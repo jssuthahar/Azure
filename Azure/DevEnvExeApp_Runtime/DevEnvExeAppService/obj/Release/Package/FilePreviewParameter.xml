@@ -1,0 +1,13 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<parameters>
+  <parameter name="IIS Web Application Name" description="" value="DevEnvDemo" tags="IisApp">
+    <parameterEntry kind="ProviderPath" scope="IisApp" match="^C:\\Suthahar\\Xamarin\\Azure\\DevEnvExeApp_Runtime\\DevEnvExeAppService\\obj\\Release\\Package\\PackageTmp$" />
+    <parameterEntry kind="ProviderPath" scope="setAcl" match="^C:\\Suthahar\\Xamarin\\Azure\\DevEnvExeApp_Runtime\\DevEnvExeAppService\\obj\\Release\\Package\\PackageTmp$" />
+  </parameter>
+  <parameter name="MS_NotificationHubConnectionString-Web.config Connection String" description="" value="Endpoint=sb://[your namespace].servicebus.windows.net;SharedSecretIssuer=owner;SharedSecretValue=[your secret]" tags="">
+    <parameterEntry kind="XmlFile" scope="C:\\Suthahar\\Xamarin\\Azure\\DevEnvExeApp_Runtime\\DevEnvExeAppService\\obj\\Release\\Package\\PackageTmp\\Web\.config$" match="/configuration/connectionStrings/add[@name='MS_NotificationHubConnectionString']/@connectionString" />
+  </parameter>
+  <parameter name="MS_TableConnectionString-Web.config Connection String" description="" value="Data Source=tcp:csharpcorner.database.windows.net,1433;Initial Catalog=DevEnvDemo;User ID=suthahar@csharpcorner;Password=suresh@123" tags="">
+    <parameterEntry kind="XmlFile" scope="C:\\Suthahar\\Xamarin\\Azure\\DevEnvExeApp_Runtime\\DevEnvExeAppService\\obj\\Release\\Package\\PackageTmp\\Web\.config$" match="/configuration/connectionStrings/add[@name='MS_TableConnectionString']/@connectionString" />
+  </parameter>
+</parameters>
