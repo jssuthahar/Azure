@@ -1,0 +1,16 @@
+<XamlCompilerSaveState>
+  <ReferenceAssemblyList>
+    <LocalAssembly PathName="c:\suthahar\xamarin\azure\devenvexeapp_xamarin_forms\winphone81\obj\x86\debug\intermediatexaml\winphone81.exe" HashGuid="9f6c1b54-637f-5f35-4968-2e4834bf7562" />
+    <ReferenceAssembly PathName="c:\suthahar\xamarin\azure\devenvexeapp_xamarin_forms\devenvexeapp\bin\debug\devenvexeapp.dll" HashGuid="771abcee-003b-f542-fcfe-f489563e55aa" />
+    <ReferenceAssembly PathName="c:\suthahar\xamarin\azure\devenvexeapp_xamarin_forms\packages\microsoft.azure.mobile.client.3.0.3\lib\wpa81\microsoft.windowsazure.mobile.dll" HashGuid="b1dcaa97-cc41-a02d-c94f-f367893aa987" />
+    <ReferenceAssembly PathName="c:\suthahar\xamarin\azure\devenvexeapp_xamarin_forms\packages\microsoft.azure.mobile.client.3.0.3\lib\wpa81\microsoft.windowsazure.mobile.ext.dll" HashGuid="37cc6169-576b-f3de-1e6a-600572f7c503" />
+    <ReferenceAssembly PathName="c:\suthahar\xamarin\azure\devenvexeapp_xamarin_forms\packages\newtonsoft.json.6.0.4\lib\portable-net45+wp80+win8+wpa81\newtonsoft.json.dll" HashGuid="02b12ba6-881e-6b8a-1687-5b2ee1851a11" />
+    <ReferenceAssembly PathName="c:\suthahar\xamarin\azure\devenvexeapp_xamarin_forms\packages\microsoft.net.http.2.2.29\lib\wpa81\system.net.http.extensions.dll" HashGuid="794366f8-cc6d-f0fa-3d07-33b45136e193" />
+    <ReferenceAssembly PathName="c:\suthahar\xamarin\azure\devenvexeapp_xamarin_forms\packages\microsoft.net.http.2.2.29\lib\wpa81\system.net.http.primitives.dll" HashGuid="7b71418d-e056-7613-c839-85fb8f6472a6" />
+    <ReferenceAssembly PathName="c:\suthahar\xamarin\azure\devenvexeapp_xamarin_forms\packages\xamarin.forms.2.0.1.6495\lib\wpa81\xamarin.forms.core.dll" HashGuid="81f082c0-b7e7-95b3-a9ed-2e2d9b51621f" />
+    <ReferenceAssembly PathName="c:\suthahar\xamarin\azure\devenvexeapp_xamarin_forms\packages\xamarin.forms.2.0.1.6495\lib\wpa81\xamarin.forms.platform.dll" HashGuid="d9389e38-8a39-bed5-406b-7a34fe4704ea" />
+    <ReferenceAssembly PathName="c:\suthahar\xamarin\azure\devenvexeapp_xamarin_forms\packages\xamarin.forms.2.0.1.6495\lib\wpa81\xamarin.forms.platform.winrt.dll" HashGuid="90857546-45ca-99c6-9f56-7b4999edda75" />
+    <ReferenceAssembly PathName="c:\suthahar\xamarin\azure\devenvexeapp_xamarin_forms\packages\xamarin.forms.2.0.1.6495\lib\wpa81\xamarin.forms.platform.winrt.phone.dll" HashGuid="a9e183e0-7a4a-b12c-d004-86b46135dbe4" />
+    <ReferenceAssembly PathName="c:\suthahar\xamarin\azure\devenvexeapp_xamarin_forms\packages\xamarin.forms.2.0.1.6495\lib\wpa81\xamarin.forms.xaml.dll" HashGuid="3953804c-3f4d-f50e-72fc-d5c6cd693e13" />
+  </ReferenceAssemblyList>
+</XamlCompilerSaveState>

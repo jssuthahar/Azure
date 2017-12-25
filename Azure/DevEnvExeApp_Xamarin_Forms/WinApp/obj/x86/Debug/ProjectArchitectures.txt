@@ -1,0 +1,2 @@
+C:\Suthahar\Xamarin\Azure\DevEnvExeApp_Xamarin_Forms\DevEnvExeApp\DevEnvExeApp.csproj;neutral
+C:\Suthahar\Xamarin\Azure\DevEnvExeApp_Xamarin_Forms\WinApp\DevEnvExeApp.WinApp.csproj;x86

@@ -1,0 +1,2 @@
+C:\Suthahar\Xamarin\Xamarin\AzureFunctionsDemo\AzureFunctionsDemo\AzureFunctionsDemo.Windows\AzureFunctionsDemo.Windows.csproj;neutral
+C:\Suthahar\Xamarin\Xamarin\AzureFunctionsDemo\AzureFunctionsDemo\AzureFunctionsDemo\AzureFunctionsDemo.csproj;neutral
