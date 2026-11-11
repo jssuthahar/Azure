@@ -1,0 +1,33 @@
+---
+/** "Nimbus" — the site's friendly cloud teacher. Original artwork, decorative. */
+interface Props { size?: number; class?: string; mood?: 'happy' | 'thinking' | 'cheer' }
+const { size = 72, class: cls = '', mood = 'happy' } = Astro.props;
+---
+<svg class={cls} width={size} height={size} viewBox="0 0 120 120" aria-hidden="true" focusable="false">
+  <defs>
+    <linearGradient id="nimbus-body" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#ffffff" />
+      <stop offset="1" stop-color="#d6e9fa" />
+    </linearGradient>
+  </defs>
+  <path d="M30 92h60a20 20 0 0 0 3-39.8A28 28 0 0 0 39.5 45 22 22 0 0 0 30 92z" fill="url(#nimbus-body)" stroke="#0078d4" stroke-width="3.5" stroke-linejoin="round" />
+  <!-- mortarboard -->
+  <path d="M44 30l24-10 24 10-24 10z" fill="#005a9e" />
+  <path d="M54 34v8c0 3 6 5 14 5s14-2 14-5v-8l-14 6z" fill="#0078d4" />
+  <path d="M90 31v12" stroke="#ffb900" stroke-width="2.5" stroke-linecap="round" />
+  <circle cx="90" cy="45" r="2.8" fill="#ffb900" />
+  <!-- face -->
+  <circle cx="52" cy="66" r="5" fill="#0b1020" />
+  <circle cx="74" cy="66" r="5" fill="#0b1020" />
+  <circle cx="53.6" cy="64.4" r="1.6" fill="#fff" />
+  <circle cx="75.6" cy="64.4" r="1.6" fill="#fff" />
+  <circle cx="45" cy="76" r="4.5" fill="#ff8c9a" opacity=".55" />
+  <circle cx="81" cy="76" r="4.5" fill="#ff8c9a" opacity=".55" />
+  {mood === 'thinking' ? (
+    <path d="M57 79h12" stroke="#0b1020" stroke-width="3" stroke-linecap="round" />
+  ) : mood === 'cheer' ? (
+    <path d="M55 76q8 10 16 0z" fill="#0b1020" />
+  ) : (
+    <path d="M56 77q7 6 14 0" fill="none" stroke="#0b1020" stroke-width="3" stroke-linecap="round" />
+  )}
+</svg>

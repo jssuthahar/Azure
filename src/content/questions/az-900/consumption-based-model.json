@@ -1,0 +1,64 @@
+{
+  "cert": "az-900",
+  "domain": 1,
+  "topic": "consumption-based-model",
+  "questions": [
+    {
+      "id": "cc-cons-1",
+      "type": "single",
+      "question": "Which statement describes the consumption-based model?",
+      "options": [
+        { "text": "You pay a fixed price for hardware before using it", "why": "That is capital expenditure, the opposite." },
+        { "text": "You pay only for the resources you use", "why": "Correct. Usage is metered and billed." },
+        { "text": "All cloud services are free up to unlimited usage", "why": "Cloud usage is billed." },
+        { "text": "You pay the same monthly amount regardless of usage", "why": "That describes a flat fee, not consumption pricing." }
+      ],
+      "answer": [1],
+      "explanation": "The consumption-based model bills you for what you actually use.",
+      "objective": "1.1.5"
+    },
+    {
+      "id": "cc-cons-2",
+      "type": "multi",
+      "question": "Which TWO are benefits of the consumption-based model?",
+      "options": [
+        { "text": "No up-front costs", "why": "Correct." },
+        { "text": "Guaranteed fixed monthly bill", "why": "Bills vary with usage under consumption pricing." },
+        { "text": "Ability to stop paying for resources you no longer need", "why": "Correct. Delete or scale down to reduce cost." },
+        { "text": "Customers must buy their own hardware", "why": "No hardware purchase is needed." }
+      ],
+      "answer": [0, 2],
+      "explanation": "No up-front cost and paying only while you need resources are core benefits.",
+      "objective": "1.1.5"
+    },
+    {
+      "id": "cc-cons-3",
+      "type": "single",
+      "scenario": "A developer shuts down Windows from inside an Azure VM. The VM shows as 'Stopped' in the portal, not 'Stopped (deallocated)'.",
+      "question": "Will compute charges continue?",
+      "options": [
+        { "text": "Yes. The VM is still allocated, so compute charges continue", "why": "Correct. Only deallocated VMs stop compute billing." },
+        { "text": "No. All charges stop when the OS shuts down", "why": "The hardware is still reserved, so compute is billed." },
+        { "text": "No. Azure never charges for VMs", "why": "Running and allocated VMs are billed." },
+        { "text": "Only network charges stop", "why": "Compute charges continue while allocated." }
+      ],
+      "answer": [0],
+      "explanation": "Stop the VM from Azure (portal, CLI, PowerShell) to deallocate it and stop compute charges. Disk charges continue.",
+      "objective": "1.1.5"
+    },
+    {
+      "id": "cc-cons-4",
+      "type": "single",
+      "question": "Which type of data transfer is generally free in Azure?",
+      "options": [
+        { "text": "Data transferred into Azure (ingress)", "why": "Correct. Inbound data transfer is generally not charged." },
+        { "text": "Data transferred out to the internet (egress)", "why": "Outbound data transfer is generally charged." },
+        { "text": "Data transferred between regions", "why": "Inter-region transfer is generally charged." },
+        { "text": "All data transfer is always charged", "why": "Ingress is generally free." }
+      ],
+      "answer": [0],
+      "explanation": "Ingress is generally free; egress and inter-region transfer usually incur charges.",
+      "objective": "3.1.1"
+    }
+  ]
+}

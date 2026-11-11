@@ -1,0 +1,17 @@
+{ "cert": "az-900", "domain": 2, "topic": "availability-zones", "questions": [
+  { "id": "t-az-1", "type": "single", "question": "What is the minimum number of availability zones in a zone-enabled Azure region?", "options": [
+    { "text": "One", "why": "One zone gives no zone redundancy." },
+    { "text": "Two", "why": "The minimum is three." },
+    { "text": "Three", "why": "Correct." },
+    { "text": "Ten", "why": "There is no such minimum." } ], "answer": [2], "explanation": "Zone-enabled regions have at least three availability zones.", "objective": "2.1.2" },
+  { "id": "t-az-2", "type": "multi", "question": "Which TWO statements about availability zones are true?", "options": [
+    { "text": "Each zone has independent power, cooling and networking", "why": "Correct." },
+    { "text": "Zones protect against an entire region going offline", "why": "Zones are inside one region; use another region for that." },
+    { "text": "A zone is made up of one or more datacenters", "why": "Correct." },
+    { "text": "Every Azure region supports availability zones", "why": "Not all regions support zones." } ], "answer": [0, 2], "explanation": "Zones are separate datacenter groups inside a region with independent infrastructure.", "objective": "2.1.2" },
+  { "id": "t-az-3", "type": "single", "question": "Zone-redundant storage (ZRS) is an example of which type of service?", "options": [
+    { "text": "Zonal", "why": "Zonal resources are pinned to one zone you choose." },
+    { "text": "Zone-redundant", "why": "Correct. Azure replicates it across zones." },
+    { "text": "Non-regional", "why": "Non-regional services are not tied to a region." },
+    { "text": "Sovereign", "why": "Sovereign refers to isolated Azure clouds." } ], "answer": [1], "explanation": "Zone-redundant services are automatically replicated across zones.", "objective": "2.1.2" }
+] }

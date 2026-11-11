@@ -1,0 +1,28 @@
+---
+interface Props { items: { slug: string; text: string; full?: boolean }[] }
+const { items } = Astro.props;
+---
+<nav class="toc text-sm" aria-label="On this page">
+  <p class="mb-2 text-xs font-bold tracking-[0.14em] uppercase text-muted">On this page</p>
+  <ul class="space-y-0.5 border-l border-default">
+    {items.map((h) => (
+      <li data-full={h.full ? '' : undefined}><a href={`#${h.slug}`} class="-ml-px block border-l-2 border-transparent py-1 pr-2 pl-3 leading-snug text-muted hover:text-[var(--text)]">{h.text}</a></li>
+    ))}
+  </ul>
+</nav>
+<script>
+  const links = [...document.querySelectorAll<HTMLAnchorElement>('.toc a')];
+  const targets = links.map((a) => document.getElementById(decodeURIComponent(a.hash.slice(1)))).filter(Boolean) as HTMLElement[];
+  if (targets.length && 'IntersectionObserver' in window) {
+    const io = new IntersectionObserver(
+      (entries) => {
+        for (const e of entries) {
+          if (!e.isIntersecting) continue;
+          links.forEach((a) => a.toggleAttribute('data-active', a.hash === `#${e.target.id}`));
+        }
+      },
+      { rootMargin: '-80px 0px -70% 0px' },
+    );
+    targets.forEach((t) => io.observe(t));
+  }
+</script>

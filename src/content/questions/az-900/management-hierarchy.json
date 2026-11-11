@@ -1,0 +1,91 @@
+{
+ "cert": "az-900",
+ "domain": 2,
+ "topic": "management-hierarchy",
+ "questions": [
+  {
+   "id": "t-mh-1",
+   "type": "single",
+   "question": "Which list is in the correct order from the TOP of the hierarchy to the BOTTOM?",
+   "options": [
+    {
+     "text": "Management groups, subscriptions, resource groups, resources",
+     "why": "Correct."
+    },
+    {
+     "text": "Subscriptions, management groups, resources, resource groups",
+     "why": "Incorrect order."
+    },
+    {
+     "text": "Resource groups, subscriptions, resources, management groups",
+     "why": "Incorrect order."
+    },
+    {
+     "text": "Resources, resource groups, subscriptions, management groups",
+     "why": "That is bottom to top."
+    }
+   ],
+   "answer": [
+    0
+   ],
+   "explanation": "MG → subscription → resource group → resource.",
+   "objective": "2.1.7"
+  },
+  {
+   "id": "t-mh-2",
+   "type": "single",
+   "question": "A user is assigned the Contributor role on a resource group. Where does the permission apply?",
+   "options": [
+    {
+     "text": "To the resource group and all resources inside it",
+     "why": "Correct."
+    },
+    {
+     "text": "To the whole subscription",
+     "why": "Permissions flow down, not up."
+    },
+    {
+     "text": "To all management groups",
+     "why": "Permissions flow down, not up."
+    },
+    {
+     "text": "Only to the resource group object itself",
+     "why": "Child resources inherit."
+    }
+   ],
+   "answer": [
+    0
+   ],
+   "explanation": "Role assignments are inherited by child scopes.",
+   "objective": "2.1.7"
+  },
+  {
+   "id": "t-mh-3",
+   "type": "single",
+   "question": "Where is the best place to assign a company-wide policy?",
+   "options": [
+    {
+     "text": "At a high-level management group",
+     "why": "Correct."
+    },
+    {
+     "text": "On each individual resource",
+     "why": "Hard to maintain."
+    },
+    {
+     "text": "On one resource group only",
+     "why": "Would not cover other groups."
+    },
+    {
+     "text": "In a resource tag",
+     "why": "Tags do not enforce policy."
+    }
+   ],
+   "answer": [
+    0
+   ],
+   "explanation": "Assign broad governance high in the hierarchy so it is inherited.",
+   "objective": "2.1.7"
+  }
+ ]
+}

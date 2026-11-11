@@ -1,0 +1,179 @@
+---
+title: Reliability
+seoTitle: Reliability in Cloud Computing Explained | AZ-900
+description: "Cloud reliability explained: recovering from failures with zones, regions and disaster recovery, plus interview questions and AZ-900 practice."
+answer: >-
+  **Reliability** is the ability of a system to **recover from failures and continue to function** correctly. The cloud improves reliability because its decentralised design (many regions and availability zones around the world) lets you deploy resources in multiple places, so if one location has a problem, another can take over, sometimes automatically.
+updated: 2026-11-11
+readingMinutes: 8
+keyTerms:
+  - term: Reliability
+    definition: The ability of a system to recover from failures and keep functioning correctly.
+  - term: Disaster recovery (DR)
+    definition: The plans and tooling to restore service after a major incident, such as a regional outage.
+  - term: RTO
+    definition: Recovery Time Objective. The maximum acceptable time to restore service after a failure.
+  - term: RPO
+    definition: Recovery Point Objective. The maximum acceptable amount of data loss, measured in time.
+  - term: Failover
+    definition: Switching to a standby component or location when the primary fails.
+interview:
+  - level: beginner
+    q: What does reliability mean in the cloud?
+    a: >-
+      Reliability means a system can recover from failures and keep working. Azure helps because it has regions and availability zones all over the world, so I can run copies of my app and data in more than one place and fail over if one has a problem.
+    followUps:
+      - q: Is reliability the same as high availability?
+        a: >-
+          They are related but not the same. High availability is about maximising uptime. Reliability is broader. It is about the system recovering from failures and working correctly over time, including recovering data and restoring service after a disaster.
+  - level: intermediate
+    q: What are RTO and RPO, and why do they matter?
+    a: >-
+      RTO is how quickly service must be restored after a failure; RPO is how much data loss is acceptable, measured in time. They drive design and cost. An RPO of zero needs synchronous replication; an RTO of minutes needs a warm or active standby. Backups alone give longer RTO and RPO but cost far less.
+    followUps: []
+  - level: experienced
+    q: How would you validate that a system is actually reliable rather than just designed to be?
+    a: >-
+      Test failure on purpose. Run regular failover drills, restore backups into a clean environment, and use fault injection with Azure Chaos Studio to kill instances, add latency or simulate a zone outage. Observe with health models and alerts. Document runbooks and automate failover where possible. A DR plan that has never been tested is a hope, not a plan.
+    followUps: []
+  - level: scenario
+    q: A hospital appointments system must recover within one hour after a regional outage with at most five minutes of data loss. What would you suggest?
+    a: >-
+      RTO of one hour and RPO of five minutes. Replicate the database to a second region with asynchronous geo-replication (for example Azure SQL failover groups), keep the app deployable in the secondary region via infrastructure as code (or a warm standby), use Azure Site Recovery for any VMs, put Azure Front Door in front for traffic switching, and test the failover regularly.
+    followUps: []
+revision:
+  keyPoints:
+    - Reliability = ability to **recover from failures and keep functioning**.
+    - The cloud's decentralised design (regions, zones) makes reliable architectures easier.
+    - Key tools include availability zones, region pairs, geo-redundant storage, Azure Backup and Azure Site Recovery.
+    - RTO = how fast you recover; RPO = how much data you can lose.
+    - Reliability must be tested (failover drills, restore tests, chaos experiments).
+  mistakes:
+    - Treating backups as a disaster recovery plan without ever testing restores.
+    - Confusing reliability (recover and keep working) with predictability (consistent performance and cost).
+  examTips:
+    - '"Recover from failures" / "continue to function" / "decentralised design" = **reliability**.'
+    - '"Maximum uptime" / "SLA percentage" = **high availability**.'
+  quick:
+    - q: What does reliability allow a system to do?
+      a: Recover from failures and continue to function.
+    - q: What does RTO stand for?
+      a: Recovery Time Objective, the maximum time to restore service.
+    - q: What does RPO stand for?
+      a: Recovery Point Objective, the maximum acceptable data loss measured in time.
+    - q: Which Azure service replicates VMs to another region for disaster recovery?
+      a: Azure Site Recovery.
+    - q: Why does the cloud's global footprint help reliability?
+      a: You can deploy in multiple regions and zones, so a failure in one place does not stop the service.
+references:
+  - title: Describe the benefits of reliability and predictability (Microsoft Learn)
+    url: https://learn.microsoft.com/en-us/training/modules/describe-benefits-use-cloud-services/
+  - title: Azure Well-Architected Framework - Reliability
+    url: https://learn.microsoft.com/en-us/azure/well-architected/reliability/
+  - title: Azure Site Recovery overview
+    url: https://learn.microsoft.com/en-us/azure/site-recovery/site-recovery-overview
+related:
+  - high-availability
+  - predictability
+  - hybrid-cloud
+---
+
+## Start with a question
+
+<Story question="A flood knocks out an entire city's power for two days. Does your hospital booking system still work?">
+
+If it runs in one server room in that city, no. Patients cannot book, and doctors cannot see schedules.
+
+If it is designed to **recover**, with copies of the data and the app ready in another city, it switches over and keeps running. That ability to bounce back is **reliability**.
+
+</Story>
+
+## Explain it like I'm 10
+
+<Eli10>
+
+Imagine you are writing a big school project. A **reliable** student saves the work on the laptop, **and** on a USB stick, **and** emails a copy to themselves. If the laptop dies the night before it is due, no panic: they open the copy and keep going.
+
+The cloud lets companies keep copies of their programs and data in **many different places around the world**, so if one place has trouble, they carry on from another.
+
+</Eli10>
+
+## The technical explanation
+
+**Reliability** is the ability of a workload to **recover from failures and continue to function as expected**. The cloud's **decentralised design**, with dozens of regions worldwide, most with multiple availability zones, gives you building blocks to survive failures at every scale:
+
+<Flow
+  caption="Reliability at every scale"
+  steps={[
+    { title: 'Component', text: 'Instance crashes → load balancer routes to healthy instances.' },
+    { title: 'Datacenter', text: 'Zone failure → zone-redundant services continue in other zones.' },
+    { title: 'Region', text: 'Regional outage → fail over to a second region (geo-replication, Site Recovery).' },
+    { title: 'Data', text: 'Corruption or deletion → restore from backups (Azure Backup, point-in-time restore).' },
+  ]}
+/>
+
+### Reliability vs high availability
+
+<Compare
+  caption="Two related but different benefits"
+  columns={[
+    { title: 'High availability', icon: '🟢', tone: 'accent', items: ['Focus: maximum uptime', 'Measured with SLA percentages', 'Achieved with redundancy (no single point of failure)', 'Question: "Is it up right now?"'] },
+    { title: 'Reliability', icon: '🔁', tone: 'ok', items: ['Focus: recover and keep working correctly', 'Measured with RTO, RPO, failure rates', 'Achieved with redundancy plus recovery: backup, failover, DR', 'Question: "When something breaks, do we come back?"'] },
+  ]}
+/>
+
+### Azure features that support reliability
+
+| Feature | Protects against |
+| --- | --- |
+| Availability zones and zone-redundant services | Datacenter failure |
+| Region pairs and geo-redundant storage (GRS/GZRS) | Regional disaster |
+| Azure Backup | Data loss, corruption, ransomware |
+| Azure Site Recovery | VM and server outages (replicate and fail over to another region) |
+| Azure SQL Database failover groups | Database regional outage |
+| Azure Front Door / Traffic Manager | Route users away from an unhealthy region |
+
+<TryIt labs="storage-redundancy" text="Give your data a copy in another region by switching a storage account to GZRS." />
+
+<DeepDive title="Reliability engineering in practice">
+
+The **Reliability pillar** of the Azure Well-Architected Framework recommends:
+
+- **Define targets** with the business for each flow: availability, RTO and RPO. Not every flow needs the same.
+- **Failure mode analysis**: list what can fail and how each failure is detected and mitigated.
+- **Self-healing**: retries with exponential back-off, circuit breakers, health probes, automatic instance replacement.
+- **Test**: chaos experiments with **Azure Chaos Studio**, DR drills, backup restore tests.
+- **Observe**: health models in Azure Monitor that reflect user experience, not just CPU.
+
+A useful mental model: you *design* for high availability, but you *prove* reliability by recovering under realistic failure.
+
+</DeepDive>
+
+## Real-world business scenario
+
+<Scenario
+  company="A national healthcare appointments service"
+  industry="Healthcare"
+  problem="A single-region deployment meant a regional incident could stop citizens booking appointments for hours, with possible data loss."
+  service="Zone-redundant App Service and Azure SQL Database in the primary region, auto-failover group to a second region, Azure Front Door for routing, Azure Backup for long-term retention, quarterly DR drills."
+  why="Zones handle datacenter failures automatically; the secondary region and failover group meet the RTO of one hour and RPO of minutes for regional disasters."
+  outcome="A real zone incident later caused no downtime, and DR drills keep the regional failover runbook proven."
+/>
+
+## When to use it and when not to
+
+<UseWhen
+  use={[
+    'Systems where outages or data loss harm customers, revenue or safety.',
+    'Regulated workloads that require documented, tested disaster recovery.',
+    'Any production system. At minimum, tested backups.',
+  ]}
+  avoid={[
+    'Building multi-region active-active for low-impact internal tools. The cost and complexity are not justified.',
+    'Designing DR you never test.',
+  ]}
+  alternatives={[
+    '**Backup-and-restore only** for low-criticality systems (cheapest, slowest recovery).',
+    '**Pilot light / warm standby** to balance cost and recovery time.',
+  ]}
+/>

@@ -1,0 +1,110 @@
+---
+title: The Azure Management Hierarchy
+seoTitle: "Azure Hierarchy: Management Groups to Resources | AZ-900"
+description: The Azure management hierarchy explained with an animation, from management groups to subscriptions, resource groups and resources, plus AZ-900 practice.
+answer: >-
+  Azure organises everything in four levels: **management groups** contain **subscriptions**, subscriptions contain **resource groups**, and resource groups contain **resources**. Policies and access applied at a higher level are **inherited** by everything below it.
+updated: 2026-11-11
+readingMinutes: 5
+keyTerms:
+  - term: Scope
+    definition: The level where you apply a setting, such as a management group, subscription, resource group or resource.
+  - term: Inheritance
+    definition: Settings at a parent scope automatically apply to child scopes.
+interview:
+  - level: beginner
+    q: Describe the Azure management hierarchy from top to bottom.
+    a: >-
+      Management groups at the top, then subscriptions, then resource groups, then resources. Anything I set at a level, like a policy or permission, flows down to the levels below.
+    followUps: []
+  - level: intermediate
+    q: If you give someone the Reader role on a subscription, what can they read?
+    a: >-
+      Everything inside that subscription: all its resource groups and resources, because role assignments are inherited down the hierarchy.
+    followUps: []
+  - level: experienced
+    q: Where would you assign a policy that requires a cost-centre tag on every resource in the company?
+    a: >-
+      At the highest management group that covers all subscriptions, usually the root or a top-level landing zone group, so every current and future subscription inherits it. I would start in audit mode, then move to deny or modify once teams have adapted.
+    followUps: []
+revision:
+  keyPoints:
+    - Management groups → subscriptions → resource groups → resources.
+    - Settings flow down (inheritance).
+    - Apply broad rules high up, specific rules low down.
+  mistakes:
+    - Putting the levels in the wrong order on the exam.
+  examTips:
+    - Memorise the order. **MG → Sub → RG → Resource**.
+  quick:
+    - q: What is the top level of the Azure hierarchy?
+      a: Management groups (under the root management group).
+    - q: What is directly below a subscription?
+      a: Resource groups.
+    - q: Where do resources live?
+      a: In resource groups.
+    - q: Do settings flow up or down the hierarchy?
+      a: Down.
+    - q: Where should company-wide policies be assigned?
+      a: At a high-level management group.
+references:
+  - title: Describe the hierarchy of resource groups, subscriptions and management groups
+    url: https://learn.microsoft.com/en-us/training/modules/describe-core-architectural-components-of-azure/
+related:
+  - management-groups
+  - subscriptions
+  - resources-and-resource-groups
+---
+
+## Start with a question
+
+<Story question="If a rule is set at the very top of your company’s Azure, how far down does it reach?">
+
+All the way down. That is the power of the **management hierarchy**.
+
+</Story>
+
+## Explain it like I'm 10
+
+<Eli10>
+
+Think of **Russian nesting dolls**. The biggest doll (management group) holds a smaller doll (subscription), which holds a smaller one (resource group), which holds the tiniest dolls (resources). Paint a sticker on the big doll's rule book, and every doll inside follows it.
+
+</Eli10>
+
+## The technical explanation
+
+| Level | Contains | Typical use |
+| --- | --- | --- |
+| Management group | Subscriptions, other management groups | Company-wide policy and access |
+| Subscription | Resource groups | Billing and access boundary |
+| Resource group | Resources | Lifecycle grouping for an app or environment |
+| Resource | – | The actual VM, database, storage account… |
+
+<Flow
+  caption="Inheritance flows down the hierarchy"
+  steps={[
+    { title: 'Management group', text: 'Policy: allowed regions = Europe only.' },
+    { title: 'Subscription', text: 'Inherits the policy. Adds RBAC for the web team.' },
+    { title: 'Resource group', text: 'Inherits both. Adds a delete lock.' },
+    { title: 'Resource', text: 'A VM in West Europe follows all of the above.' },
+  ]}
+/>
+
+## Real-world business scenario
+
+<Scenario
+  company="A bank"
+  industry="Banking"
+  problem="Auditors wanted proof that every resource met encryption and location rules across 30 subscriptions."
+  service="Assigned policy initiatives at the top management group and reviewed compliance in Azure Policy."
+  why="Inheritance guarantees the rules apply everywhere below, including subscriptions created later."
+  outcome="One compliance dashboard covered every subscription."
+/>
+
+## When to use it and when not to
+
+<UseWhen
+  use={['Use the hierarchy to apply rules at the right scope: broad rules high, specific rules low.']}
+  avoid={['Assigning the same policy separately to many subscriptions instead of once at a management group.']}
+/>

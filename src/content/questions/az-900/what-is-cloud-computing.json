@@ -1,0 +1,64 @@
+{
+  "cert": "az-900",
+  "domain": 1,
+  "topic": "what-is-cloud-computing",
+  "questions": [
+    {
+      "id": "cc-what-1",
+      "type": "single",
+      "question": "Which statement best describes cloud computing?",
+      "options": [
+        { "text": "Delivering computing services over the internet, on demand, typically paying for what you use", "why": "Correct. This is the core definition: services over the internet, on demand, metered." },
+        { "text": "Buying servers and installing them in your own building", "why": "That is the on-premises model, the opposite of cloud computing." },
+        { "text": "Storing files only on a USB drive so they are portable", "why": "Local storage is not delivered as a service over a network." },
+        { "text": "A single powerful supercomputer owned by Microsoft", "why": "The cloud is huge pools of servers across many datacenters, not one machine." }
+      ],
+      "answer": [0],
+      "explanation": "Cloud computing is the on-demand delivery of compute, storage, networking and other services over the internet, usually with consumption-based pricing.",
+      "objective": "1.1.1"
+    },
+    {
+      "id": "cc-what-2",
+      "type": "multi",
+      "question": "Which TWO are characteristics of cloud computing?",
+      "options": [
+        { "text": "On-demand self-service", "why": "Correct. You provision resources yourself, in minutes, without a purchase process." },
+        { "text": "Long-term hardware purchase contracts are required", "why": "Cloud removes the need to buy hardware. Commitments such as reservations are optional." },
+        { "text": "Measured service", "why": "Correct. Usage is metered and billed based on consumption." },
+        { "text": "Capacity can only be changed by buying new servers", "why": "Rapid elasticity means capacity changes quickly without buying hardware." }
+      ],
+      "answer": [0, 2],
+      "explanation": "On-demand self-service and measured service are two of the five essential characteristics (with broad network access, resource pooling and rapid elasticity).",
+      "objective": "1.1.1"
+    },
+    {
+      "id": "cc-what-3",
+      "type": "single",
+      "scenario": "A ticket-booking start-up expects huge traffic for one concert sale and almost none afterwards. It does not want to buy servers.",
+      "question": "Why is cloud computing a good fit?",
+      "options": [
+        { "text": "It can add capacity for the sale and release it afterwards, so they pay mainly for what they use", "why": "Correct. Rapid elasticity plus consumption-based pricing suit short, spiky demand." },
+        { "text": "Cloud servers are free during traffic spikes", "why": "Cloud resources are not free. You pay for the capacity you consume." },
+        { "text": "The cloud removes the need for any application code", "why": "You still build the application. The cloud provides the infrastructure and services." },
+        { "text": "Cloud computing guarantees zero downtime", "why": "No provider guarantees zero downtime. Availability is defined by SLAs." }
+      ],
+      "answer": [0],
+      "explanation": "Spiky, temporary demand is the textbook case for cloud: scale out for the event, scale in afterwards, pay for actual usage.",
+      "objective": "1.1.1"
+    },
+    {
+      "id": "cc-what-4",
+      "type": "single",
+      "question": "In a public cloud such as Azure, who is responsible for the physical datacenter and its hardware?",
+      "options": [
+        { "text": "The customer", "why": "Customers never manage physical datacenters in the public cloud." },
+        { "text": "The cloud provider", "why": "Correct. Microsoft owns, operates and secures Azure's physical datacenters." },
+        { "text": "The customer's internet service provider", "why": "The ISP provides connectivity, not the cloud datacenter." },
+        { "text": "Responsibility is split 50/50", "why": "Physical security is always the provider's job in public cloud (see the shared responsibility model)." }
+      ],
+      "answer": [1],
+      "explanation": "Physical hosts, network and datacenter are always the cloud provider's responsibility in the public cloud.",
+      "objective": "1.1.2"
+    }
+  ]
+}

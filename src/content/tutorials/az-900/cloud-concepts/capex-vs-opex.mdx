@@ -1,0 +1,156 @@
+---
+title: CapEx vs OpEx
+seoTitle: CapEx vs OpEx in Cloud Computing Explained | AZ-900
+description: Capital expenditure vs operational expenditure explained with simple examples, cloud impact, a cost chart, interview questions and AZ-900 practice questions.
+answer: >-
+  **Capital expenditure (CapEx)** is spending money up front on physical assets, such as servers or a datacenter, that you own and depreciate over several years. **Operational expenditure (OpEx)** is ongoing spending on services or products as you use them, billed and deducted in the same period. Cloud computing mostly turns IT from CapEx into OpEx.
+updated: 2026-11-11
+readingMinutes: 7
+keyTerms:
+  - term: CapEx
+    definition: Capital expenditure. Up-front spending on physical assets that are owned and depreciated over time.
+  - term: OpEx
+    definition: Operational expenditure. Ongoing spending on services or products, expensed in the period it occurs.
+  - term: Depreciation
+    definition: Spreading the cost of an asset over its useful life in the accounts, because its value declines.
+  - term: Cash flow
+    definition: The timing of money going out and coming in. Big CapEx purchases hit cash flow immediately.
+interview:
+  - level: beginner
+    q: What is the difference between CapEx and OpEx?
+    a: >-
+      CapEx is a big up-front purchase of something you own, like buying servers for a datacenter. OpEx is ongoing spending for things as you use them, like paying a monthly cloud bill. Cloud computing is mainly OpEx.
+    followUps:
+      - q: Give a non-IT example.
+        a: >-
+          Buying a delivery van is CapEx. Renting a van by the day, or paying a courier per parcel, is OpEx.
+  - level: intermediate
+    q: Why do finance teams often like the OpEx model of cloud?
+    a: >-
+      No large up-front cash outlay, costs match actual usage and revenue, no risk of stranded assets if needs change, and spending can be adjusted month by month. It also makes it easier to attribute costs to products or teams.
+    followUps: []
+  - level: experienced
+    q: Is OpEx always better? What would a CFO push back on?
+    a: >-
+      Not always. Steady workloads on pure pay-as-you-go can cost more over time than owned hardware, and OpEx is less predictable if engineering does not manage it. Some organisations have capital budgets that are easier to approve than operating budget increases. Reservations and savings plans sit in between, a commitment that buys a discount. The right framing is total cost of ownership and flexibility, not OpEx versus CapEx as an ideology.
+    followUps: []
+  - level: scenario
+    q: A company must decide whether to spend 500,000 on a new on-premises storage array or move backups to Azure. How does CapEx/OpEx factor in?
+    a: >-
+      The array is CapEx, a large immediate cash outlay, a depreciating asset, fixed capacity, and a refresh in five years. Azure Backup and Blob Storage are OpEx, paid monthly by usage, scaling with data, with no hardware to refresh. If cash flow and flexibility matter, OpEx is attractive. The decision should compare five-year TCO including staff, power and space.
+    followUps: []
+revision:
+  keyPoints:
+    - CapEx = up-front spending on physical assets you own; value depreciates over time.
+    - OpEx = ongoing spending on services as you use them; expensed in the same period.
+    - On-premises IT is mainly CapEx; cloud is mainly OpEx.
+    - OpEx improves flexibility and cash flow; it needs active cost management.
+    - The consumption-based model is what makes cloud spending OpEx.
+  mistakes:
+    - Thinking OpEx is automatically cheaper. It is more flexible, not always cheaper.
+    - Mixing up which one cloud represents. Cloud is **OpEx**.
+  examTips:
+    - '"Buying servers", "building a datacenter", "up-front" all point to **CapEx**.'
+    - '"Pay as you go", "monthly bill", "no up-front cost" all point to **OpEx**.'
+  quick:
+    - q: Is buying servers CapEx or OpEx?
+      a: CapEx.
+    - q: Is a monthly Azure bill CapEx or OpEx?
+      a: OpEx.
+    - q: What is depreciation?
+      a: Spreading an asset's cost over its useful life as its value declines.
+    - q: Which model requires a large up-front payment?
+      a: CapEx.
+    - q: Which cloud concept turns IT spending into OpEx?
+      a: The consumption-based (pay-as-you-go) model.
+references:
+  - title: Describe the consumption-based model (Microsoft Learn)
+    url: https://learn.microsoft.com/en-us/training/modules/describe-cloud-compute/
+  - title: Cloud Adoption Framework - financial considerations
+    url: https://learn.microsoft.com/en-us/azure/cloud-adoption-framework/strategy/
+related:
+  - consumption-based-model
+  - cloud-pricing-models
+  - on-premises-vs-cloud
+---
+
+## Start with a question
+
+<Story question="Should a new bakery buy a 30,000 oven on day one, or rent one monthly until it knows how busy it will be?">
+
+Buying the oven means a huge payment before the first loaf is sold. The bakery owns it, but if the business changes direction, the oven is still there, losing value.
+
+Renting means smaller monthly payments, no big risk, and the freedom to upgrade or return it. **These are the two ways businesses spend money: CapEx and OpEx.**
+
+</Story>
+
+## Explain it like I'm 10
+
+<Eli10>
+
+Imagine you want to read lots of comics.
+
+- **CapEx** is spending all your birthday money at once to **buy** a big pile of comics. They are yours forever, but you cannot buy anything else this month, and you may get bored of some of them.
+- **OpEx** is paying a little bit **every week** for a comic library membership. You read what you want and can stop paying whenever you like.
+
+The cloud is the library membership.
+
+</Eli10>
+
+## The technical explanation
+
+| | Capital expenditure (CapEx) | Operational expenditure (OpEx) |
+| --- | --- | --- |
+| What it is | Up-front spending on physical infrastructure or assets | Ongoing spending on services or products |
+| Example in IT | Buying servers, storage, networking, building a datacenter | Cloud subscriptions, pay-as-you-go VMs, SaaS licences |
+| Accounting | Asset is depreciated over its useful life (often 3–5 years for IT) | Expensed in the period it occurs |
+| Cash flow | Large payment at the start | Smaller, regular payments that follow usage |
+| Flexibility | Low. You own fixed capacity | High. Scale up or down, stop anytime |
+| Risk | Over-buying (idle assets) or under-buying (capacity shortage) | Uncontrolled usage can grow costs |
+
+<CostChart />
+
+### Why the cloud is OpEx
+
+Because Azure is billed through the **consumption-based model**, you do not buy the infrastructure. You pay monthly for what you use. That shifts IT spending from CapEx to OpEx, which:
+
+- removes the big up-front payment,
+- lets costs follow business demand,
+- and avoids being stuck with assets you no longer need.
+
+<TryIt labs="vm-and-cost" text="OpEx in action: no purchase, just a meter that runs while you use resources and stops when you remove them." />
+
+<Callout type="exam">
+AZ-900 questions often hide this concept inside a scenario: "The company wants to avoid a large initial investment in hardware" → cloud / OpEx. "The company purchases servers for its datacenter" → CapEx.
+</Callout>
+
+<DeepDive title="Commitments blur the line">
+
+Reservations and savings plans are paid like OpEx (monthly or up front) but **behave like a commitment**: you owe the money whether or not you use the capacity. Finance teams sometimes treat large up-front reservation payments as prepaid expenses spread over the term. For architecture discussions, the useful question is not "CapEx or OpEx?" but **"How much flexibility are we buying, and what does it cost?"**
+
+</DeepDive>
+
+## Real-world business scenario
+
+<Scenario
+  company="A growing online education start-up"
+  industry="Online education"
+  problem="Investors wanted cash spent on content and marketing, not on server racks, and nobody could predict next year's user numbers."
+  service="All hosting on Azure PaaS services, billed monthly; budgets in Cost Management per product team."
+  why="OpEx kept cash free for growth, matched cost to the number of students, and avoided buying hardware that might be too big or too small."
+  outcome="IT costs rose gradually alongside revenue instead of in big steps, and the board could see cost per student each month."
+/>
+
+## When to use it and when not to
+
+<UseWhen
+  use={[
+    '**OpEx (cloud)** when demand is uncertain, growing or seasonal.',
+    '**OpEx** when you want to preserve cash and avoid stranded assets.',
+    '**CapEx** may make sense for large, stable, long-lived workloads where you can keep owned hardware fully used.',
+  ]}
+  avoid={[
+    'Choosing OpEx without budgets and alerts, because costs can drift upwards unnoticed.',
+    'Choosing CapEx for a project whose future size is uncertain.',
+  ]}
+/>

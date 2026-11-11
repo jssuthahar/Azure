@@ -1,0 +1,106 @@
+---
+title: Azure VPN Gateway
+seoTitle: Azure VPN Gateway Explained Simply | AZ-900
+description: "Azure VPN Gateway explained: site-to-site, point-to-site and VNet-to-VNet encryption over the internet, with interview questions and AZ-900 practice."
+answer: >-
+  **Azure VPN Gateway** sends **encrypted** traffic between an Azure virtual network and another location **over the public internet**. Common uses are **site-to-site** (connect your office network), **point-to-site** (connect individual laptops) and **VNet-to-VNet** connections.
+updated: 2026-11-11
+readingMinutes: 5
+keyTerms:
+  - term: VPN gateway
+    definition: A virtual network gateway that creates encrypted IPsec/IKE tunnels over the internet.
+  - term: Site-to-site
+    definition: Connects an entire on-premises network to Azure.
+  - term: Point-to-site
+    definition: Connects individual devices, such as a laptop, to Azure.
+  - term: Route-based VPN
+    definition: Uses routes to decide which traffic goes into the tunnel; the most common and flexible type.
+interview:
+  - level: beginner
+    q: What does Azure VPN Gateway do?
+    a: >-
+      It creates an encrypted tunnel over the internet between Azure and my office, or between Azure and individual laptops, so traffic is private even though it crosses the public internet.
+    followUps: []
+  - level: intermediate
+    q: What is the difference between site-to-site and point-to-site?
+    a: >-
+      Site-to-site connects a whole network, like an office, using a VPN device on-premises. Point-to-site connects individual computers, like remote workers, using a VPN client on each device.
+    followUps: []
+  - level: experienced
+    q: When is VPN Gateway not enough?
+    a: >-
+      When you need predictable latency, very high bandwidth or traffic that never touches the internet, for example large data transfers or strict compliance. Then use ExpressRoute, often with a VPN as a backup path.
+    followUps: []
+revision:
+  keyPoints:
+    - VPN Gateway encrypts traffic over the public internet.
+    - Site-to-site = office network; point-to-site = individual devices; VNet-to-VNet also supported.
+    - One VPN gateway per virtual network.
+    - Can be made highly available (active-active, zone-redundant).
+  mistakes:
+    - Confusing VPN Gateway (internet, encrypted) with ExpressRoute (private, not internet).
+  examTips:
+    - '"Encrypted connection over the public internet" = **VPN Gateway**.'
+  quick:
+    - q: Does VPN Gateway traffic go over the internet?
+      a: Yes, encrypted.
+    - q: What connects a whole office to Azure?
+      a: A site-to-site VPN.
+    - q: What connects one laptop to Azure?
+      a: A point-to-site VPN.
+    - q: How many VPN gateways can a VNet have?
+      a: One.
+    - q: What is the private, non-internet alternative?
+      a: ExpressRoute.
+references:
+  - title: What is Azure VPN Gateway?
+    url: https://learn.microsoft.com/en-us/azure/vpn-gateway/vpn-gateway-about-vpngateways
+related:
+  - expressroute
+  - hybrid-cloud
+  - virtual-networks-and-subnets
+---
+
+## Start with a question
+
+<Story question="How does your office talk to Azure privately if the only road between them is the public internet?">
+
+You build a **tunnel**: an encrypted VPN connection that wraps your data so nobody on the internet can read it.
+
+</Story>
+
+## Explain it like I'm 10
+
+<Eli10>
+
+Imagine sending a letter in a **locked metal box** through the normal post. The postman carries it on public roads, but only you and your friend have the key. That locked box is a VPN.
+
+</Eli10>
+
+## The technical explanation
+
+A **VPN gateway** is deployed into a dedicated **GatewaySubnet** in your VNet and uses IPsec/IKE encryption.
+
+| Type | Connects | Typical use |
+| --- | --- | --- |
+| Site-to-site | On-premises network ↔ Azure | Branch or head office |
+| Point-to-site | Individual device ↔ Azure | Remote workers, admins |
+| VNet-to-VNet | Azure VNet ↔ Azure VNet | Encrypted link between VNets |
+
+## Real-world business scenario
+
+<Scenario
+  company="A regional retail chain"
+  industry="Retail"
+  problem="Stores needed to reach a stock system in Azure, but a private line to every store was too expensive."
+  service="Site-to-site VPN from each store router to an Azure VPN Gateway."
+  why="Encrypted connectivity over existing internet lines at low cost."
+  outcome="All stores connected within weeks using existing broadband."
+/>
+
+## When to use it and when not to
+
+<UseWhen
+  use={['Affordable encrypted connectivity to offices or remote users.', 'Backup path for ExpressRoute.']}
+  avoid={['Very high-bandwidth, latency-sensitive or no-internet requirements (use ExpressRoute).']}
+/>

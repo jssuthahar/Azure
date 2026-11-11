@@ -1,0 +1,64 @@
+{
+  "cert": "az-900",
+  "domain": 1,
+  "topic": "iaas",
+  "questions": [
+    {
+      "id": "cc-iaas-1",
+      "type": "single",
+      "question": "Which cloud service type gives you the most control over the operating system?",
+      "options": [
+        { "text": "Infrastructure as a Service (IaaS)", "why": "Correct. With IaaS you manage the OS and everything above it." },
+        { "text": "Platform as a Service (PaaS)", "why": "PaaS manages the OS for you." },
+        { "text": "Software as a Service (SaaS)", "why": "SaaS gives the least control; you just use the software." },
+        { "text": "All give the same control", "why": "Control decreases from IaaS to PaaS to SaaS." }
+      ],
+      "answer": [0],
+      "explanation": "IaaS offers the most flexibility and control, and the most management responsibility.",
+      "objective": "1.3.1"
+    },
+    {
+      "id": "cc-iaas-2",
+      "type": "single",
+      "question": "You deploy an Azure virtual machine. Who is responsible for installing operating system security updates?",
+      "options": [
+        { "text": "Microsoft", "why": "For IaaS VMs, Microsoft does not patch your guest OS automatically on your behalf by default." },
+        { "text": "You, the customer", "why": "Correct. In IaaS the customer manages the OS, though Azure provides tools to automate updates." },
+        { "text": "The hardware vendor", "why": "Hardware vendors are not involved in your guest OS." },
+        { "text": "Nobody. Cloud VMs do not need updates", "why": "All operating systems need updates." }
+      ],
+      "answer": [1],
+      "explanation": "In IaaS, the guest operating system is the customer's responsibility.",
+      "objective": "1.1.2"
+    },
+    {
+      "id": "cc-iaas-3",
+      "type": "single",
+      "scenario": "A company needs to move 30 on-premises servers to Azure as quickly as possible, without modifying the applications.",
+      "question": "Which service type should it use?",
+      "options": [
+        { "text": "IaaS", "why": "Correct. Lift-and-shift to VMs requires no app changes." },
+        { "text": "PaaS", "why": "PaaS typically requires some refactoring." },
+        { "text": "SaaS", "why": "SaaS replaces the application with a vendor's product." },
+        { "text": "Serverless", "why": "Serverless requires rewriting code into functions." }
+      ],
+      "answer": [0],
+      "explanation": "Lift-and-shift migrations with minimal changes are the classic IaaS use case.",
+      "objective": "1.3.4"
+    },
+    {
+      "id": "cc-iaas-4",
+      "type": "multi",
+      "question": "Which TWO are examples of IaaS in Azure?",
+      "options": [
+        { "text": "Azure Virtual Machines", "why": "Correct." },
+        { "text": "Microsoft 365", "why": "Microsoft 365 is SaaS." },
+        { "text": "Azure Virtual Machine Scale Sets", "why": "Correct. They are groups of IaaS VMs." },
+        { "text": "Azure App Service", "why": "App Service is PaaS." }
+      ],
+      "answer": [0, 2],
+      "explanation": "VMs and VM Scale Sets are IaaS; App Service is PaaS; Microsoft 365 is SaaS.",
+      "objective": "1.3.1"
+    }
+  ]
+}

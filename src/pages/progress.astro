@@ -1,0 +1,99 @@
+---
+import Base from '../layouts/Base.astro';
+import Mascot from '../components/Mascot.astro';
+import { getNav } from '../lib/learn';
+import { MODULES } from '../data/az-900/syllabus';
+
+const nav = await getNav();
+const published = nav.filter((t) => t.published);
+const moduleKeys = Object.fromEntries(MODULES.map((m) => [m.slug, published.filter((t) => t.module.slug === m.slug).map((t) => t.key)]));
+const topics = published.map((t) => ({ key: t.key, title: t.title, url: t.url, module: t.module.slug }));
+const payload = JSON.stringify({ moduleKeys, topics, modules: MODULES.map((m) => ({ slug: m.slug, title: m.shortTitle, domain: m.domain })) }).replace(/</g, '\\u003c');
+---
+<Base title="My Progress | MSDEVBUILD Azure" description="Your AZ-900 learning progress, knowledge-check scores, mock exam history and achievement badges, saved privately in your browser." noindex>
+  <script type="application/json" id="pg-data" set:html={payload} />
+  <div class="mx-auto max-w-5xl px-4 py-8 sm:px-6">
+    <div class="flex flex-wrap items-center gap-4">
+      <Mascot size={72} mood="cheer" />
+      <div>
+        <p class="eyebrow">Your learning journey</p>
+        <h1 class="mt-2 text-3xl font-bold tracking-tight">My progress</h1>
+      </div>
+    </div>
+    <p class="mt-3 text-sm text-muted">Saved only in this browser. No account and no tracking. Clearing site data or switching device starts fresh.</p>
+
+    <section class="band-navy mt-8 rounded-2xl p-5 sm:p-6" aria-label="Level">
+      <div class="flex flex-wrap items-center justify-between gap-3">
+        <p class="text-2xl font-bold"><span id="pg-lv-icon"></span> <span id="pg-lv-name"></span></p>
+        <p class="text-lg"><strong id="pg-xp">0</strong> XP · 🔥 <strong id="pg-streak">0</strong>-day streak</p>
+      </div>
+      <div class="bar mt-3 !border-white/20 !bg-white/10"><span id="pg-lv-bar" style="width:0;background:#ffd75e"></span></div>
+      <p id="pg-lv-next" class="mt-1.5 text-sm text-white/75"></p>
+    </section>
+
+    <section class="mt-4 grid gap-4 sm:grid-cols-3" aria-label="Summary">
+      <div class="card p-5"><p class="text-sm text-muted">Topics completed</p><p class="text-3xl font-bold" id="pg-done">0</p><div class="bar mt-2"><span id="pg-done-bar" style="width:0"></span></div></div>
+      <div class="card p-5"><p class="text-sm text-muted">Knowledge checks taken</p><p class="text-3xl font-bold" id="pg-quiz">0</p></div>
+      <div class="card p-5"><p class="text-sm text-muted">Best mock exam</p><p class="text-3xl font-bold" id="pg-mock">–</p></div>
+    </section>
+
+    <section class="mt-10" aria-labelledby="badges-h">
+      <h2 id="badges-h" class="text-xl font-bold">Achievement badges</h2>
+      <div id="pg-badges" class="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-4"></div>
+    </section>
+
+    <section class="mt-10" aria-labelledby="topics-h">
+      <h2 id="topics-h" class="text-xl font-bold">Topics</h2>
+      <div id="pg-topics" class="mt-4 space-y-6"></div>
+    </section>
+
+    <section class="mt-10" aria-labelledby="mocks-h">
+      <h2 id="mocks-h" class="text-xl font-bold">Mock exam history</h2>
+      <div id="pg-mocks" class="mt-4 space-y-2 text-sm"></div>
+    </section>
+
+    <div class="mt-10 flex flex-wrap gap-3">
+      <a href="/az-900/games/" class="btn btn-accent">🎮 Play &amp; Learn</a>
+      <a href="/az-900/revision/" class="btn btn-outline">Revision flashcards</a>
+      <button type="button" id="pg-reset" class="btn btn-outline">Reset my progress</button>
+    </div>
+  </div>
+</Base>
+<script>
+  import { load, badges, reset, levelFor, streak } from '../lib/progress';
+  const data = JSON.parse(document.getElementById('pg-data')!.textContent!) as {
+    moduleKeys: Record<string, string[]>; topics: { key: string; title: string; url: string; module: string }[]; modules: { slug: string; title: string; domain: number }[];
+  };
+  const $ = (id: string) => document.getElementById(id)!;
+  const paint = () => {
+    const s = load();
+    const lv = levelFor(s.xp);
+    $('pg-lv-icon').textContent = lv.icon;
+    $('pg-lv-name').textContent = `Level ${lv.level}: ${lv.name}`;
+    $('pg-xp').textContent = String(s.xp);
+    $('pg-streak').textContent = String(streak(s));
+    ($('pg-lv-bar') as HTMLElement).style.width = `${lv.pct}%`;
+    $('pg-lv-next').textContent = lv.next ? `${lv.next.min - s.xp} XP to ${lv.next.icon} ${lv.next.name}` : 'Top level reached. Legendary!';
+    const done = data.topics.filter((t) => s.done[t.key]).length;
+    $('pg-done').textContent = `${done} / ${data.topics.length}`;
+    ($('pg-done-bar') as HTMLElement).style.width = `${data.topics.length ? (done / data.topics.length) * 100 : 0}%`;
+    $('pg-quiz').textContent = String(Object.keys(s.quizzes).length);
+    $('pg-mock').textContent = s.mocks.length ? `${Math.max(...s.mocks.map((m) => m.percent))}%` : '–';
+    $('pg-badges').innerHTML = badges(s, data.moduleKeys).map((b) =>
+      `<div class="badge-tile card p-4 text-center" data-earned="${b.earned}"><p class="text-3xl" aria-hidden="true">${b.icon}</p><p class="mt-2 font-semibold">${b.title}</p><p class="text-xs text-muted">${b.text}</p><p class="mt-1 text-xs font-semibold ${b.earned ? 'verdict-ok' : 'text-muted'}">${b.earned ? 'Earned' : 'Locked'}</p></div>`).join('');
+    $('pg-topics').innerHTML = data.modules.map((m) => {
+      const ts = data.topics.filter((t) => t.module === m.slug);
+      if (!ts.length) return `<div><p class="font-semibold">Domain ${m.domain}: ${m.title}</p><p class="text-sm text-muted">Tutorials coming soon.</p></div>`;
+      return `<div><p class="font-semibold">Domain ${m.domain}: ${m.title}</p><ul class="mt-2 grid gap-2 sm:grid-cols-2">${ts.map((t) => {
+        const q = s.quizzes[t.key];
+        return `<li><a href="${t.url}" class="flex items-center gap-3 rounded-xl border border-default bg-[var(--card)] px-3 py-2 text-sm hover:border-[var(--accent)]"><span>${s.done[t.key] ? '✅' : '⬜'}</span><span class="flex-1">${t.title}</span>${q ? `<span class="chip">${q.score}/${q.total}</span>` : ''}</a></li>`;
+      }).join('')}</ul></div>`;
+    }).join('');
+    $('pg-mocks').innerHTML = s.mocks.length
+      ? s.mocks.map((m) => `<div class="flex flex-wrap items-center gap-3 rounded-xl border border-default bg-[var(--card)] px-3 py-2"><span class="font-semibold">${m.percent}%</span><span class="text-muted">${m.score}/${m.total} · ${m.mode} · ${new Date(m.at).toLocaleString()}</span></div>`).join('')
+      : '<p class="text-muted">No mock exams yet. <a class="text-accent underline" href="/az-900/mock-exam/">Take one now</a>.</p>';
+  };
+  paint();
+  window.addEventListener('progress-change', paint);
+  $('pg-reset').addEventListener('click', () => { if (confirm('Reset all progress, scores and badges in this browser?')) reset(); });
+</script>

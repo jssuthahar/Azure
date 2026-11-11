@@ -1,0 +1,111 @@
+---
+title: AzCopy, Storage Explorer and Azure File Sync
+seoTitle: AzCopy vs Storage Explorer vs Azure File Sync | AZ-900
+description: "AzCopy, Azure Storage Explorer and Azure File Sync compared: how to move and sync files with Azure Storage, with examples and AZ-900 practice."
+answer: >-
+  Azure offers three main tools for moving files. **AzCopy** is a command-line utility that copies blobs or files to and from storage accounts. **Azure Storage Explorer** is a free desktop app with a graphical interface for managing storage, and it uses AzCopy behind the scenes. **Azure File Sync** keeps Windows file servers in sync with Azure Files and can cache frequently used files locally.
+updated: 2026-11-11
+readingMinutes: 5
+keyTerms:
+  - term: AzCopy
+    definition: A command-line tool for copying data to, from and between storage accounts.
+  - term: Azure Storage Explorer
+    definition: A cross-platform desktop GUI for managing Azure Storage.
+  - term: Azure File Sync
+    definition: Synchronises Windows Server file shares with Azure Files, with optional cloud tiering.
+  - term: Cloud tiering
+    definition: Keeps frequently used files on the local server and leaves the rest in Azure.
+interview:
+  - level: beginner
+    q: What is the difference between AzCopy and Storage Explorer?
+    a: >-
+      AzCopy is a command-line tool, which is great for scripts and automation. Storage Explorer is a desktop app with a graphical interface for browsing and copying files by clicking. Storage Explorer actually uses AzCopy underneath.
+    followUps: []
+  - level: intermediate
+    q: What does Azure File Sync do?
+    a: >-
+      It keeps a Windows file server synchronised with an Azure file share. Users keep using the local server, while Azure holds the full copy. Cloud tiering keeps only hot files locally, and multiple servers can sync to the same share.
+    followUps: []
+  - level: experienced
+    q: Which tool for a nightly copy of 2 TB of logs from on-premises to Blob Storage?
+    a: >-
+      AzCopy in a scheduled script or pipeline, using sync or copy with Microsoft Entra authentication. It is fast and supports resuming. For tens or hundreds of terabytes on a slow link, consider Data Box instead.
+    followUps: []
+revision:
+  keyPoints:
+    - AzCopy = command line, scripting.
+    - Storage Explorer = desktop GUI (uses AzCopy).
+    - Azure File Sync = sync Windows file servers with Azure Files, with cloud tiering.
+  mistakes:
+    - Using File Sync for blobs. It works with Azure Files.
+  examTips:
+    - '"Command-line copy to storage" = **AzCopy**.'
+    - '"GUI to manage storage" = **Storage Explorer**.'
+    - '"Keep an on-premises file server in sync with the cloud" = **Azure File Sync**.'
+  quick:
+    - q: Which tool is command-line?
+      a: AzCopy.
+    - q: Which tool provides a graphical interface?
+      a: Azure Storage Explorer.
+    - q: What does Storage Explorer use underneath?
+      a: AzCopy.
+    - q: Which tool syncs Windows Server with Azure Files?
+      a: Azure File Sync.
+    - q: What is cloud tiering?
+      a: Keeping hot files locally while the rest stay in Azure.
+references:
+  - title: Get started with AzCopy
+    url: https://learn.microsoft.com/en-us/azure/storage/common/storage-use-azcopy-v10
+  - title: What is Azure File Sync?
+    url: https://learn.microsoft.com/en-us/azure/storage/file-sync/file-sync-introduction
+related:
+  - files-queues-tables-disks
+  - azure-migrate-and-data-box
+---
+
+## Start with a question
+
+<Story question="How do you get thousands of files into Azure: typing, clicking or syncing?">
+
+All three are possible: **AzCopy** for typing commands, **Storage Explorer** for clicking, and **Azure File Sync** for keeping a server in sync automatically.
+
+</Story>
+
+## Explain it like I'm 10
+
+<Eli10>
+
+- **AzCopy** is telling a robot exactly what to copy.
+- **Storage Explorer** is dragging files with your mouse.
+- **File Sync** is a magic folder that always matches its twin in the cloud.
+
+</Eli10>
+
+## The technical explanation
+
+<Compare
+  caption="Three ways to move files"
+  columns={[
+    { title: 'AzCopy', icon: '⌨️', tone: 'neutral', items: ['Command line', 'Scripts and automation', 'Blobs and files', 'Fast, resumable'] },
+    { title: 'Storage Explorer', icon: '🖱️', tone: 'accent', items: ['Desktop GUI', 'Windows, macOS, Linux', 'Browse and manage', 'Uses AzCopy'] },
+    { title: 'Azure File Sync', icon: '🔄', tone: 'ok', items: ['Windows Server ↔ Azure Files', 'Cloud tiering', 'Multi-site sync', 'Continuous'] },
+  ]}
+/>
+
+## Real-world business scenario
+
+<Scenario
+  company="A law firm with three offices"
+  industry="Enterprise"
+  problem="Each office had its own file server with different versions of documents."
+  service="Azure Files as the central share, with Azure File Sync on a small server in each office."
+  why="One source of truth, with local speed and cloud tiering."
+  outcome="All offices see the same documents, and local servers need far less disk."
+/>
+
+## When to use it and when not to
+
+<UseWhen
+  use={['**AzCopy** for scripted transfers.', '**Storage Explorer** for ad-hoc management.', '**File Sync** for hybrid file servers.']}
+  avoid={['Network copying of huge data sets on slow links (consider Data Box).']}
+/>

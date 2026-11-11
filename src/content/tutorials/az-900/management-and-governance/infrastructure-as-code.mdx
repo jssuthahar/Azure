@@ -1,0 +1,110 @@
+---
+title: Infrastructure as Code (IaC)
+seoTitle: Infrastructure as Code (IaC) on Azure Explained | AZ-900
+description: "Infrastructure as code explained: defining Azure resources in files with Bicep, ARM templates and Terraform, declarative vs imperative, with AZ-900 practice."
+answer: >-
+  **Infrastructure as code (IaC)** means managing infrastructure, such as networks, VMs and databases, by writing **code files** instead of clicking. The files can be version-controlled, reviewed and deployed repeatedly, so every environment is consistent. On Azure, common IaC tools are **Bicep**, **ARM templates** and **Terraform**, which are mostly **declarative**: you describe the end state, and the tool works out how to reach it.
+updated: 2026-11-11
+readingMinutes: 6
+keyTerms:
+  - term: Infrastructure as code
+    definition: Defining and deploying infrastructure through code files.
+  - term: Declarative
+    definition: Describe what you want; the tool decides how to create it.
+  - term: Imperative
+    definition: Write step-by-step commands, as in a script.
+  - term: Bicep
+    definition: A concise Azure language that compiles to ARM templates.
+interview:
+  - level: beginner
+    q: What is infrastructure as code?
+    a: >-
+      Writing your cloud setup in code files, like a recipe, so you can create the same environment again and again exactly the same way.
+    followUps: []
+  - level: intermediate
+    q: What is the difference between declarative and imperative IaC?
+    a: >-
+      Declarative describes the desired end state, like "a VM of this size in this network", and the tool works out the steps. Imperative lists each step to run in order, like a CLI script. Bicep, ARM templates and Terraform are declarative.
+    followUps: []
+  - level: experienced
+    q: How does IaC fit into DevOps?
+    a: >-
+      Templates live in Git, changes go through pull requests and automated validation (linting, what-if previews, policy checks), and pipelines deploy them to dev, test and production. This gives auditable, repeatable environments and makes drift and disaster recovery easier to handle.
+    followUps: []
+revision:
+  keyPoints:
+    - IaC = infrastructure defined in code files.
+    - Repeatable, consistent, version-controlled, reviewable.
+    - Declarative (desired state) vs imperative (step by step).
+    - Azure tools include Bicep, ARM templates and Terraform.
+  mistakes:
+    - Thinking IaC means only shell scripts. Declarative templates are the norm.
+  examTips:
+    - '"Deploy identical environments repeatedly from files" = **infrastructure as code**.'
+  quick:
+    - q: What is infrastructure as code?
+      a: Managing infrastructure through code files.
+    - q: Name two Azure IaC tools.
+      a: Bicep and ARM templates (also Terraform).
+    - q: What does declarative mean?
+      a: Describing the desired end state rather than the steps.
+    - q: Why store IaC in source control?
+      a: For history, review and collaboration.
+    - q: What does Bicep compile to?
+      a: ARM templates.
+references:
+  - title: What is infrastructure as code?
+    url: https://learn.microsoft.com/en-us/devops/deliver/what-is-infrastructure-as-code
+  - title: What is Bicep?
+    url: https://learn.microsoft.com/en-us/azure/azure-resource-manager/bicep/overview
+related:
+  - azure-resource-manager
+  - cloud-shell-cli-powershell
+  - manageability
+---
+
+## Start with a question
+
+<Story question="Your test environment works perfectly, but production behaves differently. Why?">
+
+Because they were built by hand, at different times, by different people. **Infrastructure as code** builds them from the same recipe.
+
+</Story>
+
+## Explain it like I'm 10
+
+<Eli10>
+
+IaC is like **LEGO instructions**. Anyone with the same instructions builds the exact same model every time, and if it breaks, you rebuild it in minutes.
+
+</Eli10>
+
+## The technical explanation
+
+A small **Bicep** file describing a storage account:
+
+```bicep
+resource st 'Microsoft.Storage/storageAccounts@2023-05-01' = {
+  name: 'stlearn0412'
+  location: 'westeurope'
+  sku: { name: 'Standard_ZRS' }
+  kind: 'StorageV2'
+}
+```
+
+Deploy it with `az deployment group create --resource-group rg-learn --template-file main.bicep`. Run it again and nothing changes, because it is already in the desired state (**idempotent**).
+
+## Real-world business scenario
+
+<Scenario
+  company="An e-commerce platform"
+  industry="E-commerce"
+  problem="Building a new region by hand took two weeks and still differed from the original."
+  service="All infrastructure defined in Bicep and deployed by pipeline."
+  why="Same code means the same environment every time."
+  outcome="A new region now takes an afternoon and matches exactly."
+/>
+
+## When to use it and when not to
+
+<UseWhen use={['All production environments.', 'Anything you deploy more than once.']} avoid={['Quick one-off experiments, where the portal or CLI is fine.']} />

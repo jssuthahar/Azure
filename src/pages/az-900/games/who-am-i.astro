@@ -1,0 +1,112 @@
+---
+import GameLayout from '../../../layouts/GameLayout.astro';
+import { RIDDLES } from '../../../data/az-900/games';
+import { getNav } from '../../../lib/learn';
+
+const nav = await getNav();
+const riddles = RIDDLES.map((r) => ({ ...r, url: r.topic ? nav.find((t) => t.slug === r.topic && t.published)?.url : undefined }));
+const payload = JSON.stringify(riddles).replace(/</g, '\\u003c');
+---
+<GameLayout title="Who Am I?" seoTitle="Who Am I? Guess the Azure Service Game | MSDEVBUILD" description="A riddle game for AZ-900: guess the Azure service from up to three clues. Fewer clues, more points. Great revision for the exam." icon="🕵️" intro="Read the clue and guess the Azure service. Need help? Ask for another clue, but it costs points." band="band-yellow">
+  <script type="application/json" id="wa-data" set:html={payload} />
+  <div class="flex items-center justify-between text-lg">
+    <p>Riddle <strong id="wa-n">1</strong>/5</p>
+    <p>Score <strong id="wa-score">0</strong></p>
+  </div>
+
+  <section id="wa-play" class="mt-5">
+    <div class="rounded-2xl border-2 border-[var(--accent)] bg-[var(--card)] p-6">
+      <p class="text-sm font-bold text-accent">🕵️ Clues</p>
+      <ol id="wa-clues" class="mt-3 space-y-2 text-xl leading-snug"></ol>
+      <p class="mt-3 text-sm text-muted" id="wa-worth"></p>
+    </div>
+    <div id="wa-opts" class="mt-5 grid gap-3 sm:grid-cols-2"></div>
+    <div class="mt-4 flex flex-wrap items-center gap-3">
+      <button type="button" id="wa-clue" class="big-btn big-btn-light">💡 Another clue</button>
+      <p id="wa-fb" class="text-lg" aria-live="polite"></p>
+    </div>
+    <button type="button" id="wa-next" class="nav-btn mt-4 hidden">Next riddle ❯</button>
+  </section>
+
+  <section id="wa-done" class="mt-6 hidden rounded-2xl bg-[var(--pastel-yellow)] p-6 text-center">
+    <p id="wa-emoji" class="text-7xl"></p>
+    <h2 id="wa-title" class="mt-2 text-3xl font-bold"></h2>
+    <p id="wa-sub" class="mt-1 text-lg"></p>
+    <div class="mt-6"><button type="button" id="wa-again" class="big-btn">Play again</button></div>
+  </section>
+</GameLayout>
+<script>
+  import { shuffle, confetti } from '../../../lib/fun';
+  import { saveGame } from '../../../lib/progress';
+  type R = { answer: string; clues: string[]; url?: string };
+  const all: R[] = JSON.parse(document.getElementById('wa-data')!.textContent!);
+  const $ = (id: string) => document.getElementById(id)!;
+  const POINTS = [30, 20, 10];
+  let round: R[] = [], i = 0, clue = 0, score = 0, firstClue = 0, solved = false;
+
+  function start() {
+    round = shuffle(all).slice(0, 5);
+    i = 0; score = 0; firstClue = 0;
+    $('wa-done').classList.add('hidden');
+    $('wa-play').classList.remove('hidden');
+    render();
+  }
+  function render() {
+    const r = round[i];
+    clue = 0; solved = false;
+    $('wa-n').textContent = String(i + 1);
+    $('wa-score').textContent = String(score);
+    const options = shuffle([r.answer, ...shuffle(all.filter((x) => x.answer !== r.answer)).slice(0, 3).map((x) => x.answer)]);
+    $('wa-opts').innerHTML = options.map((o) => `<button type="button" class="opt text-left text-lg font-semibold" data-a="${o}">${o}</button>`).join('');
+    $('wa-fb').textContent = '';
+    $('wa-next').classList.add('hidden');
+    paintClues();
+  }
+  function paintClues() {
+    const r = round[i];
+    $('wa-clues').innerHTML = r.clues.slice(0, clue + 1).map((c, k) => `<li class="flex gap-3"><span class="grid size-7 shrink-0 place-items-center rounded-full bg-[#0078d4] text-sm font-bold text-white">${k + 1}</span><span>“${c}”</span></li>`).join('');
+    $('wa-worth').textContent = solved ? '' : `Guess now for ${POINTS[clue]} points.`;
+    ($('wa-clue') as HTMLButtonElement).disabled = clue >= 2 || solved;
+  }
+  $('wa-clue').addEventListener('click', () => { if (clue < 2) { clue++; paintClues(); } });
+  $('wa-opts').addEventListener('click', (e) => {
+    const b = (e.target as HTMLElement).closest<HTMLElement>('[data-a]');
+    if (!b || solved || b.dataset.state) return;
+    const r = round[i];
+    if (b.dataset.a === r.answer) {
+      solved = true;
+      score += POINTS[clue];
+      if (clue === 0) firstClue++;
+      b.dataset.state = 'correct';
+      $('wa-fb').innerHTML = `<span class="font-bold verdict-ok">✓ Yes! +${POINTS[clue]}</span>${r.url ? ` · <a class="text-accent underline" href="${r.url}">Learn more</a>` : ''}`;
+      end();
+    } else {
+      b.dataset.state = 'wrong';
+      if (clue < 2) { clue++; $('wa-fb').innerHTML = '<span class="verdict-bad">Not me! Here is another clue…</span>'; paintClues(); }
+      else {
+        solved = true;
+        $('wa-opts').querySelector<HTMLElement>(`[data-a="${r.answer}"]`)!.dataset.state = 'correct';
+        $('wa-fb').innerHTML = `<span class="verdict-bad">I was <strong>${r.answer}</strong>.</span>`;
+        end();
+      }
+    }
+    $('wa-score').textContent = String(score);
+  });
+  function end() {
+    clue = 2; paintClues();
+    $('wa-next').textContent = i === round.length - 1 ? 'See my score ❯' : 'Next riddle ❯';
+    $('wa-next').classList.remove('hidden');
+  }
+  $('wa-next').addEventListener('click', () => {
+    if (++i < round.length) return render();
+    const best = saveGame('whoami', score, Math.round(score / 3), { detective: firstClue });
+    $('wa-play').classList.add('hidden');
+    $('wa-done').classList.remove('hidden');
+    $('wa-emoji').textContent = score >= 120 ? '🕵️' : score >= 70 ? '🎉' : '💪';
+    $('wa-title').textContent = `${score} / 150 points`;
+    $('wa-sub').textContent = `${firstClue} solved on the first clue${best ? ' · New personal best!' : ''}`;
+    if (score >= 100) confetti();
+  });
+  $('wa-again').addEventListener('click', start);
+  start();
+</script>

@@ -1,0 +1,106 @@
+---
+title: Conditional Access
+seoTitle: Microsoft Entra Conditional Access Explained | AZ-900
+description: "Microsoft Entra Conditional Access explained with an animation: signals, decisions, common policies, examples, interview questions and AZ-900 practice."
+answer: >-
+  **Microsoft Entra Conditional Access** is a tool that uses **signals**, such as who the user is, their location, device, the app they want and sign-in risk, to make an access **decision**: allow access, require MFA or another control, or block access. It works like an "if this, then that" policy for sign-ins.
+updated: 2026-11-11
+readingMinutes: 6
+keyTerms:
+  - term: Conditional Access policy
+    definition: An if-then rule combining signals and an access decision.
+  - term: Signal
+    definition: Information used in the decision, such as user, location, device, app or risk.
+  - term: Grant control
+    definition: The requirement or decision, such as require MFA, require a compliant device, or block.
+interview:
+  - level: beginner
+    q: What is Conditional Access?
+    a: >-
+      A set of rules in Microsoft Entra ID that decides how someone can sign in based on conditions. For example, if they sign in from outside the office, they must use MFA.
+    followUps: []
+  - level: intermediate
+    q: Give three example Conditional Access policies.
+    a: >-
+      Require MFA for all administrators. Block sign-ins from countries where the company does not operate. Require a compliant or company-managed device to access sensitive apps.
+    followUps: []
+  - level: experienced
+    q: How do you roll out Conditional Access safely?
+    a: >-
+      Start in report-only mode to see the impact, exclude emergency break-glass accounts, target pilot groups first, use the What If tool, and monitor sign-in logs before switching policies on for everyone.
+    followUps: []
+revision:
+  keyPoints:
+    - Conditional Access = if signals, then decision.
+    - Signals are user/group, location, device, app and risk.
+    - Decisions are allow, require MFA or another control, or block.
+    - Part of Microsoft Entra ID.
+  mistakes:
+    - Confusing Conditional Access (sign-in decisions) with Azure RBAC (permissions on resources).
+  examTips:
+    - '"Require MFA only when users sign in from outside the office" = **Conditional Access**.'
+  quick:
+    - q: What does Conditional Access use to decide?
+      a: Signals such as user, location, device, app and risk.
+    - q: Name three possible decisions.
+      a: Allow, require MFA (or another control), block.
+    - q: Which service provides Conditional Access?
+      a: Microsoft Entra ID.
+    - q: What mode lets you test a policy without enforcing it?
+      a: Report-only mode.
+    - q: Give an example policy.
+      a: Require MFA for all administrators.
+references:
+  - title: What is Conditional Access?
+    url: https://learn.microsoft.com/en-us/entra/identity/conditional-access/overview
+related:
+  - authentication-methods
+  - zero-trust
+  - microsoft-entra-id
+---
+
+## Start with a question
+
+<Story question="Should signing in from your office desk be treated the same as signing in from an unknown country at 3 a.m.?">
+
+Of course not. **Conditional Access** looks at the situation and decides what to ask for.
+
+</Story>
+
+## Explain it like I'm 10
+
+<Eli10>
+
+A smart school gate: if you're a student arriving at 8 a.m., it opens. If it's midnight, it asks for a teacher's permission. If it doesn't recognise you, it stays shut.
+
+</Eli10>
+
+## The technical explanation
+
+<Flow
+  caption="How Conditional Access works"
+  steps={[
+    { title: 'Signals', text: 'User or group, location (IP), device state, application, sign-in risk.' },
+    { title: 'Policy', text: 'If the user is an admin and outside the trusted network…' },
+    { title: 'Decision', text: '…require MFA. Other options are allow, require a compliant device, or block.' },
+    { title: 'Enforcement', text: 'Applied at sign-in, for every app connected to Entra ID.' },
+  ]}
+/>
+
+## Real-world business scenario
+
+<Scenario
+  company="A financial advisory firm"
+  industry="Banking"
+  problem="Advisers needed to work from anywhere, but compliance required strong controls on client data."
+  service="Conditional Access: MFA outside the office, compliant devices for the client app, and blocks on high-risk sign-ins."
+  why="Security adapts to the situation instead of blocking or allowing everyone equally."
+  outcome="Flexible working with stronger security and a smooth experience in the office."
+/>
+
+## When to use it and when not to
+
+<UseWhen
+  use={['Require MFA based on risk or location.', 'Protect sensitive apps with device requirements.']}
+  avoid={['Turning on broad block policies without report-only testing.']}
+/>

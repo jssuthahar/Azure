@@ -1,0 +1,64 @@
+{
+  "cert": "az-900",
+  "domain": 1,
+  "topic": "high-availability",
+  "questions": [
+    {
+      "id": "cc-ha-1",
+      "type": "single",
+      "question": "Which cloud benefit focuses on keeping a service accessible with minimal downtime, even when components fail?",
+      "options": [
+        { "text": "High availability", "why": "Correct." },
+        { "text": "Elasticity", "why": "Elasticity is about automatically matching resources to demand." },
+        { "text": "Predictability", "why": "Predictability is about consistent performance and cost." },
+        { "text": "Governance", "why": "Governance is about policies and compliance." }
+      ],
+      "answer": [0],
+      "explanation": "High availability maximises uptime through redundancy.",
+      "objective": "1.2.1"
+    },
+    {
+      "id": "cc-ha-2",
+      "type": "single",
+      "question": "Where does Microsoft formally state the guaranteed uptime for an Azure service?",
+      "options": [
+        { "text": "In the Service Level Agreement (SLA)", "why": "Correct." },
+        { "text": "In Azure Advisor", "why": "Advisor gives recommendations." },
+        { "text": "In the Azure pricing calculator", "why": "The calculator estimates costs." },
+        { "text": "In Azure Policy", "why": "Policy enforces rules on resources." }
+      ],
+      "answer": [0],
+      "explanation": "SLAs define Microsoft's uptime and connectivity commitments, usually as a percentage.",
+      "objective": "1.2.1"
+    },
+    {
+      "id": "cc-ha-3",
+      "type": "single",
+      "question": "Which SLA allows the LEAST downtime per month?",
+      "options": [
+        { "text": "99%", "why": "About 7.3 hours per month." },
+        { "text": "99.9%", "why": "About 43.8 minutes per month." },
+        { "text": "99.95%", "why": "About 21.9 minutes per month." },
+        { "text": "99.99%", "why": "Correct. About 4.4 minutes per month." }
+      ],
+      "answer": [3],
+      "explanation": "The higher the percentage, the less downtime is permitted.",
+      "objective": "1.2.1"
+    },
+    {
+      "id": "cc-ha-4",
+      "type": "single",
+      "scenario": "A web app runs on a single Azure virtual machine. The company wants the app to stay available if one datacenter in the region fails.",
+      "question": "What should they do?",
+      "options": [
+        { "text": "Increase the VM size", "why": "A bigger VM is still a single point of failure in one datacenter." },
+        { "text": "Deploy multiple VM instances across availability zones behind a load balancer", "why": "Correct. Redundancy across physically separate zones." },
+        { "text": "Add a resource lock to the VM", "why": "Locks prevent deletion; they do not provide availability." },
+        { "text": "Apply resource tags", "why": "Tags are metadata for organisation and cost." }
+      ],
+      "answer": [1],
+      "explanation": "Spreading redundant instances across availability zones protects against a datacenter failure.",
+      "objective": "2.1.2"
+    }
+  ]
+}

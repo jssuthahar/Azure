@@ -1,0 +1,205 @@
+{
+  "cert": "az-900",
+  "domain": 3,
+  "questions": [
+    {
+      "id": "d3-tm-1",
+      "type": "single",
+      "question": "Which management tool provides a web-based graphical interface with customisable dashboards for managing Azure?",
+      "options": [
+        { "text": "Azure portal", "why": "Correct." },
+        { "text": "Azure CLI", "why": "CLI is command-line." },
+        { "text": "Azure PowerShell", "why": "PowerShell is command-line." },
+        { "text": "ARM templates", "why": "Templates are code files." }
+      ],
+      "answer": [0],
+      "explanation": "The Azure portal is the browser-based GUI with dashboards.",
+      "objective": "3.3.1"
+    },
+    {
+      "id": "d3-tm-2",
+      "type": "single",
+      "question": "Which statement about Azure Cloud Shell is correct?",
+      "options": [
+        { "text": "It is a browser-based shell that offers both Bash and PowerShell, already authenticated to your account", "why": "Correct." },
+        { "text": "It must be installed on a local computer", "why": "It runs in the browser." },
+        { "text": "It only supports Bash", "why": "It supports Bash and PowerShell." },
+        { "text": "It is a monitoring service", "why": "It is a management shell." }
+      ],
+      "answer": [0],
+      "explanation": "Cloud Shell gives Azure CLI and Azure PowerShell in the browser with no installation.",
+      "objective": "3.3.2"
+    },
+    {
+      "id": "d3-tm-3",
+      "type": "single",
+      "question": "An administrator prefers commands such as `New-AzVM` and `Get-AzResourceGroup`. Which tool is this?",
+      "options": [
+        { "text": "Azure PowerShell", "why": "Correct. It uses verb-noun cmdlets from the Az module." },
+        { "text": "Azure CLI", "why": "The CLI uses commands such as `az vm create`." },
+        { "text": "Azure portal", "why": "The portal is graphical." },
+        { "text": "Azure Advisor", "why": "Advisor gives recommendations." }
+      ],
+      "answer": [0],
+      "explanation": "Azure PowerShell uses cmdlets (verb-noun); Azure CLI uses `az` commands.",
+      "objective": "3.3.2"
+    },
+    {
+      "id": "d3-tm-4",
+      "type": "single",
+      "scenario": "A company wants to apply Azure Policy and Microsoft Defender for Cloud to Linux servers running in its own datacenter and in another cloud provider.",
+      "question": "Which service makes this possible?",
+      "options": [
+        { "text": "Azure Arc", "why": "Correct. Arc projects external servers into Azure Resource Manager." },
+        { "text": "Azure Migrate", "why": "Migrate moves workloads into Azure." },
+        { "text": "Azure Data Box", "why": "Data Box moves data offline." },
+        { "text": "Azure Virtual Desktop", "why": "Unrelated." }
+      ],
+      "answer": [0],
+      "explanation": "Azure Arc extends Azure management, governance and security to resources outside Azure.",
+      "objective": "3.3.3"
+    },
+    {
+      "id": "d3-tm-5",
+      "type": "multi",
+      "question": "Which TWO are benefits of infrastructure as code (IaC)?",
+      "options": [
+        { "text": "Environments can be deployed consistently and repeatedly", "why": "Correct." },
+        { "text": "It removes the need for any testing", "why": "Code should still be tested and reviewed." },
+        { "text": "Infrastructure definitions can be stored in source control and reviewed", "why": "Correct." },
+        { "text": "It only works with on-premises servers", "why": "IaC is widely used in the cloud." }
+      ],
+      "answer": [0, 2],
+      "explanation": "IaC makes infrastructure repeatable, versioned and reviewable. Examples are Bicep, ARM templates and Terraform.",
+      "objective": "3.3.4"
+    },
+    {
+      "id": "d3-tm-6",
+      "type": "single",
+      "question": "What is Azure Resource Manager (ARM)?",
+      "options": [
+        { "text": "The deployment and management service through which all Azure management requests are processed", "why": "Correct." },
+        { "text": "A virtual machine size", "why": "Unrelated." },
+        { "text": "A storage redundancy option", "why": "Unrelated." },
+        { "text": "A third-party monitoring product", "why": "ARM is a core Azure service." }
+      ],
+      "answer": [0],
+      "explanation": "Portal, CLI, PowerShell, REST and templates all go through ARM, which provides consistent authentication, RBAC, policy and tagging.",
+      "objective": "3.3.5"
+    },
+    {
+      "id": "d3-tm-7",
+      "type": "single",
+      "question": "ARM templates are written in which format, and what style are they?",
+      "options": [
+        { "text": "JSON, declarative", "why": "Correct. You describe what you want, not how to build it." },
+        { "text": "YAML, imperative", "why": "ARM templates are JSON and declarative." },
+        { "text": "XML, procedural", "why": "Incorrect." },
+        { "text": "CSV, scripted", "why": "Incorrect." }
+      ],
+      "answer": [0],
+      "explanation": "ARM templates are declarative JSON files. Bicep is a simpler language that compiles to ARM templates.",
+      "objective": "3.3.5"
+    },
+    {
+      "id": "d3-tm-8",
+      "type": "single",
+      "question": "Which service analyses your deployed resources and provides personalised recommendations to improve reliability, security, performance, operational excellence and cost?",
+      "options": [
+        { "text": "Azure Advisor", "why": "Correct." },
+        { "text": "Azure Service Health", "why": "Service Health reports Azure service issues." },
+        { "text": "Azure pricing calculator", "why": "The calculator estimates costs before deployment." },
+        { "text": "Azure DNS", "why": "Unrelated." }
+      ],
+      "answer": [0],
+      "explanation": "Advisor gives recommendations across five categories, aligned with the Well-Architected Framework.",
+      "objective": "3.4.1"
+    },
+    {
+      "id": "d3-tm-9",
+      "type": "single",
+      "scenario": "You want to be notified about Azure service incidents and planned maintenance that affect the specific regions and services your subscription uses.",
+      "question": "Which service should you use?",
+      "options": [
+        { "text": "Azure Service Health", "why": "Correct. It gives a personalised view of service issues and maintenance." },
+        { "text": "Azure Advisor", "why": "Advisor gives optimisation recommendations." },
+        { "text": "Azure Policy", "why": "Policy enforces rules." },
+        { "text": "Microsoft Purview", "why": "Purview governs data." }
+      ],
+      "answer": [0],
+      "explanation": "Azure status is global; Service Health is personalised to your services and regions; Resource Health covers individual resources.",
+      "objective": "3.4.2"
+    },
+    {
+      "id": "d3-tm-10",
+      "type": "single",
+      "question": "Which component of Azure Service Health shows the health of an individual resource, such as a specific virtual machine?",
+      "options": [
+        { "text": "Resource Health", "why": "Correct." },
+        { "text": "Azure status", "why": "Azure status is a global view of all Azure services." },
+        { "text": "Azure Advisor", "why": "Advisor gives recommendations." },
+        { "text": "Cost analysis", "why": "Unrelated." }
+      ],
+      "answer": [0],
+      "explanation": "Service Health includes Azure status (global), Service Health (your services) and Resource Health (your resources).",
+      "objective": "3.4.2"
+    },
+    {
+      "id": "d3-tm-11",
+      "type": "single",
+      "question": "Which tool in Azure Monitor lets you write queries, using Kusto Query Language (KQL), against collected log data?",
+      "options": [
+        { "text": "Log Analytics", "why": "Correct." },
+        { "text": "Azure Advisor", "why": "Advisor does not run log queries." },
+        { "text": "Azure Policy", "why": "Policy does not query logs." },
+        { "text": "Azure Storage Explorer", "why": "Storage Explorer manages storage data." }
+      ],
+      "answer": [0],
+      "explanation": "Log Analytics is the Azure Monitor tool for editing and running KQL log queries.",
+      "objective": "3.4.3"
+    },
+    {
+      "id": "d3-tm-12",
+      "type": "single",
+      "question": "Which Azure Monitor feature monitors live web applications, tracking request rates, response times, failures and dependencies?",
+      "options": [
+        { "text": "Application Insights", "why": "Correct." },
+        { "text": "Azure Service Health", "why": "Service Health tracks Azure platform issues." },
+        { "text": "Resource locks", "why": "Unrelated." },
+        { "text": "Azure Arc", "why": "Arc extends management." }
+      ],
+      "answer": [0],
+      "explanation": "Application Insights is Azure Monitor's application performance monitoring (APM) feature.",
+      "objective": "3.4.3"
+    },
+    {
+      "id": "d3-tm-13",
+      "type": "single",
+      "scenario": "An operations team wants an email and SMS when a VM's CPU stays above 90% for 15 minutes.",
+      "question": "What should they configure?",
+      "options": [
+        { "text": "An Azure Monitor alert rule with an action group", "why": "Correct." },
+        { "text": "A budget in Cost Management", "why": "Budgets alert on cost, not CPU." },
+        { "text": "A resource tag", "why": "Tags do not send notifications." },
+        { "text": "An Azure Policy initiative", "why": "Policy governs resource properties." }
+      ],
+      "answer": [0],
+      "explanation": "Azure Monitor alerts evaluate metrics or logs and notify through action groups (email, SMS, webhooks and more).",
+      "objective": "3.4.3"
+    },
+    {
+      "id": "d3-tm-14",
+      "type": "single",
+      "question": "What is Bicep?",
+      "options": [
+        { "text": "A domain-specific language for declaratively deploying Azure resources, simpler than ARM JSON", "why": "Correct." },
+        { "text": "A monitoring dashboard", "why": "Unrelated." },
+        { "text": "A storage tier", "why": "Unrelated." },
+        { "text": "A type of virtual network", "why": "Unrelated." }
+      ],
+      "answer": [0],
+      "explanation": "Bicep is an infrastructure-as-code language that compiles to ARM templates.",
+      "objective": "3.3.4"
+    }
+  ]
+}

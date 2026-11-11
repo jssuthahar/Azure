@@ -1,0 +1,64 @@
+{
+  "cert": "az-900",
+  "domain": 1,
+  "topic": "serverless",
+  "questions": [
+    {
+      "id": "cc-svl-1",
+      "type": "single",
+      "question": "Which statement best describes serverless computing?",
+      "options": [
+        { "text": "Applications run without any servers at all", "why": "Servers exist; the provider manages them." },
+        { "text": "You run code without managing infrastructure, and it scales automatically in response to events", "why": "Correct. This is the core of serverless." },
+        { "text": "You must reserve a fixed number of servers for one year", "why": "Reservations are a pricing model, not serverless." },
+        { "text": "Code can only run on your own on-premises servers", "why": "Serverless is a cloud model." }
+      ],
+      "answer": [1],
+      "explanation": "Serverless abstracts servers away: event-driven execution, automatic scaling, no infrastructure management.",
+      "objective": "1.1.7"
+    },
+    {
+      "id": "cc-svl-2",
+      "type": "single",
+      "scenario": "You need to run a small piece of code each time a new file is uploaded to Azure Blob Storage. You do not want to manage any servers.",
+      "question": "Which Azure service should you use?",
+      "options": [
+        { "text": "Azure Virtual Machines", "why": "VMs require server management." },
+        { "text": "Azure Functions", "why": "Correct. A blob trigger runs the function on each upload." },
+        { "text": "Azure Virtual Desktop", "why": "AVD provides virtual desktops." },
+        { "text": "Azure ExpressRoute", "why": "ExpressRoute is a private network connection." }
+      ],
+      "answer": [1],
+      "explanation": "Azure Functions is Azure's event-driven serverless compute service.",
+      "objective": "2.2.1"
+    },
+    {
+      "id": "cc-svl-3",
+      "type": "multi",
+      "question": "Which TWO are characteristics of serverless computing?",
+      "options": [
+        { "text": "Billing based on execution rather than idle server time (on consumption plans)", "why": "Correct." },
+        { "text": "The customer patches the operating system", "why": "The provider manages the OS in serverless." },
+        { "text": "Automatic scaling in response to demand", "why": "Correct." },
+        { "text": "A fixed number of always-on servers", "why": "Serverless scales dynamically, including to zero." }
+      ],
+      "answer": [0, 2],
+      "explanation": "Serverless means consumption-based billing and automatic, event-driven scaling.",
+      "objective": "1.1.7"
+    },
+    {
+      "id": "cc-svl-4",
+      "type": "single",
+      "question": "Which Azure service lets you build automated workflows that connect apps and services using a visual designer with little or no code?",
+      "options": [
+        { "text": "Azure Logic Apps", "why": "Correct. Low-code, serverless workflows with connectors." },
+        { "text": "Azure Kubernetes Service", "why": "AKS orchestrates containers." },
+        { "text": "Azure Managed Disks", "why": "Managed Disks provide VM storage." },
+        { "text": "Azure Policy", "why": "Azure Policy enforces governance rules." }
+      ],
+      "answer": [0],
+      "explanation": "Logic Apps is a serverless workflow service with a visual designer and many connectors.",
+      "objective": "1.1.7"
+    }
+  ]
+}

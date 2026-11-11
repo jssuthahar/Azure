@@ -1,0 +1,73 @@
+---
+import type { NavTopic } from '../lib/learn';
+import { MODULES } from '../data/az-900/syllabus';
+
+interface Props { nav: NavTopic[]; currentKey?: string }
+const { nav, currentKey } = Astro.props;
+---
+<nav class="syllabus side-w3 text-[0.95rem]" aria-label="AZ-900 lessons">
+  <div class="flex items-center justify-between pt-5 pr-14 pb-2 pl-4 lg:pr-4">
+    <a href="/az-900/" class="text-xl font-semibold">AZ-900 Tutorial</a>
+    <span class="chip" title="Topics completed" data-progress-total>0%</span>
+  </div>
+  {MODULES.map((m) => {
+    const topics = nav.filter((t) => t.module.slug === m.slug);
+    return (
+      <div class="pb-3">
+        <a href={`/az-900/${m.slug}/`} class="block px-4 pt-4 pb-1.5 text-[0.8rem] font-bold tracking-wide uppercase text-muted hover:text-[var(--accent-deep)]">
+          {m.domain}. {m.shortTitle} <span class="font-normal normal-case">· {m.weight}</span>
+        </a>
+        <ul>
+          {topics.map((t) =>
+            t.published ? (
+              <li>
+                <a href={t.url} data-topic-key={t.key} aria-current={t.key === currentKey ? 'page' : undefined} class="side-link flex items-center gap-2.5 px-4 py-[0.4rem] leading-snug">
+                  <span class="topic-dot" aria-hidden="true">✓</span>
+                  <span class="min-w-0">{t.title}</span>
+                </a>
+              </li>
+            ) : (
+              <li class="flex items-center gap-2.5 px-4 py-[0.4rem] leading-snug text-muted opacity-70" title="Lesson coming soon">
+                <span class="topic-dot opacity-50" aria-hidden="true"></span>
+                <span class="min-w-0">{t.title}</span>
+                <span class="ml-auto shrink-0 text-[0.65rem] tracking-wide uppercase">soon</span>
+              </li>
+            ),
+          )}
+        </ul>
+      </div>
+    );
+  })}
+  <div class="border-t border-default px-4 py-4 text-sm">
+    <p class="mb-2 text-[0.8rem] font-bold tracking-wide uppercase text-muted">Practice</p>
+    <ul class="space-y-1">
+      <li><a class="text-accent hover:underline" href="/az-900/labs/">🧪 Practice labs (simulator)</a></li>
+      <li><a class="text-accent hover:underline" href="/az-900/mock-exam/">⏱ Mock exam</a></li>
+      <li><a class="text-accent hover:underline" href="/az-900/interview/">🎤 Interview questions</a></li>
+      <li><a class="text-accent hover:underline" href="/az-900/revision/">🃏 Revision flashcards</a></li>
+    </ul>
+  </div>
+</nav>
+<script>
+  import { load } from '../lib/progress';
+  const paint = () => {
+    const s = load();
+    const links = document.querySelectorAll<HTMLElement>('.syllabus [data-topic-key]');
+    const keys = new Set<string>();
+    let done = 0;
+    links.forEach((a) => {
+      const k = a.dataset.topicKey!;
+      const isDone = Boolean(s.done[k]);
+      a.toggleAttribute('data-done', isDone);
+      if (!keys.has(k)) {
+        keys.add(k);
+        if (isDone) done++;
+      }
+    });
+    document.querySelectorAll('[data-progress-total]').forEach((el) => {
+      el.textContent = keys.size ? `${Math.round((done / keys.size) * 100)}%` : '0%';
+    });
+  };
+  paint();
+  window.addEventListener('progress-change', paint);
+</script>

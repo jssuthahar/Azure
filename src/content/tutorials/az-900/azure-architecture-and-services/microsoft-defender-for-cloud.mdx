@@ -1,0 +1,97 @@
+---
+title: Microsoft Defender for Cloud
+seoTitle: Microsoft Defender for Cloud Explained | AZ-900
+description: "Microsoft Defender for Cloud explained: secure score, recommendations and threat protection across Azure, on-premises and other clouds, with AZ-900 practice."
+answer: >-
+  **Microsoft Defender for Cloud** is a monitoring tool for **security posture management** and **threat protection**. It assesses your resources against security best practices, shows a **secure score** with recommendations to fix issues, and detects and alerts on threats. It protects Azure, on-premises (through Azure Arc) and other clouds such as AWS and Google Cloud.
+updated: 2026-11-11
+readingMinutes: 5
+keyTerms:
+  - term: Secure score
+    definition: A measurement of your security posture; higher is better.
+  - term: Cloud security posture management (CSPM)
+    definition: Continuously assessing configuration against best practices.
+  - term: Cloud workload protection (CWP)
+    definition: Threat detection for workloads such as servers, containers, storage and databases (Defender plans).
+interview:
+  - level: beginner
+    q: What is Microsoft Defender for Cloud?
+    a: >-
+      A security service that checks my cloud resources for weaknesses, gives me a secure score and recommendations to fix them, and alerts me to attacks.
+    followUps: []
+  - level: intermediate
+    q: What environments can Defender for Cloud protect?
+    a: >-
+      Azure natively, on-premises and other datacenters through Azure Arc, and other public clouds such as Amazon Web Services and Google Cloud Platform through connectors.
+    followUps: []
+  - level: experienced
+    q: How would you use Defender for Cloud in a security programme?
+    a: >-
+      Track secure score as a KPI, assign recommendations to owners, use the regulatory compliance dashboard for standards such as ISO 27001 or PCI DSS, enable Defender plans for critical workloads, and stream alerts to Microsoft Sentinel. Use Azure Policy to enforce the fixes so issues don't come back.
+    followUps: []
+revision:
+  keyPoints:
+    - Defender for Cloud = posture management + threat protection.
+    - Secure score and recommendations show what to fix.
+    - Protects Azure, on-premises (Arc) and multi-cloud (AWS, GCP).
+    - Defender plans add workload threat protection.
+  mistakes:
+    - Thinking it only works for Azure resources.
+  examTips:
+    - '"Secure score and security recommendations across hybrid and multi-cloud" = **Defender for Cloud**.'
+  quick:
+    - q: What does secure score measure?
+      a: Your security posture.
+    - q: Can Defender for Cloud protect AWS resources?
+      a: Yes.
+    - q: How does it protect on-premises servers?
+      a: Through Azure Arc.
+    - q: What are the two main capabilities?
+      a: Security posture management and threat protection.
+    - q: What does it give you to improve security?
+      a: Recommendations.
+references:
+  - title: What is Microsoft Defender for Cloud?
+    url: https://learn.microsoft.com/en-us/azure/defender-for-cloud/defender-for-cloud-introduction
+related:
+  - security
+  - defense-in-depth
+  - zero-trust
+---
+
+## Start with a question
+
+<Story question="You have 300 cloud resources. Which ones have a security hole right now?">
+
+You'd never find them by hand. **Defender for Cloud** checks them continuously and tells you.
+
+</Story>
+
+## Explain it like I'm 10
+
+<Eli10>
+
+Defender for Cloud is like a **health check-up** for your computers. It gives a score, tells you what to fix ("brush your teeth, close that open door!"), and raises the alarm if a germ (attacker) gets in.
+
+</Eli10>
+
+## The technical explanation
+
+- **Posture management:** continuous assessment, **secure score**, recommendations, regulatory compliance dashboard.
+- **Workload protection:** Defender plans for servers, containers, storage, databases, App Service, Key Vault and more, with threat alerts.
+- **Coverage:** Azure, hybrid via **Azure Arc**, and **multi-cloud** via AWS and GCP connectors.
+
+## Real-world business scenario
+
+<Scenario
+  company="A SaaS company on Azure and AWS"
+  industry="Enterprise"
+  problem="The security team had no single view of misconfigurations across two clouds."
+  service="Microsoft Defender for Cloud with AWS connectors and Defender plans for servers and containers."
+  why="One dashboard, one secure score, and alerts across both clouds."
+  outcome="Secure score rose month by month as teams fixed recommendations."
+/>
+
+## When to use it and when not to
+
+<UseWhen use={['On every subscription to see and improve security posture.', 'Across hybrid and multi-cloud estates.']} avoid={['Ignoring the recommendations once enabled.']} />

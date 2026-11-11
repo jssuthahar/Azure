@@ -1,0 +1,17 @@
+{ "cert": "az-900", "domain": 2, "topic": "regions-and-region-pairs", "questions": [
+  { "id": "t-reg-1", "type": "single", "question": "Which factor is the MOST important reason to choose an Azure region close to your users?", "options": [
+    { "text": "Lower latency for a faster user experience", "why": "Correct. Distance adds delay." },
+    { "text": "It removes the need for backups", "why": "Backups are still needed." },
+    { "text": "All regions have identical prices", "why": "Prices vary by region." },
+    { "text": "It makes the resource free", "why": "Resources are billed in every region." } ], "answer": [0], "explanation": "Nearby regions reduce network latency; also consider residency, service availability and price.", "objective": "2.1.1" },
+  { "id": "t-reg-2", "type": "single", "question": "What happens to planned Azure updates in a region pair?", "options": [
+    { "text": "They are applied to one region of the pair at a time", "why": "Correct. Sequential updates reduce risk." },
+    { "text": "They are applied to both regions at exactly the same time", "why": "That would increase risk." },
+    { "text": "Paired regions never receive updates", "why": "All regions are updated." },
+    { "text": "Customers must apply them manually", "why": "Microsoft manages platform updates." } ], "answer": [0], "explanation": "Region pairs receive planned updates sequentially.", "objective": "2.1.1" },
+  { "id": "t-reg-3", "type": "single", "scenario": "A company in China needs to run workloads that comply with Chinese regulations.", "question": "Which option should it use?", "options": [
+    { "text": "Azure operated by 21Vianet", "why": "Correct. It is a sovereign instance of Azure in China." },
+    { "text": "Azure Government", "why": "Azure Government is for US government agencies." },
+    { "text": "Any public Azure region in Europe", "why": "This does not meet Chinese requirements." },
+    { "text": "An availability zone", "why": "Zones are inside regions; they do not address sovereignty." } ], "answer": [0], "explanation": "Sovereign regions include Azure Government (US) and Azure operated by 21Vianet (China).", "objective": "2.1.1" }
+] }

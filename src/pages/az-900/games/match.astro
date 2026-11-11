@@ -1,0 +1,126 @@
+---
+import { getCollection } from 'astro:content';
+import GameLayout from '../../../layouts/GameLayout.astro';
+
+const entries = await getCollection('tutorials', (e) => e.id.startsWith('az-900/'));
+const seen = new Set<string>();
+const pairs = entries
+  .flatMap((e) => e.data.keyTerms)
+  .filter((k) => k.definition.length <= 120 && !seen.has(k.term.toLowerCase()) && seen.add(k.term.toLowerCase()))
+  .map((k) => ({ term: k.term, def: k.definition.replace(/\*\*/g, '') }));
+const payload = JSON.stringify(pairs).replace(/</g, '\\u003c');
+---
+<GameLayout title="Match the Pairs" seoTitle="Match the Pairs: AZ-900 Memory Game | MSDEVBUILD" description="A memory card game for AZ-900: flip cards to match Azure and cloud terms with their meanings. Fewer moves means more points and XP." icon="🧠" intro="Flip two cards at a time. Match each blue term with its meaning." band="band-green">
+  <script type="application/json" id="match-data" set:html={payload} />
+  <div class="flex flex-wrap items-center justify-between gap-3">
+    <p class="text-lg">Moves: <strong id="moves">0</strong> · Pairs: <strong id="found">0</strong>/6 · ⏱ <span id="time">0</span>s</p>
+    <button type="button" id="new" class="nav-btn">New board</button>
+  </div>
+  <div id="board" class="mt-6 grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4" aria-live="polite"></div>
+  <div id="win" class="mt-8 hidden rounded-2xl bg-[var(--pastel-green)] p-6 text-center">
+    <p class="text-6xl">🎉</p>
+    <p id="win-text" class="mt-2 text-2xl font-bold"></p>
+    <p id="win-sub" class="mt-1 text-muted"></p>
+  </div>
+</GameLayout>
+<style is:global>
+  .mcard {
+    perspective: 900px;
+    min-height: 8.5rem;
+  }
+  .mcard-inner {
+    position: relative;
+    width: 100%;
+    height: 100%;
+    min-height: 8.5rem;
+    transition: transform 0.45s;
+    transform-style: preserve-3d;
+  }
+  .mcard[data-open] .mcard-inner,
+  .mcard[data-done] .mcard-inner {
+    transform: rotateY(180deg);
+  }
+  .mface {
+    position: absolute;
+    inset: 0;
+    display: grid;
+    place-items: center;
+    border-radius: 0.9rem;
+    padding: 0.75rem;
+    text-align: center;
+    backface-visibility: hidden;
+  }
+  .mback {
+    background: linear-gradient(135deg, #0078d4, #005a9e);
+    color: #fff;
+    font-size: 2.2rem;
+  }
+  .mfront {
+    transform: rotateY(180deg);
+    border: 2px solid var(--border);
+    background: var(--card);
+  }
+  .mcard[data-done] .mfront {
+    border-color: var(--ok);
+    background: var(--pastel-green);
+  }
+</style>
+<script>
+  import { shuffle, confetti } from '../../../lib/fun';
+  import { saveGame } from '../../../lib/progress';
+  const all: { term: string; def: string }[] = JSON.parse(document.getElementById('match-data')!.textContent!);
+  const $ = (id: string) => document.getElementById(id)!;
+  const PAIRS = 6;
+  let open: HTMLElement[] = [], moves = 0, found = 0, t0 = 0, timer = 0, lock = false;
+
+  function deal() {
+    const pick = shuffle(all).slice(0, PAIRS);
+    const cards = shuffle(pick.flatMap((p, i) => [{ id: i, text: p.term, kind: 'term' }, { id: i, text: p.def, kind: 'def' }]));
+    $('board').innerHTML = cards
+      .map((c) => `<button type="button" class="mcard" data-id="${c.id}" aria-label="Hidden card"><div class="mcard-inner"><div class="mface mback" aria-hidden="true">☁️</div><div class="mface mfront ${c.kind === 'term' ? 'text-lg font-bold text-accent' : 'text-[0.85rem] leading-snug'}">${c.text}</div></div></button>`)
+      .join('');
+    open = []; moves = 0; found = 0; lock = false;
+    $('moves').textContent = '0'; $('found').textContent = '0'; $('time').textContent = '0';
+    $('win').classList.add('hidden');
+    clearInterval(timer); t0 = 0;
+  }
+
+  $('board').addEventListener('click', (e) => {
+    const card = (e.target as HTMLElement).closest<HTMLElement>('.mcard');
+    if (!card || lock || card.hasAttribute('data-open') || card.hasAttribute('data-done')) return;
+    if (!t0) { t0 = Date.now(); timer = window.setInterval(() => ($('time').textContent = String(Math.round((Date.now() - t0) / 1000))), 1000); }
+    card.setAttribute('data-open', '');
+    card.setAttribute('aria-label', card.querySelector('.mfront')!.textContent!);
+    open.push(card);
+    if (open.length < 2) return;
+    moves++;
+    $('moves').textContent = String(moves);
+    const [a, b] = open;
+    if (a.dataset.id === b.dataset.id) {
+      [a, b].forEach((c) => { c.removeAttribute('data-open'); c.setAttribute('data-done', ''); });
+      open = [];
+      found++;
+      $('found').textContent = String(found);
+      if (found === PAIRS) win();
+    } else {
+      lock = true;
+      setTimeout(() => {
+        [a, b].forEach((c) => { c.removeAttribute('data-open'); c.setAttribute('aria-label', 'Hidden card'); });
+        open = []; lock = false;
+      }, 1100);
+    }
+  });
+
+  function win() {
+    clearInterval(timer);
+    const secs = Math.round((Date.now() - t0) / 1000);
+    const score = Math.max(10, 100 - (moves - PAIRS) * 2);
+    const best = saveGame('match', score, Math.round(score / 3));
+    $('win').classList.remove('hidden');
+    $('win-text').textContent = `All pairs in ${moves} moves!`;
+    $('win-sub').textContent = `Score ${score} · ${secs} seconds${best ? ' · New personal best!' : ''}`;
+    confetti();
+  }
+  $('new').addEventListener('click', deal);
+  deal();
+</script>

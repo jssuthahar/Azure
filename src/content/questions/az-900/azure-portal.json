@@ -1,0 +1,91 @@
+{
+ "cert": "az-900",
+ "domain": 3,
+ "topic": "azure-portal",
+ "questions": [
+  {
+   "id": "t-pt-1",
+   "type": "single",
+   "question": "Which tool lets you manage Azure through a web-based graphical interface?",
+   "options": [
+    {
+     "text": "Azure portal",
+     "why": "Correct."
+    },
+    {
+     "text": "Azure CLI",
+     "why": "Command line."
+    },
+    {
+     "text": "ARM templates",
+     "why": "Code files."
+    },
+    {
+     "text": "Azure PowerShell",
+     "why": "Command line."
+    }
+   ],
+   "answer": [
+    0
+   ],
+   "explanation": "The portal is the web GUI.",
+   "objective": "3.3.1"
+  },
+  {
+   "id": "t-pt-2",
+   "type": "single",
+   "question": "What can you customise in the Azure portal to show your key resources and metrics?",
+   "options": [
+    {
+     "text": "Dashboards",
+     "why": "Correct."
+    },
+    {
+     "text": "Datacenters",
+     "why": "No."
+    },
+    {
+     "text": "Regions",
+     "why": "No."
+    },
+    {
+     "text": "Hypervisors",
+     "why": "No."
+    }
+   ],
+   "answer": [
+    0
+   ],
+   "explanation": "Portal dashboards are customisable.",
+   "objective": "3.3.1"
+  },
+  {
+   "id": "t-pt-3",
+   "type": "single",
+   "question": "Which shell can you launch directly from the Azure portal?",
+   "options": [
+    {
+     "text": "Azure Cloud Shell",
+     "why": "Correct."
+    },
+    {
+     "text": "A local Linux terminal",
+     "why": "Not from the portal."
+    },
+    {
+     "text": "Azure Data Box shell",
+     "why": "No such thing."
+    },
+    {
+     "text": "Command Prompt on your PC",
+     "why": "No."
+    }
+   ],
+   "answer": [
+    0
+   ],
+   "explanation": "Cloud Shell opens from the portal.",
+   "objective": "3.3.2"
+  }
+ ]
+}

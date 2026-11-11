@@ -1,0 +1,91 @@
+{
+ "cert": "az-900",
+ "domain": 3,
+ "topic": "cloud-shell-cli-powershell",
+ "questions": [
+  {
+   "id": "t-cs-1",
+   "type": "single",
+   "question": "Which tool runs in the browser and already has Azure CLI and Azure PowerShell installed and authenticated?",
+   "options": [
+    {
+     "text": "Azure Cloud Shell",
+     "why": "Correct."
+    },
+    {
+     "text": "Azure Storage Explorer",
+     "why": "Desktop GUI."
+    },
+    {
+     "text": "Azure Advisor",
+     "why": "Recommendations."
+    },
+    {
+     "text": "Azure Arc",
+     "why": "Hybrid management."
+    }
+   ],
+   "answer": [
+    0
+   ],
+   "explanation": "Cloud Shell needs no installation.",
+   "objective": "3.3.2"
+  },
+  {
+   "id": "t-cs-2",
+   "type": "single",
+   "question": "Commands such as `az vm create` belong to which tool?",
+   "options": [
+    {
+     "text": "Azure CLI",
+     "why": "Correct."
+    },
+    {
+     "text": "Azure PowerShell",
+     "why": "Uses cmdlets like New-AzVM."
+    },
+    {
+     "text": "ARM templates",
+     "why": "JSON files."
+    },
+    {
+     "text": "Azure Policy",
+     "why": "Governance."
+    }
+   ],
+   "answer": [
+    0
+   ],
+   "explanation": "Azure CLI uses az commands.",
+   "objective": "3.3.2"
+  },
+  {
+   "id": "t-cs-3",
+   "type": "single",
+   "question": "Which experiences can you choose in Azure Cloud Shell?",
+   "options": [
+    {
+     "text": "Bash or PowerShell",
+     "why": "Correct."
+    },
+    {
+     "text": "Only Bash",
+     "why": "PowerShell is also available."
+    },
+    {
+     "text": "Only PowerShell",
+     "why": "Bash is also available."
+    },
+    {
+     "text": "Only Command Prompt",
+     "why": "No."
+    }
+   ],
+   "answer": [
+    0
+   ],
+   "explanation": "Cloud Shell offers Bash and PowerShell.",
+   "objective": "3.3.2"
+  }
+ ]
+}

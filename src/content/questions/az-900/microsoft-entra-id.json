@@ -1,0 +1,91 @@
+{
+ "cert": "az-900",
+ "domain": 2,
+ "topic": "microsoft-entra-id",
+ "questions": [
+  {
+   "id": "t-en-1",
+   "type": "single",
+   "question": "What is Microsoft Entra ID?",
+   "options": [
+    {
+     "text": "Microsoft's cloud-based identity and access management service",
+     "why": "Correct."
+    },
+    {
+     "text": "A virtual machine image",
+     "why": "No."
+    },
+    {
+     "text": "A storage redundancy option",
+     "why": "No."
+    },
+    {
+     "text": "A cost management tool",
+     "why": "No."
+    }
+   ],
+   "answer": [
+    0
+   ],
+   "explanation": "Entra ID (formerly Azure AD) handles identities and sign-in.",
+   "objective": "2.4.1"
+  },
+  {
+   "id": "t-en-2",
+   "type": "single",
+   "question": "A legacy app in Azure needs domain join and Kerberos, but you do not want to manage domain controllers. What should you use?",
+   "options": [
+    {
+     "text": "Microsoft Entra Domain Services",
+     "why": "Correct."
+    },
+    {
+     "text": "Azure DNS",
+     "why": "No domain join."
+    },
+    {
+     "text": "Conditional Access",
+     "why": "Sign-in policies."
+    },
+    {
+     "text": "Azure Advisor",
+     "why": "Recommendations."
+    }
+   ],
+   "answer": [
+    0
+   ],
+   "explanation": "Entra Domain Services provides managed domain features.",
+   "objective": "2.4.1"
+  },
+  {
+   "id": "t-en-3",
+   "type": "single",
+   "question": "Which tool synchronises on-premises Active Directory users to Microsoft Entra ID?",
+   "options": [
+    {
+     "text": "Microsoft Entra Connect",
+     "why": "Correct."
+    },
+    {
+     "text": "AzCopy",
+     "why": "Copies storage data."
+    },
+    {
+     "text": "Azure Migrate",
+     "why": "Migrates workloads."
+    },
+    {
+     "text": "Azure Policy",
+     "why": "Governance."
+    }
+   ],
+   "answer": [
+    0
+   ],
+   "explanation": "Entra Connect (or Cloud Sync) provides hybrid identity sync.",
+   "objective": "2.4.1"
+  }
+ ]
+}

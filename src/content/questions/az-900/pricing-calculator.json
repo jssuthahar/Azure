@@ -1,0 +1,92 @@
+{
+ "cert": "az-900",
+ "domain": 3,
+ "topic": "pricing-calculator",
+ "questions": [
+  {
+   "id": "t-pc-1",
+   "type": "single",
+   "question": "Which tool estimates the monthly cost of Azure services before you deploy them?",
+   "options": [
+    {
+     "text": "Azure pricing calculator",
+     "why": "Correct."
+    },
+    {
+     "text": "Microsoft Cost Management",
+     "why": "Tracks actual spending."
+    },
+    {
+     "text": "Azure Service Health",
+     "why": "Service issues."
+    },
+    {
+     "text": "Azure Arc",
+     "why": "Hybrid management."
+    }
+   ],
+   "answer": [
+    0
+   ],
+   "explanation": "The pricing calculator estimates costs.",
+   "objective": "3.1.2"
+  },
+  {
+   "id": "t-pc-2",
+   "type": "single",
+   "question": "Does the pricing calculator create resources in your subscription?",
+   "options": [
+    {
+     "text": "No",
+     "why": "Correct."
+    },
+    {
+     "text": "Yes",
+     "why": "It only estimates."
+    },
+    {
+     "text": "Only VMs",
+     "why": "No resources are created."
+    },
+    {
+     "text": "Only in sovereign regions",
+     "why": "No."
+    }
+   ],
+   "answer": [
+    0
+   ],
+   "explanation": "It is an estimation tool only.",
+   "objective": "3.1.2"
+  },
+  {
+   "id": "t-pc-3",
+   "type": "multi",
+   "question": "Which TWO options can you choose in the pricing calculator?",
+   "options": [
+    {
+     "text": "Region",
+     "why": "Correct."
+    },
+    {
+     "text": "Your employees' names",
+     "why": "No."
+    },
+    {
+     "text": "VM size",
+     "why": "Correct."
+    },
+    {
+     "text": "Microsoft datacenter building",
+     "why": "You cannot pick a datacenter."
+    }
+   ],
+   "answer": [
+    0,
+    2
+   ],
+   "explanation": "Configure services by region, size, tier and usage.",
+   "objective": "3.1.2"
+  }
+ ]
+}

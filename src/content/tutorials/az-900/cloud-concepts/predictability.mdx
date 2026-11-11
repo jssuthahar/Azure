@@ -1,0 +1,153 @@
+---
+title: Predictability
+seoTitle: Predictability in Cloud – Performance and Cost | AZ-900
+description: Cloud predictability explained, covering performance and cost predictability, the Azure tools behind them, interview questions and AZ-900 practice.
+answer: >-
+  **Predictability** in the cloud means you can move forward with confidence, knowing roughly how your system will **perform** and what it will **cost**. **Performance predictability** comes from autoscaling, load balancing and high availability, so users get a consistent experience. **Cost predictability** comes from tools like the pricing calculator, budgets and cost analysis, which let you forecast and track spend.
+updated: 2026-11-11
+readingMinutes: 7
+keyTerms:
+  - term: Performance predictability
+    definition: Confidence that the system will deliver a consistent user experience under expected load.
+  - term: Cost predictability
+    definition: Confidence in what the cloud will cost, through forecasting, monitoring and controls.
+  - term: Azure Well-Architected Framework
+    definition: Microsoft's guidance built around five pillars (reliability, security, cost optimization, operational excellence, performance efficiency).
+  - term: Budget
+    definition: A spending threshold in Microsoft Cost Management that triggers alerts when actual or forecast cost approaches it.
+interview:
+  - level: beginner
+    q: What does predictability mean as a cloud benefit?
+    a: >-
+      It means being able to predict how the system will perform and how much it will cost. For performance, things like autoscaling and load balancing keep the experience consistent. For cost, tools like the pricing calculator and budgets help forecast and track spending.
+    followUps:
+      - q: Which Azure tool helps you estimate costs before deploying?
+        a: >-
+          The Azure pricing calculator. After deployment, Microsoft Cost Management helps track actual and forecast spend.
+  - level: intermediate
+    q: Pay-as-you-go sounds unpredictable. How do you make cloud costs predictable?
+    a: >-
+      Estimate up front with the pricing calculator, set budgets with alerts in Cost Management, use cost analysis and forecasts, tag resources by owner and project, buy reservations or savings plans for steady workloads to lock in prices, and put guardrails with Azure Policy such as allowed VM sizes or regions.
+    followUps: []
+  - level: experienced
+    q: How do you achieve performance predictability for a multi-tenant SaaS product on Azure?
+    a: >-
+      Set clear performance targets (for example p95 latency), load-test against them, autoscale on the metrics that matter, isolate noisy tenants (separate pools or throttling per tenant), use provisioned-throughput or premium tiers where consistent latency is required, cache hot data, and watch dependencies with Application Insights. The Performance Efficiency and Cost Optimization pillars of the Well-Architected Framework provide the checklists.
+    followUps: []
+  - level: scenario
+    q: A finance director asks, "How do I know we will not get a surprise cloud bill next month?" What do you show them?
+    a: >-
+      A pricing calculator estimate for the planned architecture, a Cost Management budget with alerts at 50/80/100% and forecast-based alerts, cost analysis views by department using tags, and reservations covering the steady baseline so most of the bill is fixed.
+    followUps: []
+revision:
+  keyPoints:
+    - Predictability has two parts, **performance** and **cost**.
+    - "Performance: autoscaling, load balancing, high availability give a consistent experience."
+    - "Cost: pricing calculator (estimate), Cost Management (track, forecast, budgets, alerts)."
+    - Reservations and savings plans make steady spend more predictable.
+    - The Well-Architected Framework provides guidance for both.
+  mistakes:
+    - Thinking predictability means "costs never change". It means costs are forecastable and controlled.
+    - Confusing predictability with reliability.
+  examTips:
+    - '"Forecast costs" / "budget" / "consistent performance" = **predictability**.'
+    - Remember the two types, performance predictability and cost predictability.
+  quick:
+    - q: What are the two kinds of predictability in the cloud?
+      a: Performance predictability and cost predictability.
+    - q: Which tool estimates Azure costs before you deploy?
+      a: The Azure pricing calculator.
+    - q: Which tool tracks actual spend and sends budget alerts?
+      a: Microsoft Cost Management.
+    - q: Name a feature that improves performance predictability.
+      a: Autoscaling (also load balancing, high availability).
+    - q: Which Microsoft framework gives best-practice guidance across reliability, security, cost, operations and performance?
+      a: The Azure Well-Architected Framework.
+references:
+  - title: Describe the benefits of reliability and predictability (Microsoft Learn)
+    url: https://learn.microsoft.com/en-us/training/modules/describe-benefits-use-cloud-services/
+  - title: Azure Well-Architected Framework
+    url: https://learn.microsoft.com/en-us/azure/well-architected/
+  - title: Azure pricing calculator
+    url: https://azure.microsoft.com/en-us/pricing/calculator/
+related:
+  - reliability
+  - cloud-pricing-models
+  - consumption-based-model
+---
+
+## Start with a question
+
+<Story question="Would you trust a bus company if the bus sometimes takes 10 minutes and sometimes 2 hours, and the fare changes every day?">
+
+Even if the bus *usually* arrives, you cannot plan your life around it. Businesses feel the same about technology. They need to know **how it will perform** and **what it will cost** before they commit to it.
+
+That confidence is called **predictability**.
+
+</Story>
+
+## Explain it like I'm 10
+
+<Eli10>
+
+Think about your **pocket money**. If you know you get the same amount every week, you can plan: "In three weeks I can buy that game." And if your bike always gets you to school in 10 minutes, you know when to leave home.
+
+The cloud helps companies know **how fast** their apps will be and **how much** they will pay, so they can plan ahead just like you.
+
+</Eli10>
+
+## The technical explanation
+
+Microsoft's AZ-900 material splits predictability into two parts:
+
+<Compare
+  caption="The two halves of predictability"
+  columns={[
+    { title: 'Performance predictability', icon: '⚡', tone: 'accent', items: ['Predict the resources needed for a good experience', 'Autoscaling adds capacity before users feel it', 'Load balancing spreads traffic evenly', 'High availability keeps it running'] },
+    { title: 'Cost predictability', icon: '💷', tone: 'ok', items: ['Forecast spend before and after deployment', '<strong>Pricing calculator</strong> to estimate', '<strong>Cost Management</strong> to track, forecast and set budgets', 'Reservations or savings plans to fix steady costs'] },
+  ]}
+/>
+
+### Tools that support predictability
+
+| Need | Azure tool |
+| --- | --- |
+| Estimate costs before building | Azure pricing calculator |
+| Track, analyse and forecast actual spend | Microsoft Cost Management (cost analysis, budgets, alerts) |
+| Lock in lower prices for steady usage | Reservations, savings plans |
+| Keep performance consistent under load | Autoscale, load balancers, caching |
+| Get best-practice recommendations | Azure Advisor, Azure Well-Architected Framework |
+| Prevent expensive surprises | Azure Policy (for example, allowed VM sizes and regions) |
+
+<TryIt labs="vm-and-cost" text="Check the cost before you click create: the simulated portal shows an estimate for every VM size." />
+
+<Callout type="tip">
+The **Azure Well-Architected Framework** is Microsoft's design guidance for good workloads. Its five pillars are **Reliability, Security, Cost Optimization, Operational Excellence and Performance Efficiency**. It is not required for AZ-900, but it is excellent interview vocabulary.
+</Callout>
+
+## Real-world business scenario
+
+<Scenario
+  company="A software company selling a SaaS HR product"
+  industry="Enterprise SaaS"
+  problem="Customers complained that the app was fast some days and slow on payroll days, and finance could not predict hosting costs per customer."
+  service="Autoscale based on request queue length, Redis caching for reports, budgets per environment in Cost Management, tags per customer tier, and a savings plan for the baseline compute."
+  why="Autoscale and caching gave consistent response times; budgets, tags and committed pricing made spend forecastable and attributable."
+  outcome="Payroll-day latency stayed within target, and finance could price new customer contracts using a known cost per tenant."
+/>
+
+## When to use it and when not to
+
+Predictability is a goal, not a single service. Prioritise it when:
+
+<UseWhen
+  use={[
+    'You must commit prices to customers or budgets to management.',
+    'User experience has to be consistent (customer-facing apps, SLAs to your clients).',
+    'Your workloads have known patterns you can plan capacity and commitments for.',
+  ]}
+  avoid={[
+    'Over-optimising predictability for early experiments. Flexibility matters more at that stage.',
+    'Locking into long commitments before you understand usage.',
+  ]}
+/>

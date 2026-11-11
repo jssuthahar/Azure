@@ -1,0 +1,9 @@
+---
+/** Section A opener: the relatable question that frames the problem. */
+interface Props { question: string }
+const { question } = Astro.props;
+---
+<div data-speakable class="story rounded-lg border-l-[5px] border-[#e0b100] bg-[var(--pastel-yellow)] px-5 py-4">
+  <p class="flex items-start gap-3 text-lg leading-snug font-semibold sm:text-xl"><span aria-hidden="true" class="text-2xl leading-none">🤔</span><span class="flex-1">{question}</span><button type="button" class="speak-btn shrink-0 text-[var(--warn)]" aria-label="Listen to the story">🔊</button></p>
+  <div class="mt-3 space-y-3 leading-relaxed"><slot /></div>
+</div>

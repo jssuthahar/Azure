@@ -1,0 +1,109 @@
+---
+title: Management Groups
+seoTitle: Azure Management Groups Explained Simply | AZ-900
+description: Azure management groups explained, with how they organise subscriptions and inherit policy and access, real examples and AZ-900 practice.
+answer: >-
+  **Management groups** are containers that organise multiple **subscriptions** so you can apply governance, such as Azure Policy and role-based access control, once and have it inherited by every subscription, resource group and resource beneath them. They can be nested to mirror your organisation, under a single root management group.
+updated: 2026-11-11
+readingMinutes: 6
+keyTerms:
+  - term: Management group
+    definition: A container above subscriptions used to apply policy and access across many subscriptions.
+  - term: Root management group
+    definition: The single top-level management group for a Microsoft Entra tenant.
+  - term: Inheritance
+    definition: Settings applied at a higher level automatically apply to everything below.
+interview:
+  - level: beginner
+    q: What is a management group?
+    a: >-
+      A container for subscriptions. If I apply a policy or permission to a management group, every subscription inside it gets that setting automatically.
+    followUps: []
+  - level: intermediate
+    q: What are the key facts about management groups?
+    a: >-
+      They contain subscriptions or other management groups, can be nested up to six levels deep (not counting the root and subscription levels), each management group or subscription has only one parent, and a directory can have up to 10,000 management groups. Everything sits under one root management group.
+    followUps: []
+  - level: experienced
+    q: How would you design a management group hierarchy?
+    a: >-
+      Keep it shallow and based on governance needs, not the org chart. A common pattern from Azure landing zones is root, then Platform (identity, connectivity, management) and Landing Zones (corp, online), plus Sandbox and Decommissioned. Policies such as allowed regions and required tags go high up, with exceptions applied lower.
+    followUps: []
+revision:
+  keyPoints:
+    - Management groups organise subscriptions.
+    - Policy and RBAC on a management group are inherited by everything below.
+    - They can be nested (up to six levels below the root).
+    - One root management group per directory; each child has one parent.
+  mistakes:
+    - Thinking management groups contain resources directly. They contain subscriptions (and other management groups).
+  examTips:
+    - '"Apply a policy to many subscriptions at once" = **management group**.'
+  quick:
+    - q: What do management groups contain?
+      a: Subscriptions and other management groups.
+    - q: How deep can management groups be nested?
+      a: Up to six levels, not counting the root and subscription levels.
+    - q: How many parents can a subscription have?
+      a: One.
+    - q: What sits at the top of every hierarchy?
+      a: The root management group.
+    - q: Why use management groups?
+      a: To apply governance such as policy and access across many subscriptions at once.
+references:
+  - title: What are Azure management groups?
+    url: https://learn.microsoft.com/en-us/azure/governance/management-groups/overview
+related:
+  - subscriptions
+  - management-hierarchy
+  - governance
+---
+
+## Start with a question
+
+<Story question="Your company has 50 subscriptions. How do you make sure none of them create resources outside Europe?">
+
+Setting the same rule 50 times is slow and error-prone, and someone will forget. **Management groups** let you set it once, at the top.
+
+</Story>
+
+## Explain it like I'm 10
+
+<Eli10>
+
+A school has **rules for the whole school** (no running in corridors), and each class follows them automatically. The head teacher does not tell every class separately.
+
+A management group is like the whole school. Put a rule there, and every class (subscription) follows it.
+
+</Eli10>
+
+## The technical explanation
+
+**Management groups** sit above subscriptions in the hierarchy. You can place subscriptions, and other management groups, inside them, building a tree that mirrors how you govern your organisation.
+
+- Policies and RBAC assignments made at a management group are **inherited** by all child management groups, subscriptions, resource groups and resources.
+- Every tenant has one **root management group**.
+- Management groups can be nested up to **six levels** deep, excluding the root and subscription levels.
+- Each management group and subscription has exactly **one parent**.
+- A directory can have up to **10,000** management groups.
+
+## Real-world business scenario
+
+<Scenario
+  company="A global retailer"
+  industry="Enterprise"
+  problem="Each of 60 subscriptions had different, inconsistent rules; some created resources in non-approved countries."
+  service="Created a management group hierarchy (Production, Non-production, Sandbox) and assigned an 'Allowed locations' policy at the root."
+  why="One assignment at the top is inherited by every subscription and resource."
+  outcome="All subscriptions now follow the same location and tagging rules automatically."
+/>
+
+## When to use it and when not to
+
+<UseWhen
+  use={[
+    'You have several subscriptions that need the same policies and access.',
+    'You want governance that scales as new subscriptions are added.',
+  ]}
+  avoid={['Building a deep hierarchy that mirrors every team. Keep it shallow and governance-driven.']}
+/>

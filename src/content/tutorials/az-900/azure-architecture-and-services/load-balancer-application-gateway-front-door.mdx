@@ -1,0 +1,108 @@
+---
+title: Load Balancer, Application Gateway and Front Door
+seoTitle: Load Balancer vs App Gateway vs Front Door | Azure
+description: "Azure Load Balancer, Application Gateway and Front Door compared: layer 4 vs 7, regional vs global, WAF and when to use each. Beyond the exam."
+answer: >-
+  All three spread traffic across servers, at different layers. **Azure Load Balancer** works at layer 4 (TCP/UDP) within a region. **Application Gateway** is a regional layer-7 web load balancer with URL-based routing, TLS termination and an optional Web Application Firewall. **Azure Front Door** is a global layer-7 entry point that routes users to the nearest healthy region, with caching and WAF.
+updated: 2026-11-11
+readingMinutes: 7
+keyTerms:
+  - term: Layer 4
+    definition: Transport layer (TCP/UDP). Routing by IP address and port only.
+  - term: Layer 7
+    definition: Application layer (HTTP/HTTPS). Routing can use URLs, headers and cookies.
+  - term: Web Application Firewall (WAF)
+    definition: Protects web apps from common attacks such as SQL injection and cross-site scripting.
+  - term: Health probe
+    definition: A regular check that removes unhealthy backends from rotation.
+interview:
+  - level: beginner
+    q: What does a load balancer do?
+    a: >-
+      It spreads incoming traffic across several servers and stops sending traffic to any server that fails a health check, so the app stays fast and available.
+    followUps: []
+  - level: intermediate
+    q: How do you choose between Load Balancer, Application Gateway and Front Door?
+    a: >-
+      Load Balancer for non-HTTP or high-performance layer-4 traffic in one region. Application Gateway for web apps in one region needing URL routing, TLS offload or WAF. Front Door for global web apps that need users routed to the closest healthy region, with caching and WAF at the edge.
+    followUps: []
+  - level: experienced
+    q: Would you ever combine them?
+    a: >-
+      Yes. A common pattern is Front Door globally, routing to Application Gateway or directly to App Service in each region, with internal Load Balancers in front of VM-based back-end tiers. Front Door handles global failover; regional services handle local distribution.
+    followUps: []
+revision:
+  keyPoints:
+    - Load Balancer = layer 4, regional, TCP/UDP.
+    - Application Gateway = layer 7, regional, URL routing, TLS, WAF.
+    - Front Door = layer 7, global, nearest healthy region, caching, WAF.
+    - All use health probes to avoid unhealthy backends.
+  mistakes:
+    - Using Load Balancer when you need URL-based routing.
+  examTips:
+    - These are not listed in the current AZ-900 outline but are common in interviews and real projects.
+  quick:
+    - q: Which works at layer 4?
+      a: Azure Load Balancer.
+    - q: Which offers URL-based routing in one region?
+      a: Application Gateway.
+    - q: Which routes users globally to the nearest healthy region?
+      a: Azure Front Door.
+    - q: What protects web apps from SQL injection?
+      a: A Web Application Firewall (WAF).
+    - q: What removes failed servers from rotation?
+      a: Health probes.
+references:
+  - title: Load-balancing options
+    url: https://learn.microsoft.com/en-us/azure/architecture/guide/technology-choices/load-balancing-overview
+related:
+  - high-availability
+  - virtual-networks-and-subnets
+---
+
+## Start with a question
+
+<Story question="Your shop has customers in Europe and Asia and ten servers. Who decides which server answers each customer?">
+
+A **load balancer**. Azure has several, each for a different kind of job.
+
+</Story>
+
+## Explain it like I'm 10
+
+<Eli10>
+
+- **Load Balancer** is a lollipop lady sending children to any open classroom door.
+- **Application Gateway** reads the child's note: "art class" goes to the art room, "maths" to the maths room.
+- **Front Door** works for schools in many cities and sends each child to the nearest open school.
+
+</Eli10>
+
+## The technical explanation
+
+<Compare
+  caption="Three ways to distribute traffic"
+  columns={[
+    { title: 'Load Balancer', icon: '⚖️', tone: 'neutral', items: ['Layer 4 (TCP/UDP)', 'Regional', 'Public or internal', 'Very high performance'] },
+    { title: 'Application Gateway', icon: '🚦', tone: 'accent', items: ['Layer 7 (HTTP/S)', 'Regional', 'URL routing, TLS termination', 'Optional WAF'] },
+    { title: 'Front Door', icon: '🌍', tone: 'ok', items: ['Layer 7, global', 'Nearest healthy region', 'Caching at the edge', 'WAF, DDoS protection'] },
+  ]}
+/>
+
+## Real-world business scenario
+
+<Scenario
+  company="A global travel booking site"
+  industry="E-commerce"
+  problem="Users in Asia had slow pages and a regional outage took the site down worldwide."
+  service="Azure Front Door in front of App Service in two regions, with WAF enabled."
+  why="Global routing to the nearest healthy region plus edge security."
+  outcome="Faster pages in Asia and automatic failover during a later regional incident."
+/>
+
+## When to use it and when not to
+
+<UseWhen
+  use={['**Load Balancer** for TCP/UDP and VM tiers.', '**Application Gateway** for regional web apps with path routing or WAF.', '**Front Door** for global web apps.']}
+  avoid={['Front Door for purely internal, non-HTTP traffic.']}
+/>

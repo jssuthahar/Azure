@@ -1,0 +1,102 @@
+---
+title: Azure Virtual Desktop
+seoTitle: Azure Virtual Desktop (AVD) Explained Simply | AZ-900
+description: "Azure Virtual Desktop explained: cloud-hosted Windows desktops, multi-session, security benefits, use cases, interview questions and AZ-900 practice."
+answer: >-
+  **Azure Virtual Desktop** is a desktop and application virtualisation service that runs Windows desktops and apps in Azure. Users connect from almost any device, while company data stays in the cloud. It supports **Windows multi-session**, so several users can share one VM, which lowers cost.
+updated: 2026-11-11
+readingMinutes: 6
+keyTerms:
+  - term: Desktop virtualisation
+    definition: Running a user's desktop in a datacenter and streaming it to their device.
+  - term: Windows multi-session
+    definition: Windows 10/11 Enterprise editions that allow several users on one VM at once, available on Azure Virtual Desktop.
+  - term: Host pool
+    definition: A group of VMs that serve desktops to users.
+interview:
+  - level: beginner
+    q: What is Azure Virtual Desktop?
+    a: >-
+      It is a service that gives users a Windows desktop and apps running in Azure. They can connect from a laptop, tablet or browser, and company data stays in the cloud rather than on their device.
+    followUps: []
+  - level: intermediate
+    q: What are the security benefits of Azure Virtual Desktop?
+    a: >-
+      Data stays in Azure, not on personal devices, so a lost laptop does not leak files. Access is protected with Microsoft Entra ID, multifactor authentication and Conditional Access, and session hosts do not need to be exposed to the internet.
+    followUps: []
+  - level: experienced
+    q: How does multi-session affect AVD costs?
+    a: >-
+      Windows multi-session lets several users share one session host VM, so you need fewer VMs than one-per-user. Combined with autoscaling host pools that shut down hosts after hours, it can significantly cut compute costs for task workers.
+    followUps: []
+revision:
+  keyPoints:
+    - AVD runs Windows desktops and apps in Azure.
+    - Users connect from many devices; data stays in the cloud.
+    - Windows multi-session lets several users share one VM.
+    - Secured with Entra ID, MFA and Conditional Access.
+  mistakes:
+    - Thinking AVD installs apps on the user's own device.
+  examTips:
+    - '"Users need a Windows desktop from any device, data must stay in Azure" = **Azure Virtual Desktop**.'
+  quick:
+    - q: What does Azure Virtual Desktop deliver?
+      a: Windows desktops and applications running in Azure.
+    - q: Where does company data stay with AVD?
+      a: In Azure, not on the user's device.
+    - q: What is Windows multi-session?
+      a: Several users sharing one Windows VM at the same time.
+    - q: Name one AVD security feature.
+      a: Entra ID sign-in with MFA and Conditional Access.
+    - q: Name a good AVD use case.
+      a: Contractors or remote staff using personal devices.
+references:
+  - title: What is Azure Virtual Desktop?
+    url: https://learn.microsoft.com/en-us/azure/virtual-desktop/overview
+related:
+  - virtual-machines
+  - conditional-access
+---
+
+## Start with a question
+
+<Story question="A contractor needs company apps for three months on their own laptop. Do you post them a company PC?">
+
+Shipping laptops is slow and risky. With **Azure Virtual Desktop**, they open a window on their own device and get a full company desktop that lives in Azure.
+
+</Story>
+
+## Explain it like I'm 10
+
+<Eli10>
+
+It's like watching a cartoon on a **streaming app**: the cartoon isn't stored on your tablet, it streams from far away. Azure Virtual Desktop streams a whole computer screen to you.
+
+</Eli10>
+
+## The technical explanation
+
+Azure Virtual Desktop runs **session host VMs** in Azure and streams desktops or individual apps to users through the Remote Desktop client or a browser. Key features:
+
+- **Windows multi-session** (Windows 10/11 Enterprise multi-session) for multiple users per VM.
+- Identity with **Microsoft Entra ID**, plus **MFA** and **Conditional Access**.
+- Data stays in Azure; the user's device only receives pixels.
+- Autoscaling host pools to save money outside working hours.
+
+## Real-world business scenario
+
+<Scenario
+  company="A call centre company"
+  industry="Enterprise"
+  problem="300 agents needed to work from home on personal PCs, but customer data could not be stored on those devices."
+  service="Azure Virtual Desktop with multi-session hosts, Entra ID with MFA, and autoscaling."
+  why="Desktops stream from Azure, so data never leaves the cloud; multi-session reduced VM count."
+  outcome="Agents worked remotely within two weeks, and compliance was maintained."
+/>
+
+## When to use it and when not to
+
+<UseWhen
+  use={['Remote or temporary workers on personal devices.', 'Secure access to sensitive apps.', 'Legacy Windows apps for users on Mac or tablets.']}
+  avoid={['Graphics-heavy offline work with poor internet connections.']}
+/>

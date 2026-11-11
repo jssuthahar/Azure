@@ -1,0 +1,88 @@
+{
+ "cert": "az-900",
+ "domain": 2,
+ "topic": "azure-databases",
+ "questions": [
+  {
+   "id": "t-db-1",
+   "type": "single",
+   "question": "Which option offers near-100% SQL Server compatibility as a PaaS service, ideal for migrations?",
+   "options": [
+    {
+     "text": "Azure SQL Managed Instance",
+     "why": "Correct."
+    },
+    {
+     "text": "Azure Cosmos DB",
+     "why": "NoSQL."
+    },
+    {
+     "text": "Azure Table Storage",
+     "why": "NoSQL key/value."
+    },
+    {
+     "text": "Azure Files",
+     "why": "File shares."
+    }
+   ],
+   "answer": [
+    0
+   ],
+   "explanation": "Managed Instance suits lift-and-shift of SQL Server."
+  },
+  {
+   "id": "t-db-2",
+   "type": "single",
+   "question": "Which database is globally distributed NoSQL with very low latency?",
+   "options": [
+    {
+     "text": "Azure Cosmos DB",
+     "why": "Correct."
+    },
+    {
+     "text": "SQL Server on a VM",
+     "why": "Relational IaaS."
+    },
+    {
+     "text": "Azure SQL Database",
+     "why": "Relational PaaS."
+    },
+    {
+     "text": "Azure Queue Storage",
+     "why": "Messages."
+    }
+   ],
+   "answer": [
+    0
+   ],
+   "explanation": "Cosmos DB is designed for global scale."
+  },
+  {
+   "id": "t-db-3",
+   "type": "single",
+   "question": "Which option gives you full control of the operating system and SQL Server?",
+   "options": [
+    {
+     "text": "SQL Server on Azure VMs",
+     "why": "Correct."
+    },
+    {
+     "text": "Azure SQL Database",
+     "why": "PaaS."
+    },
+    {
+     "text": "SQL Managed Instance",
+     "why": "PaaS."
+    },
+    {
+     "text": "Cosmos DB",
+     "why": "NoSQL PaaS."
+    }
+   ],
+   "answer": [
+    0
+   ],
+   "explanation": "VMs are IaaS."
+  }
+ ]
+}

@@ -1,0 +1,30 @@
+{
+  "name": "azure-msdevbuild",
+  "type": "module",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Azure certification learning platform (azure.msdevbuild.com) \u2014 starting with AZ-900.",
+  "scripts": {
+    "dev": "astro dev",
+    "build": "astro build",
+    "preview": "astro preview",
+    "check": "astro check",
+    "check:meta": "node scripts/check-meta.mjs",
+    "check:questions": "node scripts/check-questions.mjs",
+    "check:all": "npm run check:meta && npm run check:questions && astro build",
+    "og": "node scripts/make-og.mjs"
+  },
+  "dependencies": {
+    "@astrojs/mdx": "4.3.14",
+    "@astrojs/sitemap": "3.7.3",
+    "@fontsource-variable/inter": "5.3.0",
+    "@tailwindcss/typography": "0.5.20",
+    "@tailwindcss/vite": "4.3.3",
+    "astro": "5.18.2",
+    "tailwindcss": "4.3.3"
+  },
+  "devDependencies": {
+    "@astrojs/check": "0.9.10",
+    "typescript": "5.9.3"
+  }
+}

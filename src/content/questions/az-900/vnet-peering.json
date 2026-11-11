@@ -1,0 +1,91 @@
+{
+ "cert": "az-900",
+ "domain": 2,
+ "topic": "vnet-peering",
+ "questions": [
+  {
+   "id": "t-pe-1",
+   "type": "single",
+   "question": "Two Azure VNets in different regions must communicate privately over the Microsoft backbone. What should you use?",
+   "options": [
+    {
+     "text": "Global VNet peering",
+     "why": "Correct."
+    },
+    {
+     "text": "Azure DNS",
+     "why": "Name resolution."
+    },
+    {
+     "text": "Point-to-site VPN",
+     "why": "Connects devices, not VNets."
+    },
+    {
+     "text": "A resource lock",
+     "why": "Unrelated."
+    }
+   ],
+   "answer": [
+    0
+   ],
+   "explanation": "Global peering connects VNets across regions.",
+   "objective": "2.2.5"
+  },
+  {
+   "id": "t-pe-2",
+   "type": "single",
+   "question": "VNet A is peered to B, and B is peered to C. Can A talk to C directly?",
+   "options": [
+    {
+     "text": "No, peering is non-transitive",
+     "why": "Correct."
+    },
+    {
+     "text": "Yes, always",
+     "why": "Peering is not transitive."
+    },
+    {
+     "text": "Only on weekends",
+     "why": "No."
+    },
+    {
+     "text": "Only if they are in the same subscription",
+     "why": "Transitivity does not depend on subscription."
+    }
+   ],
+   "answer": [
+    0
+   ],
+   "explanation": "Peer A and C directly, or route through a hub.",
+   "objective": "2.2.5"
+  },
+  {
+   "id": "t-pe-3",
+   "type": "single",
+   "question": "Does traffic between peered VNets travel over the public internet?",
+   "options": [
+    {
+     "text": "No",
+     "why": "Correct. It uses the Microsoft backbone."
+    },
+    {
+     "text": "Yes",
+     "why": "Peered traffic stays private."
+    },
+    {
+     "text": "Only for global peering",
+     "why": "Global peering also uses the backbone."
+    },
+    {
+     "text": "Only for HTTP traffic",
+     "why": "No."
+    }
+   ],
+   "answer": [
+    0
+   ],
+   "explanation": "Peering traffic stays on Microsoft's private network.",
+   "objective": "2.2.5"
+  }
+ ]
+}

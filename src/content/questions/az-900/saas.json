@@ -1,0 +1,64 @@
+{
+  "cert": "az-900",
+  "domain": 1,
+  "topic": "saas",
+  "questions": [
+    {
+      "id": "cc-saas-1",
+      "type": "single",
+      "question": "Microsoft 365 is an example of which cloud service type?",
+      "options": [
+        { "text": "IaaS", "why": "IaaS provides VMs and infrastructure, not finished applications." },
+        { "text": "PaaS", "why": "PaaS is a platform for running your own apps." },
+        { "text": "SaaS", "why": "Correct. Microsoft 365 is complete software delivered over the internet." },
+        { "text": "Private cloud", "why": "Private cloud is a deployment model, not a service type." }
+      ],
+      "answer": [2],
+      "explanation": "Microsoft 365 is software as a service: users sign in and use it; Microsoft runs everything else.",
+      "objective": "1.3.3"
+    },
+    {
+      "id": "cc-saas-2",
+      "type": "single",
+      "question": "Which cloud service type requires the least management effort from the customer?",
+      "options": [
+        { "text": "SaaS", "why": "Correct. The provider manages almost the entire stack." },
+        { "text": "PaaS", "why": "PaaS still requires you to manage your application." },
+        { "text": "IaaS", "why": "IaaS requires the most customer management." },
+        { "text": "On-premises", "why": "On-premises requires you to manage everything." }
+      ],
+      "answer": [0],
+      "explanation": "Management effort decreases from IaaS to PaaS to SaaS.",
+      "objective": "1.3.3"
+    },
+    {
+      "id": "cc-saas-3",
+      "type": "multi",
+      "question": "In a SaaS solution, which TWO remain the customer's responsibility?",
+      "options": [
+        { "text": "User accounts and identities", "why": "Correct. Always the customer's responsibility." },
+        { "text": "Applying updates to the application", "why": "The SaaS provider updates the application." },
+        { "text": "The data stored in the service", "why": "Correct. Your information and data are always yours." },
+        { "text": "Physical network security", "why": "That is the provider's responsibility." }
+      ],
+      "answer": [0, 2],
+      "explanation": "Data, devices, and accounts and identities are always customer responsibilities, even in SaaS.",
+      "objective": "1.1.2"
+    },
+    {
+      "id": "cc-saas-4",
+      "type": "single",
+      "scenario": "A small company wants email and video meetings for all staff by next week. It has no IT team.",
+      "question": "Which approach is most appropriate?",
+      "options": [
+        { "text": "Deploy mail servers on Azure VMs", "why": "That is IaaS and requires administration skills." },
+        { "text": "Build a custom email app on App Service", "why": "Building email is unnecessary and slow." },
+        { "text": "Subscribe to a SaaS productivity suite", "why": "Correct. Ready immediately with no infrastructure to manage." },
+        { "text": "Buy servers for the office", "why": "On-premises requires hardware and skills they do not have." }
+      ],
+      "answer": [2],
+      "explanation": "Standard business needs with no IT staff are an ideal SaaS use case.",
+      "objective": "1.3.4"
+    }
+  ]
+}

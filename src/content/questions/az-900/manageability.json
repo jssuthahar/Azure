@@ -1,0 +1,63 @@
+{
+  "cert": "az-900",
+  "domain": 1,
+  "topic": "manageability",
+  "questions": [
+    {
+      "id": "cc-mgmt-1",
+      "type": "multi",
+      "question": "Which TWO are examples of management OF the cloud?",
+      "options": [
+        { "text": "Automatically scaling resources based on demand", "why": "Correct." },
+        { "text": "Using the Azure portal", "why": "That is management IN the cloud (an interface)." },
+        { "text": "Monitoring health and automatically replacing failing resources", "why": "Correct." },
+        { "text": "Using Azure CLI", "why": "That is management IN the cloud (an interface)." }
+      ],
+      "answer": [0, 2],
+      "explanation": "Management of the cloud is about what happens to resources (scale, templates, monitoring, auto-replace, alerts).",
+      "objective": "1.2.4"
+    },
+    {
+      "id": "cc-mgmt-2",
+      "type": "single",
+      "question": "Which of the following is an example of management IN the cloud?",
+      "options": [
+        { "text": "Using Azure PowerShell to manage resources", "why": "Correct. It is a management interface." },
+        { "text": "Autoscaling a web app", "why": "That is management OF the cloud." },
+        { "text": "Receiving metric-based alerts", "why": "That is management OF the cloud." },
+        { "text": "Deploying from a template", "why": "That is management OF the cloud in Microsoft's description." }
+      ],
+      "answer": [0],
+      "explanation": "Management in the cloud refers to the tools you use: portal, CLI, PowerShell, APIs.",
+      "objective": "1.2.4"
+    },
+    {
+      "id": "cc-mgmt-3",
+      "type": "single",
+      "question": "Which tool provides a browser-based command line with Azure CLI and Azure PowerShell already installed?",
+      "options": [
+        { "text": "Azure Cloud Shell", "why": "Correct." },
+        { "text": "Azure Advisor", "why": "Advisor gives recommendations." },
+        { "text": "Azure Storage Explorer", "why": "Storage Explorer is a desktop app for storage." },
+        { "text": "Azure Virtual Desktop", "why": "AVD delivers virtual desktops." }
+      ],
+      "answer": [0],
+      "explanation": "Cloud Shell runs in the browser, already authenticated, with CLI and PowerShell.",
+      "objective": "3.3.2"
+    },
+    {
+      "id": "cc-mgmt-4",
+      "type": "single",
+      "question": "Defining infrastructure in files that can be version-controlled and deployed repeatably is called what?",
+      "options": [
+        { "text": "Infrastructure as code (IaC)", "why": "Correct." },
+        { "text": "Software as a service", "why": "SaaS is a cloud service type." },
+        { "text": "Resource tagging", "why": "Tags add metadata." },
+        { "text": "Consumption-based pricing", "why": "That is a pricing model." }
+      ],
+      "answer": [0],
+      "explanation": "IaC (Bicep, ARM templates, Terraform) makes deployments repeatable and reviewable.",
+      "objective": "3.3.4"
+    }
+  ]
+}

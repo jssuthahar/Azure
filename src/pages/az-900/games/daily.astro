@@ -1,0 +1,115 @@
+---
+import GameLayout from '../../../layouts/GameLayout.astro';
+import { getQuestionBank } from '../../../lib/learn';
+
+const bank = (await getQuestionBank())
+  .filter((q) => q.type === 'single')
+  .sort((a, b) => a.id.localeCompare(b.id))
+  .map((q) => ({ id: q.id, s: q.scenario, q: q.question, o: q.options.map((x) => x.text), w: q.options.map((x) => x.why), a: q.answer[0], e: q.explanation }));
+const payload = JSON.stringify(bank).replace(/</g, '\\u003c');
+---
+<GameLayout title="Daily Challenge" seoTitle="AZ-900 Daily Challenge: 5 Questions a Day | MSDEVBUILD" description="Five AZ-900 practice questions every day, the same for every learner. Build a daily learning streak and earn bonus XP." icon="📅" intro="Five questions, once a day. Keep your 🔥 streak going!" band="band-yellow">
+  <script type="application/json" id="dc-data" set:html={payload} />
+  <div class="flex flex-wrap items-center justify-between gap-3">
+    <p class="text-lg font-semibold" id="dc-date"></p>
+    <p class="text-lg">🔥 Streak: <strong id="dc-streak">0</strong> day(s)</p>
+  </div>
+
+  <section id="dc-play" class="mt-6">
+    <div class="flex gap-2" id="dc-dots" aria-hidden="true"></div>
+    <div class="card mt-5 p-5 sm:p-6">
+      <p id="dc-s" class="mb-3 hidden rounded-xl bg-subtle p-3"></p>
+      <p id="dc-q" class="text-xl leading-snug font-semibold"></p>
+      <div id="dc-opts" class="mt-4 space-y-2"></div>
+      <div id="dc-fb" class="mt-4 hidden rounded-xl bg-[var(--pastel-grey)] p-4"></div>
+      <button type="button" id="dc-next" class="nav-btn mt-4 hidden">Next ❯</button>
+    </div>
+  </section>
+
+  <section id="dc-done" class="mt-6 hidden rounded-2xl bg-[var(--pastel-green)] p-6 text-center">
+    <p id="dc-emoji" class="text-7xl"></p>
+    <h2 id="dc-title" class="mt-2 text-3xl font-bold"></h2>
+    <p id="dc-sub" class="mt-1 text-lg"></p>
+    <p id="dc-next-in" class="mt-4 text-muted"></p>
+    <div class="mt-6 flex flex-wrap justify-center gap-3">
+      <a href="/az-900/games/" class="big-btn">More games ❯</a>
+      <button type="button" id="dc-replay" class="big-btn big-btn-light">Replay today's questions</button>
+    </div>
+  </section>
+</GameLayout>
+<script>
+  import { seeded, shuffle, confetti } from '../../../lib/fun';
+  import { load, saveDaily, streak, today } from '../../../lib/progress';
+  type Q = { id: string; s?: string; q: string; o: string[]; w: string[]; a: number; e: string };
+  const bank: Q[] = JSON.parse(document.getElementById('dc-data')!.textContent!);
+  const $ = (id: string) => document.getElementById(id)!;
+  const esc = (s: string) => s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>').replace(/`(.+?)`/g, '<code>$1</code>');
+  const day = today();
+  const rand = seeded('az900-' + day);
+  const qs = shuffle(bank, rand).slice(0, 5);
+  let i = 0, score = 0, results: boolean[] = [];
+
+  $('dc-date').textContent = new Date().toLocaleDateString(undefined, { weekday: 'long', day: 'numeric', month: 'long' });
+  const paintStreak = () => ($('dc-streak').textContent = String(streak(load())));
+  paintStreak();
+
+  function dots() {
+    $('dc-dots').innerHTML = qs.map((_, k) => `<span class="h-2.5 flex-1 rounded-full ${k < results.length ? (results[k] ? 'bg-[var(--ok)]' : 'bg-[var(--bad)]') : k === i ? 'bg-[var(--accent)]' : 'bg-[var(--border)]'}"></span>`).join('');
+  }
+  function render() {
+    const q = qs[i];
+    dots();
+    $('dc-s').classList.toggle('hidden', !q.s);
+    $('dc-s').innerHTML = q.s ? esc(q.s) : '';
+    $('dc-q').innerHTML = `<span class="text-muted">${i + 1}/5 ·</span> ${esc(q.q)}`;
+    $('dc-opts').innerHTML = q.o.map((t, k) => `<button type="button" data-k="${k}" class="opt w-full text-left">${esc(t)}</button>`).join('');
+    $('dc-fb').classList.add('hidden');
+    $('dc-next').classList.add('hidden');
+  }
+  $('dc-opts').addEventListener('click', (e) => {
+    const b = (e.target as HTMLElement).closest<HTMLElement>('[data-k]');
+    if (!b || !$('dc-next').classList.contains('hidden')) return;
+    const q = qs[i];
+    const k = Number(b.dataset.k);
+    const ok = k === q.a;
+    if (ok) score++;
+    results.push(ok);
+    $('dc-opts').querySelectorAll<HTMLElement>('[data-k]').forEach((x) => {
+      const n = Number(x.dataset.k);
+      x.dataset.state = n === q.a ? 'correct' : n === k ? 'wrong' : '';
+    });
+    $('dc-fb').classList.remove('hidden');
+    $('dc-fb').innerHTML = `<p class="font-bold ${ok ? 'verdict-ok' : 'verdict-bad'}">${ok ? '✓ Correct!' : '✕ Not quite.'}</p><p class="mt-1">${esc(q.e)}</p>${ok ? '' : `<p class="mt-1 text-sm text-muted">Your answer: ${esc(q.w[k])}</p>`}`;
+    $('dc-next').textContent = i === 4 ? 'See my result ❯' : 'Next ❯';
+    $('dc-next').classList.remove('hidden');
+    dots();
+  });
+  $('dc-next').addEventListener('click', () => (++i < 5 ? render() : finish()));
+
+  function finish() {
+    const first = saveDaily(score);
+    paintStreak();
+    showDone(score, first);
+    if (score >= 4) confetti();
+  }
+  function showDone(s: number, first: boolean) {
+    $('dc-play').classList.add('hidden');
+    $('dc-done').classList.remove('hidden');
+    $('dc-emoji').textContent = s === 5 ? '🏆' : s >= 3 ? '🎉' : '💪';
+    $('dc-title').textContent = `${s} out of 5`;
+    $('dc-sub').textContent = first ? `+${20 + s * 10} XP earned. Streak: ${streak(load())} day(s) 🔥` : 'Already completed today. Replays are for practice only.';
+    const mid = new Date(); mid.setHours(24, 0, 0, 0);
+    const h = Math.floor((mid.getTime() - Date.now()) / 3.6e6), m = Math.floor(((mid.getTime() - Date.now()) % 3.6e6) / 6e4);
+    $('dc-next-in').textContent = `New questions in ${h}h ${m}m.`;
+  }
+  $('dc-replay').addEventListener('click', () => {
+    i = 0; score = 0; results = [];
+    $('dc-done').classList.add('hidden');
+    $('dc-play').classList.remove('hidden');
+    render();
+  });
+
+  const done = load().daily[day];
+  if (done !== undefined) showDone(done, false);
+  else render();
+</script>

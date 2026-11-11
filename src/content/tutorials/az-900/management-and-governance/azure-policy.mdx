@@ -1,0 +1,106 @@
+---
+title: Azure Policy
+seoTitle: Azure Policy Explained Simply | AZ-900
+description: "Azure Policy explained: definitions, initiatives, effects like deny and audit, remediation and compliance, with an animation, examples and AZ-900 practice."
+answer: >-
+  **Azure Policy** helps you create, assign and manage rules that keep resources **compliant with your organisation's standards**. Policies evaluate resource properties and can **audit**, **deny**, **modify** or **deploy** settings automatically. Group related policies into **initiatives**, assign them at any scope, and see compliance in one dashboard.
+updated: 2026-11-11
+readingMinutes: 6
+keyTerms:
+  - term: Policy definition
+    definition: A rule describing a condition and an effect, such as "deny VMs outside allowed sizes".
+  - term: Initiative
+    definition: A group of related policy definitions assigned together.
+  - term: Effect
+    definition: What happens when a rule matches, such as Audit, Deny, Modify or DeployIfNotExists.
+  - term: Remediation
+    definition: Fixing existing non-compliant resources automatically.
+interview:
+  - level: beginner
+    q: What is Azure Policy?
+    a: >-
+      A service that enforces rules on Azure resources, like only allowing certain regions or requiring tags, and shows which resources don't comply.
+    followUps: []
+  - level: intermediate
+    q: What is the difference between a policy and an initiative?
+    a: >-
+      A policy definition is a single rule. An initiative groups several related policies, for example everything needed for a regulatory standard, so you can assign and track them together.
+    followUps: []
+  - level: experienced
+    q: How do you introduce Azure Policy without breaking deployments?
+    a: >-
+      Assign with the Audit effect first, review compliance, communicate with teams, then switch critical rules to Deny. Use Modify or DeployIfNotExists with remediation tasks for settings that can be fixed automatically, and manage policies as code.
+    followUps: []
+revision:
+  keyPoints:
+    - Azure Policy enforces rules on resource properties.
+    - Effects include Audit, Deny, Modify and DeployIfNotExists.
+    - Initiatives group related policies.
+    - Assign at management group, subscription or resource group scope; inherited downward.
+    - Can remediate existing resources.
+  mistakes:
+    - Confusing Policy (what resources look like) with RBAC (who can act).
+  examTips:
+    - '"Only allow resources in specific regions" = **Azure Policy**.'
+  quick:
+    - q: What does Azure Policy enforce?
+      a: Rules on resource properties, such as allowed regions or required tags.
+    - q: What is an initiative?
+      a: A group of related policy definitions.
+    - q: Name two policy effects.
+      a: Audit and Deny (also Modify, DeployIfNotExists).
+    - q: Can Azure Policy fix existing resources?
+      a: Yes, with remediation tasks.
+    - q: Policy or RBAC? Controlling who can create VMs.
+      a: RBAC.
+references:
+  - title: What is Azure Policy?
+    url: https://learn.microsoft.com/en-us/azure/governance/policy/overview
+related:
+  - governance
+  - resource-locks
+  - management-groups
+---
+
+## Start with a question
+
+<Story question="How do you stop anyone in the company creating a resource in a forbidden country, even by accident?">
+
+You write the rule once in **Azure Policy**, and Azure blocks it for everyone.
+
+</Story>
+
+## Explain it like I'm 10
+
+<Eli10>
+
+Azure Policy is a **robot playground monitor**. The rule is "no climbing the fence". The robot stops anyone who tries, writes down who broke rules before it arrived, and can even fix some problems by itself.
+
+</Eli10>
+
+## The technical explanation
+
+<Flow
+  caption="Azure Policy in action"
+  steps={[
+    { title: 'Definition', text: 'Rule: allowed locations = West Europe, North Europe.' },
+    { title: 'Assignment', text: 'Assigned at a management group, subscription or resource group.' },
+    { title: 'Evaluation', text: 'New and existing resources are checked.' },
+    { title: 'Effect', text: 'Deny new violations; audit or remediate existing ones.' },
+  ]}
+/>
+
+## Real-world business scenario
+
+<Scenario
+  company="A pharmaceutical company"
+  industry="Healthcare"
+  problem="Clinical data had to stay in the EU and all storage had to use HTTPS, but checks were manual."
+  service="An initiative with 'allowed locations' (Deny), 'secure transfer required' (Deny) and 'require tags' (Modify) at the root management group."
+  why="Rules are enforced automatically everywhere."
+  outcome="Zero location violations and a live compliance dashboard for auditors."
+/>
+
+## When to use it and when not to
+
+<UseWhen use={['Enforcing standards: regions, SKUs, tags, encryption, security settings.']} avoid={['Controlling who can perform actions (use RBAC).']} />

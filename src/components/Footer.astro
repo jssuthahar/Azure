@@ -1,0 +1,44 @@
+---
+import { SITE } from '../config';
+import { MODULES } from '../data/az-900/syllabus';
+const year = new Date().getFullYear();
+---
+
+<footer class="mt-20 border-t border-default bg-[var(--bg)]/80">
+  <div class="mx-auto grid max-w-7xl gap-10 px-4 py-12 sm:grid-cols-2 sm:px-6 lg:grid-cols-4">
+    <div>
+      <p class="font-semibold"><span class="header-ms">MS</span>DEVBUILD <span class="font-normal text-muted">/ azure</span></p>
+      <p class="mt-3 text-sm leading-relaxed text-muted">
+        Free Azure certification tutorials by {SITE.author}. Learn the concepts, practise the questions, and walk into the exam and the interview with confidence.
+      </p>
+    </div>
+    <div>
+      <p class="text-sm font-semibold">Azure Tutorials</p>
+      <ul class="mt-3 space-y-2 text-sm text-muted">
+        <li><a class="hover:text-[var(--accent-deep)]" href="/az-900/">AZ-900 Azure Fundamentals</a></li>
+        {MODULES.map((m) => <li><a class="hover:text-[var(--accent-deep)]" href={`/az-900/#${m.slug}`}>{m.shortTitle}</a></li>)}
+        <li><a class="hover:text-[var(--accent-deep)]" href="/az-900/mock-exam/">AZ-900 mock exam</a></li>
+        <li><a class="hover:text-[var(--accent-deep)]" href="/az-900/interview/">AZ-900 interview questions</a></li>
+      </ul>
+    </div>
+    <div>
+      <p class="text-sm font-semibold">MSDEVBUILD</p>
+      <ul class="mt-3 space-y-2 text-sm text-muted">
+        <li><a class="hover:text-[var(--accent-deep)]" href={SITE.blog}>Programming tutorials &amp; blog</a></li>
+        <li><a class="hover:text-[var(--accent-deep)]" href="/about/">About</a></li>
+        <li><a class="hover:text-[var(--accent-deep)]" href={`${SITE.main}`}>Contact</a></li>
+      </ul>
+    </div>
+    <div>
+      <p class="text-sm font-semibold">Legal</p>
+      <ul class="mt-3 space-y-2 text-sm text-muted">
+        <li><a class="hover:text-[var(--accent-deep)]" href="/privacy/">Privacy Policy</a></li>
+        <li><a class="hover:text-[var(--accent-deep)]" href="/terms/">Terms and Conditions</a></li>
+      </ul>
+      <p class="mt-4 text-xs leading-relaxed text-muted">
+        Independent learning resource. Not affiliated with or endorsed by Microsoft. Practice questions are original and are not actual exam questions.
+      </p>
+    </div>
+  </div>
+  <div class="border-t border-default py-5 text-center text-xs text-muted">© {year} {SITE.org}. Microsoft, Azure and related marks are trademarks of the Microsoft group of companies.</div>
+</footer>

@@ -1,0 +1,60 @@
+{
+  "cert": "az-900",
+  "domain": 1,
+  "topic": "on-premises-vs-cloud",
+  "questions": [
+    {
+      "id": "cc-onprem-1",
+      "type": "single",
+      "question": "In an on-premises environment, who is responsible for replacing a failed hard disk in a server?",
+      "options": [
+        { "text": "The organisation that owns the server", "why": "Correct. On-premises, the organisation owns and maintains all hardware." },
+        { "text": "Microsoft", "why": "Microsoft maintains hardware in Azure datacenters, not in your building." },
+        { "text": "The internet service provider", "why": "ISPs provide connectivity, not server maintenance." },
+        { "text": "Nobody. Disks do not fail on-premises", "why": "All hardware eventually fails." }
+      ],
+      "answer": [0],
+      "explanation": "On-premises means you own the full stack, including physical hardware maintenance."
+    },
+    {
+      "id": "cc-onprem-2",
+      "type": "single",
+      "question": "Which statement correctly compares on-premises and cloud capacity?",
+      "options": [
+        { "text": "On-premises capacity can be increased in minutes; cloud capacity takes weeks", "why": "It is the other way round." },
+        { "text": "On-premises capacity is fixed until more hardware is bought; cloud capacity can be changed on demand", "why": "Correct. This is a core difference." },
+        { "text": "Both have unlimited capacity", "why": "On-premises capacity is limited by the hardware you own." },
+        { "text": "Cloud capacity can never be reduced once added", "why": "You can scale in or delete resources at any time." }
+      ],
+      "answer": [1],
+      "explanation": "Cloud capacity is provisioned on demand. On-premises capacity is limited by what you have purchased and installed."
+    },
+    {
+      "id": "cc-onprem-3",
+      "type": "multi",
+      "question": "Which TWO costs are typically part of running an on-premises datacenter but are handled by the provider in the public cloud?",
+      "options": [
+        { "text": "Power and cooling for servers", "why": "Correct. The provider pays for datacenter power and cooling." },
+        { "text": "Deciding who in your company can access your data", "why": "Access to your data and identities is always the customer's responsibility." },
+        { "text": "Replacing ageing physical servers", "why": "Correct. Hardware refresh is the provider's job in the cloud." },
+        { "text": "Classifying your own business data", "why": "Data classification remains the customer's responsibility." }
+      ],
+      "answer": [0, 2],
+      "explanation": "Physical concerns (power, cooling, hardware) move to the provider. Data and access stay with you."
+    },
+    {
+      "id": "cc-onprem-4",
+      "type": "single",
+      "scenario": "A factory's control software must respond to machines in under 2 milliseconds and the internet link is unreliable.",
+      "question": "Where should this control software most likely run?",
+      "options": [
+        { "text": "In a distant public cloud region", "why": "Network latency and an unreliable link make a remote region a poor fit." },
+        { "text": "On-premises, close to the machines", "why": "Correct. Ultra-low latency to local equipment is a classic reason to stay on-premises or at the edge." },
+        { "text": "In a SaaS email product", "why": "SaaS email is unrelated to machine control." },
+        { "text": "It cannot run anywhere", "why": "It can run locally, possibly managed with hybrid tools such as Azure Arc." }
+      ],
+      "answer": [1],
+      "explanation": "Latency-critical, site-bound workloads are a strong case for on-premises or edge, often managed in a hybrid model."
+    }
+  ]
+}

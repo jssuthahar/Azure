@@ -1,0 +1,112 @@
+---
+title: Microsoft Entra ID and Entra Domain Services
+seoTitle: Microsoft Entra ID and Domain Services Explained | AZ-900
+description: "Microsoft Entra ID and Entra Domain Services explained: cloud identity, sign-in, SSO, sync with Active Directory and managed domains, with AZ-900 practice."
+answer: >-
+  **Microsoft Entra ID** (formerly Azure Active Directory) is Microsoft's cloud-based identity and access management service. It signs users in to Azure, Microsoft 365 and thousands of other apps, and provides single sign-on, MFA, app and device management. **Microsoft Entra Domain Services** provides managed domain services, such as domain join, Group Policy, LDAP and Kerberos, for legacy apps without you running domain controllers.
+updated: 2026-11-11
+readingMinutes: 7
+keyTerms:
+  - term: Microsoft Entra ID
+    definition: Cloud identity and access management service (formerly Azure AD).
+  - term: Tenant
+    definition: A dedicated instance of Microsoft Entra ID representing an organisation.
+  - term: Microsoft Entra Connect
+    definition: Synchronises users and groups from on-premises Active Directory to Entra ID.
+  - term: Microsoft Entra Domain Services
+    definition: Managed domain join, Group Policy, LDAP and Kerberos/NTLM without managing domain controllers.
+interview:
+  - level: beginner
+    q: What is Microsoft Entra ID?
+    a: >-
+      Microsoft's cloud identity service. It stores users and groups and handles sign-in to Azure, Microsoft 365 and other apps, with features like single sign-on and multifactor authentication.
+    followUps:
+      - q: Is it the same as on-premises Active Directory?
+        a: >-
+          No. On-premises AD Domain Services uses Kerberos, LDAP and Group Policy inside a corporate network. Entra ID is a cloud service using modern protocols like OAuth and SAML over the internet. They are often connected with Entra Connect.
+  - level: intermediate
+    q: When would you use Microsoft Entra Domain Services?
+    a: >-
+      When I move legacy applications to Azure that need traditional domain features such as domain join, Group Policy, LDAP or Kerberos, and I do not want to deploy and patch my own domain controllers in Azure.
+    followUps: []
+  - level: experienced
+    q: How do you design hybrid identity for a company with on-premises AD?
+    a: >-
+      Sync identities with Entra Connect or Cloud Sync, choose password hash sync (simplest and most resilient) or pass-through authentication, enable seamless SSO, enforce MFA and Conditional Access in Entra ID, and gradually move apps to modern authentication so dependence on on-premises AD shrinks.
+    followUps: []
+revision:
+  keyPoints:
+    - Entra ID = cloud identity and access management (formerly Azure AD).
+    - Provides authentication, SSO, app management and device management.
+    - Entra Connect syncs on-premises AD to Entra ID.
+    - Entra Domain Services = managed domain join, Group Policy, LDAP and Kerberos.
+  mistakes:
+    - Calling Entra ID a direct replacement for on-premises AD Domain Services. They work differently.
+  examTips:
+    - '"Legacy app needs domain join and Kerberos, no domain controllers to manage" = **Entra Domain Services**.'
+  quick:
+    - q: What was Microsoft Entra ID previously called?
+      a: Azure Active Directory (Azure AD).
+    - q: What does Entra Connect do?
+      a: Syncs on-premises Active Directory identities to Entra ID.
+    - q: Name two services Entra ID provides.
+      a: Authentication and single sign-on (also app and device management).
+    - q: What does Entra Domain Services provide?
+      a: Managed domain join, Group Policy, LDAP and Kerberos/NTLM.
+    - q: Do you manage domain controllers with Entra Domain Services?
+      a: No, Microsoft manages them.
+references:
+  - title: What is Microsoft Entra ID?
+    url: https://learn.microsoft.com/en-us/entra/fundamentals/whatis
+  - title: Microsoft Entra Domain Services overview
+    url: https://learn.microsoft.com/en-us/entra/identity/domain-services/overview
+related:
+  - authentication-methods
+  - conditional-access
+  - azure-rbac
+---
+
+## Start with a question
+
+<Story question="How many passwords would you need if every app at work had its own login?">
+
+Dozens. With **Microsoft Entra ID**, one work identity signs you in everywhere.
+
+</Story>
+
+## Explain it like I'm 10
+
+<Eli10>
+
+Entra ID is like your **school ID card**. Show it once at the gate and you can get into the library, canteen and computer room without a new pass for each.
+
+</Eli10>
+
+## The technical explanation
+
+Microsoft Entra ID provides:
+
+- **Authentication**: verifying identity, password reset, MFA, smart lockout.
+- **Single sign-on**: one identity for many apps.
+- **Application management**: register and manage access to cloud and on-premises apps.
+- **Device management**: register devices and use them in access policies.
+
+**Microsoft Entra Connect** synchronises users from on-premises Active Directory. **Microsoft Entra Domain Services** adds managed **domain join, Group Policy, LDAP and Kerberos/NTLM** for legacy workloads, with Microsoft running the domain controllers.
+
+## Real-world business scenario
+
+<Scenario
+  company="A manufacturing company"
+  industry="Enterprise"
+  problem="Staff had separate passwords for email, HR, the Azure portal and partner sites, and a legacy app in Azure needed domain join."
+  service="Entra ID with Entra Connect for single sign-on, and Entra Domain Services for the legacy app."
+  why="One identity everywhere, plus classic domain features without running domain controllers."
+  outcome="Fewer password resets, and the legacy app was migrated without rewriting."
+/>
+
+## When to use it and when not to
+
+<UseWhen
+  use={['Sign-in to Azure, Microsoft 365 and SaaS apps.', '**Domain Services** for legacy apps needing Kerberos or LDAP in Azure.']}
+  avoid={['Deploying your own domain controllers in Azure just for a few legacy apps, if Domain Services meets the need.']}
+/>

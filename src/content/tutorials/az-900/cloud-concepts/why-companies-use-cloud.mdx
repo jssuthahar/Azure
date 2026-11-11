@@ -1,0 +1,167 @@
+---
+title: Why Companies Use the Cloud
+seoTitle: Why Do Companies Use Cloud Computing? Benefits | AZ-900
+description: "The real reasons companies move to the cloud: speed, cost, scale, reliability and security, with examples, interview questions and AZ-900 practice."
+answer: >-
+  Companies use the cloud to **move faster, spend smarter and scale without limits**. They avoid big up-front hardware purchases, get capacity in minutes, scale up and down with demand, reach users worldwide, and inherit the provider's investment in reliability and security, so their own teams can focus on the product.
+updated: 2026-11-11
+readingMinutes: 8
+keyTerms:
+  - term: Agility
+    definition: The ability to try, launch and change things quickly because resources are available in minutes.
+  - term: Time to market
+    definition: How long it takes to get a new product or feature in front of customers.
+  - term: Economies of scale
+    definition: Large providers buy hardware and power so cheaply that they can offer lower unit costs than one company could achieve.
+  - term: Undifferentiated heavy lifting
+    definition: Work that is necessary but does not make your product special, such as racking servers or patching hardware.
+interview:
+  - level: beginner
+    q: Give me three reasons a company would move to the cloud.
+    a: >-
+      First, cost. No big up-front hardware purchase, and you pay for what you use. Second, speed. Servers are ready in minutes instead of weeks. Third, scale. You can handle traffic spikes and expand to new countries without building datacenters.
+    followUps:
+      - q: Is there any downside?
+        a: >-
+          Yes. Costs can grow if nobody manages them, you depend on the provider and your internet connectivity, and you still own security for your data and identities. Moving also takes effort and new skills.
+  - level: intermediate
+    q: How would you explain the business value of cloud to a non-technical manager?
+    a: >-
+      I would avoid jargon and talk about outcomes. We can launch new ideas in days, we stop paying for idle servers, the website stays up on our busiest days, and our engineers work on features customers see instead of maintaining hardware. Then I would back it with numbers from a pilot or a TCO comparison.
+    followUps: []
+  - level: experienced
+    q: What are the common reasons cloud migrations fail to deliver the expected savings?
+    a: >-
+      Lift-and-shift without right-sizing, so oversized VMs run 24/7. No tagging or ownership, so nobody is accountable for spend. Ignoring reservations and savings plans for steady workloads. Data egress and cross-region traffic left out of estimates. Keeping old operating models such as manual change tickets, so the agility gains never appear. FinOps practices and architecture changes towards managed services and autoscaling are what unlock the value.
+    followUps: []
+  - level: scenario
+    q: A hospital wants to analyse ten years of anonymised scans with AI but has no GPU servers. What does the cloud offer?
+    a: >-
+      They can rent GPU capacity only for the weeks the analysis runs, use managed AI services, and store data in a region that meets healthcare compliance requirements. Buying GPU servers for a one-off project would be slow and expensive, and the hardware would sit idle afterwards.
+    followUps: []
+revision:
+  keyPoints:
+    - "Speed and agility: resources in minutes, faster time to market."
+    - "Cost: no up-front CapEx, pay for consumption, economies of scale."
+    - "Scale: grow or shrink with demand, globally."
+    - "Reliability and security: inherit the provider's redundancy and security investment."
+    - "Focus: stop doing undifferentiated heavy lifting and build what customers value."
+  mistakes:
+    - Saying cloud is always cheaper. It is cheaper when managed well and used appropriately.
+    - Forgetting that the customer still has security responsibilities in the cloud.
+  examTips:
+    - The exam names benefits precisely. Learn the difference between scalability, elasticity, availability and reliability in the following lessons.
+    - '"No need to buy hardware up front" usually maps to **OpEx / consumption-based model**.'
+  quick:
+    - q: What does "time to market" mean?
+      a: How long it takes to get a product or feature to customers.
+    - q: Why can large cloud providers offer low prices?
+      a: Economies of scale, because they buy hardware, power and bandwidth in huge volumes.
+    - q: Name one risk of moving to the cloud.
+      a: Uncontrolled costs, provider dependency, or new skills required.
+    - q: What is undifferentiated heavy lifting?
+      a: Necessary infrastructure work, like patching hardware, that does not make your product better.
+    - q: Which benefit lets you reach users in other countries quickly?
+      a: Global reach, by deploying to cloud regions near those users.
+references:
+  - title: Describe the benefits of using cloud services (Microsoft Learn)
+    url: https://learn.microsoft.com/en-us/training/modules/describe-benefits-use-cloud-services/
+  - title: Cloud Adoption Framework - business outcomes
+    url: https://learn.microsoft.com/en-us/azure/cloud-adoption-framework/strategy/
+related:
+  - on-premises-vs-cloud
+  - capex-vs-opex
+  - scalability
+---
+
+## Start with a question
+
+<Story question="Your online shop gets featured on national TV tonight. Can your website handle 50 times the normal traffic by 8 pm?">
+
+If your website runs on two servers in an office cupboard, the honest answer is no. Ordering more servers takes weeks. By the time they arrive, the TV moment is over and those customers have gone elsewhere.
+
+That single story contains most of the reasons companies move to the cloud: **speed**, **scale**, **cost** and **not losing customers**.
+
+</Story>
+
+## Explain it like I'm 10
+
+<Eli10>
+
+Imagine your class is planning a party. You *could* buy 200 chairs, store them in your classroom all year, and fix them when they break. Or you could **rent chairs** for the party day, get exactly as many as you need, and return them afterwards.
+
+Most companies used to buy all the chairs. The cloud lets them rent instead. They also get to spend their time planning a great party (building their app) rather than repairing chairs (fixing servers).
+
+</Eli10>
+
+## The technical explanation
+
+The business case for cloud usually rests on six benefits. Each one gets its own lesson later, so here is the map:
+
+| Benefit | The business problem it solves | Covered in |
+| --- | --- | --- |
+| Cost efficiency | Large up-front hardware spend, paying for idle capacity | Consumption-based model, CapEx vs OpEx |
+| Speed and agility | Weeks of procurement before any project can start | This lesson |
+| Scalability and elasticity | Traffic spikes, growth, seasonal demand | Scalability, Elasticity |
+| Availability and reliability | Downtime when hardware or a datacenter fails | High Availability, Reliability |
+| Security and governance | Keeping up with threats and compliance rules | Security, Governance |
+| Manageability | Too much manual operational work | Manageability |
+
+### Speed is often the hidden winner
+
+Cost gets the headlines, but many organisations say **agility** is the bigger prize. When a developer can create a test environment in five minutes and delete it at lunchtime, the whole organisation experiments more. Ideas that would never justify a hardware purchase can be tried for the price of a coffee.
+
+### Economies of scale
+
+Microsoft buys servers, electricity and network capacity at a scale no single company can match. It passes part of that saving on, which is why compute and storage unit prices tend to fall over time.
+
+### Focus on what makes you different
+
+A bank's customers do not care who replaced a failed disk last night. They care about the banking app. Every hour engineers spend on **undifferentiated heavy lifting**, such as racking servers or patching firmware, is an hour not spent on the product.
+
+<TryIt labs="vm-and-cost" text="Feel the agility: launch a server in seconds, then stop it and watch the cost drop." />
+
+<Callout type="warning">
+"Cloud is cheaper" is only true when it is used well. A company that copies its servers to the cloud unchanged and leaves them running 24/7 at full size can pay *more*. Cost benefits come from right-sizing, autoscaling, switching things off and using managed services.
+</Callout>
+
+## Real-world business scenario
+
+<Scenario
+  company="A mid-size retail chain going online"
+  industry="E-commerce"
+  problem="Its own datacenter was near capacity, the next hardware refresh would cost millions, and festive-season sales crashed the site two years running."
+  service="Moved the web shop to Azure App Service with autoscale, product images to Blob Storage with a CDN, and the order database to Azure SQL Database."
+  why="Avoid the hardware refresh (CapEx), absorb festive peaks automatically, and free the infrastructure team to work on omnichannel features."
+  outcome="The festive season ran without outages, the datacenter contract was reduced, and new features shipped monthly instead of quarterly."
+/>
+
+## Visual: from idea to production
+
+<Compare
+  caption="How long it takes to start a new project"
+  columns={[
+    { title: 'Traditional IT', icon: '🐢', tone: 'warn', items: ['Write a business case', 'Approve the hardware budget', 'Order and wait for delivery (weeks)', 'Rack, cable, install, configure', 'Finally start building'] },
+    { title: 'Cloud', icon: '🚀', tone: 'ok', items: ['Pick a service in the portal or code', 'Resources ready in minutes', 'Start building the same day', 'Delete it if the idea fails', 'Pay only for the time used'] },
+  ]}
+/>
+
+## When to use it and when not to
+
+<UseWhen
+  use={[
+    'You need to launch, test or expand quickly.',
+    'Demand varies by hour, season or event.',
+    'A hardware refresh or datacenter lease renewal is coming up. This is a natural moment to move.',
+    'You want access to services you could not easily build yourself (global networks, AI, managed databases).',
+  ]}
+  avoid={[
+    'Regulation or contracts require on-premises hosting.',
+    'The workload is stable, already paid for, and works well where it is. Moving it may add cost without benefit.',
+    'There is no plan for skills, cost control and security in the cloud yet.',
+  ]}
+  alternatives={[
+    'Move gradually with a **hybrid** approach: new apps in the cloud, legacy systems on-premises.',
+    'Use **SaaS** products where they meet the need, and do not build at all.',
+  ]}
+/>

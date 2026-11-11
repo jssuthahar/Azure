@@ -1,0 +1,185 @@
+---
+title: Hybrid and Multi-cloud
+seoTitle: Hybrid Cloud vs Multi-cloud Explained (Azure Arc) | AZ-900
+description: Hybrid cloud and multi-cloud explained simply, with Azure Arc, use cases for each cloud model, interview questions and AZ-900 practice questions.
+answer: >-
+  A **hybrid cloud** combines a public cloud with a private cloud or on-premises infrastructure and lets data and applications move between them, so each workload runs where it fits best. **Multi-cloud** means using two or more public cloud providers, for example Azure and AWS. Azure Arc lets you manage resources across all of these from Azure.
+updated: 2026-11-11
+readingMinutes: 9
+keyTerms:
+  - term: Hybrid cloud
+    definition: A combination of public cloud with private cloud or on-premises infrastructure, connected so workloads and data can interact.
+  - term: Multi-cloud
+    definition: Using services from two or more public cloud providers.
+  - term: Cloud bursting
+    definition: Running normally on-premises and "bursting" extra demand into the public cloud during peaks.
+  - term: Azure Arc
+    definition: Extends Azure management, governance and security to servers, Kubernetes and data services running anywhere.
+  - term: ExpressRoute
+    definition: A private, dedicated connection between your network and Azure that does not travel over the public internet.
+interview:
+  - level: beginner
+    q: What is a hybrid cloud?
+    a: >-
+      It is a mix of public cloud and private or on-premises infrastructure that work together. For example, a company keeps its customer database in its own datacenter but runs its website in Azure, and the two are securely connected.
+    followUps:
+      - q: How are they connected?
+        a: >-
+          Usually with a site-to-site VPN over the internet (Azure VPN Gateway) or a private dedicated connection (Azure ExpressRoute). Identity is often unified too, with Microsoft Entra ID synchronised from on-premises Active Directory.
+  - level: intermediate
+    q: What is the difference between hybrid cloud and multi-cloud?
+    a: >-
+      Hybrid is about combining on-premises or private infrastructure with public cloud. Multi-cloud is about using more than one public cloud provider. An organisation can be both, with on-premises servers plus Azure and AWS.
+    followUps: []
+  - level: experienced
+    q: What is the biggest operational challenge of hybrid and multi-cloud, and how do you address it?
+    a: >-
+      Fragmentation. Different consoles, policies, identity systems, monitoring and skill sets for each environment, which leads to inconsistent security. I would standardise identity on one provider, use a single control plane where possible (Azure Arc to project on-premises and other-cloud servers and Kubernetes into Azure, then apply Azure Policy, Defender for Cloud and Azure Monitor consistently), and use infrastructure as code with tools such as Terraform for multi-cloud deployments. Also be deliberate. Multi-cloud for its own sake doubles complexity.
+    followUps:
+      - q: Is multi-cloud a good way to avoid vendor lock-in?
+        a: >-
+          Sometimes, but it has a price. To be truly portable you limit yourself to the lowest common denominator and give up many managed services. A pragmatic approach is to pick a primary cloud, use its managed services, and design for portability only where the business risk justifies it.
+  - level: scenario
+    q: A retailer's on-premises order system copes fine except during Black Friday. What hybrid pattern could help?
+    a: >-
+      Cloud bursting. The order system keeps running on-premises normally, and during the peak extra application instances run in Azure, connected back to on-premises over VPN or ExpressRoute. They pay for the cloud capacity only during the peak.
+    followUps: []
+revision:
+  keyPoints:
+    - Hybrid = public cloud + private cloud/on-premises, connected and working together.
+    - Multi-cloud = more than one public cloud provider.
+    - Hybrid gives flexibility. Keep what must stay; move what benefits from cloud.
+    - Connectivity options are VPN Gateway (over the internet, encrypted) and ExpressRoute (private, dedicated).
+    - Azure Arc manages servers, Kubernetes and data services anywhere from Azure.
+  mistakes:
+    - Treating hybrid and multi-cloud as the same thing.
+    - Forgetting that hybrid adds complexity and needs unified identity, security and monitoring.
+  examTips:
+    - '"Keep some data on-premises for compliance while using the cloud for the rest" = **hybrid cloud**.'
+    - '"Manage on-premises and other-cloud servers from Azure" = **Azure Arc**.'
+    - Use cases. Public for new and variable workloads, private for strict control, hybrid when you need both.
+  quick:
+    - q: What two environments does a hybrid cloud combine?
+      a: Public cloud and private cloud/on-premises infrastructure.
+    - q: What does multi-cloud mean?
+      a: Using services from more than one public cloud provider.
+    - q: What is cloud bursting?
+      a: Running on-premises normally and sending extra peak demand to the public cloud.
+    - q: Which Azure service manages servers running outside Azure as if they were Azure resources?
+      a: Azure Arc.
+    - q: Which Azure service provides a private, dedicated connection that does not use the public internet?
+      a: Azure ExpressRoute.
+references:
+  - title: Describe cloud computing - cloud models (Microsoft Learn)
+    url: https://learn.microsoft.com/en-us/training/modules/describe-cloud-compute/
+  - title: Azure Arc overview
+    url: https://learn.microsoft.com/en-us/azure/azure-arc/overview
+  - title: ExpressRoute overview
+    url: https://learn.microsoft.com/en-us/azure/expressroute/expressroute-introduction
+related:
+  - public-cloud
+  - private-cloud
+  - on-premises-vs-cloud
+---
+
+## Start with a question
+
+<Story question="What if a hospital must keep patient records in its own building, but wants to use cloud AI to analyse scans?">
+
+It does not have to pick one world. It can keep the records system at home and still use the cloud for the parts that benefit from it, connected safely.
+
+That "best of both worlds" approach is **hybrid cloud**, and it is how most large organisations actually run today.
+
+</Story>
+
+## Explain it like I'm 10
+
+<Eli10>
+
+Imagine you have a bookshelf at home with your favourite books, the ones you never want to lend to anyone. But when you need a book you do not own, you go to the **public library**.
+
+You use **both**: your home shelf for the special books, the library for everything else. A **library card** connects them, because you can borrow and bring books home.
+
+A hybrid cloud is your home shelf (on-premises) plus the library (public cloud), with a secure connection in between.
+
+</Eli10>
+
+## The technical explanation
+
+**Hybrid cloud** is a computing environment that combines a **public cloud** with a **private cloud or on-premises infrastructure**, allowing data and applications to be shared between them. The organisation decides, workload by workload, where each piece runs.
+
+**Multi-cloud** means using **two or more public cloud providers**, for example Azure for applications and another provider for a specific analytics tool. It often happens through acquisitions or team preferences.
+
+<Flow
+  caption="A typical hybrid architecture"
+  steps={[
+    { title: 'On-premises datacenter', text: 'Core systems and regulated data stay here.' },
+    { title: 'Secure connection', text: '<strong>VPN Gateway</strong> (encrypted over the internet) or <strong>ExpressRoute</strong> (private circuit).' },
+    { title: 'Azure', text: 'Web apps, analytics, AI, backup and disaster recovery.' },
+    { title: 'One control plane', text: '<strong>Azure Arc</strong> + Azure Policy + Azure Monitor across both.' },
+  ]}
+/>
+
+### Choosing a cloud model: use cases
+
+The exam objective asks you to identify use cases for each model. Here they are side by side:
+
+<Compare
+  caption="Matching workloads to cloud models"
+  columns={[
+    { title: 'Public cloud', icon: '☁️', tone: 'accent', items: ['New web and mobile apps', 'Unpredictable or seasonal traffic', 'Dev/test environments', 'Start-ups with no hardware budget'] },
+    { title: 'Private cloud', icon: '🏠', tone: 'neutral', items: ['Strict regulatory control of hardware', 'Highly customised infrastructure', 'Large, steady workloads on owned hardware'] },
+    { title: 'Hybrid cloud', icon: '🔗', tone: 'ok', items: ['Some data must stay on-premises', 'Gradual migration to the cloud', 'Cloud bursting for peaks', 'Cloud backup and disaster recovery'] },
+  ]}
+/>
+
+### Azure Arc: managing everything from one place
+
+**Azure Arc** projects resources running outside Azure (on-premises Windows and Linux servers, Kubernetes clusters, SQL Server instances, even VMs in other clouds) into Azure Resource Manager. Once connected, you can tag them, apply **Azure Policy**, protect them with **Microsoft Defender for Cloud**, monitor them with **Azure Monitor** and control access with **Azure RBAC**, exactly like native Azure resources.
+
+<Callout type="exam">
+Azure Arc appears in Domain 3 ("Describe the purpose of Azure Arc"). The one-line answer is that it **extends Azure management and governance to resources outside Azure**: on-premises, at the edge and in other clouds.
+</Callout>
+
+<DeepDive title="Hybrid design patterns architects actually use">
+
+- **Tiered hybrid**: front ends in the cloud, back-end systems of record on-premises. Watch the chatty calls across the link, because latency adds up.
+- **Partitioned multi-cloud**: different workloads on different clouds, each fully self-contained. This is simpler than spreading one app across clouds.
+- **Cloud bursting**: needs the app to be stateless or to have data close at hand, plus pre-tested capacity in the cloud. Often harder in practice than on slides.
+- **Backup and DR to cloud**: Azure Backup and Azure Site Recovery replicate on-premises workloads to Azure. This is often the first and lowest-risk hybrid step.
+- **Edge**: run workloads on-premises with Azure Local or Arc-enabled Kubernetes for latency or disconnected scenarios, managed centrally.
+
+Key cross-cutting decisions are identity (Entra ID with hybrid sync), DNS resolution across environments, IP address planning with no overlaps, and egress cost on data that crosses boundaries.
+
+</DeepDive>
+
+## Real-world business scenario
+
+<Scenario
+  company="A national insurance company"
+  industry="Enterprise / Insurance"
+  problem="Policy administration runs on a mainframe that cannot move, but the company wants a modern customer portal, AI-driven claims triage and cloud backup."
+  service="Customer portal and AI services in Azure, connected to the mainframe via ExpressRoute. Azure Backup for on-premises servers. All servers onboarded to Azure Arc for unified policy and monitoring."
+  why="The mainframe stays put; everything customer-facing gets cloud agility; one governance model covers both environments."
+  outcome="Claims are triaged in minutes, the portal scales during storm seasons, and auditors review a single set of policies."
+/>
+
+## When to use it and when not to
+
+<UseWhen
+  use={[
+    'Part of your estate must stay on-premises (regulation, latency, legacy) but other parts benefit from cloud.',
+    'You are migrating gradually and need both worlds to work together for months or years.',
+    'You want cloud-based backup, disaster recovery or burst capacity for on-premises systems.',
+    'Multi-cloud: a specific provider has a service you truly need, or an acquisition brought another cloud.',
+  ]}
+  avoid={[
+    'You have no on-premises requirement. A single public cloud is simpler.',
+    'Multi-cloud "just in case". It multiplies skills, tooling and security effort.',
+    'Splitting one tightly coupled application across environments with high latency between them.',
+  ]}
+  alternatives={[
+    '**Go all-in on public cloud** if nothing needs to stay on-premises.',
+    '**Private cloud only** for fully regulated, stable estates.',
+  ]}
+/>

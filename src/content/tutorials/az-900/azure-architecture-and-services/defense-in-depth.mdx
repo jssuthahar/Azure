@@ -1,0 +1,102 @@
+---
+title: Defense in Depth
+seoTitle: Defense in Depth in Azure Explained | AZ-900
+description: "The defense-in-depth model explained with layers from physical to data, an animation, Azure controls for each layer and AZ-900 practice."
+answer: >-
+  **Defense in depth** protects information with **multiple layers of security**, so if one layer is breached, the next one still stops the attacker. The layers, from outside in, are physical security, identity and access, perimeter, network, compute, application and **data** at the centre.
+updated: 2026-11-11
+readingMinutes: 5
+keyTerms:
+  - term: Defense in depth
+    definition: A layered security strategy with protections at every level.
+  - term: Perimeter layer
+    definition: Protection at the edge of the network, such as DDoS protection and firewalls.
+  - term: Blast radius
+    definition: How much damage one breach can cause. Layers keep it small.
+interview:
+  - level: beginner
+    q: What is defense in depth?
+    a: >-
+      Using many layers of security instead of one, like a castle with a moat, walls, guards and a locked vault, so an attacker who gets past one layer still faces the next.
+    followUps: []
+  - level: intermediate
+    q: Name the layers and an Azure control for each.
+    a: >-
+      Physical (Microsoft datacenter security), identity and access (Entra ID, MFA), perimeter (DDoS Protection, Azure Firewall), network (NSGs, segmentation), compute (patching, Defender for Servers, Bastion), application (secure code, WAF, Key Vault secrets) and data (encryption, access controls).
+    followUps: []
+  - level: experienced
+    q: How does defense in depth relate to Zero Trust?
+    a: >-
+      They complement each other. Defense in depth describes layering controls; Zero Trust describes how each access decision is made at every layer. A Zero Trust architecture is implemented as layered controls.
+    followUps: []
+revision:
+  keyPoints:
+    - Multiple layers, so one failure does not expose data.
+    - Physical → identity → perimeter → network → compute → application → data.
+    - Data is at the centre.
+  mistakes:
+    - Thinking a single strong firewall is enough.
+  examTips:
+    - Know the order of layers and that **data** is in the middle.
+  quick:
+    - q: What is at the centre of defense in depth?
+      a: Data.
+    - q: What is the outermost layer?
+      a: Physical security.
+    - q: Which layer includes DDoS protection?
+      a: Perimeter.
+    - q: Which layer includes NSGs?
+      a: Network.
+    - q: Why use many layers?
+      a: So that if one fails, others still protect the data.
+references:
+  - title: Describe the purpose of the defense-in-depth model (Microsoft Learn)
+    url: https://learn.microsoft.com/en-us/training/modules/describe-azure-identity-access-security/
+related:
+  - zero-trust
+  - security
+  - network-security-groups
+---
+
+## Start with a question
+
+<Story question="If the castle has only one wall, what happens when it falls?">
+
+The castle falls. Real castles had moats, walls, towers and guards. **Defense in depth** builds security the same way.
+
+</Story>
+
+## Explain it like I'm 10
+
+<Eli10>
+
+Your treasure is in a **box**, inside a **locked drawer**, inside a **locked room**, inside a **house with an alarm**. A thief would need to beat all of them.
+
+</Eli10>
+
+## The technical explanation
+
+| Layer | Purpose | Azure examples |
+| --- | --- | --- |
+| Physical | Protect buildings and hardware | Microsoft datacenter security |
+| Identity and access | Control who gets in | Entra ID, MFA, Conditional Access |
+| Perimeter | Stop network attacks at the edge | DDoS Protection, Azure Firewall |
+| Network | Limit communication | NSGs, segmentation, private endpoints |
+| Compute | Secure VMs and containers | Patching, Defender for Servers, Bastion |
+| Application | Build secure apps | Secure code, WAF, Key Vault |
+| Data | Protect the information itself | Encryption, access controls, Purview |
+
+## Real-world business scenario
+
+<Scenario
+  company="An online retailer"
+  industry="E-commerce"
+  problem="A vulnerable web plugin let an attacker into a web server, but no further."
+  service="Layered controls: WAF, NSGs blocking web-to-database access except one port, encrypted database, least-privilege identities."
+  why="Each layer contained the attack."
+  outcome="The breach was limited to one server; no customer data was accessed."
+/>
+
+## When to use it and when not to
+
+<UseWhen use={['Always: design every workload with several layers of protection.']} avoid={['Relying on one control, such as only a firewall.']} />

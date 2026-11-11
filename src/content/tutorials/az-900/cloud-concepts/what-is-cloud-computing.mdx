@@ -1,0 +1,195 @@
+---
+title: What is Cloud Computing?
+seoTitle: What is Cloud Computing? Simple Explanation | AZ-900
+description: Cloud computing explained simply, with everyday examples, a real business scenario, interview questions and AZ-900 practice questions with answers.
+answer: >-
+  **Cloud computing** is the delivery of computing services (servers, storage, databases, networking, software and analytics) over the internet, on demand. You use what you need, when you need it, and pay for what you use, instead of buying and running your own hardware.
+updated: 2026-11-11
+readingMinutes: 9
+keyTerms:
+  - term: Cloud computing
+    definition: Renting computing services over the internet, on demand, instead of owning the hardware.
+  - term: Cloud provider
+    definition: The company that owns the datacenters and rents out the services, for example Microsoft (Azure).
+  - term: On-demand self-service
+    definition: You can create resources yourself in minutes through a portal or API, without raising a purchase order.
+  - term: Resource pooling
+    definition: The provider shares huge pools of hardware between many customers, keeping each customer isolated.
+  - term: Measured service
+    definition: Usage is metered (per second, per GB, per request) so you are billed for what you actually consume.
+interview:
+  - level: beginner
+    q: In one or two sentences, what is cloud computing?
+    a: >-
+      Cloud computing means using computing services such as servers, storage, databases and software over the internet from a provider like Microsoft, instead of buying and maintaining my own hardware. I create what I need on demand and usually pay only for what I use.
+    followUps:
+      - q: Can you give me a real-world example?
+        a: >-
+          Gmail or Outlook.com is cloud software: I never install a mail server. For a business example, an online exam site can rent 50 extra servers during exam week and release them afterwards, paying only for that week.
+  - level: intermediate
+    q: What are the essential characteristics that make something "cloud" rather than just "a server in someone else's building"?
+    a: >-
+      The NIST definition lists five: on-demand self-service, broad network access, resource pooling, rapid elasticity and measured service. A rented server you order by email and pay for yearly is hosting, not cloud. Cloud means I can provision it myself through an API in minutes, scale it up or down quickly, and pay based on metered usage.
+    followUps: []
+  - level: experienced
+    q: Cloud is often described as "cheaper". Is that always true?
+    a: >-
+      No. Cloud changes the cost model from capital expense to operating expense and removes idle capacity, but a steady, always-on workload lifted as-is onto pay-as-you-go VMs can cost more than amortised hardware. The savings come from right-sizing, autoscaling, reservations, managed services that cut operational effort, and speed. I always frame it as total cost of ownership and business agility, not raw unit price.
+    followUps:
+      - q: So when would you keep a workload on-premises?
+        a: >-
+          Strict data residency or sovereignty rules that a cloud region cannot meet, ultra-low-latency needs next to factory machines, heavy recent hardware investment that is not yet depreciated, or legacy systems that cannot be moved. Often the answer is hybrid rather than all-or-nothing.
+  - level: scenario
+    q: A school's results website crashes every year on results day. The rest of the year it is almost idle. How would cloud computing help?
+    a: >-
+      This is the classic spiky workload. On-premises they would have to buy enough servers for results day and leave them idle for 364 days. In the cloud they can scale out automatically for the peak, or use a platform service that autoscales, and scale back in afterwards, paying for the extra capacity only on the busy day.
+    followUps: []
+revision:
+  keyPoints:
+    - Cloud computing = computing services delivered **over the internet, on demand**, paid for by usage.
+    - Services include compute, storage, networking, databases, analytics, AI and complete software.
+    - The provider owns and runs the datacenters; you rent capacity and focus on your application.
+    - Five characteristics define cloud - self-service, network access, resource pooling, rapid elasticity, measured service.
+    - Cloud shifts spending from up-front purchase (CapEx) to pay-as-you-go (OpEx).
+  mistakes:
+    - Thinking "cloud" means "free" or "always cheaper". You pay for usage, and waste costs real money.
+    - Thinking the cloud is a single computer somewhere. It is millions of servers in datacenters across the world.
+    - Assuming the provider is responsible for everything. Security is shared (see the shared responsibility model).
+  examTips:
+    - If a question mentions "pay only for what you use" or "no up-front cost", think **consumption-based model** and **OpEx**.
+    - The exam often describes a benefit in plain words and asks you to name it. Learn the benefit vocabulary in this module.
+  quick:
+    - q: Name four types of service you can get from a cloud provider.
+      a: Compute (virtual machines), storage, networking, databases. Also analytics, AI and full software (SaaS).
+    - q: Who owns the physical servers in a public cloud?
+      a: The cloud provider, for example Microsoft for Azure.
+    - q: What does "measured service" mean?
+      a: Usage is metered so you are billed for what you actually consume.
+    - q: Which spending model does cloud computing mainly use, CapEx or OpEx?
+      a: OpEx (operational expenditure), meaning ongoing pay-as-you-go spending.
+    - q: Give one reason a company might not move a workload to the cloud.
+      a: Data sovereignty rules, ultra-low latency needs, or recent heavy investment in on-premises hardware.
+references:
+  - title: What is cloud computing? (Microsoft Learn, AZ-900 path)
+    url: https://learn.microsoft.com/en-us/training/modules/describe-cloud-compute/
+  - title: The NIST Definition of Cloud Computing (SP 800-145)
+    url: https://csrc.nist.gov/pubs/sp/800/145/final
+related:
+  - what-is-microsoft-azure
+  - on-premises-vs-cloud
+  - consumption-based-model
+---
+
+## Start with a question
+
+<Story question="What happens when 10,000 students try to open the same online exam website at 9:00 sharp?">
+
+If the school runs the site on one server in the staff room, it slows to a crawl and then falls over. Students panic, teachers get angry phone calls, and the IT person is blamed.
+
+The obvious fix is "buy more servers". But exams only happen a few days a year. For the other days, those expensive machines sit there humming, using electricity and needing updates. That is the problem cloud computing was invented to solve.
+
+</Story>
+
+## Explain it like I'm 10
+
+<Eli10>
+
+Think about electricity at home. Your family does not own a power station. You plug something in, the power is just there, and at the end of the month you pay for the units you used. If you hold a big party and switch on every light, the power company handles it.
+
+**Cloud computing is the same idea for computers.** Instead of buying your own big computers, you borrow them from a company like Microsoft over the internet. Need ten computers for an hour? You get them. Done? Give them back and stop paying.
+
+</Eli10>
+
+## The technical explanation
+
+**Cloud computing is the on-demand delivery of IT resources over the internet, with pay-as-you-go pricing.** A cloud provider such as Microsoft owns massive datacenters around the world. It rents out what those datacenters can do as services:
+
+- **Compute**: virtual machines, containers, serverless functions. The "brains" that run your code.
+- **Storage**: files, blobs (images, videos, backups), disks.
+- **Networking**: virtual networks, load balancers, private connections, DNS.
+- **Databases**: managed SQL and NoSQL databases.
+- **Analytics and AI**: data warehouses, machine learning, AI services.
+- **Complete software**: email, office apps, CRM (customer relationship management) delivered ready to use.
+
+What separates real cloud from an ordinary data centre lease is captured in the widely used NIST definition. It has **five essential characteristics**:
+
+| Characteristic | What it means in practice |
+| --- | --- |
+| On-demand self-service | You create a server yourself in minutes through a portal, command line or API. No ticket, no purchase order. |
+| Broad network access | Services are reachable over the network from laptops, phones and other services. |
+| Resource pooling | The provider shares huge pools of hardware across many customers, keeping each one logically isolated. |
+| Rapid elasticity | Capacity can be added or removed quickly, often automatically. |
+| Measured service | Usage is metered per second, per GB or per request, and you are billed accordingly. |
+
+<Flow
+  caption="What happens when you 'create a server' in the cloud"
+  steps={[
+    { title: 'You ask', text: 'Click in the portal or run one CLI command: "a Linux VM, 4 CPUs, in West Europe".' },
+    { title: 'Provider allocates', text: 'Azure finds spare capacity in a datacenter and carves out an isolated virtual machine.' },
+    { title: 'You use it', text: 'Within minutes the VM is running and reachable over the network.' },
+    { title: 'Meter runs', text: 'Usage is measured. Delete the VM and the compute charges stop.' },
+  ]}
+/>
+
+<TryIt labs="vm-and-cost,first-resource-group" text="See on-demand self-service for yourself: create a resource group and a virtual machine in the simulator in under a minute, then delete them and watch the meter stop." />
+
+<Callout type="exam">
+AZ-900 rarely asks for the NIST list by name. It asks you to recognise the *benefits* these characteristics create, such as scalability, elasticity, high availability and the consumption-based model. Each of those has its own lesson in this module.
+</Callout>
+
+<DeepDive title="What is actually happening under the hood?">
+
+Three technologies make cloud computing possible at this scale:
+
+1. **Virtualisation**: a hypervisor splits one physical server into many isolated virtual machines. Azure runs a customised Hyper-V-based hypervisor on its hosts.
+2. **Software-defined everything**: networks, storage and even firewalls are configured by software, which is why you can build an entire network with an API call.
+3. **Automation and orchestration**: a control plane (in Azure, Azure Resource Manager) takes your request, places it on suitable hardware, wires it up and tracks it.
+
+For architects the key mental shift is this. Hardware becomes a **programmable, disposable commodity**. You design for failure: assume any single machine can disappear, keep state outside it, and let automation replace it. That is why cloud-native designs lean on stateless services, managed databases and infrastructure as code.
+
+</DeepDive>
+
+## Real-world business scenario
+
+<Scenario
+  company="An online learning platform (similar to many edtech start-ups)"
+  industry="Online education"
+  problem="Traffic is quiet most of the month but jumps 20× on exam and results days. Buying servers for the peak would waste money; buying for the average would crash on exam day."
+  service="Cloud-hosted web app with autoscaling, a managed database and blob storage for course videos."
+  why="No up-front hardware purchase, capacity that follows demand automatically, and a provider that handles the physical datacenter, power and hardware repairs."
+  outcome="The site stays up on exam day, the bill drops on quiet days, and the small team spends its time on features instead of fixing servers."
+/>
+
+The same pattern shows up everywhere: a food delivery app at dinner time, a shopping site on sale day, a bank's month-end batch jobs. The business problem is always some mix of "we need capacity fast", "we do not want to pay for idle machines" and "we do not want to run a datacenter".
+
+## Visual: owning vs renting computers
+
+<Compare
+  caption="The two ways to get computing power"
+  columns={[
+    { title: 'Own it (on-premises)', icon: '🏢', tone: 'neutral', items: ['Buy servers up front', 'Wait weeks for delivery and setup', 'Pay for power, cooling, space, staff', 'Capacity is fixed until you buy more', 'You fix broken hardware'] },
+    { title: 'Rent it (cloud)', icon: '☁️', tone: 'accent', items: ['No up-front hardware cost', 'Ready in minutes', 'Provider runs the datacenter', 'Scale up and down on demand', 'Provider replaces failed hardware'] },
+  ]}
+/>
+
+## When to use it and when not to
+
+<UseWhen
+  use={[
+    'Demand is unpredictable or spiky (launches, sales, exam days).',
+    'You need to move fast: try an idea this week, not next quarter.',
+    'You want to serve users in several countries without building datacenters there.',
+    'You would rather spend engineering time on the product than on hardware.',
+  ]}
+  avoid={[
+    'Regulations require data to stay in a place no cloud region can serve.',
+    'Machines need sub-millisecond latency next to physical equipment (factory floors).',
+    'You have a large, steady workload on hardware you already own and have not depreciated.',
+    'Nobody is watching the bill. Unmanaged cloud spend grows quietly.',
+  ]}
+  alternatives={[
+    '**Hybrid cloud**: keep some systems on-premises and connect them to the cloud.',
+    '**Private cloud**: cloud-style self-service on hardware dedicated to one organisation.',
+    '**Edge or on-premises extensions** such as Azure Arc or Azure Local for workloads that must stay on site.',
+  ]}
+/>

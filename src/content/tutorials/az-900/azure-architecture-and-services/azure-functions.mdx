@@ -1,0 +1,107 @@
+---
+title: Azure Functions
+seoTitle: "Azure Functions Explained: Serverless Compute | AZ-900"
+description: Azure Functions explained simply, with triggers and bindings, hosting plans, use cases, limits, interview questions and AZ-900 practice questions.
+answer: >-
+  **Azure Functions** is Azure's serverless compute service. You write small pieces of code that run in response to **triggers** such as HTTP requests, timers, queue messages or new files. Azure provides and scales the compute automatically, and on consumption-style plans you pay only while your code runs.
+updated: 2026-11-11
+readingMinutes: 6
+keyTerms:
+  - term: Trigger
+    definition: The event that starts a function, such as an HTTP call, a timer or a new blob.
+  - term: Binding
+    definition: A declarative connection to input or output data, such as writing to a queue, without extra code.
+  - term: Stateless
+    definition: A function keeps no data between runs unless you store it elsewhere; Durable Functions adds stateful workflows.
+interview:
+  - level: beginner
+    q: What is Azure Functions?
+    a: >-
+      A serverless service that runs small pieces of code when something happens, like a file upload or an HTTP request, without me managing any servers.
+    followUps: []
+  - level: intermediate
+    q: What are triggers and bindings?
+    a: >-
+      A trigger is what starts the function, and every function has exactly one. Bindings are optional input and output connections to other services, like reading a blob or writing to a queue, declared in configuration instead of written in code.
+    followUps: []
+  - level: experienced
+    q: How do you handle long-running workflows with Functions?
+    a: >-
+      Use Durable Functions, which add orchestrations with checkpoints and replay, patterns such as function chaining, fan-out/fan-in and human interaction, and survive restarts. For very long or heavy jobs, consider Container Apps jobs or Batch instead.
+    followUps: []
+revision:
+  keyPoints:
+    - Functions = serverless, event-driven code.
+    - Triggers start functions; bindings connect data.
+    - Scales automatically, including to zero.
+    - Pay per execution on consumption-style plans.
+  mistakes:
+    - Using Functions for long-running, CPU-heavy processing without Durable Functions or a suitable plan.
+  examTips:
+    - '"Run code in response to an event, without managing servers" = **Azure Functions**.'
+  quick:
+    - q: What starts an Azure Function?
+      a: A trigger.
+    - q: How many triggers does a function have?
+      a: Exactly one.
+    - q: What are bindings?
+      a: Declarative connections to input or output data.
+    - q: How are you usually billed on a consumption-style plan?
+      a: Per execution and resources used while running.
+    - q: What adds stateful workflows to Functions?
+      a: Durable Functions.
+references:
+  - title: Azure Functions overview
+    url: https://learn.microsoft.com/en-us/azure/azure-functions/functions-overview
+related:
+  - serverless
+  - compute-types
+  - app-service
+---
+
+## Start with a question
+
+<Story question="Why keep a server running all day to resize five photos an hour?">
+
+You don't have to. **Azure Functions** wakes up when a photo arrives, resizes it, and goes back to sleep.
+
+</Story>
+
+## Explain it like I'm 10
+
+<Eli10>
+
+A function is like a **doorbell**. Nothing happens until someone presses it, then it rings once and stops. You don't pay for a doorbell sitting quietly on the wall.
+
+</Eli10>
+
+## The technical explanation
+
+<Flow
+  caption="Trigger → function → binding"
+  steps={[
+    { title: 'Trigger', text: 'HTTP request, timer, queue message, new blob, database change…' },
+    { title: 'Your code', text: 'C#, JavaScript, Python, Java, PowerShell and more.' },
+    { title: 'Output binding', text: 'Write to a queue, a database or storage, declaratively.' },
+  ]}
+/>
+
+Hosting plans include **Flex Consumption** (recommended serverless plan, scale to zero, optional always-ready instances), **Premium** (pre-warmed instances) and **Dedicated** (App Service plan).
+
+## Real-world business scenario
+
+<Scenario
+  company="A food delivery app"
+  industry="Food delivery"
+  problem="Order confirmations were sent by a VM that sat mostly idle but crashed at dinner peaks."
+  service="An Azure Function triggered by a queue message for every new order."
+  why="Event-driven, automatic scaling, pay per execution."
+  outcome="Confirmations keep up with peaks, and costs fell to near zero off-peak."
+/>
+
+## When to use it and when not to
+
+<UseWhen
+  use={['Event-driven tasks, webhooks, scheduled jobs and glue code.']}
+  avoid={['Constant heavy traffic where an always-on service is cheaper.', 'Very long-running processing.']}
+/>

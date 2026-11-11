@@ -1,0 +1,113 @@
+---
+title: Storage Accounts and Storage Types
+seoTitle: Azure Storage Accounts and Types Explained | AZ-900
+description: "Azure storage accounts explained: account types, naming rules, endpoints and redundancy choices, with a hands-on lab and AZ-900 practice."
+answer: >-
+  An **Azure storage account** is a container that provides a unique namespace for your Azure Storage data: blobs, files, queues and tables. Its name must be **globally unique** (3–24 lowercase letters and numbers) because it becomes part of each service's URL. **Standard general-purpose v2** is recommended for most scenarios; **premium** accounts offer low-latency SSD storage for specific needs.
+updated: 2026-11-11
+readingMinutes: 6
+keyTerms:
+  - term: Storage account
+    definition: A uniquely named container for Azure Storage services and their settings.
+  - term: Standard general-purpose v2
+    definition: The recommended account type, supporting blobs, files, queues and tables with all redundancy options.
+  - term: Premium account
+    definition: SSD-backed accounts for block blobs, file shares or page blobs that need low latency.
+  - term: Service endpoint URL
+    definition: The address of each service, such as https://name.blob.core.windows.net.
+interview:
+  - level: beginner
+    q: What is an Azure storage account?
+    a: >-
+      It is the container for my Azure Storage data, like blobs, file shares, queues and tables. It has a globally unique name, a region and a redundancy setting.
+    followUps:
+      - q: Why must the name be globally unique?
+        a: >-
+          Because it becomes part of public URLs, such as name.blob.core.windows.net, and no two accounts can share a URL.
+  - level: intermediate
+    q: Which storage account types exist?
+    a: >-
+      Standard general-purpose v2 for most scenarios, supporting blobs, files, queues and tables. Premium block blobs for high transaction rates and low latency. Premium file shares for high-performance file shares. Premium page blobs for page blobs such as unmanaged disks.
+    followUps: []
+  - level: experienced
+    q: What settings would you lock down on a new storage account?
+    a: >-
+      Require secure transfer (HTTPS), set a minimum TLS version, disable anonymous blob access, prefer Microsoft Entra authorisation over shared keys, use private endpoints and disable public network access where possible, enable soft delete and versioning, and pick redundancy based on recovery needs. Azure Policy can enforce these.
+    followUps: []
+revision:
+  keyPoints:
+    - A storage account holds blobs, files, queues and tables.
+    - Names are 3–24 lowercase letters and numbers, unique across Azure.
+    - Standard general-purpose v2 is recommended for most uses.
+    - Premium types use SSDs for low-latency workloads.
+    - Redundancy is chosen per account.
+  mistakes:
+    - Using capital letters, hyphens or symbols in storage account names.
+  examTips:
+    - '"Recommended for most scenarios" = **Standard general-purpose v2**.'
+  quick:
+    - q: How long can a storage account name be?
+      a: 3 to 24 characters.
+    - q: Which characters are allowed?
+      a: Lowercase letters and numbers only.
+    - q: Why must the name be globally unique?
+      a: It forms part of public service URLs.
+    - q: Which account type is recommended for most scenarios?
+      a: Standard general-purpose v2.
+    - q: What does a premium account use?
+      a: SSD storage for low latency.
+references:
+  - title: Storage account overview
+    url: https://learn.microsoft.com/en-us/azure/storage/common/storage-account-overview
+related:
+  - blob-storage-and-tiers
+  - storage-redundancy
+  - files-queues-tables-disks
+---
+
+## Start with a question
+
+<Story question="Where does an app keep millions of photos, shared folders and messages in the cloud?">
+
+In an **Azure storage account**: one uniquely named home for several kinds of storage.
+
+</Story>
+
+## Explain it like I'm 10
+
+<Eli10>
+
+A storage account is like your own **locker room** with one name on the door. Inside are different lockers: one for pictures (blobs), one for shared folders (files), one for notes to pass around (queues) and one for lists (tables).
+
+</Eli10>
+
+## The technical explanation
+
+| Account type | Supports | Redundancy |
+| --- | --- | --- |
+| Standard general-purpose v2 | Blobs (incl. Data Lake Storage), files, queues, tables | LRS, GRS, RA-GRS, ZRS, GZRS, RA-GZRS |
+| Premium block blobs | Block and append blobs | LRS, ZRS |
+| Premium file shares | Azure Files | LRS, ZRS |
+| Premium page blobs | Page blobs | LRS |
+
+Each service gets its own **endpoint**: `https://<name>.blob.core.windows.net`, `.file.`, `.queue.` and `.table.core.windows.net`.
+
+<TryIt labs="storage-redundancy" text="Try to create an account named My-Storage! and read the error, then create a valid one." />
+
+## Real-world business scenario
+
+<Scenario
+  company="A photo-sharing app"
+  industry="Consumer app"
+  problem="Images were stored on VM disks that filled up and were hard to scale."
+  service="A Standard general-purpose v2 storage account with blob containers."
+  why="Massive, cheap, durable object storage reachable over HTTPS."
+  outcome="Storage grows automatically and VM disks no longer fill up."
+/>
+
+## When to use it and when not to
+
+<UseWhen
+  use={['Any app that stores files, images, backups, messages or simple NoSQL data.']}
+  avoid={['Relational data needing SQL joins and transactions (use Azure SQL).']}
+/>

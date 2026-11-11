@@ -1,0 +1,92 @@
+{
+ "cert": "az-900",
+ "domain": 2,
+ "topic": "subscriptions",
+ "questions": [
+  {
+   "id": "t-sub-1",
+   "type": "multi",
+   "question": "An Azure subscription acts as which TWO boundaries?",
+   "options": [
+    {
+     "text": "Billing boundary",
+     "why": "Correct."
+    },
+    {
+     "text": "Physical datacenter boundary",
+     "why": "Subscriptions are logical."
+    },
+    {
+     "text": "Access control boundary",
+     "why": "Correct."
+    },
+    {
+     "text": "Availability zone boundary",
+     "why": "Zones are physical."
+    }
+   ],
+   "answer": [
+    0,
+    2
+   ],
+   "explanation": "Subscriptions separate billing and access control.",
+   "objective": "2.1.5"
+  },
+  {
+   "id": "t-sub-2",
+   "type": "single",
+   "question": "Three departments each need their own separate Azure invoice. What should you create?",
+   "options": [
+    {
+     "text": "Three subscriptions",
+     "why": "Correct. Each gets its own billing."
+    },
+    {
+     "text": "Three resource locks",
+     "why": "Locks prevent deletion."
+    },
+    {
+     "text": "Three availability zones",
+     "why": "Zones are physical locations."
+    },
+    {
+     "text": "Three tags on one VM",
+     "why": "Tags alone do not create separate invoices."
+    }
+   ],
+   "answer": [
+    0
+   ],
+   "explanation": "Separate subscriptions provide separate bills.",
+   "objective": "2.1.5"
+  },
+  {
+   "id": "t-sub-3",
+   "type": "single",
+   "question": "What does a subscription directly contain?",
+   "options": [
+    {
+     "text": "Resource groups",
+     "why": "Correct."
+    },
+    {
+     "text": "Management groups",
+     "why": "Management groups contain subscriptions."
+    },
+    {
+     "text": "Regions",
+     "why": "Regions are physical locations."
+    },
+    {
+     "text": "Microsoft Entra tenants",
+     "why": "A tenant contains subscriptions, not the reverse."
+    }
+   ],
+   "answer": [
+    0
+   ],
+   "explanation": "Subscriptions contain resource groups.",
+   "objective": "2.1.7"
+  }
+ ]
+}

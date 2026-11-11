@@ -1,0 +1,64 @@
+{
+  "cert": "az-900",
+  "domain": 1,
+  "topic": "scalability",
+  "questions": [
+    {
+      "id": "cc-scale-1",
+      "type": "single",
+      "question": "Increasing the number of CPUs and the amount of memory on an existing virtual machine is an example of what?",
+      "options": [
+        { "text": "Vertical scaling (scaling up)", "why": "Correct. You are making one resource bigger." },
+        { "text": "Horizontal scaling (scaling out)", "why": "Scaling out adds more instances." },
+        { "text": "High availability", "why": "A bigger VM is still one instance." },
+        { "text": "Geo-redundancy", "why": "Geo-redundancy replicates data across regions." }
+      ],
+      "answer": [0],
+      "explanation": "Changing the size of a single resource is vertical scaling.",
+      "objective": "1.2.1"
+    },
+    {
+      "id": "cc-scale-2",
+      "type": "single",
+      "question": "Adding more virtual machine instances to handle increased traffic is an example of what?",
+      "options": [
+        { "text": "Scaling up", "why": "Scaling up increases the size of a resource." },
+        { "text": "Scaling out", "why": "Correct. Horizontal scaling adds instances." },
+        { "text": "Predictability", "why": "Predictability is a benefit, not a scaling action." },
+        { "text": "Resource locking", "why": "Locks prevent changes." }
+      ],
+      "answer": [1],
+      "explanation": "Horizontal scaling (scale out) adds more instances.",
+      "objective": "1.2.1"
+    },
+    {
+      "id": "cc-scale-3",
+      "type": "multi",
+      "question": "Which TWO statements about scalability in the cloud are true?",
+      "options": [
+        { "text": "You can increase resources when demand increases", "why": "Correct." },
+        { "text": "Once you scale up, you can never scale down", "why": "You can scale down or in when demand falls." },
+        { "text": "You only pay for the resources you are using", "why": "Correct. Scaling down reduces cost." },
+        { "text": "Scaling always requires buying new physical servers", "why": "Cloud scaling uses on-demand resources." }
+      ],
+      "answer": [0, 2],
+      "explanation": "Cloud scalability works in both directions and costs follow what you use.",
+      "objective": "1.2.1"
+    },
+    {
+      "id": "cc-scale-4",
+      "type": "single",
+      "scenario": "A web app keeps each user's shopping cart in the memory of the web server. The team plans to scale out to 10 instances.",
+      "question": "What problem is most likely?",
+      "options": [
+        { "text": "Users may lose their carts when requests go to a different instance", "why": "Correct. In-memory state is not shared across instances." },
+        { "text": "The app will automatically become read-only", "why": "Nothing like this happens automatically." },
+        { "text": "Azure will block scaling out", "why": "Azure allows scaling; the issue is app design." },
+        { "text": "The SLA will drop to zero", "why": "SLAs are unrelated to this design flaw." }
+      ],
+      "answer": [0],
+      "explanation": "Scale-out works best with stateless apps; store session state in a shared cache or database.",
+      "objective": "1.2.1"
+    }
+  ]
+}

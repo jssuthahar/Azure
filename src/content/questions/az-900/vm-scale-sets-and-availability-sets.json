@@ -1,0 +1,91 @@
+{
+ "cert": "az-900",
+ "domain": 2,
+ "topic": "vm-scale-sets-and-availability-sets",
+ "questions": [
+  {
+   "id": "t-ss-1",
+   "type": "single",
+   "question": "Which Azure feature automatically increases and decreases the number of identical VMs based on demand?",
+   "options": [
+    {
+     "text": "Virtual Machine Scale Sets",
+     "why": "Correct."
+    },
+    {
+     "text": "Availability sets",
+     "why": "They spread VMs, they do not scale."
+    },
+    {
+     "text": "Resource locks",
+     "why": "Prevent deletion."
+    },
+    {
+     "text": "Azure DNS",
+     "why": "Name resolution."
+    }
+   ],
+   "answer": [
+    0
+   ],
+   "explanation": "Scale sets support autoscale.",
+   "objective": "2.2.2"
+  },
+  {
+   "id": "t-ss-2",
+   "type": "single",
+   "question": "An availability set protects VMs by placing them in different what?",
+   "options": [
+    {
+     "text": "Fault domains and update domains",
+     "why": "Correct."
+    },
+    {
+     "text": "Subscriptions",
+     "why": "Unrelated."
+    },
+    {
+     "text": "Regions",
+     "why": "Availability sets are within one datacenter."
+    },
+    {
+     "text": "Tags",
+     "why": "Unrelated."
+    }
+   ],
+   "answer": [
+    0
+   ],
+   "explanation": "Fault domains separate hardware; update domains separate maintenance.",
+   "objective": "2.2.2"
+  },
+  {
+   "id": "t-ss-3",
+   "type": "single",
+   "question": "What is the additional cost of using an availability set?",
+   "options": [
+    {
+     "text": "No additional cost; you pay only for the VMs",
+     "why": "Correct."
+    },
+    {
+     "text": "A fixed monthly fee per set",
+     "why": "No fee."
+    },
+    {
+     "text": "Double the VM price",
+     "why": "No surcharge."
+    },
+    {
+     "text": "A per-domain fee",
+     "why": "No fee."
+    }
+   ],
+   "answer": [
+    0
+   ],
+   "explanation": "Availability sets are free.",
+   "objective": "2.2.2"
+  }
+ ]
+}

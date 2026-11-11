@@ -1,0 +1,177 @@
+---
+title: Serverless Computing
+seoTitle: What is Serverless Computing? Azure Functions | AZ-900
+description: "Serverless computing explained with Azure Functions and Logic Apps: event-driven code, pay-per-execution, interview questions and AZ-900 practice."
+answer: >-
+  **Serverless computing** lets you run code or workflows **without provisioning or managing servers**. The provider allocates resources automatically when an event occurs, scales from zero to many instances, and typically **bills only for the time your code actually runs**. Servers still exist, you just never see or manage them. Azure Functions and Azure Logic Apps are examples.
+updated: 2026-11-11
+readingMinutes: 8
+keyTerms:
+  - term: Serverless
+    definition: A model where the provider manages all infrastructure and scaling; you supply code or workflows triggered by events.
+  - term: Event-driven
+    definition: Code runs in response to something happening, such as an HTTP request, a new file, a queue message or a timer.
+  - term: Trigger
+    definition: The event that starts a function, for example an HTTP call or a blob upload.
+  - term: Cold start
+    definition: Extra delay when a function runs after being idle and a new instance must start.
+  - term: Scale to zero
+    definition: When nothing is happening, no instances run and (on consumption plans) you pay nothing for compute.
+interview:
+  - level: beginner
+    q: What does serverless mean if there are still servers?
+    a: >-
+      It means I do not manage the servers. The cloud provider runs them, scales them and patches them. I only write the code that runs when an event happens, and usually pay only when it runs.
+    followUps:
+      - q: Give me an Azure example.
+        a: >-
+          Azure Functions. For example, a function that creates a thumbnail every time someone uploads a photo to Blob Storage. It runs only when a photo arrives.
+  - level: intermediate
+    q: What are the benefits and drawbacks of serverless?
+    a: >-
+      Benefits are no infrastructure management, automatic scaling (including to zero), pay-per-execution pricing that is very cheap for spiky or low traffic, and fast development of event-driven features. Drawbacks are cold-start latency on some plans, execution time limits, harder local debugging and observability across many small functions, and costs that can exceed a dedicated service under constant high load.
+    followUps: []
+  - level: experienced
+    q: When would you NOT choose Azure Functions for a workload?
+    a: >-
+      For long-running or stateful processing that does not fit function timeouts (unless Durable Functions fits), for steady high-throughput APIs where an always-on App Service or Container Apps is cheaper and has predictable latency, for latency-critical endpoints that cannot tolerate cold starts (unless I pay for pre-warmed instances), and when the team needs full control of the runtime environment. I would also be careful with chatty function-to-function designs that are hard to trace.
+    followUps:
+      - q: How do you mitigate cold starts?
+        a: >-
+          Use the Flex Consumption or Premium plan with always-ready or pre-warmed instances, keep the deployment package small, avoid heavy start-up work, and choose a language runtime with fast start-up.
+  - level: scenario
+    q: A school wants to email parents automatically every time a teacher uploads a report card PDF. Serverless or a VM?
+    a: >-
+      Serverless. An Azure Function triggered by the Blob Storage upload, or a Logic App with a ready-made email connector, runs only when a file arrives. There is no server to patch and the cost is close to nothing between uploads.
+    followUps: []
+revision:
+  keyPoints:
+    - Serverless = no server management; provider handles provisioning, scaling and maintenance.
+    - Event-driven. Code runs when triggered (HTTP, timer, queue, file upload).
+    - Scales automatically, including to zero.
+    - Pay for execution (on consumption-style plans), not for idle servers.
+    - Azure examples are **Azure Functions** (code) and **Azure Logic Apps** (low-code workflows).
+  mistakes:
+    - Thinking serverless means there are no servers.
+    - Assuming serverless is always cheapest. Constant heavy load can cost more than an always-on service.
+  examTips:
+    - '"Run code in response to events without managing infrastructure" = **Azure Functions** / serverless.'
+    - '"Automate a workflow with connectors and little or no code" = **Azure Logic Apps**.'
+  quick:
+    - q: Are there servers in serverless computing?
+      a: Yes, but the provider manages them and you never see them.
+    - q: What starts a serverless function?
+      a: A trigger, which is an event such as an HTTP request, a timer, a queue message or a file upload.
+    - q: Name the Azure service for running event-driven code without servers.
+      a: Azure Functions.
+    - q: What is a cold start?
+      a: The extra delay when an idle function must start a new instance.
+    - q: How are you usually billed in a serverless consumption plan?
+      a: For executions and the resources used while code runs, not for idle time.
+references:
+  - title: Describe cloud computing - serverless (Microsoft Learn)
+    url: https://learn.microsoft.com/en-us/training/modules/describe-cloud-compute/
+  - title: Azure Functions overview
+    url: https://learn.microsoft.com/en-us/azure/azure-functions/functions-overview
+  - title: Azure Functions hosting options
+    url: https://learn.microsoft.com/en-us/azure/azure-functions/functions-scale
+related:
+  - paas
+  - consumption-based-model
+  - elasticity
+---
+
+## Start with a question
+
+<Story question="Why pay for a security guard to stand at the door all night if visitors only arrive twice a day?">
+
+A web server on a VM is like a guard on a 24-hour shift. It is paid every hour, whether ten people arrive or none.
+
+Now imagine a **doorbell**: nothing happens until someone presses it, then help appears instantly. **Serverless computing works like a doorbell.** Your code sleeps until an event happens, wakes up, does its job, and you pay for that moment.
+
+</Story>
+
+## Explain it like I'm 10
+
+<Eli10>
+
+Think about the **automatic lights** in a school corridor. They switch on only when someone walks past and switch off when the corridor is empty. Nobody has to remember to flip a switch, and the school does not pay for lights in an empty hallway.
+
+Serverless is automatic lights for computer programs. **The program runs only when something happens**, and nobody has to look after the computer it runs on.
+
+</Eli10>
+
+## The technical explanation
+
+**Serverless computing** is a cloud execution model in which the provider **dynamically allocates resources on demand**, so developers do not provision, scale or maintain servers. It has three defining traits:
+
+1. **No infrastructure management**: no VMs, no OS patching, no capacity planning.
+2. **Event-driven scaling**: instances are created automatically as events arrive, from zero to many, and removed when idle.
+3. **Consumption-based billing**: on consumption-style plans you pay per execution and for resources used while code runs, not for idle time.
+
+<Flow
+  caption="An event-driven serverless flow in Azure"
+  steps={[
+    { title: 'Event happens', text: 'A customer uploads a photo to Blob Storage.' },
+    { title: 'Trigger fires', text: 'The blob trigger starts an Azure Function.' },
+    { title: 'Code runs', text: 'The function resizes the photo and writes a thumbnail.' },
+    { title: 'Scales back to zero', text: 'No more uploads, no running instances, no compute charges.' },
+  ]}
+/>
+
+### Serverless on Azure
+
+| Service | Best for |
+| --- | --- |
+| **Azure Functions** | Small units of code triggered by events (HTTP, timers, queues, blobs, databases) |
+| **Azure Logic Apps** | Low-code workflows that connect services with hundreds of built-in connectors |
+| **Azure Container Apps** | Containers that scale on events, including to zero, without managing Kubernetes |
+
+<Callout type="exam">
+Serverless is **not** a fourth service type that replaces IaaS, PaaS and SaaS. It is an execution model, and Azure Functions is generally described as both **PaaS** and **serverless**. On AZ-900, link serverless with **event-driven**, **no infrastructure management** and **pay only when code runs**.
+</Callout>
+
+<DeepDive title="Serverless in production: hosting plans and patterns">
+
+Azure Functions can be hosted on several plans with different trade-offs:
+
+- **Flex Consumption**: event-driven scale-out, scale to zero, optional always-ready instances, and virtual network integration. This is Microsoft's recommended serverless plan for new apps.
+- **Consumption** (legacy): pure pay-per-execution with cold starts and a shorter maximum run time.
+- **Premium**: pre-warmed instances (no cold starts), VNet support, longer run times.
+- **Dedicated (App Service plan)**: runs on always-on instances you already pay for.
+
+Patterns that work well include fan-out/fan-in and long-running orchestrations with **Durable Functions**, queue-based load levelling to protect databases, and scheduled jobs replacing VM cron tasks. Watch out for unbounded scale-out hammering downstream systems (set maximum instance counts), and invest early in distributed tracing with Application Insights.
+
+</DeepDive>
+
+## Real-world business scenario
+
+<Scenario
+  company="A food delivery platform"
+  industry="Food delivery"
+  problem="After each order the system must send an SMS, update loyalty points and notify the restaurant. Order volume is near zero at 4 am and huge at 8 pm."
+  service="Each order publishes a message to a queue; Azure Functions process notifications and loyalty updates; a Logic App handles restaurant notifications via an existing connector."
+  why="Event-driven work with extreme peaks and troughs is ideal for serverless: automatic scaling, no idle cost, no servers to manage."
+  outcome="Notifications kept up during peak dinner rush, and the monthly compute bill for this feature fell to a fraction of the always-on VM it replaced."
+/>
+
+## When to use it and when not to
+
+<UseWhen
+  use={[
+    'Event-driven tasks such as file processing, notifications, webhooks and IoT messages.',
+    'Spiky or unpredictable workloads with idle periods.',
+    'Scheduled jobs (timer triggers) and glue code between services.',
+    'Rapid prototyping, where you pay almost nothing until there is traffic.',
+  ]}
+  avoid={[
+    'Long-running, CPU-heavy jobs that exceed plan time limits.',
+    'Steady, high-volume traffic. An always-on service may be cheaper and more predictable.',
+    'Latency-critical endpoints that cannot tolerate cold starts on consumption plans.',
+  ]}
+  alternatives={[
+    '**Azure App Service** for always-on web apps and APIs.',
+    '**Azure Container Apps** for containerised microservices with scale-to-zero.',
+    '**Virtual machines** when you need full control of the environment.',
+  ]}
+/>

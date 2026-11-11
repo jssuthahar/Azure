@@ -1,0 +1,34 @@
+---
+/** Defense in depth: layers of protection around your data; attacks bounce off. */
+const rings = [
+  { r: 130, label: 'Physical', c: '#9fd0f7' },
+  { r: 110, label: 'Identity', c: '#76b9ed' },
+  { r: 90, label: 'Perimeter', c: '#4ca3e6' },
+  { r: 70, label: 'Network', c: '#2b8ddf' },
+  { r: 50, label: 'Compute & app', c: '#0078d4' },
+];
+const attacks = [
+  { from: [20, 30], to: [180, 90] },
+  { from: [620, 40], to: [470, 100] },
+  { from: [610, 280], to: [455, 205] },
+  { from: [30, 270], to: [185, 210] },
+];
+---
+<svg viewBox="0 0 640 300" role="img" aria-label="Your data sits in the middle, protected by layers: physical security, identity, perimeter, network, compute and application. Attacks are stopped at the outer layers.">
+  {rings.map((ring, i) => (
+    <g>
+      <circle cx="320" cy="150" r={ring.r} fill={ring.c} opacity={0.35 + i * 0.12} />
+      <circle cx="320" cy="150" r={ring.r} fill="none" stroke="#fff" stroke-width="2" stroke-dasharray="4 10" class="a-spin" style={`animation-duration:${18 - i * 2}s;${i % 2 ? 'animation-direction:reverse' : ''}`} />
+      <text x="320" y={150 - ring.r + 14} text-anchor="middle" font-size="11" font-weight="700" fill="#002b55">{ring.label}</text>
+    </g>
+  ))}
+  <g class="a-pulse"><circle cx="320" cy="150" r="30" fill="#ffd75e" stroke="#c19c00" stroke-width="2" /><text x="320" y="148" text-anchor="middle" font-size="18">🔒</text><text x="320" y="166" text-anchor="middle" font-size="11" font-weight="700" fill="#0b1020">DATA</text></g>
+  {attacks.map((a, i) => (
+    <g>
+      <path id={`atk${i}`} d={`M${a.from[0]} ${a.from[1]} L${a.to[0]} ${a.to[1]}`} fill="none" />
+      <g><animateMotion dur="2.4s" begin={`-${i * 0.6}s`} repeatCount="indefinite" keyPoints="0;1;0.6" keyTimes="0;0.7;1" calcMode="linear"><mpath href={`#atk${i}`} /></animateMotion><circle r="9" fill="#e74856" /><text y="4" text-anchor="middle" font-size="10" fill="#fff">✕</text></g>
+    </g>
+  ))}
+  <text x="60" y="150" class="lbl">🚫 attacks</text>
+  <text x="540" y="150" class="lbl">blocked</text>
+</svg>

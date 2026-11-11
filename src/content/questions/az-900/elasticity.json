@@ -1,0 +1,63 @@
+{
+  "cert": "az-900",
+  "domain": 1,
+  "topic": "elasticity",
+  "questions": [
+    {
+      "id": "cc-elastic-1",
+      "type": "single",
+      "question": "A web app automatically adds instances when traffic increases and removes them when traffic decreases. Which cloud benefit is this?",
+      "options": [
+        { "text": "Elasticity", "why": "Correct. Automatic adjustment to demand." },
+        { "text": "Predictability", "why": "Predictability concerns consistent performance and cost." },
+        { "text": "Manageability", "why": "Manageability concerns how you manage resources." },
+        { "text": "Governance", "why": "Governance is about rules and compliance." }
+      ],
+      "answer": [0],
+      "explanation": "Elasticity is automatic, demand-driven scaling.",
+      "objective": "1.2.1"
+    },
+    {
+      "id": "cc-elastic-2",
+      "type": "single",
+      "question": "What best describes the difference between scalability and elasticity?",
+      "options": [
+        { "text": "Elasticity is the automatic adjustment of resources based on demand; scalability is the ability to adjust resources", "why": "Correct." },
+        { "text": "Scalability only works on-premises; elasticity only works in the cloud", "why": "Both concepts apply to cloud systems." },
+        { "text": "They mean exactly the same thing", "why": "Elasticity specifically implies automatic, real-time scaling." },
+        { "text": "Elasticity only scales up; scalability only scales down", "why": "Both work in both directions." }
+      ],
+      "answer": [0],
+      "explanation": "All elastic systems are scalable, but elasticity adds automatic, rapid response to demand.",
+      "objective": "1.2.1"
+    },
+    {
+      "id": "cc-elastic-3",
+      "type": "single",
+      "question": "Which Azure feature lets a group of identical VMs automatically increase or decrease in number based on demand?",
+      "options": [
+        { "text": "Virtual Machine Scale Sets", "why": "Correct." },
+        { "text": "Availability sets", "why": "Availability sets spread VMs across fault domains; they do not autoscale." },
+        { "text": "Resource groups", "why": "Resource groups are logical containers." },
+        { "text": "Azure DNS", "why": "Azure DNS hosts DNS zones." }
+      ],
+      "answer": [0],
+      "explanation": "VM Scale Sets support autoscale to add or remove identical VM instances.",
+      "objective": "2.2.2"
+    },
+    {
+      "id": "cc-elastic-4",
+      "type": "multi",
+      "question": "Which TWO are benefits of elasticity?",
+      "options": [
+        { "text": "Reduced cost by removing unused resources automatically", "why": "Correct." },
+        { "text": "Guaranteed 100% uptime", "why": "No service guarantees 100% uptime." },
+        { "text": "Capacity that keeps up with sudden spikes without manual action", "why": "Correct." },
+        { "text": "Removal of all security responsibilities", "why": "Security responsibilities remain shared." }
+      ],
+      "answer": [0, 2],
+      "explanation": "Elasticity matches capacity to demand automatically, reducing waste and handling spikes.",
+      "objective": "1.2.1"
+    }
+  ]
+}

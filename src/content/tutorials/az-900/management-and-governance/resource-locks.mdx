@@ -1,0 +1,103 @@
+---
+title: Resource Locks
+seoTitle: Azure Resource Locks Explained (Delete, ReadOnly) | AZ-900
+description: "Azure resource locks explained: Delete and ReadOnly locks, inheritance, how they override permissions, with a hands-on lab and AZ-900 practice."
+answer: >-
+  **Resource locks** prevent resources from being **accidentally deleted or changed**. A **Delete** lock (CanNotDelete) allows changes but blocks deletion. A **ReadOnly** lock blocks both changes and deletion. Locks can be applied to subscriptions, resource groups or individual resources, are inherited by child resources, and apply to everyone, even Owners, until the lock is removed.
+updated: 2026-11-11
+readingMinutes: 5
+keyTerms:
+  - term: Delete lock (CanNotDelete)
+    definition: Users can read and modify a resource but cannot delete it.
+  - term: ReadOnly lock
+    definition: Users can read a resource but cannot modify or delete it.
+  - term: Lock inheritance
+    definition: A lock on a resource group or subscription applies to everything inside.
+interview:
+  - level: beginner
+    q: What is a resource lock?
+    a: >-
+      A safety catch on an Azure resource that stops it from being deleted, or changed, by mistake.
+    followUps: []
+  - level: intermediate
+    q: What is the difference between Delete and ReadOnly locks?
+    a: >-
+      A Delete lock still lets you change the resource but not delete it. A ReadOnly lock stops both changes and deletion, making it effectively read-only.
+    followUps: []
+  - level: experienced
+    q: What surprises can ReadOnly locks cause?
+    a: >-
+      Some operations that look like reads are actually writes in Azure Resource Manager. For example, listing storage account keys is a POST, so a ReadOnly lock can block it. A ReadOnly lock on a resource group can also block scaling or creating resources inside it. Test locks before applying them broadly.
+    followUps: []
+revision:
+  keyPoints:
+    - Locks prevent accidental deletion or modification.
+    - Delete (CanNotDelete) vs ReadOnly.
+    - Apply at subscription, resource group or resource; inherited downward.
+    - Locks apply to all users, including Owners.
+    - Remove the lock first to make the change.
+  mistakes:
+    - Thinking Owners can bypass locks.
+  examTips:
+    - '"Prevent accidental deletion but allow changes" = **Delete (CanNotDelete) lock**.'
+  quick:
+    - q: Which lock allows changes but blocks deletion?
+      a: Delete (CanNotDelete).
+    - q: Which lock blocks changes and deletion?
+      a: ReadOnly.
+    - q: Can an Owner delete a locked resource?
+      a: Not until the lock is removed.
+    - q: Are locks inherited?
+      a: Yes, by resources within the locked scope.
+    - q: Where can locks be applied?
+      a: Subscriptions, resource groups and resources.
+references:
+  - title: Lock your resources to protect your infrastructure
+    url: https://learn.microsoft.com/en-us/azure/azure-resource-manager/management/lock-resources
+related:
+  - azure-policy
+  - governance
+  - resource-tags
+---
+
+## Start with a question
+
+<Story question="What stops a tired admin deleting the production database at 2 a.m.?">
+
+A **resource lock**. Even with full permissions, the delete simply fails.
+
+</Story>
+
+## Explain it like I'm 10
+
+<Eli10>
+
+A lock is like a **child-safety cap** on a medicine bottle. You can still see what's inside, but you can't open it by accident. To open it, you deliberately remove the cap first.
+
+</Eli10>
+
+## The technical explanation
+
+| Lock | Read | Modify | Delete |
+| --- | --- | --- | --- |
+| Delete (CanNotDelete) | ✅ | ✅ | ❌ |
+| ReadOnly | ✅ | ❌ | ❌ |
+
+Locks override RBAC: even an **Owner** must remove the lock before deleting or changing a locked resource.
+
+<TryIt labs="locks-and-tags" text="Add a Delete lock to a resource group, try to delete it (it fails), then remove the lock properly." />
+
+## Real-world business scenario
+
+<Scenario
+  company="An online bank"
+  industry="Banking"
+  problem="A clean-up script deleted the wrong resource group, taking down a payment service."
+  service="Delete locks on all production resource groups, with lock removal limited to a small ops group."
+  why="Locks block deletion regardless of permissions."
+  outcome="A later scripting mistake was blocked by the lock with no impact."
+/>
+
+## When to use it and when not to
+
+<UseWhen use={['Production and shared resources that must never be deleted by accident.']} avoid={['ReadOnly locks on resources that need normal operations like scaling.']} />

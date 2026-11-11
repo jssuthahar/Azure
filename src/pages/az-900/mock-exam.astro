@@ -1,0 +1,376 @@
+---
+import Base from '../../layouts/Base.astro';
+import Mascot from '../../components/Mascot.astro';
+import { getQuestionBank, getNav } from '../../lib/learn';
+import { MODULES } from '../../data/az-900/syllabus';
+
+const bank = await getQuestionBank();
+const nav = await getNav();
+const topicTitle = Object.fromEntries(nav.filter((t) => t.published).map((t) => [t.slug, { title: t.title, url: t.url }]));
+const domains = MODULES.map((m) => ({ domain: m.domain, title: m.shortTitle, weight: m.weightMid, count: bank.filter((q) => q.domain === m.domain).length }));
+const payload = JSON.stringify({ bank, domains, topicTitle }).replace(/</g, '\\u003c');
+
+const title = 'AZ-900 Mock Exam: Free Timed Practice Test';
+const description = `Free timed AZ-900 practice exam with ${bank.length} original questions weighted by official domain, mark-for-review, scoring and full explanations.`;
+const crumbs = [
+  { name: 'Home', url: '/' },
+  { name: 'AZ-900', url: '/az-900/' },
+  { name: 'Mock exam', url: '/az-900/mock-exam/' },
+];
+---
+<Base title={title} description={description} breadcrumbs={crumbs}>
+  <script type="application/json" id="exam-data" set:html={payload} />
+  <div class="mx-auto max-w-6xl px-4 py-8 sm:px-6">
+    <!-- ============ SETUP ============ -->
+    <section id="setup">
+      <nav aria-label="Breadcrumb" class="text-sm text-muted"><a href="/">Home</a> / <a href="/az-900/">AZ-900</a> / <span class="text-[var(--text)]">Mock exam</span></nav>
+      <div class="mt-6 grid gap-8 lg:grid-cols-[1.4fr_1fr]">
+        <div>
+          <p class="eyebrow">Practise under exam conditions</p>
+          <h1 class="mt-3 text-3xl font-bold tracking-tight sm:text-4xl">AZ-900 mock exam</h1>
+          <p class="mt-4 text-lg leading-relaxed text-muted">Questions are drawn at random from a bank of {bank.length} and weighted like the real exam's domains. You get a timer, question navigation and mark-for-review. At the end you see a full review that explains every option.</p>
+          <div class="callout callout-warning mt-5">
+            <p class="callout-title">Practice questions only</p>
+            <p>Every question here was written for this site to teach the official objectives. None are real, recalled or leaked Microsoft exam questions. The real exam's wording, format and scoring differ.</p>
+          </div>
+        </div>
+        <div class="card flex items-center gap-4 p-5">
+          <Mascot size={72} mood="thinking" />
+          <div class="text-sm leading-relaxed">
+            <p class="font-semibold">Nimbus's exam tips</p>
+            <p class="mt-1 text-muted">Read the last line of a question first. Rule out options that are obviously wrong. Flag anything you are unsure of, move on, and come back.</p>
+          </div>
+        </div>
+      </div>
+
+      <form id="setup-form" class="mt-8 grid gap-4 md:grid-cols-3">
+        <label class="opt min-w-0 flex-col !gap-1 p-5">
+          <span class="flex items-center gap-2"><input type="radio" name="mode" value="full" checked /><span class="font-semibold">Full mock exam</span></span>
+          <span class="text-sm text-muted">40 questions · 45 minutes · all three domains weighted 25–30% / 35–40% / 30–35%.</span>
+        </label>
+        <label class="opt min-w-0 flex-col !gap-1 p-5">
+          <span class="flex items-center gap-2"><input type="radio" name="mode" value="quick" /><span class="font-semibold">Quick practice</span></span>
+          <span class="text-sm text-muted">10 questions · 12 minutes · a short daily warm-up.</span>
+        </label>
+        <label class="opt min-w-0 flex-col !gap-1 p-5">
+          <span class="flex items-center gap-2"><input type="radio" name="mode" value="domain" /><span class="font-semibold">Practise one domain</span></span>
+          <span class="text-sm text-muted">Up to 15 questions · 18 minutes · focus on a weak area.</span>
+          <select name="domain" class="mt-2 w-full max-w-full min-w-0 rounded-lg border border-default bg-[var(--bg)] px-2 py-1.5 text-sm" aria-label="Domain">
+            {domains.map((d) => <option value={d.domain}>Domain {d.domain}: {d.title} ({d.count} questions)</option>)}
+          </select>
+        </label>
+        <div class="flex flex-wrap items-center gap-3 md:col-span-3">
+          <button type="submit" class="btn btn-accent">Start exam</button>
+          <button type="button" id="resume" class="btn btn-outline hidden">Resume unfinished exam</button>
+          <label class="flex items-center gap-2 text-sm text-muted"><input type="checkbox" name="untimed" /> Practice without a timer</label>
+        </div>
+      </form>
+    </section>
+
+    <!-- ============ EXAM ============ -->
+    <section id="exam" class="hidden" aria-label="Exam in progress">
+      <div class="sticky top-16 z-10 -mx-4 mb-5 flex flex-wrap items-center gap-3 border-b border-default bg-[var(--bg)]/95 px-4 py-3 sm:-mx-6 sm:px-6">
+        <p class="font-semibold">Question <span id="q-num">1</span> of <span id="q-total">40</span></p>
+        <span id="q-domain" class="chip"></span>
+        <p class="ml-auto font-mono text-lg font-bold tabular-nums" id="timer" role="timer" aria-live="off">45:00</p>
+        <button type="button" id="submit-exam" class="btn btn-primary btn-sm">Finish &amp; score</button>
+      </div>
+      <div class="grid gap-6 lg:grid-cols-[minmax(0,1fr)_16rem]">
+        <div>
+          <div class="card p-5 sm:p-6">
+            <p id="q-scenario" class="mb-3 hidden rounded-xl bg-subtle p-3 leading-relaxed"></p>
+            <p id="q-text" class="text-lg leading-relaxed font-semibold"></p>
+            <p id="q-hint" class="mt-1 text-sm text-muted"></p>
+            <fieldset id="q-options" class="mt-4 space-y-2"><legend class="sr-only">Answer options</legend></fieldset>
+          </div>
+          <div class="mt-4 flex flex-wrap items-center gap-2">
+            <button type="button" id="prev" class="btn btn-outline btn-sm">← Previous</button>
+            <button type="button" id="flag" class="btn btn-outline btn-sm" aria-pressed="false">⚑ Mark for review</button>
+            <button type="button" id="next" class="btn btn-accent btn-sm ml-auto">Next →</button>
+          </div>
+        </div>
+        <aside class="card h-fit p-4">
+          <p class="text-sm font-semibold">Question navigator</p>
+          <div id="navigator" class="mt-3 grid grid-cols-6 gap-1.5 lg:grid-cols-5"></div>
+          <div class="mt-3 space-y-1 text-xs text-muted">
+            <p><span class="mr-1 inline-block size-3 rounded border border-[var(--accent)] bg-[var(--accent-soft)] align-middle"></span>Answered</p>
+            <p><span class="mr-1 inline-block size-3 rounded-full bg-[var(--warn)] align-middle"></span>Marked for review</p>
+          </div>
+        </aside>
+      </div>
+    </section>
+
+    <!-- ============ RESULTS ============ -->
+    <section id="results" class="hidden" aria-labelledby="results-title">
+      <div class="card overflow-hidden">
+        <div class="band flex flex-wrap items-center gap-6 p-6">
+          <div>
+            <p class="text-sm text-white/80">Your result</p>
+            <h2 id="results-title" class="text-4xl font-bold"><span id="r-percent"></span>%</h2>
+            <p id="r-detail" class="text-white/85"></p>
+          </div>
+          <p id="r-verdict" class="ml-auto rounded-2xl bg-white/15 px-4 py-3 text-lg font-semibold"></p>
+        </div>
+        <div class="grid gap-6 p-6 md:grid-cols-2">
+          <div>
+            <h3 class="font-semibold">Performance by domain</h3>
+            <div id="r-domains" class="mt-3 space-y-3"></div>
+          </div>
+          <div>
+            <h3 class="font-semibold">What to do next</h3>
+            <ul id="r-next" class="mt-3 space-y-2 text-sm leading-relaxed"></ul>
+            <p class="mt-4 text-xs text-muted">The "scaled" figure is a rough indication on a 1–1000 scale (passing mark 700). Microsoft's real scoring is not a simple percentage.</p>
+          </div>
+        </div>
+      </div>
+      <div class="mt-8 flex flex-wrap items-center gap-2">
+        <h3 class="mr-auto text-xl font-bold">Review answers</h3>
+        <div role="group" aria-label="Filter review" class="flex gap-1 text-sm">
+          <button type="button" class="btn btn-outline btn-sm" data-filter="all">All</button>
+          <button type="button" class="btn btn-outline btn-sm" data-filter="wrong">Incorrect</button>
+          <button type="button" class="btn btn-outline btn-sm" data-filter="flagged">Flagged</button>
+        </div>
+      </div>
+      <ol id="review" class="mt-4 space-y-4"></ol>
+      <div class="mt-8 flex gap-3"><button type="button" id="again" class="btn btn-accent">Take another exam</button><a href="/progress/" class="btn btn-outline">See my progress</a></div>
+    </section>
+  </div>
+</Base>
+
+<script>
+  import { saveMock } from '../../lib/progress';
+
+  interface Q {
+    id: string; type: 'single' | 'multi'; scenario?: string; question: string;
+    options: { text: string; why: string }[]; answer: number[]; explanation: string; domain: 1 | 2 | 3; topic?: string;
+  }
+  interface ExamQ extends Q { order: number[] }
+  interface State { mode: string; qs: ExamQ[]; picks: number[][]; flags: boolean[]; cur: number; endsAt: number | null; }
+
+  const data = JSON.parse(document.getElementById('exam-data')!.textContent!) as {
+    bank: Q[]; domains: { domain: number; title: string; weight: number; count: number }[]; topicTitle: Record<string, { title: string; url: string }>;
+  };
+  const SKEY = 'msdb-azure-exam-inprogress';
+  const $ = <T extends HTMLElement = HTMLElement>(id: string) => document.getElementById(id) as T;
+  const esc = (s: string) => s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>').replace(/`(.+?)`/g, '<code>$1</code>');
+  const shuffle = <T,>(a: T[]) => { const b = [...a]; for (let i = b.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [b[i], b[j]] = [b[j], b[i]]; } return b; };
+  const domainTitle = (d: number) => data.domains.find((x) => x.domain === d)?.title ?? '';
+
+  let st: State | null = null;
+  let tick: number | undefined;
+
+  const persist = () => { try { st ? sessionStorage.setItem(SKEY, JSON.stringify(st)) : sessionStorage.removeItem(SKEY); } catch {} };
+
+  function build(mode: string, domain: number): ExamQ[] {
+    const total = mode === 'full' ? 40 : mode === 'quick' ? 10 : 15;
+    let picked: Q[] = [];
+    if (mode === 'domain') {
+      picked = shuffle(data.bank.filter((q) => q.domain === domain)).slice(0, total);
+    } else {
+      const weights = data.domains.map((d) => d.weight);
+      const sum = weights.reduce((a, b) => a + b, 0);
+      const quota = data.domains.map((d) => Math.round((d.weight / sum) * total));
+      quota[quota.length - 1] += total - quota.reduce((a, b) => a + b, 0);
+      const used = new Set<string>();
+      data.domains.forEach((d, i) => {
+        const pool = shuffle(data.bank.filter((q) => q.domain === d.domain)).slice(0, quota[i]);
+        pool.forEach((q) => used.add(q.id));
+        picked.push(...pool);
+      });
+      if (picked.length < total) picked.push(...shuffle(data.bank.filter((q) => !used.has(q.id))).slice(0, total - picked.length));
+      picked = shuffle(picked);
+    }
+    return picked.map((q) => ({ ...q, order: shuffle(q.options.map((_, i) => i)) }));
+  }
+
+  function show(id: 'setup' | 'exam' | 'results') {
+    (['setup', 'exam', 'results'] as const).forEach((s) => $(s).classList.toggle('hidden', s !== id));
+    window.scrollTo({ top: 0 });
+  }
+
+  function start(mode: string, domain: number, untimed: boolean) {
+    const qs = build(mode, domain);
+    const minutes = mode === 'full' ? 45 : mode === 'quick' ? 12 : 18;
+    st = { mode, qs, picks: qs.map(() => []), flags: qs.map(() => false), cur: 0, endsAt: untimed ? null : Date.now() + minutes * 60_000 };
+    persist();
+    runExam();
+  }
+
+  function runExam() {
+    show('exam');
+    $('q-total').textContent = String(st!.qs.length);
+    renderNav();
+    renderQ();
+    clearInterval(tick);
+    const t = $('timer');
+    if (st!.endsAt) {
+      const upd = () => {
+        const left = Math.max(0, st!.endsAt! - Date.now());
+        const m = Math.floor(left / 60000), s = Math.floor((left % 60000) / 1000);
+        t.textContent = `${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
+        t.style.color = left < 5 * 60_000 ? 'var(--bad)' : '';
+        if (left <= 0) { clearInterval(tick); alert('Time is up! Your exam will now be scored.'); finish(); }
+      };
+      upd();
+      tick = window.setInterval(upd, 1000);
+    } else t.textContent = 'Untimed';
+  }
+
+  function renderQ() {
+    const s = st!;
+    const q = s.qs[s.cur];
+    $('q-num').textContent = String(s.cur + 1);
+    $('q-domain').textContent = `Domain ${q.domain}: ${domainTitle(q.domain)}`;
+    const sc = $('q-scenario');
+    sc.classList.toggle('hidden', !q.scenario);
+    sc.innerHTML = q.scenario ? esc(q.scenario) : '';
+    $('q-text').innerHTML = esc(q.question);
+    $('q-hint').textContent = q.type === 'multi' ? `Select ${q.answer.length} answers.` : 'Select one answer.';
+    const box = $('q-options');
+    box.querySelectorAll('label').forEach((l) => l.remove());
+    q.order.forEach((oi) => {
+      const lab = document.createElement('label');
+      lab.className = 'opt';
+      const inp = document.createElement('input');
+      inp.type = q.type === 'multi' ? 'checkbox' : 'radio';
+      inp.name = 'exam-opt';
+      inp.value = String(oi);
+      inp.checked = s.picks[s.cur].includes(oi);
+      const span = document.createElement('span');
+      span.className = 'leading-relaxed';
+      span.innerHTML = esc(q.options[oi].text);
+      lab.append(inp, span);
+      box.append(lab);
+    });
+    $('flag').setAttribute('aria-pressed', String(s.flags[s.cur]));
+    $('flag').textContent = s.flags[s.cur] ? '⚑ Marked for review' : '⚑ Mark for review';
+    ($('prev') as HTMLButtonElement).disabled = s.cur === 0;
+    $('next').textContent = s.cur === s.qs.length - 1 ? 'Review & finish' : 'Next →';
+    paintNav();
+  }
+
+  function renderNav() {
+    const nav = $('navigator');
+    nav.innerHTML = '';
+    st!.qs.forEach((_, i) => {
+      const b = document.createElement('button');
+      b.type = 'button';
+      b.className = 'qnav-btn';
+      b.textContent = String(i + 1);
+      b.setAttribute('aria-label', `Go to question ${i + 1}`);
+      b.addEventListener('click', () => { st!.cur = i; persist(); renderQ(); });
+      nav.append(b);
+    });
+  }
+  function paintNav() {
+    [...$('navigator').children].forEach((b, i) => {
+      b.toggleAttribute('data-answered', st!.picks[i].length > 0);
+      b.toggleAttribute('data-flagged', st!.flags[i]);
+      b.toggleAttribute('data-current', i === st!.cur);
+    });
+  }
+
+  $('q-options').addEventListener('change', () => {
+    st!.picks[st!.cur] = [...$('q-options').querySelectorAll<HTMLInputElement>('input:checked')].map((i) => Number(i.value));
+    persist();
+    paintNav();
+  });
+  $('prev').addEventListener('click', () => { if (st!.cur > 0) { st!.cur--; persist(); renderQ(); } });
+  $('next').addEventListener('click', () => {
+    if (st!.cur < st!.qs.length - 1) { st!.cur++; persist(); renderQ(); } else confirmFinish();
+  });
+  $('flag').addEventListener('click', () => { st!.flags[st!.cur] = !st!.flags[st!.cur]; persist(); renderQ(); });
+  $('submit-exam').addEventListener('click', confirmFinish);
+
+  function confirmFinish() {
+    const un = st!.picks.filter((p) => p.length === 0).length;
+    const fl = st!.flags.filter(Boolean).length;
+    const msg = [un && `${un} unanswered`, fl && `${fl} marked for review`].filter(Boolean).join(' and ');
+    if (!msg || confirm(`You have ${msg}. Finish and see your score?`)) finish();
+  }
+
+  const isRight = (q: ExamQ, p: number[]) => p.length === q.answer.length && p.every((x) => q.answer.includes(x));
+
+  function finish() {
+    clearInterval(tick);
+    const s = st!;
+    const ok = s.qs.filter((q, i) => isRight(q, s.picks[i])).length;
+    const total = s.qs.length;
+    const percent = Math.round((ok / total) * 100);
+    const scaled = Math.round(1 + (percent / 100) * 999);
+    const domains: Record<string, { ok: number; total: number }> = {};
+    s.qs.forEach((q, i) => {
+      const k = String(q.domain);
+      domains[k] ??= { ok: 0, total: 0 };
+      domains[k].total++;
+      if (isRight(q, s.picks[i])) domains[k].ok++;
+    });
+    saveMock({ score: ok, total, percent, scaled, mode: s.mode, domains, at: new Date().toISOString() });
+    renderResults(ok, total, percent, scaled, domains);
+    try { sessionStorage.removeItem(SKEY); } catch {}
+  }
+
+  function renderResults(ok: number, total: number, percent: number, scaled: number, domains: Record<string, { ok: number; total: number }>) {
+    const s = st!;
+    show('results');
+    $('r-percent').textContent = String(percent);
+    $('r-detail').textContent = `${ok} of ${total} correct · approx. ${scaled} / 1000 scaled`;
+    $('r-verdict').textContent = percent >= 80 ? '🚀 Exam ready' : percent >= 70 ? '👍 Passing range: keep practising' : '📚 Keep going: review weak areas';
+    $('r-domains').innerHTML = Object.entries(domains).sort().map(([d, v]) => {
+      const p = Math.round((v.ok / v.total) * 100);
+      return `<div><div class="flex justify-between text-sm"><span>Domain ${d}: ${domainTitle(Number(d))}</span><span class="font-semibold">${v.ok}/${v.total} (${p}%)</span></div><div class="bar mt-1"><span style="width:${p}%;background:${p >= 70 ? 'var(--ok)' : 'var(--bad)'}"></span></div></div>`;
+    }).join('');
+    const weak = Object.entries(domains).filter(([, v]) => v.ok / v.total < 0.7).map(([d]) => Number(d));
+    const missedTopics = [...new Set(s.qs.filter((q, i) => !isRight(q, s.picks[i]) && q.topic && data.topicTitle[q.topic]).map((q) => q.topic!))].slice(0, 5);
+    const tips: string[] = [];
+    if (weak.length) tips.push(`Focus next on domain ${weak.join(' and ')}: try <em>Practise one domain</em>.`);
+    if (missedTopics.length) tips.push(`Revisit: ${missedTopics.map((t) => `<a class="text-accent underline" href="${data.topicTitle[t].url}">${data.topicTitle[t].title}</a>`).join(', ')}.`);
+    tips.push('Read the explanation for every question you missed, including why the other options are wrong.');
+    if (percent >= 80) tips.push('Consistently scoring 80%+? Try Microsoft\'s free official practice assessment too.');
+    $('r-next').innerHTML = tips.map((t) => `<li class="flex gap-2"><span class="text-accent">›</span><span>${t}</span></li>`).join('');
+
+    $('review').innerHTML = s.qs.map((q, i) => {
+      const right = isRight(q, s.picks[i]);
+      const opts = q.order.map((oi) => {
+        const isAns = q.answer.includes(oi), picked = s.picks[i].includes(oi);
+        const state = isAns ? (picked ? 'correct' : 'missed') : picked ? 'wrong' : '';
+        const mark = isAns ? '✓' : picked ? '✕' : '';
+        return `<div class="opt" data-state="${state}" style="cursor:default"><span class="w-4 font-bold">${mark}</span><span class="flex-1"><span class="block">${esc(q.options[oi].text)}</span><span class="why mt-1 block">${esc(q.options[oi].why)}</span></span></div>`;
+      }).join('');
+      const topic = q.topic && data.topicTitle[q.topic] ? `<a class="text-sm text-accent underline" href="${data.topicTitle[q.topic].url}">Study: ${data.topicTitle[q.topic].title}</a>` : '';
+      return `<li class="card p-5" data-right="${right}" data-flagged="${s.flags[i]}">
+        <div class="flex flex-wrap items-center gap-2 text-sm"><span class="font-semibold ${right ? 'verdict-ok' : 'verdict-bad'}">${right ? '✓ Correct' : s.picks[i].length ? '✕ Incorrect' : '○ Not answered'}</span><span class="text-muted">Question ${i + 1} · Domain ${q.domain}</span>${s.flags[i] ? '<span class="chip">⚑ flagged</span>' : ''}</div>
+        ${q.scenario ? `<p class="mt-2 rounded-xl bg-subtle p-3">${esc(q.scenario)}</p>` : ''}
+        <p class="mt-2 font-semibold">${esc(q.question)}</p>
+        <div class="mt-3 space-y-2">${opts}</div>
+        <p class="mt-3 rounded-xl border border-default bg-[var(--bg)] p-3 text-[0.95rem]"><strong>Explanation:</strong> ${esc(q.explanation)}</p>
+        <div class="mt-2">${topic}</div>
+      </li>`;
+    }).join('');
+  }
+
+  document.querySelectorAll<HTMLButtonElement>('[data-filter]').forEach((b) =>
+    b.addEventListener('click', () => {
+      const f = b.dataset.filter;
+      $('review').querySelectorAll<HTMLElement>('li').forEach((li) => {
+        li.hidden = f === 'wrong' ? li.dataset.right === 'true' : f === 'flagged' ? li.dataset.flagged !== 'true' : false;
+      });
+    }),
+  );
+
+  $('setup-form').addEventListener('submit', (e) => {
+    e.preventDefault();
+    const fd = new FormData(e.target as HTMLFormElement);
+    start(String(fd.get('mode')), Number(fd.get('domain')), fd.get('untimed') === 'on');
+  });
+  $('again').addEventListener('click', () => { st = null; persist(); show('setup'); });
+
+  try {
+    const saved = sessionStorage.getItem(SKEY);
+    if (saved) {
+      const r = $('resume');
+      r.classList.remove('hidden');
+      r.addEventListener('click', () => { st = JSON.parse(saved); runExam(); });
+    }
+  } catch {}
+</script>

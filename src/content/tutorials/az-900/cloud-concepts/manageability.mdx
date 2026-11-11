@@ -1,0 +1,174 @@
+---
+title: Manageability
+seoTitle: "Cloud Manageability: Management Of and In the Cloud | AZ-900"
+description: "Cloud manageability explained: management of the cloud (autoscale, monitoring) and in the cloud (portal, CLI, APIs), with AZ-900 practice."
+answer: >-
+  **Manageability** in the cloud has two sides. **Management *of* the cloud** means managing your resources themselves: autoscaling, deploying from templates, monitoring health and replacing failed resources automatically, and receiving alerts. **Management *in* the cloud** means how you do the managing: through the Azure portal, the command line (Azure CLI and Azure PowerShell), APIs and infrastructure as code.
+updated: 2026-11-11
+readingMinutes: 7
+keyTerms:
+  - term: Management of the cloud
+    definition: Managing your cloud resources, such as scaling, deploying from templates, monitoring and alerting, and automatic replacement of failed resources.
+  - term: Management in the cloud
+    definition: The interfaces used to manage resources, such as the Azure portal, CLI, PowerShell, APIs and SDKs.
+  - term: Infrastructure as code (IaC)
+    definition: Defining infrastructure in files (Bicep, ARM templates, Terraform) so it can be versioned and deployed repeatably.
+  - term: Azure Cloud Shell
+    definition: A browser-based shell with Azure CLI and Azure PowerShell preinstalled and already authenticated.
+interview:
+  - level: beginner
+    q: What does manageability mean as a cloud benefit?
+    a: >-
+      It means the cloud is easier to manage. On one side, resources can scale automatically, be deployed from templates, be monitored and send alerts. On the other side, I can manage everything through a web portal, command-line tools or APIs from anywhere.
+    followUps:
+      - q: What tools can you use to manage Azure?
+        a: >-
+          The Azure portal in a browser, Azure CLI and Azure PowerShell (also available in Azure Cloud Shell), REST APIs and SDKs, and infrastructure-as-code tools like Bicep, ARM templates and Terraform.
+  - level: intermediate
+    q: When would you use the portal versus the CLI versus infrastructure as code?
+    a: >-
+      The portal suits learning, exploring and one-off tasks. The CLI or PowerShell suit scripting and repeatable admin tasks. Infrastructure as code (Bicep, ARM or Terraform) is for anything that must be consistent across environments or reviewed, especially production. You declare the desired state in source control and deploy through a pipeline.
+    followUps: []
+  - level: experienced
+    q: How does infrastructure as code improve manageability at scale?
+    a: >-
+      It makes environments reproducible and reviewable. Changes go through pull requests, drift can be detected, new regions or environments are a parameter change, and disaster recovery can include redeploying infrastructure from code. Combined with CI/CD, policy-as-code and tagging conventions, it turns manual operations into an auditable engineering process.
+    followUps: []
+  - level: scenario
+    q: An admin needs to restart 40 VMs every night after a batch job. Manual portal clicks are taking an hour. What would you suggest?
+    a: >-
+      Automate it. A short Azure CLI or PowerShell script run on a schedule, using Azure Automation or a timer-triggered Azure Function with a managed identity. Better still, check whether the restart is needed at all, or whether the batch job could run on a Scale Set or serverless service.
+    followUps: []
+revision:
+  keyPoints:
+    - "Management **of** the cloud: autoscale, deploy from templates, monitor health, auto-replace failed resources, alerts."
+    - "Management **in** the cloud: Azure portal, Azure CLI, Azure PowerShell, Cloud Shell, APIs, SDKs."
+    - Infrastructure as code (Bicep, ARM templates, Terraform) makes management repeatable and auditable.
+    - All management tools go through Azure Resource Manager, so results are consistent.
+    - Manage from anywhere with a browser or a terminal.
+  mistakes:
+    - Thinking the portal is the only way to manage Azure.
+    - Doing production changes by hand with no record or review.
+  examTips:
+    - '"Manage resources from a browser with a GUI" = **Azure portal**.'
+    - '"Scripting / command line" = **Azure CLI** or **Azure PowerShell**; "browser-based shell" = **Cloud Shell**.'
+    - Know the two sides, management **of** the cloud vs management **in** the cloud.
+  quick:
+    - q: What are the two aspects of cloud manageability?
+      a: Management of the cloud and management in the cloud.
+    - q: Give two examples of management of the cloud.
+      a: Autoscaling, deploying from templates, monitoring and alerts, automatic replacement of failed resources.
+    - q: Give three tools for management in the cloud.
+      a: Azure portal, Azure CLI, Azure PowerShell (also APIs, SDKs, Cloud Shell).
+    - q: What is infrastructure as code?
+      a: Defining infrastructure in code files so it can be versioned and deployed repeatably.
+    - q: What is Azure Cloud Shell?
+      a: A browser-based shell with Azure CLI and PowerShell preinstalled and authenticated.
+references:
+  - title: Describe the benefits of manageability in the cloud (Microsoft Learn)
+    url: https://learn.microsoft.com/en-us/training/modules/describe-benefits-use-cloud-services/
+  - title: Azure Cloud Shell overview
+    url: https://learn.microsoft.com/en-us/azure/cloud-shell/overview
+  - title: What is Bicep?
+    url: https://learn.microsoft.com/en-us/azure/azure-resource-manager/bicep/overview
+related:
+  - governance
+  - elasticity
+  - what-is-microsoft-azure
+---
+
+## Start with a question
+
+<Story question="Your company has 300 servers. One of them fails at 3 am. Who notices, and who fixes it?">
+
+In a traditional server room, maybe nobody notices until users complain in the morning. Then someone drives in, finds the server, and starts repairing it.
+
+In the cloud, monitoring can **notice automatically**, a scale set can **replace the failed instance automatically**, and an alert reaches the on-call engineer's phone. If anyone needs to act, they can do it **from a browser anywhere**. That is **manageability**.
+
+</Story>
+
+## Explain it like I'm 10
+
+<Eli10>
+
+Think of a **video game** where you build a city. You do not walk around fixing every building by hand. You have a **control panel**: tap a button to build ten houses, see warning icons when a building catches fire, and send firefighters automatically.
+
+Azure gives companies a control panel like that for their computers. They can manage everything from one screen, or even let it **fix itself**.
+
+</Eli10>
+
+## The technical explanation
+
+Microsoft describes cloud manageability in two parts.
+
+<Compare
+  caption="The two sides of manageability"
+  columns={[
+    { title: 'Management OF the cloud', subtitle: 'Managing your resources', icon: '⚙️', tone: 'accent', items: ['Automatically scale resources based on need', 'Deploy resources from preconfigured templates', 'Monitor health and automatically replace failing resources', 'Receive alerts based on configured metrics'] },
+    { title: 'Management IN the cloud', subtitle: 'How you manage them', icon: '🖥️', tone: 'ok', items: ['Azure portal (web GUI)', 'Azure CLI and Azure PowerShell', 'Azure Cloud Shell in the browser', 'REST APIs and SDKs', 'Infrastructure as code (Bicep, ARM, Terraform)'] },
+  ]}
+/>
+
+### One control plane, many tools
+
+Whichever tool you use, every management request goes through **Azure Resource Manager (ARM)**. That is why a VM created in the portal looks exactly the same as one created with the CLI or a Bicep file.
+
+For example, creating a resource group with the Azure CLI:
+
+```bash
+az group create --name rg-exam-portal --location westeurope
+```
+
+…or declaring infrastructure as code with Bicep:
+
+```bicep
+resource storage 'Microsoft.Storage/storageAccounts@2023-05-01' = {
+  name: 'stexamportal001'
+  location: 'westeurope'
+  sku: { name: 'Standard_ZRS' }
+  kind: 'StorageV2'
+}
+```
+
+<TryIt labs="cloud-shell-webapp,sandbox" text="Type these commands yourself in the simulated Cloud Shell. Nothing can break and nothing costs money." />
+
+You do not need to write code for AZ-900. Just recognise that these tools exist and what each is for. They are covered fully in Module 3.
+
+<DeepDive title="From click-ops to platform engineering">
+
+Teams usually move through stages:
+
+1. **Click-ops** in the portal, which is fine for learning, risky for production.
+2. **Scripts** (CLI/PowerShell) for repeatable tasks.
+3. **Infrastructure as code** in source control with CI/CD pipelines, so environments are reproducible and changes are reviewed.
+4. **Platform engineering**: golden templates, policy-as-code, self-service environments (for example Azure Deployment Environments) and automated operations with Azure Monitor alerts triggering runbooks or Functions.
+
+Measure manageability by how long it takes to stand up a new, compliant environment, and by how much of incident response is automated.
+
+</DeepDive>
+
+## Real-world business scenario
+
+<Scenario
+  company="An online gaming platform"
+  industry="Gaming"
+  problem="Game servers were configured by hand in each region, every region drifted slightly, and outages at night waited for someone to wake up."
+  service="Bicep templates deployed through pipelines for every region, VM Scale Sets with automatic instance repair, Azure Monitor alerts to on-call phones, and Cloud Shell for emergency access."
+  why="Templates made regions identical; health monitoring and auto-repair handled routine failures without humans."
+  outcome="Launching a new region went from two weeks to one afternoon, and most night-time failures now resolve themselves before anyone is paged."
+/>
+
+## When to use it and when not to
+
+<UseWhen
+  use={[
+    '**Portal** for learning, exploring and quick one-off checks.',
+    '**CLI / PowerShell / Cloud Shell** for scripted and repeatable tasks.',
+    '**Infrastructure as code** for every production environment.',
+    '**Monitoring, alerts and autoscale** on everything that matters to users.',
+  ]}
+  avoid={[
+    'Manual portal changes in production with no record.',
+    'Alerts on everything. Alert fatigue means real problems get ignored.',
+  ]}
+/>

@@ -1,0 +1,75 @@
+---
+import { getCollection } from 'astro:content';
+import Base from '../../layouts/Base.astro';
+import { getNav, inlineMd } from '../../lib/learn';
+
+const nav = await getNav();
+const entries = await getCollection('tutorials', (e) => e.id.startsWith('az-900/'));
+const published = nav.filter((t) => t.published);
+const cards = published.flatMap((t) => entries.find((e) => e.id === t.key)!.data.revision.quick.map((c) => ({ ...c, topic: t.title, url: t.url })));
+const glossary = [
+  ...new Map(
+    published.flatMap((t) => entries.find((e) => e.id === t.key)!.data.keyTerms.map((k) => [k.term.toLowerCase(), { ...k, url: t.url }] as const)),
+  ).values(),
+].sort((a, b) => a.term.localeCompare(b.term));
+const payload = JSON.stringify(cards).replace(/</g, '\\u003c');
+const title = 'AZ-900 Revision: Flashcards and Glossary';
+const description = `Last-minute AZ-900 revision: ${cards.length} flashcards and a ${glossary.length}-term Azure glossary built from every published tutorial.`;
+const crumbs = [
+  { name: 'Home', url: '/' },
+  { name: 'AZ-900', url: '/az-900/' },
+  { name: 'Revision', url: '/az-900/revision/' },
+];
+---
+<Base title={title} description={description} breadcrumbs={crumbs}>
+  <script type="application/json" id="fc-data" set:html={payload} />
+  <div class="mx-auto max-w-4xl px-4 py-8 sm:px-6">
+    <nav aria-label="Breadcrumb" class="text-sm text-muted"><a href="/">Home</a> / <a href="/az-900/">AZ-900</a> / <span class="text-[var(--text)]">Revision</span></nav>
+    <p class="eyebrow mt-6">Quick revision</p>
+    <h1 class="mt-3 text-3xl font-bold tracking-tight sm:text-4xl">AZ-900 flashcards and glossary</h1>
+    <p class="mt-3 text-muted">{cards.length} flashcards from {published.length} topics. Try to answer before you flip the card.</p>
+
+    <section class="card mt-8 p-6" aria-label="Flashcards">
+      <p id="fc-meta" class="text-xs font-semibold tracking-wider uppercase text-muted"></p>
+      <p id="fc-q" class="mt-3 min-h-[3.5rem] text-xl leading-snug font-semibold"></p>
+      <p id="fc-a" class="mt-4 hidden rounded-xl bg-[var(--accent-soft)] p-4 leading-relaxed" aria-live="polite"></p>
+      <div class="mt-5 flex flex-wrap gap-2">
+        <button type="button" id="fc-flip" class="btn btn-accent btn-sm">Show answer</button>
+        <button type="button" id="fc-next" class="btn btn-outline btn-sm">Next card →</button>
+        <button type="button" id="fc-shuffle" class="btn btn-outline btn-sm">Shuffle</button>
+      </div>
+    </section>
+
+    <section class="lesson mt-12 !max-w-none" aria-labelledby="glossary">
+      <h2 id="glossary">Glossary</h2>
+      <dl class="mt-4 grid gap-3 sm:grid-cols-2">
+        {glossary.map((g) => (
+          <div class="card p-4"><dt class="font-semibold"><a href={g.url} class="!no-underline">{g.term}</a></dt><dd class="mt-1 text-[0.95rem] text-muted" set:html={inlineMd(g.definition)} /></div>
+        ))}
+      </dl>
+    </section>
+  </div>
+</Base>
+<script>
+  type Card = { q: string; a: string; topic: string; url: string };
+  let cards: Card[] = JSON.parse(document.getElementById('fc-data')!.textContent!);
+  let i = 0;
+  const $ = (id: string) => document.getElementById(id)!;
+  const esc = (s: string) => s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
+  const show = () => {
+    const c = cards[i];
+    if (!c) return;
+    $('fc-meta').innerHTML = `Card ${i + 1} of ${cards.length} · <a class="underline" href="${c.url}">${c.topic}</a>`;
+    $('fc-q').innerHTML = esc(c.q);
+    $('fc-a').innerHTML = esc(c.a);
+    $('fc-a').classList.add('hidden');
+    $('fc-flip').textContent = 'Show answer';
+  };
+  $('fc-flip').addEventListener('click', () => {
+    const hidden = $('fc-a').classList.toggle('hidden');
+    $('fc-flip').textContent = hidden ? 'Show answer' : 'Hide answer';
+  });
+  $('fc-next').addEventListener('click', () => { i = (i + 1) % cards.length; show(); });
+  $('fc-shuffle').addEventListener('click', () => { cards = cards.sort(() => Math.random() - 0.5); i = 0; show(); });
+  show();
+</script>

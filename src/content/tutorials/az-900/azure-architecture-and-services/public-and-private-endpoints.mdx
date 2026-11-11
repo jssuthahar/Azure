@@ -1,0 +1,98 @@
+---
+title: Public and Private Endpoints
+seoTitle: Azure Public vs Private Endpoints Explained | AZ-900
+description: "Public and private endpoints in Azure explained: how PaaS services are reached, Private Link, security benefits, interview questions and AZ-900 practice."
+answer: >-
+  A **public endpoint** is a service's address reachable over the internet, using a public IP or URL. A **private endpoint** is a network interface with a **private IP address from your virtual network** that connects you privately to an Azure service such as Storage or SQL Database, using Azure Private Link. Traffic stays on the Microsoft network, and you can turn off public access completely.
+updated: 2026-11-11
+readingMinutes: 5
+keyTerms:
+  - term: Public endpoint
+    definition: An internet-reachable address for a service.
+  - term: Private endpoint
+    definition: A network interface with a private IP in your VNet that connects to a PaaS service.
+  - term: Azure Private Link
+    definition: The technology behind private endpoints that keeps traffic on the Microsoft backbone.
+interview:
+  - level: beginner
+    q: What is the difference between a public and a private endpoint?
+    a: >-
+      A public endpoint can be reached from the internet. A private endpoint gives the service a private address inside my virtual network, so only my network can reach it.
+    followUps: []
+  - level: intermediate
+    q: Why would you use a private endpoint for Azure SQL Database?
+    a: >-
+      To keep database traffic off the internet, to disable public access entirely and reduce the attack surface, and to let on-premises networks reach the database privately over VPN or ExpressRoute.
+    followUps: []
+  - level: experienced
+    q: What extra configuration do private endpoints need?
+    a: >-
+      DNS. Use private DNS zones so the service's normal hostname resolves to the private IP inside the VNet and from connected networks. Then disable public network access, and review NSG and routing policies for the private endpoint subnet.
+    followUps: []
+revision:
+  keyPoints:
+    - Public endpoint = reachable over the internet.
+    - Private endpoint = private IP in your VNet, via Private Link.
+    - Private endpoints keep traffic on the Microsoft network.
+    - You can disable public access once private endpoints are in place.
+  mistakes:
+    - Forgetting DNS configuration for private endpoints.
+  examTips:
+    - '"Access a PaaS service using a private IP from your VNet" = **private endpoint**.'
+  quick:
+    - q: What is a public endpoint?
+      a: An internet-reachable address for a service.
+    - q: What does a private endpoint use?
+      a: A private IP address from your virtual network.
+    - q: Which technology powers private endpoints?
+      a: Azure Private Link.
+    - q: Can you block public access after adding a private endpoint?
+      a: Yes.
+    - q: What usually needs to be configured with private endpoints?
+      a: Private DNS zones.
+references:
+  - title: What is a private endpoint?
+    url: https://learn.microsoft.com/en-us/azure/private-link/private-endpoint-overview
+related:
+  - azure-dns
+  - virtual-networks-and-subnets
+  - zero-trust
+---
+
+## Start with a question
+
+<Story question="Your database is in the cloud. Should anyone on the internet be able to knock on its door?">
+
+Ideally not. A **private endpoint** moves the door inside your private network.
+
+</Story>
+
+## Explain it like I'm 10
+
+<Eli10>
+
+A **public endpoint** is a shop door on the main street: anyone can walk up. A **private endpoint** is a door that opens only from inside your house, through your own hallway.
+
+</Eli10>
+
+## The technical explanation
+
+PaaS services (Storage, SQL Database, Key Vault and many more) have **public endpoints** by default. A **private endpoint** creates a network interface in your subnet with a private IP, mapped to one specific resource through **Azure Private Link**. Combine it with **private DNS zones** and **disable public network access** for strong isolation.
+
+## Real-world business scenario
+
+<Scenario
+  company="A fintech company"
+  industry="Banking"
+  problem="Security scans flagged that its storage accounts and SQL database were reachable from the internet."
+  service="Private endpoints for storage and SQL, private DNS zones, and public network access disabled."
+  why="Services become reachable only from the company's networks."
+  outcome="The internet-facing attack surface for data services dropped to zero."
+/>
+
+## When to use it and when not to
+
+<UseWhen
+  use={['Sensitive data services such as databases, storage and Key Vault.', 'Hybrid access from on-premises over VPN or ExpressRoute.']}
+  avoid={['Public websites meant for everyone, which need a public endpoint.']}
+/>

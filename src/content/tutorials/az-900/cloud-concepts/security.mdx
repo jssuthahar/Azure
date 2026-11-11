@@ -1,0 +1,163 @@
+---
+title: Security in the Cloud
+seoTitle: Security Benefits of the Cloud Explained | AZ-900
+description: "The security benefits of the cloud explained: physical security, DDoS protection, patching and identity, with interview questions and AZ-900 practice."
+answer: >-
+  The cloud improves **security** because providers invest in protections few organisations could build themselves: physically secured datacenters, network protection such as DDoS defence, encryption, and automatic patching of managed services. You choose how much control you want. IaaS lets you manage OS-level security yourself, while PaaS and SaaS hand more patching to Microsoft. Your data and identities stay your responsibility.
+updated: 2026-11-11
+readingMinutes: 8
+keyTerms:
+  - term: Defense in depth
+    definition: Layered security (physical, identity, perimeter, network, compute, application, data) so one failed control does not expose everything.
+  - term: DDoS attack
+    definition: Distributed Denial of Service. Flooding a service with traffic from many sources to make it unavailable.
+  - term: Encryption at rest
+    definition: Data stored on disk is encrypted. It is enabled by default for Azure Storage and Azure SQL Database.
+  - term: Microsoft Defender for Cloud
+    definition: Azure's security posture management and threat protection service for Azure, hybrid and multi-cloud workloads.
+interview:
+  - level: beginner
+    q: Why can the cloud be more secure than an on-premises server room?
+    a: >-
+      Microsoft spends heavily on security: guarded datacenters with strict physical access, protection against attacks like DDoS, encryption, a large security team, and automatic patching for managed services. Most companies could not afford that themselves. But I still have to secure my own data, accounts and configuration.
+    followUps:
+      - q: How does the choice of IaaS, PaaS or SaaS affect security work?
+        a: >-
+          With IaaS I control and must patch the OS, which gives more control and more work. With PaaS and SaaS, Microsoft patches the platform, so I focus on identities, access and data.
+  - level: intermediate
+    q: Name some Azure services that help secure workloads.
+    a: >-
+      Microsoft Entra ID for identity with MFA and Conditional Access, Microsoft Defender for Cloud for posture and threat protection, Azure Key Vault for secrets and keys, network security groups and Azure Firewall for traffic control, Azure DDoS Protection, and private endpoints to keep PaaS traffic off the public internet.
+    followUps: []
+  - level: experienced
+    q: If you could implement only three security controls on a new Azure environment, which would you pick and why?
+    a: >-
+      First, phishing-resistant MFA and Conditional Access for every identity, especially admins, because identity is the most attacked layer. Second, least privilege with Azure RBAC and Privileged Identity Management for just-in-time admin access. Third, guardrails with Azure Policy and Defender for Cloud to block public exposure of storage and databases and to surface misconfigurations. Those three prevent most real-world cloud breaches, which are identity and configuration failures, not provider failures.
+    followUps: []
+  - level: scenario
+    q: A small online shop worries about being taken offline by a flood of fake traffic during a sale. What does Azure offer?
+    a: >-
+      All Azure resources get basic infrastructure-level DDoS protection automatically. For stronger, tuned protection with telemetry and rapid-response support, they can enable Azure DDoS Protection on the virtual network, or put the site behind Azure Front Door with Web Application Firewall to filter malicious requests at the edge.
+    followUps: []
+revision:
+  keyPoints:
+    - Providers deliver security few companies can match, including physical security, DDoS protection, encryption and expert teams.
+    - Choose your level of control. IaaS = you patch the OS; PaaS/SaaS = Microsoft patches the platform.
+    - Data, identities and devices remain the customer's job (shared responsibility).
+    - Key tools are Entra ID, Defender for Cloud, Key Vault, NSGs, Azure Firewall and DDoS Protection.
+    - Defense in depth layers controls so one failure does not expose everything.
+  mistakes:
+    - Assuming "in the cloud" means "secure by default for everything I configure".
+    - Leaving storage or databases publicly accessible and blaming the provider.
+  examTips:
+    - '"Protection from distributed denial of service attacks" = **Azure DDoS Protection**.'
+    - '"Security posture, secure score, threat protection across hybrid and multi-cloud" = **Microsoft Defender for Cloud**.'
+  quick:
+    - q: Who secures the physical Azure datacenters?
+      a: Microsoft.
+    - q: What does DDoS stand for?
+      a: Distributed Denial of Service.
+    - q: In which service type do you patch the operating system yourself?
+      a: IaaS.
+    - q: Which Azure service stores secrets, keys and certificates securely?
+      a: Azure Key Vault.
+    - q: What is defense in depth?
+      a: Layered security controls so a single failure does not compromise the whole system.
+references:
+  - title: Describe the benefits of security and governance (Microsoft Learn)
+    url: https://learn.microsoft.com/en-us/training/modules/describe-benefits-use-cloud-services/
+  - title: Azure security fundamentals
+    url: https://learn.microsoft.com/en-us/azure/security/fundamentals/overview
+  - title: Microsoft Defender for Cloud overview
+    url: https://learn.microsoft.com/en-us/azure/defender-for-cloud/defender-for-cloud-introduction
+related:
+  - shared-responsibility-model
+  - governance
+  - high-availability
+---
+
+## Start with a question
+
+<Story question="Who protects your company's servers better, one IT person with a key to the server cupboard, or thousands of security specialists, guards, cameras and biometric scanners?">
+
+Many small and medium businesses keep servers in an office cupboard. The "security" is a door lock and a hope that nobody spills coffee.
+
+Microsoft's datacenters have perimeter fences, security staff, multi-factor physical access, and teams monitoring for attacks around the clock. **Moving to the cloud gives you all of that on day one**, as long as you secure your own part.
+
+</Story>
+
+## Explain it like I'm 10
+
+<Eli10>
+
+Imagine keeping your savings in a **piggy bank** at home versus in a **real bank**. The bank has thick vault doors, alarms, cameras and guards. Your piggy bank has… a cork.
+
+The cloud is like the bank: much better protection than you could build yourself. But you still have to **keep your PIN secret**, because the bank cannot protect you if you give it away.
+
+</Eli10>
+
+## The technical explanation
+
+Microsoft's AZ-900 material frames the security benefit like this: **whether you want maximum control or want the provider to handle most of it, the cloud supports your needs.**
+
+- Want **maximum control** of security configuration? Use **IaaS**. You manage the OS, patches and installed software.
+- Want **patches and maintenance handled for you**? Use **PaaS or SaaS**. Microsoft patches the platform automatically.
+- In every case, the provider handles **physical security** and offers built-in **network protection**, including defence against **DDoS attacks**.
+
+### Defense in depth
+
+Azure security is usually described in layers, so that if one layer fails, others still protect the data:
+
+<Flow
+  caption="Defense in depth: layers around your data (covered fully in Module 2)"
+  steps={[
+    { title: 'Physical', text: 'Datacenter access controls' },
+    { title: 'Identity & access', text: 'Entra ID, MFA, Conditional Access' },
+    { title: 'Perimeter', text: 'DDoS Protection, firewalls' },
+    { title: 'Network', text: 'NSGs, segmentation, private endpoints' },
+    { title: 'Compute & app', text: 'Patching, secure code, Defender' },
+    { title: 'Data', text: 'Encryption, Key Vault, classification' },
+  ]}
+/>
+
+### Built-in security you get from Azure
+
+| Protection | What Azure provides |
+| --- | --- |
+| Physical security | Restricted, monitored datacenters run by Microsoft |
+| Encryption | Encryption at rest on by default for Azure Storage and Azure SQL Database; TLS in transit |
+| DDoS | Infrastructure-level protection for all; Azure DDoS Protection for enhanced, tuned protection |
+| Patching | Automatic for PaaS and SaaS platforms |
+| Posture and threats | Microsoft Defender for Cloud: secure score, recommendations, threat detection |
+| Secrets | Azure Key Vault for keys, secrets and certificates |
+
+<TryIt labs="vm-and-cost,locks-and-tags" text="Make secure choices: create a VM with no open inbound ports, and lock a production resource group." />
+
+<Callout type="warning">
+The cloud provides strong security **tools**, but they only help if you use them. The most common cloud incidents are **stolen credentials without MFA** and **resources accidentally exposed to the internet**. Both are customer-side configuration issues.
+</Callout>
+
+## Real-world business scenario
+
+<Scenario
+  company="A regional bank's mobile app team"
+  industry="Banking"
+  problem="Auditors flagged that on-premises servers were patched irregularly, admin accounts used passwords only, and there was no DDoS protection for public APIs."
+  service="APIs moved to App Service (platform patched by Microsoft) behind Azure Front Door with WAF; Entra ID with MFA and Conditional Access for admins; secrets in Key Vault with managed identities; Defender for Cloud enabled."
+  why="PaaS removed the patching gap, edge protection blocked attacks before they reached the app, and identity controls closed the biggest risk."
+  outcome="The next audit passed, and Defender for Cloud's secure score became a monthly KPI for the team."
+/>
+
+## When to use it and when not to
+
+<UseWhen
+  use={[
+    '**PaaS/SaaS** when you want the provider to handle patching and platform hardening.',
+    '**IaaS** when you need full control of OS-level security settings and agents.',
+    '**Defender for Cloud** on every subscription to see and improve your posture.',
+  ]}
+  avoid={[
+    'Exposing management ports (RDP/SSH) to the internet. Use Azure Bastion or just-in-time access.',
+    'Storing secrets in code or configuration files. Use Key Vault and managed identities.',
+  ]}
+/>

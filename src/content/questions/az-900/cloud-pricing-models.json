@@ -1,0 +1,64 @@
+{
+  "cert": "az-900",
+  "domain": 1,
+  "topic": "cloud-pricing-models",
+  "questions": [
+    {
+      "id": "cc-price-1",
+      "type": "single",
+      "scenario": "A company has database servers that will run at the same size, in the same region, 24/7 for the next three years.",
+      "question": "Which pricing option will most likely give the biggest predictable saving?",
+      "options": [
+        { "text": "Pay-as-you-go", "why": "No discount; best for variable workloads." },
+        { "text": "Azure Reservations (3-year term)", "why": "Correct. Stable, long-running resources benefit most from reservations." },
+        { "text": "Spot VMs", "why": "Spot VMs can be evicted, which is unsuitable for databases." },
+        { "text": "Free tier", "why": "Free allowances do not cover production database servers." }
+      ],
+      "answer": [1],
+      "explanation": "Reservations trade a 1- or 3-year commitment for large discounts on predictable workloads.",
+      "objective": "1.1.6"
+    },
+    {
+      "id": "cc-price-2",
+      "type": "single",
+      "question": "Which Azure pricing option uses unused capacity at a deep discount, but the VM can be evicted when Azure needs the capacity back?",
+      "options": [
+        { "text": "Spot Virtual Machines", "why": "Correct." },
+        { "text": "Reservations", "why": "Reserved capacity is not evicted." },
+        { "text": "Azure Hybrid Benefit", "why": "Hybrid Benefit is a licensing benefit." },
+        { "text": "Dedicated Host", "why": "Dedicated Hosts are physical servers for one customer." }
+      ],
+      "answer": [0],
+      "explanation": "Spot VMs offer large discounts on spare capacity with eviction risk.",
+      "objective": "1.1.6"
+    },
+    {
+      "id": "cc-price-3",
+      "type": "single",
+      "question": "A company already owns Windows Server licences with Software Assurance. Which option can reduce the cost of running Windows VMs in Azure?",
+      "options": [
+        { "text": "Azure Hybrid Benefit", "why": "Correct. It lets you apply eligible existing licences." },
+        { "text": "Azure Advisor", "why": "Advisor recommends optimisations but is not a licensing benefit." },
+        { "text": "Azure Policy", "why": "Policy enforces rules; it does not change prices." },
+        { "text": "Resource locks", "why": "Locks prevent deletion or modification." }
+      ],
+      "answer": [0],
+      "explanation": "Azure Hybrid Benefit lets you reuse eligible Windows Server and SQL Server licences.",
+      "objective": "1.1.6"
+    },
+    {
+      "id": "cc-price-4",
+      "type": "multi",
+      "question": "Which TWO pricing options require a one- or three-year commitment?",
+      "options": [
+        { "text": "Azure Reservations", "why": "Correct." },
+        { "text": "Pay-as-you-go", "why": "No commitment." },
+        { "text": "Azure savings plan for compute", "why": "Correct." },
+        { "text": "Spot VMs", "why": "No commitment; capacity can be evicted." }
+      ],
+      "answer": [0, 2],
+      "explanation": "Reservations and savings plans both use 1- or 3-year commitments in exchange for discounts.",
+      "objective": "1.1.6"
+    }
+  ]
+}

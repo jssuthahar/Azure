@@ -1,0 +1,103 @@
+---
+title: Pricing Calculator
+seoTitle: Azure Pricing Calculator Explained | AZ-900
+description: "The Azure pricing calculator explained: estimating the cost of Azure services before you deploy, with steps, tips, examples and AZ-900 practice."
+answer: >-
+  The **Azure pricing calculator** is a free web tool that **estimates the cost of provisioning Azure resources before you deploy them**. You add services such as VMs, storage and databases, choose options like region, size, tier and hours, and it shows an estimated monthly cost you can save, share and export. It does not create any resources.
+updated: 2026-11-11
+readingMinutes: 5
+keyTerms:
+  - term: Pricing calculator
+    definition: A web tool that estimates the cost of Azure services before deployment.
+  - term: Estimate
+    definition: A saved list of services and options with a predicted monthly cost.
+interview:
+  - level: beginner
+    q: What is the Azure pricing calculator?
+    a: >-
+      A free website where I add the Azure services I plan to use, choose sizes and regions, and see an estimated monthly cost before building anything.
+    followUps: []
+  - level: intermediate
+    q: How is the pricing calculator different from the TCO calculator?
+    a: >-
+      The pricing calculator estimates the cost of Azure services you plan to use. The TCO calculator compares the total cost of running workloads on-premises versus in Azure, including things like hardware, power and staff.
+    followUps: []
+  - level: experienced
+    q: How do you make pricing calculator estimates realistic?
+    a: >-
+      Use realistic hours (not always 730 for dev/test), include bandwidth, storage transactions, backup and monitoring, compare pay-as-you-go with reservations and savings plans, apply Azure Hybrid Benefit, and check region price differences. Then validate with a small pilot and Cost Management data.
+    followUps: []
+revision:
+  keyPoints:
+    - Estimates costs before you deploy.
+    - Choose services, region, size, tier and usage.
+    - Estimates can be saved, shared and exported.
+    - It does not create resources.
+  mistakes:
+    - Confusing the pricing calculator with the TCO calculator.
+  examTips:
+    - '"Estimate the monthly cost of planned Azure services" = **pricing calculator**.'
+  quick:
+    - q: What does the pricing calculator do?
+      a: Estimates the cost of Azure services before deployment.
+    - q: Does it create any resources?
+      a: No.
+    - q: Name two options you can choose.
+      a: Region and size (also tier, hours, redundancy).
+    - q: Can you share an estimate?
+      a: Yes, estimates can be saved, shared and exported.
+    - q: Which tool compares on-premises and Azure costs?
+      a: The TCO calculator.
+references:
+  - title: Azure pricing calculator
+    url: https://azure.microsoft.com/en-us/pricing/calculator/
+related:
+  - tco-calculator
+  - factors-affecting-cost
+  - cost-management
+---
+
+## Start with a question
+
+<Story question="Your manager asks, “How much will this cost per month?” before you build anything. What do you say?">
+
+You open the **pricing calculator**, add the services, and give a confident estimate.
+
+</Story>
+
+## Explain it like I'm 10
+
+<Eli10>
+
+It's like filling a **shopping basket online** before you pay: add things, change sizes, see the total. You can take things out until the price is right. Nothing is bought yet.
+
+</Eli10>
+
+## The technical explanation
+
+<Flow
+  caption="Using the pricing calculator"
+  steps={[
+    { title: 'Add products', text: 'Virtual machines, storage, App Service, databases…' },
+    { title: 'Configure', text: 'Region, size, tier, redundancy, hours, pricing model.' },
+    { title: 'Review estimate', text: 'Monthly and upfront costs per item and in total.' },
+    { title: 'Save or export', text: 'Share with your manager or attach to a proposal.' },
+  ]}
+/>
+
+<TryIt labs="vm-and-cost" text="The simulated portal shows a cost estimate as you pick VM sizes, a mini version of what the pricing calculator does." />
+
+## Real-world business scenario
+
+<Scenario
+  company="A school district"
+  industry="Education"
+  problem="The board needed a cost estimate before approving a cloud learning platform."
+  service="Built an estimate in the pricing calculator comparing two regions and pay-as-you-go versus a one-year reservation."
+  why="Clear, shareable numbers before any spending."
+  outcome="The project was approved with an accurate budget."
+/>
+
+## When to use it and when not to
+
+<UseWhen use={['Before every new project or major change.']} avoid={['Treating an estimate as a guaranteed bill. Real usage varies.']} />

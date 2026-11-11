@@ -1,0 +1,176 @@
+{
+  "cert": "az-900",
+  "domain": 2,
+  "questions": [
+    {
+      "id": "d2-arch-1",
+      "type": "single",
+      "question": "What is an Azure region?",
+      "options": [
+        { "text": "A geographical area containing at least one, and potentially multiple, datacenters connected by a low-latency network", "why": "Correct." },
+        { "text": "A single server rack in a datacenter", "why": "A region contains whole datacenters, not a rack." },
+        { "text": "A logical container for resources", "why": "That is a resource group." },
+        { "text": "A billing account", "why": "Billing is handled by subscriptions and billing accounts." }
+      ],
+      "answer": [0],
+      "explanation": "Regions are geographic areas with one or more datacenters networked together with low latency.",
+      "objective": "2.1.1"
+    },
+    {
+      "id": "d2-arch-2",
+      "type": "multi",
+      "question": "Which TWO statements about Azure region pairs are true?",
+      "options": [
+        { "text": "Planned Azure updates are rolled out to paired regions one region at a time", "why": "Correct. This reduces the risk of both being affected." },
+        { "text": "Every region pair is always in different continents", "why": "Pairs are usually in the same geography." },
+        { "text": "If a broad outage occurs, recovery of one region in each pair is prioritised", "why": "Correct." },
+        { "text": "Resources are automatically replicated to the paired region for every service", "why": "Replication depends on the service and your configuration (for example GRS)." }
+      ],
+      "answer": [0, 2],
+      "explanation": "Region pairs provide sequential updates and prioritised recovery; replication is service-specific.",
+      "objective": "2.1.1"
+    },
+    {
+      "id": "d2-arch-3",
+      "type": "single",
+      "question": "Azure Government is an example of which type of region?",
+      "options": [
+        { "text": "Sovereign region", "why": "Correct. It is isolated for US government agencies and partners." },
+        { "text": "Availability zone", "why": "Zones are within a region." },
+        { "text": "Region pair", "why": "A pair is two regions linked for resilience." },
+        { "text": "Edge zone only", "why": "Azure Government is a sovereign cloud." }
+      ],
+      "answer": [0],
+      "explanation": "Sovereign regions such as Azure Government (US) and Azure operated by 21Vianet (China) are isolated from the main Azure cloud.",
+      "objective": "2.1.1"
+    },
+    {
+      "id": "d2-arch-4",
+      "type": "single",
+      "question": "What is an availability zone?",
+      "options": [
+        { "text": "A physically separate location within an Azure region, made up of one or more datacenters with independent power, cooling and networking", "why": "Correct." },
+        { "text": "A group of regions in the same country", "why": "That is a geography." },
+        { "text": "A logical grouping of VMs inside one rack", "why": "That is closer to a fault domain in an availability set." },
+        { "text": "A type of subscription", "why": "Zones are physical infrastructure." }
+      ],
+      "answer": [0],
+      "explanation": "Availability zones are isolated datacenter groups within a region. Zone-enabled regions have at least three.",
+      "objective": "2.1.2"
+    },
+    {
+      "id": "d2-arch-5",
+      "type": "single",
+      "question": "A service that automatically replicates across availability zones, so you do not choose a specific zone, is described as what?",
+      "options": [
+        { "text": "Zone-redundant", "why": "Correct." },
+        { "text": "Zonal", "why": "Zonal services are pinned to a specific zone you choose." },
+        { "text": "Non-regional", "why": "Non-regional services are global and not tied to a region." },
+        { "text": "Sovereign", "why": "Sovereign refers to isolated clouds." }
+      ],
+      "answer": [0],
+      "explanation": "Zonal = pinned to one zone; zone-redundant = replicated across zones automatically; non-regional = always available globally.",
+      "objective": "2.1.2"
+    },
+    {
+      "id": "d2-arch-6",
+      "type": "single",
+      "question": "Which statement about resource groups is true?",
+      "options": [
+        { "text": "A resource can belong to only one resource group at a time", "why": "Correct." },
+        { "text": "Resource groups can be nested inside other resource groups", "why": "Resource groups cannot be nested." },
+        { "text": "All resources in a resource group must be in the same region", "why": "Resources can be in different regions from each other and from the group." },
+        { "text": "Deleting a resource group leaves its resources running", "why": "Deleting a resource group deletes everything inside it." }
+      ],
+      "answer": [0],
+      "explanation": "Each resource lives in exactly one resource group; groups cannot be nested; deleting a group deletes its contents.",
+      "objective": "2.1.4"
+    },
+    {
+      "id": "d2-arch-7",
+      "type": "single",
+      "scenario": "A developer creates a temporary test environment containing a VM, a database and a storage account. When testing ends, everything must be removed quickly.",
+      "question": "What is the simplest approach?",
+      "options": [
+        { "text": "Put all the resources in one resource group and delete the group afterwards", "why": "Correct. Deleting the group deletes all its resources." },
+        { "text": "Put each resource in a different subscription", "why": "This adds complexity with no benefit." },
+        { "text": "Apply a ReadOnly lock", "why": "A lock would prevent changes and deletion." },
+        { "text": "Create a management group", "why": "Management groups organise subscriptions, not resources for cleanup." }
+      ],
+      "answer": [0],
+      "explanation": "Grouping resources with the same lifecycle in one resource group makes cleanup a single action.",
+      "objective": "2.1.4"
+    },
+    {
+      "id": "d2-arch-8",
+      "type": "multi",
+      "question": "An Azure subscription acts as which TWO types of boundary?",
+      "options": [
+        { "text": "Billing boundary", "why": "Correct. Each subscription gets its own invoices and cost reports." },
+        { "text": "Physical datacenter boundary", "why": "Subscriptions are logical, not physical." },
+        { "text": "Access control boundary", "why": "Correct. Access policies can be applied per subscription." },
+        { "text": "Availability zone boundary", "why": "Zones are physical infrastructure in a region." }
+      ],
+      "answer": [0, 2],
+      "explanation": "Subscriptions are both billing and access-control boundaries.",
+      "objective": "2.1.5"
+    },
+    {
+      "id": "d2-arch-9",
+      "type": "single",
+      "scenario": "A company has 40 subscriptions and wants to apply the same Azure Policy and access rules to all subscriptions belonging to its Finance division.",
+      "question": "What should it use?",
+      "options": [
+        { "text": "A management group containing the Finance subscriptions", "why": "Correct. Policies and RBAC applied to a management group are inherited." },
+        { "text": "A single resource group", "why": "Resource groups live inside one subscription." },
+        { "text": "A resource tag", "why": "Tags add metadata but do not apply policy inheritance." },
+        { "text": "A virtual network", "why": "Networking is unrelated." }
+      ],
+      "answer": [0],
+      "explanation": "Management groups organise subscriptions so governance can be applied once and inherited.",
+      "objective": "2.1.6"
+    },
+    {
+      "id": "d2-arch-10",
+      "type": "single",
+      "question": "Which order shows the Azure management hierarchy from the HIGHEST level to the LOWEST?",
+      "options": [
+        { "text": "Management groups → subscriptions → resource groups → resources", "why": "Correct." },
+        { "text": "Subscriptions → management groups → resources → resource groups", "why": "Incorrect order." },
+        { "text": "Resource groups → subscriptions → management groups → resources", "why": "Incorrect order." },
+        { "text": "Resources → resource groups → subscriptions → management groups", "why": "This is lowest to highest." }
+      ],
+      "answer": [0],
+      "explanation": "Management groups contain subscriptions, which contain resource groups, which contain resources.",
+      "objective": "2.1.7"
+    },
+    {
+      "id": "d2-arch-11",
+      "type": "single",
+      "question": "Azure Policy assigned at a management group applies to which resources?",
+      "options": [
+        { "text": "All subscriptions, resource groups and resources beneath that management group", "why": "Correct. Settings are inherited down the hierarchy." },
+        { "text": "Only resources created directly in the management group", "why": "Resources are not created directly in management groups." },
+        { "text": "Only the first subscription under it", "why": "All child scopes inherit." },
+        { "text": "Only resources in the same region as the management group", "why": "Management groups are not regional." }
+      ],
+      "answer": [0],
+      "explanation": "Policy and RBAC assignments inherit down from management groups to everything below.",
+      "objective": "2.1.7"
+    },
+    {
+      "id": "d2-arch-12",
+      "type": "single",
+      "question": "What does an Azure datacenter provide?",
+      "options": [
+        { "text": "The physical facilities, with servers, power, cooling and networking, that host Azure resources", "why": "Correct." },
+        { "text": "A logical folder for organising resources", "why": "That is a resource group." },
+        { "text": "A list of compliance policies", "why": "That is Azure Policy or Purview." },
+        { "text": "A software development kit", "why": "SDKs are libraries, not facilities." }
+      ],
+      "answer": [0],
+      "explanation": "Datacenters are the physical buildings, grouped into availability zones and regions. Customers cannot choose an individual datacenter directly.",
+      "objective": "2.1.3"
+    }
+  ]
+}

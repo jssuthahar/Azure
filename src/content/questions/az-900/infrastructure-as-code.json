@@ -1,0 +1,92 @@
+{
+ "cert": "az-900",
+ "domain": 3,
+ "topic": "infrastructure-as-code",
+ "questions": [
+  {
+   "id": "t-iac-1",
+   "type": "single",
+   "question": "What is infrastructure as code?",
+   "options": [
+    {
+     "text": "Managing infrastructure through code files that can be versioned and redeployed",
+     "why": "Correct."
+    },
+    {
+     "text": "Writing application code on VMs",
+     "why": "No."
+    },
+    {
+     "text": "A cost management tool",
+     "why": "No."
+    },
+    {
+     "text": "A type of storage",
+     "why": "No."
+    }
+   ],
+   "answer": [
+    0
+   ],
+   "explanation": "IaC defines infrastructure in files.",
+   "objective": "3.3.4"
+  },
+  {
+   "id": "t-iac-2",
+   "type": "multi",
+   "question": "Which TWO are infrastructure-as-code tools for Azure?",
+   "options": [
+    {
+     "text": "Bicep",
+     "why": "Correct."
+    },
+    {
+     "text": "Azure Storage Explorer",
+     "why": "GUI for storage."
+    },
+    {
+     "text": "ARM templates",
+     "why": "Correct."
+    },
+    {
+     "text": "Microsoft Purview",
+     "why": "Data governance."
+    }
+   ],
+   "answer": [
+    0,
+    2
+   ],
+   "explanation": "Bicep and ARM templates (and Terraform) are IaC tools.",
+   "objective": "3.3.4"
+  },
+  {
+   "id": "t-iac-3",
+   "type": "single",
+   "question": "What does a declarative approach mean?",
+   "options": [
+    {
+     "text": "You describe the desired end state",
+     "why": "Correct."
+    },
+    {
+     "text": "You write every step in order",
+     "why": "That is imperative."
+    },
+    {
+     "text": "You click in the portal",
+     "why": "Manual."
+    },
+    {
+     "text": "You avoid version control",
+     "why": "No."
+    }
+   ],
+   "answer": [
+    0
+   ],
+   "explanation": "Declarative tools work out how to reach the desired state.",
+   "objective": "3.3.4"
+  }
+ ]
+}

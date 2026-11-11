@@ -1,0 +1,91 @@
+{
+ "cert": "az-900",
+ "domain": 2,
+ "topic": "azure-virtual-desktop",
+ "questions": [
+  {
+   "id": "t-avd-1",
+   "type": "single",
+   "question": "Remote staff need a Windows desktop and company apps from personal devices, and data must stay in Azure. Which service?",
+   "options": [
+    {
+     "text": "Azure Virtual Desktop",
+     "why": "Correct."
+    },
+    {
+     "text": "Azure Functions",
+     "why": "Runs event code."
+    },
+    {
+     "text": "Azure Blob Storage",
+     "why": "Object storage."
+    },
+    {
+     "text": "Azure DNS",
+     "why": "Name resolution."
+    }
+   ],
+   "answer": [
+    0
+   ],
+   "explanation": "AVD streams desktops while data stays in Azure.",
+   "objective": "2.2.2"
+  },
+  {
+   "id": "t-avd-2",
+   "type": "single",
+   "question": "Which feature lets several users share one VM in Azure Virtual Desktop?",
+   "options": [
+    {
+     "text": "Windows multi-session",
+     "why": "Correct."
+    },
+    {
+     "text": "Availability zones",
+     "why": "Resilience feature."
+    },
+    {
+     "text": "Resource tags",
+     "why": "Metadata."
+    },
+    {
+     "text": "Azure Policy",
+     "why": "Governance."
+    }
+   ],
+   "answer": [
+    0
+   ],
+   "explanation": "Windows Enterprise multi-session supports multiple concurrent users.",
+   "objective": "2.2.2"
+  },
+  {
+   "id": "t-avd-3",
+   "type": "single",
+   "question": "Where is company data stored when users work through Azure Virtual Desktop?",
+   "options": [
+    {
+     "text": "In Azure",
+     "why": "Correct."
+    },
+    {
+     "text": "On each user's personal device",
+     "why": "Data stays in the cloud."
+    },
+    {
+     "text": "On USB drives",
+     "why": "No."
+    },
+    {
+     "text": "In the browser cache only",
+     "why": "No."
+    }
+   ],
+   "answer": [
+    0
+   ],
+   "explanation": "Users receive the screen; data stays in Azure.",
+   "objective": "2.2.2"
+  }
+ ]
+}

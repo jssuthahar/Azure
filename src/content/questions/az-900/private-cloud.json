@@ -1,0 +1,62 @@
+{
+  "cert": "az-900",
+  "domain": 1,
+  "topic": "private-cloud",
+  "questions": [
+    {
+      "id": "cc-private-1",
+      "type": "single",
+      "question": "Which cloud model provides computing resources used exclusively by a single organisation?",
+      "options": [
+        { "text": "Public cloud", "why": "Public cloud is shared by many customers." },
+        { "text": "Private cloud", "why": "Correct. Private cloud is dedicated to one organisation." },
+        { "text": "Hybrid cloud", "why": "Hybrid combines models; it is not defined by single-organisation use." },
+        { "text": "Software as a service", "why": "SaaS is a service type, not a deployment model." }
+      ],
+      "answer": [1],
+      "explanation": "A private cloud is single-tenant, used by one organisation only.",
+      "objective": "1.1.3"
+    },
+    {
+      "id": "cc-private-2",
+      "type": "single",
+      "question": "A private cloud can be hosted in a third-party datacenter. Is this statement true?",
+      "options": [
+        { "text": "Yes", "why": "Correct. Private cloud can be on-premises or hosted, as long as it is dedicated to one organisation." },
+        { "text": "No", "why": "Location does not define private cloud. Exclusive use does." }
+      ],
+      "answer": [0],
+      "explanation": "Private cloud is defined by exclusive use, not by where the hardware sits.",
+      "objective": "1.1.3"
+    },
+    {
+      "id": "cc-private-3",
+      "type": "single",
+      "scenario": "An organisation must have complete control over its hardware and security configuration, and is willing to buy and maintain the equipment.",
+      "question": "Which cloud model best meets this requirement?",
+      "options": [
+        { "text": "Public cloud", "why": "Public cloud gives configuration-level control, not control of hardware." },
+        { "text": "Private cloud", "why": "Correct. Private cloud gives maximum control at the cost of owning the hardware." },
+        { "text": "SaaS", "why": "SaaS gives the least control." },
+        { "text": "Serverless", "why": "Serverless abstracts away infrastructure entirely." }
+      ],
+      "answer": [1],
+      "explanation": "Complete hardware control plus willingness to maintain it is the classic private cloud use case.",
+      "objective": "1.1.4"
+    },
+    {
+      "id": "cc-private-4",
+      "type": "multi",
+      "question": "Which TWO are disadvantages of a private cloud compared with a public cloud?",
+      "options": [
+        { "text": "Higher up-front capital expenditure", "why": "Correct. You must buy the hardware." },
+        { "text": "Less control over security configuration", "why": "Private cloud offers more control, not less." },
+        { "text": "Scalability limited by the hardware you own", "why": "Correct. You cannot exceed purchased capacity quickly." },
+        { "text": "Data must be shared with other tenants", "why": "Private cloud is single-tenant." }
+      ],
+      "answer": [0, 2],
+      "explanation": "Private cloud trades higher cost and limited scale for control.",
+      "objective": "1.1.3"
+    }
+  ]
+}

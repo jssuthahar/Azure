@@ -1,0 +1,73 @@
+---
+/**
+ * Azure networking scene. `focus` highlights one concept with moving packets:
+ * vnet | peering | vpn | expressroute | dns | endpoint | nsg | lb | wan
+ */
+interface Props { focus?: 'vnet' | 'peering' | 'vpn' | 'expressroute' | 'dns' | 'endpoint' | 'nsg' | 'lb' | 'wan' }
+const { focus = 'vnet' } = Astro.props;
+const on = (...k: string[]) => (k.includes(focus) ? 1 : 0.28);
+const vm = (x: number, y: number) => `<g transform="translate(${x} ${y})"><rect width="34" height="26" rx="4" fill="#0078d4"/><rect x="5" y="5" width="24" height="5" rx="2" fill="#9fd0f7"/><rect x="5" y="14" width="24" height="5" rx="2" fill="#9fd0f7"/></g>`;
+const label: Record<string, string> = {
+  vnet: 'A virtual network with two subnets: your private network in Azure',
+  peering: 'Peering connects two virtual networks over Microsoft’s private backbone',
+  vpn: 'VPN Gateway: an encrypted tunnel over the public internet',
+  expressroute: 'ExpressRoute: a private, dedicated line that skips the internet',
+  dns: 'Azure DNS turns names like shop.contoso.com into IP addresses',
+  endpoint: 'A private endpoint brings a PaaS service into your network on a private IP',
+  nsg: 'A network security group allows or blocks traffic like a firewall',
+  lb: 'A load balancer spreads traffic across healthy servers',
+  wan: 'Virtual WAN joins many offices and networks through one hub',
+};
+---
+<svg viewBox="0 0 640 300" role="img" aria-label={label[focus]}>
+  <!-- internet cloud -->
+  <g opacity={on('vpn', 'dns', 'lb', 'nsg', 'vnet')}>
+    <path d="M250 62h90a22 22 0 0 0 2-43.8A32 32 0 0 0 283 12a25 25 0 0 0-33 50z" fill="var(--card)" stroke="#8a97a8" stroke-width="2" />
+    <text x="295" y="46" text-anchor="middle" class="sub">Internet</text>
+  </g>
+  <!-- office -->
+  <g transform="translate(16 150)" opacity={on('vpn', 'expressroute', 'wan', 'vnet')}>
+    <path d="M0 30l45-28 45 28z" fill="#8a97a8" /><rect x="8" y="28" width="74" height="60" fill="var(--card)" stroke="#8a97a8" stroke-width="2" />
+    <rect x="34" y="58" width="22" height="30" fill="#8a97a8" /><text x="45" y="106" text-anchor="middle" class="lbl">Office</text>
+  </g>
+  <!-- main vnet -->
+  <rect x="160" y="96" width="250" height="180" rx="14" fill="none" stroke="#0078d4" stroke-width="2.5" stroke-dasharray={focus === 'vnet' ? '0' : '6 5'} opacity={on('vnet', 'peering', 'vpn', 'expressroute', 'endpoint', 'nsg', 'lb', 'dns', 'wan')} />
+  <text x="172" y="116" class="lbl" fill="#0078d4">VNet 10.0.0.0/16</text>
+  <g opacity={on('vnet', 'nsg', 'lb', 'endpoint', 'peering', 'dns')}>
+    <rect x="176" y="128" width="104" height="132" rx="10" fill="#0078d4" opacity=".08" /><text x="186" y="146" class="sub">web subnet</text>
+    <g set:html={vm(190, 158) + vm(236, 158) + vm(213, 200)} />
+    <rect x="292" y="128" width="104" height="132" rx="10" fill="#107c10" opacity=".08" /><text x="302" y="146" class="sub">data subnet</text>
+    <g set:html={vm(326, 170)} />
+  </g>
+  <!-- NSG shield -->
+  <g transform="translate(270 70)" opacity={on('nsg')}><path d="M14 0l14 6v12c0 9-6 15-14 18C6 33 0 27 0 18V6z" fill="#107c10" /><text x="14" y="23" text-anchor="middle" fill="#fff" font-size="12">✓</text><text x="36" y="22" class="sub">NSG</text></g>
+  <!-- LB -->
+  <g transform="translate(176 66)" opacity={on('lb')}><rect width="74" height="26" rx="8" fill="#243a5e" /><text x="37" y="17" text-anchor="middle" fill="#fff" font-size="10" font-weight="700">LOAD BAL.</text></g>
+  <!-- second vnet -->
+  <g opacity={on('peering', 'wan')}><rect x="470" y="150" width="150" height="110" rx="14" fill="none" stroke="#8764b8" stroke-width="2.5" /><text x="482" y="170" class="lbl" fill="#8764b8">VNet 2</text><g set:html={vm(500, 196) + vm(548, 196)} /></g>
+  <!-- storage PaaS -->
+  <g transform="translate(470 40)" opacity={on('endpoint', 'dns')}><rect width="150" height="76" rx="12" fill="var(--card)" stroke="#ca5010" stroke-width="2" /><text x="75" y="30" text-anchor="middle" font-size="22">🗄️</text><text x="75" y="56" text-anchor="middle" class="sub">Storage (PaaS)</text></g>
+  <!-- DNS -->
+  <g transform="translate(372 18)" opacity={on('dns')}><rect width="84" height="32" rx="8" fill="#ffd75e" /><text x="42" y="21" text-anchor="middle" font-size="11" font-weight="700" fill="#0b1020">Azure DNS</text></g>
+
+  <!-- links -->
+  <path id="nl-vpn" d="M106 190 C 160 120, 230 70, 270 50 M300 62 C 300 80, 260 110, 230 160" fill="none" stroke="#ca5010" stroke-width="3" stroke-dasharray="8 6" opacity={on('vpn')} />
+  <path id="nl-er" d="M106 225 H210" fill="none" stroke="#107c10" stroke-width="5" opacity={on('expressroute')} />
+  <path id="nl-peer" d="M396 215 H500" fill="none" stroke="#8764b8" stroke-width="4" opacity={on('peering')} />
+  <path id="nl-pe" d="M343 170 C 380 130, 430 100, 470 80" fill="none" stroke="#ca5010" stroke-width="3" opacity={on('endpoint')} />
+  <path id="nl-dns" d="M300 40 H372 M414 50 C 414 100, 300 120, 252 160" fill="none" stroke="#c19c00" stroke-width="2.5" opacity={on('dns')} />
+  <path id="nl-lb" d="M250 79 C 260 120, 210 140, 207 158 M213 92 C 230 120, 250 140, 253 158 M213 92 C 230 150, 230 180, 230 200" fill="none" stroke="#243a5e" stroke-width="2" opacity={on('lb')} />
+  <path id="nl-in" d="M295 62 V 128" fill="none" stroke="#e74856" stroke-width="2.5" opacity={on('nsg')} />
+  <path id="nl-wan" d="M106 205 C 260 300, 420 300, 520 260" fill="none" stroke="#0099bc" stroke-width="3.5" opacity={on('wan')} />
+
+  {focus === 'vpn' && <circle r="6" fill="#ca5010"><animateMotion dur="2.6s" repeatCount="indefinite"><mpath href="#nl-vpn" /></animateMotion></circle>}
+  {focus === 'expressroute' && [0, 1, 2].map((i) => <circle r="6" fill="#107c10"><animateMotion dur="1.4s" begin={`-${i * 0.45}s`} repeatCount="indefinite"><mpath href="#nl-er" /></animateMotion></circle>)}
+  {focus === 'peering' && <><circle r="6" fill="#8764b8"><animateMotion dur="1.6s" repeatCount="indefinite"><mpath href="#nl-peer" /></animateMotion></circle><circle r="6" fill="#0078d4"><animateMotion dur="1.6s" begin="-0.8s" repeatCount="indefinite" keyPoints="1;0" keyTimes="0;1" calcMode="linear"><mpath href="#nl-peer" /></animateMotion></circle></>}
+  {focus === 'endpoint' && <circle r="6" fill="#ca5010"><animateMotion dur="1.8s" repeatCount="indefinite"><mpath href="#nl-pe" /></animateMotion></circle>}
+  {focus === 'dns' && <circle r="6" fill="#c19c00"><animateMotion dur="2.4s" repeatCount="indefinite"><mpath href="#nl-dns" /></animateMotion></circle>}
+  {focus === 'lb' && [0, 1].map((i) => <circle r="5" fill="#ffb900"><animateMotion dur="1.5s" begin={`-${i * 0.7}s`} repeatCount="indefinite"><mpath href="#nl-lb" /></animateMotion></circle>)}
+  {focus === 'nsg' && <g><animateMotion dur="2s" repeatCount="indefinite" keyPoints="0;0.55;0" keyTimes="0;0.6;1" calcMode="linear"><mpath href="#nl-in" /></animateMotion><circle r="7" fill="#e74856" /><text y="4" text-anchor="middle" fill="#fff" font-size="9">✕</text></g>}
+  {focus === 'wan' && <circle r="6" fill="#0099bc"><animateMotion dur="2.4s" repeatCount="indefinite"><mpath href="#nl-wan" /></animateMotion></circle>}
+  {focus === 'vnet' && <circle r="5" fill="#ffb900"><animateMotion dur="2s" repeatCount="indefinite" path="M230 200 C 270 220, 310 210, 343 183" /></circle>}
+  <text x="320" y="294" text-anchor="middle" class="lbl">{label[focus]}</text>
+</svg>

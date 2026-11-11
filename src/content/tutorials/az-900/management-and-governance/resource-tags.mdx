@@ -1,0 +1,101 @@
+---
+title: Resource Tags
+seoTitle: Azure Resource Tags Explained Simply | AZ-900
+description: "Azure resource tags explained: name-value labels for cost reporting, ownership, automation and governance, with examples, a lab and AZ-900 practice."
+answer: >-
+  **Resource tags** are **name-value pairs** (such as `env = production` or `costCenter = 1234`) that you attach to Azure resources, resource groups and subscriptions. They add metadata that helps with **cost reporting**, **resource management**, **operations and automation**, **security** and **governance and compliance**. Tags are not inherited by default.
+updated: 2026-11-11
+readingMinutes: 5
+keyTerms:
+  - term: Tag
+    definition: A name-value pair of metadata on a resource.
+  - term: Tag inheritance
+    definition: Resources do not inherit tags from their group by default; Azure Policy can enforce or copy them.
+interview:
+  - level: beginner
+    q: What are tags in Azure?
+    a: >-
+      Labels made of a name and value, like department equals finance, that I put on resources to organise them and report costs.
+    followUps: []
+  - level: intermediate
+    q: What are common uses of tags?
+    a: >-
+      Cost allocation by department or project, identifying owners and environments, automation such as shutting down resources tagged env=dev at night, marking data sensitivity for security, and governance reporting.
+    followUps: []
+  - level: experienced
+    q: How do you make tagging consistent across a company?
+    a: >-
+      Define a small required set (owner, costCenter, env), enforce it with Azure Policy (deny or modify effects, and inherit tags from resource groups), set it in infrastructure as code templates, and report non-compliance.
+    followUps: []
+revision:
+  keyPoints:
+    - Tags = name-value metadata on resources.
+    - Used for cost reporting, ownership, automation, security and governance.
+    - Not inherited by default; Azure Policy can enforce and inherit.
+  mistakes:
+    - Assuming tags on a resource group automatically appear on its resources.
+  examTips:
+    - '"Group costs by department across resource groups" = **tags**.'
+  quick:
+    - q: What is a tag made of?
+      a: A name and a value.
+    - q: Are tags inherited by default?
+      a: No.
+    - q: How can you enforce tags?
+      a: With Azure Policy.
+    - q: Give two uses of tags.
+      a: Cost reporting and identifying owners (also automation and governance).
+    - q: Can you tag resource groups and subscriptions?
+      a: Yes.
+references:
+  - title: Use tags to organize your Azure resources
+    url: https://learn.microsoft.com/en-us/azure/azure-resource-manager/management/tag-resources
+related:
+  - cost-management
+  - azure-policy
+  - governance
+---
+
+## Start with a question
+
+<Story question="Finance asks how much the Marketing department spent on Azure last month. How do you answer in one minute?">
+
+If every resource is tagged `department = marketing`, filter cost analysis by that tag. Done.
+
+</Story>
+
+## Explain it like I'm 10
+
+<Eli10>
+
+Tags are **name stickers** on your school things: "Owner: Sam", "Class: 5B". When things get mixed up, you can sort them by sticker.
+
+</Eli10>
+
+## The technical explanation
+
+Each resource can have many tags. Typical tags:
+
+| Name | Example value | Used for |
+| --- | --- | --- |
+| env | production, dev | Automation, policy |
+| owner | sam@contoso.com | Accountability |
+| costCenter | 1234 | Cost reporting |
+| dataClass | confidential | Security |
+
+<TryIt labs="first-resource-group,locks-and-tags" text="Add tags like env = learning and owner = yourname to a resource group in the simulator." />
+
+## Real-world business scenario
+
+<Scenario
+  company="A university IT department"
+  industry="Education"
+  problem="Nobody knew which faculty owned hundreds of resources."
+  service="Required tags (owner, faculty, env) enforced with Azure Policy, and cost analysis grouped by faculty."
+  why="Tags give every resource an owner and a cost centre."
+  outcome="Monthly cost reports per faculty, and orphaned resources easily traced."
+/>
+
+## When to use it and when not to
+
+<UseWhen use={['Tag everything with owner, cost centre and environment.']} avoid={['Storing secrets or personal data in tags.']} />

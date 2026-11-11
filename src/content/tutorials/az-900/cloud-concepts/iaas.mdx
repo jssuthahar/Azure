@@ -1,0 +1,177 @@
+---
+title: IaaS – Infrastructure as a Service
+seoTitle: What is IaaS? Infrastructure as a Service Explained | AZ-900
+description: IaaS explained simply with Azure Virtual Machines, who manages what, real use cases, when not to use it, interview questions and AZ-900 practice questions.
+answer: >-
+  **Infrastructure as a Service (IaaS)** is the cloud service type where the provider gives you raw infrastructure (virtual machines, storage and networking) and **you manage everything from the operating system upwards**. It offers the most control and flexibility of the cloud service types, and the most management responsibility. Azure Virtual Machines are the classic example.
+updated: 2026-11-11
+readingMinutes: 9
+keyTerms:
+  - term: IaaS
+    definition: Infrastructure as a Service. Rent VMs, storage and networks; you manage the OS, runtime, apps and data.
+  - term: Virtual machine (VM)
+    definition: A software-based computer running on a physical host, with its own OS, CPU, memory and disks.
+  - term: Hypervisor
+    definition: Software that runs multiple isolated VMs on one physical server.
+  - term: Lift and shift (rehost)
+    definition: Moving an existing application to cloud VMs with minimal changes.
+interview:
+  - level: beginner
+    q: What is IaaS? Give an Azure example.
+    a: >-
+      IaaS means renting basic computing infrastructure, such as virtual machines, disks and networks, from a cloud provider. The provider manages the physical hardware; I manage the operating system, software and data. Azure Virtual Machines is the main example.
+    followUps:
+      - q: What exactly do you manage on an Azure VM?
+        a: >-
+          The OS and its patches, installed software and runtimes, the application, data, network configuration such as NSG rules, identities and access, and backup choices. Microsoft manages the physical server, storage hardware, network and datacenter.
+  - level: intermediate
+    q: Why would you choose IaaS over PaaS?
+    a: >-
+      When I need full control of the OS (custom drivers, specific versions, agents), when migrating an existing app quickly without changes (lift and shift), when the software is not supported on a PaaS offering, or for workloads like custom databases or legacy line-of-business apps. The trade-off is that I take on patching, scaling and high-availability design.
+    followUps: []
+  - level: experienced
+    q: You inherit 50 lifted-and-shifted VMs. How would you reduce the operational burden and cost?
+    a: >-
+      Right-size using Azure Advisor and actual utilisation, shut down or schedule non-production VMs, buy reservations or a savings plan for steady ones, and use Azure Hybrid Benefit for Windows and SQL licences. Automate patching with Azure Update Manager, protect with Azure Backup, and standardise with policy. Then plan a modernisation path, moving web tiers to App Service or containers and databases to Azure SQL, so the platform team stops managing OSes it does not need to.
+    followUps: []
+  - level: scenario
+    q: A company runs a 15-year-old Windows application that only installs on a specific Windows Server version and needs a vendor agent. Which service type fits?
+    a: >-
+      IaaS, an Azure VM with that Windows Server image. PaaS would not allow the custom installation. The company can modernise later, but IaaS gets it into Azure now with full control of the OS.
+    followUps: []
+revision:
+  keyPoints:
+    - IaaS = provider manages physical hardware, network, datacenter and virtualisation; **you manage OS and above**.
+    - Most control and flexibility, most management responsibility of the three service types.
+    - Azure examples include Virtual Machines, VM Scale Sets, Managed Disks and Virtual Networks.
+    - Typical use cases are lift-and-shift migration, test/dev, custom software, and HPC.
+    - You pay for VMs while they are running (allocated). Deallocated VMs stop compute charges.
+  mistakes:
+    - Thinking Microsoft patches the OS on your IaaS VMs. That is your job, though Azure offers tools to automate it.
+    - Choosing IaaS by default when a PaaS service would remove most of the work.
+  examTips:
+    - '"Full control over the operating system" = **IaaS**.'
+    - '"Migrate with minimal changes" or "lift and shift" = **IaaS**.'
+  quick:
+    - q: What does IaaS stand for?
+      a: Infrastructure as a Service.
+    - q: Who installs operating system updates on an Azure VM?
+      a: The customer (you), optionally using Azure automation tools.
+    - q: Which Azure service is the classic IaaS example?
+      a: Azure Virtual Machines.
+    - q: Which service type offers the most control?
+      a: IaaS.
+    - q: What is "lift and shift"?
+      a: Moving an application to cloud VMs with minimal changes.
+references:
+  - title: Describe cloud service types (Microsoft Learn)
+    url: https://learn.microsoft.com/en-us/training/modules/describe-cloud-service-types/
+  - title: Shared responsibility in the cloud
+    url: https://learn.microsoft.com/en-us/azure/security/fundamentals/shared-responsibility
+  - title: Virtual machines in Azure
+    url: https://learn.microsoft.com/en-us/azure/virtual-machines/overview
+related:
+  - paas
+  - saas
+  - shared-responsibility-model
+---
+
+## Start with a question
+
+<Story question="You want to run an old program that only works on one specific version of Windows. Where do you put it in the cloud?">
+
+Most modern cloud platforms say "give us your code and we run it". But this program needs a particular operating system, an installer that clicks through twenty screens, and a vendor's monitoring agent.
+
+You need a computer you control completely, without buying one. That is **Infrastructure as a Service**.
+
+</Story>
+
+## Explain it like I'm 10
+
+<Eli10>
+
+Imagine renting an **empty flat**. The landlord gives you the building, walls, electricity and water pipes, and fixes the roof if it leaks. Everything inside is up to you: furniture, decoration, cleaning, locks on your bedroom door.
+
+IaaS is renting an empty computer. Microsoft gives you the machine, the power and the network. **You install everything on it and keep it tidy.**
+
+</Eli10>
+
+## The technical explanation
+
+**Infrastructure as a Service** is the most flexible cloud service type. The provider supplies and manages the **physical datacenter, physical network, physical hosts and the virtualisation layer**. You get virtual machines, disks and virtual networks, and you are responsible for **everything you put on them**: the operating system, patches, middleware, runtimes, applications, data, and their configuration and security.
+
+<Flow
+  caption="The IaaS stack: where Microsoft's job ends and yours begins"
+  steps={[
+    { title: 'Datacenter, power, cooling', text: 'Microsoft' },
+    { title: 'Physical servers, storage, network', text: 'Microsoft' },
+    { title: 'Virtualisation (hypervisor)', text: 'Microsoft' },
+    { title: 'OS, runtime, middleware', text: '<strong>You</strong>' },
+    { title: 'Applications and data', text: '<strong>You</strong>' },
+  ]}
+/>
+
+### IaaS on Azure
+
+| Azure service | What you get |
+| --- | --- |
+| Azure Virtual Machines | Windows or Linux VMs in many sizes (general purpose, memory-optimised, GPU and more) |
+| Virtual Machine Scale Sets | Groups of identical VMs that scale automatically |
+| Managed Disks | Block storage disks for VMs |
+| Azure Virtual Network | Your private network in Azure, with subnets and security rules |
+
+<TryIt labs="vm-and-cost" text="Create an IaaS virtual machine, discover the disk, network and IP Azure adds for it, and practise stopping it the right way." />
+
+### Common IaaS use cases
+
+- **Lift-and-shift migration**: move existing servers to Azure quickly, then modernise later.
+- **Test and development**: build and tear down environments in minutes.
+- **Custom or legacy software** that needs a specific OS, drivers or agents.
+- **High-performance computing (HPC)**: large numbers of powerful VMs for simulations and rendering.
+- **Website hosting** where you need full control of the web server.
+
+<Callout type="tip">
+A stopped VM in Azure can still cost money. If you only "shut down" inside Windows, the VM stays **allocated** and compute charges continue. Stop it from the portal, CLI or PowerShell so it is **deallocated**. Disks are still billed either way.
+</Callout>
+
+<DeepDive title="IaaS done well: what senior engineers add">
+
+- **Availability**: a single VM's SLA depends on its disk type (highest with Premium SSD or Ultra Disk). Use availability zones or availability sets plus a load balancer for production.
+- **Automation**: build images with Azure VM Image Builder, configure with cloud-init or Desired State Configuration, deploy with Bicep or Terraform. Never hand-build production VMs.
+- **Patching**: Azure Update Manager can schedule and report patches across Azure and Arc-enabled servers.
+- **Security**: no public IPs on management ports; use Azure Bastion or just-in-time VM access; enable Defender for Servers.
+- **Cost**: right-size, autoscale with Scale Sets, use reservations or savings plans for baseline, and Spot VMs for interruptible batch work.
+
+</DeepDive>
+
+## Real-world business scenario
+
+<Scenario
+  company="A logistics company"
+  industry="Enterprise"
+  problem="Its warehouse management system runs on old servers whose support contract ends in three months. The vendor only certifies it on Windows Server with SQL Server installed locally."
+  service="Azure Virtual Machines in an availability zone pair, migrated with Azure Migrate, with Azure Backup and Azure Update Manager."
+  why="IaaS is the only option that keeps the vendor's supported configuration, and migration needs no code changes."
+  outcome="Migrated before the hardware contract expired, with better availability than the single old server, and a plan to modernise in phase two."
+/>
+
+## When to use it and when not to
+
+<UseWhen
+  use={[
+    'You need full control of the operating system and installed software.',
+    'You are migrating existing workloads quickly with minimal changes.',
+    'The software is not supported on PaaS (custom agents, drivers, legacy versions).',
+    'Specialised compute such as GPUs or HPC clusters.',
+  ]}
+  avoid={[
+    'A standard web app or API. PaaS (App Service) removes OS patching and scaling work.',
+    'Event-driven code that runs occasionally. Serverless (Azure Functions) is simpler and cheaper.',
+    'Your team has no capacity to patch, secure and back up servers.',
+  ]}
+  alternatives={[
+    '**PaaS** such as Azure App Service or Azure SQL Database when you just want to run code or data.',
+    '**Containers** (Azure Container Apps, AKS) for portable, modern packaging.',
+    '**Serverless** (Azure Functions) for event-driven tasks.',
+  ]}
+/>

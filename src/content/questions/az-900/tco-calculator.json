@@ -1,0 +1,88 @@
+{
+ "cert": "az-900",
+ "domain": 3,
+ "topic": "tco-calculator",
+ "questions": [
+  {
+   "id": "t-tco-1",
+   "type": "single",
+   "question": "Which tool compares the cost of running workloads on-premises with running them in Azure?",
+   "options": [
+    {
+     "text": "TCO calculator",
+     "why": "Correct."
+    },
+    {
+     "text": "Pricing calculator",
+     "why": "Azure costs only."
+    },
+    {
+     "text": "Azure Advisor",
+     "why": "Recommendations."
+    },
+    {
+     "text": "Azure Monitor",
+     "why": "Telemetry."
+    }
+   ],
+   "answer": [
+    0
+   ],
+   "explanation": "The TCO calculator compares on-premises and Azure."
+  },
+  {
+   "id": "t-tco-2",
+   "type": "single",
+   "question": "Which costs belong in a total cost of ownership comparison for on-premises?",
+   "options": [
+    {
+     "text": "Hardware, power, cooling, space and staff",
+     "why": "Correct."
+    },
+    {
+     "text": "Only the server purchase price",
+     "why": "Incomplete."
+    },
+    {
+     "text": "Only software licences",
+     "why": "Incomplete."
+    },
+    {
+     "text": "Only internet bandwidth",
+     "why": "Incomplete."
+    }
+   ],
+   "answer": [
+    0
+   ],
+   "explanation": "TCO includes all lifetime costs."
+  },
+  {
+   "id": "t-tco-3",
+   "type": "single",
+   "question": "Which Azure Migrate feature estimates TCO from your discovered servers?",
+   "options": [
+    {
+     "text": "Business case",
+     "why": "Correct."
+    },
+    {
+     "text": "Data Box",
+     "why": "Offline transfer."
+    },
+    {
+     "text": "Resource locks",
+     "why": "Governance."
+    },
+    {
+     "text": "Deployment slots",
+     "why": "App Service feature."
+    }
+   ],
+   "answer": [
+    0
+   ],
+   "explanation": "The business case uses discovery data."
+  }
+ ]
+}

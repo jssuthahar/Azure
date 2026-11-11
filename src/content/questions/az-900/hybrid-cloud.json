@@ -1,0 +1,64 @@
+{
+  "cert": "az-900",
+  "domain": 1,
+  "topic": "hybrid-cloud",
+  "questions": [
+    {
+      "id": "cc-hybrid-1",
+      "type": "single",
+      "scenario": "A company must keep its customer database on-premises for compliance, but wants to host its public website in Azure and let the website read from that database.",
+      "question": "Which cloud model is this?",
+      "options": [
+        { "text": "Public cloud", "why": "Part of the solution remains on-premises, so it is not purely public." },
+        { "text": "Private cloud", "why": "The website runs in a public cloud, so it is not purely private." },
+        { "text": "Hybrid cloud", "why": "Correct. On-premises and public cloud are combined and connected." },
+        { "text": "Multi-cloud", "why": "Multi-cloud means multiple public cloud providers." }
+      ],
+      "answer": [2],
+      "explanation": "Combining on-premises infrastructure with public cloud, connected so they work together, is hybrid cloud.",
+      "objective": "1.1.4"
+    },
+    {
+      "id": "cc-hybrid-2",
+      "type": "single",
+      "question": "An organisation uses both Microsoft Azure and another public cloud provider. What is this approach called?",
+      "options": [
+        { "text": "Multi-cloud", "why": "Correct. Using more than one public cloud provider is multi-cloud." },
+        { "text": "Private cloud", "why": "Private cloud is dedicated infrastructure for one organisation." },
+        { "text": "Single tenancy", "why": "Single tenancy describes dedicated infrastructure." },
+        { "text": "Serverless", "why": "Serverless is a compute model, not a provider strategy." }
+      ],
+      "answer": [0],
+      "explanation": "Multi-cloud = two or more public cloud providers.",
+      "objective": "1.1.3"
+    },
+    {
+      "id": "cc-hybrid-3",
+      "type": "single",
+      "question": "Which Azure service lets you manage on-premises servers and servers in other clouds with Azure tools such as Azure Policy?",
+      "options": [
+        { "text": "Azure Arc", "why": "Correct. Arc extends Azure management to resources outside Azure." },
+        { "text": "Azure DNS", "why": "Azure DNS hosts DNS zones." },
+        { "text": "Azure Advisor", "why": "Advisor recommends optimisations for Azure resources." },
+        { "text": "Azure Data Box", "why": "Data Box is for offline data transfer." }
+      ],
+      "answer": [0],
+      "explanation": "Azure Arc projects external servers, Kubernetes clusters and data services into Azure for unified management and governance.",
+      "objective": "3.3.3"
+    },
+    {
+      "id": "cc-hybrid-4",
+      "type": "multi",
+      "question": "Which TWO are benefits of a hybrid cloud?",
+      "options": [
+        { "text": "Sensitive workloads can stay on-premises while others use the public cloud", "why": "Correct. Flexibility of placement is the core benefit." },
+        { "text": "It removes all on-premises hardware costs", "why": "On-premises parts still have hardware costs." },
+        { "text": "Extra capacity can be used in the cloud during demand peaks", "why": "Correct. This is cloud bursting." },
+        { "text": "It is always simpler to manage than a single cloud", "why": "Hybrid usually adds management complexity." }
+      ],
+      "answer": [0, 2],
+      "explanation": "Hybrid offers workload placement flexibility and burst capacity, at the cost of extra complexity.",
+      "objective": "1.1.4"
+    }
+  ]
+}

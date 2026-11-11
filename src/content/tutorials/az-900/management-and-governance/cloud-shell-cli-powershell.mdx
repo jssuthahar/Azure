@@ -1,0 +1,109 @@
+---
+title: Cloud Shell, Azure CLI and Azure PowerShell
+seoTitle: Azure Cloud Shell vs Azure CLI vs PowerShell | AZ-900
+description: "Azure Cloud Shell, Azure CLI and Azure PowerShell compared: command-line tools for managing Azure, with examples, a simulator lab and AZ-900 practice."
+answer: >-
+  **Azure CLI** (`az` commands) and **Azure PowerShell** (cmdlets such as `New-AzVM`) are command-line tools for managing Azure through scripts. **Azure Cloud Shell** is a browser-based shell, launched from the portal, that already has both tools installed and is already signed in. You can choose a **Bash** or **PowerShell** experience.
+updated: 2026-11-11
+readingMinutes: 6
+keyTerms:
+  - term: Azure CLI
+    definition: Cross-platform command-line tool using az commands, popular with Bash users.
+  - term: Azure PowerShell
+    definition: A set of PowerShell cmdlets (the Az module) for managing Azure.
+  - term: Azure Cloud Shell
+    definition: A browser-based, authenticated shell with Azure CLI and PowerShell preinstalled.
+interview:
+  - level: beginner
+    q: What is Azure Cloud Shell?
+    a: >-
+      A command line in my browser, opened from the Azure portal, that already has Azure CLI and PowerShell installed and is signed in to my account. Nothing to install.
+    followUps: []
+  - level: intermediate
+    q: Azure CLI or Azure PowerShell, which should you use?
+    a: >-
+      Both can do the same things. Pick the one that fits your skills and environment: the CLI's az commands feel natural in Bash and Linux; PowerShell cmdlets suit teams already using PowerShell on Windows. Both run on Windows, macOS and Linux.
+    followUps: []
+  - level: experienced
+    q: Why use the command line instead of the portal?
+    a: >-
+      Repeatability and automation. Scripts can be version-controlled, reviewed, scheduled and run in pipelines, and they produce the same result every time. They are also faster for bulk operations.
+    followUps: []
+revision:
+  keyPoints:
+    - Azure CLI = az commands.
+    - Azure PowerShell = cmdlets like New-AzVM.
+    - Cloud Shell = browser shell with both tools, already authenticated.
+    - Cloud Shell offers Bash or PowerShell.
+  mistakes:
+    - Thinking you must install anything to use Cloud Shell.
+  examTips:
+    - '"Browser-based shell with Azure tools preinstalled" = **Azure Cloud Shell**.'
+  quick:
+    - q: What prefix do Azure CLI commands use?
+      a: az
+    - q: Give an Azure PowerShell cmdlet example.
+      a: New-AzVM (or Get-AzResourceGroup).
+    - q: Do you need to install anything for Cloud Shell?
+      a: No, it runs in the browser.
+    - q: Which shells does Cloud Shell offer?
+      a: Bash and PowerShell.
+    - q: Why prefer scripts over clicking for repeated tasks?
+      a: They are repeatable, automatable and reviewable.
+references:
+  - title: Azure Cloud Shell overview
+    url: https://learn.microsoft.com/en-us/azure/cloud-shell/overview
+  - title: Choose the right Azure command-line tool
+    url: https://learn.microsoft.com/en-us/cli/azure/choose-the-right-azure-command-line-tool
+related:
+  - azure-portal
+  - infrastructure-as-code
+  - azure-resource-manager
+---
+
+## Start with a question
+
+<Story question="You need to create the same 20 resources in three environments. Click 60 times, or run one script?">
+
+One script. That's why Azure gives you the **CLI**, **PowerShell** and **Cloud Shell**.
+
+</Story>
+
+## Explain it like I'm 10
+
+<Eli10>
+
+Clicking in the portal is like drawing a picture by hand. Typing commands is like giving a **robot instructions**: write them once, and the robot draws the same picture perfectly every time.
+
+</Eli10>
+
+## The technical explanation
+
+The same task in both tools:
+
+```bash
+# Azure CLI
+az group create --name rg-learn --location westeurope
+```
+
+```powershell
+# Azure PowerShell
+New-AzResourceGroup -Name rg-learn -Location westeurope
+```
+
+<TryIt labs="cloud-shell-webapp,sandbox" text="Type real az commands in the simulated Cloud Shell: create a resource group, list it as a table, and deploy a web app." />
+
+## Real-world business scenario
+
+<Scenario
+  company="A managed service provider"
+  industry="Enterprise"
+  problem="Engineers created the same baseline resources for each new customer by hand, with frequent mistakes."
+  service="An Azure CLI script run from Cloud Shell or a pipeline."
+  why="Consistent, fast and repeatable."
+  outcome="New customer environments are ready in minutes without errors."
+/>
+
+## When to use it and when not to
+
+<UseWhen use={['Automation, bulk changes and repeatable tasks.', 'Cloud Shell when you are on any computer with only a browser.']} avoid={['Ad-hoc scripts for complex production infrastructure. Prefer IaC templates.']} />

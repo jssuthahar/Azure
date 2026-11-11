@@ -1,0 +1,118 @@
+---
+title: Azure Subscriptions
+seoTitle: "Azure Subscriptions Explained: Billing and Access | AZ-900"
+description: Azure subscriptions explained simply as billing and access boundaries, why companies use several, real examples, interview questions and AZ-900 practice.
+answer: >-
+  An **Azure subscription** is a logical unit that links your Azure account to billing, and acts as both a **billing boundary** and an **access control boundary**. All resource groups and resources live inside a subscription. Organisations often create several subscriptions to separate environments, departments or billing.
+updated: 2026-11-11
+readingMinutes: 6
+keyTerms:
+  - term: Subscription
+    definition: A container for resources that is a billing boundary and an access control boundary.
+  - term: Billing boundary
+    definition: Each subscription gets its own invoices and cost reports.
+  - term: Access control boundary
+    definition: Permissions and policies can be applied at the subscription level for everything inside.
+  - term: Azure account
+    definition: The identity (in a Microsoft Entra tenant) used to sign in and own subscriptions.
+interview:
+  - level: beginner
+    q: What is an Azure subscription?
+    a: >-
+      It is the container that links Azure resources to billing. Everything I create lives in a subscription, and I can control who has access and see costs at the subscription level.
+    followUps: []
+  - level: intermediate
+    q: Why would a company use more than one subscription?
+    a: >-
+      To separate environments such as production and development, to separate departments or projects for billing, to apply different access and policies, and to stay within subscription limits and quotas.
+    followUps: []
+  - level: experienced
+    q: How do subscriptions fit into an enterprise landing zone design?
+    a: >-
+      Subscriptions are the unit of scale and isolation. A landing zone typically gives each workload, or each workload environment, its own subscription, placed under management groups that apply shared policies. Platform subscriptions hold shared services such as connectivity and identity. This keeps blast radius small and billing clear.
+    followUps: []
+revision:
+  keyPoints:
+    - A subscription links Azure usage to billing.
+    - It is a billing boundary and an access control boundary.
+    - Resource groups and resources live inside subscriptions.
+    - One account can have multiple subscriptions.
+  mistakes:
+    - Confusing subscriptions with resource groups. Subscriptions contain resource groups.
+  examTips:
+    - '"Separate invoices for different departments" = use **separate subscriptions**.'
+    - The two boundaries are **billing** and **access control**.
+  quick:
+    - q: What two boundaries does a subscription provide?
+      a: A billing boundary and an access control boundary.
+    - q: What does a subscription contain?
+      a: Resource groups, which contain resources.
+    - q: Can one account have several subscriptions?
+      a: Yes.
+    - q: Why separate production and development into different subscriptions?
+      a: To isolate access, policies, quotas and costs.
+    - q: What groups several subscriptions for shared governance?
+      a: A management group.
+references:
+  - title: Describe the core architectural components of Azure (Microsoft Learn)
+    url: https://learn.microsoft.com/en-us/training/modules/describe-core-architectural-components-of-azure/
+related:
+  - resources-and-resource-groups
+  - management-groups
+  - management-hierarchy
+---
+
+## Start with a question
+
+<Story question="How does the finance team know which department spent what on Azure?">
+
+If everything is on one bill, nobody knows. Azure's answer is the **subscription**: each one gets its own bill and its own access rules.
+
+</Story>
+
+## Explain it like I'm 10
+
+<Eli10>
+
+Think of **mobile phone plans**. Each family member can have their own plan with its own bill. Mum can see everyone's bills, but each child only controls their own.
+
+An Azure subscription is like one of those plans: a separate bill and separate rules for what is inside.
+
+</Eli10>
+
+## The technical explanation
+
+An Azure **subscription** provides authenticated and authorised access to Azure services and is tied to a billing arrangement. It sits between management groups and resource groups in the hierarchy.
+
+| Boundary | What it does |
+| --- | --- |
+| Billing | Each subscription generates its own invoices and cost reports |
+| Access control | Apply RBAC roles and Azure Policy to everything in the subscription |
+
+Common reasons for multiple subscriptions: **environments** (prod, dev, test), **organisational structure** (departments or teams), **billing** (cost centres), and **limits** (each subscription has quotas).
+
+<TryIt labs="sandbox" text="Everything in the simulator lives inside one subscription. Open the Cloud Shell and run az account show to see it." />
+
+## Real-world business scenario
+
+<Scenario
+  company="A university"
+  industry="Education"
+  problem="Research groups, IT and the student portal shared one subscription; nobody could tell who spent what, and researchers had access to the student database."
+  service="Created separate subscriptions for IT production, the student portal and each research faculty."
+  why="Subscriptions give separate bills and separate access boundaries."
+  outcome="Each faculty receives its own Azure bill, and research staff no longer have access to student systems."
+/>
+
+## When to use it and when not to
+
+<UseWhen
+  use={[
+    'Separate production from development and test.',
+    'Give departments or customers their own bill and access boundary.',
+  ]}
+  avoid={[
+    'Creating a subscription for every tiny project. Resource groups are often enough.',
+  ]}
+  alternatives={['**Resource groups and tags** for finer-grained organisation inside one subscription.']}
+/>

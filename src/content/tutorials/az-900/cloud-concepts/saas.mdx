@@ -1,0 +1,147 @@
+---
+title: SaaS – Software as a Service
+seoTitle: What is SaaS? Software as a Service Explained | AZ-900
+description: SaaS explained simply with Microsoft 365 and other examples, what you still manage, use cases, trade-offs, interview questions and AZ-900 practice questions.
+answer: >-
+  **Software as a Service (SaaS)** is the cloud service type where you use a **complete, ready-made application** over the internet, usually by subscription. The provider runs everything: infrastructure, platform, application, updates. You just sign in and use it, and you remain responsible for your data, users, devices and access settings. Microsoft 365, Outlook.com and Dynamics 365 are examples.
+updated: 2026-11-11
+readingMinutes: 7
+keyTerms:
+  - term: SaaS
+    definition: Software as a Service. A finished application delivered over the internet, fully run by the provider.
+  - term: Subscription licensing
+    definition: Paying per user or per month for software instead of buying perpetual licences.
+  - term: Configuration vs customisation
+    definition: SaaS lets you configure settings and workflows, but you cannot change the vendor's underlying code.
+interview:
+  - level: beginner
+    q: What is SaaS? Give two examples.
+    a: >-
+      SaaS is software you use over the internet without installing or managing it. The provider runs and updates everything. Examples are Microsoft 365 (Outlook, Teams, Word online) and Dynamics 365. Many consumer apps like web email are also SaaS.
+    followUps:
+      - q: If Microsoft runs everything, what is the customer responsible for?
+        a: >-
+          The customer is still responsible for its data, the user accounts and who has access, the devices people use, and settings like multifactor authentication and sharing policies. Most SaaS security incidents come from weak passwords or over-sharing, not from the provider's infrastructure.
+  - level: intermediate
+    q: What are the disadvantages of SaaS?
+    a: >-
+      Limited customisation (you work within the vendor's features), dependency on the vendor's roadmap and availability, data stored in the vendor's systems (check residency and export options), subscription costs that grow with users, and integration constraints set by the vendor's APIs.
+    followUps: []
+  - level: experienced
+    q: The business wants to build a custom CRM. How do you decide between building on PaaS and buying SaaS?
+    a: >-
+      I would ask whether the CRM is a source of competitive advantage. If our sales process is standard, buy SaaS (for example Dynamics 365) and configure it. That is faster, cheaper to run and continuously updated. Build only the parts that truly differentiate us, perhaps as extensions on PaaS integrated through APIs. I would also weigh data residency, integration needs, total cost per user over five years, and exit strategy (data export).
+    followUps: []
+  - level: scenario
+    q: A 20-person charity needs email, calendars, file sharing and video calls next week with no IT staff. What do you recommend?
+    a: >-
+      A SaaS productivity suite such as Microsoft 365. Nothing to install or maintain, available immediately, predictable per-user pricing. Turn on MFA for every account from day one.
+    followUps: []
+revision:
+  keyPoints:
+    - SaaS = complete application delivered over the internet; **provider manages almost everything**.
+    - Least control and least management effort of the three service types.
+    - Usually subscription-based, per user or per month.
+    - You still own your **data, accounts, identities and devices**.
+    - Microsoft examples include Microsoft 365, Dynamics 365 and Outlook.com.
+  mistakes:
+    - Thinking the customer has no security responsibility in SaaS.
+    - Calling Azure itself SaaS. Azure is a platform offering IaaS, PaaS and serverless services.
+  examTips:
+    - '"Users only need to sign in and use the software" = **SaaS**.'
+    - '"Email, office apps, CRM delivered over the internet" = SaaS.'
+  quick:
+    - q: What does SaaS stand for?
+      a: Software as a Service.
+    - q: Give a Microsoft SaaS example.
+      a: Microsoft 365 (also Dynamics 365, Outlook.com).
+    - q: Which service type has the least customer management effort?
+      a: SaaS.
+    - q: In SaaS, who is responsible for user accounts and data?
+      a: The customer.
+    - q: What is a typical SaaS pricing model?
+      a: Subscription, often per user per month.
+references:
+  - title: Describe cloud service types (Microsoft Learn)
+    url: https://learn.microsoft.com/en-us/training/modules/describe-cloud-service-types/
+  - title: Shared responsibility in the cloud
+    url: https://learn.microsoft.com/en-us/azure/security/fundamentals/shared-responsibility
+related:
+  - iaas
+  - paas
+  - choosing-iaas-paas-saas
+---
+
+## Start with a question
+
+<Story question="When you send an email, do you ever think about the mail server?">
+
+You open Outlook or Gmail, type, press send. You never installed a mail server, never patched one, never bought a disk to store your messages. Someone else does all of that.
+
+That everyday experience is **Software as a Service**, the most complete form of cloud.
+
+</Story>
+
+## Explain it like I'm 10
+
+<Eli10>
+
+Some days you cook at home. Some days your family orders **pizza delivery**. With delivery you do not buy ingredients, own an oven or wash the pans. The pizza simply arrives, ready to eat.
+
+SaaS is software delivered ready to use. **You just open it and use it.** Somebody else does all the cooking and cleaning behind the scenes.
+
+</Eli10>
+
+## The technical explanation
+
+With **Software as a Service**, the provider hosts and manages the **entire application stack**: datacenter, hardware, OS, runtime, the application itself, and its updates. Customers access it through a browser or app, usually paying a **subscription per user or per month**.
+
+What you can still do is **configure**: create users, set permissions, choose security policies, adjust workflows and integrate through APIs. What you cannot do is change the vendor's code or infrastructure.
+
+| You manage | The provider manages |
+| --- | --- |
+| Your data (what you store, classify and share) | The application and its updates |
+| User accounts and identities | Runtime, OS, middleware |
+| Devices that access the service | Servers, storage, networking |
+| Access policies (for example MFA, sharing settings) | Datacenter and physical security |
+
+### Examples
+
+- **Microsoft 365**: Outlook, Teams, Word, Excel, SharePoint, OneDrive.
+- **Dynamics 365**: CRM and ERP business applications.
+- Many others from different vendors: online accounting, HR systems, ticketing tools, video conferencing.
+
+<Callout type="warning">
+A common mistake is believing SaaS means "security is the vendor's problem". In the shared responsibility model, **data, devices, and accounts and identities are always the customer's responsibility**, even in SaaS. Turning on multifactor authentication matters more than anything else you can do.
+</Callout>
+
+## Real-world business scenario
+
+<Scenario
+  company="A chain of dental clinics"
+  industry="Healthcare"
+  problem="Each clinic ran its own email server and file share in a back office. Backups were unreliable and staff could not work from home."
+  service="Microsoft 365 for email, Teams and file sharing, with multifactor authentication and conditional access policies."
+  why="No servers to maintain, always up to date, accessible from anywhere, and predictable per-user cost."
+  outcome="Back-office servers were retired, staff collaborate across clinics, and IT time moved from fixing servers to helping people."
+/>
+
+## When to use it and when not to
+
+<UseWhen
+  use={[
+    'The need is common across businesses: email, collaboration, CRM, HR, accounting.',
+    'You want something working immediately with no maintenance.',
+    'You prefer predictable per-user subscription costs.',
+    'Users need access from anywhere, on any device.',
+  ]}
+  avoid={[
+    'The process is your competitive advantage and needs deep, unique customisation.',
+    'Strict data residency rules the vendor cannot meet.',
+    'Integration needs that the vendor APIs cannot support.',
+  ]}
+  alternatives={[
+    '**PaaS** to build a custom application when no product fits.',
+    '**Extend SaaS** with low-code tools or custom PaaS components integrated by API.',
+  ]}
+/>

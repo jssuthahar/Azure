@@ -1,0 +1,26 @@
+---
+import Base from './Base.astro';
+import Mascot from '../components/Mascot.astro';
+
+interface Props { title: string; seoTitle: string; description: string; icon: string; intro: string; band?: string }
+const { title, seoTitle, description, icon, intro, band = 'band-blue' } = Astro.props;
+const crumbs = [
+  { name: 'Home', url: '/' },
+  { name: 'AZ-900', url: '/az-900/' },
+  { name: 'Play & Learn', url: '/az-900/games/' },
+  { name: title, url: Astro.url.pathname },
+];
+---
+<Base title={seoTitle} description={description} breadcrumbs={crumbs}>
+  <section class={`${band} px-4 py-8 sm:py-10`}>
+    <div class="mx-auto flex max-w-4xl items-center gap-4">
+      <Mascot size={70} mood="cheer" class="hidden shrink-0 sm:block" />
+      <div class="min-w-0">
+        <nav class="text-sm text-muted" aria-label="Breadcrumb"><a class="hover:underline" href="/az-900/games/">❮ Play &amp; Learn</a></nav>
+        <h1 class="mt-1 text-3xl font-bold tracking-tight sm:text-4xl"><span aria-hidden="true">{icon}</span> {title}</h1>
+        <p class="mt-1 text-lg">{intro}</p>
+      </div>
+    </div>
+  </section>
+  <div class="mx-auto max-w-4xl px-4 py-8 sm:px-6"><slot /></div>
+</Base>

@@ -1,0 +1,91 @@
+{
+ "cert": "az-900",
+ "domain": 3,
+ "topic": "azure-monitor",
+ "questions": [
+  {
+   "id": "t-mon-1",
+   "type": "single",
+   "question": "Which tool lets you write KQL queries against log data collected by Azure Monitor?",
+   "options": [
+    {
+     "text": "Log Analytics",
+     "why": "Correct."
+    },
+    {
+     "text": "Azure Advisor",
+     "why": "Recommendations."
+    },
+    {
+     "text": "Azure Policy",
+     "why": "Governance."
+    },
+    {
+     "text": "Storage Explorer",
+     "why": "Storage GUI."
+    }
+   ],
+   "answer": [
+    0
+   ],
+   "explanation": "Log Analytics runs KQL queries.",
+   "objective": "3.4.3"
+  },
+  {
+   "id": "t-mon-2",
+   "type": "single",
+   "question": "Which feature monitors a web application's response times, failure rates and dependencies?",
+   "options": [
+    {
+     "text": "Application Insights",
+     "why": "Correct."
+    },
+    {
+     "text": "Resource locks",
+     "why": "Governance."
+    },
+    {
+     "text": "Azure DNS",
+     "why": "Names."
+    },
+    {
+     "text": "Azure Migrate",
+     "why": "Migration."
+    }
+   ],
+   "answer": [
+    0
+   ],
+   "explanation": "Application Insights is APM.",
+   "objective": "3.4.3"
+  },
+  {
+   "id": "t-mon-3",
+   "type": "single",
+   "question": "What do Azure Monitor alerts use to send emails, SMS or call webhooks?",
+   "options": [
+    {
+     "text": "Action groups",
+     "why": "Correct."
+    },
+    {
+     "text": "Management groups",
+     "why": "Governance."
+    },
+    {
+     "text": "Availability sets",
+     "why": "VM resilience."
+    },
+    {
+     "text": "Resource groups",
+     "why": "Containers."
+    }
+   ],
+   "answer": [
+    0
+   ],
+   "explanation": "Action groups define notifications and automation.",
+   "objective": "3.4.3"
+  }
+ ]
+}

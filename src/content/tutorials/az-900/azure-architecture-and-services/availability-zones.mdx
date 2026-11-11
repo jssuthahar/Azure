@@ -1,0 +1,137 @@
+---
+title: Availability Zones
+seoTitle: Azure Availability Zones Explained Simply | AZ-900
+description: Azure availability zones explained with zonal vs zone-redundant services, an animation, real examples, interview questions and AZ-900 practice questions.
+answer: >-
+  **Availability zones** are physically separate locations within an Azure region. Each zone is made up of one or more datacenters with independent power, cooling and networking. Regions that support zones have at least three, so spreading your app across zones keeps it running even if one whole datacenter fails.
+updated: 2026-11-11
+readingMinutes: 7
+keyTerms:
+  - term: Availability zone
+    definition: A physically separate group of one or more datacenters within a region, with independent power, cooling and networking.
+  - term: Zonal service
+    definition: A resource pinned to a zone you choose, such as a VM in zone 1.
+  - term: Zone-redundant service
+    definition: A service Azure automatically replicates across zones, such as zone-redundant storage (ZRS).
+  - term: Non-regional service
+    definition: A service that is always available across Azure geographies and is not tied to a region, such as Microsoft Entra ID.
+interview:
+  - level: beginner
+    q: What is an availability zone?
+    a: >-
+      It is a physically separate datacenter location inside an Azure region, with its own power, cooling and network. Regions with zones have at least three, so I can run copies of my app in different zones and survive one datacenter failing.
+    followUps:
+      - q: Is there a cost for using zones?
+        a: >-
+          The zones themselves are free, but you pay for the extra resources you run, and for some services there are small charges for data transferred between zones.
+  - level: intermediate
+    q: What is the difference between zonal and zone-redundant services?
+    a: >-
+      Zonal means I pin a resource to a specific zone, like a VM in zone 1, and I design redundancy myself by deploying more instances in other zones. Zone-redundant means Azure replicates the service across zones automatically, like zone-redundant storage or a zone-redundant SQL database.
+    followUps: []
+  - level: experienced
+    q: When would you choose availability zones versus a second region?
+    a: >-
+      Zones protect against datacenter-level failures with low latency between zones, so synchronous replication is practical. A second region protects against regional disasters, but adds latency, data replication complexity and cost. Most production workloads start zone-redundant in one region, and add a second region only for critical systems with strict recovery objectives.
+    followUps: []
+  - level: scenario
+    q: A web app on two VMs in one datacenter went down during a power failure. What would you change?
+    a: >-
+      Spread the VMs across availability zones behind a zone-redundant load balancer, and use zone-redundant tiers for the database and storage. Then a single datacenter power failure no longer takes the app down.
+    followUps: []
+revision:
+  keyPoints:
+    - Availability zones are separate datacenter groups inside one region.
+    - Each zone has independent power, cooling and networking.
+    - Zone-enabled regions have at least three zones.
+    - Zonal = you pick the zone; zone-redundant = Azure replicates across zones.
+    - Not every region supports availability zones.
+  mistakes:
+    - Thinking zones protect against a whole-region disaster. They do not; use another region for that.
+    - Assuming every region has zones.
+  examTips:
+    - '"Protect against a datacenter failure within a region" = **availability zones**.'
+    - Minimum number of zones in a zone-enabled region = **three**.
+  quick:
+    - q: How many availability zones does a zone-enabled region have at minimum?
+      a: Three.
+    - q: What does each zone have independently?
+      a: Power, cooling and networking.
+    - q: What is a zone-redundant service?
+      a: A service Azure automatically replicates across zones.
+    - q: Do zones protect against a regional outage?
+      a: No. Use a second region for that.
+    - q: Give an example of a zonal resource.
+      a: A virtual machine deployed to a specific zone.
+references:
+  - title: What are availability zones?
+    url: https://learn.microsoft.com/en-us/azure/reliability/availability-zones-overview
+related:
+  - regions-and-region-pairs
+  - high-availability
+  - datacenters
+---
+
+## Start with a question
+
+<Story question="What if the building that holds your servers loses power?">
+
+Even the best datacenter can lose power, overheat or have a network fault. If all your servers are in that one building, your app stops.
+
+Availability zones let you put copies of your app in **separate buildings in the same city**, so one building's bad day does not become yours.
+
+</Story>
+
+## Explain it like I'm 10
+
+<Eli10>
+
+Think about keeping your favourite toys at **three different friends' houses** in the same town. If one house has a power cut, you can still play at the other two.
+
+Availability zones are those three houses: close enough to talk to each other quickly, far enough apart that one problem does not affect them all.
+
+</Eli10>
+
+## The technical explanation
+
+An **availability zone** is a physically separate location within an Azure region, made up of one or more datacenters with **independent power, cooling and networking**. Zones in a region are connected by high-speed, low-latency private fibre, so data can be replicated between them almost instantly. A zone-enabled region has a **minimum of three zones**.
+
+| Service category | What it means | Example |
+| --- | --- | --- |
+| Zonal | You choose the zone for each resource | A VM in zone 2 |
+| Zone-redundant | Azure replicates across zones for you | Zone-redundant storage (ZRS), zone-redundant Azure SQL Database |
+| Non-regional | Always available, not tied to a region | Microsoft Entra ID, Azure DNS |
+
+<TryIt labs="storage-redundancy" text="Create a storage account with zone-redundant storage (ZRS) so your data is kept in three zones." />
+
+<Callout type="exam">
+Zones protect you from a **datacenter** failure. For a whole-**region** failure, you need a second region, often the region pair.
+</Callout>
+
+## Real-world business scenario
+
+<Scenario
+  company="An online payments start-up"
+  industry="Banking"
+  problem="Its payment API ran in one datacenter; a cooling failure caused a two-hour outage and lost transactions."
+  service="Redeployed the API across three availability zones behind a zone-redundant load balancer, with a zone-redundant database."
+  why="Zones remove the single-datacenter point of failure, while keeping latency low enough for synchronous database replication."
+  outcome="A later datacenter incident caused no customer-visible downtime."
+/>
+
+## When to use it and when not to
+
+<UseWhen
+  use={[
+    'Production workloads that need high availability within a region.',
+    'Databases and storage that should survive a datacenter failure (use zone-redundant tiers).',
+  ]}
+  avoid={[
+    'Dev/test environments where downtime is acceptable. Zones add instance costs.',
+    'Regions without zone support. Pick a zone-enabled region if zones are required.',
+  ]}
+  alternatives={[
+    '**Availability sets** spread VMs across racks in one datacenter (smaller protection).',
+    '**A second region** for regional disaster recovery.',
+  ]}
+/>

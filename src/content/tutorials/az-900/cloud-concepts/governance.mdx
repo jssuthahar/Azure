@@ -1,0 +1,162 @@
+---
+title: Governance in the Cloud
+seoTitle: Cloud Governance Benefits Explained | AZ-900
+description: Cloud governance explained simply, with policies, compliance templates, auditing and Azure Policy, plus interview questions and AZ-900 practice.
+answer: >-
+  **Governance** in the cloud is the set of rules, processes and tools that keep your cloud use **compliant with company and regulatory standards**. The cloud makes governance easier because rules can be applied in software, with templates for standards, automatic auditing that flags non-compliant resources, and enforcement that can block or fix them automatically, using tools such as Azure Policy and resource locks.
+updated: 2026-11-11
+readingMinutes: 7
+keyTerms:
+  - term: Governance
+    definition: Policies and processes that ensure cloud resources meet organisational and regulatory standards.
+  - term: Compliance
+    definition: Meeting the requirements of laws, regulations and industry standards (for example GDPR, ISO 27001, PCI DSS).
+  - term: Azure Policy
+    definition: A service that evaluates resources against rules and can audit, deny or remediate non-compliant ones.
+  - term: Guardrails
+    definition: Automated controls that keep teams within safe boundaries without slowing them down.
+interview:
+  - level: beginner
+    q: What does governance mean in the cloud?
+    a: >-
+      Governance means having rules for how the cloud is used and making sure they are followed. For example, only allowing certain regions, requiring tags for cost tracking, or making sure storage is encrypted. In Azure, tools like Azure Policy check and enforce these rules automatically.
+    followUps:
+      - q: Why is that easier in the cloud?
+        a: >-
+          Because everything is created through software and APIs, rules can be checked and enforced automatically at creation time, and audits can run continuously instead of once a year.
+  - level: intermediate
+    q: Name Azure tools used for governance and what each does.
+    a: >-
+      Azure Policy enforces and audits rules on resources; resource locks prevent accidental deletion or changes; management groups apply policies and access across many subscriptions; tags organise resources for cost and ownership; Microsoft Purview governs data, including discovery, classification and lineage; and Microsoft Cost Management with budgets governs spending.
+    followUps: []
+  - level: experienced
+    q: How do you build governance that does not slow developers down?
+    a: >-
+      Use guardrails rather than gates. Design a management group hierarchy (for example from Azure landing zones), assign policy initiatives at the top so every subscription inherits them, use deny only for the critical rules (public exposure, allowed regions), use audit and deployIfNotExists for the rest so things are fixed automatically, and give teams self-service subscriptions inside those boundaries. Make compliance visible on a dashboard and treat policy as code in a repository with reviews.
+    followUps: []
+  - level: scenario
+    q: A company must keep all customer data within the EU. How can Azure help enforce that?
+    a: >-
+      Assign an Azure Policy "Allowed locations" rule at the management group level, listing only EU regions. Any attempt to create a resource elsewhere is denied, and the compliance dashboard shows existing resources that violate it.
+    followUps: []
+revision:
+  keyPoints:
+    - Governance = rules and processes to keep cloud usage compliant and under control.
+    - The cloud enables **templates**, **automatic auditing** and **automatic enforcement**.
+    - "Azure tools: Azure Policy, resource locks, management groups, tags, Microsoft Purview, Cost Management."
+    - Policies can audit, deny, or remediate (deploy missing settings).
+    - Good governance is guardrails that keep teams safe while letting them move fast.
+  mistakes:
+    - Confusing governance (rules and compliance) with security (protecting against threats). They overlap but are different.
+    - Thinking Azure Policy controls who can do things. That is Azure RBAC. Policy controls what resources may look like.
+  examTips:
+    - '"Ensure resources comply with company standards" / "audit and enforce rules" = **governance** / **Azure Policy**.'
+    - '"Prevent accidental deletion" = **resource locks**.'
+  quick:
+    - q: What is cloud governance?
+      a: The rules, processes and tools that keep cloud usage compliant with organisational and regulatory standards.
+    - q: Which Azure service audits and enforces rules on resources?
+      a: Azure Policy.
+    - q: What prevents a critical resource from being deleted accidentally?
+      a: A resource lock (CanNotDelete).
+    - q: How does the cloud make auditing easier?
+      a: Resources are continuously evaluated and non-compliant ones are flagged automatically.
+    - q: What is the difference between Azure Policy and Azure RBAC?
+      a: Policy controls what resources can look like; RBAC controls who can perform actions.
+references:
+  - title: Describe the benefits of security and governance (Microsoft Learn)
+    url: https://learn.microsoft.com/en-us/training/modules/describe-benefits-use-cloud-services/
+  - title: What is Azure Policy?
+    url: https://learn.microsoft.com/en-us/azure/governance/policy/overview
+  - title: Cloud Adoption Framework - Govern
+    url: https://learn.microsoft.com/en-us/azure/cloud-adoption-framework/govern/
+related:
+  - security
+  - manageability
+  - shared-responsibility-model
+---
+
+## Start with a question
+
+<Story question="What stops an employee from creating a 50,000-a-month server in the wrong country on a Friday afternoon?">
+
+In many organisations, the honest answer used to be "nothing, until the bill arrives". With hundreds of people able to create resources in minutes, you need rules, and those rules must be checked automatically. Nobody can review every click by hand.
+
+That is **governance**.
+
+</Story>
+
+## Explain it like I'm 10
+
+<Eli10>
+
+Every school has **rules**: wear your uniform, no running in the corridor, phones off in class. Teachers check that the rules are followed.
+
+Now imagine a **magic school** where the door simply will not open if you are not wearing your uniform, and a friendly robot fixes your tie for you. In the cloud, **rules can be checked and even enforced automatically**. That is cloud governance.
+
+</Eli10>
+
+## The technical explanation
+
+Microsoft's AZ-900 material describes how the cloud supports governance and compliance:
+
+1. **Templates** help you deploy resources that already meet corporate standards and regulatory requirements.
+2. **Auditing** can automatically flag resources that are out of compliance.
+3. **Updates and enforcement**: providers update the platform with new compliance capabilities, and policies can automatically block or remediate non-compliant resources.
+
+<Flow
+  caption="How Azure Policy governs a new resource"
+  steps={[
+    { title: 'Request', text: 'Someone deploys a storage account in "Brazil South".' },
+    { title: 'Evaluate', text: 'Azure Resource Manager checks the assigned policies.' },
+    { title: 'Decide', text: 'Policy "Allowed locations: EU only" → <strong>Deny</strong>.' },
+    { title: 'Report', text: 'Compliance dashboard shows every resource\'s status.' },
+  ]}
+/>
+
+### The governance toolbox in Azure
+
+| Tool | Governs | Covered in |
+| --- | --- | --- |
+| **Azure Policy** | What resources may look like (regions, SKUs, tags, encryption) | Module 3 |
+| **Resource locks** | Prevent accidental deletion or modification | Module 3 |
+| **Management groups** | Apply policies and access across many subscriptions | Module 2 |
+| **Tags** | Ownership, environment and cost centre metadata | Module 3 |
+| **Microsoft Purview** | Data governance: discover, classify and track data | Module 3 |
+| **Azure RBAC** | Who can do what (access governance) | Module 2 |
+| **Cost Management** | Budgets and spending accountability | Module 3 |
+
+<TryIt labs="locks-and-tags,first-resource-group" text="Practise two governance tools: tags for ownership, and a delete lock that even an Owner cannot bypass." />
+
+<Callout type="exam">
+A classic trap is **Azure Policy vs Azure RBAC**. RBAC answers **who** can create a VM. Policy answers **which kind** of VM may be created (for example, only certain sizes in certain regions).
+</Callout>
+
+## Real-world business scenario
+
+<Scenario
+  company="A multinational pharmaceutical company"
+  industry="Healthcare / life sciences"
+  problem="Research teams created resources in many regions without tags; auditors could not prove where clinical data lived or who owned which costs."
+  service="Management group hierarchy with Azure Policy initiatives (allowed EU regions, mandatory owner and cost-centre tags, encryption required), resource locks on production data stores, and Microsoft Purview to classify sensitive data."
+  why="Rules are enforced automatically at creation time and continuously audited, without blocking teams' self-service."
+  outcome="Compliance reports are generated from the dashboard in minutes, and untagged spending dropped to near zero."
+/>
+
+## When to use it and when not to
+
+<UseWhen
+  use={[
+    'From day one. Governance is far easier before hundreds of resources exist.',
+    'Regulated industries that must prove where data lives and how it is protected.',
+    'Organisations with many teams and subscriptions.',
+  ]}
+  avoid={[
+    'Locking everything down with "deny" policies so tightly that teams create shadow IT elsewhere.',
+    'Writing rules nobody monitors. Review compliance dashboards regularly.',
+  ]}
+  alternatives={[
+    'Start with **audit** effects to measure, then move critical rules to **deny**.',
+    'Use the **Azure landing zone** reference architecture for a ready-made governance baseline.',
+  ]}
+/>

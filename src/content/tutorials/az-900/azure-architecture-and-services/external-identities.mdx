@@ -1,0 +1,103 @@
+---
+title: External Identities
+seoTitle: Microsoft Entra External Identities Explained | AZ-900
+description: "External identities in Azure explained: B2B guest collaboration and customer sign-in with Microsoft Entra External ID, with examples and AZ-900 practice."
+answer: >-
+  **External identities** let people outside your organisation, such as partners, suppliers and customers, access your apps using **their own identities** (their work account, a Microsoft account, Google and others). **B2B collaboration** invites partners as guests. **Microsoft Entra External ID** lets customers sign up and sign in to your consumer-facing apps.
+updated: 2026-11-11
+readingMinutes: 5
+keyTerms:
+  - term: External identity
+    definition: An identity from outside your organisation used to access your resources.
+  - term: B2B collaboration
+    definition: Inviting external users as guests who sign in with their own credentials.
+  - term: B2B direct connect
+    definition: A trust with another Entra organisation, used for Teams shared channels.
+  - term: Microsoft Entra External ID (customers)
+    definition: Customer identity and access management for public-facing apps.
+interview:
+  - level: beginner
+    q: What are external identities?
+    a: >-
+      A way for people outside my company, like partners or customers, to access my apps using their own accounts, so I don't have to create and manage passwords for them.
+    followUps: []
+  - level: intermediate
+    q: What is the difference between B2B and customer identity?
+    a: >-
+      B2B collaboration is for partners working with your internal apps; they appear as guest users in your directory. Customer identity (Entra External ID for customers) is for consumers signing up to your public apps, at large scale, with custom branding and social sign-in.
+    followUps: []
+  - level: experienced
+    q: How do you keep guest access under control?
+    a: >-
+      Use access reviews to remove stale guests, apply Conditional Access with MFA for guests, limit guest permissions and invitations, and use entitlement management access packages with expiry dates.
+    followUps: []
+revision:
+  keyPoints:
+    - External identities let outsiders use their own accounts.
+    - B2B collaboration = partner guests.
+    - B2B direct connect = trust with another Entra organisation (Teams shared channels).
+    - Entra External ID for customers = sign-up/sign-in for consumer apps.
+  mistakes:
+    - Creating internal accounts with passwords for every partner.
+  examTips:
+    - '"Partners sign in with their own work accounts" = **B2B collaboration** (external identities).'
+  quick:
+    - q: What do external users sign in with?
+      a: Their own identities, such as their work or social accounts.
+    - q: What are invited partners called in your directory?
+      a: Guest users.
+    - q: Which option is for consumers of a public app?
+      a: Microsoft Entra External ID for customers.
+    - q: Name one way to control guest access.
+      a: Access reviews (also Conditional Access with MFA).
+    - q: What is B2B direct connect used for?
+      a: Trust with another Entra organisation, for example Teams shared channels.
+references:
+  - title: External identities overview
+    url: https://learn.microsoft.com/en-us/entra/external-id/external-identities-overview
+related:
+  - microsoft-entra-id
+  - conditional-access
+---
+
+## Start with a question
+
+<Story question="A partner company needs access to one of your project apps. Do you give each of their people a new username and password?">
+
+You don't have to. With **external identities** they sign in with the accounts they already have.
+
+</Story>
+
+## Explain it like I'm 10
+
+<Eli10>
+
+When a friend from another school visits, they don't get a new student card. They show **their own school card**, and you give them a **visitor sticker** for the rooms they may enter.
+
+</Eli10>
+
+## The technical explanation
+
+| Scenario | Feature | Who |
+| --- | --- | --- |
+| Partners use your internal apps | B2B collaboration (guests) | Suppliers, consultants |
+| Shared Teams channels with another company | B2B direct connect | Partner organisations |
+| Customers sign up to your public app | Microsoft Entra External ID (customers) | Consumers |
+
+## Real-world business scenario
+
+<Scenario
+  company="A construction company"
+  industry="Enterprise"
+  problem="Subcontractors needed access to a project portal; IT spent hours creating and deleting accounts."
+  service="Invited subcontractors as B2B guests with MFA and quarterly access reviews."
+  why="Partners use their own accounts; access is reviewed and removed automatically."
+  outcome="Onboarding takes minutes, and stale accounts disappear after each review."
+/>
+
+## When to use it and when not to
+
+<UseWhen
+  use={['Partner collaboration.', 'Customer sign-in for public apps.']}
+  avoid={['Creating internal accounts for outsiders.']}
+/>

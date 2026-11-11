@@ -1,0 +1,98 @@
+---
+import type { Question } from '../content.config';
+import { inlineMd } from '../lib/learn';
+
+interface Props { questions: Question[]; topicKey: string; id?: string }
+const { questions, topicKey, id = 'knowledge-check' } = Astro.props;
+const answers = JSON.stringify(questions.map((q) => q.answer));
+---
+<section class="kc" data-topic-key={topicKey} data-answers={answers} aria-labelledby={id}>
+  <h2 id={id}>Test yourself with exercises</h2>
+  <p class="text-muted">
+    {questions.length} original practice questions in the AZ-900 style. Pick your answers, then check them. You will see why each option is right or wrong. Score 75% or more and this topic is marked complete.
+  </p>
+  <form class="exercise-box mt-5 space-y-5" novalidate>
+    {questions.map((q, qi) => (
+      <fieldset class="card p-5" data-q={qi}>
+        <legend class="sr-only">Question {qi + 1}</legend>
+        <p class="text-xs font-bold tracking-wider uppercase text-muted">
+          Question {qi + 1} of {questions.length}{q.type === 'multi' ? ` · Select ${q.answer.length}` : ''}
+        </p>
+        {q.scenario && <p class="mt-2 rounded-xl bg-subtle p-3 text-[0.95rem] leading-relaxed" set:html={inlineMd(q.scenario)} />}
+        <p class="mt-2 font-semibold leading-relaxed" set:html={inlineMd(q.question)} />
+        <div class="mt-3 space-y-2">
+          {q.options.map((o, oi) => (
+            <label class="opt" data-o={oi}>
+              <input type={q.type === 'multi' ? 'checkbox' : 'radio'} name={`${id}-q${qi}`} value={oi} />
+              <span class="min-w-0 flex-1">
+                <span class="block leading-relaxed" set:html={inlineMd(o.text)} />
+                <span class="why mt-1 hidden" set:html={inlineMd(o.why)} />
+              </span>
+            </label>
+          ))}
+        </div>
+        <div class="kc-feedback mt-3 hidden rounded-xl border border-default bg-[var(--bg)] p-3 text-[0.95rem] leading-relaxed" aria-live="polite">
+          <p class="kc-verdict font-semibold"></p>
+          <p class="mt-1" set:html={inlineMd(q.explanation)} />
+        </div>
+      </fieldset>
+    ))}
+    <div class="flex flex-wrap items-center gap-3">
+      <button type="submit" class="btn btn-accent">Check my answers</button>
+      <button type="button" class="kc-retry btn btn-outline hidden">Try again</button>
+      <p class="kc-score font-semibold" aria-live="polite"></p>
+    </div>
+  </form>
+</section>
+<script>
+  import { saveQuiz } from '../lib/progress';
+  import { confetti } from '../lib/fun';
+  document.querySelectorAll<HTMLElement>('.kc').forEach((root) => {
+    const answers: number[][] = JSON.parse(root.dataset.answers!);
+    const form = root.querySelector('form')!;
+    const retry = root.querySelector<HTMLButtonElement>('.kc-retry')!;
+    const scoreEl = root.querySelector<HTMLElement>('.kc-score')!;
+    form.addEventListener('submit', (e) => {
+      e.preventDefault();
+      let score = 0;
+      root.querySelectorAll<HTMLFieldSetElement>('fieldset[data-q]').forEach((fs) => {
+        const qi = Number(fs.dataset.q);
+        const correct = new Set(answers[qi]);
+        const picked = new Set([...fs.querySelectorAll<HTMLInputElement>('input:checked')].map((i) => Number(i.value)));
+        const ok = picked.size === correct.size && [...picked].every((p) => correct.has(p));
+        if (ok) score++;
+        fs.querySelectorAll<HTMLElement>('.opt').forEach((opt) => {
+          const oi = Number(opt.dataset.o);
+          opt.dataset.state = correct.has(oi) ? (picked.has(oi) ? 'correct' : 'missed') : picked.has(oi) ? 'wrong' : '';
+          opt.querySelector('.why')?.classList.remove('hidden');
+          opt.querySelector('input')!.disabled = true;
+        });
+        const fb = fs.querySelector<HTMLElement>('.kc-feedback')!;
+        fb.classList.remove('hidden');
+        const v = fb.querySelector<HTMLElement>('.kc-verdict')!;
+        v.textContent = ok ? '✓ Correct' : picked.size === 0 ? 'Not answered. The correct answer is highlighted.' : '✕ Not quite. The correct answer is highlighted.';
+        v.className = `kc-verdict font-semibold ${ok ? 'verdict-ok' : 'verdict-bad'}`;
+      });
+      const total = answers.length;
+      const pct = Math.round((score / total) * 100);
+      scoreEl.textContent = `You scored ${score}/${total} (${pct}%)${pct >= 75 ? ' 🎉 Topic marked complete.' : '. Review the explanations and try again.'}`;
+      form.querySelector<HTMLButtonElement>('button[type=submit]')!.disabled = true;
+      retry.classList.remove('hidden');
+      saveQuiz(root.dataset.topicKey!, score, total);
+      if (pct >= 75) confetti(pct === 100 ? 220 : 120);
+    });
+    retry.addEventListener('click', () => {
+      form.reset();
+      root.querySelectorAll<HTMLElement>('.opt').forEach((o) => {
+        o.dataset.state = '';
+        o.querySelector('.why')?.classList.add('hidden');
+        o.querySelector('input')!.disabled = false;
+      });
+      root.querySelectorAll('.kc-feedback').forEach((f) => f.classList.add('hidden'));
+      form.querySelector<HTMLButtonElement>('button[type=submit]')!.disabled = false;
+      retry.classList.add('hidden');
+      scoreEl.textContent = '';
+      root.querySelector('fieldset')?.scrollIntoView({ block: 'start' });
+    });
+  });
+</script>

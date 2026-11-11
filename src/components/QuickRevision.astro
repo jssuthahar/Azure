@@ -1,0 +1,44 @@
+---
+import { inlineMd } from '../lib/learn';
+interface Props {
+  revision: { keyPoints: string[]; mistakes: string[]; examTips: string[]; quick: { q: string; a: string }[] };
+  keyTerms: { term: string; definition: string }[];
+}
+const { revision, keyTerms } = Astro.props;
+---
+<section aria-labelledby="quick-revision">
+  <h2 id="quick-revision">Quick revision</h2>
+  <div class="mt-4 grid gap-4 md:grid-cols-2">
+    <div class="card p-5 md:col-span-2">
+      <h3 class="!mt-0 text-base font-semibold">Key points</h3>
+      <ul class="mt-2 list-disc space-y-1.5 pl-5">{revision.keyPoints.map((k) => <li set:html={inlineMd(k)} />)}</ul>
+    </div>
+    {keyTerms.length > 0 && (
+      <div class="card p-5 md:col-span-2">
+        <h3 class="!mt-0 text-base font-semibold">Important terminology</h3>
+        <dl class="mt-2 grid gap-x-6 gap-y-2 sm:grid-cols-2">
+          {keyTerms.map((t) => <div><dt class="font-semibold">{t.term}</dt><dd class="text-[0.95rem] text-muted" set:html={inlineMd(t.definition)} /></div>)}
+        </dl>
+      </div>
+    )}
+    <div class="card p-5">
+      <h3 class="!mt-0 text-base font-semibold verdict-bad">Common mistakes</h3>
+      <ul class="mt-2 list-disc space-y-1.5 pl-5">{revision.mistakes.map((k) => <li set:html={inlineMd(k)} />)}</ul>
+    </div>
+    <div class="card p-5">
+      <h3 class="!mt-0 text-base font-semibold text-accent">Exam tips</h3>
+      <ul class="mt-2 list-disc space-y-1.5 pl-5">{revision.examTips.map((k) => <li set:html={inlineMd(k)} />)}</ul>
+    </div>
+  </div>
+  <h3 id="five-quick-questions">Five quick revision questions</h3>
+  <ol class="!list-none !pl-0 space-y-2">
+    {revision.quick.map((r, i) => (
+      <li>
+        <details class="fold rounded-xl border border-default bg-[var(--card)]">
+          <summary class="flex gap-3 px-4 py-3"><span class="font-semibold text-accent">{i + 1}.</span><span class="flex-1" set:html={inlineMd(r.q)} /><span class="text-xs text-muted">Show</span></summary>
+          <p class="border-t border-default px-4 py-3 text-[0.95rem]" set:html={inlineMd(r.a)} />
+        </details>
+      </li>
+    ))}
+  </ol>
+</section>

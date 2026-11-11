@@ -1,0 +1,92 @@
+{
+ "cert": "az-900",
+ "domain": 2,
+ "topic": "virtual-networks-and-subnets",
+ "questions": [
+  {
+   "id": "t-vn-1",
+   "type": "single",
+   "question": "What is the purpose of a subnet in an Azure virtual network?",
+   "options": [
+    {
+     "text": "To divide the address space and group resources",
+     "why": "Correct."
+    },
+    {
+     "text": "To connect two regions",
+     "why": "Peering does that."
+    },
+    {
+     "text": "To store files",
+     "why": "Storage does that."
+    },
+    {
+     "text": "To create a billing boundary",
+     "why": "Subscriptions do that."
+    }
+   ],
+   "answer": [
+    0
+   ],
+   "explanation": "Subnets segment a VNet.",
+   "objective": "2.2.5"
+  },
+  {
+   "id": "t-vn-2",
+   "type": "multi",
+   "question": "Which TWO are capabilities of Azure virtual networks?",
+   "options": [
+    {
+     "text": "Isolation and segmentation of resources",
+     "why": "Correct."
+    },
+    {
+     "text": "Automatic translation of documents",
+     "why": "Unrelated."
+    },
+    {
+     "text": "Communication with on-premises networks",
+     "why": "Correct."
+    },
+    {
+     "text": "Hosting DNS domains for sale",
+     "why": "Unrelated."
+    }
+   ],
+   "answer": [
+    0,
+    2
+   ],
+   "explanation": "VNets isolate resources and connect to on-premises via VPN or ExpressRoute.",
+   "objective": "2.2.5"
+  },
+  {
+   "id": "t-vn-3",
+   "type": "single",
+   "question": "What is the scope of an Azure virtual network?",
+   "options": [
+    {
+     "text": "A single region",
+     "why": "Correct."
+    },
+    {
+     "text": "All regions globally",
+     "why": "VNets are regional."
+    },
+    {
+     "text": "A single VM",
+     "why": "A VNet holds many resources."
+    },
+    {
+     "text": "A management group",
+     "why": "Unrelated."
+    }
+   ],
+   "answer": [
+    0
+   ],
+   "explanation": "VNets are regional; use peering to connect regions.",
+   "objective": "2.2.5"
+  }
+ ]
+}

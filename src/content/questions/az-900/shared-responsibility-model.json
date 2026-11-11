@@ -1,0 +1,78 @@
+{
+  "cert": "az-900",
+  "domain": 1,
+  "topic": "shared-responsibility-model",
+  "questions": [
+    {
+      "id": "cc-srm-1",
+      "type": "single",
+      "question": "In the shared responsibility model, which responsibility is ALWAYS retained by the customer, regardless of the service type?",
+      "options": [
+        { "text": "Physical network security", "why": "Physical network is always Microsoft's responsibility in Azure." },
+        { "text": "Operating system patching", "why": "OS is the customer's job in IaaS but Microsoft's in PaaS and SaaS." },
+        { "text": "Information and data", "why": "Correct. Data is always the customer's responsibility." },
+        { "text": "Physical hosts", "why": "Physical hosts are always Microsoft's responsibility in Azure." }
+      ],
+      "answer": [2],
+      "explanation": "Information and data, devices, and accounts and identities always belong to the customer.",
+      "objective": "1.1.2"
+    },
+    {
+      "id": "cc-srm-2",
+      "type": "single",
+      "question": "For which service type is the customer responsible for patching the operating system?",
+      "options": [
+        { "text": "IaaS", "why": "Correct. In IaaS you manage the guest OS." },
+        { "text": "PaaS", "why": "In PaaS the provider manages the OS." },
+        { "text": "SaaS", "why": "In SaaS the provider manages the OS." },
+        { "text": "None of them", "why": "IaaS customers do manage the OS." }
+      ],
+      "answer": [0],
+      "explanation": "Operating system responsibility belongs to the customer in IaaS and moves to the provider in PaaS and SaaS.",
+      "objective": "1.1.2"
+    },
+    {
+      "id": "cc-srm-3",
+      "type": "multi",
+      "question": "Which TWO are always Microsoft's responsibility for Azure services?",
+      "options": [
+        { "text": "Physical datacenter security", "why": "Correct." },
+        { "text": "Managing user accounts and identities", "why": "Always the customer's responsibility." },
+        { "text": "Physical hosts", "why": "Correct." },
+        { "text": "Devices that users use to access services", "why": "Always the customer's responsibility." }
+      ],
+      "answer": [0, 2],
+      "explanation": "Physical datacenter, physical network and physical hosts are always the provider's responsibility.",
+      "objective": "1.1.2"
+    },
+    {
+      "id": "cc-srm-4",
+      "type": "single",
+      "scenario": "A user of a company's Microsoft 365 tenant reuses a leaked password, and an attacker signs in and downloads files.",
+      "question": "According to the shared responsibility model, whose responsibility was protecting that account?",
+      "options": [
+        { "text": "Microsoft, because Microsoft 365 is SaaS", "why": "Even in SaaS, accounts and identities are the customer's responsibility." },
+        { "text": "The customer", "why": "Correct. Account and identity protection, such as enforcing MFA, is always the customer's job." },
+        { "text": "The user's internet provider", "why": "ISPs are not part of the cloud shared responsibility model." },
+        { "text": "No one", "why": "Responsibilities are always assigned in the model." }
+      ],
+      "answer": [1],
+      "explanation": "Accounts and identities remain customer responsibilities in every model, including SaaS.",
+      "objective": "1.1.2"
+    },
+    {
+      "id": "cc-srm-5",
+      "type": "single",
+      "question": "As an organisation moves from IaaS to PaaS to SaaS, what happens to the customer's responsibilities?",
+      "options": [
+        { "text": "They increase", "why": "The provider takes on more as you move towards SaaS." },
+        { "text": "They decrease", "why": "Correct. More of the stack is managed by the provider." },
+        { "text": "They stay exactly the same", "why": "The split changes with each service type." },
+        { "text": "They disappear completely in SaaS", "why": "Data, devices and identities remain with the customer." }
+      ],
+      "answer": [1],
+      "explanation": "Customer responsibility decreases from IaaS to PaaS to SaaS, but never reaches zero.",
+      "objective": "1.1.2"
+    }
+  ]
+}

@@ -1,0 +1,107 @@
+---
+title: SLAs and the Service Lifecycle
+seoTitle: Azure SLAs and Service Lifecycle (Preview, GA)
+description: "Azure SLAs and the service lifecycle explained: uptime percentages, service credits, composite SLAs, preview vs general availability. Beyond the exam."
+answer: >-
+  A **Service Level Agreement (SLA)** is Microsoft's formal commitment to a level of uptime or connectivity for a service, usually as a percentage such as 99.9%, with **service credits** if it is missed. The **service lifecycle** describes how services are released: **private preview**, then **public preview** (usually no SLA), then **general availability (GA)**, which is fully supported with an SLA.
+updated: 2026-11-11
+readingMinutes: 5
+keyTerms:
+  - term: SLA
+    definition: A formal commitment to uptime or connectivity, with service credits if it is not met.
+  - term: Service credit
+    definition: A percentage of fees refunded when an SLA is missed.
+  - term: Public preview
+    definition: A service available to all customers for testing, usually without an SLA.
+  - term: General availability (GA)
+    definition: A fully released, supported service, normally covered by an SLA.
+interview:
+  - level: beginner
+    q: What is an SLA?
+    a: >-
+      A promise from Microsoft about how much of the time a service will be available, like 99.9%. If Microsoft misses it, customers can claim service credits.
+    followUps: []
+  - level: intermediate
+    q: What is the difference between public preview and general availability?
+    a: >-
+      Public preview lets everyone try a new feature, but it usually has no SLA and may change, so it is not recommended for production. General availability means the service is fully released, supported and typically covered by an SLA.
+    followUps: []
+  - level: experienced
+    q: How do you calculate the SLA of an application using several services?
+    a: >-
+      Multiply the SLAs of services that all must work, which lowers the overall figure. Add redundancy, such as multiple regions, to increase it. Remember SLAs cover the platform, not your own code or deployments.
+    followUps: []
+revision:
+  keyPoints:
+    - SLAs are uptime commitments with service credits.
+    - Composite SLA = multiply SLAs of dependent services.
+    - Lifecycle is private preview → public preview → general availability.
+    - Preview services usually have no SLA.
+  mistakes:
+    - Running production on preview features without understanding the risk.
+  examTips:
+    - SLAs and lifecycle are not listed in the current outline, but they underpin high availability and are common interview topics.
+  quick:
+    - q: What is a service credit?
+      a: A refund percentage when an SLA is missed.
+    - q: Do public preview services usually have an SLA?
+      a: No.
+    - q: What does GA stand for?
+      a: General availability.
+    - q: How do you combine SLAs of services that all must work?
+      a: Multiply them.
+    - q: Which has less downtime, 99.9% or 99.99%?
+      a: 99.99%.
+references:
+  - title: Service Level Agreements for Microsoft Online Services
+    url: https://www.microsoft.com/licensing/docs/view/Service-Level-Agreements-SLA-for-Online-Services
+  - title: Supplemental terms for Microsoft Azure previews
+    url: https://azure.microsoft.com/en-us/support/legal/preview-supplemental-terms/
+related:
+  - high-availability
+  - service-health-and-azure-status
+---
+
+## Start with a question
+
+<Story question="A brand-new Azure feature is exactly what you need. Should you run your bank’s payments on it today?">
+
+Check whether it's **preview** or **generally available**, and what its **SLA** promises.
+
+</Story>
+
+## Explain it like I'm 10
+
+<Eli10>
+
+A new video game might be in **beta** (preview): fun to try, but it may crash and things can change. The **full release** (GA) comes with support and a promise it'll work properly (the SLA).
+
+</Eli10>
+
+## The technical explanation
+
+<Flow
+  caption="The Azure service lifecycle"
+  steps={[
+    { title: 'Private preview', text: 'Invited customers test early versions.' },
+    { title: 'Public preview', text: 'Everyone can try it. Usually no SLA, may change.' },
+    { title: 'General availability', text: 'Fully supported, typically with an SLA.' },
+  ]}
+/>
+
+<SlaCalculator />
+
+## Real-world business scenario
+
+<Scenario
+  company="A payments start-up"
+  industry="Banking"
+  problem="Engineers wanted to use a preview database feature for the production payment flow."
+  service="Kept the preview feature in a test environment and waited for general availability before using it in production."
+  why="Preview features usually have no SLA and may change."
+  outcome="No surprises in production; the feature moved to production after GA."
+/>
+
+## When to use it and when not to
+
+<UseWhen use={['Use GA services with SLAs for production.', 'Try previews in dev and test.']} avoid={['Building critical production paths on preview features.']} />

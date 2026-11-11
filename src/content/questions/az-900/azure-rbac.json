@@ -1,0 +1,91 @@
+{
+ "cert": "az-900",
+ "domain": 2,
+ "topic": "azure-rbac",
+ "questions": [
+  {
+   "id": "t-rb-1",
+   "type": "single",
+   "question": "Which built-in role can manage resources but cannot grant access to others?",
+   "options": [
+    {
+     "text": "Contributor",
+     "why": "Correct."
+    },
+    {
+     "text": "Owner",
+     "why": "Can grant access."
+    },
+    {
+     "text": "Reader",
+     "why": "View only."
+    },
+    {
+     "text": "User Access Administrator",
+     "why": "Manages access only."
+    }
+   ],
+   "answer": [
+    0
+   ],
+   "explanation": "Contributor manages resources without access management.",
+   "objective": "2.4.5"
+  },
+  {
+   "id": "t-rb-2",
+   "type": "single",
+   "question": "What three elements make up an Azure role assignment?",
+   "options": [
+    {
+     "text": "Security principal, role definition, scope",
+     "why": "Correct."
+    },
+    {
+     "text": "Region, zone, datacenter",
+     "why": "Physical infrastructure."
+    },
+    {
+     "text": "Tag, lock, policy",
+     "why": "Governance tools."
+    },
+    {
+     "text": "Subscription, invoice, budget",
+     "why": "Billing concepts."
+    }
+   ],
+   "answer": [
+    0
+   ],
+   "explanation": "Who, what and where.",
+   "objective": "2.4.5"
+  },
+  {
+   "id": "t-rb-3",
+   "type": "single",
+   "question": "An auditor must view all resources in a subscription without changing anything. Which role?",
+   "options": [
+    {
+     "text": "Reader",
+     "why": "Correct."
+    },
+    {
+     "text": "Owner",
+     "why": "Too much access."
+    },
+    {
+     "text": "Contributor",
+     "why": "Can change resources."
+    },
+    {
+     "text": "Virtual Machine Contributor",
+     "why": "Can manage VMs."
+    }
+   ],
+   "answer": [
+    0
+   ],
+   "explanation": "Least privilege: Reader.",
+   "objective": "2.4.5"
+  }
+ ]
+}

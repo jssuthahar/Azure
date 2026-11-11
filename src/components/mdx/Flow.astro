@@ -1,0 +1,80 @@
+---
+/**
+ * Step-by-step / request-flow diagram. Horizontal on wide screens, vertical on phones.
+ * "▶ Play" lights up each step in turn while Nimbus reads it aloud.
+ */
+interface Step { title: string; text?: string; icon?: string }
+interface Props { steps: Step[]; caption: string }
+const { steps, caption } = Astro.props;
+---
+<figure class="flow card p-4 sm:p-5">
+  <ol class="flex flex-col items-stretch gap-2 md:flex-row md:items-stretch">
+    {steps.map((s, i) => (
+      <>
+        <li class="flow-step flex-1 rounded-xl border-2 border-default bg-[var(--bg)] p-3.5 transition-all duration-300">
+          <p class="flex items-center gap-2 text-sm font-semibold">
+            <span class="grid size-6 shrink-0 place-items-center rounded-full bg-[#0078d4] text-xs text-white">{s.icon ?? i + 1}</span>
+            <span class="flow-title">{s.title}</span>
+          </p>
+          {s.text && <p class="flow-text mt-1.5 text-[0.85rem] leading-relaxed text-muted" set:html={s.text} />}
+        </li>
+        {i < steps.length - 1 && <li aria-hidden="true" class="flow-arrow grid place-items-center text-xl text-accent transition-transform md:px-0.5"><span class="md:hidden">↓</span><span class="hidden md:inline">→</span></li>}
+      </>
+    ))}
+  </ol>
+  <figcaption class="mt-3 flex flex-wrap items-center justify-center gap-3 text-center text-sm text-muted">
+    <span>{caption}</span>
+    <button type="button" class="flow-play rounded-full bg-[#0078d4] px-3 py-1 text-xs font-bold text-white hover:bg-[#005a9e]">▶ Play steps</button>
+  </figcaption>
+</figure>
+<style is:global>
+  .flow-step[data-active] {
+    border-color: #0078d4;
+    background: var(--pastel-blue);
+    transform: scale(1.04);
+    box-shadow: 0 8px 20px -10px rgb(0 120 212 / 0.6);
+  }
+  .flow-step[data-done] {
+    border-color: var(--ok);
+  }
+  .flow[data-playing] .flow-step:not([data-active]):not([data-done]) {
+    opacity: 0.45;
+  }
+</style>
+<script>
+  import { canSpeak, speak, stopSpeaking, readableText } from '../../lib/speech';
+  let runId = 0;
+  document.querySelectorAll<HTMLElement>('.flow').forEach((fig) => {
+    const btn = fig.querySelector<HTMLButtonElement>('.flow-play')!;
+    const steps = [...fig.querySelectorAll<HTMLElement>('.flow-step')];
+    const reset = () => {
+      fig.removeAttribute('data-playing');
+      steps.forEach((s) => s.removeAttribute('data-active') || s.removeAttribute('data-done'));
+      steps.forEach((s) => s.removeAttribute('data-done'));
+      btn.textContent = '▶ Play steps';
+    };
+    btn.addEventListener('click', async () => {
+      if (fig.hasAttribute('data-playing')) {
+        runId++;
+        stopSpeaking();
+        return reset();
+      }
+      window.dispatchEvent(new CustomEvent('speech-stop-all'));
+      stopSpeaking();
+      const id = ++runId;
+      reset();
+      fig.setAttribute('data-playing', '');
+      btn.textContent = '⏹ Stop';
+      for (const s of steps) {
+        if (id !== runId) return;
+        s.setAttribute('data-active', '');
+        const wait = new Promise((r) => setTimeout(r, 1800));
+        if (canSpeak()) await Promise.all([speak(readableText(s)), wait]);
+        else await wait;
+        s.removeAttribute('data-active');
+        s.setAttribute('data-done', '');
+      }
+      if (id === runId) setTimeout(() => id === runId && reset(), 1500);
+    });
+  });
+</script>

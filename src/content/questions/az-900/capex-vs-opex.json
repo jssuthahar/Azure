@@ -1,0 +1,64 @@
+{
+  "cert": "az-900",
+  "domain": 1,
+  "topic": "capex-vs-opex",
+  "questions": [
+    {
+      "id": "cc-capex-1",
+      "type": "single",
+      "question": "A company buys new servers for its on-premises datacenter. What type of expenditure is this?",
+      "options": [
+        { "text": "Capital expenditure (CapEx)", "why": "Correct. Up-front purchase of physical assets." },
+        { "text": "Operational expenditure (OpEx)", "why": "OpEx is ongoing spending on services as you use them." },
+        { "text": "Consumption-based expenditure", "why": "Buying hardware is not consumption-based." },
+        { "text": "Serverless expenditure", "why": "This is not a real expenditure category." }
+      ],
+      "answer": [0],
+      "explanation": "Purchasing physical infrastructure up front is CapEx.",
+      "objective": "1.1.5"
+    },
+    {
+      "id": "cc-capex-2",
+      "type": "single",
+      "question": "Paying a monthly bill for Azure virtual machines based on usage is an example of what?",
+      "options": [
+        { "text": "CapEx", "why": "No asset is purchased up front." },
+        { "text": "OpEx", "why": "Correct. Ongoing spending for services consumed." },
+        { "text": "Depreciation", "why": "Depreciation applies to owned assets." },
+        { "text": "A one-time capital investment", "why": "The bill is ongoing and usage-based." }
+      ],
+      "answer": [1],
+      "explanation": "Cloud consumption is billed as operational expenditure.",
+      "objective": "1.1.5"
+    },
+    {
+      "id": "cc-capex-3",
+      "type": "multi",
+      "question": "Which TWO statements about operational expenditure (OpEx) are true?",
+      "options": [
+        { "text": "It requires a large up-front investment", "why": "That describes CapEx." },
+        { "text": "Costs can be adjusted as needs change", "why": "Correct. You can scale usage up or down." },
+        { "text": "It is spent on services or products as they are used", "why": "Correct." },
+        { "text": "The asset is owned and depreciated over years", "why": "That describes CapEx." }
+      ],
+      "answer": [1, 2],
+      "explanation": "OpEx is ongoing, usage-based and flexible; CapEx is up-front and depreciated.",
+      "objective": "1.1.5"
+    },
+    {
+      "id": "cc-capex-4",
+      "type": "single",
+      "scenario": "A company wants to avoid a large initial investment and only pay for IT resources as the business grows.",
+      "question": "Which approach meets this goal?",
+      "options": [
+        { "text": "Build a new on-premises datacenter", "why": "That is a large CapEx investment." },
+        { "text": "Use cloud services billed through a consumption-based model", "why": "Correct. OpEx with no up-front cost." },
+        { "text": "Buy servers with a five-year warranty", "why": "That is still CapEx." },
+        { "text": "Purchase a private cloud", "why": "Private cloud typically requires CapEx." }
+      ],
+      "answer": [1],
+      "explanation": "Cloud consumption-based pricing avoids up-front investment and scales with the business.",
+      "objective": "1.1.5"
+    }
+  ]
+}

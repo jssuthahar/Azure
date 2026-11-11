@@ -1,0 +1,91 @@
+{
+ "cert": "az-900",
+ "domain": 3,
+ "topic": "service-health-and-azure-status",
+ "questions": [
+  {
+   "id": "t-sh-1",
+   "type": "single",
+   "question": "You want to be notified about planned maintenance that affects the Azure services and regions you use. What should you use?",
+   "options": [
+    {
+     "text": "Azure Service Health",
+     "why": "Correct."
+    },
+    {
+     "text": "Azure Advisor",
+     "why": "Recommendations."
+    },
+    {
+     "text": "Azure Policy",
+     "why": "Governance."
+    },
+    {
+     "text": "Cost Management",
+     "why": "Spending."
+    }
+   ],
+   "answer": [
+    0
+   ],
+   "explanation": "Service Health is personalised to your services.",
+   "objective": "3.4.2"
+  },
+  {
+   "id": "t-sh-2",
+   "type": "single",
+   "question": "Which component shows whether one specific VM is currently available?",
+   "options": [
+    {
+     "text": "Resource Health",
+     "why": "Correct."
+    },
+    {
+     "text": "Azure status",
+     "why": "Global view."
+    },
+    {
+     "text": "Azure Advisor",
+     "why": "Recommendations."
+    },
+    {
+     "text": "Pricing calculator",
+     "why": "Estimates."
+    }
+   ],
+   "answer": [
+    0
+   ],
+   "explanation": "Resource Health covers individual resources.",
+   "objective": "3.4.2"
+  },
+  {
+   "id": "t-sh-3",
+   "type": "single",
+   "question": "Which view shows the health of all Azure services across all regions?",
+   "options": [
+    {
+     "text": "Azure status",
+     "why": "Correct."
+    },
+    {
+     "text": "Resource Health",
+     "why": "Your resources only."
+    },
+    {
+     "text": "Service Health",
+     "why": "Your services and regions only."
+    },
+    {
+     "text": "Log Analytics",
+     "why": "Log queries."
+    }
+   ],
+   "answer": [
+    0
+   ],
+   "explanation": "Azure status is the global view.",
+   "objective": "3.4.2"
+  }
+ ]
+}

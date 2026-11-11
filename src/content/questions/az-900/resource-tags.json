@@ -1,0 +1,91 @@
+{
+ "cert": "az-900",
+ "domain": 3,
+ "topic": "resource-tags",
+ "questions": [
+  {
+   "id": "t-tg-1",
+   "type": "single",
+   "question": "What is a resource tag?",
+   "options": [
+    {
+     "text": "A name-value pair of metadata",
+     "why": "Correct."
+    },
+    {
+     "text": "A type of lock",
+     "why": "No."
+    },
+    {
+     "text": "A VM size",
+     "why": "No."
+    },
+    {
+     "text": "A network rule",
+     "why": "No."
+    }
+   ],
+   "answer": [
+    0
+   ],
+   "explanation": "Tags add metadata such as env=prod.",
+   "objective": "3.1.4"
+  },
+  {
+   "id": "t-tg-2",
+   "type": "single",
+   "question": "Are tags on a resource group automatically inherited by its resources?",
+   "options": [
+    {
+     "text": "No, not by default",
+     "why": "Correct."
+    },
+    {
+     "text": "Yes, always",
+     "why": "Not by default."
+    },
+    {
+     "text": "Only for storage accounts",
+     "why": "No."
+    },
+    {
+     "text": "Only in production",
+     "why": "No."
+    }
+   ],
+   "answer": [
+    0
+   ],
+   "explanation": "Use Azure Policy to inherit or enforce tags.",
+   "objective": "3.1.4"
+  },
+  {
+   "id": "t-tg-3",
+   "type": "single",
+   "question": "Which is a common purpose of tags?",
+   "options": [
+    {
+     "text": "Grouping costs by department or project",
+     "why": "Correct."
+    },
+    {
+     "text": "Encrypting data",
+     "why": "No."
+    },
+    {
+     "text": "Replacing RBAC",
+     "why": "No."
+    },
+    {
+     "text": "Increasing VM performance",
+     "why": "No."
+    }
+   ],
+   "answer": [
+    0
+   ],
+   "explanation": "Tags support cost reporting and organisation.",
+   "objective": "3.1.4"
+  }
+ ]
+}

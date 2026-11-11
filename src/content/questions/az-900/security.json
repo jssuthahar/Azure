@@ -1,0 +1,63 @@
+{
+  "cert": "az-900",
+  "domain": 1,
+  "topic": "security",
+  "questions": [
+    {
+      "id": "cc-sec-1",
+      "type": "single",
+      "question": "A company wants the most control over the security configuration of its operating systems in the cloud. Which service type should it choose?",
+      "options": [
+        { "text": "IaaS", "why": "Correct. You manage and configure the OS." },
+        { "text": "PaaS", "why": "The provider manages the OS in PaaS." },
+        { "text": "SaaS", "why": "SaaS gives the least control." },
+        { "text": "Serverless", "why": "Serverless abstracts the OS completely." }
+      ],
+      "answer": [0],
+      "explanation": "IaaS gives maximum control over OS-level security, with matching responsibility.",
+      "objective": "1.2.3"
+    },
+    {
+      "id": "cc-sec-2",
+      "type": "single",
+      "question": "Which Azure service helps protect applications from distributed denial of service attacks?",
+      "options": [
+        { "text": "Azure DDoS Protection", "why": "Correct." },
+        { "text": "Azure Advisor", "why": "Advisor gives recommendations; it does not block attacks." },
+        { "text": "Azure Cost Management", "why": "Cost Management tracks spending." },
+        { "text": "Azure Arc", "why": "Arc extends management to other environments." }
+      ],
+      "answer": [0],
+      "explanation": "Azure DDoS Protection mitigates volumetric and protocol attacks on Azure resources.",
+      "objective": "1.2.3"
+    },
+    {
+      "id": "cc-sec-3",
+      "type": "multi",
+      "question": "Which TWO are security benefits of using PaaS instead of IaaS?",
+      "options": [
+        { "text": "Operating system patches are applied by the provider", "why": "Correct." },
+        { "text": "The customer no longer needs to manage user access", "why": "Access and identities remain the customer's responsibility." },
+        { "text": "Less infrastructure for the customer to secure", "why": "Correct. A smaller customer-managed surface." },
+        { "text": "Data becomes the provider's responsibility", "why": "Data always remains the customer's responsibility." }
+      ],
+      "answer": [0, 2],
+      "explanation": "PaaS shifts platform patching and infrastructure security to the provider, while data and access stay with you.",
+      "objective": "1.2.3"
+    },
+    {
+      "id": "cc-sec-4",
+      "type": "single",
+      "question": "Which Azure service provides a secure score, security recommendations and threat protection for Azure, hybrid and multi-cloud resources?",
+      "options": [
+        { "text": "Microsoft Defender for Cloud", "why": "Correct." },
+        { "text": "Azure Monitor", "why": "Azure Monitor collects telemetry; Defender for Cloud provides security posture and threat protection." },
+        { "text": "Azure Policy", "why": "Policy enforces rules but does not provide threat protection." },
+        { "text": "Azure DNS", "why": "Azure DNS hosts domains." }
+      ],
+      "answer": [0],
+      "explanation": "Defender for Cloud combines security posture management (secure score) with workload protection.",
+      "objective": "2.4.8"
+    }
+  ]
+}

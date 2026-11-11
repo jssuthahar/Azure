@@ -1,0 +1,48 @@
+---
+/**
+ * W3-style learning layout: a full-height grey lesson menu on the left,
+ * the lesson in the middle, an optional "on this page" column on wide screens.
+ * On phones the menu becomes a slide-out drawer opened from a sticky button.
+ */
+import Sidebar from './Sidebar.astro';
+import type { NavTopic } from '../lib/learn';
+
+interface Props { nav: NavTopic[]; currentKey?: string }
+const { nav, currentKey } = Astro.props;
+const hasAside = Astro.slots.has('aside');
+---
+<div class="lg:flex">
+  <aside id="lesson-menu" class="side-w3 fixed inset-y-0 left-0 z-[60] w-[17rem] -translate-x-full overflow-y-auto border-r border-default shadow-xl transition-transform lg:sticky lg:top-[var(--header-h)] lg:z-auto lg:h-[calc(100dvh-var(--header-h))] lg:translate-x-0 lg:shadow-none" aria-label="Lesson menu">
+    <button type="button" data-menu-close class="absolute top-3 right-3 rounded-md p-1.5 text-xl leading-none hover:bg-[var(--side-hover)] lg:hidden" aria-label="Close menu">✕</button>
+    <Sidebar nav={nav} currentKey={currentKey} />
+  </aside>
+  <div id="menu-scrim" data-menu-close class="fixed inset-0 z-[55] hidden bg-black/40 lg:hidden"></div>
+
+  <div class="min-w-0 flex-1">
+    <div class="sticky top-[var(--header-h)] z-40 border-b border-default bg-[var(--side-bg)] px-4 py-2 lg:hidden">
+      <button type="button" id="menu-open" class="flex items-center gap-2 text-sm font-semibold" aria-controls="lesson-menu" aria-expanded="false">
+        <span class="text-lg leading-none" aria-hidden="true">☰</span> AZ-900 lessons
+      </button>
+    </div>
+    <div class="flex gap-10 px-4 py-6 sm:px-8 lg:py-8">
+      <div class="min-w-0 flex-1"><slot /></div>
+      {hasAside && <aside class="hidden w-56 shrink-0 xl:block"><div class="sticky top-[calc(var(--header-h)+2rem)]"><slot name="aside" /></div></aside>}
+    </div>
+  </div>
+</div>
+<script>
+  const menu = document.getElementById('lesson-menu');
+  const scrim = document.getElementById('menu-scrim');
+  const open = document.getElementById('menu-open');
+  const set = (on: boolean) => {
+    menu?.classList.toggle('-translate-x-full', !on);
+    scrim?.classList.toggle('hidden', !on);
+    open?.setAttribute('aria-expanded', String(on));
+  };
+  open?.addEventListener('click', () => set(true));
+  document.querySelectorAll('[data-menu-close]').forEach((el) => el.addEventListener('click', () => set(false)));
+  document.addEventListener('keydown', (e) => e.key === 'Escape' && set(false));
+  // Keep the current lesson in view inside the long menu.
+  const current = menu?.querySelector<HTMLElement>('[aria-current="page"]');
+  if (menu && current) menu.scrollTop = current.offsetTop - menu.clientHeight / 2;
+</script>

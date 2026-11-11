@@ -1,0 +1,97 @@
+---
+title: Virtual Network Peering
+seoTitle: Azure VNet Peering Explained Simply | AZ-900
+description: "Azure VNet peering explained: regional and global peering, the Microsoft backbone and non-transitivity, with interview questions and AZ-900 practice."
+answer: >-
+  **Virtual network peering** connects two Azure virtual networks so resources in both can communicate using private IP addresses. Traffic travels over **Microsoft's private backbone network**, never the public internet. Peering works within a region and across regions (**global peering**).
+updated: 2026-11-11
+readingMinutes: 5
+keyTerms:
+  - term: VNet peering
+    definition: A private connection between two virtual networks.
+  - term: Global VNet peering
+    definition: Peering between virtual networks in different Azure regions.
+  - term: Non-transitive
+    definition: If A peers with B and B with C, A cannot reach C unless A and C are also peered (or a hub routes the traffic).
+interview:
+  - level: beginner
+    q: What is VNet peering?
+    a: >-
+      It connects two Azure virtual networks so they behave like one network for traffic between them. It is private, fast and uses Microsoft's backbone, not the internet.
+    followUps: []
+  - level: intermediate
+    q: Is peering transitive?
+    a: >-
+      No. If VNet A is peered with B, and B with C, A and C cannot talk unless they are peered directly or traffic goes through a hub with routing, for example a firewall or Virtual WAN hub.
+    followUps: []
+  - level: experienced
+    q: When would you use a hub-and-spoke design with peering?
+    a: >-
+      When many workload VNets (spokes) need shared services such as a firewall, VPN or ExpressRoute gateway and DNS in a central hub. Spokes peer to the hub, use gateway transit and route through the firewall. At larger scale, Azure Virtual WAN can manage the hub for you.
+    followUps: []
+revision:
+  keyPoints:
+    - Peering connects VNets privately.
+    - Traffic uses Microsoft's backbone, not the internet.
+    - Works in the same region and across regions (global peering).
+    - Peering is non-transitive.
+  mistakes:
+    - Assuming peered VNets can overlap in address space. They cannot.
+  examTips:
+    - '"Connect two Azure VNets privately over the Microsoft backbone" = **VNet peering**.'
+  quick:
+    - q: What does VNet peering connect?
+      a: Two Azure virtual networks.
+    - q: Does peered traffic cross the public internet?
+      a: No, it uses Microsoft's backbone.
+    - q: What is global peering?
+      a: Peering between VNets in different regions.
+    - q: Is peering transitive?
+      a: No.
+    - q: Can peered VNets have overlapping address spaces?
+      a: No.
+references:
+  - title: Virtual network peering
+    url: https://learn.microsoft.com/en-us/azure/virtual-network/virtual-network-peering-overview
+related:
+  - virtual-networks-and-subnets
+  - virtual-wan
+---
+
+## Start with a question
+
+<Story question="Your app’s network is in West Europe and your data platform is in North Europe. How do they talk privately?">
+
+You **peer** the two virtual networks. They connect over Microsoft's own private cables.
+
+</Story>
+
+## Explain it like I'm 10
+
+<Eli10>
+
+Two neighbours build a **gate in the fence** between their gardens. Now the kids can visit each other without going out onto the busy street. Peering is that private gate between two networks.
+
+</Eli10>
+
+## The technical explanation
+
+Peering links two VNets so resources communicate with **private IPs**, low latency and high bandwidth. **Regional peering** joins VNets in one region; **global peering** joins VNets in different regions. Traffic stays on the **Microsoft backbone**. Peering is **non-transitive** and requires **non-overlapping** address spaces.
+
+## Real-world business scenario
+
+<Scenario
+  company="A healthcare analytics company"
+  industry="Healthcare"
+  problem="The patient app in one VNet needed to query an analytics platform in another region, and the data could not cross the public internet."
+  service="Global VNet peering between the two VNets."
+  why="Private, encrypted-in-transit backbone connectivity with no gateways to manage."
+  outcome="Low-latency private queries between regions, satisfying the security review."
+/>
+
+## When to use it and when not to
+
+<UseWhen
+  use={['Connecting VNets in Azure privately.', 'Hub-and-spoke designs with shared services.']}
+  avoid={['Connecting on-premises networks. Use VPN Gateway or ExpressRoute for that.']}
+/>

@@ -1,0 +1,60 @@
+{
+  "cert": "az-900",
+  "domain": 1,
+  "topic": "why-companies-use-cloud",
+  "questions": [
+    {
+      "id": "cc-why-1",
+      "type": "single",
+      "question": "A company wants developers to be able to create test environments in minutes instead of waiting weeks for hardware. Which cloud benefit does this describe?",
+      "options": [
+        { "text": "Agility", "why": "Correct. Getting resources quickly so you can experiment and deliver faster is agility." },
+        { "text": "Predictability", "why": "Predictability is about consistent performance and costs, not speed of provisioning." },
+        { "text": "Governance", "why": "Governance is about rules and compliance." },
+        { "text": "High availability", "why": "High availability is about keeping services running despite failures." }
+      ],
+      "answer": [0],
+      "explanation": "Agility means you can provision and change resources quickly, which shortens time to market."
+    },
+    {
+      "id": "cc-why-2",
+      "type": "multi",
+      "question": "Which TWO are common business reasons to adopt cloud computing?",
+      "options": [
+        { "text": "Avoiding large up-front hardware purchases", "why": "Correct. Cloud shifts spending to pay-as-you-go." },
+        { "text": "Eliminating all security responsibilities for the customer", "why": "Customers always keep responsibilities such as data, identities and devices." },
+        { "text": "Scaling resources to match demand", "why": "Correct. Scalability and elasticity are key cloud benefits." },
+        { "text": "Guaranteeing that costs will always be lower than on-premises", "why": "Costs depend on how you use the cloud. Lower cost is not guaranteed." }
+      ],
+      "answer": [0, 2],
+      "explanation": "Avoiding CapEx and scaling with demand are core benefits. Security is shared and savings depend on good management."
+    },
+    {
+      "id": "cc-why-3",
+      "type": "single",
+      "question": "Why can large cloud providers often offer lower unit prices than a company running its own datacenter?",
+      "options": [
+        { "text": "Economies of scale", "why": "Correct. Buying hardware, power and networking at huge volume lowers cost per unit." },
+        { "text": "They do not pay for electricity", "why": "Providers pay for power, though at large-volume rates." },
+        { "text": "Cloud hardware never fails", "why": "Hardware fails everywhere. Providers design for failure." },
+        { "text": "Customers must sign ten-year contracts", "why": "Pay-as-you-go needs no long-term contract." }
+      ],
+      "answer": [0],
+      "explanation": "Economies of scale let providers operate more cheaply per unit and pass some of that saving to customers."
+    },
+    {
+      "id": "cc-why-4",
+      "type": "single",
+      "scenario": "A company moved 200 servers to Azure VMs without changing their size and leaves them all running 24/7. Its bill is higher than expected.",
+      "question": "What is the most likely reason?",
+      "options": [
+        { "text": "Cloud is always more expensive than on-premises", "why": "Not true in general. It depends on how resources are used." },
+        { "text": "Resources were not right-sized or scaled to demand", "why": "Correct. Oversized, always-on VMs waste money. Right-size, autoscale and use reservations." },
+        { "text": "Azure charges for VMs only when they are stopped", "why": "Running (allocated) VMs incur compute charges. Deallocated VMs do not." },
+        { "text": "Azure does not support Windows Server", "why": "Azure supports Windows Server." }
+      ],
+      "answer": [1],
+      "explanation": "Lift-and-shift without right-sizing or scaling is the most common cause of disappointing cloud bills."
+    }
+  ]
+}

@@ -1,0 +1,96 @@
+---
+title: Total Cost of Ownership (TCO)
+seoTitle: Azure TCO Calculator and Business Case Explained
+description: "Total cost of ownership explained: comparing on-premises and Azure costs with the TCO calculator and Azure Migrate business case. Beyond the exam."
+answer: >-
+  **Total cost of ownership (TCO)** is everything a workload costs over its life: hardware, software, power, cooling, space, networking and staff. The **Azure TCO calculator** compares running workloads **on-premises versus in Azure**. For a deeper analysis based on discovered servers, **Azure Migrate's business case** estimates TCO, savings and cash flow.
+updated: 2026-11-11
+readingMinutes: 5
+keyTerms:
+  - term: Total cost of ownership
+    definition: All direct and indirect costs of a system over its lifetime.
+  - term: TCO calculator
+    definition: A tool comparing on-premises and Azure costs for a workload.
+  - term: Business case (Azure Migrate)
+    definition: A TCO and savings report built from discovery data of your real servers.
+interview:
+  - level: beginner
+    q: What is total cost of ownership?
+    a: >-
+      All the costs of running something, not just the purchase price: servers, licences, power, cooling, building space, networking and the people who run it.
+    followUps: []
+  - level: intermediate
+    q: When would you use the TCO calculator instead of the pricing calculator?
+    a: >-
+      When I want to compare the cost of keeping a workload on-premises against moving it to Azure. The pricing calculator only estimates Azure costs.
+    followUps: []
+  - level: experienced
+    q: How would you build a credible migration business case?
+    a: >-
+      Discover the real estate with Azure Migrate, use performance-based sizing, build its business case for TCO, cash flow and savings from Azure Hybrid Benefit and reservations, include staff and facility costs and migration effort, and validate assumptions with finance.
+    followUps: []
+revision:
+  keyPoints:
+    - TCO includes hardware, software, facilities and staff costs.
+    - TCO calculator compares on-premises vs Azure.
+    - Azure Migrate business case gives a detailed TCO from real discovery data.
+  mistakes:
+    - Comparing only server prices with monthly Azure bills.
+  examTips:
+    - '"Compare on-premises costs with Azure" = **TCO calculator**. (Not listed in the current outline, but classic exam vocabulary.)'
+  quick:
+    - q: What does TCO stand for?
+      a: Total cost of ownership.
+    - q: Which tool compares on-premises and Azure costs?
+      a: The TCO calculator.
+    - q: Name three on-premises costs in a TCO.
+      a: Hardware, power and cooling, staff (also space and licences).
+    - q: Which Azure Migrate feature estimates TCO from discovered servers?
+      a: The business case.
+    - q: Does the pricing calculator compare on-premises costs?
+      a: No, it estimates Azure costs only.
+references:
+  - title: Azure TCO calculator
+    url: https://azure.microsoft.com/en-us/pricing/tco/calculator/
+  - title: Azure Migrate business case overview
+    url: https://learn.microsoft.com/en-us/azure/migrate/concepts-business-case-calculation
+related:
+  - pricing-calculator
+  - capex-vs-opex
+  - on-premises-vs-cloud
+---
+
+## Start with a question
+
+<Story question="A server costs 5,000 to buy. Is that what it really costs your company?">
+
+Not even close. Add power, cooling, space, licences, backups and the people who run it. That's the **total cost of ownership**.
+
+</Story>
+
+## Explain it like I'm 10
+
+<Eli10>
+
+A puppy isn't just the price you pay at the shop. There's food, the vet, toys and a bed. That's the **total cost** of owning a puppy. Servers are the same.
+
+</Eli10>
+
+## The technical explanation
+
+The **TCO calculator** asks for your current servers, databases, storage and networking, plus assumptions like electricity cost and IT labour, then compares on-premises costs with the equivalent Azure resources over several years. **Azure Migrate's business case** goes further using real discovery data, cash-flow projections and savings from benefits like Azure Hybrid Benefit.
+
+## Real-world business scenario
+
+<Scenario
+  company="A logistics company"
+  industry="Enterprise"
+  problem="The CFO saw only that Azure bills would be monthly and assumed the old servers were 'free' because they were already bought."
+  service="Azure Migrate business case using discovered servers and real utilisation."
+  why="It showed the full cost of power, space, support contracts and the coming hardware refresh."
+  outcome="Leadership approved the migration with a clear multi-year savings picture."
+/>
+
+## When to use it and when not to
+
+<UseWhen use={['Building a case for migrating to Azure.']} avoid={['Using TCO tools for new cloud-only apps (use the pricing calculator).']} />

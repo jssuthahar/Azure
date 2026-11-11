@@ -1,0 +1,91 @@
+{
+ "cert": "az-900",
+ "domain": 2,
+ "topic": "azure-migrate-and-data-box",
+ "questions": [
+  {
+   "id": "t-md-1",
+   "type": "single",
+   "question": "Which service helps you discover, assess and migrate on-premises servers to Azure?",
+   "options": [
+    {
+     "text": "Azure Migrate",
+     "why": "Correct."
+    },
+    {
+     "text": "Azure Data Box",
+     "why": "Offline transfer."
+    },
+    {
+     "text": "Azure Arc",
+     "why": "Hybrid management."
+    },
+    {
+     "text": "Azure DNS",
+     "why": "Names."
+    }
+   ],
+   "answer": [
+    0
+   ],
+   "explanation": "Azure Migrate is the migration hub.",
+   "objective": "2.3.6"
+  },
+  {
+   "id": "t-md-2",
+   "type": "single",
+   "question": "You need to move 400 TB to Azure but the network would take months. What should you use?",
+   "options": [
+    {
+     "text": "Azure Data Box",
+     "why": "Correct."
+    },
+    {
+     "text": "Point-to-site VPN",
+     "why": "Still the same network."
+    },
+    {
+     "text": "AzCopy over the current link",
+     "why": "Too slow."
+    },
+    {
+     "text": "Azure Advisor",
+     "why": "Recommendations."
+    }
+   ],
+   "answer": [
+    0
+   ],
+   "explanation": "Data Box ships data physically.",
+   "objective": "2.3.6"
+  },
+  {
+   "id": "t-md-3",
+   "type": "single",
+   "question": "Can Azure Data Box be used to export data out of Azure?",
+   "options": [
+    {
+     "text": "Yes",
+     "why": "Correct."
+    },
+    {
+     "text": "No, it only imports",
+     "why": "It supports export too."
+    },
+    {
+     "text": "Only for databases",
+     "why": "No."
+    },
+    {
+     "text": "Only in sovereign regions",
+     "why": "No."
+    }
+   ],
+   "answer": [
+    0
+   ],
+   "explanation": "Data Box supports import and export.",
+   "objective": "2.3.6"
+  }
+ ]
+}

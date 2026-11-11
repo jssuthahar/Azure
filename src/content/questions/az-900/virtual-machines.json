@@ -1,0 +1,92 @@
+{
+ "cert": "az-900",
+ "domain": 2,
+ "topic": "virtual-machines",
+ "questions": [
+  {
+   "id": "t-vm-1",
+   "type": "multi",
+   "question": "Which TWO resources are required for an Azure virtual machine?",
+   "options": [
+    {
+     "text": "A network interface",
+     "why": "Correct."
+    },
+    {
+     "text": "A management group",
+     "why": "Not required."
+    },
+    {
+     "text": "A managed disk for the OS",
+     "why": "Correct."
+    },
+    {
+     "text": "A Microsoft Purview account",
+     "why": "Not required."
+    }
+   ],
+   "answer": [
+    0,
+    2
+   ],
+   "explanation": "VMs need a disk, NIC and virtual network; public IP and NSG are optional.",
+   "objective": "2.2.3"
+  },
+  {
+   "id": "t-vm-2",
+   "type": "single",
+   "question": "How do you stop paying for compute on an Azure VM you are not using?",
+   "options": [
+    {
+     "text": "Deallocate it",
+     "why": "Correct."
+    },
+    {
+     "text": "Shut down the OS from inside the VM",
+     "why": "The VM stays allocated and billed."
+    },
+    {
+     "text": "Remove its tags",
+     "why": "Tags do not affect billing."
+    },
+    {
+     "text": "Add a resource lock",
+     "why": "Locks prevent deletion."
+    }
+   ],
+   "answer": [
+    0
+   ],
+   "explanation": "Deallocation releases hardware and stops compute charges.",
+   "objective": "2.2.3"
+  },
+  {
+   "id": "t-vm-3",
+   "type": "single",
+   "question": "A company must migrate a Windows app with a vendor agent quickly with no code changes. Which service?",
+   "options": [
+    {
+     "text": "Azure Virtual Machines",
+     "why": "Correct."
+    },
+    {
+     "text": "Azure Functions",
+     "why": "Requires rewriting."
+    },
+    {
+     "text": "Azure App Service",
+     "why": "May not support the vendor agent."
+    },
+    {
+     "text": "Microsoft 365",
+     "why": "SaaS productivity suite."
+    }
+   ],
+   "answer": [
+    0
+   ],
+   "explanation": "VMs suit lift-and-shift and custom software.",
+   "objective": "2.2.2"
+  }
+ ]
+}

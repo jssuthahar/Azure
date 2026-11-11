@@ -1,0 +1,99 @@
+---
+/**
+ * Problem → Solution card. On scroll the pains are "solved" one by one;
+ * "▶ Show me" replays it while Nimbus reads each pair aloud.
+ */
+import { PROBLEM_SOLUTION } from '../data/az-900/problem-solution';
+interface Props { topic: string }
+const ps = PROBLEM_SOLUTION[Astro.props.topic];
+---
+{ps && (
+  <section class="ps mt-6 overflow-hidden rounded-2xl border border-[var(--card-line)] bg-[var(--card)]" aria-label="Problem and solution">
+    <div class="grid md:grid-cols-[1fr_auto_1fr]">
+      <div class="ps-problem bg-[var(--bad-soft)] p-5">
+        <p class="text-sm font-bold verdict-bad">😟 THE PROBLEM</p>
+        <p class="mt-1.5 text-lg leading-snug font-semibold">{ps.problem}</p>
+      </div>
+      <div class="ps-arrow grid place-items-center bg-[var(--card)] py-2 text-3xl md:px-3" aria-hidden="true"><span class="md:hidden">⬇️</span><span class="hidden md:inline">➡️</span></div>
+      <div class="ps-solution bg-[var(--pastel-green)] p-5">
+        <p class="text-sm font-bold verdict-ok">😊 THE SOLUTION</p>
+        <p class="mt-1.5 text-lg leading-snug font-semibold">{ps.solution}</p>
+      </div>
+    </div>
+    <ul class="divide-y divide-[var(--border)]">
+      {ps.pairs.map((p, i) => (
+        <li class="ps-row grid items-center gap-2 px-5 py-3 sm:grid-cols-[2rem_1fr_auto_1fr] sm:gap-3" style={`--d:${i * 0.7}s`}>
+          <span class="hidden text-2xl sm:block" aria-hidden="true">{p.icon}</span>
+          <span class="ps-pain text-[0.98rem]"><span class="sm:hidden" aria-hidden="true">{p.icon} </span>{p.pain}</span>
+          <span class="ps-go hidden text-xl text-accent sm:block" aria-hidden="true">→</span>
+          <span class="ps-fix text-[0.98rem] font-semibold verdict-ok">✓ {p.fix}</span>
+        </li>
+      ))}
+    </ul>
+    <div class="flex flex-wrap items-center gap-3 border-t border-[var(--border)] bg-[var(--pastel-grey)] px-5 py-3">
+      <span class="chip">🛠️ Solved with: {ps.tool}</span>
+      <button type="button" class="ps-play ml-auto rounded-full bg-[#0078d4] px-4 py-1.5 text-sm font-bold text-white hover:bg-[#005a9e]">▶ Show me</button>
+    </div>
+  </section>
+)}
+<style is:global>
+  .ps-pain { transition: color 0.4s, opacity 0.4s; }
+  .js .ps-fix, .js .ps-go { opacity: 0; transform: translateX(-10px); transition: opacity 0.5s, transform 0.5s; }
+  .ps-row[data-solved] .ps-pain { color: var(--text-muted); text-decoration: line-through; text-decoration-color: var(--bad); text-decoration-thickness: 2px; }
+  .js .ps-row[data-solved] .ps-fix, .js .ps-row[data-solved] .ps-go { opacity: 1; transform: none; }
+  .ps-row[data-active] { background: var(--pastel-yellow); }
+  @media (prefers-reduced-motion: reduce) { .js .ps-fix, .js .ps-go { opacity: 1; transform: none; transition: none; } }
+</style>
+<script>
+  import { canSpeak, speak, stopSpeaking } from '../lib/speech';
+  const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
+  document.querySelectorAll<HTMLElement>('.ps').forEach((card) => {
+    const rows = [...card.querySelectorAll<HTMLElement>('.ps-row')];
+    const btn = card.querySelector<HTMLButtonElement>('.ps-play')!;
+    let run = 0;
+    // Solve the rows one by one the first time the card is seen.
+    const io = new IntersectionObserver(async ([e]) => {
+      if (!e.isIntersecting) return;
+      io.disconnect();
+      for (const r of rows) {
+        await sleep(650);
+        r.setAttribute('data-solved', '');
+      }
+    }, { threshold: 0.4 });
+    io.observe(card);
+
+    btn.addEventListener('click', async () => {
+      const id = ++run;
+      if (btn.dataset.playing) {
+        delete btn.dataset.playing;
+        btn.textContent = '▶ Show me';
+        stopSpeaking();
+        rows.forEach((r) => { r.removeAttribute('data-active'); r.setAttribute('data-solved', ''); });
+        return;
+      }
+      window.dispatchEvent(new CustomEvent('speech-stop-all'));
+      stopSpeaking();
+      btn.dataset.playing = '1';
+      btn.textContent = '⏹ Stop';
+      rows.forEach((r) => r.removeAttribute('data-solved'));
+      const problem = card.querySelector('.ps-problem p:last-child')!.textContent!;
+      const solution = card.querySelector('.ps-solution p:last-child')!.textContent!;
+      if (canSpeak()) await speak(`The problem: ${problem}`); else await sleep(1500);
+      for (const r of rows) {
+        if (id !== run) return;
+        r.setAttribute('data-active', '');
+        const pain = r.querySelector('.ps-pain')!.textContent!.trim();
+        const fix = r.querySelector('.ps-fix')!.textContent!.replace('✓', '').trim();
+        if (canSpeak()) await speak(`${pain}?`); else await sleep(900);
+        if (id !== run) return;
+        r.setAttribute('data-solved', '');
+        if (canSpeak()) await speak(fix); else await sleep(1100);
+        r.removeAttribute('data-active');
+      }
+      if (id !== run) return;
+      if (canSpeak()) await speak(`So the solution is: ${solution}`);
+      delete btn.dataset.playing;
+      btn.textContent = '▶ Show me';
+    });
+  });
+</script>

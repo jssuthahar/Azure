@@ -1,0 +1,100 @@
+---
+title: Azure Advisor
+seoTitle: Azure Advisor Explained Simply | AZ-900
+description: "Azure Advisor explained: personalised recommendations for reliability, security, performance, operations and cost, with examples and AZ-900 practice."
+answer: >-
+  **Azure Advisor** evaluates your deployed Azure resources and gives **personalised recommendations** to improve them. Recommendations are grouped into five categories: **Reliability**, **Security**, **Performance**, **Operational Excellence** and **Cost**. Each one explains the problem and how to fix it, and many can be fixed with one click.
+updated: 2026-11-11
+readingMinutes: 5
+keyTerms:
+  - term: Azure Advisor
+    definition: A free service that analyses your resources and recommends improvements.
+  - term: Advisor score
+    definition: A score showing how well you follow Advisor's best-practice recommendations.
+  - term: Well-Architected Framework
+    definition: Microsoft's best-practice guidance; Advisor's categories align with its pillars.
+interview:
+  - level: beginner
+    q: What does Azure Advisor do?
+    a: >-
+      It looks at the resources I've already deployed and suggests improvements, like resizing an underused VM to save money or turning on backup to improve reliability.
+    followUps: []
+  - level: intermediate
+    q: What are Azure Advisor's recommendation categories?
+    a: >-
+      Reliability, Security, Performance, Operational Excellence and Cost.
+    followUps: []
+  - level: experienced
+    q: How would you operationalise Advisor recommendations?
+    a: >-
+      Review Advisor score regularly, assign recommendations to resource owners, set up Advisor alerts for new high-impact recommendations, export them to work tracking, and automate common fixes, such as shutting down idle dev VMs. Cross-check cost recommendations against planned growth before acting.
+    followUps: []
+revision:
+  keyPoints:
+    - Advisor analyses deployed resources and recommends improvements.
+    - Five categories are Reliability, Security, Performance, Operational Excellence and Cost.
+    - Free, personalised and actionable.
+  mistakes:
+    - Confusing Advisor (recommendations) with Service Health (Azure platform issues).
+  examTips:
+    - '"Recommendations to reduce cost and improve reliability" = **Azure Advisor**.'
+  quick:
+    - q: What does Azure Advisor provide?
+      a: Personalised recommendations to improve your resources.
+    - q: Name the five Advisor categories.
+      a: Reliability, Security, Performance, Operational Excellence, Cost.
+    - q: Does Advisor estimate costs before deployment?
+      a: No, that's the pricing calculator. Advisor analyses deployed resources.
+    - q: Give an example Advisor recommendation.
+      a: Resize or shut down an underused VM to save money.
+    - q: Which framework do Advisor's categories align with?
+      a: The Azure Well-Architected Framework.
+references:
+  - title: Introduction to Azure Advisor
+    url: https://learn.microsoft.com/en-us/azure/advisor/advisor-overview
+related:
+  - cost-management
+  - azure-monitor
+  - predictability
+---
+
+## Start with a question
+
+<Story question="What if a cloud expert reviewed your Azure every day and told you exactly what to fix?">
+
+That's **Azure Advisor**, and it's free.
+
+</Story>
+
+## Explain it like I'm 10
+
+<Eli10>
+
+Advisor is like a **coach** watching your football team. "Your goalkeeper needs gloves" (security), "you're running too much" (cost), "practise passing" (performance). Helpful tips based on how *your* team actually plays.
+
+</Eli10>
+
+## The technical explanation
+
+| Category | Example recommendation |
+| --- | --- |
+| Reliability | Use availability zones; enable VM backup |
+| Security | Enable MFA; fix vulnerabilities (from Defender for Cloud) |
+| Performance | Upgrade a storage tier with throttling |
+| Operational Excellence | Create Service Health alerts; follow naming and tagging |
+| Cost | Resize or shut down underused VMs; buy reservations |
+
+## Real-world business scenario
+
+<Scenario
+  company="A digital agency"
+  industry="Enterprise"
+  problem="The Azure bill kept growing and nobody had time to review every resource."
+  service="Azure Advisor cost and reliability recommendations reviewed every week."
+  why="Advisor pinpoints underused resources and risky configurations automatically."
+  outcome="Several idle VMs were shut down and backups were enabled on critical servers."
+/>
+
+## When to use it and when not to
+
+<UseWhen use={['Regular health and cost reviews of deployed resources.']} avoid={['Applying every recommendation blindly without context.']} />

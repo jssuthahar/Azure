@@ -1,0 +1,133 @@
+---
+title: Azure Virtual Machines
+seoTitle: Azure Virtual Machines Explained for Beginners | AZ-900
+description: "Azure Virtual Machines explained: when to use them, the resources a VM needs, sizes and costs, a hands-on lab, interview questions and AZ-900 practice."
+answer: >-
+  **Azure Virtual Machines** are IaaS computers in the cloud. You pick an operating system image and a size (CPU and memory), and Azure runs it on its hardware. A VM needs supporting resources: a **disk**, a **network interface** in a **virtual network**, and optionally a **public IP address** and a **network security group**. You manage the OS, software and patches.
+updated: 2026-11-11
+readingMinutes: 8
+keyTerms:
+  - term: VM size
+    definition: The amount of vCPU, memory and other capacity, such as Standard_B1s or Standard_D4s_v5.
+  - term: Image
+    definition: The template the VM starts from, such as Ubuntu Server or Windows Server.
+  - term: Managed disk
+    definition: Block storage attached to a VM for its OS and data.
+  - term: Network interface (NIC)
+    definition: Connects a VM to a virtual network subnet.
+  - term: Deallocated
+    definition: A stopped VM whose hardware is released, so compute billing stops.
+interview:
+  - level: beginner
+    q: What is an Azure virtual machine and when would you use one?
+    a: >-
+      It is a computer in the cloud that I control completely, including the operating system. I would use one for lift-and-shift migrations, custom or legacy software, or when I need full control of the environment.
+    followUps:
+      - q: Which resources are created with a VM?
+        a: >-
+          At least an OS disk, a network interface and a virtual network with a subnet. Usually also a public IP address and a network security group.
+  - level: intermediate
+    q: What is the difference between stopping and deallocating a VM?
+    a: >-
+      Stopping from inside the OS powers it off but keeps the hardware allocated, so compute billing continues. Deallocating, by using Stop in the portal or az vm deallocate, releases the hardware and stops compute charges. Disks still incur storage costs either way.
+    followUps: []
+  - level: experienced
+    q: How do you make a VM-based workload production-ready?
+    a: >-
+      Run at least two instances across availability zones or an availability set behind a load balancer, use managed disks with backup, automate builds with images and infrastructure as code, patch with Azure Update Manager, close management ports and use Azure Bastion, enable Defender for Servers, and right-size with reservations or a savings plan for steady load.
+    followUps: []
+revision:
+  keyPoints:
+    - VMs are IaaS. You manage the OS and everything on it.
+    - Choose an image (OS) and a size (CPU/RAM).
+    - A VM needs a disk, NIC and virtual network; often a public IP and NSG too.
+    - Deallocate to stop compute charges; disks still cost money.
+    - Use multiple VMs across zones or availability sets for high availability.
+  mistakes:
+    - Assuming a VM shut down from inside the OS stops billing.
+    - Opening RDP or SSH to the whole internet.
+  examTips:
+    - '"Resources required for a VM": disk, NIC, virtual network (subnet); optional public IP and NSG.'
+  quick:
+    - q: Which cloud service type is an Azure VM?
+      a: IaaS.
+    - q: Name three resources a VM needs.
+      a: A disk, a network interface and a virtual network.
+    - q: How do you stop paying for VM compute?
+      a: Deallocate it (Stop in the portal or az vm deallocate).
+    - q: What does the VM size control?
+      a: The amount of vCPU, memory and related capacity.
+    - q: Who patches the VM's operating system?
+      a: You, the customer.
+references:
+  - title: Virtual machines in Azure
+    url: https://learn.microsoft.com/en-us/azure/virtual-machines/overview
+related:
+  - iaas
+  - vm-scale-sets-and-availability-sets
+  - virtual-networks-and-subnets
+---
+
+## Start with a question
+
+<Story question="How do you get a new server running in minutes, without buying one?">
+
+You create an **Azure virtual machine**: pick an operating system, pick a size, click create.
+
+</Story>
+
+## Explain it like I'm 10
+
+<Eli10>
+
+Imagine a giant computer that can split itself into many smaller pretend computers. Each pretend computer has its own screen, files and programs. Azure lends you one of those pretend computers. That is a **virtual machine**.
+
+</Eli10>
+
+## The technical explanation
+
+When you create a VM, you choose:
+
+| Choice | Examples |
+| --- | --- |
+| Image (operating system) | Ubuntu Server, Windows Server, Red Hat |
+| Size | Standard_B1s (1 vCPU, 1 GiB) up to very large memory and GPU sizes |
+| Region and availability | A region, and optionally an availability zone or availability set |
+| Networking | Virtual network, subnet, public IP, inbound ports |
+
+### Resources a VM needs
+
+<Flow
+  caption="What Azure creates when you create a VM"
+  steps={[
+    { title: 'Virtual machine', text: 'The compute: vCPU and memory.' },
+    { title: 'OS disk', text: 'A managed disk holding the operating system.' },
+    { title: 'Network interface', text: 'Connects the VM to a subnet.' },
+    { title: 'Virtual network', text: 'Your private network in Azure.' },
+    { title: 'Public IP + NSG', text: 'Optional: internet access and firewall rules.' },
+  ]}
+/>
+
+<TryIt labs="vm-and-cost" text="Create a VM in the simulator, open its resource group to find the disk, NIC, network and IP Azure created, then deallocate it and watch the cost drop." />
+
+<Callout type="warning">
+Shutting down the operating system leaves the VM <strong>allocated</strong> and still billed for compute. Use <strong>Stop</strong> in the portal (deallocate) to stop compute charges.
+</Callout>
+
+## Real-world business scenario
+
+<Scenario
+  company="An insurance company"
+  industry="Enterprise"
+  problem="A claims application only runs on Windows Server with a vendor agent, and its on-premises hardware is end-of-life."
+  service="Migrated to Azure VMs in two availability zones behind a load balancer, with Azure Backup."
+  why="VMs keep full OS control for the vendor software while removing hardware ownership."
+  outcome="No code changes, better availability, and hardware costs eliminated."
+/>
+
+## When to use it and when not to
+
+<UseWhen
+  use={['Lift-and-shift migrations.', 'Software that needs full OS control.', 'Specialised sizes such as GPUs.']}
+  avoid={['Simple web apps, where App Service is easier.', 'Short event-driven tasks, where Functions is cheaper.']}
+/>

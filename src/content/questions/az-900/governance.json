@@ -1,0 +1,64 @@
+{
+  "cert": "az-900",
+  "domain": 1,
+  "topic": "governance",
+  "questions": [
+    {
+      "id": "cc-gov-1",
+      "type": "single",
+      "question": "Which cloud benefit ensures that resources are deployed and maintained according to company standards and regulatory requirements?",
+      "options": [
+        { "text": "Governance", "why": "Correct." },
+        { "text": "Elasticity", "why": "Elasticity is about scaling with demand." },
+        { "text": "High availability", "why": "HA is about uptime." },
+        { "text": "Scalability", "why": "Scalability is about capacity." }
+      ],
+      "answer": [0],
+      "explanation": "Governance covers rules, templates, auditing and enforcement of standards.",
+      "objective": "1.2.3"
+    },
+    {
+      "id": "cc-gov-2",
+      "type": "single",
+      "scenario": "Your company requires that Azure resources can only be created in two specific regions.",
+      "question": "Which Azure service should you use to enforce this?",
+      "options": [
+        { "text": "Azure Policy", "why": "Correct. An 'Allowed locations' policy denies other regions." },
+        { "text": "Azure RBAC", "why": "RBAC controls who can act, not where resources go." },
+        { "text": "Resource locks", "why": "Locks prevent deletion or changes." },
+        { "text": "Azure Advisor", "why": "Advisor recommends but does not enforce." }
+      ],
+      "answer": [0],
+      "explanation": "Azure Policy evaluates and enforces rules such as allowed locations.",
+      "objective": "3.2.2"
+    },
+    {
+      "id": "cc-gov-3",
+      "type": "multi",
+      "question": "Which TWO ways does the cloud help with governance and compliance?",
+      "options": [
+        { "text": "Automatic auditing that flags non-compliant resources", "why": "Correct." },
+        { "text": "Removing the need for any company rules", "why": "Rules are still required; the cloud helps enforce them." },
+        { "text": "Templates that deploy resources already meeting standards", "why": "Correct." },
+        { "text": "Allowing anyone to create anything with no oversight", "why": "That is the opposite of governance." }
+      ],
+      "answer": [0, 2],
+      "explanation": "Templates and automated auditing and enforcement make governance easier in the cloud.",
+      "objective": "1.2.3"
+    },
+    {
+      "id": "cc-gov-4",
+      "type": "single",
+      "question": "What is the key difference between Azure Policy and Azure role-based access control (RBAC)?",
+      "options": [
+        { "text": "Policy controls what properties resources can have; RBAC controls who can perform actions", "why": "Correct." },
+        { "text": "Policy controls who can sign in; RBAC controls resource regions", "why": "This is reversed and inaccurate." },
+        { "text": "They are the same service", "why": "They are different services with different purposes." },
+        { "text": "RBAC only works on-premises", "why": "RBAC is an Azure authorization system." }
+      ],
+      "answer": [0],
+      "explanation": "Policy governs resource properties and compliance; RBAC governs user permissions.",
+      "objective": "3.2.2"
+    }
+  ]
+}

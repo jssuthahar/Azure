@@ -1,0 +1,91 @@
+{
+ "cert": "az-900",
+ "domain": 2,
+ "topic": "management-groups",
+ "questions": [
+  {
+   "id": "t-mg-1",
+   "type": "single",
+   "question": "What can a management group contain?",
+   "options": [
+    {
+     "text": "Subscriptions and other management groups",
+     "why": "Correct."
+    },
+    {
+     "text": "Only virtual machines",
+     "why": "Resources live in resource groups."
+    },
+    {
+     "text": "Only resource locks",
+     "why": "Locks are applied to scopes."
+    },
+    {
+     "text": "Datacenters",
+     "why": "Datacenters are physical."
+    }
+   ],
+   "answer": [
+    0
+   ],
+   "explanation": "Management groups contain subscriptions and child management groups.",
+   "objective": "2.1.6"
+  },
+  {
+   "id": "t-mg-2",
+   "type": "single",
+   "question": "You apply an Azure Policy to a management group. Which resources are affected?",
+   "options": [
+    {
+     "text": "All subscriptions, resource groups and resources under it",
+     "why": "Correct."
+    },
+    {
+     "text": "Only the first subscription",
+     "why": "All children inherit."
+    },
+    {
+     "text": "No resources until each subscription opts in",
+     "why": "Inheritance is automatic."
+    },
+    {
+     "text": "Only resources created before the policy",
+     "why": "Policies evaluate existing and new resources."
+    }
+   ],
+   "answer": [
+    0
+   ],
+   "explanation": "Settings applied to a management group are inherited by everything below.",
+   "objective": "2.1.6"
+  },
+  {
+   "id": "t-mg-3",
+   "type": "single",
+   "question": "How many parents can a subscription have in the management group hierarchy?",
+   "options": [
+    {
+     "text": "One",
+     "why": "Correct."
+    },
+    {
+     "text": "Two",
+     "why": "Each child has a single parent."
+    },
+    {
+     "text": "Unlimited",
+     "why": "Each child has a single parent."
+    },
+    {
+     "text": "None. Subscriptions cannot be in management groups",
+     "why": "They can."
+    }
+   ],
+   "answer": [
+    0
+   ],
+   "explanation": "Each management group and subscription has exactly one parent.",
+   "objective": "2.1.6"
+  }
+ ]
+}

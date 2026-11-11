@@ -1,0 +1,97 @@
+---
+title: Azure Virtual WAN
+seoTitle: Azure Virtual WAN Explained Simply | Azure
+description: "Azure Virtual WAN explained: one managed hub to connect branches, VPN users, ExpressRoute and virtual networks at scale. Beyond the AZ-900 exam."
+answer: >-
+  **Azure Virtual WAN** is a networking service that brings many networking, security and routing features together in one place. Microsoft-managed **hubs** connect your branch offices (VPN or SD-WAN), remote users, ExpressRoute circuits and virtual networks, so everything can reach everything through the Microsoft global network without you building and maintaining the hub yourself.
+updated: 2026-11-11
+readingMinutes: 5
+keyTerms:
+  - term: Virtual WAN hub
+    definition: A Microsoft-managed virtual network that acts as the central connection point in a region.
+  - term: Branch
+    definition: A remote office connected through VPN or SD-WAN.
+  - term: Transit
+    definition: Traffic passing through a hub between other networks, such as branch to branch.
+interview:
+  - level: beginner
+    q: What is Azure Virtual WAN?
+    a: >-
+      A managed service that connects all my offices, remote users and Azure networks through central hubs that Microsoft runs, instead of me building a complicated network myself.
+    followUps: []
+  - level: intermediate
+    q: How is Virtual WAN different from building hub-and-spoke yourself?
+    a: >-
+      In a customer-managed hub-and-spoke I build the hub VNet, gateways, firewall and routing. Virtual WAN provides the hub as a managed service with automatic routing, any-to-any transit and easy branch onboarding, which suits large, multi-region estates.
+    followUps: []
+  - level: experienced
+    q: When is Virtual WAN overkill?
+    a: >-
+      For a small estate with a handful of VNets in one region and one VPN. A simple hub-and-spoke with peering is cheaper and easier there. Virtual WAN shines with many branches, many regions or SD-WAN integration.
+    followUps: []
+revision:
+  keyPoints:
+    - Virtual WAN = managed hubs connecting branches, users, ExpressRoute and VNets.
+    - Any-to-any connectivity through the Microsoft network.
+    - Best for large, multi-site, multi-region networks.
+  mistakes:
+    - Using Virtual WAN for a tiny network where peering is enough.
+  examTips:
+    - Not in the current AZ-900 outline, but useful context for networking interviews.
+  quick:
+    - q: What does Virtual WAN provide?
+      a: Managed hubs connecting branches, users, ExpressRoute and VNets.
+    - q: Who manages the Virtual WAN hub?
+      a: Microsoft.
+    - q: What is transit traffic?
+      a: Traffic passing through a hub between other networks.
+    - q: When is Virtual WAN most useful?
+      a: Large networks with many branches or regions.
+    - q: What is a simpler alternative for small estates?
+      a: Hub-and-spoke with VNet peering.
+references:
+  - title: What is Azure Virtual WAN?
+    url: https://learn.microsoft.com/en-us/azure/virtual-wan/virtual-wan-about
+related:
+  - vnet-peering
+  - vpn-gateway
+  - expressroute
+---
+
+## Start with a question
+
+<Story question="Your company has 200 shops, 3 Azure regions and 5,000 remote workers. How do you connect them all without a spaghetti diagram?">
+
+You use **Azure Virtual WAN**: central hubs that Microsoft runs, which everything plugs into.
+
+</Story>
+
+## Explain it like I'm 10
+
+<Eli10>
+
+Instead of building a road from every town to every other town, you build one big **train station** in the middle. Every town connects to the station, and from there you can get anywhere.
+
+</Eli10>
+
+## The technical explanation
+
+Virtual WAN uses Microsoft-managed **hubs** in each region. You connect **site-to-site VPN or SD-WAN branches**, **point-to-site users**, **ExpressRoute** circuits and **VNets** to the hubs, and Virtual WAN handles routing and transit between them, optionally with Azure Firewall in a **secured hub**.
+
+## Real-world business scenario
+
+<Scenario
+  company="A retail chain with 200 stores"
+  industry="Retail"
+  problem="Each store had its own VPN to Azure and store-to-store traffic went through the head office, causing slowness and a fragile network."
+  service="Azure Virtual WAN hubs in two regions with stores connected through SD-WAN devices."
+  why="Managed, any-to-any connectivity at scale."
+  outcome="Simpler operations, faster store-to-store traffic and easier onboarding of new stores."
+/>
+
+## When to use it and when not to
+
+<UseWhen
+  use={['Many branches or regions.', 'SD-WAN integration and global transit.']}
+  avoid={['Small single-region networks.']}
+/>

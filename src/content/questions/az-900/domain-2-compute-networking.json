@@ -1,0 +1,192 @@
+{
+  "cert": "az-900",
+  "domain": 2,
+  "questions": [
+    {
+      "id": "d2-cn-1",
+      "type": "single",
+      "question": "Which compute option packages an application with its dependencies and shares the host operating system kernel, making it lightweight and fast to start?",
+      "options": [
+        { "text": "Containers", "why": "Correct." },
+        { "text": "Virtual machines", "why": "VMs each include a full guest OS." },
+        { "text": "Availability sets", "why": "Availability sets are a VM placement feature." },
+        { "text": "Resource groups", "why": "Resource groups are logical containers." }
+      ],
+      "answer": [0],
+      "explanation": "Containers virtualise the OS rather than the hardware, so they are lighter than VMs.",
+      "objective": "2.2.1"
+    },
+    {
+      "id": "d2-cn-2",
+      "type": "single",
+      "question": "An availability set protects VMs by spreading them across which two groupings?",
+      "options": [
+        { "text": "Fault domains and update domains", "why": "Correct." },
+        { "text": "Regions and geographies", "why": "Availability sets work within a single datacenter." },
+        { "text": "Subscriptions and resource groups", "why": "These are management constructs." },
+        { "text": "Tags and locks", "why": "These are governance features." }
+      ],
+      "answer": [0],
+      "explanation": "Fault domains separate power and network hardware; update domains separate planned maintenance reboots.",
+      "objective": "2.2.2"
+    },
+    {
+      "id": "d2-cn-3",
+      "type": "single",
+      "scenario": "Employees need to securely access a full Windows desktop and business apps from personal devices, while company data stays in Azure.",
+      "question": "Which service should be used?",
+      "options": [
+        { "text": "Azure Virtual Desktop", "why": "Correct. It provides cloud-hosted desktops and apps." },
+        { "text": "Azure Functions", "why": "Functions runs event-driven code." },
+        { "text": "Azure DNS", "why": "DNS resolves names." },
+        { "text": "Azure Container Instances", "why": "ACI runs containers, not user desktops." }
+      ],
+      "answer": [0],
+      "explanation": "Azure Virtual Desktop delivers virtualised Windows desktops and apps, including multi-session Windows.",
+      "objective": "2.2.2"
+    },
+    {
+      "id": "d2-cn-4",
+      "type": "multi",
+      "question": "Which TWO resources are typically created together with an Azure virtual machine?",
+      "options": [
+        { "text": "A network interface (NIC)", "why": "Correct. A VM needs a NIC to connect to a virtual network." },
+        { "text": "A management group", "why": "Not required for a VM." },
+        { "text": "A managed disk for the operating system", "why": "Correct." },
+        { "text": "A Microsoft Purview account", "why": "Not required for a VM." }
+      ],
+      "answer": [0, 2],
+      "explanation": "VMs require size, disks (OS and optional data), a NIC and a virtual network; public IP and NSG are optional.",
+      "objective": "2.2.3"
+    },
+    {
+      "id": "d2-cn-5",
+      "type": "single",
+      "question": "Which Azure service hosts web apps, REST APIs and mobile back ends without you managing the underlying VMs?",
+      "options": [
+        { "text": "Azure App Service", "why": "Correct." },
+        { "text": "Azure Virtual Machines", "why": "VMs require OS management." },
+        { "text": "Azure ExpressRoute", "why": "ExpressRoute is private connectivity." },
+        { "text": "Azure Storage Explorer", "why": "Storage Explorer manages storage data." }
+      ],
+      "answer": [0],
+      "explanation": "App Service is the PaaS web hosting option supporting many languages, autoscale and deployment slots.",
+      "objective": "2.2.4"
+    },
+    {
+      "id": "d2-cn-6",
+      "type": "single",
+      "question": "Which statement about Azure virtual networks (VNets) is correct?",
+      "options": [
+        { "text": "VNets let Azure resources communicate with each other, the internet and on-premises networks", "why": "Correct." },
+        { "text": "A VNet can span multiple regions by default", "why": "A VNet is scoped to a single region; use peering to connect regions." },
+        { "text": "VNets are required to use Microsoft 365", "why": "Unrelated." },
+        { "text": "Subnets cannot be created inside a VNet", "why": "Subnets segment a VNet's address space." }
+      ],
+      "answer": [0],
+      "explanation": "VNets provide isolation, segmentation (subnets) and connectivity to the internet and on-premises.",
+      "objective": "2.2.5"
+    },
+    {
+      "id": "d2-cn-7",
+      "type": "single",
+      "scenario": "Two virtual networks in different Azure regions must communicate privately using the Microsoft backbone network.",
+      "question": "What should you configure?",
+      "options": [
+        { "text": "Virtual network peering (global peering)", "why": "Correct." },
+        { "text": "A resource lock", "why": "Locks prevent deletion." },
+        { "text": "Azure DNS public zone", "why": "DNS does not connect networks." },
+        { "text": "An availability set", "why": "Availability sets are for VM placement." }
+      ],
+      "answer": [0],
+      "explanation": "Peering connects VNets so traffic stays on Microsoft's private backbone; global peering works across regions.",
+      "objective": "2.2.5"
+    },
+    {
+      "id": "d2-cn-8",
+      "type": "single",
+      "question": "Which service creates an encrypted connection between an on-premises network and an Azure virtual network over the public internet?",
+      "options": [
+        { "text": "Azure VPN Gateway", "why": "Correct." },
+        { "text": "Azure ExpressRoute", "why": "ExpressRoute uses a private connection, not the public internet." },
+        { "text": "Azure Front Door", "why": "Front Door is a global web entry point." },
+        { "text": "Azure Bastion", "why": "Bastion provides secure RDP/SSH to VMs from the portal." }
+      ],
+      "answer": [0],
+      "explanation": "VPN Gateway sends encrypted traffic over the internet (site-to-site, point-to-site, VNet-to-VNet).",
+      "objective": "2.2.5"
+    },
+    {
+      "id": "d2-cn-9",
+      "type": "single",
+      "scenario": "A bank needs a dedicated, private connection to Azure with predictable performance that does not travel over the public internet.",
+      "question": "Which service meets this requirement?",
+      "options": [
+        { "text": "Azure ExpressRoute", "why": "Correct." },
+        { "text": "Point-to-site VPN", "why": "This goes over the public internet." },
+        { "text": "Azure DNS", "why": "DNS resolves names." },
+        { "text": "Virtual network peering", "why": "Peering connects VNets, not on-premises networks." }
+      ],
+      "answer": [0],
+      "explanation": "ExpressRoute provides private connectivity through a connectivity provider, bypassing the internet.",
+      "objective": "2.2.5"
+    },
+    {
+      "id": "d2-cn-10",
+      "type": "single",
+      "question": "What does Azure DNS do?",
+      "options": [
+        { "text": "Hosts DNS domains and provides name resolution using Azure infrastructure", "why": "Correct." },
+        { "text": "Registers and sells new domain names", "why": "Azure DNS hosts domains; it does not sell domain names." },
+        { "text": "Encrypts traffic between regions", "why": "Not DNS's purpose." },
+        { "text": "Balances load between VMs", "why": "That is a load balancer." }
+      ],
+      "answer": [0],
+      "explanation": "Azure DNS hosts your DNS zones; you buy the domain from a registrar.",
+      "objective": "2.2.5"
+    },
+    {
+      "id": "d2-cn-11",
+      "type": "single",
+      "question": "A private endpoint lets you do what?",
+      "options": [
+        { "text": "Connect to a PaaS service, such as Azure Storage, using a private IP address from your virtual network", "why": "Correct." },
+        { "text": "Expose a VM directly to the internet", "why": "That would use a public IP." },
+        { "text": "Bypass authentication", "why": "Authentication still applies." },
+        { "text": "Create a backup", "why": "Unrelated." }
+      ],
+      "answer": [0],
+      "explanation": "Private endpoints bring a service into your VNet via a private IP; public endpoints are reachable over the internet.",
+      "objective": "2.2.6"
+    },
+    {
+      "id": "d2-cn-12",
+      "type": "single",
+      "scenario": "You need to run a single container for a short batch job without managing VMs or a Kubernetes cluster.",
+      "question": "Which service is the simplest fit?",
+      "options": [
+        { "text": "Azure Container Instances", "why": "Correct. The fastest way to run a container with no orchestration." },
+        { "text": "Azure Kubernetes Service", "why": "AKS is for orchestrating many containers; it is more than needed." },
+        { "text": "Azure Virtual Desktop", "why": "AVD delivers desktops." },
+        { "text": "Azure Policy", "why": "Policy enforces governance." }
+      ],
+      "answer": [0],
+      "explanation": "ACI runs individual containers on demand; AKS orchestrates complex container workloads.",
+      "objective": "2.2.1"
+    },
+    {
+      "id": "d2-cn-13",
+      "type": "single",
+      "question": "Which statement about subnets is correct?",
+      "options": [
+        { "text": "Subnets divide a virtual network's address space into segments", "why": "Correct." },
+        { "text": "A subnet can span multiple virtual networks", "why": "A subnet belongs to one VNet." },
+        { "text": "Subnets are a type of storage account", "why": "Subnets are networking." },
+        { "text": "Subnets replace the need for virtual networks", "why": "Subnets live inside VNets." }
+      ],
+      "answer": [0],
+      "explanation": "Subnets segment a VNet, letting you group resources and apply network security rules.",
+      "objective": "2.2.5"
+    }
+  ]
+}

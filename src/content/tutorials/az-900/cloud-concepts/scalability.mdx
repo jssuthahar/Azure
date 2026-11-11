@@ -1,0 +1,170 @@
+---
+title: Scalability
+seoTitle: "Scalability: Vertical vs Horizontal Scaling | AZ-900"
+description: Cloud scalability explained, vertical (scale up) vs horizontal (scale out), with an interactive chart, Azure examples and AZ-900 practice questions.
+answer: >-
+  **Scalability** is the ability to adjust resources to meet demand. If demand grows, you add resources; if it falls, you remove them. There are two directions. **Vertical scaling** (scale up or down) makes a resource bigger or smaller, for example more CPU and RAM. **Horizontal scaling** (scale out or in) adds or removes instances. In the cloud you pay only for the resources you are using at the time.
+updated: 2026-11-11
+readingMinutes: 8
+keyTerms:
+  - term: Scalability
+    definition: The ability to increase or decrease resources to handle changes in workload.
+  - term: Vertical scaling (scale up/down)
+    definition: Changing the size of a single resource, such as adding CPUs or memory to a VM.
+  - term: Horizontal scaling (scale out/in)
+    definition: Changing the number of instances, such as going from 2 web servers to 10.
+  - term: Stateless
+    definition: An app instance that keeps no user-specific data locally, so any instance can handle any request. This is essential for scaling out.
+interview:
+  - level: beginner
+    q: What is scalability, and what are the two types?
+    a: >-
+      Scalability is being able to add or remove resources as demand changes. Vertical scaling makes one machine bigger or smaller, for example more CPU or memory. Horizontal scaling adds or removes machines, for example going from two web servers to six.
+    followUps:
+      - q: Which one is better?
+        a: >-
+          Horizontal scaling is usually preferred in the cloud because there is no upper limit set by the biggest machine, it adds redundancy, and it can happen without downtime. Vertical scaling is simple and useful for things like databases that are hard to split, but it has a ceiling and often needs a restart.
+  - level: intermediate
+    q: What is the difference between scalability and elasticity?
+    a: >-
+      Scalability is the ability to grow or shrink resources to handle load, which can be done manually or on a schedule. Elasticity is scalability that happens automatically and rapidly in response to real-time demand, for example autoscale adding instances when CPU goes above 70%.
+    followUps: []
+  - level: experienced
+    q: You need to scale out a web application. What design changes might be needed first?
+    a: >-
+      Make the tier stateless. Move session state to a distributed cache like Redis, store uploads in Blob Storage instead of local disk, externalise configuration, and make background jobs idempotent so they can run on any instance. Then check downstream bottlenecks. Scaling the web tier often just moves the bottleneck to the database, so consider read replicas, caching, partitioning or queue-based load levelling.
+    followUps:
+      - q: How do you scale a relational database?
+        a: >-
+          First vertically (more vCores), then with read replicas for read-heavy loads, caching, and finally partitioning or sharding, or a horizontally scalable service such as Azure SQL Hyperscale or Azure Cosmos DB, depending on the data model.
+  - level: scenario
+    q: An e-commerce site expects traffic to triple during a three-day sale. What would you do?
+    a: >-
+      Scale out the web and API tiers ahead of the sale (scheduled autoscale), with autoscale rules on top to handle surprises; scale up the database tier for the sale; warm the cache; and scale back in afterwards so they stop paying for the extra capacity.
+    followUps: []
+revision:
+  keyPoints:
+    - Scalability = adjust resources to meet demand, up or down.
+    - "Vertical = scale **up/down**: bigger or smaller resource (CPU, RAM)."
+    - "Horizontal = scale **out/in**: more or fewer instances."
+    - In the cloud you pay only for resources currently in use, so scaling down saves money.
+    - Horizontal scaling needs stateless app design and also adds redundancy.
+  mistakes:
+    - Mixing up the words. **Up/down = vertical**, **out/in = horizontal**.
+    - Confusing scalability (capacity) with availability (uptime).
+  examTips:
+    - '"Add more virtual machines" = scale **out** (horizontal).'
+    - '"Increase the VM size / add CPU and memory" = scale **up** (vertical).'
+  quick:
+    - q: Adding more RAM to a VM is which type of scaling?
+      a: Vertical scaling (scale up).
+    - q: Going from 3 to 8 web server instances is which type?
+      a: Horizontal scaling (scale out).
+    - q: Why is horizontal scaling popular in the cloud?
+      a: No single-machine size limit, it adds redundancy, and it usually needs no downtime.
+    - q: What app design property makes scaling out easy?
+      a: Being stateless.
+    - q: Do you keep paying for capacity after scaling down?
+      a: No. You pay for what is in use.
+references:
+  - title: Describe the benefits of high availability and scalability (Microsoft Learn)
+    url: https://learn.microsoft.com/en-us/training/modules/describe-benefits-use-cloud-services/
+  - title: Autoscale in Azure Monitor
+    url: https://learn.microsoft.com/en-us/azure/azure-monitor/autoscale/autoscale-overview
+related:
+  - elasticity
+  - high-availability
+  - consumption-based-model
+---
+
+## Start with a question
+
+<Story question="A restaurant suddenly gets a queue out of the door. Does it buy a bigger kitchen, or open more counters?">
+
+Both are ways of handling more customers. A bigger stove and a faster chef is **scaling up**. Opening three more counters with more staff is **scaling out**. When the rush is over, a smart restaurant sends the extra staff home so it is not paying for them.
+
+That is **scalability**: matching capacity to demand, in both directions.
+
+</Story>
+
+## Explain it like I'm 10
+
+<Eli10>
+
+Imagine carrying books for your class.
+
+- **Scale up**: you swap your small school bag for a **giant backpack**. One person, more space.
+- **Scale out**: you ask **four friends** to help, each with their own bag.
+
+If there are fewer books tomorrow, you go back to the small bag, or your friends go and play. In the cloud, you only pay for the bags you are actually using.
+
+</Eli10>
+
+## The technical explanation
+
+**Scalability** is the ability of a system to handle more (or less) work by adjusting resources. Because cloud resources are on demand and billed by consumption, you can scale to the load you have now **and pay only for that**.
+
+<Compare
+  caption="The two directions of scaling"
+  columns={[
+    { title: 'Vertical scaling', subtitle: 'Scale up / scale down', icon: '⬆️', tone: 'accent', items: ['Change the size of one resource', 'Example: VM from 2 to 8 vCPUs', 'Simple; no app changes', 'Has a ceiling (largest size)', 'Often needs a restart'] },
+    { title: 'Horizontal scaling', subtitle: 'Scale out / scale in', icon: '➡️', tone: 'ok', items: ['Change the number of instances', 'Example: 2 to 10 web servers', 'Near-unlimited ceiling', 'Adds redundancy too', 'App should be stateless'] },
+  ]}
+/>
+
+### How you scale in Azure
+
+| Service | Scale up | Scale out |
+| --- | --- | --- |
+| Virtual Machines | Resize the VM | Virtual Machine Scale Sets |
+| App Service | Change the App Service plan tier | Increase instance count (manual or autoscale) |
+| Azure SQL Database | More vCores or higher tier | Read replicas, Hyperscale, elastic pools |
+| Azure Functions | Larger instance memory (Flex) | Automatic, event-driven |
+| AKS | Bigger node sizes | More pods and nodes (cluster autoscaler) |
+
+<TryIt labs="scale-sets" text="Scale out from 2 to 6 servers with one command, then back in, and watch the cost change." />
+
+<DemandChart modes={['fixed', 'manual']} initial="manual" caption="Scaling manually on a schedule beats fixed capacity, but it still lags behind real demand. Automatic scaling is covered in Elasticity." />
+
+<DeepDive title="Scaling the whole system, not one tier">
+
+Scaling one tier often just moves the bottleneck. Senior engineers look at the full path:
+
+1. **Edge**: CDN and Front Door absorb static content and spread load globally.
+2. **Web/API**: stateless instances behind a load balancer, with autoscale.
+3. **Async work**: queues (Service Bus, Storage Queues) decouple spikes from slower back ends. This is queue-based load levelling.
+4. **Data**: caching (Redis), read replicas, partitioning. Choose a data store whose scaling model fits the access pattern.
+5. **Limits**: every service has quotas (vCPU per region, connections per database). Request increases before a big event, not during it.
+
+Load-test before the big day. Real behaviour under load rarely matches the diagram.
+
+</DeepDive>
+
+## Real-world business scenario
+
+<Scenario
+  company="An online shopping platform"
+  industry="E-commerce"
+  problem="Annual sale traffic is ten times normal for 72 hours. Previously the site ran on fixed servers sized for normal days and slowed to a crawl."
+  service="App Service with scheduled scale-out before the sale and autoscale rules on CPU, Azure SQL Database scaled up for the sale, Redis cache for product pages."
+  why="Horizontal scaling for the stateless web tier, vertical scaling for the database, and scaling back afterwards to stop paying for the extra capacity."
+  outcome="Checkout stayed fast through the sale, and the extra capacity cost only three days of usage."
+/>
+
+## When to use it and when not to
+
+<UseWhen
+  use={[
+    '**Scale out** for stateless web and API tiers, and any workload you can split across instances.',
+    '**Scale up** for workloads that are hard to distribute, such as some databases or legacy apps.',
+    '**Scale down/in** after peaks to save money.',
+  ]}
+  avoid={[
+    'Scaling out a stateful app that keeps sessions in memory. Users will lose sessions. Fix the design first.',
+    'Scaling up as the only strategy for growth. You will hit the largest size eventually.',
+  ]}
+  alternatives={[
+    '**Caching** and **CDNs** to reduce load before adding capacity.',
+    '**Serverless** services that scale automatically without any configuration.',
+  ]}
+/>

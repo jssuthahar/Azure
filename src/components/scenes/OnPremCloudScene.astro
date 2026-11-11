@@ -1,0 +1,34 @@
+---
+/** Own servers (hot, expensive, you fix them) vs renting from the cloud (pay per use). */
+---
+<svg viewBox="0 0 640 300" role="img" aria-label="On the left, a company's own server room with an up-front price tag, heat and a wrench. On the right, the cloud, which Microsoft runs while a meter charges only for use.">
+  <!-- left: building with server room -->
+  <rect x="40" y="70" width="210" height="170" rx="10" fill="var(--card)" stroke="#8a97a8" stroke-width="2" />
+  <path d="M30 76 145 28l115 48z" fill="#8a97a8" />
+  <g transform="translate(70 110)">
+    {[0, 1, 2].map((i) => (
+      <g transform={`translate(${i * 48} 0)`}><rect width="38" height="90" rx="5" fill="#243a5e" />{[0, 1, 2, 3, 4].map((r) => <rect x="6" y={8 + r * 16} width="26" height="9" rx="2" fill="#5b6f8f" />)}<circle cx="30" cy="12" r="2.2" fill="#6ccb5f" class="a-blink" /></g>
+    ))}
+  </g>
+  <g class="a-spin" style="animation-duration:1s"><circle cx="223" cy="104" r="14" fill="none" stroke="#8a97a8" stroke-width="2" /><path d="M223 92v24M211 104h24" stroke="#8a97a8" stroke-width="4" stroke-linecap="round" /></g>
+  <g class="a-float"><path d="M210 210c6-10-4-14 4-24 2 8 10 10 6 20" fill="#ff8c00" opacity=".85" /><text x="232" y="214" class="sub">hot!</text></g>
+  <g class="a-pulse"><rect x="60" y="250" width="120" height="30" rx="15" fill="#e74856" /><text x="120" y="270" text-anchor="middle" fill="#fff" font-size="13" font-weight="700">💸 $$$ up front</text></g>
+  <g class="a-float-2"><text x="200" y="272" font-size="22">🔧</text><text x="226" y="270" class="sub">You fix it</text></g>
+  <text x="145" y="20" text-anchor="middle" class="lbl">On-premises: you own it</text>
+
+  <!-- arrow -->
+  <g class="a-pulse"><path d="M280 150h70" stroke="#0078d4" stroke-width="6" stroke-linecap="round" /><path d="M345 136l18 14-18 14z" fill="#0078d4" /></g>
+  <text x="320" y="185" text-anchor="middle" class="sub">move</text>
+
+  <!-- right: cloud -->
+  <g class="a-float">
+    <path d="M400 190h170a42 42 0 0 0 5-83.6A62 62 0 0 0 455 92a48 48 0 0 0-55 98z" fill="#eaf4fe" stroke="#0078d4" stroke-width="3" />
+    {[0, 1, 2].map((i) => <rect x={445 + i * 30} y="125" width="22" height="46" rx="4" fill="#0078d4" />)}
+  </g>
+  <!-- meter -->
+  <rect x="430" y="214" width="150" height="60" rx="12" fill="#243a5e" />
+  <text x="505" y="236" text-anchor="middle" fill="#9fd0f7" font-size="11" font-weight="700">PAY AS YOU GO</text>
+  <rect x="446" y="246" width="118" height="12" rx="6" fill="#465a7a" />
+  <rect x="446" y="246" width="118" height="12" rx="6" fill="#6ccb5f"><animate attributeName="width" values="8;118;8" dur="5s" repeatCount="indefinite" /></rect>
+  <text x="505" y="20" text-anchor="middle" class="lbl">Cloud: Microsoft runs it</text>
+</svg>

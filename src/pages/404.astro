@@ -1,0 +1,12 @@
+---
+import Base from '../layouts/Base.astro';
+import Mascot from '../components/Mascot.astro';
+---
+<Base title="Page not found | MSDEVBUILD Azure" description="This page could not be found. Head back to the AZ-900 syllabus to continue learning." noindex wide={false}>
+  <div class="py-10 text-center">
+    <Mascot size={110} mood="thinking" class="mx-auto" />
+    <h1 class="mt-6 text-3xl font-bold">This page drifted away</h1>
+    <p class="mt-3 text-muted">It may still be in progress, or the link is wrong.</p>
+    <div class="mt-6 flex justify-center gap-3"><a href="/az-900/" class="btn btn-accent">AZ-900 syllabus</a><a href="/" class="btn btn-outline">Home</a></div>
+  </div>
+</Base>

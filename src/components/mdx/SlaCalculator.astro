@@ -1,0 +1,53 @@
+---
+/** Interactive: turn an SLA percentage into real downtime, and combine two SLAs. */
+---
+<figure class="sla-calc card p-4 sm:p-5">
+  <div class="grid gap-5 md:grid-cols-2">
+    <div>
+      <label class="text-sm font-semibold" for="sla-a">Uptime SLA (%)</label>
+      <select id="sla-a" class="mt-2 w-full rounded-xl border border-default bg-[var(--bg)] px-3 py-2">
+        <option value="99">99%</option>
+        <option value="99.9" selected>99.9%</option>
+        <option value="99.95">99.95%</option>
+        <option value="99.99">99.99%</option>
+        <option value="99.999">99.999%</option>
+      </select>
+      <dl class="mt-4 grid grid-cols-3 gap-2 text-center text-sm" aria-live="polite">
+        <div class="rounded-xl border border-default bg-[var(--bg)] p-2"><dt class="text-xs text-muted">Per week</dt><dd data-out="week" class="font-bold text-accent"></dd></div>
+        <div class="rounded-xl border border-default bg-[var(--bg)] p-2"><dt class="text-xs text-muted">Per month</dt><dd data-out="month" class="font-bold text-accent"></dd></div>
+        <div class="rounded-xl border border-default bg-[var(--bg)] p-2"><dt class="text-xs text-muted">Per year</dt><dd data-out="year" class="font-bold text-accent"></dd></div>
+      </dl>
+      <p class="mt-2 text-xs text-muted">Maximum downtime still allowed under the SLA.</p>
+    </div>
+    <div>
+      <p class="text-sm font-semibold">Combine two services that both must work</p>
+      <div class="mt-2 grid grid-cols-[1fr_auto_1fr] items-center gap-2">
+        <input id="sla-b1" type="number" step="0.01" min="90" max="100" value="99.95" class="w-full rounded-xl border border-default bg-[var(--bg)] px-3 py-2" aria-label="First service SLA percent" />
+        <span aria-hidden="true">×</span>
+        <input id="sla-b2" type="number" step="0.01" min="90" max="100" value="99.99" class="w-full rounded-xl border border-default bg-[var(--bg)] px-3 py-2" aria-label="Second service SLA percent" />
+      </div>
+      <p class="mt-4 rounded-xl border border-default bg-[var(--bg)] p-3 text-sm" aria-live="polite">Composite SLA: <strong data-out="composite" class="text-accent"></strong> — lower than either service on its own.</p>
+      <p class="mt-2 text-xs text-muted">Web app (99.95%) calling a database (99.99%): 0.9995 × 0.9999.</p>
+    </div>
+  </div>
+  <figcaption class="mt-4 text-center text-sm text-muted">Every extra “9” cuts allowed downtime by 10×. Month = 30.44 days on average.</figcaption>
+</figure>
+<script>
+  const fmt = (min: number) => (min >= 120 ? `${(min / 60).toFixed(1)} h` : min >= 1 ? `${min.toFixed(1)} min` : `${(min * 60).toFixed(0)} s`);
+  document.querySelectorAll<HTMLElement>('.sla-calc').forEach((root) => {
+    const a = root.querySelector<HTMLSelectElement>('#sla-a')!;
+    const b1 = root.querySelector<HTMLInputElement>('#sla-b1')!;
+    const b2 = root.querySelector<HTMLInputElement>('#sla-b2')!;
+    const out = (k: string) => root.querySelector<HTMLElement>(`[data-out="${k}"]`)!;
+    const update = () => {
+      const down = 1 - Number(a.value) / 100;
+      out('week').textContent = fmt(down * 7 * 1440);
+      out('month').textContent = fmt(down * 30.44 * 1440);
+      out('year').textContent = fmt(down * 365.25 * 1440);
+      const c = (Number(b1.value) / 100) * (Number(b2.value) / 100) * 100;
+      out('composite').textContent = `${c.toFixed(4).replace(/0+$/, '').replace(/\.$/, '')}%`;
+    };
+    [a, b1, b2].forEach((el) => el.addEventListener('input', update));
+    update();
+  });
+</script>

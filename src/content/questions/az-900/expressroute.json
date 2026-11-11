@@ -1,0 +1,92 @@
+{
+ "cert": "az-900",
+ "domain": 2,
+ "topic": "expressroute",
+ "questions": [
+  {
+   "id": "t-er-1",
+   "type": "single",
+   "question": "Which service provides a private connection to Azure that does NOT go over the public internet?",
+   "options": [
+    {
+     "text": "Azure ExpressRoute",
+     "why": "Correct."
+    },
+    {
+     "text": "Azure VPN Gateway",
+     "why": "Uses the internet."
+    },
+    {
+     "text": "Point-to-site VPN",
+     "why": "Uses the internet."
+    },
+    {
+     "text": "Azure Front Door",
+     "why": "Global web entry point."
+    }
+   ],
+   "answer": [
+    0
+   ],
+   "explanation": "ExpressRoute uses a private connection through a provider.",
+   "objective": "2.2.5"
+  },
+  {
+   "id": "t-er-2",
+   "type": "multi",
+   "question": "Which TWO are benefits of ExpressRoute?",
+   "options": [
+    {
+     "text": "Consistent, predictable latency",
+     "why": "Correct."
+    },
+    {
+     "text": "It is always free",
+     "why": "It is a paid service."
+    },
+    {
+     "text": "Higher reliability than typical internet connections",
+     "why": "Correct."
+    },
+    {
+     "text": "It requires no connectivity provider",
+     "why": "A provider is usually required."
+    }
+   ],
+   "answer": [
+    0,
+    2
+   ],
+   "explanation": "ExpressRoute offers reliability, speed, consistent latency and security.",
+   "objective": "2.2.5"
+  },
+  {
+   "id": "t-er-3",
+   "type": "single",
+   "question": "Who typically provides the physical connection for ExpressRoute?",
+   "options": [
+    {
+     "text": "A connectivity provider",
+     "why": "Correct."
+    },
+    {
+     "text": "Azure Advisor",
+     "why": "Recommendations."
+    },
+    {
+     "text": "The customer's ISP Wi-Fi",
+     "why": "No."
+    },
+    {
+     "text": "Microsoft Entra ID",
+     "why": "Identity service."
+    }
+   ],
+   "answer": [
+    0
+   ],
+   "explanation": "Connectivity partners provide the circuit.",
+   "objective": "2.2.5"
+  }
+ ]
+}

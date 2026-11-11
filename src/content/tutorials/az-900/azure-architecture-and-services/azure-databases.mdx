@@ -1,0 +1,107 @@
+---
+title: Azure SQL, SQL Managed Instance and Cosmos DB
+seoTitle: Azure SQL vs Managed Instance vs Cosmos DB | Azure
+description: "Azure database options compared: SQL Database, SQL Managed Instance, SQL Server on VMs and Cosmos DB, with when to use each. Beyond the AZ-900 exam."
+answer: >-
+  Azure offers databases from most control to most managed. **SQL Server on Azure VMs** (IaaS) gives full control. **Azure SQL Managed Instance** (PaaS) offers near-complete SQL Server compatibility for easy migrations. **Azure SQL Database** (PaaS) is a fully managed modern database. **Azure Cosmos DB** is a globally distributed NoSQL database with very low latency.
+updated: 2026-11-11
+readingMinutes: 6
+keyTerms:
+  - term: Azure SQL Database
+    definition: Fully managed PaaS relational database based on the SQL Server engine.
+  - term: SQL Managed Instance
+    definition: PaaS with near-100% SQL Server compatibility, ideal for lift-and-shift.
+  - term: Azure Cosmos DB
+    definition: Globally distributed, multi-model NoSQL database with low latency and elastic scale.
+interview:
+  - level: beginner
+    q: What is the difference between Azure SQL Database and Cosmos DB?
+    a: >-
+      Azure SQL Database is a relational database with tables and SQL queries. Cosmos DB is a NoSQL database for flexible JSON-style data that can be replicated globally with very low latency.
+    followUps: []
+  - level: intermediate
+    q: When would you choose SQL Managed Instance over SQL Database?
+    a: >-
+      When migrating existing SQL Server databases that rely on instance-level features such as SQL Agent jobs, cross-database queries or CLR, and you want PaaS with minimal changes.
+    followUps: []
+  - level: experienced
+    q: When would you still run SQL Server on a VM?
+    a: >-
+      When you need OS-level access, a specific SQL Server version or feature not available in PaaS, third-party software installed alongside, or full control of patch timing. The trade-off is that you manage patching, backups and high availability yourself.
+    followUps: []
+revision:
+  keyPoints:
+    - SQL on VM = IaaS, full control.
+    - SQL Managed Instance = PaaS, near-full SQL Server compatibility.
+    - SQL Database = fully managed PaaS.
+    - Cosmos DB = global, low-latency NoSQL.
+  mistakes:
+    - Using Cosmos DB for heavily relational, join-based workloads.
+  examTips:
+    - Databases are not in the current AZ-900 outline, but they appear often in interviews.
+  quick:
+    - q: Which option gives full control of SQL Server?
+      a: SQL Server on Azure VMs.
+    - q: Which PaaS option is best for lift-and-shift of SQL Server?
+      a: Azure SQL Managed Instance.
+    - q: Which option is a globally distributed NoSQL database?
+      a: Azure Cosmos DB.
+    - q: Which cloud service type is Azure SQL Database?
+      a: PaaS.
+    - q: Who patches Azure SQL Database?
+      a: Microsoft.
+references:
+  - title: What is Azure SQL?
+    url: https://learn.microsoft.com/en-us/azure/azure-sql/azure-sql-iaas-vs-paas-what-is-overview
+  - title: Azure Cosmos DB overview
+    url: https://learn.microsoft.com/en-us/azure/cosmos-db/introduction
+related:
+  - paas
+  - iaas
+---
+
+## Start with a question
+
+<Story question="Your shopping app needs a database. Do you install one yourself or let Azure run it?">
+
+Azure offers both, and several options in between.
+
+</Story>
+
+## Explain it like I'm 10
+
+<Eli10>
+
+- **SQL on a VM**: you build and look after your own bookshelf.
+- **Managed Instance**: a library copies your exact bookshelf and looks after it.
+- **SQL Database**: the library gives you a modern shelf and does everything.
+- **Cosmos DB**: magic shelves in every city, so books appear instantly wherever you are.
+
+</Eli10>
+
+## The technical explanation
+
+| Option | Type | Best for |
+| --- | --- | --- |
+| SQL Server on Azure VMs | IaaS | Full control, specific versions, OS access |
+| Azure SQL Managed Instance | PaaS | Migrating existing SQL Server with minimal changes |
+| Azure SQL Database | PaaS | New cloud apps, serverless and Hyperscale options |
+| Azure Cosmos DB | PaaS NoSQL | Global apps needing low latency and flexible schema |
+
+## Real-world business scenario
+
+<Scenario
+  company="A global gaming company"
+  industry="Gaming"
+  problem="Player profiles needed fast reads and writes worldwide, and the purchase ledger needed strict relational integrity."
+  service="Cosmos DB with multi-region writes for profiles; Azure SQL Database for purchases."
+  why="Each data shape gets the right database."
+  outcome="Fast profiles everywhere and reliable purchase records."
+/>
+
+## When to use it and when not to
+
+<UseWhen
+  use={['**SQL Database** for most new relational apps.', '**Managed Instance** for SQL Server migrations.', '**Cosmos DB** for global, low-latency NoSQL.']}
+  avoid={['Running your own SQL on VMs unless you need the control.']}
+/>

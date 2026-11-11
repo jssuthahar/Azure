@@ -1,0 +1,88 @@
+{
+ "cert": "az-900",
+ "domain": 2,
+ "topic": "load-balancer-application-gateway-front-door",
+ "questions": [
+  {
+   "id": "t-lb-1",
+   "type": "single",
+   "question": "Which service is a regional layer-7 web load balancer with URL-based routing and an optional Web Application Firewall?",
+   "options": [
+    {
+     "text": "Azure Application Gateway",
+     "why": "Correct."
+    },
+    {
+     "text": "Azure Load Balancer",
+     "why": "Layer 4."
+    },
+    {
+     "text": "Azure DNS",
+     "why": "Name resolution."
+    },
+    {
+     "text": "VNet peering",
+     "why": "Connects networks."
+    }
+   ],
+   "answer": [
+    0
+   ],
+   "explanation": "Application Gateway works at layer 7 within a region."
+  },
+  {
+   "id": "t-lb-2",
+   "type": "single",
+   "question": "Users worldwide should be routed to the nearest healthy region of a web app. Which service fits best?",
+   "options": [
+    {
+     "text": "Azure Front Door",
+     "why": "Correct."
+    },
+    {
+     "text": "Azure Load Balancer",
+     "why": "Regional, layer 4."
+    },
+    {
+     "text": "Azure Application Gateway",
+     "why": "Regional."
+    },
+    {
+     "text": "Network security group",
+     "why": "Filters traffic."
+    }
+   ],
+   "answer": [
+    0
+   ],
+   "explanation": "Front Door is a global layer-7 entry point."
+  },
+  {
+   "id": "t-lb-3",
+   "type": "single",
+   "question": "Which service distributes TCP and UDP traffic across VMs within a region?",
+   "options": [
+    {
+     "text": "Azure Load Balancer",
+     "why": "Correct."
+    },
+    {
+     "text": "Azure Front Door",
+     "why": "Global HTTP."
+    },
+    {
+     "text": "Azure Policy",
+     "why": "Governance."
+    },
+    {
+     "text": "Azure Cosmos DB",
+     "why": "Database."
+    }
+   ],
+   "answer": [
+    0
+   ],
+   "explanation": "Azure Load Balancer operates at layer 4."
+  }
+ ]
+}

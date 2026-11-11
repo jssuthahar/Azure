@@ -1,0 +1,170 @@
+---
+title: PaaS – Platform as a Service
+seoTitle: What is PaaS? Platform as a Service Explained | AZ-900
+description: PaaS explained simply with Azure App Service and Azure SQL Database, who manages what, use cases, limits, interview questions and AZ-900 practice questions.
+answer: >-
+  **Platform as a Service (PaaS)** is the cloud service type where the provider manages the infrastructure **and** the platform (operating system, runtime, middleware, patching, often scaling and backups), and **you bring your application and data**. Developers focus on code, not servers. Azure App Service and Azure SQL Database are typical examples.
+updated: 2026-11-11
+readingMinutes: 9
+keyTerms:
+  - term: PaaS
+    definition: Platform as a Service. The provider runs the OS, runtime and middleware; you deploy apps and manage data and access.
+  - term: Runtime
+    definition: The environment your code needs to run, such as .NET, Node.js, Java or Python.
+  - term: Middleware
+    definition: Software between the OS and your app, such as web servers or database engines.
+  - term: Managed service
+    definition: A service where the provider handles operations like patching, backups and high availability for you.
+interview:
+  - level: beginner
+    q: What is PaaS? Give an Azure example.
+    a: >-
+      PaaS is a cloud service where the provider manages the servers, operating system and runtime, and I just deploy my application and manage my data. Azure App Service for hosting web apps and APIs, and Azure SQL Database for managed databases, are examples.
+    followUps:
+      - q: What do you still have to manage?
+        a: >-
+          My application code and its configuration, my data, who has access (identities and permissions), and some settings like network access rules. Microsoft handles OS patching, the runtime and the underlying infrastructure.
+  - level: intermediate
+    q: What are the benefits and limitations of PaaS for a development team?
+    a: >-
+      Benefits are faster development, no OS patching, built-in scaling, high availability, backups and deployment slots, and often lower total cost because less operations work is needed. Limitations are less control over the environment (you cannot install anything on the OS), supported runtimes and versions only, platform-specific features that can increase lock-in, and service limits you must design around.
+    followUps: []
+  - level: experienced
+    q: A team wants to move a .NET API from VMs to Azure App Service. What would you check first?
+    a: >-
+      Dependencies on the local machine (file system writes, the Windows registry, GAC components, installed COM libraries, local scheduled tasks), session state stored in memory (move it to Redis), configuration and secrets (move to app settings and Key Vault with managed identity), outbound IP and firewall needs, private connectivity to databases (VNet integration, private endpoints), and the right plan tier for scale-out and slots. Then I would set up deployment slots for zero-downtime releases.
+    followUps: []
+  - level: scenario
+    q: Two developers are building a new e-commerce API and have no operations staff. IaaS or PaaS?
+    a: >-
+      PaaS. App Service for the API and Azure SQL Database for data. They avoid OS patching, get autoscaling and backups built in, and can spend their time on features.
+    followUps: []
+revision:
+  keyPoints:
+    - PaaS = provider manages infrastructure **and** OS, runtime, middleware; **you manage apps and data**.
+    - Built-in features usually include scaling, high availability, patching and backups.
+    - Azure examples are App Service, Azure SQL Database, Azure Cosmos DB, Azure Functions and Azure Container Apps.
+    - Ideal for developers who want to focus on code.
+    - Trade-off is less control over the environment than IaaS.
+  mistakes:
+    - Thinking PaaS means zero responsibility. You still own your code, data, identities and access settings.
+    - Assuming any software can run on PaaS. You cannot install arbitrary OS-level components.
+  examTips:
+    - '"Developers focus on code, not managing servers or OS" = **PaaS**.'
+    - '"Managed database with automatic patching and backups" = PaaS (for example Azure SQL Database).'
+  quick:
+    - q: What does PaaS stand for?
+      a: Platform as a Service.
+    - q: Who patches the operating system in PaaS?
+      a: The cloud provider.
+    - q: Name two Azure PaaS services.
+      a: Azure App Service and Azure SQL Database (also Cosmos DB, Functions, Container Apps).
+    - q: What is the main trade-off of PaaS compared with IaaS?
+      a: Less control over the underlying OS and environment.
+    - q: Who is responsible for the application code in PaaS?
+      a: The customer.
+references:
+  - title: Describe cloud service types (Microsoft Learn)
+    url: https://learn.microsoft.com/en-us/training/modules/describe-cloud-service-types/
+  - title: App Service overview
+    url: https://learn.microsoft.com/en-us/azure/app-service/overview
+  - title: What is Azure SQL Database?
+    url: https://learn.microsoft.com/en-us/azure/azure-sql/database/sql-database-paas-overview
+related:
+  - iaas
+  - saas
+  - choosing-iaas-paas-saas
+---
+
+## Start with a question
+
+<Story question="Do you want to bake a cake, or do you want to build an oven, wire the kitchen and then bake a cake?">
+
+Most developers just want to bake the cake: write code and ship features. Yet with plain servers they also have to install operating systems, patch them every month, configure web servers and plan how to scale.
+
+**Platform as a Service hands you a ready kitchen.** You bring the recipe (your code) and the ingredients (your data).
+
+</Story>
+
+## Explain it like I'm 10
+
+<Eli10>
+
+Think about a **school science lab**. When you arrive, the benches, gas taps, microscopes and safety equipment are already set up and checked by the lab technician. You do not build anything. You just **do your experiment**.
+
+PaaS is a ready-made science lab for computer programs. Microsoft is the lab technician who keeps everything working. **You only bring your experiment** (your app).
+
+</Eli10>
+
+## The technical explanation
+
+With **Platform as a Service**, the provider manages everything IaaS covers (datacenter, hardware, network, virtualisation) **plus** the operating system, runtime and middleware. It usually adds operational features such as **automatic patching, scaling, high availability and backups**. You deploy your application and manage your data, identities and access configuration.
+
+<Flow
+  caption="The PaaS stack: Microsoft manages more, you focus on the app"
+  steps={[
+    { title: 'Datacenter, hardware, network', text: 'Microsoft' },
+    { title: 'Virtualisation and OS', text: 'Microsoft' },
+    { title: 'Runtime, middleware, patching', text: 'Microsoft' },
+    { title: 'Application', text: '<strong>You</strong> (Microsoft runs the platform)' },
+    { title: 'Data, identities, access', text: '<strong>You</strong>' },
+  ]}
+/>
+
+### PaaS on Azure
+
+| Azure service | What it gives developers |
+| --- | --- |
+| Azure App Service | Host web apps, REST APIs and mobile back ends in .NET, Java, Node.js, Python or PHP, with autoscale and deployment slots |
+| Azure SQL Database | Fully managed SQL Server database engine with automated backups, patching and high availability |
+| Azure Cosmos DB | Globally distributed NoSQL database with low-latency reads and writes |
+| Azure Functions | Run small pieces of code in response to events (also serverless) |
+| Azure Container Apps | Run containers without managing Kubernetes clusters |
+
+<TryIt labs="cloud-shell-webapp" text="Deploy a PaaS web app with three Azure CLI commands, with no virtual machine or operating system to manage." />
+
+<Callout type="exam">
+Some services fit more than one label. Azure Functions is both **PaaS** and **serverless**. On the exam, read what the question emphasises: "no infrastructure management, pay per execution" points to serverless; "developers focus on code, provider manages the platform" points to PaaS.
+</Callout>
+
+<DeepDive title="Designing for PaaS: what changes in your architecture">
+
+- **Stateless instances**: the platform adds and removes instances, so keep session state in Azure Managed Redis or a database, and files in Blob Storage, not on local disk.
+- **Configuration and secrets**: use app settings plus Azure Key Vault references, and authenticate with **managed identities** instead of connection-string passwords.
+- **Networking**: PaaS endpoints are public by default. Lock them down with access restrictions, VNet integration for outbound traffic and **private endpoints** for inbound.
+- **Release safety**: App Service deployment slots let you warm up and swap releases with no downtime and instant rollback.
+- **Limits**: every PaaS service has quotas (connections, request size, timeouts). Read them early. They shape the design.
+
+</DeepDive>
+
+## Real-world business scenario
+
+<Scenario
+  company="An online learning platform"
+  industry="Online education"
+  problem="Three developers were spending a day a week patching VMs and manually adding servers before exam weeks."
+  service="Moved the web front end and API to Azure App Service with autoscale rules, the database to Azure SQL Database, and course videos to Blob Storage."
+  why="PaaS removed OS patching and manual scaling, and gave built-in backups and high availability without a dedicated operations hire."
+  outcome="The patching day disappeared from the calendar, exam-week scaling became automatic, and releases became daily with deployment slots."
+/>
+
+## When to use it and when not to
+
+<UseWhen
+  use={[
+    'Web apps, APIs and mobile back ends built on mainstream runtimes.',
+    'New development where you want speed and minimal operations.',
+    'Managed databases where you want automatic backups, patching and HA.',
+    'Small teams without dedicated infrastructure staff.',
+  ]}
+  avoid={[
+    'The software needs OS-level customisation, special drivers or unsupported runtimes.',
+    'Strict requirements to control patch timing at OS level.',
+    'Ported legacy apps that rely heavily on local machine state. Refactor first, or use IaaS.',
+  ]}
+  alternatives={[
+    '**IaaS** VMs when you need full control.',
+    '**Containers** on Container Apps or AKS for portable packaging with more control than App Service.',
+    '**SaaS** if an existing product already does what you were about to build.',
+  ]}
+/>

@@ -1,0 +1,92 @@
+{
+ "cert": "az-900",
+ "domain": 2,
+ "topic": "azure-functions",
+ "questions": [
+  {
+   "id": "t-fn-1",
+   "type": "single",
+   "question": "What starts an Azure Function?",
+   "options": [
+    {
+     "text": "A trigger",
+     "why": "Correct."
+    },
+    {
+     "text": "A resource lock",
+     "why": "Unrelated."
+    },
+    {
+     "text": "A management group",
+     "why": "Unrelated."
+    },
+    {
+     "text": "An availability set",
+     "why": "Unrelated."
+    }
+   ],
+   "answer": [
+    0
+   ],
+   "explanation": "Each function has one trigger.",
+   "objective": "2.2.1"
+  },
+  {
+   "id": "t-fn-2",
+   "type": "multi",
+   "question": "Which TWO statements about Azure Functions are true?",
+   "options": [
+    {
+     "text": "It is event-driven",
+     "why": "Correct."
+    },
+    {
+     "text": "You must patch the OS",
+     "why": "The platform manages it."
+    },
+    {
+     "text": "It can scale automatically, including to zero on consumption plans",
+     "why": "Correct."
+    },
+    {
+     "text": "It requires a VM per function",
+     "why": "No VMs to manage."
+    }
+   ],
+   "answer": [
+    0,
+    2
+   ],
+   "explanation": "Functions are serverless and event-driven.",
+   "objective": "2.2.1"
+  },
+  {
+   "id": "t-fn-3",
+   "type": "single",
+   "question": "Which feature adds stateful, long-running workflows to Azure Functions?",
+   "options": [
+    {
+     "text": "Durable Functions",
+     "why": "Correct."
+    },
+    {
+     "text": "Deployment slots",
+     "why": "App Service feature."
+    },
+    {
+     "text": "Availability zones",
+     "why": "Resilience."
+    },
+    {
+     "text": "Resource tags",
+     "why": "Metadata."
+    }
+   ],
+   "answer": [
+    0
+   ],
+   "explanation": "Durable Functions provide orchestrations with state.",
+   "objective": "2.2.1"
+  }
+ ]
+}

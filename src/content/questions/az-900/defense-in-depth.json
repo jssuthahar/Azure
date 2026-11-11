@@ -1,0 +1,91 @@
+{
+ "cert": "az-900",
+ "domain": 2,
+ "topic": "defense-in-depth",
+ "questions": [
+  {
+   "id": "t-dd-1",
+   "type": "single",
+   "question": "What is at the centre of the defense-in-depth model?",
+   "options": [
+    {
+     "text": "Data",
+     "why": "Correct."
+    },
+    {
+     "text": "Physical security",
+     "why": "Outermost layer."
+    },
+    {
+     "text": "Perimeter",
+     "why": "An outer layer."
+    },
+    {
+     "text": "Network",
+     "why": "A middle layer."
+    }
+   ],
+   "answer": [
+    0
+   ],
+   "explanation": "All layers protect the data.",
+   "objective": "2.4.7"
+  },
+  {
+   "id": "t-dd-2",
+   "type": "single",
+   "question": "Which layer includes DDoS protection and firewalls at the network edge?",
+   "options": [
+    {
+     "text": "Perimeter",
+     "why": "Correct."
+    },
+    {
+     "text": "Data",
+     "why": "Innermost."
+    },
+    {
+     "text": "Application",
+     "why": "App-level security."
+    },
+    {
+     "text": "Identity and access",
+     "why": "Sign-in controls."
+    }
+   ],
+   "answer": [
+    0
+   ],
+   "explanation": "The perimeter layer protects the network edge.",
+   "objective": "2.4.7"
+  },
+  {
+   "id": "t-dd-3",
+   "type": "single",
+   "question": "What is the purpose of defense in depth?",
+   "options": [
+    {
+     "text": "To slow and stop attacks with multiple layers so one failure does not expose data",
+     "why": "Correct."
+    },
+    {
+     "text": "To rely on one strong control",
+     "why": "Opposite idea."
+    },
+    {
+     "text": "To speed up applications",
+     "why": "Unrelated."
+    },
+    {
+     "text": "To reduce storage cost",
+     "why": "Unrelated."
+    }
+   ],
+   "answer": [
+    0
+   ],
+   "explanation": "Layered security limits the impact of any single breach.",
+   "objective": "2.4.7"
+  }
+ ]
+}

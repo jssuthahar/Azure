@@ -1,0 +1,107 @@
+---
+title: Blob Storage and Access Tiers
+seoTitle: Azure Blob Storage and Access Tiers | AZ-900
+description: "Azure Blob Storage and hot, cool, cold and archive tiers explained with an animation, cost trade-offs, examples and AZ-900 practice."
+answer: >-
+  **Azure Blob Storage** is object storage for massive amounts of unstructured data, such as images, videos, documents, logs and backups. **Access tiers** let you balance storage cost against access cost: **Hot** for frequently used data, **Cool** (stored at least 30 days), **Cold** (at least 90 days) and **Archive** (at least 180 days, offline, must be rehydrated before reading).
+updated: 2026-11-11
+readingMinutes: 7
+keyTerms:
+  - term: Blob
+    definition: Binary large object. Any file stored in Blob Storage.
+  - term: Container
+    definition: A folder-like grouping of blobs inside a storage account.
+  - term: Access tier
+    definition: Hot, Cool, Cold or Archive, which trades storage price against access price.
+  - term: Rehydration
+    definition: Moving an archived blob back to an online tier so it can be read, which can take hours.
+interview:
+  - level: beginner
+    q: What is Blob Storage used for?
+    a: >-
+      Storing files of any type: pictures, videos, documents, backups and logs. Apps can read and write them over HTTPS from anywhere.
+    followUps: []
+  - level: intermediate
+    q: Explain the blob access tiers.
+    a: >-
+      Hot has the highest storage cost but lowest access cost, for data used often. Cool and Cold are cheaper to store but cost more to read, with minimum storage durations of 30 and 90 days. Archive is the cheapest to store but offline. You must rehydrate it before reading, which can take hours, and it has a 180-day minimum.
+    followUps: []
+  - level: experienced
+    q: How would you automate tiering for logs?
+    a: >-
+      Use lifecycle management rules: move blobs to Cool after 30 days without access, to Archive after 180 days, and delete them after the retention period. Watch early-deletion charges and rehydration costs for archived data.
+    followUps: []
+revision:
+  keyPoints:
+    - Blob Storage = object storage for unstructured data.
+    - Hot → Cool → Cold → Archive gets cheaper to store and more expensive to access.
+    - Minimum durations are Cool 30 days, Cold 90 days, Archive 180 days.
+    - Archive is offline; rehydrate before reading.
+    - Lifecycle management moves blobs between tiers automatically.
+  mistakes:
+    - Choosing Archive for data that must be read immediately.
+  examTips:
+    - '"Cheapest storage, rarely accessed, can wait hours to read" = **Archive** tier.'
+  quick:
+    - q: What kind of data is Blob Storage for?
+      a: Unstructured data such as images, videos, documents and backups.
+    - q: Which tier has the lowest storage cost?
+      a: Archive.
+    - q: What is the minimum storage duration for the Cool tier?
+      a: 30 days.
+    - q: Can you read Archive data immediately?
+      a: No. It must be rehydrated first.
+    - q: What moves blobs between tiers automatically?
+      a: Lifecycle management rules.
+references:
+  - title: Access tiers for blob data
+    url: https://learn.microsoft.com/en-us/azure/storage/blobs/access-tiers-overview
+related:
+  - storage-accounts
+  - storage-redundancy
+---
+
+## Start with a question
+
+<Story question="Should last week’s photos and ten-year-old tax records cost the same to store?">
+
+No. You look at recent photos every day; old records almost never. **Access tiers** let you pay less for data you rarely touch.
+
+</Story>
+
+## Explain it like I'm 10
+
+<Eli10>
+
+Your **school bag** (Hot) holds things you use daily. Your **bedroom cupboard** (Cool) holds things for this term. The **attic** (Cold) holds things for next year. The **storage unit across town** (Archive) is super cheap, but it takes ages to fetch things back.
+
+</Eli10>
+
+## The technical explanation
+
+| Tier | Best for | Minimum duration | Availability |
+| --- | --- | --- | --- |
+| Hot | Frequently accessed data | None | Online |
+| Cool | Infrequently accessed | 30 days | Online |
+| Cold | Rarely accessed | 90 days | Online |
+| Archive | Long-term retention | 180 days | **Offline** (rehydrate first) |
+
+Hot, Cool and Cold can be set as the account default; Archive is set per blob. **Lifecycle management** rules move blobs automatically.
+
+## Real-world business scenario
+
+<Scenario
+  company="A video surveillance company"
+  industry="Security"
+  problem="Recordings must be kept for 2 years but are almost never viewed after the first week; storage bills were huge."
+  service="Blob Storage with lifecycle rules: Hot for 7 days, Cool until day 90, then Archive."
+  why="Each video lives in the cheapest tier that still meets access needs."
+  outcome="Storage costs dropped substantially while meeting retention rules."
+/>
+
+## When to use it and when not to
+
+<UseWhen
+  use={['Images, videos, documents, backups, logs and data lakes.']}
+  avoid={['Archive for anything needed within minutes.', 'Blobs as a shared drive for Windows users (use Azure Files).']}
+/>

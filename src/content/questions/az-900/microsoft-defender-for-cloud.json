@@ -1,0 +1,91 @@
+{
+ "cert": "az-900",
+ "domain": 2,
+ "topic": "microsoft-defender-for-cloud",
+ "questions": [
+  {
+   "id": "t-mdc-1",
+   "type": "single",
+   "question": "Which service provides a secure score and security recommendations for Azure, on-premises and AWS resources?",
+   "options": [
+    {
+     "text": "Microsoft Defender for Cloud",
+     "why": "Correct."
+    },
+    {
+     "text": "Azure Advisor only",
+     "why": "Advisor includes security recommendations from Defender, but Defender for Cloud is the security service."
+    },
+    {
+     "text": "Azure DNS",
+     "why": "Names."
+    },
+    {
+     "text": "Cost Management",
+     "why": "Spending."
+    }
+   ],
+   "answer": [
+    0
+   ],
+   "explanation": "Defender for Cloud covers hybrid and multi-cloud posture.",
+   "objective": "2.4.8"
+  },
+  {
+   "id": "t-mdc-2",
+   "type": "single",
+   "question": "How does Defender for Cloud protect on-premises servers?",
+   "options": [
+    {
+     "text": "Through Azure Arc",
+     "why": "Correct."
+    },
+    {
+     "text": "Through Azure Data Box",
+     "why": "Offline transfer."
+    },
+    {
+     "text": "Through Azure DNS",
+     "why": "Names."
+    },
+    {
+     "text": "It cannot",
+     "why": "It can, via Arc."
+    }
+   ],
+   "answer": [
+    0
+   ],
+   "explanation": "Arc onboards external servers.",
+   "objective": "2.4.8"
+  },
+  {
+   "id": "t-mdc-3",
+   "type": "single",
+   "question": "What does a higher secure score indicate?",
+   "options": [
+    {
+     "text": "A stronger security posture",
+     "why": "Correct."
+    },
+    {
+     "text": "Higher costs",
+     "why": "Unrelated."
+    },
+    {
+     "text": "More VMs",
+     "why": "Unrelated."
+    },
+    {
+     "text": "Lower availability",
+     "why": "Unrelated."
+    }
+   ],
+   "answer": [
+    0
+   ],
+   "explanation": "Secure score measures security posture.",
+   "objective": "2.4.8"
+  }
+ ]
+}

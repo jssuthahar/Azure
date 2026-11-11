@@ -1,0 +1,194 @@
+---
+import { getCollection, render } from 'astro:content';
+import Base from '../../../layouts/Base.astro';
+import LearnShell from '../../../components/LearnShell.astro';
+import LessonTools from '../../../components/LessonTools.astro';
+import LessonHero from '../../../components/LessonHero.astro';
+import ProblemSolution from '../../../components/ProblemSolution.astro';
+import { labsForTopic } from '../../../lib/sim/labs';
+import { sectionKind, SIMPLE_SECTIONS } from '../../../lib/rehype-sections.mjs';
+import Toc from '../../../components/Toc.astro';
+import KnowledgeCheck from '../../../components/KnowledgeCheck.astro';
+import InterviewBlock from '../../../components/InterviewBlock.astro';
+import QuickRevision from '../../../components/QuickRevision.astro';
+import { mdxComponents } from '../../../components/mdx';
+import { getNav, getTopicQuestions, moduleUrl, inlineMd } from '../../../lib/learn';
+import { moduleBySlug, objectiveText, SKILLS_MEASURED_AS_OF } from '../../../data/az-900/syllabus';
+import { SITE } from '../../../config';
+
+export async function getStaticPaths() {
+  const entries = await getCollection('tutorials', (e) => e.id.startsWith('az-900/'));
+  return entries.map((entry) => {
+    const [, module, topic] = entry.id.split('/');
+    return { params: { module, topic }, props: { entry } };
+  });
+}
+
+const { entry } = Astro.props;
+const { module: moduleSlug, topic: topicSlug } = Astro.params;
+const mod = moduleBySlug(moduleSlug!)!;
+const nav = await getNav();
+const me = nav.find((t) => t.key === entry.id)!;
+const published = nav.filter((t) => t.published);
+const idx = published.findIndex((t) => t.key === entry.id);
+const prev = published[idx - 1];
+const next = published[idx + 1];
+const related = entry.data.related.map((slug) => nav.find((t) => t.slug === slug && t.published)).filter(Boolean);
+
+const { Content, headings } = await render(entry);
+const questions = await getTopicQuestions(topicSlug!);
+const labs = labsForTopic(topicSlug!).slice(0, 2);
+const d = entry.data;
+
+const toc = [
+  ...headings.filter((h) => h.depth === 2).map((h) => ({ ...h, full: !SIMPLE_SECTIONS.includes(sectionKind(h.text)) })),
+  { slug: 'interview-questions', text: 'Interview preparation', full: true },
+  ...(questions.length ? [{ slug: 'knowledge-check', text: 'Test yourself', full: false }] : []),
+  { slug: 'quick-revision', text: 'Quick revision', full: true },
+];
+
+const url = new URL(Astro.url.pathname, SITE.url).href;
+const crumbs = [
+  { name: 'Home', url: '/' },
+  { name: 'AZ-900', url: '/az-900/' },
+  { name: mod.shortTitle, url: moduleUrl(mod.slug) },
+  { name: d.title, url: Astro.url.pathname },
+];
+const schema = [
+  {
+    '@type': 'TechArticle',
+    '@id': `${url}#article`,
+    headline: d.title,
+    description: d.description,
+    url,
+    inLanguage: 'en',
+    dateModified: d.updated.toISOString(),
+    author: { '@type': 'Person', name: SITE.author, url: SITE.main },
+    publisher: { '@id': `${SITE.url}/#organization` },
+    isPartOf: { '@id': `${SITE.url}/az-900/#course` },
+    about: me.objectives.map((o) => ({ '@type': 'Thing', name: objectiveText(o) })),
+    educationalLevel: 'Beginner to advanced',
+    learningResourceType: 'Tutorial',
+    teaches: d.keyTerms.map((k) => k.term),
+    citation: d.references.map((r) => r.url),
+  },
+];
+---
+<Base title={d.seoTitle} description={d.description} type="article" schema={schema} breadcrumbs={crumbs}>
+  <LearnShell nav={nav} currentKey={entry.id}>
+    <article class="mx-auto max-w-[860px]">
+      <nav aria-label="Breadcrumb" class="text-sm text-muted">
+        <ol class="flex flex-wrap items-center gap-1.5">
+          {crumbs.slice(0, -1).map((c) => <li class="flex items-center gap-1.5"><a class="hover:text-[var(--accent-deep)] hover:underline" href={c.url}>{c.name}</a><span aria-hidden="true">›</span></li>)}
+          <li aria-current="page" class="truncate text-[var(--text)]">{d.title}</li>
+        </ol>
+      </nav>
+
+      <h1 class="mt-3 text-[2.1rem] leading-tight font-semibold tracking-tight sm:text-[2.6rem]">{d.title}</h1>
+
+      <div class="mt-5 flex items-center justify-between gap-3">
+        {prev ? <a href={prev.url} class="nav-btn" rel="prev">❮ Previous</a> : <a href="/az-900/" class="nav-btn">❮ Home</a>}
+        {next ? <a href={next.url} class="nav-btn" rel="next">Next ❯</a> : <a href="/az-900/mock-exam/" class="nav-btn">Mock exam ❯</a>}
+      </div>
+
+      <LessonTools />
+
+      <LessonHero topic={topicSlug!} />
+
+      <ProblemSolution topic={topicSlug!} />
+
+      {labs.length > 0 && (
+        <div class="mt-5 flex flex-wrap items-center gap-4 rounded-2xl border-2 border-[#0078d4] bg-[var(--pastel-blue)] p-4">
+          <span class="text-4xl" aria-hidden="true">🧪</span>
+          <span class="min-w-0 flex-1">
+            <span class="block font-semibold">Try it yourself in the Azure simulator</span>
+            <span class="block text-sm text-muted">No Azure account needed. {labs.map((l) => l.title).join(' · ')}</span>
+          </span>
+          {labs.map((l) => <a href={`/az-900/labs/${l.id}/`} class="nav-btn">{l.icon} Try it ❯</a>)}
+        </div>
+      )}
+
+      <div class="mt-6 flex flex-wrap gap-2 text-xs">
+        <span class="chip">Module {mod.domain}: {mod.shortTitle}</span>
+        <span class="chip chip-muted">⏱ {d.readingMinutes} min read</span>
+        <span class="chip chip-muted">Updated {d.updated.toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })}</span>
+        {me.beyondExam && <span class="chip">Beyond the exam: real-world knowledge</span>}
+      </div>
+
+      <div class="answer-box mt-5" data-speakable>
+        <p class="flex items-center gap-3 text-sm font-bold text-accent">Quick answer <button type="button" class="speak-btn" aria-label="Listen to the quick answer">🔊 Listen</button></p>
+        <p class="mt-1 text-[1.05rem] leading-relaxed" set:html={inlineMd(d.answer)} />
+      </div>
+      {me.objectives.length > 0 && (
+        <p class="mt-3 text-sm text-muted">
+          <span class="font-semibold text-[var(--text)]">Exam objective:</span>
+          {me.objectives.map((o) => ` ${o} ${objectiveText(o)}.`)} <span class="text-xs">(Skills measured as of {SKILLS_MEASURED_AS_OF})</span>
+        </p>
+      )}
+
+      <div class="lesson mt-4">
+        <Content components={mdxComponents} />
+
+        <div class="simple-only !mt-8 flex flex-wrap items-center gap-4 rounded-lg bg-[var(--pastel-blue)] p-5">
+          <span class="text-4xl" aria-hidden="true">🎓</span>
+          <span class="min-w-0 flex-1"><span class="block font-semibold">Ready for more?</span><span class="block text-sm text-muted">The full lesson adds the technical explanation, when to use it, interview questions and revision notes.</span></span>
+          <button type="button" class="nav-btn" data-go-full="the-technical-explanation">Show full lesson ❯</button>
+        </div>
+
+        <div class="full-only"><InterviewBlock items={d.interview} /></div>
+
+        {questions.length > 0 && <KnowledgeCheck questions={questions} topicKey={entry.id} />}
+
+        <div class="full-only">
+          <QuickRevision revision={d.revision} keyTerms={d.keyTerms} />
+          <section aria-labelledby="references">
+            <h2 id="references">Official references</h2>
+            <ul>{d.references.map((r) => <li><a href={r.url} rel="noopener">{r.title}</a></li>)}</ul>
+          </section>
+        </div>
+      </div>
+
+      <a href="/az-900/games/" class="mt-10 flex items-center gap-4 rounded-lg bg-[var(--pastel-lilac)] p-4 hover:ring-2 hover:ring-[var(--accent)]">
+        <span class="text-4xl" aria-hidden="true">🎮</span>
+        <span class="min-w-0 flex-1"><span class="block font-semibold">Make it stick: play a quick game</span><span class="block text-sm text-muted">Sort It, Match the Pairs, Lightning Round and Who Am I? Earn XP and badges.</span></span>
+        <span class="nav-btn shrink-0">Play ❯</span>
+      </a>
+
+      <div class="mt-4 flex flex-wrap items-center gap-3 rounded-lg bg-[var(--pastel-green)] p-4">
+        <button id="mark-done" type="button" class="btn btn-primary btn-sm" data-key={entry.id}>Mark topic as complete</button>
+        <p class="text-sm">Finished this lesson? Tick it off. Your progress is saved in this browser.</p>
+      </div>
+
+      <div class="mt-6 flex items-center justify-between gap-3 border-t border-default pt-6">
+        {prev ? <a href={prev.url} class="nav-btn" rel="prev">❮ Previous</a> : <a href="/az-900/" class="nav-btn">❮ Home</a>}
+        {next ? <a href={next.url} class="nav-btn" rel="next">Next ❯</a> : <a href="/az-900/mock-exam/" class="nav-btn">Mock exam ❯</a>}
+      </div>
+      {next && <p class="mt-2 text-right text-sm text-muted">Next up: <a class="text-accent hover:underline" href={next.url}>{next.title}</a></p>}
+    </article>
+
+    <div slot="aside" class="space-y-6">
+      <Toc items={toc} />
+      {related.length > 0 && (
+        <div>
+          <p class="mb-2 text-xs font-bold tracking-[0.14em] uppercase text-muted">Related lessons</p>
+          <ul class="space-y-1 text-sm">{related.map((r) => <li><a class="text-accent hover:underline" href={r!.url}>{r!.title}</a></li>)}</ul>
+        </div>
+      )}
+    </div>
+  </LearnShell>
+</Base>
+<script>
+  import { load, setDone } from '../../../lib/progress';
+  const btn = document.getElementById('mark-done') as HTMLButtonElement | null;
+  if (btn) {
+    const key = btn.dataset.key!;
+    const paint = () => {
+      const done = Boolean(load().done[key]);
+      btn.textContent = done ? '✓ Completed (click to undo)' : 'Mark topic as complete';
+      btn.setAttribute('aria-pressed', String(done));
+    };
+    btn.addEventListener('click', () => setDone(key, !load().done[key]));
+    window.addEventListener('progress-change', paint);
+    paint();
+  }
+</script>

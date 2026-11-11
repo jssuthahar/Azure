@@ -1,0 +1,65 @@
+---
+import Base from '../../../layouts/Base.astro';
+import LearnShell from '../../../components/LearnShell.astro';
+import { MODULES, type SyllabusModule } from '../../../data/az-900/syllabus';
+import { getNav, getTutorial } from '../../../lib/learn';
+
+export function getStaticPaths() {
+  return MODULES.map((m) => ({ params: { module: m.slug }, props: { mod: m } }));
+}
+const { mod } = Astro.props as { mod: SyllabusModule };
+const nav = await getNav();
+const topics = nav.filter((t) => t.module.slug === mod.slug);
+const published = topics.filter((t) => t.published);
+const answers = Object.fromEntries(
+  await Promise.all(published.map(async (t) => [t.key, (await getTutorial(t.key))?.data.description ?? ''])),
+);
+const title = `AZ-900 ${mod.shortTitle}: Domain ${mod.domain} Tutorials`;
+const description = `AZ-900 domain ${mod.domain} (${mod.weight} of the exam): ${mod.summary}`.slice(0, 160);
+const crumbs = [
+  { name: 'Home', url: '/' },
+  { name: 'AZ-900', url: '/az-900/' },
+  { name: mod.shortTitle, url: Astro.url.pathname },
+];
+---
+<Base title={title} description={description} breadcrumbs={crumbs}>
+  <LearnShell nav={nav}>
+    <div class="mx-auto max-w-[860px]">
+      <nav aria-label="Breadcrumb" class="text-sm text-muted"><a class="hover:underline" href="/">Home</a> › <a class="hover:underline" href="/az-900/">AZ-900</a> › <span class="text-[var(--text)]">{mod.shortTitle}</span></nav>
+      <h1 class="mt-3 text-[2.1rem] leading-tight font-semibold tracking-tight sm:text-[2.6rem]">{mod.shortTitle}</h1>
+      <p class="mt-1 text-lg text-muted">Domain {mod.domain} · {mod.weight} of the AZ-900 exam</p>
+      <div class="answer-box mt-5"><p class="text-[1.05rem] leading-relaxed">{mod.summary}</p></div>
+      {published.length > 0 && (
+        <div class="mt-5 flex flex-wrap items-center gap-3">
+          <a href={published[0].url} class="big-btn">Start the first lesson ❯</a>
+          <span class="text-sm text-muted">{published.length} of {topics.length} lessons ready</span>
+        </div>
+      )}
+      {published.length === 0 && (
+        <div class="callout callout-note mt-6">
+          <p class="callout-title">Lessons coming soon</p>
+          <p>The lessons for this domain are being written. You can already practise this domain in the <a class="underline" href="/az-900/mock-exam/">mock exam</a> ("Practise one domain"), and the <a class="underline" href="/az-900/#syllabus">syllabus</a> lists every objective you need to know.</p>
+        </div>
+      )}
+      <h2 class="mt-10 text-2xl font-semibold">Lessons in this module</h2>
+      <ol class="mt-4 divide-y divide-[var(--border)] overflow-hidden rounded-lg border border-default bg-[var(--card)]">
+        {topics.map((t, i) =>
+          t.published ? (
+            <li><a href={t.url} class="flex gap-4 px-4 py-3.5 hover:bg-[var(--pastel-blue)]" data-topic-key={t.key}>
+              <span class="grid size-8 shrink-0 place-items-center rounded-full bg-[#0078d4] text-sm font-semibold text-white">{i + 1}</span>
+              <span class="min-w-0">
+                <span class="block font-semibold text-accent">{t.title}{t.beyondExam ? ' · beyond the exam' : ''}</span>
+                <span class="mt-0.5 block text-sm leading-relaxed text-muted">{answers[t.key]}</span>
+              </span>
+            </a></li>
+          ) : (
+            <li class="flex gap-4 px-4 py-3.5 text-muted">
+              <span class="grid size-8 shrink-0 place-items-center rounded-full border border-default text-sm">{i + 1}</span>
+              <span><span class="block font-semibold">{t.title}</span><span class="text-xs tracking-wide uppercase">coming soon</span></span>
+            </li>
+          ),
+        )}
+      </ol>
+    </div>
+  </LearnShell>
+</Base>

@@ -1,0 +1,91 @@
+{
+ "cert": "az-900",
+ "domain": 3,
+ "topic": "azure-advisor",
+ "questions": [
+  {
+   "id": "t-adv-1",
+   "type": "single",
+   "question": "Which service gives personalised recommendations to reduce cost and improve reliability of deployed resources?",
+   "options": [
+    {
+     "text": "Azure Advisor",
+     "why": "Correct."
+    },
+    {
+     "text": "Azure Service Health",
+     "why": "Platform issues."
+    },
+    {
+     "text": "Pricing calculator",
+     "why": "Pre-deployment estimates."
+    },
+    {
+     "text": "Azure Arc",
+     "why": "Hybrid management."
+    }
+   ],
+   "answer": [
+    0
+   ],
+   "explanation": "Advisor analyses deployed resources.",
+   "objective": "3.4.1"
+  },
+  {
+   "id": "t-adv-2",
+   "type": "single",
+   "question": "Which is NOT an Azure Advisor recommendation category?",
+   "options": [
+    {
+     "text": "Marketing",
+     "why": "Correct. Not a category."
+    },
+    {
+     "text": "Cost",
+     "why": "A category."
+    },
+    {
+     "text": "Security",
+     "why": "A category."
+    },
+    {
+     "text": "Reliability",
+     "why": "A category."
+    }
+   ],
+   "answer": [
+    0
+   ],
+   "explanation": "Categories are Reliability, Security, Performance, Operational Excellence, Cost.",
+   "objective": "3.4.1"
+  },
+  {
+   "id": "t-adv-3",
+   "type": "single",
+   "question": "Advisor suggests resizing an underused VM. Which category is this?",
+   "options": [
+    {
+     "text": "Cost",
+     "why": "Correct."
+    },
+    {
+     "text": "Security",
+     "why": "No."
+    },
+    {
+     "text": "Reliability",
+     "why": "No."
+    },
+    {
+     "text": "Governance",
+     "why": "Not an Advisor category."
+    }
+   ],
+   "answer": [
+    0
+   ],
+   "explanation": "Right-sizing saves money.",
+   "objective": "3.4.1"
+  }
+ ]
+}

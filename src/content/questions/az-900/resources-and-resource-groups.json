@@ -1,0 +1,93 @@
+{
+ "cert": "az-900",
+ "domain": 2,
+ "topic": "resources-and-resource-groups",
+ "questions": [
+  {
+   "id": "t-rg-1",
+   "type": "single",
+   "question": "Can an Azure resource belong to more than one resource group at the same time?",
+   "options": [
+    {
+     "text": "Yes, up to five",
+     "why": "A resource is in exactly one group."
+    },
+    {
+     "text": "No, exactly one",
+     "why": "Correct."
+    },
+    {
+     "text": "Only if they are in the same region",
+     "why": "Region does not matter; still only one group."
+    },
+    {
+     "text": "Only virtual machines can",
+     "why": "No resource can."
+    }
+   ],
+   "answer": [
+    1
+   ],
+   "explanation": "Each resource belongs to exactly one resource group (it can be moved).",
+   "objective": "2.1.4"
+  },
+  {
+   "id": "t-rg-2",
+   "type": "multi",
+   "question": "Which TWO statements about resource groups are true?",
+   "options": [
+    {
+     "text": "Deleting a resource group deletes all resources in it",
+     "why": "Correct."
+    },
+    {
+     "text": "Resource groups can be nested inside other resource groups",
+     "why": "They cannot be nested."
+    },
+    {
+     "text": "Resources can be in a different region from their resource group",
+     "why": "Correct."
+    },
+    {
+     "text": "Each resource group can only hold one resource",
+     "why": "Groups hold many resources."
+    }
+   ],
+   "answer": [
+    0,
+    2
+   ],
+   "explanation": "Groups delete their contents and can hold resources from many regions; nesting is not allowed.",
+   "objective": "2.1.4"
+  },
+  {
+   "id": "t-rg-3",
+   "type": "single",
+   "question": "How should you organise resources into resource groups?",
+   "options": [
+    {
+     "text": "By shared lifecycle, such as one app in one environment",
+     "why": "Correct."
+    },
+    {
+     "text": "Alphabetically by resource name",
+     "why": "Names are not a good grouping criterion."
+    },
+    {
+     "text": "Always one resource per group",
+     "why": "This makes management harder."
+    },
+    {
+     "text": "All company resources in one group",
+     "why": "This makes access and clean-up risky."
+    }
+   ],
+   "answer": [
+    0
+   ],
+   "explanation": "Group resources that are deployed, managed and deleted together.",
+   "objective": "2.1.4",
+   "scenario": "Your team runs a shop app in production and test environments."
+  }
+ ]
+}

@@ -1,0 +1,239 @@
+---
+/**
+ * Azure practice simulator: guided tasks on the left, a simulated portal and
+ * Cloud Shell on the right, sharing one simulated Azure. Practice only.
+ */
+import type { Lab } from '../lib/sim/labs';
+import { inlineMd } from '../lib/learn';
+interface Props { lab: Lab }
+const { lab } = Astro.props;
+---
+<div class="sim-root grid gap-5 lg:grid-cols-[22rem_minmax(0,1fr)]" data-lab={lab.id} data-start={lab.start}>
+  <!-- Tasks -->
+  <aside class="space-y-4">
+    {lab.tasks.length > 0 ? (
+      <div class="rounded-xl border border-default bg-[var(--card)]">
+        <div class="flex items-center justify-between border-b border-default px-4 py-3">
+          <p class="font-semibold">Your tasks</p>
+          <p class="text-sm"><strong class="sim-done">0</strong>/{lab.tasks.length}</p>
+        </div>
+        <div class="bar mx-4 mt-3"><span class="sim-bar" style="width:0"></span></div>
+        <ol class="space-y-2 p-4">
+          {lab.tasks.map((t, i) => (
+            <li class="sim-task rounded-lg border border-default p-3" data-i={i}>
+              <p class="flex gap-2.5 text-[0.95rem] leading-snug"><span class="sim-check grid size-6 shrink-0 place-items-center rounded-full border-2 border-default text-xs font-bold">{i + 1}</span><span set:html={inlineMd(t.text)} /></p>
+              <details class="fold mt-2 pl-8 text-sm">
+                <summary class="cursor-pointer text-accent">💡 Show me how</summary>
+                {t.portal && <p class="mt-1.5"><strong>Portal:</strong> {t.portal}</p>}
+                {t.cli && (
+                  <div class="mt-1.5">
+                    <p><strong>Cloud Shell:</strong></p>
+                    <code class="mt-1 block overflow-x-auto rounded bg-[#0b1020] px-2 py-1.5 text-xs text-[#9fe870]">{t.cli}</code>
+                    <button type="button" class="sim-try mt-1.5 rounded-full bg-[#0078d4] px-3 py-1 text-xs font-bold text-white" data-cmd={t.cli}>▶ Try it in Cloud Shell</button>
+                  </div>
+                )}
+              </details>
+            </li>
+          ))}
+        </ol>
+      </div>
+    ) : (
+      <div class="rounded-xl bg-[var(--pastel-yellow)] p-4 text-sm leading-relaxed">
+        <p class="font-semibold">🎛️ Ideas to try</p>
+        <ul class="mt-2 list-disc space-y-1 pl-5">
+          <li>Create a VM, then try “Shut down inside OS” vs Stop and compare costs.</li>
+          <li>Try a storage account called <code>test</code>. Why does it fail?</li>
+          <li>Add a ReadOnly lock and try to create a VM in that group.</li>
+          <li>In Cloud Shell type <code>az --help</code> or <code>az vm --help</code>.</li>
+        </ul>
+      </div>
+    )}
+    <div class="sim-win hidden rounded-xl bg-[var(--pastel-green)] p-4 text-center">
+      <p class="text-5xl">🏆</p>
+      <p class="mt-2 text-xl font-bold">Lab complete!</p>
+      <p class="mt-2 text-sm leading-relaxed">{lab.wrap}</p>
+      <a href="/az-900/labs/" class="nav-btn mt-4">More labs ❯</a>
+    </div>
+    <p class="rounded-lg border border-dashed border-default p-3 text-xs leading-relaxed text-muted">🧪 This is a <strong>simulation</strong> built for learning. No Azure account is needed and nothing touches real Azure. Prices shown are illustrative. Screens are simplified versions of the real portal.</p>
+  </aside>
+
+  <!-- Simulator -->
+  <section class="min-w-0">
+    <div class="flex flex-wrap items-center gap-2">
+      <div class="inline-flex rounded-full border border-default bg-[var(--pastel-grey)] p-1 text-sm font-semibold" role="tablist" aria-label="Simulator view">
+        <button type="button" role="tab" data-tab="portal" class="rounded-full px-4 py-1.5">🖥️ Portal</button>
+        <button type="button" role="tab" data-tab="shell" class="rounded-full px-4 py-1.5">⌨️ Cloud Shell</button>
+      </div>
+      <span class="sim-cost chip ml-auto">💰 $0.00/mo</span>
+      <button type="button" class="sim-reset rounded-full border border-default px-3 py-1.5 text-sm hover:bg-[var(--pastel-grey)]">↺ Reset</button>
+    </div>
+
+    <div class="sim-portal relative mt-3 overflow-hidden rounded-xl border border-default bg-[var(--bg)]" data-panel="portal"></div>
+
+    <div class="sim-shell mt-3 hidden overflow-hidden rounded-xl border border-[#243a5e] bg-[#0b1020] text-[#e6edf3]" data-panel="shell">
+      <div class="flex items-center gap-2 bg-[#243a5e] px-3 py-1.5 text-xs"><span class="font-semibold">Bash</span><span class="rounded bg-white/15 px-1.5 font-bold">PRACTICE</span><span class="text-white/70">Azure Cloud Shell (simulated)</span></div>
+      <div class="sim-out h-[26rem] overflow-y-auto p-3 font-mono text-[0.8rem] leading-relaxed whitespace-pre-wrap" aria-live="polite"></div>
+      <form class="sim-form flex items-center gap-2 border-t border-white/10 px-3 py-2 font-mono text-[0.85rem]">
+        <span class="sim-prompt shrink-0 text-[#9fe870]">learner@Azure:~$</span>
+        <label class="sr-only" for={`sim-in-${lab.id}`}>Command</label>
+        <input id={`sim-in-${lab.id}`} class="sim-in min-w-0 flex-1 bg-transparent text-white outline-none" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="type an az command, e.g. az --help" />
+        <button class="rounded bg-[#0078d4] px-3 py-1 text-xs font-bold text-white">Run ↵</button>
+      </form>
+    </div>
+  </section>
+</div>
+
+<style is:global>
+  .sim-root [role='tab'][aria-selected='true'] { background: #0078d4; color: #fff; }
+  .sim-task[data-done] { border-color: var(--ok); background: var(--pastel-green); }
+  .sim-task[data-done] .sim-check { border-color: var(--ok); background: var(--ok); color: #fff; }
+  .sim-task[data-current] { border-color: #0078d4; box-shadow: 0 0 0 2px var(--accent-soft); }
+  .sim-out .err { color: #ff8b94; }
+  .sim-out .cmd { color: #9fe870; }
+  .sim-out .info { color: #8fcbf7; }
+</style>
+
+<script>
+  import { Sim, SUB_NAME } from '../lib/sim/engine';
+  import { runCli, COMPLETIONS, type CliResult } from '../lib/sim/cli';
+  import { Portal } from '../lib/sim/portal';
+  import { ALL_LABS } from '../lib/sim/labs';
+  import { saveLab } from '../lib/progress';
+  import { confetti } from '../lib/fun';
+
+  document.querySelectorAll<HTMLElement>('.sim-root').forEach((root) => {
+    const lab = ALL_LABS.find((l) => l.id === root.dataset.lab)!;
+    let sim = new Sim();
+    let portal: Portal;
+    let portalEl = root.querySelector<HTMLElement>('.sim-portal')!;
+    const out = root.querySelector<HTMLElement>('.sim-out')!;
+    const input = root.querySelector<HTMLInputElement>('.sim-in')!;
+    const prompt = root.querySelector<HTMLElement>('.sim-prompt')!;
+    const history: string[] = [];
+    let hIdx = 0;
+    let pending: CliResult['confirm'] | null = null;
+    let finished = false;
+
+    const print = (text: string, cls = '') => {
+      const d = document.createElement('div');
+      if (cls) d.className = cls;
+      d.textContent = text;
+      out.append(d);
+      out.scrollTop = out.scrollHeight;
+    };
+    const banner = () => {
+      out.innerHTML = '';
+      print('Welcome to Azure Cloud Shell (practice simulator) 🎓', 'info');
+      print(`Subscription: ${SUB_NAME}`, 'info');
+      print("Type 'help' or 'az --help' to see what you can do. Use ↑/↓ for history and Tab to complete.\n", 'info');
+    };
+
+    const tabs = [...root.querySelectorAll<HTMLButtonElement>('[data-tab]')];
+    const show = (t: string) => {
+      tabs.forEach((b) => b.setAttribute('aria-selected', String(b.dataset.tab === t)));
+      root.querySelectorAll<HTMLElement>('[data-panel]').forEach((p) => p.classList.toggle('hidden', p.dataset.panel !== t));
+      if (t === 'shell') setTimeout(() => input.focus(), 50);
+      if (t === 'portal') portal.render();
+    };
+    tabs.forEach((b) => b.addEventListener('click', () => show(b.dataset.tab!)));
+
+    const tasks = [...root.querySelectorAll<HTMLElement>('.sim-task')];
+    const doneSet = new Set<number>();
+    const check = () => {
+      root.querySelector('.sim-cost')!.textContent = `💰 $${(sim.totalHourly() * 730).toFixed(2)}/mo`;
+      lab.tasks.forEach((t, i) => {
+        if (!doneSet.has(i) && t.check(sim)) {
+          doneSet.add(i);
+          tasks[i].setAttribute('data-done', '');
+          tasks[i].querySelector('.sim-check')!.textContent = '✓';
+        }
+      });
+      const next = lab.tasks.findIndex((_, i) => !doneSet.has(i));
+      tasks.forEach((t, i) => t.toggleAttribute('data-current', i === next));
+      const n = doneSet.size;
+      const doneEl = root.querySelector('.sim-done');
+      if (doneEl) doneEl.textContent = String(n);
+      const bar = root.querySelector<HTMLElement>('.sim-bar');
+      if (bar) bar.style.width = `${(n / Math.max(1, lab.tasks.length)) * 100}%`;
+      if (lab.tasks.length && n === lab.tasks.length && !finished) {
+        finished = true;
+        root.querySelector('.sim-win')!.classList.remove('hidden');
+        saveLab(lab.id);
+        confetti(200);
+      }
+    };
+
+    const boot = () => {
+      sim = new Sim();
+      // Fresh element so the previous portal's event listeners are dropped.
+      const fresh = portalEl.cloneNode(false) as HTMLElement;
+      portalEl.replaceWith(fresh);
+      portalEl = fresh;
+      portal = new Portal(portalEl, sim);
+      sim.onChange(check);
+      banner();
+      doneSet.clear();
+      finished = false;
+      tasks.forEach((t, i) => { t.removeAttribute('data-done'); t.querySelector('.sim-check')!.textContent = String(i + 1); });
+      root.querySelector('.sim-win')?.classList.add('hidden');
+      check();
+    };
+
+    root.querySelector<HTMLFormElement>('.sim-form')!.addEventListener('submit', (e) => {
+      e.preventDefault();
+      const line = input.value;
+      input.value = '';
+      if (pending) {
+        print(`${pending.question}${line}`);
+        const c = pending;
+        pending = null;
+        prompt.textContent = 'learner@Azure:~$';
+        if (/^y(es)?$/i.test(line.trim())) handle(c.then());
+        else print('Operation cancelled.', 'info');
+        return;
+      }
+      print(`learner@Azure:~$ ${line}`, 'cmd');
+      if (line.trim()) { history.push(line); hIdx = history.length; }
+      if (line.trim() === 'history') return print(history.map((h, i) => `${i + 1}  ${h}`).join('\n'));
+      try {
+        handle(runCli(line, sim));
+      } catch (err) {
+        print(`ERROR: ${(err as Error).message}`, 'err');
+      }
+    });
+    const handle = (r: CliResult) => {
+      if (r.clear) { out.innerHTML = ''; return; }
+      if (r.confirm) { pending = r.confirm; prompt.textContent = r.confirm.question; return; }
+      if (r.error) print(`ERROR: ${r.error}`, 'err');
+      if (r.out) print(r.out);
+      if (r.open) { portal.openResource(r.open); print('(Opened in the Portal tab.)', 'info'); }
+    };
+    input.addEventListener('keydown', (e) => {
+      if (e.key === 'ArrowUp') { e.preventDefault(); if (hIdx > 0) input.value = history[--hIdx]; }
+      else if (e.key === 'ArrowDown') { e.preventDefault(); hIdx = Math.min(history.length, hIdx + 1); input.value = history[hIdx] ?? ''; }
+      else if (e.key === 'Tab') {
+        e.preventDefault();
+        const v = input.value.trimStart();
+        const hits = COMPLETIONS.filter((c) => c.startsWith(v));
+        if (hits.length === 1) input.value = hits[0] + ' ';
+        else if (hits.length > 1) {
+          let pre = hits[0];
+          for (const h of hits) while (!h.startsWith(pre)) pre = pre.slice(0, -1);
+          if (pre.length > v.length) input.value = pre; else print(hits.join('    '), 'info');
+        }
+      }
+    });
+    root.querySelectorAll<HTMLButtonElement>('.sim-try').forEach((b) =>
+      b.addEventListener('click', () => {
+        show('shell');
+        input.value = b.dataset.cmd!;
+        input.focus();
+        input.setSelectionRange(input.value.length, input.value.length);
+      }),
+    );
+    root.querySelector('.sim-reset')!.addEventListener('click', () => { if (confirm('Reset the practice world? Everything you created will be removed.')) boot(); });
+
+    boot();
+    show(root.dataset.start === 'shell' ? 'shell' : 'portal');
+  });
+</script>

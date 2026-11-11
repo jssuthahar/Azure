@@ -1,0 +1,60 @@
+---
+/**
+ * Animated "who manages what" stack. Cycles On-premises → IaaS → PaaS → SaaS,
+ * colouring each layer You (purple) or Microsoft (blue). Tabs let learners pick.
+ */
+interface Props { focus?: 'onprem' | 'iaas' | 'paas' | 'saas' }
+const { focus = 'onprem' } = Astro.props;
+const layers = ['Your data', 'Application', 'Runtime', 'Operating system', 'Virtualisation', 'Servers and storage', 'Networking', 'Datacenter'];
+const models = [
+  { id: 'onprem', label: '🏠 On-premises', you: 8, say: 'On-premises: you do everything yourself.' },
+  { id: 'iaas', label: '🧱 IaaS', you: 4, say: 'IaaS: Microsoft runs the hardware. You manage the operating system and up.' },
+  { id: 'paas', label: '🧰 PaaS', you: 2, say: 'PaaS: Microsoft runs the platform too. You bring your app and data.' },
+  { id: 'saas', label: '📦 SaaS', you: 1, say: 'SaaS: Microsoft runs the whole app. You look after your data and users.' },
+];
+---
+<div class="stack-scene p-4 sm:p-5" data-focus={focus}>
+  <div class="flex flex-wrap gap-2" role="tablist" aria-label="Cloud service type">
+    {models.map((m) => <button type="button" role="tab" data-model={m.id} data-you={m.you} data-say={m.say} class="rounded-full border border-default bg-[var(--card)] px-3 py-1.5 text-sm font-semibold">{m.label}</button>)}
+    <button type="button" class="stack-auto ml-auto rounded-full px-3 py-1.5 text-sm text-muted" aria-pressed="true">⏸ Auto</button>
+  </div>
+  <div class="mt-4 grid gap-1.5" aria-live="polite">
+    {layers.map((l, i) => (
+      <div class="stack-layer flex items-center justify-between rounded-lg px-3 py-2 text-sm font-semibold text-white" data-i={i}>
+        <span>{l}</span><span class="stack-who text-xs opacity-90"></span>
+      </div>
+    ))}
+  </div>
+  <p class="stack-say mt-3 text-center text-[1.02rem] font-semibold"></p>
+  <div class="mt-2 flex justify-center gap-4 text-xs"><span><span class="mr-1 inline-block size-3 rounded-sm bg-[#8764b8] align-middle"></span>You manage</span><span><span class="mr-1 inline-block size-3 rounded-sm bg-[#0078d4] align-middle"></span>Microsoft manages</span></div>
+</div>
+<style>
+  .stack-layer { transition: background-color 0.5s ease, transform 0.5s ease; background: #0078d4; }
+  .stack-layer[data-you] { background: #8764b8; transform: translateX(6px); }
+  [role='tab'][aria-selected='true'] { background: #0078d4; color: #fff; border-color: #0078d4; }
+</style>
+<script>
+  document.querySelectorAll<HTMLElement>('.stack-scene').forEach((root) => {
+    const tabs = [...root.querySelectorAll<HTMLButtonElement>('[data-model]')];
+    const layers = [...root.querySelectorAll<HTMLElement>('.stack-layer')];
+    const auto = root.querySelector<HTMLButtonElement>('.stack-auto')!;
+    let idx = Math.max(0, tabs.findIndex((t) => t.dataset.model === root.dataset.focus));
+    let timer = 0;
+    const show = (i: number) => {
+      idx = i;
+      const you = Number(tabs[i].dataset.you);
+      tabs.forEach((t, k) => t.setAttribute('aria-selected', String(k === i)));
+      layers.forEach((l, k) => {
+        l.toggleAttribute('data-you', k < you);
+        l.querySelector('.stack-who')!.textContent = k < you ? 'You' : 'Microsoft';
+      });
+      root.querySelector('.stack-say')!.textContent = tabs[i].dataset.say!;
+    };
+    const start = () => { clearInterval(timer); timer = window.setInterval(() => show((idx + 1) % tabs.length), 3200); auto.textContent = '⏸ Auto'; auto.setAttribute('aria-pressed', 'true'); };
+    const stopAuto = () => { clearInterval(timer); timer = 0; auto.textContent = '▶ Auto'; auto.setAttribute('aria-pressed', 'false'); };
+    tabs.forEach((t, k) => t.addEventListener('click', () => { stopAuto(); show(k); }));
+    auto.addEventListener('click', () => (timer ? stopAuto() : start()));
+    show(idx);
+    if (!matchMedia('(prefers-reduced-motion: reduce)').matches) start();
+  });
+</script>

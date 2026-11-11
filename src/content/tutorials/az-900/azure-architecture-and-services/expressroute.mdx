@@ -1,0 +1,105 @@
+---
+title: Azure ExpressRoute
+seoTitle: Azure ExpressRoute Explained Simply | AZ-900
+description: "Azure ExpressRoute explained: private connections that skip the internet, benefits, VPN comparison, interview questions and AZ-900 practice."
+answer: >-
+  **Azure ExpressRoute** extends your on-premises network into the Microsoft cloud over a **private, dedicated connection** provided by a connectivity partner. Traffic **does not travel over the public internet**, giving more reliability, faster speeds, consistent latency and higher security than typical internet connections.
+updated: 2026-11-11
+readingMinutes: 6
+keyTerms:
+  - term: ExpressRoute circuit
+    definition: The logical private connection between your network and Microsoft through a provider.
+  - term: Connectivity provider
+    definition: A telecom or exchange partner that provides the physical connection.
+  - term: ExpressRoute Global Reach
+    definition: Connects your on-premises sites to each other through the Microsoft network.
+interview:
+  - level: beginner
+    q: What is ExpressRoute?
+    a: >-
+      A private, dedicated connection between my company's network and Microsoft's cloud, provided by a telecom partner. It does not use the public internet.
+    followUps: []
+  - level: intermediate
+    q: What are the benefits of ExpressRoute over a VPN?
+    a: >-
+      Traffic stays off the internet, latency is consistent, bandwidth is higher, and reliability is backed by an SLA with redundant connections. It can also connect to Microsoft services such as Microsoft 365 as well as Azure.
+    followUps: []
+  - level: experienced
+    q: How would you design resilient hybrid connectivity with ExpressRoute?
+    a: >-
+      Use circuits in two different peering locations, connect them to zone-redundant gateways, and keep a site-to-site VPN as a failover path. For multi-region estates, consider ExpressRoute Global Reach or Virtual WAN for site-to-site transit.
+    followUps: []
+revision:
+  keyPoints:
+    - ExpressRoute = private, dedicated connection to Microsoft cloud.
+    - Does not use the public internet.
+    - More reliable, faster, consistent latency, higher security.
+    - Provided through connectivity partners.
+  mistakes:
+    - Saying ExpressRoute is encrypted VPN over the internet. That describes VPN Gateway.
+  examTips:
+    - '"Private connection that does not go over the internet" = **ExpressRoute**.'
+  quick:
+    - q: Does ExpressRoute use the public internet?
+      a: No.
+    - q: Who provides the physical connection?
+      a: A connectivity provider (partner).
+    - q: Name two benefits of ExpressRoute.
+      a: Consistent latency and higher reliability (also speed and security).
+    - q: Which feature connects on-premises sites to each other via Microsoft?
+      a: ExpressRoute Global Reach.
+    - q: What is a common backup for ExpressRoute?
+      a: A site-to-site VPN.
+references:
+  - title: What is Azure ExpressRoute?
+    url: https://learn.microsoft.com/en-us/azure/expressroute/expressroute-introduction
+related:
+  - vpn-gateway
+  - hybrid-cloud
+---
+
+## Start with a question
+
+<Story question="A bank moves 10 TB a night between its datacenter and Azure. Should that ride on the public internet?">
+
+Probably not. It needs a **private highway**: ExpressRoute.
+
+</Story>
+
+## Explain it like I'm 10
+
+<Eli10>
+
+VPN is driving on the **public motorway** in a locked car. ExpressRoute is having your **own private road** straight to Microsoft's door: no traffic jams, no strangers.
+
+</Eli10>
+
+## The technical explanation
+
+ExpressRoute connects your network to Microsoft through a **connectivity provider** using models such as co-location at a cloud exchange, point-to-point Ethernet, any-to-any (IP VPN) networks, or **ExpressRoute Direct** straight into Microsoft's network.
+
+<Compare
+  caption="VPN Gateway vs ExpressRoute"
+  columns={[
+    { title: 'VPN Gateway', icon: '🔐', tone: 'neutral', items: ['Over the public internet', 'Encrypted tunnel', 'Quick and cheap to set up', 'Variable latency'] },
+    { title: 'ExpressRoute', icon: '🛣️', tone: 'accent', items: ['Private connection, no internet', 'Through a connectivity partner', 'Higher bandwidth', 'Consistent latency, SLA-backed'] },
+  ]}
+/>
+
+## Real-world business scenario
+
+<Scenario
+  company="A national bank"
+  industry="Banking"
+  problem="Nightly data transfers to Azure over VPN were slow and unpredictable, and regulators preferred traffic to avoid the public internet."
+  service="Redundant ExpressRoute circuits from two locations, with a VPN as backup."
+  why="Private, consistent, high-bandwidth connectivity."
+  outcome="Nightly jobs finish reliably within their window."
+/>
+
+## When to use it and when not to
+
+<UseWhen
+  use={['Large, steady data transfers.', 'Latency-sensitive hybrid apps.', 'Compliance that prefers no internet path.']}
+  avoid={['Small offices or temporary needs where VPN is cheaper and faster to set up.']}
+/>

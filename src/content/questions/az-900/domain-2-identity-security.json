@@ -1,0 +1,207 @@
+{
+  "cert": "az-900",
+  "domain": 2,
+  "questions": [
+    {
+      "id": "d2-id-1",
+      "type": "single",
+      "question": "What is Microsoft Entra ID?",
+      "options": [
+        { "text": "Microsoft's cloud-based identity and access management service", "why": "Correct." },
+        { "text": "A virtual machine image", "why": "Unrelated." },
+        { "text": "An on-premises domain controller you must install", "why": "Entra ID is a cloud service." },
+        { "text": "A storage redundancy option", "why": "Unrelated." }
+      ],
+      "answer": [0],
+      "explanation": "Entra ID provides authentication, SSO, MFA, application management and more.",
+      "objective": "2.4.1"
+    },
+    {
+      "id": "d2-id-2",
+      "type": "single",
+      "scenario": "A legacy application in Azure requires domain join, Group Policy and Kerberos authentication, but the company does not want to deploy or manage domain controllers.",
+      "question": "Which service should it use?",
+      "options": [
+        { "text": "Microsoft Entra Domain Services", "why": "Correct. It provides managed domain services." },
+        { "text": "Azure DNS", "why": "DNS alone does not provide domain join or Kerberos." },
+        { "text": "Microsoft Entra Conditional Access", "why": "Conditional Access enforces access policies." },
+        { "text": "Azure Policy", "why": "Policy governs resource properties." }
+      ],
+      "answer": [0],
+      "explanation": "Entra Domain Services offers domain join, Group Policy, LDAP and Kerberos/NTLM as a managed service.",
+      "objective": "2.4.1"
+    },
+    {
+      "id": "d2-id-3",
+      "type": "single",
+      "question": "Which authentication method requires two or more forms of verification, such as a password and a code from a phone app?",
+      "options": [
+        { "text": "Multifactor authentication (MFA)", "why": "Correct." },
+        { "text": "Single sign-on (SSO)", "why": "SSO lets one sign-in access many apps." },
+        { "text": "Role-based access control", "why": "RBAC is authorization, not authentication." },
+        { "text": "Resource locks", "why": "Unrelated." }
+      ],
+      "answer": [0],
+      "explanation": "MFA combines something you know, something you have, and/or something you are.",
+      "objective": "2.4.2"
+    },
+    {
+      "id": "d2-id-4",
+      "type": "single",
+      "question": "What is the main benefit of single sign-on (SSO)?",
+      "options": [
+        { "text": "Users sign in once with one identity to access many applications", "why": "Correct." },
+        { "text": "Users never need a password or any credential", "why": "That describes passwordless, not SSO." },
+        { "text": "It encrypts storage accounts", "why": "Unrelated." },
+        { "text": "It replaces the need for permissions", "why": "Authorization is still required." }
+      ],
+      "answer": [0],
+      "explanation": "SSO reduces the number of credentials users manage and simplifies access management.",
+      "objective": "2.4.2"
+    },
+    {
+      "id": "d2-id-5",
+      "type": "multi",
+      "question": "Which TWO are passwordless authentication methods supported with Microsoft Entra ID?",
+      "options": [
+        { "text": "Windows Hello for Business", "why": "Correct." },
+        { "text": "Sharing a password with a colleague", "why": "Not an authentication method." },
+        { "text": "FIDO2 security keys (passkeys)", "why": "Correct." },
+        { "text": "Resource tags", "why": "Unrelated." }
+      ],
+      "answer": [0, 2],
+      "explanation": "Passwordless options include Windows Hello for Business, Microsoft Authenticator and FIDO2 security keys/passkeys.",
+      "objective": "2.4.2"
+    },
+    {
+      "id": "d2-id-6",
+      "type": "single",
+      "scenario": "A company wants to let consultants from a partner organisation sign in with their own work accounts to access a specific internal app.",
+      "question": "Which capability should it use?",
+      "options": [
+        { "text": "Microsoft Entra B2B collaboration (external identities)", "why": "Correct. Guests use their own credentials." },
+        { "text": "Create new local passwords for each consultant on a VM", "why": "Inefficient and insecure." },
+        { "text": "Azure DNS private zones", "why": "Unrelated." },
+        { "text": "Azure Data Box", "why": "Unrelated." }
+      ],
+      "answer": [0],
+      "explanation": "External identities let partners, vendors and customers use their own identities to access your apps.",
+      "objective": "2.4.3"
+    },
+    {
+      "id": "d2-id-7",
+      "type": "single",
+      "scenario": "Users signing in from inside the corporate network should be allowed in normally, but sign-ins from unknown locations must require MFA.",
+      "question": "Which feature should you use?",
+      "options": [
+        { "text": "Microsoft Entra Conditional Access", "why": "Correct. It evaluates signals such as location to make access decisions." },
+        { "text": "Azure RBAC", "why": "RBAC controls permissions on resources, not sign-in conditions." },
+        { "text": "Resource locks", "why": "Unrelated." },
+        { "text": "Azure Advisor", "why": "Advisor gives recommendations." }
+      ],
+      "answer": [0],
+      "explanation": "Conditional Access uses signals (user, location, device, app, risk) to allow, require MFA or block.",
+      "objective": "2.4.4"
+    },
+    {
+      "id": "d2-id-8",
+      "type": "single",
+      "question": "In Azure RBAC, a role assignment applied at a resource group scope affects what?",
+      "options": [
+        { "text": "The resource group and all resources within it", "why": "Correct. Permissions are inherited by child scopes." },
+        { "text": "Only the resource group object, not the resources", "why": "Child resources inherit." },
+        { "text": "The entire subscription", "why": "Inheritance flows down, not up." },
+        { "text": "All subscriptions in the tenant", "why": "Inheritance flows down, not up." }
+      ],
+      "answer": [0],
+      "explanation": "RBAC assignments at a scope are inherited by everything below it.",
+      "objective": "2.4.5"
+    },
+    {
+      "id": "d2-id-9",
+      "type": "single",
+      "scenario": "An auditor must be able to view all resources in a subscription but must not change anything.",
+      "question": "Which built-in role should be assigned?",
+      "options": [
+        { "text": "Reader", "why": "Correct. View everything, change nothing." },
+        { "text": "Contributor", "why": "Contributor can create and modify resources." },
+        { "text": "Owner", "why": "Owner has full control, including access management." },
+        { "text": "User Access Administrator", "why": "This role manages user access." }
+      ],
+      "answer": [0],
+      "explanation": "Assign the least privilege needed. Reader gives read-only access.",
+      "objective": "2.4.5"
+    },
+    {
+      "id": "d2-id-10",
+      "type": "multi",
+      "question": "Which TWO are guiding principles of the Zero Trust model?",
+      "options": [
+        { "text": "Verify explicitly", "why": "Correct." },
+        { "text": "Trust everything inside the corporate network", "why": "This is the old perimeter model that Zero Trust replaces." },
+        { "text": "Assume breach", "why": "Correct." },
+        { "text": "Give everyone administrator rights to reduce helpdesk calls", "why": "Zero Trust uses least privilege." }
+      ],
+      "answer": [0, 2],
+      "explanation": "Zero Trust principles are verify explicitly, use least privilege access, and assume breach.",
+      "objective": "2.4.6"
+    },
+    {
+      "id": "d2-id-11",
+      "type": "single",
+      "question": "What is the purpose of the defense-in-depth model?",
+      "options": [
+        { "text": "To use multiple layers of security so that if one layer is breached, others still protect the data", "why": "Correct." },
+        { "text": "To rely on a single strong firewall", "why": "That is a single layer." },
+        { "text": "To store data in the deepest storage tier", "why": "Unrelated to security layering." },
+        { "text": "To replace identity security with physical security", "why": "All layers work together." }
+      ],
+      "answer": [0],
+      "explanation": "Layers include physical, identity and access, perimeter, network, compute, application and data.",
+      "objective": "2.4.7"
+    },
+    {
+      "id": "d2-id-12",
+      "type": "single",
+      "question": "In the defense-in-depth model, which layer is at the centre, the asset that all other layers ultimately protect?",
+      "options": [
+        { "text": "Data", "why": "Correct." },
+        { "text": "Physical security", "why": "Physical security is the outermost layer." },
+        { "text": "Perimeter", "why": "Perimeter is an outer layer." },
+        { "text": "Network", "why": "Network sits between perimeter and compute." }
+      ],
+      "answer": [0],
+      "explanation": "The layers wrap around data, the most valuable asset.",
+      "objective": "2.4.7"
+    },
+    {
+      "id": "d2-id-13",
+      "type": "single",
+      "scenario": "A company runs workloads in Azure, on-premises and in another public cloud. It wants one service to assess security posture and detect threats across all of them.",
+      "question": "Which service should it use?",
+      "options": [
+        { "text": "Microsoft Defender for Cloud", "why": "Correct. It covers Azure, hybrid and multi-cloud." },
+        { "text": "Azure Policy only", "why": "Policy enforces rules but does not detect threats." },
+        { "text": "Azure DNS", "why": "Unrelated." },
+        { "text": "Azure Cost Management", "why": "Cost Management tracks spending." }
+      ],
+      "answer": [0],
+      "explanation": "Defender for Cloud provides posture management and workload protection across environments.",
+      "objective": "2.4.8"
+    },
+    {
+      "id": "d2-id-14",
+      "type": "single",
+      "question": "What is the difference between authentication and authorization?",
+      "options": [
+        { "text": "Authentication proves who you are; authorization decides what you can do", "why": "Correct." },
+        { "text": "Authentication decides what you can do; authorization proves who you are", "why": "Reversed." },
+        { "text": "They are the same thing", "why": "They are distinct steps." },
+        { "text": "Authorization only applies to storage", "why": "Authorization applies everywhere." }
+      ],
+      "answer": [0],
+      "explanation": "AuthN = identity (who). AuthZ = permissions (what). Entra ID handles authentication; RBAC handles Azure authorization.",
+      "objective": "2.4.2"
+    }
+  ]
+}

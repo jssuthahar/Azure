@@ -1,0 +1,100 @@
+---
+title: Zero Trust
+seoTitle: Zero Trust Security Model Explained Simply | AZ-900
+description: "The Zero Trust security model explained: verify explicitly, use least privilege, assume breach, with an animation, examples and AZ-900 practice."
+answer: >-
+  **Zero Trust** is a security model that assumes the worst and trusts nothing by default, not even requests from inside the corporate network. Its three guiding principles are **verify explicitly** (always authenticate and authorise using all available signals), **use least privilege access** (just-in-time and just-enough access) and **assume breach** (minimise blast radius and segment access).
+updated: 2026-11-11
+readingMinutes: 5
+keyTerms:
+  - term: Zero Trust
+    definition: A model where every access request is fully verified, regardless of where it comes from.
+  - term: Verify explicitly
+    definition: Always authenticate and authorise using identity, location, device, service and risk.
+  - term: Least privilege
+    definition: Limit access with just-in-time and just-enough-access.
+  - term: Assume breach
+    definition: Design as if attackers are already inside. Segment, encrypt and monitor.
+interview:
+  - level: beginner
+    q: What does Zero Trust mean?
+    a: >-
+      Never trust, always verify. Every request is checked, even if it comes from inside the company network, instead of trusting everything behind the firewall.
+    followUps: []
+  - level: intermediate
+    q: What are the three principles of Zero Trust?
+    a: >-
+      Verify explicitly, use least privilege access, and assume breach.
+    followUps: []
+  - level: experienced
+    q: How do Azure services support Zero Trust?
+    a: >-
+      Entra ID with MFA and Conditional Access to verify explicitly; RBAC and Privileged Identity Management for least privilege; and segmentation, private endpoints, encryption and Defender for Cloud monitoring to assume breach and limit blast radius.
+    followUps: []
+revision:
+  keyPoints:
+    - Zero Trust = never trust, always verify.
+    - Verify explicitly, least privilege, assume breach.
+    - Replaces the old "trusted internal network" model.
+  mistakes:
+    - Thinking Zero Trust is a single product you can buy.
+  examTips:
+    - Learn the three principles word for word.
+  quick:
+    - q: What is the Zero Trust motto?
+      a: Never trust, always verify.
+    - q: Name the three principles.
+      a: Verify explicitly, use least privilege access, assume breach.
+    - q: Does Zero Trust trust the internal network?
+      a: No.
+    - q: Which principle limits access to just-in-time and just-enough?
+      a: Least privilege access.
+    - q: Name an Azure tool that helps verify explicitly.
+      a: Conditional Access (with MFA).
+references:
+  - title: What is Zero Trust?
+    url: https://learn.microsoft.com/en-us/security/zero-trust/zero-trust-overview
+related:
+  - conditional-access
+  - azure-rbac
+  - defense-in-depth
+---
+
+## Start with a question
+
+<Story question="Once someone is inside the office network, should they be trusted with everything?">
+
+The old model said yes. **Zero Trust** says no: check every request, every time.
+
+</Story>
+
+## Explain it like I'm 10
+
+<Eli10>
+
+In a Zero Trust school, you show your ID at **every door**, not just the front gate. Even if you're already inside, the library still checks you, and you only get keys to the rooms you need today.
+
+</Eli10>
+
+## The technical explanation
+
+| Principle | Meaning | Azure examples |
+| --- | --- | --- |
+| Verify explicitly | Use identity, device, location and risk on every request | Entra ID, MFA, Conditional Access |
+| Least privilege | Just-in-time, just-enough access | Azure RBAC, Privileged Identity Management |
+| Assume breach | Segment, encrypt, monitor, limit blast radius | NSGs, private endpoints, Defender for Cloud |
+
+## Real-world business scenario
+
+<Scenario
+  company="A healthcare provider"
+  industry="Healthcare"
+  problem="An attacker who phished one employee could move freely across the 'trusted' internal network."
+  service="Adopted Zero Trust: MFA and Conditional Access, least-privilege roles, network segmentation and continuous monitoring."
+  why="Every request is verified and access is limited, so one compromised account can do little."
+  outcome="Lateral movement in later security tests was stopped at the first step."
+/>
+
+## When to use it and when not to
+
+<UseWhen use={['As the foundation for every modern security strategy.']} avoid={['Relying on the network perimeter alone.']} />

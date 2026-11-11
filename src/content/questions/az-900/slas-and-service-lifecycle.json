@@ -1,0 +1,88 @@
+{
+ "cert": "az-900",
+ "domain": 3,
+ "topic": "slas-and-service-lifecycle",
+ "questions": [
+  {
+   "id": "t-sla-1",
+   "type": "single",
+   "question": "What happens if Microsoft does not meet the SLA for a service?",
+   "options": [
+    {
+     "text": "Customers may be eligible for service credits",
+     "why": "Correct."
+    },
+    {
+     "text": "The service becomes free forever",
+     "why": "No."
+    },
+    {
+     "text": "Microsoft deletes the service",
+     "why": "No."
+    },
+    {
+     "text": "Nothing at all",
+     "why": "Service credits may apply."
+    }
+   ],
+   "answer": [
+    0
+   ],
+   "explanation": "SLAs include service credits."
+  },
+  {
+   "id": "t-sla-2",
+   "type": "single",
+   "question": "Which stage of the service lifecycle usually comes with an SLA?",
+   "options": [
+    {
+     "text": "General availability",
+     "why": "Correct."
+    },
+    {
+     "text": "Public preview",
+     "why": "Usually no SLA."
+    },
+    {
+     "text": "Private preview",
+     "why": "No SLA."
+    },
+    {
+     "text": "Retired",
+     "why": "No longer available."
+    }
+   ],
+   "answer": [
+    0
+   ],
+   "explanation": "GA services are fully supported."
+  },
+  {
+   "id": "t-sla-3",
+   "type": "single",
+   "question": "An app needs a web app (99.95%) and a database (99.99%), and both must work. What is the composite SLA?",
+   "options": [
+    {
+     "text": "About 99.94%",
+     "why": "Correct. 0.9995 × 0.9999."
+    },
+    {
+     "text": "99.99%",
+     "why": "Too high."
+    },
+    {
+     "text": "199.94%",
+     "why": "SLAs are multiplied, not added."
+    },
+    {
+     "text": "99.95%",
+     "why": "Too high."
+    }
+   ],
+   "answer": [
+    0
+   ],
+   "explanation": "Multiply the SLAs of dependent services."
+  }
+ ]
+}

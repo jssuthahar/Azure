@@ -1,0 +1,119 @@
+---
+title: Azure Monitor, Log Analytics, Alerts and Application Insights
+seoTitle: Azure Monitor, Log Analytics and App Insights | AZ-900
+description: "Azure Monitor explained: metrics and logs, Log Analytics with KQL, alerts with action groups and Application Insights, with AZ-900 practice."
+answer: >-
+  **Azure Monitor** collects, analyses and acts on **metrics and logs** from your Azure resources, applications, operating systems and on-premises sources. **Log Analytics** lets you query log data using KQL. **Azure Monitor alerts** notify you or run automation when conditions are met. **Application Insights** monitors your web applications' performance, failures and usage.
+updated: 2026-11-11
+readingMinutes: 7
+keyTerms:
+  - term: Metrics
+    definition: Numeric values collected at regular intervals, such as CPU percentage.
+  - term: Logs
+    definition: Records of events and data, queried with KQL in Log Analytics.
+  - term: KQL
+    definition: Kusto Query Language, used to query logs.
+  - term: Action group
+    definition: A set of notification and automation actions (email, SMS, webhook, Logic App) triggered by alerts.
+  - term: Application Insights
+    definition: Application performance monitoring (APM) feature of Azure Monitor.
+interview:
+  - level: beginner
+    q: What is Azure Monitor?
+    a: >-
+      Azure's monitoring service. It collects numbers like CPU and memory, and logs of what happened, from my resources and apps, so I can see problems, analyse them and get alerts.
+    followUps: []
+  - level: intermediate
+    q: Explain Log Analytics, alerts and Application Insights.
+    a: >-
+      Log Analytics is where I write KQL queries against collected logs. Alerts watch metrics, logs or the activity log and notify me through action groups, or trigger automation, when a condition is met. Application Insights monitors live web apps: request rates, response times, failures, dependencies, page views and availability tests.
+    followUps: []
+  - level: experienced
+    q: How do you avoid alert fatigue?
+    a: >-
+      Alert on symptoms users feel (error rate, latency) rather than every metric, use dynamic thresholds, group alerts by severity with clear owners, route critical ones to on-call and the rest to dashboards, and review alerts after incidents to tune or remove noisy ones.
+    followUps: []
+revision:
+  keyPoints:
+    - Azure Monitor collects metrics and logs from many sources.
+    - Log Analytics queries logs with KQL.
+    - Alerts notify or automate through action groups.
+    - Application Insights monitors application performance and usage.
+  mistakes:
+    - Confusing Azure Monitor (your resources) with Service Health (Azure platform issues).
+  examTips:
+    - '"Query log data with KQL" = **Log Analytics**.'
+    - '"Monitor web app response times and failures" = **Application Insights**.'
+  quick:
+    - q: What two main types of data does Azure Monitor collect?
+      a: Metrics and logs.
+    - q: Which tool runs KQL queries on logs?
+      a: Log Analytics.
+    - q: What delivers alert notifications such as email or SMS?
+      a: Action groups.
+    - q: Which feature monitors application performance?
+      a: Application Insights.
+    - q: Can Azure Monitor collect data from on-premises?
+      a: Yes, with agents (and Azure Arc).
+references:
+  - title: Azure Monitor overview
+    url: https://learn.microsoft.com/en-us/azure/azure-monitor/overview
+  - title: Application Insights overview
+    url: https://learn.microsoft.com/en-us/azure/azure-monitor/app/app-insights-overview
+related:
+  - service-health-and-azure-status
+  - azure-advisor
+  - manageability
+---
+
+## Start with a question
+
+<Story question="Your website slowed down at 9:14 p.m. How do you find out why, and how do you get woken up next time?">
+
+**Azure Monitor** collects the evidence, **Log Analytics** helps you investigate it, and **alerts** wake you up next time.
+
+</Story>
+
+## Explain it like I'm 10
+
+<Eli10>
+
+Azure Monitor is like a **fitness tracker** for your computers: it counts heartbeats (metrics), keeps a diary (logs), and buzzes when something looks wrong (alerts). Application Insights is a fitness tracker just for your app.
+
+</Eli10>
+
+## The technical explanation
+
+<Flow
+  caption="How Azure Monitor works"
+  steps={[
+    { title: 'Collect', text: 'Metrics and logs from apps, OS, Azure resources, subscriptions and on-premises.' },
+    { title: 'Analyse', text: 'Metrics explorer, Log Analytics (KQL), workbooks, Application Insights.' },
+    { title: 'Respond', text: 'Alerts with action groups (email, SMS, webhooks) and autoscale.' },
+    { title: 'Visualise', text: 'Dashboards, workbooks, Power BI and Grafana.' },
+  ]}
+/>
+
+A sample KQL query in Log Analytics:
+
+```kusto
+AppRequests
+| where TimeGenerated > ago(1h) and Success == false
+| summarize failures = count() by Name
+| order by failures desc
+```
+
+## Real-world business scenario
+
+<Scenario
+  company="An online food ordering site"
+  industry="Food delivery"
+  problem="Customers reported slow checkouts, but the team had no data to find the cause."
+  service="Application Insights on the web app, Log Analytics for server logs, and alerts on response time and error rate."
+  why="End-to-end visibility and proactive alerts."
+  outcome="A slow database dependency was spotted in Application Insights and fixed; alerts now catch issues before customers do."
+/>
+
+## When to use it and when not to
+
+<UseWhen use={['Every production workload: metrics, logs, Application Insights and meaningful alerts.']} avoid={['Alerting on everything, which causes alert fatigue.']} />

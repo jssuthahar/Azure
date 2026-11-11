@@ -1,0 +1,91 @@
+{
+ "cert": "az-900",
+ "domain": 2,
+ "topic": "app-service",
+ "questions": [
+  {
+   "id": "t-app-1",
+   "type": "single",
+   "question": "Which Azure service hosts web apps and REST APIs without you managing the underlying servers?",
+   "options": [
+    {
+     "text": "Azure App Service",
+     "why": "Correct."
+    },
+    {
+     "text": "Azure Virtual Machines",
+     "why": "You manage the OS."
+    },
+    {
+     "text": "Azure Data Box",
+     "why": "Offline data transfer."
+    },
+    {
+     "text": "Azure Policy",
+     "why": "Governance."
+    }
+   ],
+   "answer": [
+    0
+   ],
+   "explanation": "App Service is PaaS web hosting.",
+   "objective": "2.2.4"
+  },
+  {
+   "id": "t-app-2",
+   "type": "single",
+   "question": "What do you pay for in Azure App Service?",
+   "options": [
+    {
+     "text": "The App Service plan",
+     "why": "Correct. Size and number of instances."
+    },
+    {
+     "text": "Each line of code",
+     "why": "No."
+    },
+    {
+     "text": "Each visitor",
+     "why": "No."
+    },
+    {
+     "text": "Nothing; it is always free",
+     "why": "Free tier is limited; most tiers are paid."
+    }
+   ],
+   "answer": [
+    0
+   ],
+   "explanation": "Apps run on, and are billed by, an App Service plan.",
+   "objective": "2.2.4"
+  },
+  {
+   "id": "t-app-3",
+   "type": "single",
+   "question": "Which App Service feature enables zero-downtime releases?",
+   "options": [
+    {
+     "text": "Deployment slots",
+     "why": "Correct."
+    },
+    {
+     "text": "Resource locks",
+     "why": "Prevent deletion."
+    },
+    {
+     "text": "Availability sets",
+     "why": "VM feature."
+    },
+    {
+     "text": "Azure DNS",
+     "why": "Name resolution."
+    }
+   ],
+   "answer": [
+    0
+   ],
+   "explanation": "Deploy to a slot, then swap into production.",
+   "objective": "2.2.4"
+  }
+ ]
+}

@@ -1,0 +1,91 @@
+{
+ "cert": "az-900",
+ "domain": 3,
+ "topic": "azure-resource-manager",
+ "questions": [
+  {
+   "id": "t-arm-1",
+   "type": "single",
+   "question": "Which service is the deployment and management layer for all Azure requests?",
+   "options": [
+    {
+     "text": "Azure Resource Manager",
+     "why": "Correct."
+    },
+    {
+     "text": "Azure Monitor",
+     "why": "Telemetry."
+    },
+    {
+     "text": "Azure Advisor",
+     "why": "Recommendations."
+    },
+    {
+     "text": "Microsoft Purview",
+     "why": "Data governance."
+    }
+   ],
+   "answer": [
+    0
+   ],
+   "explanation": "ARM processes every management request.",
+   "objective": "3.3.5"
+  },
+  {
+   "id": "t-arm-2",
+   "type": "single",
+   "question": "ARM templates are written in which format?",
+   "options": [
+    {
+     "text": "JSON",
+     "why": "Correct."
+    },
+    {
+     "text": "CSV",
+     "why": "No."
+    },
+    {
+     "text": "HTML",
+     "why": "No."
+    },
+    {
+     "text": "Plain English",
+     "why": "No."
+    }
+   ],
+   "answer": [
+    0
+   ],
+   "explanation": "ARM templates are declarative JSON.",
+   "objective": "3.3.5"
+  },
+  {
+   "id": "t-arm-3",
+   "type": "single",
+   "question": "You deploy the same ARM template twice. What happens the second time if nothing changed?",
+   "options": [
+    {
+     "text": "Nothing changes, because deployments are idempotent",
+     "why": "Correct."
+    },
+    {
+     "text": "Duplicate resources are created",
+     "why": "No, templates are idempotent."
+    },
+    {
+     "text": "All resources are deleted",
+     "why": "No."
+    },
+    {
+     "text": "Deployment always fails",
+     "why": "No."
+    }
+   ],
+   "answer": [
+    0
+   ],
+   "explanation": "Idempotent deployments reach the same state.",
+   "objective": "3.3.5"
+  }
+ ]
+}

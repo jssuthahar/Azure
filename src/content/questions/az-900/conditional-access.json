@@ -1,0 +1,92 @@
+{
+ "cert": "az-900",
+ "domain": 2,
+ "topic": "conditional-access",
+ "questions": [
+  {
+   "id": "t-ca-1",
+   "type": "single",
+   "question": "You want to require MFA only when users sign in from outside the corporate network. What should you use?",
+   "options": [
+    {
+     "text": "Microsoft Entra Conditional Access",
+     "why": "Correct."
+    },
+    {
+     "text": "Azure RBAC",
+     "why": "Permissions on resources."
+    },
+    {
+     "text": "Azure Policy",
+     "why": "Resource rules."
+    },
+    {
+     "text": "Resource locks",
+     "why": "Prevent deletion."
+    }
+   ],
+   "answer": [
+    0
+   ],
+   "explanation": "Conditional Access uses signals like location to decide.",
+   "objective": "2.4.4"
+  },
+  {
+   "id": "t-ca-2",
+   "type": "multi",
+   "question": "Which TWO are signals Conditional Access can use?",
+   "options": [
+    {
+     "text": "User location",
+     "why": "Correct."
+    },
+    {
+     "text": "Storage access tier",
+     "why": "Unrelated."
+    },
+    {
+     "text": "Device state",
+     "why": "Correct."
+    },
+    {
+     "text": "VM size",
+     "why": "Unrelated."
+    }
+   ],
+   "answer": [
+    0,
+    2
+   ],
+   "explanation": "Signals include user, location, device, app and risk.",
+   "objective": "2.4.4"
+  },
+  {
+   "id": "t-ca-3",
+   "type": "single",
+   "question": "Which is NOT a typical Conditional Access decision?",
+   "options": [
+    {
+     "text": "Delete the user account",
+     "why": "Correct. Not a sign-in decision."
+    },
+    {
+     "text": "Allow access",
+     "why": "A valid decision."
+    },
+    {
+     "text": "Require MFA",
+     "why": "A valid decision."
+    },
+    {
+     "text": "Block access",
+     "why": "A valid decision."
+    }
+   ],
+   "answer": [
+    0
+   ],
+   "explanation": "Decisions are allow, require controls, or block.",
+   "objective": "2.4.4"
+  }
+ ]
+}

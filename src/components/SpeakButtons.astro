@@ -1,0 +1,31 @@
+---
+/**
+ * Global handler for every 🔊 button on the site: a `.speak-btn` reads the text
+ * of its closest `[data-speakable]` container (or `data-say` text if given).
+ */
+---
+<script>
+  import { canSpeak, speak, stopSpeaking, readableText } from '../lib/speech';
+  let active: HTMLElement | null = null;
+  if (!canSpeak()) document.documentElement.classList.add('no-voice');
+  document.addEventListener('click', async (e) => {
+    const btn = (e.target as HTMLElement).closest<HTMLElement>('.speak-btn');
+    if (!btn) return;
+    e.preventDefault();
+    const wasActive = active === btn;
+    stopSpeaking();
+    window.dispatchEvent(new CustomEvent('speech-stop-all'));
+    document.querySelectorAll('.speak-btn[data-on]').forEach((b) => b.removeAttribute('data-on'));
+    active = null;
+    if (wasActive) return;
+    const box = btn.closest('[data-speakable]');
+    const text = btn.dataset.say ?? (box ? readableText(box) : '');
+    active = btn;
+    btn.setAttribute('data-on', '');
+    await speak(text);
+    if (active === btn) {
+      btn.removeAttribute('data-on');
+      active = null;
+    }
+  });
+</script>

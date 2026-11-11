@@ -1,0 +1,252 @@
+---
+import Base from '../layouts/Base.astro';
+import Mascot from '../components/Mascot.astro';
+import CloudScene from '../components/scenes/CloudScene.astro';
+import { CERTIFICATIONS } from '../data/certifications';
+import { MODULES } from '../data/az-900/syllabus';
+import { getNav, getQuestionBank, getTutorial, inlineMd } from '../lib/learn';
+import { SITE } from '../config';
+
+const nav = await getNav();
+const published = nav.filter((t) => t.published);
+const bank = await getQuestionBank();
+const first = published[0];
+
+const bands = ['band-blue', 'band-yellow', 'band-green'];
+const modules = await Promise.all(
+  MODULES.map(async (m, i) => {
+    const topics = nav.filter((t) => t.module.slug === m.slug);
+    const pub = topics.filter((t) => t.published);
+    const sample = pub[0] ? await getTutorial(pub[0].key) : undefined;
+    return { m, topics, pub, sample, band: bands[i % bands.length], qCount: bank.filter((q) => q.domain === m.domain).length };
+  }),
+);
+const sampleQ = bank.find((q) => q.id === 'd2-arch-10') ?? bank[0];
+
+const audiences = [
+  { icon: '🎒', title: 'School students', text: 'No cloud knowledge needed. Stories about libraries, games and pizza.' },
+  { icon: '🎓', title: 'College & freshers', text: 'Cloud basics linked to real IT jobs, with a quiz after every lesson.' },
+  { icon: '💻', title: 'Developers', text: 'How Azure services fit into real apps, and when not to use them.' },
+  { icon: '🏛️', title: 'Experienced engineers', text: 'Architecture trade-offs, cost, security and scenario interviews.' },
+];
+const schema = [{ '@type': 'WebPage', '@id': `${SITE.url}/#home`, name: SITE.title, description: SITE.description, url: `${SITE.url}/` }];
+---
+<Base title={SITE.title} description={SITE.description} schema={schema}>
+  <!-- Hero -->
+  <section class="band-navy px-4 py-12 sm:py-16">
+    <div class="mx-auto grid max-w-6xl items-center gap-10 lg:grid-cols-[1fr_1.1fr]">
+      <div class="text-center lg:text-left">
+        <h1 class="text-5xl font-bold tracking-tight sm:text-7xl">Learn Azure</h1>
+        <p class="mt-4 text-xl text-[#ffd75e] sm:text-2xl">From zero to AZ-900 certified, one simple lesson at a time</p>
+        <p class="mt-3 text-white/85">🎬 Animated pictures · 🔊 Nimbus reads to you · 🎮 Games and badges</p>
+        <form id="hero-search" class="mx-auto mt-7 flex max-w-xl overflow-hidden rounded-full bg-white shadow-lg lg:mx-0" role="search">
+          <label for="hero-q" class="sr-only">Search tutorials</label>
+          <input id="hero-q" list="topic-list" type="search" placeholder="Search our tutorials, e.g. IaaS or Elasticity" class="min-w-0 flex-1 bg-transparent px-6 py-3.5 text-base text-[#0b1020] outline-none placeholder:text-[#6b7280]" />
+          <button type="submit" class="bg-[#0078d4] px-6 font-semibold text-white hover:bg-[#005a9e]">Search</button>
+        </form>
+        {first && <p class="mt-5"><a href={first.url} class="text-lg text-white underline underline-offset-4 hover:text-[#ffd75e]">Not sure where to begin? Start lesson 1 ❯</a></p>}
+        <dl class="mt-8 flex flex-wrap justify-center gap-x-10 gap-y-3 text-white/90 lg:justify-start">
+          <div><dt class="text-sm text-white/70">Lessons ready</dt><dd class="text-3xl font-bold">{published.length}</dd></div>
+          <div><dt class="text-sm text-white/70">Practice questions</dt><dd class="text-3xl font-bold">{bank.length}</dd></div>
+          <div><dt class="text-sm text-white/70">Price</dt><dd class="text-3xl font-bold">Free</dd></div>
+        </dl>
+      </div>
+      <figure class="scene overflow-hidden rounded-2xl bg-white p-3 shadow-2xl sm:p-5">
+        <CloudScene />
+        <figcaption class="flex items-center justify-center gap-3 pt-2 text-sm font-medium text-[#0b1020]">
+          <span>The cloud: computers you borrow over the internet.</span>
+          <button type="button" class="speak-btn text-[#005a9e]" data-say="Imagine your school library lends you any book the moment you ask, and you only pay for the days you keep it. That is cloud computing. Phones, laptops, shops and schools all borrow computers, storage and AI from the cloud over the internet.">🔊 Listen</button>
+        </figcaption>
+      </figure>
+    </div>
+  </section>
+
+  <!-- One band per exam domain -->
+  {modules.map(({ m, topics, pub, sample, band, qCount }) => (
+    <section class={`home-band ${band}`} aria-labelledby={`mod-${m.slug}`}>
+      <div class="mx-auto grid max-w-6xl items-center gap-10 px-4 sm:px-6 lg:grid-cols-2">
+        <div class="text-center lg:text-left">
+          <h2 id={`mod-${m.slug}`} class="text-5xl font-bold tracking-tight sm:text-6xl">{m.shortTitle}</h2>
+          <p class="mt-3 text-lg font-medium">AZ-900 Domain {m.domain} · {m.weight} of the exam</p>
+          <p class="mx-auto mt-4 max-w-lg text-lg leading-relaxed lg:mx-0">{m.summary}</p>
+          <div class="mt-7 flex flex-wrap justify-center gap-3 lg:justify-start">
+            {pub.length > 0 ? (
+              <>
+                <a href={pub[0].url} class="big-btn">Learn {m.shortTitle} ❯</a>
+                <a href={`/az-900/${m.slug}/`} class="big-btn big-btn-light">All {pub.length} lessons</a>
+              </>
+            ) : (
+              <>
+                <a href="/az-900/mock-exam/" class="big-btn">Practise {qCount} questions ❯</a>
+                <a href={`/az-900/${m.slug}/`} class="big-btn big-btn-light">See the syllabus</a>
+              </>
+            )}
+          </div>
+        </div>
+        <div class="example-box shadow-sm">
+          {sample ? (
+            <>
+              <p class="text-sm font-bold text-accent">Example lesson</p>
+              <p class="mt-2 text-xl font-semibold">{sample.data.title}</p>
+              <p class="mt-3 leading-relaxed" set:html={inlineMd(sample.data.answer)} />
+              <a href={`${pub[0].url}#knowledge-check`} class="nav-btn mt-5">Try it yourself ❯</a>
+            </>
+          ) : (
+            <>
+              <p class="text-sm font-bold text-accent">What you will learn</p>
+              <ul class="mt-3 grid gap-x-6 gap-y-1.5 sm:grid-cols-2">
+                {topics.slice(0, 10).map((t) => <li class="flex gap-2 text-[0.95rem]"><span class="text-accent">✓</span>{t.title}</li>)}
+              </ul>
+              <p class="mt-4 text-sm text-muted">Lessons are being written now. The mock exam already covers this domain.</p>
+            </>
+          )}
+        </div>
+      </div>
+    </section>
+  ))}
+
+  <!-- Mock exam -->
+  <section class="home-band band-navy" aria-labelledby="mock">
+    <div class="mx-auto grid max-w-6xl items-center gap-10 px-4 sm:px-6 lg:grid-cols-2">
+      <div class="text-center lg:text-left">
+        <h2 id="mock" class="text-5xl font-bold tracking-tight sm:text-6xl">Mock Exam</h2>
+        <p class="mx-auto mt-4 max-w-lg text-lg leading-relaxed text-white/90 lg:mx-0">A timed, 40-question practice exam weighted like the real AZ-900. Mark questions for review, see your score by domain, and learn why every answer is right or wrong.</p>
+        <div class="mt-7 flex flex-wrap justify-center gap-3 lg:justify-start">
+          <a href="/az-900/mock-exam/" class="big-btn !bg-[#ffd75e] !text-[#0b1020] hover:!bg-[#ffcd2e]">Start the mock exam ❯</a>
+        </div>
+        <p class="mt-4 text-sm text-white/70">Original practice questions. Not real exam questions.</p>
+      </div>
+      <div class="example-box">
+        <p class="text-sm font-bold text-accent">Example question</p>
+        <p class="mt-2 font-semibold leading-relaxed" set:html={inlineMd(sampleQ.question)} />
+        <ul class="mt-3 space-y-2">
+          {sampleQ.options.map((o) => <li class="rounded-md border border-default px-3 py-2 text-[0.95rem]" set:html={inlineMd(o.text)} />)}
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <!-- Practice labs -->
+  <section class="home-band band-navy" aria-labelledby="labs">
+    <div class="mx-auto grid max-w-6xl items-center gap-10 px-4 sm:px-6 lg:grid-cols-2">
+      <div class="text-center lg:text-left">
+        <h2 id="labs" class="text-5xl font-bold tracking-tight sm:text-6xl">Try it Yourself 🧪</h2>
+        <p class="mx-auto mt-4 max-w-lg text-lg leading-relaxed text-white/90 lg:mx-0">Practise in a simulated Azure portal and Cloud Shell. Create VMs, storage and web apps, type real Azure CLI commands and watch the cost meter, with no Azure account needed.</p>
+        <div class="mt-7 flex flex-wrap justify-center gap-3 lg:justify-start">
+          <a href="/az-900/labs/" class="big-btn !bg-[#ffd75e] !text-[#0b1020]">Open practice labs ❯</a>
+          <a href="/az-900/labs/sandbox/" class="big-btn big-btn-light">Free sandbox</a>
+        </div>
+      </div>
+      <div class="example-box !bg-[#0b1020] font-mono text-[0.85rem] !text-[#e6edf3]">
+        <p class="text-[#8fcbf7]">Azure Cloud Shell (practice)</p>
+        <p class="mt-2"><span class="text-[#9fe870]">learner@Azure:~$</span> az vm deallocate -g rg-lab -n web01</p>
+        <p class="mt-1 text-white/80">💰 Cost: $8.76/mo → $4.38/mo</p>
+        <p class="mt-2"><span class="text-[#9fe870]">learner@Azure:~$</span> az group delete -n rg-prod</p>
+        <p class="mt-1 text-[#ff8b94]">ERROR: (ScopeLocked) The scope 'rg-prod' cannot perform delete operation because it is locked…</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- Play & Learn -->
+  <section class="home-band band-lilac" aria-labelledby="play">
+    <div class="mx-auto max-w-6xl px-4 text-center sm:px-6">
+      <h2 id="play" class="text-5xl font-bold tracking-tight sm:text-6xl">Play &amp; Learn 🎮</h2>
+      <p class="mx-auto mt-4 max-w-2xl text-lg leading-relaxed">Learning Azure should be fun. Play quick games, earn XP, level up from Cloud Seed 🌱 to Azure Legend 👑 and keep your daily 🔥 streak.</p>
+      <div class="mt-8 grid gap-3 text-left sm:grid-cols-2 lg:grid-cols-5">
+        {[
+          ['📅', 'Daily Challenge', '5 questions a day', '/az-900/games/daily/'],
+          ['🗂️', 'Sort It!', 'Tap cards into buckets', '/az-900/games/sort/'],
+          ['🧠', 'Match the Pairs', 'Memory card game', '/az-900/games/match/'],
+          ['⚡', 'Lightning Round', '60-second quiz', '/az-900/games/lightning/'],
+          ['🕵️', 'Who Am I?', 'Guess the service', '/az-900/games/who-am-i/'],
+        ].map(([icon, title, text, href]) => (
+          <a href={href} class="group rounded-2xl bg-[var(--card)] p-5 shadow-sm transition-transform hover:-translate-y-1">
+            <span class="block text-4xl transition-transform group-hover:scale-110" aria-hidden="true">{icon}</span>
+            <span class="mt-3 block text-lg font-bold">{title}</span>
+            <span class="block text-sm text-muted">{text}</span>
+          </a>
+        ))}
+      </div>
+      <div class="mt-8"><a href="/az-900/games/" class="big-btn">Start playing ❯</a></div>
+    </div>
+  </section>
+
+  <!-- Interview -->
+  <section class="home-band band-yellow" aria-labelledby="iv">
+    <div class="mx-auto grid max-w-6xl items-center gap-10 px-4 sm:px-6 lg:grid-cols-2">
+      <div class="text-center lg:text-left">
+        <h2 id="iv" class="text-5xl font-bold tracking-tight sm:text-6xl">Interview Ready</h2>
+        <p class="mx-auto mt-4 max-w-lg text-lg leading-relaxed lg:mx-0">Practise with Nimbus as your interviewer. Beginner to architect-level questions, model answers and the follow-up questions real interviewers ask.</p>
+        <div class="mt-7 flex flex-wrap justify-center gap-3 lg:justify-start">
+          <a href="/az-900/interview/" class="big-btn">Practise interview questions ❯</a>
+          <a href="/az-900/revision/" class="big-btn big-btn-light">Revision flashcards</a>
+        </div>
+      </div>
+      <div class="example-box space-y-3">
+        <div class="flex items-center gap-3"><Mascot size={48} mood="thinking" /><p class="font-semibold">Mock interview</p></div>
+        <div class="bubble bubble-interviewer mr-8"><p class="mb-1 text-xs font-bold uppercase text-muted">Interviewer</p>What is the difference between scalability and elasticity?</div>
+        <div class="bubble bubble-candidate ml-8"><p class="mb-1 text-xs font-bold uppercase text-accent">You</p>Scalability is the ability to add or remove resources. Elasticity is when that happens automatically, in real time, based on demand.</div>
+        <div class="bubble bubble-interviewer mr-8"><p class="mb-1 text-xs font-bold uppercase text-muted">Interviewer</p>Can you give me a real-world example?</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Who it's for -->
+  <section class="home-band" aria-labelledby="who">
+    <div class="mx-auto max-w-6xl px-4 text-center sm:px-6">
+      <h2 id="who" class="text-4xl font-bold tracking-tight">Made for every learner</h2>
+      <p class="mx-auto mt-3 max-w-2xl text-lg text-muted">A 10-year-old should understand the idea. A 20-year veteran should still learn something new.</p>
+      <div class="mt-10 grid gap-4 text-left sm:grid-cols-2 lg:grid-cols-4">
+        {audiences.map((a) => (
+          <div class="card p-5">
+            <p class="text-3xl" aria-hidden="true">{a.icon}</p>
+            <p class="mt-2 text-lg font-semibold">{a.title}</p>
+            <p class="mt-1 text-[0.95rem] leading-relaxed text-muted">{a.text}</p>
+          </div>
+        ))}
+      </div>
+      <div class="mt-10"><a href="/progress/" class="big-btn big-btn-light">🏆 Track your progress and earn badges</a></div>
+    </div>
+  </section>
+
+  <!-- Certifications -->
+  <section id="certifications" class="home-band band-blue scroll-mt-28" aria-labelledby="certs">
+    <div class="mx-auto max-w-6xl px-4 sm:px-6">
+      <h2 id="certs" class="text-center text-4xl font-bold tracking-tight">Azure certifications</h2>
+      <p class="mt-3 text-center text-lg text-muted">Start with AZ-900. More exams will follow once we check their current status on Microsoft Learn.</p>
+      <div class="mt-10 grid gap-3 sm:grid-cols-2 lg:grid-cols-5">
+        {CERTIFICATIONS.map((c) =>
+          c.status === 'active' ? (
+            <a href={`/${c.slug}/`} class="rounded-lg bg-[#0078d4] p-4 text-white hover:bg-[#005a9e] sm:col-span-2 lg:col-span-1">
+              <p class="text-2xl font-bold">{c.code}</p>
+              <p class="mt-1 text-sm">{c.name}</p>
+              <p class="mt-3 text-xs font-semibold">● Available now ❯</p>
+            </a>
+          ) : (
+            <div class="rounded-lg border border-default bg-[var(--card)] p-4">
+              <p class="text-2xl font-bold text-muted">{c.code}</p>
+              <p class="mt-1 text-sm">{c.name}</p>
+              <p class="mt-3 text-xs text-muted">Coming later</p>
+            </div>
+          ),
+        )}
+      </div>
+    </div>
+  </section>
+</Base>
+<script>
+  const form = document.getElementById('hero-search') as HTMLFormElement | null;
+  const input = document.getElementById('hero-q') as HTMLInputElement | null;
+  const go = () => {
+    const v = input?.value.trim().toLowerCase();
+    if (!v) return;
+    const opts = [...document.querySelectorAll<HTMLOptionElement>('#topic-list option')];
+    const hit = opts.find((o) => o.value.toLowerCase() === v) ?? opts.find((o) => o.value.toLowerCase().includes(v));
+    if (hit?.dataset.url) location.href = hit.dataset.url;
+  };
+  input?.addEventListener('change', go);
+  form?.addEventListener('submit', (e) => {
+    e.preventDefault();
+    go();
+  });
+</script>

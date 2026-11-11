@@ -1,0 +1,38 @@
+---
+/** Devices and businesses sending requests to a cloud full of services. */
+const devices = [
+  { x: 70, label: 'Laptop', path: 'M95 238 Q150 170 250 165' },
+  { x: 185, label: 'Phone', path: 'M200 238 Q230 190 285 178' },
+  { x: 440, label: 'Shop', path: 'M455 238 Q420 190 355 178' },
+  { x: 555, label: 'School', path: 'M560 238 Q500 170 390 165' },
+];
+---
+<svg viewBox="0 0 640 300" role="img" aria-label="Laptops, phones, shops and schools connect over the internet to the cloud, which provides computers, storage and AI on demand">
+  <defs>
+    <linearGradient id="cs-cloud" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ffffff" /><stop offset="1" stop-color="#cfe6fb" /></linearGradient>
+  </defs>
+  {devices.map((d, i) => (
+    <g>
+      <path id={`cs-p${i}`} d={d.path} fill="none" stroke="#0078d4" stroke-width="2.5" class="a-dash" opacity=".7" />
+      <circle r="5" fill="#ffb900"><animateMotion dur={`${2 + i * 0.4}s`} repeatCount="indefinite"><mpath href={`#cs-p${i}`} /></animateMotion></circle>
+    </g>
+  ))}
+  <g class="a-float">
+    <path d="M205 190h230a52 52 0 0 0 6-103.6A78 78 0 0 0 290 70a60 60 0 0 0-85 120z" fill="url(#cs-cloud)" stroke="#0078d4" stroke-width="3.5" stroke-linejoin="round" />
+    <g class="a-float-2"><rect x="250" y="112" width="40" height="46" rx="6" fill="#0078d4" /><rect x="256" y="120" width="28" height="6" rx="2" fill="#9fd0f7" /><rect x="256" y="131" width="28" height="6" rx="2" fill="#9fd0f7" /><rect x="256" y="142" width="28" height="6" rx="2" fill="#9fd0f7" /><circle cx="281" cy="123" r="1.8" fill="#6ccb5f" /></g>
+    <g class="a-float-3"><ellipse cx="320" cy="116" rx="20" ry="7" fill="#50e6ff" /><path d="M300 116v32c0 4 9 7 20 7s20-3 20-7v-32" fill="#0099bc" /><ellipse cx="320" cy="116" rx="20" ry="7" fill="#50e6ff" /></g>
+    <g class="a-float"><path d="M376 108l6 14 14 6-14 6-6 14-6-14-14-6 14-6z" fill="#ffb900" /></g>
+    <text x="270" y="176" text-anchor="middle" class="sub">Compute</text>
+    <text x="320" y="176" text-anchor="middle" class="sub">Storage</text>
+    <text x="376" y="176" text-anchor="middle" class="sub">AI</text>
+  </g>
+  <!-- laptop -->
+  <g transform="translate(70 238)"><rect x="0" y="0" width="52" height="32" rx="4" fill="#243a5e" /><rect x="4" y="4" width="44" height="24" rx="2" fill="#9fd0f7" /><rect x="-8" y="32" width="68" height="6" rx="3" fill="#465a7a" /></g>
+  <!-- phone -->
+  <g transform="translate(188 232)"><rect width="26" height="46" rx="6" fill="#243a5e" /><rect x="3" y="5" width="20" height="34" rx="2" fill="#9fd0f7" /></g>
+  <!-- shop -->
+  <g transform="translate(428 234)"><rect y="12" width="56" height="34" fill="#ffd75e" /><path d="M-4 14h64l-6-14H2z" fill="#e74856" /><rect x="20" y="26" width="16" height="20" fill="#8a5300" /></g>
+  <!-- school -->
+  <g transform="translate(532 230)"><rect y="16" width="60" height="34" fill="#fde7e9" stroke="#c19c00" /><path d="M-4 18L30 0l34 18z" fill="#107c10" /><rect x="24" y="30" width="12" height="20" fill="#0078d4" /><circle cx="30" cy="11" r="3" fill="#fff" /></g>
+  {devices.map((d) => <text x={d.x + 26} y="296" text-anchor="middle" class="lbl">{d.label}</text>)}
+</svg>

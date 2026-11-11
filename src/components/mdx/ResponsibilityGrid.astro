@@ -1,0 +1,51 @@
+---
+/**
+ * Shared responsibility matrix, following Microsoft's published model
+ * (learn.microsoft.com/azure/security/fundamentals/shared-responsibility).
+ * c = customer, s = shared, m = Microsoft.
+ */
+const cols = ['On-premises', 'IaaS', 'PaaS', 'SaaS'];
+const rows: [string, string][] = [
+  ['Information and data', 'cccc'],
+  ['Devices (mobile and PCs)', 'cccc'],
+  ['Accounts and identities', 'cccc'],
+  ['Identity and directory infrastructure', 'ccss'],
+  ['Applications', 'ccsm'],
+  ['Network controls', 'ccsm'],
+  ['Operating system', 'ccmm'],
+  ['Physical hosts', 'cmmm'],
+  ['Physical network', 'cmmm'],
+  ['Physical datacenter', 'cmmm'],
+];
+const label = { c: 'You', s: 'Shared', m: 'Microsoft' } as const;
+---
+<figure class="card p-4 sm:p-5">
+  <p class="mb-2 text-xs text-muted sm:hidden" aria-hidden="true">Swipe to see IaaS, PaaS and SaaS →</p>
+  <div class="overflow-x-auto">
+    <table class="w-full min-w-[34rem] border-separate border-spacing-1 text-sm">
+      <caption class="sr-only">Who is responsible for each layer in on-premises, IaaS, PaaS and SaaS</caption>
+      <thead>
+        <tr>
+          <th scope="col" class="p-2 text-left font-semibold">Responsibility</th>
+          {cols.map((c) => <th scope="col" class="p-2 text-center font-semibold">{c}</th>)}
+        </tr>
+      </thead>
+      <tbody>
+        {rows.map(([name, code]) => (
+          <tr>
+            <th scope="row" class="p-2 text-left font-medium">{name}</th>
+            {[...code].map((k) => (
+              <td class={`resp-${k} rounded-md p-2 text-center text-xs font-semibold`}>{label[k as 'c' | 's' | 'm']}</td>
+            ))}
+          </tr>
+        ))}
+      </tbody>
+    </table>
+  </div>
+  <div class="mt-3 flex flex-wrap justify-center gap-3 text-xs">
+    <span class="resp-c rounded-md px-2 py-1 font-semibold">You (customer)</span>
+    <span class="resp-s rounded-md px-2 py-1 font-semibold">Shared</span>
+    <span class="resp-m rounded-md px-2 py-1 font-semibold">Microsoft (cloud provider)</span>
+  </div>
+  <figcaption class="mt-3 text-center text-sm text-muted">The further right you move, the more the provider manages. The top three rows are always yours.</figcaption>
+</figure>

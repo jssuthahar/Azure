@@ -1,0 +1,169 @@
+---
+title: High Availability
+seoTitle: High Availability in Azure and SLAs Explained | AZ-900
+description: High availability in the cloud explained with SLAs, an uptime calculator, availability zones and real examples, plus interview questions and AZ-900 practice.
+answer: >-
+  **High availability** means designing a system so it stays **accessible and running for the maximum possible time**, even when individual components fail. In Azure you achieve it with redundancy (multiple instances, availability zones, load balancers). Microsoft expresses the expected uptime of a service as a percentage in its **Service Level Agreement (SLA)**, such as 99.9% or 99.99%.
+updated: 2026-11-11
+readingMinutes: 9
+keyTerms:
+  - term: High availability (HA)
+    definition: Keeping a service accessible with minimal downtime, despite failures of individual components.
+  - term: Uptime
+    definition: The percentage of time a service is available.
+  - term: SLA
+    definition: Service Level Agreement. Microsoft's formal commitment to a level of uptime or connectivity, often with service credits if missed.
+  - term: Redundancy
+    definition: Running duplicate components so one failure does not take the service down.
+  - term: Single point of failure
+    definition: Any component whose failure stops the whole system.
+  - term: Availability zone
+    definition: A physically separate group of datacenters within an Azure region, with independent power, cooling and networking.
+interview:
+  - level: beginner
+    q: What is high availability?
+    a: >-
+      High availability means a system keeps working with very little downtime even when parts of it fail. For example, running two web servers behind a load balancer so if one crashes, the other keeps serving users.
+    followUps:
+      - q: How does Azure describe availability?
+        a: >-
+          With Service Level Agreements (SLAs) that state a guaranteed uptime percentage for each service, like 99.95% or 99.99%. If Microsoft misses it, customers can claim service credits.
+  - level: intermediate
+    q: How much downtime does a 99.9% SLA allow per month, versus 99.99%?
+    a: >-
+      About 43.8 minutes per month for 99.9%, and about 4.4 minutes for 99.99%. Every additional nine cuts allowed downtime by a factor of ten.
+    followUps: []
+  - level: experienced
+    q: Your app uses App Service (99.95%) and Azure SQL Database (99.99%). What is the composite SLA and how would you improve it?
+    a: >-
+      Both must work, so you multiply, 0.9995 × 0.9999 ≈ 99.94%, which is lower than either part. To raise it, deploy zone-redundant tiers in a region with availability zones, or run active-active in two regions behind Azure Front Door with geo-replicated data. That raises availability because a failure must hit both paths at once. Also remember the SLA is the provider's commitment for its part. Your own code, deployments and dependencies affect real availability too.
+    followUps:
+      - q: Does a higher SLA always justify the cost?
+        a: >-
+          No. Start from the business impact of downtime. If an hour of outage costs little, a multi-region active-active design may cost more than it saves. Define availability targets with the business, then design to them.
+  - level: scenario
+    q: An online exam platform cannot be down during exam windows. What would you design for high availability in Azure?
+    a: >-
+      At least two instances of each tier spread across availability zones, zone-redundant database and storage, a load balancer or Front Door in front, health probes so unhealthy instances are removed, and deployment slots to avoid downtime during releases. Optionally a secondary region for regional failure.
+    followUps: []
+revision:
+  keyPoints:
+    - High availability = maximise uptime despite component failures.
+    - Achieved with **redundancy**, removing single points of failure.
+    - Azure tools include multiple instances, availability zones, availability sets, load balancers and zone-redundant services.
+    - Uptime is promised in **SLAs** as a percentage.
+    - "Composite SLA: multiply SLAs of components that all must work."
+  mistakes:
+    - Thinking a single VM is highly available. It is a single point of failure.
+    - Adding SLAs together instead of multiplying them.
+  examTips:
+    - '"Ensure the app remains available if a datacenter fails" = **availability zones** / high availability.'
+    - High availability is about **uptime**. Scalability is about **capacity**. Do not mix them up.
+  quick:
+    - q: What does high availability aim to maximise?
+      a: Uptime, meaning the time the service is available.
+    - q: What document defines Microsoft's uptime commitment for a service?
+      a: The Service Level Agreement (SLA).
+    - q: About how much downtime per month does 99.9% allow?
+      a: About 43.8 minutes.
+    - q: What is a single point of failure?
+      a: A component whose failure stops the whole system.
+    - q: How do you calculate a composite SLA for two services that both must work?
+      a: Multiply their SLAs, for example 0.9995 × 0.9999.
+references:
+  - title: Describe the benefits of high availability and scalability (Microsoft Learn)
+    url: https://learn.microsoft.com/en-us/training/modules/describe-benefits-use-cloud-services/
+  - title: Service Level Agreements for Online Services
+    url: https://www.microsoft.com/licensing/docs/view/Service-Level-Agreements-SLA-for-Online-Services
+  - title: What are availability zones?
+    url: https://learn.microsoft.com/en-us/azure/reliability/availability-zones-overview
+related:
+  - reliability
+  - scalability
+  - elasticity
+---
+
+## Start with a question
+
+<Story question="What happens to an online exam if the only server running it crashes at 9:15?">
+
+Ten thousand students see an error page. Some lose their answers. The school has to reschedule, and trust is gone.
+
+Now imagine the same exam running on **three servers in three separate buildings**. One crashes, and the other two carry on. Students do not even notice. That is **high availability**.
+
+</Story>
+
+## Explain it like I'm 10
+
+<Eli10>
+
+Think about the **lights in your classroom**. If there were just one bulb and it broke, the room would go dark. But there are many bulbs, so if one breaks, you can still see.
+
+High availability is putting **lots of "bulbs"** (copies of a computer program) in **different places**, so if one stops working, the others keep the lights on.
+
+</Eli10>
+
+## The technical explanation
+
+**High availability (HA)** is the ability of a system to remain operational and accessible for as much time as possible. Failures *will* happen: disks die, servers crash, power fails, a datacenter has a problem. HA design makes sure **no single failure takes the service down**.
+
+The key technique is **redundancy**, removing every single point of failure:
+
+| Failure | Azure HA technique |
+| --- | --- |
+| One VM or instance crashes | Run 2+ instances behind a load balancer (Scale Sets, App Service with multiple instances) |
+| A server rack or update domain has a problem | Availability sets spread VMs across fault and update domains |
+| An entire datacenter goes down | **Availability zones**: spread instances across physically separate zones |
+| A whole region is unavailable | Multi-region deployment with Azure Front Door or Traffic Manager |
+| Storage hardware fails | Redundant storage (LRS, ZRS, GRS, GZRS), covered in Module 2 |
+
+### Service Level Agreements
+
+Microsoft publishes an **SLA** for each service: a formal commitment to a percentage of uptime (or connectivity), with **service credits** if it falls short. Small differences in percentages mean very different amounts of downtime. Try it:
+
+<SlaCalculator />
+
+<TryIt labs="storage-redundancy" text="Choose zone-redundant storage (ZRS) and then geo-zone-redundant storage (GZRS) to protect data against datacenter and regional failures." />
+
+<Callout type="exam">
+For AZ-900 you do not need to memorise every SLA. Understand that **SLAs are expressed as percentages**, that **higher percentages mean less downtime**, that **combining services multiplies their SLAs** (and lowers the total), and that **redundancy across zones or regions** raises availability.
+</Callout>
+
+<DeepDive title="Designing HA without wasting money">
+
+- **Start with targets**: agree on an availability objective with the business (for example 99.95%), plus recovery time and recovery point objectives (RTO, RPO) for disasters.
+- **Zone-redundant by default** in regions that support zones. For many PaaS services (App Service Premium, Azure SQL Database, Storage ZRS) it is a configuration flag, often at little or no extra cost.
+- **Health probes and graceful degradation**: load balancers should remove unhealthy instances quickly; the app should degrade (for example, read-only mode) rather than fail completely.
+- **Deployments cause outages too**: blue-green or slot swaps, feature flags and safe rollout reduce self-inflicted downtime, which is often the biggest source of unavailability.
+- **Multi-region is expensive** in money and complexity (data replication, consistency, failover testing). Use it where the business impact justifies it.
+
+</DeepDive>
+
+## Real-world business scenario
+
+<Scenario
+  company="An online payments provider"
+  industry="Banking / payments"
+  problem="Every minute of downtime means failed customer payments and penalties from merchants. The single-datacenter setup had two outages last year."
+  service="Payment API on App Service Premium with zone redundancy, Azure SQL Database zone-redundant, Azure Front Door for global entry, and a warm standby in a second region."
+  why="Zones protect against datacenter failures within the region; the second region protects against a full regional outage."
+  outcome="Planned maintenance and a datacenter power event in the next year caused no customer-visible downtime."
+/>
+
+## When to use it and when not to
+
+<UseWhen
+  use={[
+    'Customer-facing or revenue-generating systems.',
+    'Systems with contractual uptime commitments to your own customers.',
+    'Anything where downtime causes safety, legal or reputational harm (healthcare, payments, exams).',
+  ]}
+  avoid={[
+    'Spending on multi-region HA for internal tools where a few hours of downtime is acceptable.',
+    'Assuming the provider SLA alone makes your app highly available. Your design matters.',
+  ]}
+  alternatives={[
+    '**Backup and restore** for non-critical systems, which is cheaper but takes longer to recover.',
+    '**Single-region, zone-redundant** design as a cost-effective middle ground.',
+  ]}
+/>

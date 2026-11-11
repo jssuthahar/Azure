@@ -1,0 +1,91 @@
+{
+ "cert": "az-900",
+ "domain": 2,
+ "topic": "vpn-gateway",
+ "questions": [
+  {
+   "id": "t-vpn-1",
+   "type": "single",
+   "question": "Which service creates an encrypted connection between an office network and Azure over the public internet?",
+   "options": [
+    {
+     "text": "Azure VPN Gateway (site-to-site)",
+     "why": "Correct."
+    },
+    {
+     "text": "Azure ExpressRoute",
+     "why": "Private, not over the internet."
+    },
+    {
+     "text": "Azure DNS",
+     "why": "Name resolution."
+    },
+    {
+     "text": "VNet peering",
+     "why": "Connects VNets."
+    }
+   ],
+   "answer": [
+    0
+   ],
+   "explanation": "VPN Gateway uses encrypted tunnels over the internet.",
+   "objective": "2.2.5"
+  },
+  {
+   "id": "t-vpn-2",
+   "type": "single",
+   "question": "Remote employees need to connect their individual laptops securely to an Azure VNet. What should you configure?",
+   "options": [
+    {
+     "text": "A point-to-site VPN",
+     "why": "Correct."
+    },
+    {
+     "text": "A site-to-site VPN",
+     "why": "Connects whole networks."
+    },
+    {
+     "text": "An availability set",
+     "why": "Unrelated."
+    },
+    {
+     "text": "ExpressRoute Global Reach",
+     "why": "Connects on-premises sites."
+    }
+   ],
+   "answer": [
+    0
+   ],
+   "explanation": "Point-to-site connects individual devices.",
+   "objective": "2.2.5"
+  },
+  {
+   "id": "t-vpn-3",
+   "type": "single",
+   "question": "How many VPN gateways can you deploy in one virtual network?",
+   "options": [
+    {
+     "text": "One",
+     "why": "Correct."
+    },
+    {
+     "text": "Unlimited",
+     "why": "One per VNet."
+    },
+    {
+     "text": "Three, one per zone",
+     "why": "A gateway can be zone-redundant, but it is still one."
+    },
+    {
+     "text": "None",
+     "why": "VNets support a VPN gateway."
+    }
+   ],
+   "answer": [
+    0
+   ],
+   "explanation": "Each VNet can have one VPN gateway.",
+   "objective": "2.2.5"
+  }
+ ]
+}

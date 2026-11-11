@@ -1,0 +1,91 @@
+{
+ "cert": "az-900",
+ "domain": 3,
+ "topic": "cost-management",
+ "questions": [
+  {
+   "id": "t-cm-1",
+   "type": "single",
+   "question": "You want to be notified when a subscription's spending reaches 80% of a set amount. What should you configure?",
+   "options": [
+    {
+     "text": "A budget with an alert in Cost Management",
+     "why": "Correct."
+    },
+    {
+     "text": "A resource lock",
+     "why": "Prevents deletion."
+    },
+    {
+     "text": "An availability zone",
+     "why": "Resilience."
+    },
+    {
+     "text": "A tag",
+     "why": "Metadata only."
+    }
+   ],
+   "answer": [
+    0
+   ],
+   "explanation": "Budgets trigger alerts at thresholds.",
+   "objective": "3.1.3"
+  },
+  {
+   "id": "t-cm-2",
+   "type": "single",
+   "question": "Do Cost Management budgets automatically stop resources when exceeded?",
+   "options": [
+    {
+     "text": "No, they send alerts unless you add automation",
+     "why": "Correct."
+    },
+    {
+     "text": "Yes, always",
+     "why": "Budgets alert by default."
+    },
+    {
+     "text": "Only for VMs",
+     "why": "No."
+    },
+    {
+     "text": "Only on weekends",
+     "why": "No."
+    }
+   ],
+   "answer": [
+    0
+   ],
+   "explanation": "Use action groups to automate responses.",
+   "objective": "3.1.3"
+  },
+  {
+   "id": "t-cm-3",
+   "type": "single",
+   "question": "Which Cost Management feature lets you explore spending by service, resource group and tag?",
+   "options": [
+    {
+     "text": "Cost analysis",
+     "why": "Correct."
+    },
+    {
+     "text": "Azure Policy",
+     "why": "Governance."
+    },
+    {
+     "text": "Secure score",
+     "why": "Security."
+    },
+    {
+     "text": "Activity log",
+     "why": "Operations log."
+    }
+   ],
+   "answer": [
+    0
+   ],
+   "explanation": "Cost analysis visualises spending.",
+   "objective": "3.1.3"
+  }
+ ]
+}

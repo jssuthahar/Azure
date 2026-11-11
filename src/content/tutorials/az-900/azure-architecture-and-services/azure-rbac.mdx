@@ -1,0 +1,109 @@
+---
+title: Azure Role-Based Access Control (RBAC)
+seoTitle: "Azure RBAC: Roles, Scopes and Least Privilege | AZ-900"
+description: "Azure role-based access control explained: security principals, roles, scopes, inheritance and least privilege, with examples and AZ-900 practice."
+answer: >-
+  **Azure role-based access control (RBAC)** manages **who** can do **what** on **which** Azure resources. You create a **role assignment** combining a security principal (user, group or app), a role definition (such as Owner, Contributor or Reader) and a scope (management group, subscription, resource group or resource). Permissions are inherited by child scopes.
+updated: 2026-11-11
+readingMinutes: 6
+keyTerms:
+  - term: Security principal
+    definition: A user, group, service principal or managed identity that receives access.
+  - term: Role definition
+    definition: A collection of permissions, such as Reader or Contributor.
+  - term: Scope
+    definition: "Where the access applies: management group, subscription, resource group or resource."
+  - term: Least privilege
+    definition: Giving only the minimum permissions needed to do the job.
+interview:
+  - level: beginner
+    q: What is Azure RBAC?
+    a: >-
+      The way Azure controls who can do what. I assign a role, like Reader, to a person or group at a scope, like a resource group, and they get exactly those permissions there.
+    followUps: []
+  - level: intermediate
+    q: What are the most common built-in roles?
+    a: >-
+      Owner (full access, including assigning access), Contributor (create and manage resources but not grant access), Reader (view only), and User Access Administrator (manage access only).
+    followUps: []
+  - level: experienced
+    q: How do RBAC and Azure Policy differ, and how do they work together?
+    a: >-
+      RBAC controls who can perform actions. Policy controls what resources may look like. A Contributor can create a VM, but Policy can still deny it if it is in a non-approved region or size. Together they enforce both permissions and standards.
+    followUps: []
+revision:
+  keyPoints:
+    - RBAC = who (principal) + what (role) + where (scope).
+    - Scopes are management group, subscription, resource group or resource.
+    - Permissions inherit down the hierarchy.
+    - Built-in roles include Owner, Contributor, Reader and User Access Administrator.
+    - Follow least privilege.
+  mistakes:
+    - Giving everyone Owner to "save time".
+    - Confusing RBAC (who) with Policy (what resources look like).
+  examTips:
+    - '"Allow a user to view but not change resources" = assign the **Reader** role.'
+  quick:
+    - q: What three things make up a role assignment?
+      a: A security principal, a role definition and a scope.
+    - q: Which role can create resources but not grant access?
+      a: Contributor.
+    - q: Which role can only view?
+      a: Reader.
+    - q: Do permissions assigned at a subscription apply to its resource groups?
+      a: Yes, through inheritance.
+    - q: What is least privilege?
+      a: Giving only the minimum access needed.
+references:
+  - title: What is Azure RBAC?
+    url: https://learn.microsoft.com/en-us/azure/role-based-access-control/overview
+related:
+  - management-hierarchy
+  - governance
+  - zero-trust
+---
+
+## Start with a question
+
+<Story question="Should the new intern be able to delete the production database?">
+
+Certainly not. **Azure RBAC** makes sure each person gets just the access they need.
+
+</Story>
+
+## Explain it like I'm 10
+
+<Eli10>
+
+At school, the **caretaker** has keys to every room, **teachers** have keys to their classrooms, and **students** can only look through the window. Each person gets the right keys for their job. That's RBAC.
+
+</Eli10>
+
+## The technical explanation
+
+| Built-in role | Can do |
+| --- | --- |
+| Owner | Everything, including granting access to others |
+| Contributor | Create and manage resources, but not grant access |
+| Reader | View resources only |
+| User Access Administrator | Manage user access only |
+
+Role assignments at a scope are **inherited** by all child scopes. RBAC uses an **allow** model: permissions add up across assignments.
+
+## Real-world business scenario
+
+<Scenario
+  company="A software agency"
+  industry="Enterprise"
+  problem="All developers were Owners on the production subscription, and an accidental deletion caused an outage."
+  service="Developers got Contributor on dev resource groups and Reader on production; a small ops group got Contributor on production."
+  why="Least privilege limits the damage from mistakes and compromised accounts."
+  outcome="No more accidental production changes, and audits became simple."
+/>
+
+## When to use it and when not to
+
+<UseWhen
+  use={['Always, to grant access by role and scope.', 'Assign roles to groups rather than individuals.']}
+  avoid={['Broad Owner assignments at high scopes.']}
+/>

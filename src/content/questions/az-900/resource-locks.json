@@ -1,0 +1,91 @@
+{
+ "cert": "az-900",
+ "domain": 3,
+ "topic": "resource-locks",
+ "questions": [
+  {
+   "id": "t-lk-1",
+   "type": "single",
+   "question": "Which lock prevents deletion but still allows a resource to be modified?",
+   "options": [
+    {
+     "text": "Delete (CanNotDelete)",
+     "why": "Correct."
+    },
+    {
+     "text": "ReadOnly",
+     "why": "Blocks modification too."
+    },
+    {
+     "text": "Tag lock",
+     "why": "Not a lock type."
+    },
+    {
+     "text": "RBAC Reader",
+     "why": "A role, not a lock."
+    }
+   ],
+   "answer": [
+    0
+   ],
+   "explanation": "Delete locks block deletion only.",
+   "objective": "3.2.3"
+  },
+  {
+   "id": "t-lk-2",
+   "type": "single",
+   "question": "A user with the Owner role tries to delete a resource with a ReadOnly lock. What happens?",
+   "options": [
+    {
+     "text": "The deletion is blocked until the lock is removed",
+     "why": "Correct."
+    },
+    {
+     "text": "The resource is deleted",
+     "why": "Locks apply to Owners too."
+    },
+    {
+     "text": "The lock is removed automatically",
+     "why": "No."
+    },
+    {
+     "text": "The resource moves to another region",
+     "why": "No."
+    }
+   ],
+   "answer": [
+    0
+   ],
+   "explanation": "Locks override RBAC permissions.",
+   "objective": "3.2.3"
+  },
+  {
+   "id": "t-lk-3",
+   "type": "single",
+   "question": "A Delete lock is applied to a resource group. What does it protect?",
+   "options": [
+    {
+     "text": "The resource group and all resources in it",
+     "why": "Correct. Locks are inherited."
+    },
+    {
+     "text": "Only the resource group, not its resources",
+     "why": "Resources inherit the lock."
+    },
+    {
+     "text": "Only VMs",
+     "why": "All resources."
+    },
+    {
+     "text": "Nothing until each resource is locked",
+     "why": "Inheritance is automatic."
+    }
+   ],
+   "answer": [
+    0
+   ],
+   "explanation": "Locks apply to child resources.",
+   "objective": "3.2.3"
+  }
+ ]
+}

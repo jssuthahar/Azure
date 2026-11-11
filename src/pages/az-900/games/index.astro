@@ -1,0 +1,74 @@
+---
+import Base from '../../../layouts/Base.astro';
+import Mascot from '../../../components/Mascot.astro';
+import { SORT_SETS, RIDDLES } from '../../../data/az-900/games';
+
+const games = [
+  { href: '/az-900/games/daily/', icon: '📅', title: 'Daily Challenge', text: '5 questions a day, the same for everyone. Keep your streak alive!', band: 'band-yellow', key: 'daily', tag: 'New every day' },
+  { href: '/az-900/games/sort/', icon: '🗂️', title: 'Sort It!', text: `Tap each card into the right bucket. ${SORT_SETS.length} rounds: IaaS/PaaS/SaaS, CapEx/OpEx and more.`, band: 'band-blue', key: 'sort', tag: `${SORT_SETS.length} rounds` },
+  { href: '/az-900/games/match/', icon: '🧠', title: 'Match the Pairs', text: 'Flip cards to match each Azure term with its meaning. Fewer moves, more points.', band: 'band-green', key: 'match', tag: 'Memory game' },
+  { href: '/az-900/games/lightning/', icon: '⚡', title: 'Lightning Round', text: 'How many questions can you answer in 60 seconds? Build combos for bonus points.', band: 'band-lilac', key: 'lightning', tag: '60 seconds' },
+  { href: '/az-900/games/who-am-i/', icon: '🕵️', title: 'Who Am I?', text: `Guess the Azure service from clues. Fewer clues, more points. ${RIDDLES.length} riddles.`, band: 'band-yellow', key: 'whoami', tag: 'Riddles' },
+];
+---
+<Base title="AZ-900 Games: Learn Azure by Playing | MSDEVBUILD" description="Learn Azure fundamentals the fun way: sorting games, memory pairs, a 60-second lightning quiz, Who Am I riddles and a daily challenge, with XP and badges." breadcrumbs={[{ name: 'Home', url: '/' }, { name: 'AZ-900', url: '/az-900/' }, { name: 'Play & Learn', url: '/az-900/games/' }]}>
+  <section class="band-navy px-4 py-12 text-center sm:py-16">
+    <Mascot size={96} mood="cheer" class="mx-auto" />
+    <h1 class="mt-4 text-4xl font-bold tracking-tight sm:text-6xl">Play &amp; Learn</h1>
+    <p class="mx-auto mt-3 max-w-2xl text-lg text-white/90 sm:text-xl">Games that make Azure stick. Earn XP, level up from <strong>Cloud Seed 🌱</strong> to <strong>Azure Legend 👑</strong>, and keep your 🔥 streak going.</p>
+    <div id="hub-level" class="mx-auto mt-6 hidden max-w-md rounded-2xl bg-white/10 p-4 text-left">
+      <div class="flex items-center justify-between text-sm"><span id="hub-name" class="font-semibold"></span><span id="hub-xp"></span></div>
+      <div class="bar mt-2 !border-white/20 !bg-white/10"><span id="hub-bar" style="width:0;background:#ffd75e"></span></div>
+      <p id="hub-next" class="mt-1.5 text-xs text-white/75"></p>
+    </div>
+  </section>
+
+  <div class="mx-auto grid max-w-6xl gap-5 px-4 py-10 sm:grid-cols-2 sm:px-6 lg:grid-cols-3">
+    {games.map((g) => (
+      <a href={g.href} class={`${g.band} group flex flex-col rounded-2xl p-6 transition-transform hover:-translate-y-1`}>
+        <div class="flex items-start justify-between">
+          <span class="text-5xl transition-transform group-hover:scale-110" aria-hidden="true">{g.icon}</span>
+          <span class="rounded-full bg-[var(--card)] px-3 py-1 text-xs font-semibold">{g.tag}</span>
+        </div>
+        <h2 class="mt-4 text-2xl font-bold">{g.title}</h2>
+        <p class="mt-1.5 flex-1 leading-relaxed">{g.text}</p>
+        <div class="mt-5 flex items-center justify-between">
+          <span class="nav-btn">Play ❯</span>
+          <span class="text-sm font-semibold" data-best={g.key}></span>
+        </div>
+      </a>
+    ))}
+    <div class="flex flex-col justify-center rounded-2xl border-2 border-dashed border-default p-6">
+      <p class="text-lg font-semibold">How to earn XP ⭐</p>
+      <ul class="mt-3 space-y-1.5 text-[0.95rem]">
+        <li>📘 Finish a lesson: <strong>+50</strong></li>
+        <li>✅ Each correct quiz answer: <strong>+10</strong></li>
+        <li>📅 Daily Challenge: <strong>up to +70</strong></li>
+        <li>🎮 Games: <strong>points based on score</strong></li>
+        <li>⏱️ Mock exam: <strong>+3 per correct answer</strong></li>
+        <li>🎤 Interview practice: <strong>+5</strong></li>
+      </ul>
+      <a href="/progress/" class="mt-4 text-accent underline">See your badges ❯</a>
+    </div>
+  </div>
+</Base>
+<script>
+  import { load, levelFor, today } from '../../../lib/progress';
+  const s = load();
+  const lv = levelFor(s.xp);
+  if (s.xp > 0) {
+    document.getElementById('hub-level')!.classList.remove('hidden');
+    document.getElementById('hub-name')!.textContent = `${lv.icon} Level ${lv.level}: ${lv.name}`;
+    document.getElementById('hub-xp')!.textContent = `${s.xp} XP`;
+    (document.getElementById('hub-bar') as HTMLElement).style.width = `${lv.pct}%`;
+    document.getElementById('hub-next')!.textContent = lv.next ? `${lv.next.min - s.xp} XP to ${lv.next.icon} ${lv.next.name}` : 'Top level reached. Legendary!';
+  }
+  const label: Record<string, string> = {
+    daily: s.daily[today()] !== undefined ? `✓ Done today (${s.daily[today()]}/5)` : '',
+    sort: s.games.sort ? `Best: ${s.games.sort}` : '',
+    match: s.games.match ? `Best: ${s.games.match}` : '',
+    lightning: s.games.lightning ? `Best: ${s.games.lightning}` : '',
+    whoami: s.games.whoami ? `Best: ${s.games.whoami}` : '',
+  };
+  document.querySelectorAll<HTMLElement>('[data-best]').forEach((el) => (el.textContent = label[el.dataset.best!] ?? ''));
+</script>

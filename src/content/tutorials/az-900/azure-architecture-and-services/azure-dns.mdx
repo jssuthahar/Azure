@@ -1,0 +1,102 @@
+---
+title: Azure DNS
+seoTitle: Azure DNS Explained Simply | AZ-900
+description: "Azure DNS explained: hosting DNS domains on Azure, records, private DNS zones and alias records, with interview questions and AZ-900 practice."
+answer: >-
+  **Azure DNS** is a hosting service for DNS domains that provides name resolution using Microsoft's global infrastructure. It turns names like shop.contoso.com into IP addresses. You manage DNS records with the same tools, access control and billing as your other Azure resources. You cannot buy a domain name through Azure DNS itself.
+updated: 2026-11-11
+readingMinutes: 5
+keyTerms:
+  - term: DNS
+    definition: Domain Name System, the internet's phone book that turns names into IP addresses.
+  - term: DNS zone
+    definition: A container for the DNS records of one domain, such as contoso.com.
+  - term: Private DNS zone
+    definition: A DNS zone that resolves names only inside your virtual networks.
+  - term: Alias record
+    definition: A DNS record that points directly to an Azure resource and updates if its IP changes.
+interview:
+  - level: beginner
+    q: What does Azure DNS do?
+    a: >-
+      It hosts my domain's DNS records on Azure, so when someone types my website name, Azure DNS answers with the right IP address.
+    followUps:
+      - q: Can I buy a domain in Azure DNS?
+        a: >-
+          No. Azure DNS hosts domains. You buy the domain from a registrar (or through App Service domains) and point its name servers to Azure DNS.
+  - level: intermediate
+    q: What are the benefits of Azure DNS?
+    a: >-
+      Reliability and performance from a global network of name servers using anycast, security through Azure RBAC, activity logs and resource locks, ease of use with the same portal, CLI and APIs, private DNS zones for VNets, and alias records that track Azure resources.
+    followUps: []
+  - level: experienced
+    q: Why are private DNS zones important with private endpoints?
+    a: >-
+      A private endpoint gives a PaaS service a private IP in your VNet. Private DNS zones make the service's normal name resolve to that private IP inside the VNet, so applications connect privately without code changes.
+    followUps: []
+revision:
+  keyPoints:
+    - Azure DNS hosts DNS domains and records on Microsoft's global network.
+    - Managed with Azure tools, RBAC, locks and logs.
+    - Private DNS zones resolve names inside VNets.
+    - You cannot buy domain names in Azure DNS.
+  mistakes:
+    - Thinking Azure DNS sells domain names.
+  examTips:
+    - '"Host DNS domains in Azure" = **Azure DNS**.'
+  quick:
+    - q: What does DNS do?
+      a: Translates names into IP addresses.
+    - q: Can you buy a domain name through Azure DNS?
+      a: No, it hosts domains you already own.
+    - q: What is a private DNS zone?
+      a: A DNS zone that resolves names only within your virtual networks.
+    - q: What is an alias record?
+      a: A record that points directly to an Azure resource and updates automatically.
+    - q: How is Azure DNS secured?
+      a: With Azure RBAC, activity logs and resource locks.
+references:
+  - title: What is Azure DNS?
+    url: https://learn.microsoft.com/en-us/azure/dns/dns-overview
+related:
+  - public-and-private-endpoints
+  - virtual-networks-and-subnets
+---
+
+## Start with a question
+
+<Story question="How does your browser know where shop.contoso.com lives?">
+
+It asks **DNS**, the internet's phone book. Azure DNS can be that phone book for your domains.
+
+</Story>
+
+## Explain it like I'm 10
+
+<Eli10>
+
+Your phone stores friends by **name**, but it actually dials a **number**. DNS is the contacts app of the internet: you type a name, it finds the number.
+
+</Eli10>
+
+## The technical explanation
+
+Azure DNS hosts **DNS zones** containing records such as A (IPv4), AAAA (IPv6), CNAME (alias name), MX (mail) and TXT. It uses a global network of name servers with **anycast** routing for fast, reliable answers. **Private DNS zones** provide name resolution inside VNets, and **alias records** point straight at Azure resources such as public IPs or Front Door.
+
+## Real-world business scenario
+
+<Scenario
+  company="A marketing agency"
+  industry="Enterprise"
+  problem="Client DNS records were spread across several registrars, and changes were slow and error-prone."
+  service="Moved DNS zones to Azure DNS, with RBAC per client and resource locks on production zones."
+  why="One place, one set of tools, with access control and audit logs."
+  outcome="DNS changes became quick and auditable, and accidental deletions stopped."
+/>
+
+## When to use it and when not to
+
+<UseWhen
+  use={['Hosting public DNS for domains you own.', 'Private name resolution inside VNets.']}
+  avoid={['Buying new domain names (use a registrar).']}
+/>

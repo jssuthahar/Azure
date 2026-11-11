@@ -1,0 +1,103 @@
+---
+title: Microsoft Cost Management
+seoTitle: Microsoft Cost Management and Budgets Explained | AZ-900
+description: "Microsoft Cost Management explained: cost analysis, budgets, alerts and recommendations to track and control Azure spending, with AZ-900 practice."
+answer: >-
+  **Microsoft Cost Management** helps you **track, analyse and control Azure spending** after you deploy. Use **cost analysis** to see where money goes, **budgets** to set spending limits, **alerts** to be warned before you overspend, and **recommendations** to find savings. It is built into the Azure portal.
+updated: 2026-11-11
+readingMinutes: 6
+keyTerms:
+  - term: Cost analysis
+    definition: Interactive charts of spending by service, resource group, tag, region and time.
+  - term: Budget
+    definition: A spending limit with alerts at chosen percentages of actual or forecast cost.
+  - term: Cost alert
+    definition: A notification, such as a budget alert, credit alert or department spending quota alert.
+interview:
+  - level: beginner
+    q: What is Microsoft Cost Management used for?
+    a: >-
+      To see how much I'm spending on Azure, what's costing the most, and to set budgets with alerts so I'm warned before going over.
+    followUps: []
+  - level: intermediate
+    q: What types of cost alerts are there?
+    a: >-
+      Budget alerts when spending reaches a threshold of a budget, credit alerts when monetary credits are being used up, and department spending quota alerts for enterprise agreements. Anomaly alerts can flag unusual spikes.
+    followUps: []
+  - level: experienced
+    q: Do budgets stop resources when exceeded?
+    a: >-
+      Not by themselves. Budgets alert. To act automatically, connect budget alerts to action groups that trigger Logic Apps, Functions or Automation runbooks, for example to shut down dev VMs. Plan carefully so production is not stopped by accident.
+    followUps: []
+revision:
+  keyPoints:
+    - Cost analysis shows where money goes.
+    - Budgets and alerts warn before overspending.
+    - Recommendations (from Advisor) find savings.
+    - Group costs by tags, resource groups or subscriptions.
+  mistakes:
+    - Thinking budgets automatically stop spending.
+  examTips:
+    - '"Be notified when spending reaches 80% of a limit" = **budget alert in Cost Management**.'
+  quick:
+    - q: Which tool tracks actual Azure spending?
+      a: Microsoft Cost Management.
+    - q: What do budgets do?
+      a: Set spending limits and trigger alerts at thresholds.
+    - q: Do budgets stop resources automatically?
+      a: No, they alert. Automation can be added with action groups.
+    - q: How can you split costs by department?
+      a: Use tags or separate subscriptions and group cost analysis by them.
+    - q: Name a type of cost alert.
+      a: Budget alert (also credit and department spending quota alerts).
+references:
+  - title: What is Microsoft Cost Management?
+    url: https://learn.microsoft.com/en-us/azure/cost-management-billing/costs/overview-cost-management
+related:
+  - resource-tags
+  - pricing-calculator
+  - azure-advisor
+---
+
+## Start with a question
+
+<Story question="It’s the 20th of the month. Do you know if you’re about to blow your Azure budget?">
+
+With **Cost Management**, you'd have had an alert at 80%, and you'd know exactly which resource caused it.
+
+</Story>
+
+## Explain it like I'm 10
+
+<Eli10>
+
+It's like a **pocket money tracker app**: it shows what you've spent on sweets, games and comics, and beeps when you've used most of this week's money.
+
+</Eli10>
+
+## The technical explanation
+
+| Capability | What it does |
+| --- | --- |
+| Cost analysis | Explore spend by service, resource group, tag, location and time |
+| Budgets | Spending thresholds on subscriptions, resource groups or management groups |
+| Alerts | Budget, credit, department quota and anomaly alerts |
+| Recommendations | Right-sizing, reservations and shutting down idle resources (from Azure Advisor) |
+| Exports | Scheduled cost data exports for reporting |
+
+<TryIt labs="vm-and-cost" text="Open Cost Management in the simulated portal to see a live (illustrative) cost breakdown by resource." />
+
+## Real-world business scenario
+
+<Scenario
+  company="A marketing agency"
+  industry="Enterprise"
+  problem="A developer left a GPU VM running for a month, discovered only when the invoice arrived."
+  service="Budgets per team with alerts at 50%, 80% and 100%, plus tag-based cost views."
+  why="Early warnings and clear ownership."
+  outcome="Spending surprises stopped; the next runaway VM was caught within a day."
+/>
+
+## When to use it and when not to
+
+<UseWhen use={['Every subscription should have budgets and alerts.']} avoid={['Relying on the monthly invoice to discover problems.']} />

@@ -1,0 +1,165 @@
+---
+title: Consumption-Based Model
+seoTitle: Consumption-Based Model (Pay-as-you-go) Explained | AZ-900
+description: "The consumption-based model explained: pay for what you use, how Azure meters resources, cost traps, interview questions and AZ-900 practice."
+answer: >-
+  The **consumption-based model** means you **pay only for the cloud resources you use**, measured by time, quantity or transactions, instead of buying capacity up front. There is no up-front cost, nothing to pay for unused capacity, and you can stop paying by removing resources. It is the pricing foundation of cloud computing and turns IT spending into operating expenditure (OpEx).
+updated: 2026-11-11
+readingMinutes: 7
+keyTerms:
+  - term: Consumption-based model
+    definition: Paying for actual usage of resources rather than for fixed capacity bought in advance.
+  - term: Pay-as-you-go
+    definition: The default Azure pricing option, billed for usage with no commitment.
+  - term: Meter
+    definition: The unit Azure uses to measure a resource's usage, such as VM hours, GB stored per month or millions of executions.
+  - term: Egress
+    definition: Data transferred out of an Azure region or out to the internet, which is usually charged. Inbound data (ingress) is generally free.
+interview:
+  - level: beginner
+    q: What is the consumption-based model?
+    a: >-
+      It means paying for cloud resources based on how much you actually use, like an electricity bill. If I run a VM for ten hours, I pay for ten hours. If I delete it, I stop paying for it.
+    followUps:
+      - q: What benefits does that give a business?
+        a: >-
+          No up-front costs, no paying for idle capacity, the ability to experiment cheaply, and costs that grow and shrink with the business.
+  - level: intermediate
+    q: How does Azure measure consumption for different services? Give examples.
+    a: >-
+      Each service has meters. VMs are billed per second of running time by size, storage per GB per month plus operations, Azure Functions on consumption plans per execution and GB-seconds of memory, bandwidth per GB of egress, and databases by provisioned compute units or by serverless usage.
+    followUps: []
+  - level: experienced
+    q: The consumption model is flexible, but bills can surprise teams. What controls do you put in place?
+    a: >-
+      Budgets with alerts in Microsoft Cost Management at subscription and resource-group level, tagging policies so every cost has an owner, auto-shutdown for dev/test, Azure Advisor cost recommendations, anomaly alerts, and regular reviews of the biggest meters. Watch hidden meters like egress, log ingestion, premium storage transactions and orphaned disks or public IPs after VMs are deleted.
+    followUps: []
+  - level: scenario
+    q: A student creates a powerful GPU VM for a weekend project and forgets about it for a month. What happens?
+    a: >-
+      Under the consumption model they are billed for every hour it was running, which can be very expensive for GPU sizes. The fix is to stop (deallocate) or delete it, set a budget alert, and use auto-shutdown schedules.
+    followUps: []
+revision:
+  keyPoints:
+    - Pay only for what you use. No up-front cost, no charge for capacity you do not consume.
+    - Resources are metered by time, quantity or transactions.
+    - Delete or deallocate resources to stop most charges. Storage still costs while it exists.
+    - Turns IT spending into OpEx.
+    - Needs active cost management (budgets, tags, alerts).
+  mistakes:
+    - Assuming a stopped (but not deallocated) VM is free.
+    - Forgetting that disks, public IPs and backups keep billing after a VM is deleted unless removed too.
+  examTips:
+    - '"No up-front costs" + "pay for what you use" + "stop paying when you stop using" = **consumption-based model**.'
+    - Inbound data transfer to Azure is generally free; outbound data transfer is generally charged.
+  quick:
+    - q: What do you pay for in a consumption-based model?
+      a: Only the resources you actually use.
+    - q: Is there an up-front cost in the consumption model?
+      a: No.
+    - q: Which expenditure type does the consumption model represent?
+      a: OpEx (operational expenditure).
+    - q: Is inbound data transfer into Azure usually charged?
+      a: No, ingress is generally free. Egress is charged.
+    - q: Name one tool to avoid surprise bills.
+      a: Budgets and alerts in Microsoft Cost Management.
+references:
+  - title: Describe the consumption-based model (Microsoft Learn)
+    url: https://learn.microsoft.com/en-us/training/modules/describe-cloud-compute/
+  - title: Azure pricing overview
+    url: https://azure.microsoft.com/en-us/pricing/
+  - title: Microsoft Cost Management overview
+    url: https://learn.microsoft.com/en-us/azure/cost-management-billing/costs/overview-cost-management
+related:
+  - capex-vs-opex
+  - cloud-pricing-models
+  - elasticity
+---
+
+## Start with a question
+
+<Story question="Would you pay for a full year of gym membership if you only plan to go for three weeks?">
+
+Traditional IT is like buying the annual membership. You pay for servers sized for your busiest day, all year, even when they sit idle.
+
+The cloud is like a **pay-per-visit gym pass**: each visit is recorded and you pay for what you used. That is the **consumption-based model**.
+
+</Story>
+
+## Explain it like I'm 10
+
+<Eli10>
+
+Think of a **water meter** at home. Every time you turn on the tap, the meter counts the litres. At the end of the month you pay for exactly the water you used. Long showers cost more; a holiday month costs almost nothing.
+
+Azure has meters too. They count **how long your computers run** and **how much stuff you store**, and you pay for exactly that.
+
+</Eli10>
+
+## The technical explanation
+
+In the **consumption-based model**, cloud resources are **metered** and billed according to actual usage. Microsoft's AZ-900 material lists three benefits:
+
+1. **No up-front costs**: nothing to buy before you start.
+2. **No need to purchase and manage costly infrastructure** that you might not fully use.
+3. **Pay for additional resources only when you need them**, and stop paying when you no longer need them.
+
+### How Azure meters common services
+
+| Service | Typical meter |
+| --- | --- |
+| Virtual Machines | Per second of running time, by VM size (and OS licence if included) |
+| Managed Disks | Per disk size tier per month (billed even if the VM is stopped) |
+| Blob Storage | GB stored per month + read/write operations + data retrieval for some tiers |
+| Azure Functions (consumption plans) | Executions + memory used over time (GB-seconds) |
+| Bandwidth | GB of data transferred out (egress); inbound data is generally free |
+| Azure SQL Database | Provisioned compute (vCores) per hour, or serverless compute used per second |
+
+<DemandChart modes={['fixed', 'elastic']} initial="fixed" caption="Fixed capacity means paying for the peak all day. Consumption-based, elastic capacity means paying close to what you use." />
+
+<Callout type="warning">
+**A VM that is "Stopped" is not the same as "Stopped (deallocated)".** If you shut down the operating system from inside the VM, Azure still reserves the hardware and keeps charging compute. Stop it from the Azure portal, CLI or PowerShell so it is deallocated. Disks keep billing until you delete them.
+</Callout>
+
+<TryIt labs="vm-and-cost" text="Try the difference between Stop and Deallocate in the simulator and watch the cost meter, including the disk that keeps billing." />
+
+<DeepDive title="FinOps: making consumption pricing work for you">
+
+The consumption model gives engineers the power to spend money with an API call. Mature organisations treat that as a shared responsibility called **FinOps**:
+
+- **Visibility**: tag every resource (owner, cost centre, environment) and report by tag in Cost Management.
+- **Accountability**: budgets per team with alert thresholds (for example 50%, 80%, 100%), plus anomaly alerts.
+- **Optimisation**: right-size with Azure Advisor, auto-shutdown for non-production, delete orphaned disks and IPs, choose storage tiers deliberately, and buy reservations or savings plans for the steady baseline (see Cloud Pricing Models).
+- **Architecture**: prefer services that scale to zero for spiky workloads; cache to cut egress; keep chatty services in the same region.
+
+</DeepDive>
+
+## Real-world business scenario
+
+<Scenario
+  company="A university's research group"
+  industry="Education / research"
+  problem="Simulations needed 500 CPU cores for two weeks each semester, then almost nothing. Buying a cluster would mean idle hardware 90% of the year."
+  service="Azure Batch with VM pools created for each run and deleted afterwards, plus Blob Storage for results."
+  why="The consumption model meant paying only during the simulation weeks, with no capital purchase."
+  outcome="Research ran on schedule at a fraction of the cost of owning a cluster, and budget alerts kept the grant spend on track."
+/>
+
+## When to use it and when not to
+
+<UseWhen
+  use={[
+    'Variable, seasonal or unpredictable workloads.',
+    'Experiments, prototypes and short-term projects.',
+    'Start-ups and teams without capital budget.',
+    'Any workload where you can scale down or switch off when idle.',
+  ]}
+  avoid={[
+    'Steady 24/7 workloads billed purely pay-as-you-go. Commitment discounts (reservations, savings plans) are usually much cheaper.',
+    'Environments with no cost ownership. Consumption without budgets leads to surprises.',
+  ]}
+  alternatives={[
+    '**Azure Reservations** or **Azure savings plan for compute** for predictable usage.',
+    '**Spot VMs** for interruptible batch work at deep discounts.',
+  ]}
+/>

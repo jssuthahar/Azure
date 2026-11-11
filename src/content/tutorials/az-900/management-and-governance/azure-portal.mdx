@@ -1,0 +1,96 @@
+---
+title: Azure Portal
+seoTitle: The Azure Portal Explained for Beginners | AZ-900
+description: "The Azure portal explained: the web console to build, manage and monitor Azure, with dashboards, Cloud Shell access, a hands-on lab and AZ-900 practice."
+answer: >-
+  The **Azure portal** is a web-based, unified console at portal.azure.com for building, managing and monitoring everything in Azure, from simple web apps to complex deployments, using a graphical interface. You can create customisable **dashboards**, set access controls, and open **Azure Cloud Shell** right from the portal. It is designed to be resilient and is available in every Azure datacenter.
+updated: 2026-11-11
+readingMinutes: 5
+keyTerms:
+  - term: Azure portal
+    definition: The browser-based graphical console for Azure.
+  - term: Dashboard
+    definition: A customisable view of tiles showing the resources and metrics you care about.
+  - term: Blade
+    definition: A panel in the portal that opens to show a resource or setting.
+interview:
+  - level: beginner
+    q: What is the Azure portal?
+    a: >-
+      The website at portal.azure.com where I can create, manage and monitor Azure resources by clicking, without writing commands.
+    followUps: []
+  - level: intermediate
+    q: What can you do in the Azure portal?
+    a: >-
+      Create and manage resources, organise them, build custom dashboards, view monitoring data and costs, configure access control, and open Cloud Shell for commands.
+    followUps: []
+  - level: experienced
+    q: When should a team stop using the portal for changes?
+    a: >-
+      For repeatable or production changes. The portal is great for learning, exploring and troubleshooting, but production deployments should use infrastructure as code through pipelines, so changes are reviewed, consistent and reproducible.
+    followUps: []
+revision:
+  keyPoints:
+    - The portal is a web-based GUI for Azure.
+    - Build, manage and monitor resources.
+    - Customisable dashboards.
+    - Cloud Shell is available from the portal.
+  mistakes:
+    - Thinking the portal is the only way to manage Azure.
+  examTips:
+    - '"Manage Azure through a web browser with a graphical interface" = **Azure portal**.'
+  quick:
+    - q: What is the address of the Azure portal?
+      a: portal.azure.com
+    - q: Is the portal graphical or command-line?
+      a: Graphical (web-based).
+    - q: What can you customise in the portal?
+      a: Dashboards.
+    - q: Which shell can you open from the portal?
+      a: Azure Cloud Shell.
+    - q: Is the portal good for repeatable production deployments?
+      a: Not ideal. Use infrastructure as code for those.
+references:
+  - title: What is the Azure portal?
+    url: https://learn.microsoft.com/en-us/azure/azure-portal/azure-portal-overview
+related:
+  - cloud-shell-cli-powershell
+  - infrastructure-as-code
+---
+
+## Start with a question
+
+<Story question="You’ve never used Azure before. Where do you start?">
+
+At **portal.azure.com**: point, click, create.
+
+</Story>
+
+## Explain it like I'm 10
+
+<Eli10>
+
+The Azure portal is like the **control panel of a video game**: buttons and menus to build things, see how they're doing and change settings, without typing any code.
+
+</Eli10>
+
+## The technical explanation
+
+The portal provides a graphical way to create resources (through wizards like "Create a resource"), browse resource groups, configure settings, view metrics and logs, manage access, check costs and launch Cloud Shell. Every action goes through **Azure Resource Manager**, the same as the CLI and PowerShell.
+
+<TryIt labs="first-resource-group" text="Practise in a simulated Azure portal: create a resource group, add tags and explore the menus." />
+
+## Real-world business scenario
+
+<Scenario
+  company="A small accounting firm"
+  industry="Enterprise"
+  problem="The office manager needed to check VM status and costs without learning command-line tools."
+  service="A custom Azure portal dashboard showing VM status, costs and alerts."
+  why="A graphical, at-a-glance view anyone can use."
+  outcome="The manager checks health and spend in seconds each morning."
+/>
+
+## When to use it and when not to
+
+<UseWhen use={['Learning, exploring, quick checks and troubleshooting.', 'Dashboards for monitoring.']} avoid={['Repetitive or production deployments (use scripts or IaC).']} />

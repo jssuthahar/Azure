@@ -1,0 +1,91 @@
+{
+ "cert": "az-900",
+ "domain": 2,
+ "topic": "public-and-private-endpoints",
+ "questions": [
+  {
+   "id": "t-ep-1",
+   "type": "single",
+   "question": "What does a private endpoint provide for an Azure Storage account?",
+   "options": [
+    {
+     "text": "A private IP address from your virtual network",
+     "why": "Correct."
+    },
+    {
+     "text": "A public IP address on the internet",
+     "why": "That is a public endpoint."
+    },
+    {
+     "text": "Automatic backups",
+     "why": "Unrelated."
+    },
+    {
+     "text": "A cheaper storage tier",
+     "why": "Unrelated."
+    }
+   ],
+   "answer": [
+    0
+   ],
+   "explanation": "Private endpoints bring services into your VNet via Private Link.",
+   "objective": "2.2.6"
+  },
+  {
+   "id": "t-ep-2",
+   "type": "single",
+   "question": "Which statement describes a public endpoint?",
+   "options": [
+    {
+     "text": "It is reachable over the internet",
+     "why": "Correct."
+    },
+    {
+     "text": "It is only reachable from inside a VNet",
+     "why": "That describes a private endpoint."
+    },
+    {
+     "text": "It is a type of VM size",
+     "why": "No."
+    },
+    {
+     "text": "It is a resource lock",
+     "why": "No."
+    }
+   ],
+   "answer": [
+    0
+   ],
+   "explanation": "Public endpoints have internet-reachable addresses.",
+   "objective": "2.2.6"
+  },
+  {
+   "id": "t-ep-3",
+   "type": "single",
+   "question": "Which technology enables private endpoints?",
+   "options": [
+    {
+     "text": "Azure Private Link",
+     "why": "Correct."
+    },
+    {
+     "text": "Azure Advisor",
+     "why": "Recommendations."
+    },
+    {
+     "text": "Azure Arc",
+     "why": "Hybrid management."
+    },
+    {
+     "text": "Azure Data Box",
+     "why": "Offline transfer."
+    }
+   ],
+   "answer": [
+    0
+   ],
+   "explanation": "Private Link maps a private IP to a specific Azure resource.",
+   "objective": "2.2.6"
+  }
+ ]
+}

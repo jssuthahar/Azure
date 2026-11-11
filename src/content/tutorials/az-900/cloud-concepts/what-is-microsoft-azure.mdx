@@ -1,0 +1,187 @@
+---
+title: What is Microsoft Azure?
+seoTitle: What is Microsoft Azure? Beginner's Guide | AZ-900
+description: Microsoft Azure explained for beginners, with what it offers, how you use it, a real business example, interview questions and AZ-900 practice questions.
+answer: >-
+  **Microsoft Azure** is Microsoft's public cloud platform: a constantly growing set of more than 200 cloud services, including virtual machines, databases, storage, networking, AI and developer tools. Microsoft runs them from datacenters in regions around the world, and you use them on demand and pay for what you consume.
+updated: 2026-11-11
+readingMinutes: 8
+keyTerms:
+  - term: Microsoft Azure
+    definition: Microsoft's public cloud platform offering compute, storage, networking, databases, AI, security and management services.
+  - term: Azure region
+    definition: A geographic area containing one or more Azure datacenters, for example West Europe or Southeast Asia.
+  - term: Azure account
+    definition: The identity you sign in with to use Azure. Resources are created inside subscriptions linked to it.
+  - term: Azure portal
+    definition: The browser-based console at portal.azure.com for creating and managing Azure resources.
+interview:
+  - level: beginner
+    q: What is Microsoft Azure, and what can a company do with it?
+    a: >-
+      Azure is Microsoft's public cloud. A company can rent virtual machines, host websites and APIs, store files and backups, run managed databases, build AI features and connect it all with secure networks, without buying hardware. It pays for what it uses and can deploy in many regions worldwide.
+    followUps:
+      - q: How would you actually create something in Azure?
+        a: >-
+          Through the Azure portal in a browser, the Azure CLI or PowerShell from a terminal, or as code with ARM templates, Bicep or Terraform. In real projects we prefer infrastructure as code so environments are repeatable.
+  - level: intermediate
+    q: Azure, AWS and Google Cloud all offer VMs and storage. Why might a company choose Azure?
+    a: >-
+      Common reasons are an existing Microsoft relationship (Microsoft 365, Windows Server, SQL Server licences that can be reused with Azure Hybrid Benefit), identity integration with Microsoft Entra ID, strong hybrid tooling such as Azure Arc, enterprise compliance offerings, and a broad AI portfolio. The technically honest answer is that all the major clouds can run most workloads. The decision is usually about skills, licensing, existing contracts and specific services.
+    followUps: []
+  - level: experienced
+    q: When someone says "we are on Azure", what layers of the platform are they really relying on?
+    a: >-
+      The global infrastructure (regions, availability zones, the Microsoft backbone network); the control plane, Azure Resource Manager, which every create, update and delete call goes through; the identity plane, Microsoft Entra ID, for who can do what; and the data plane of each service where the actual work happens. Thinking in those layers helps when you troubleshoot. A portal outage is a control-plane problem; your VM may still be serving traffic.
+    followUps: []
+  - level: scenario
+    q: A start-up founder asks, "Do I need my own servers to launch my app on Azure?" What do you tell them?
+    a: >-
+      No. They can host the web app on a managed platform such as Azure App Service, store data in a managed database, and put images in Blob Storage. Everything is created in minutes and billed by usage, so they can start small and scale as users grow. They should set a budget alert from day one.
+    followUps: []
+revision:
+  keyPoints:
+    - Azure is **Microsoft's public cloud platform** with more than 200 services.
+    - Services cover compute, storage, networking, databases, AI, security, DevOps and management.
+    - Azure runs in many **regions** worldwide, so you can deploy close to your users.
+    - You manage Azure with the portal, Azure CLI, Azure PowerShell, SDKs or infrastructure as code.
+    - You pay for what you use, with discounts for commitments (covered in Cloud Pricing Models).
+  mistakes:
+    - Confusing Azure (a cloud platform) with Microsoft 365 (a SaaS productivity suite that runs on Microsoft's cloud).
+    - Thinking Azure only runs Windows. A large share of Azure VMs run Linux.
+  examTips:
+    - Questions about "which tool to manage Azure from a browser" point to the **Azure portal**. Scripting points to CLI or PowerShell.
+    - Remember the hierarchy words for Module 2. Resources live in resource groups, which live in subscriptions.
+  quick:
+    - q: What type of cloud is Microsoft Azure - public, private or hybrid?
+      a: A public cloud, although it also supports hybrid scenarios.
+    - q: Name three categories of Azure service.
+      a: For example compute, storage, networking (also databases, AI, security, management).
+    - q: What is the browser-based console for Azure called?
+      a: The Azure portal.
+    - q: Can Azure run Linux virtual machines?
+      a: Yes. Azure supports many Linux distributions as well as Windows.
+    - q: Why does Azure have regions all over the world?
+      a: So you can run services close to users for low latency, meet data residency needs and design for resilience.
+references:
+  - title: What is Azure? (Microsoft Learn)
+    url: https://learn.microsoft.com/en-us/training/modules/describe-core-architectural-components-of-azure/
+  - title: Azure global infrastructure
+    url: https://azure.microsoft.com/en-us/explore/global-infrastructure/
+related:
+  - what-is-cloud-computing
+  - why-companies-use-cloud
+  - public-cloud
+---
+
+## Start with a question
+
+<Story question="If you wanted to open a pizza shop, would you build your own power station, water plant and road first?">
+
+Of course not. You rent a shop, plug into the city's electricity, connect to the water supply, and spend your energy on making great pizza.
+
+For a long time, companies that wanted to run software had to do the equivalent of building their own power station. They bought servers, rented a server room, ran cables and hired people to keep it alive. **Microsoft Azure is the "city utilities" option for software**: the infrastructure is already built, and you plug into it.
+
+</Story>
+
+## Explain it like I'm 10
+
+<Eli10>
+
+Imagine a gigantic toy shop that never runs out of stock. It has building blocks (computers), storage boxes (places to keep your files), walkie-talkies (networks) and even robot helpers (AI). You do not buy the toys. You **borrow exactly what you need** for your project, give it back when you are done, and pay only for the time you used it.
+
+Microsoft owns that toy shop. It is called **Azure**, and it has branches all over the world.
+
+</Eli10>
+
+## The technical explanation
+
+**Microsoft Azure is Microsoft's public cloud computing platform.** Microsoft first announced it in 2008 as "Windows Azure", made it commercially available in 2010, and renamed it Microsoft Azure in 2014 to reflect that it runs far more than Windows.
+
+Today Azure offers **more than 200 services**. You do not need to know them all for AZ-900. You need to recognise the main families:
+
+| Family | Example services | What they do |
+| --- | --- | --- |
+| Compute | Virtual Machines, App Service, Azure Functions, AKS | Run your code and applications |
+| Storage | Blob Storage, Azure Files, Managed Disks | Keep files, images, backups and disks |
+| Networking | Virtual Network, VPN Gateway, ExpressRoute, Azure DNS | Connect resources securely to each other and to you |
+| Databases | Azure SQL Database, Azure Cosmos DB | Managed relational and NoSQL databases |
+| Identity and security | Microsoft Entra ID, Microsoft Defender for Cloud | Sign-in, access control, threat protection |
+| Management and governance | Azure Policy, Azure Monitor, Cost Management | Control, monitor and pay for what you run |
+| AI and analytics | Azure AI services, Azure Machine Learning, Microsoft Fabric | Add intelligence and analyse data |
+
+### Where Azure runs
+
+Azure's infrastructure is spread across **regions**: geographic areas such as "UK South" or "Southeast Asia" that contain one or more datacenters. Many regions are split into **availability zones**, separate datacenter groups with independent power, cooling and networking. You will meet these properly in Module 2. For now, remember that you choose *where* your resources run.
+
+### How you work with Azure
+
+<Flow
+  caption="Every Azure request goes through Azure Resource Manager, whichever tool you use"
+  steps={[
+    { title: 'You use a tool', text: 'Azure portal, Azure CLI, Azure PowerShell, an SDK, or a Bicep/Terraform file.' },
+    { title: 'Azure Resource Manager', text: 'Authenticates you, checks permissions and policies, and routes the request.' },
+    { title: 'Resource provider', text: 'The service (for example Microsoft.Compute) builds the resource.' },
+    { title: 'Resource is ready', text: 'Your VM, database or web app runs in the region you picked.' },
+  ]}
+/>
+
+<TryIt labs="first-resource-group,cloud-shell-webapp" text="Use the two tools from the diagram: the Azure portal and the Cloud Shell. Both talk to the same simulated Azure Resource Manager." />
+
+<Callout type="note">
+Azure is not the same thing as Microsoft 365. Microsoft 365 (Outlook, Teams, Word) is **software as a service** that Microsoft runs on its cloud. Azure is the **platform** you build and run your own solutions on. Both use Microsoft Entra ID for sign-in, which is why they feel connected.
+</Callout>
+
+<DeepDive title="Control plane vs data plane: a distinction that pays off in production">
+
+Every Azure service has two planes:
+
+- **Control plane**: management operations such as create a storage account, resize a VM or assign a role. These all go through Azure Resource Manager at `management.azure.com`, and RBAC and Azure Policy are enforced here.
+- **Data plane**: using the resource, such as reading a blob, querying a database or calling your web app. Requests go straight to the service endpoint.
+
+Why it matters: an RBAC role like *Contributor* lets you manage a storage account but does not, by itself, let you read blob data with Entra ID auth (you need a data role such as *Storage Blob Data Reader*). Outages can also affect one plane and not the other. Knowing which plane a failure is in is a strong signal of seniority in an interview.
+
+</DeepDive>
+
+## Real-world business scenario
+
+<Scenario
+  company="A regional food delivery app"
+  industry="Food delivery"
+  problem="Orders spike at lunch and dinner. The team of six developers was spending weekends patching their own servers and could not expand to a new country quickly."
+  service="Azure App Service for the API, Azure SQL Database for orders, Blob Storage for menu photos, Microsoft Entra External ID for customer sign-in, and autoscale rules for meal times."
+  why="Managed services removed server patching, autoscale handled meal-time peaks, and a second Azure region close to the new country gave customers there fast response times."
+  outcome="Launch in the new market took weeks instead of months, and the developers spend their time on features such as live order tracking."
+/>
+
+## Visual: Azure at a glance
+
+<Compare
+  caption="The building blocks you will meet throughout AZ-900"
+  columns={[
+    { title: 'Run', icon: '⚙️', tone: 'accent', items: ['Virtual Machines', 'App Service', 'Azure Functions', 'Containers and AKS'] },
+    { title: 'Store', icon: '🗄️', tone: 'accent', items: ['Blob Storage', 'Azure Files', 'Managed Disks', 'Databases'] },
+    { title: 'Connect', icon: '🔗', tone: 'accent', items: ['Virtual Networks', 'VPN Gateway', 'ExpressRoute', 'Azure DNS'] },
+    { title: 'Control', icon: '🛡️', tone: 'accent', items: ['Microsoft Entra ID', 'Azure Policy', 'Azure Monitor', 'Cost Management'] },
+  ]}
+/>
+
+## When to use it and when not to
+
+<UseWhen
+  use={[
+    'Your organisation already uses Microsoft 365, Windows Server or SQL Server and wants to reuse skills and licences.',
+    'You need hybrid scenarios that connect on-premises systems to the cloud.',
+    'You want managed platform services so your team can focus on code rather than servers.',
+    'You need to deploy in many countries with consistent tooling.',
+  ]}
+  avoid={[
+    'Your team has deep expertise and contracts on another cloud, and nothing specific requires Azure.',
+    'A required service or region exists only on another provider.',
+    'Strict rules forbid any public cloud. Consider sovereign or private options instead.',
+  ]}
+  alternatives={[
+    '**Amazon Web Services (AWS)** and **Google Cloud** are the other two largest public clouds.',
+    '**Multi-cloud**: use more than one provider, managed together with tools such as Azure Arc.',
+  ]}
+/>

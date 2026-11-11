@@ -1,0 +1,109 @@
+---
+title: Container Instances, Container Apps and AKS
+seoTitle: "Azure Containers: ACI, Container Apps and AKS | AZ-900"
+description: Azure Container Instances, Container Apps and Azure Kubernetes Service compared, with when to use each, interview questions and AZ-900 practice questions.
+answer: >-
+  Azure offers three main ways to run containers. **Azure Container Instances (ACI)** runs individual containers on demand with no servers to manage. **Azure Container Apps** runs containerised microservices with serverless scaling, including to zero. **Azure Kubernetes Service (AKS)** is managed Kubernetes for orchestrating many containers with full control.
+updated: 2026-11-11
+readingMinutes: 7
+keyTerms:
+  - term: Container image
+    definition: A packaged, versioned app plus its dependencies, stored in a registry such as Azure Container Registry.
+  - term: Kubernetes
+    definition: An open-source system for deploying, scaling and healing containers automatically.
+  - term: Azure Container Registry (ACR)
+    definition: A private registry for storing container images.
+interview:
+  - level: beginner
+    q: What is the simplest way to run a container in Azure?
+    a: >-
+      Azure Container Instances. I give it an image and it runs, with no VMs or cluster to manage, and I pay per second while it runs.
+    followUps: []
+  - level: intermediate
+    q: When would you choose AKS over Container Instances?
+    a: >-
+      When I have many containers that need orchestration: automatic scaling, rolling updates, self-healing, service discovery and load balancing. ACI is for single containers or short tasks; AKS is for complex, long-running microservice systems.
+    followUps: []
+  - level: experienced
+    q: Where does Azure Container Apps fit?
+    a: >-
+      Between the two. It runs microservices on Kubernetes under the hood, with KEDA autoscaling, Dapr and revisions, but without exposing the cluster. It suits teams that want microservices and scale to zero without becoming Kubernetes operators. AKS is for when you need the full Kubernetes API and ecosystem.
+    followUps: []
+revision:
+  keyPoints:
+    - ACI = run single containers quickly, no orchestration.
+    - Container Apps = serverless microservices on containers.
+    - AKS = managed Kubernetes, full orchestration and control.
+    - Containers start fast and run the same everywhere.
+  mistakes:
+    - Choosing AKS for one simple container. ACI is far simpler.
+  examTips:
+    - '"Quickest way to run a container without managing VMs" = **Azure Container Instances**.'
+    - '"Orchestrate many containers" = **AKS**.'
+  quick:
+    - q: Which service runs a single container with no orchestration?
+      a: Azure Container Instances.
+    - q: Which service is managed Kubernetes?
+      a: Azure Kubernetes Service (AKS).
+    - q: Which service offers serverless microservices with scale to zero?
+      a: Azure Container Apps.
+    - q: Where are private container images stored?
+      a: Azure Container Registry.
+    - q: Why are containers portable?
+      a: They package the app with its dependencies, so they run the same everywhere.
+references:
+  - title: Choose an Azure container service
+    url: https://learn.microsoft.com/en-us/azure/architecture/guide/choose-azure-container-service
+related:
+  - compute-types
+  - app-service
+---
+
+## Start with a question
+
+<Story question="“It works on my machine!” Why does code break when it moves to a server?">
+
+Because the server has different versions and settings. **Containers** fix this by packing the app with everything it needs.
+
+</Story>
+
+## Explain it like I'm 10
+
+<Eli10>
+
+A container is like a **lunchbox** with everything inside: sandwich, fork, napkin. You can take it anywhere and lunch works the same.
+
+- **ACI**: eat one lunchbox now.
+- **Container Apps**: a canteen that brings out more lunchboxes when more kids arrive.
+- **AKS**: a huge school kitchen run by a head chef (Kubernetes) for thousands of lunches.
+
+</Eli10>
+
+## The technical explanation
+
+<Compare
+  caption="Three container services"
+  columns={[
+    { title: 'Container Instances', icon: '📦', tone: 'neutral', items: ['Single containers or groups', 'Seconds to start', 'Per-second billing', 'Batch jobs, quick tasks'] },
+    { title: 'Container Apps', icon: '🚀', tone: 'accent', items: ['Microservices and APIs', 'Event-driven autoscale (KEDA)', 'Scale to zero', 'No cluster to manage'] },
+    { title: 'AKS', icon: '☸️', tone: 'ok', items: ['Managed Kubernetes', 'Full Kubernetes API', 'Large, complex systems', 'You manage node pools and upgrades'] },
+  ]}
+/>
+
+## Real-world business scenario
+
+<Scenario
+  company="A gaming studio"
+  industry="Gaming"
+  problem="Match-making, leaderboards and chat ran as separate apps on VMs that were hard to deploy consistently."
+  service="Packaged each service as a container and ran them on AKS, with images in Azure Container Registry."
+  why="Kubernetes orchestrates many services with rolling updates and self-healing."
+  outcome="Deployments went from monthly to daily, with automatic recovery from crashes."
+/>
+
+## When to use it and when not to
+
+<UseWhen
+  use={['**ACI** for quick, isolated container tasks.', '**Container Apps** for microservices without Kubernetes expertise.', '**AKS** for complex systems needing full control.']}
+  avoid={['AKS for a single small app.', 'Containers for apps that need a full desktop OS.']}
+/>

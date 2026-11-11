@@ -1,0 +1,117 @@
+---
+title: "Storage Redundancy: LRS, ZRS, GRS, GZRS"
+seoTitle: "Azure Storage Redundancy: LRS, ZRS, GRS, GZRS | AZ-900"
+description: "Azure Storage redundancy explained with an animation: LRS, ZRS, GRS, GZRS and read-access options, durability and when to use each."
+answer: >-
+  Azure Storage always keeps multiple copies of your data. **LRS** keeps three copies in one datacenter. **ZRS** keeps three copies across three availability zones. **GRS** keeps three copies locally plus three in a secondary region. **GZRS** combines ZRS in the primary region with a copy in a secondary region. **RA-GRS** and **RA-GZRS** also let you read from the secondary region.
+updated: 2026-11-11
+readingMinutes: 7
+keyTerms:
+  - term: LRS
+    definition: Locally redundant storage. 3 copies in one datacenter.
+  - term: ZRS
+    definition: Zone-redundant storage. 3 copies across 3 availability zones.
+  - term: GRS
+    definition: Geo-redundant storage. LRS plus asynchronous copy to a secondary region.
+  - term: GZRS
+    definition: Geo-zone-redundant storage. ZRS plus asynchronous copy to a secondary region.
+  - term: RA-
+    definition: Read access to the secondary region at all times (RA-GRS, RA-GZRS).
+interview:
+  - level: beginner
+    q: What is the difference between LRS and ZRS?
+    a: >-
+      LRS keeps three copies in one datacenter, protecting against disk or rack failures. ZRS spreads three copies across availability zones, so data survives a whole datacenter failure.
+    followUps: []
+  - level: intermediate
+    q: When would you choose GZRS?
+    a: >-
+      When data must survive both a datacenter failure (zones) and a regional disaster (secondary region). It suits critical data with high availability needs. Add RA- if applications must read from the secondary during an outage.
+    followUps: []
+  - level: experienced
+    q: What should you know about the secondary region copy?
+    a: >-
+      Replication to the secondary is asynchronous, so the latest writes may be lost in a disaster. The recovery point is not zero. Without RA-, the secondary is not readable until a failover. After a customer-initiated failover, the account becomes LRS in the new primary until you reconfigure it.
+    followUps: []
+revision:
+  keyPoints:
+    - LRS = 3 copies, 1 datacenter (cheapest).
+    - ZRS = 3 copies across 3 zones.
+    - GRS = LRS + secondary region.
+    - GZRS = ZRS + secondary region (highest protection).
+    - RA- variants allow reading from the secondary.
+  mistakes:
+    - Thinking LRS protects against a datacenter fire. It does not.
+  examTips:
+    - '"Survive a datacenter failure but stay in one region" = **ZRS**.'
+    - '"Survive a regional outage" = **GRS** or **GZRS**.'
+  quick:
+    - q: How many copies does LRS keep?
+      a: Three, in one datacenter.
+    - q: Which option spreads copies across availability zones?
+      a: ZRS (and GZRS in the primary region).
+    - q: Which options copy data to a secondary region?
+      a: GRS and GZRS (and their RA- variants).
+    - q: What does RA- add?
+      a: Read access to the secondary region.
+    - q: Is replication to the secondary region synchronous?
+      a: No, it is asynchronous.
+references:
+  - title: Azure Storage redundancy
+    url: https://learn.microsoft.com/en-us/azure/storage/common/storage-redundancy
+related:
+  - storage-accounts
+  - availability-zones
+  - reliability
+---
+
+## Start with a question
+
+<Story question="If a datacenter burns down tonight, are your customers’ photos gone?">
+
+It depends on the **redundancy** you picked when you created the storage account.
+
+</Story>
+
+## Explain it like I'm 10
+
+<Eli10>
+
+You write your homework three times:
+
+- **LRS**: all three copies in your bedroom.
+- **ZRS**: one copy at home, one at gran's, one at school (same town).
+- **GRS/GZRS**: plus extra copies at your cousin's in another city.
+
+The more places, the safer your homework.
+
+</Eli10>
+
+## The technical explanation
+
+| Option | Copies | Survives | Read secondary? |
+| --- | --- | --- | --- |
+| LRS | 3 in one datacenter | Disk and rack failures | – |
+| ZRS | 3 across 3 zones | Datacenter failure | – |
+| GRS | 3 local + 3 in secondary region | Regional disaster | RA-GRS |
+| GZRS | 3 across zones + 3 in secondary region | Datacenter and regional disasters | RA-GZRS |
+
+<TryIt labs="storage-redundancy" text="Create an account with ZRS, then upgrade it to GZRS, and see the cost change in the simulator." />
+
+## Real-world business scenario
+
+<Scenario
+  company="A hospital records system"
+  industry="Healthcare"
+  problem="Medical images were on LRS; a risk review found a single datacenter incident could make them unavailable."
+  service="Switched to RA-GZRS."
+  why="Zone redundancy for local resilience plus a readable copy in another region."
+  outcome="Images remain available during datacenter incidents and readable in a regional outage."
+/>
+
+## When to use it and when not to
+
+<UseWhen
+  use={['**LRS** for easily re-creatable or dev data.', '**ZRS** for high availability in one region.', '**GZRS** for critical data that must survive regional disasters.']}
+  avoid={['Paying for geo-redundancy on temporary data you can rebuild.']}
+/>

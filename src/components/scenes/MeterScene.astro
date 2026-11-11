@@ -1,0 +1,54 @@
+---
+/** A server with a power switch and a meter: you pay while it runs, not while it is off. */
+interface Props { variant?: 'consumption' | 'pricing' | 'predictability' }
+const { variant = 'consumption' } = Astro.props;
+---
+<svg viewBox="0 0 640 300" role="img" aria-label="A cloud server runs and the meter counts coins. When it is switched off, the meter stops. You pay only for what you use.">
+  <!-- server -->
+  <g transform="translate(60 70)">
+    <rect width="120" height="150" rx="14" fill="#243a5e" />
+    {[0, 1, 2, 3].map((r) => <rect x="14" y={18 + r * 30} width="92" height="18" rx="4" fill="#5b6f8f" />)}
+    <circle cx="96" cy="27" r="5" class="mt-led" />
+    <text x="60" y="176" text-anchor="middle" class="lbl">Cloud server</text>
+  </g>
+  <!-- switch -->
+  <g transform="translate(215 120)"><rect width="70" height="36" rx="18" fill="#c8d3df" /><circle cy="18" r="14" fill="#fff" class="mt-knob" /><text x="35" y="58" text-anchor="middle" class="sub mt-on">ON</text><text x="35" y="58" text-anchor="middle" class="sub mt-off">OFF</text></g>
+  <!-- meter -->
+  <g transform="translate(330 60)">
+    <rect width="250" height="130" rx="18" fill="#243a5e" />
+    <text x="125" y="30" text-anchor="middle" fill="#9fd0f7" font-size="12" font-weight="700">METER</text>
+    <g class="mt-coins">{[0, 1, 2, 3, 4].map((i) => <ellipse cx={70 + i * 28} cy="88" rx="12" ry="6" fill="#ffb900" stroke="#c19c00" style={`animation-delay:${i * 0.35}s`} class="mt-coin" />)}</g>
+    <text x="125" y="118" text-anchor="middle" fill="#6ccb5f" font-size="13" font-weight="700" class="mt-on">💰 paying for use</text>
+    <text x="125" y="118" text-anchor="middle" fill="#9fd0f7" font-size="13" font-weight="700" class="mt-off">⏸ switched off: no compute bill</text>
+  </g>
+  {variant === 'pricing' && (
+    <g transform="translate(40 238)">
+      {[['Pay-as-you-go', 'no commitment', '#0078d4'], ['Reserved', 'up to 72% off', '#107c10'], ['Savings plan', 'up to 65% off', '#8764b8'], ['Spot', 'up to 90% off*', '#ca5010']].map(([t, s, c], i) => (
+        <g transform={`translate(${i * 145} 0)`} class={`a-float${i % 2 ? '-2' : ''}`}><rect width="135" height="48" rx="10" fill={c} /><text x="67" y="21" text-anchor="middle" fill="#fff" font-size="13" font-weight="700">{t}</text><text x="67" y="38" text-anchor="middle" fill="#fff" font-size="11">{s}</text></g>
+      ))}
+    </g>
+  )}
+  {variant === 'predictability' && (
+    <g transform="translate(150 236)">
+      <text x="0" y="14" class="lbl">Monthly budget</text>
+      <rect x="120" y="2" width="220" height="16" rx="8" fill="#c8d3df" />
+      <rect x="120" y="2" width="220" height="16" rx="8" fill="#0078d4"><animate attributeName="width" values="10;180;10" dur="6s" repeatCount="indefinite" /></rect>
+      <path d="M296 -4v28" stroke="#e74856" stroke-width="2" stroke-dasharray="3 3" />
+      <text x="300" y="44" class="sub">80% alert 🔔</text>
+    </g>
+  )}
+  {variant === 'consumption' && <text x="320" y="262" text-anchor="middle" class="lbl">Switch it off and the meter stops. Pay only for what you use.</text>}
+</svg>
+<style>
+  .mt-led { animation: mt-led 6s infinite; }
+  @keyframes mt-led { 0%, 58% { fill: #6ccb5f; } 62%, 100% { fill: #5b6f8f; } }
+  .mt-knob { animation: mt-knob 6s infinite; }
+  @keyframes mt-knob { 0%, 58% { transform: translateX(52px); fill: #6ccb5f; } 62%, 100% { transform: translateX(18px); fill: #fff; } }
+  .mt-on { animation: mt-on 6s infinite; }
+  .mt-off { animation: mt-off 6s infinite; }
+  @keyframes mt-on { 0%, 58% { opacity: 1; } 62%, 100% { opacity: 0; } }
+  @keyframes mt-off { 0%, 58% { opacity: 0; } 62%, 100% { opacity: 1; } }
+  .mt-coins { animation: mt-on 6s infinite; }
+  .mt-coin { animation: mt-drop 1.4s ease-in infinite; }
+  @keyframes mt-drop { 0% { transform: translateY(-30px); opacity: 0; } 30% { opacity: 1; } 100% { transform: translateY(0); } }
+</style>

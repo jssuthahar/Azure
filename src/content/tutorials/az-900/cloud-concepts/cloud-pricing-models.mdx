@@ -1,0 +1,171 @@
+---
+title: Cloud Pricing Models
+seoTitle: "Azure Pricing Models: Pay-as-you-go, Reserved, Spot | AZ-900"
+description: "Azure pricing models compared: pay-as-you-go, reservations, savings plans, Spot VMs and Hybrid Benefit, with interview questions and AZ-900 practice."
+answer: >-
+  Azure offers several ways to pay for the same resource. **Pay-as-you-go** charges full price for actual usage with no commitment. **Reservations** and the **savings plan for compute** give big discounts in exchange for a one- or three-year commitment. **Spot** pricing uses spare capacity at deep discounts but can be interrupted. **Azure Hybrid Benefit** lets you reuse existing Windows Server and SQL Server licences.
+updated: 2026-11-11
+readingMinutes: 9
+keyTerms:
+  - term: Pay-as-you-go
+    definition: No commitment; pay the standard rate for usage, billed monthly.
+  - term: Azure Reservations
+    definition: Commit to a specific resource type, size and region for 1 or 3 years for a significant discount.
+  - term: Azure savings plan for compute
+    definition: Commit to a fixed hourly spend on compute for 1 or 3 years; discount applies flexibly across eligible services and regions.
+  - term: Spot VMs
+    definition: Unused Azure capacity at large discounts that Azure can evict when it needs the capacity back.
+  - term: Azure Hybrid Benefit
+    definition: Use existing on-premises Windows Server and SQL Server licences (with Software Assurance or qualifying subscriptions) to reduce Azure costs.
+interview:
+  - level: beginner
+    q: What pricing options does Azure offer for virtual machines?
+    a: >-
+      Pay-as-you-go (no commitment, standard price), reservations (commit for one or three years for a big discount), the savings plan for compute (commit to an hourly spend for a flexible discount), Spot VMs (cheap spare capacity that can be taken away), and Azure Hybrid Benefit to reuse existing licences.
+    followUps:
+      - q: Which is cheapest?
+        a: >-
+          Spot is usually the lowest price, but it can be evicted, so it only suits interruptible work. For steady workloads, reservations or savings plans give the best reliable discount.
+  - level: intermediate
+    q: What is the difference between a reservation and a savings plan?
+    a: >-
+      A reservation commits to a specific resource, such as a VM family and region, and gives the deepest discount if you use exactly that. A savings plan commits to a dollar amount per hour of compute and applies automatically across VM sizes, regions and some other compute services. It is a slightly smaller discount but much more flexible if your workloads change.
+    followUps: []
+  - level: experienced
+    q: How would you build a cost-optimal purchasing strategy for a mixed estate?
+    a: >-
+      Measure the steady baseline over a few months. Cover the very stable, predictable part with reservations (often databases and long-lived VMs), cover the remaining stable compute with a savings plan for flexibility, leave the variable portion on pay-as-you-go with autoscale, and push batch and fault-tolerant jobs to Spot. Apply Azure Hybrid Benefit wherever licences allow. Review utilisation of commitments monthly, because unused commitment is wasted money. Advisor and Cost Management show recommendations and utilisation.
+    followUps: []
+  - level: scenario
+    q: A video studio renders animations overnight. Jobs can be restarted if a machine disappears. Which pricing model?
+    a: >-
+      Spot VMs. Rendering is interruptible and restartable, so the deep discount far outweighs the risk of eviction. Use Scale Sets with Spot priority and checkpointing.
+    followUps: []
+revision:
+  keyPoints:
+    - "Pay-as-you-go: no commitment, standard price, maximum flexibility."
+    - "Reservations: 1 or 3-year commitment to specific resources, large discount."
+    - "Savings plan for compute: 1 or 3-year hourly spend commitment, flexible discount."
+    - "Spot: deep discount on spare capacity, can be evicted, only for interruptible work."
+    - "Azure Hybrid Benefit: reuse eligible Windows Server and SQL Server licences."
+  mistakes:
+    - Using Spot VMs for production workloads that cannot tolerate interruption.
+    - Buying reservations for workloads that will be resized or retired soon.
+  examTips:
+    - '"Commit for one or three years to save money" = **reservations** (or savings plan).'
+    - '"Unused capacity, can be evicted" = **Spot**.'
+    - '"Reuse existing on-premises licences" = **Azure Hybrid Benefit**.'
+  quick:
+    - q: What are the two reservation terms available?
+      a: One year or three years.
+    - q: What is the main risk of Spot VMs?
+      a: Azure can evict them when it needs the capacity back.
+    - q: Which pricing option needs no commitment?
+      a: Pay-as-you-go.
+    - q: What does Azure Hybrid Benefit let you do?
+      a: Use existing eligible Windows Server and SQL Server licences to reduce Azure costs.
+    - q: Which is more flexible, a reservation or a savings plan?
+      a: A savings plan.
+references:
+  - title: What are Azure Reservations?
+    url: https://learn.microsoft.com/en-us/azure/cost-management-billing/reservations/save-compute-costs-reservations
+  - title: What is the Azure savings plan for compute?
+    url: https://learn.microsoft.com/en-us/azure/cost-management-billing/savings-plan/savings-plan-compute-overview
+  - title: Azure Spot Virtual Machines
+    url: https://learn.microsoft.com/en-us/azure/virtual-machines/spot-vms
+  - title: Azure Hybrid Benefit
+    url: https://azure.microsoft.com/en-us/pricing/offers/hybrid-benefit/
+related:
+  - consumption-based-model
+  - capex-vs-opex
+  - predictability
+---
+
+## Start with a question
+
+<Story question="Why does a train ticket bought months ahead cost less than one bought at the station?">
+
+Railways reward you for **committing early**. They can plan capacity, so they give you a discount. Buy at the last minute and you pay full price, but you keep total flexibility. Some railways even sell cheap "standby" tickets: travel only if there is a spare seat.
+
+Azure prices compute in almost exactly the same way.
+
+</Story>
+
+## Explain it like I'm 10
+
+<Eli10>
+
+Imagine a **bowling alley**:
+
+- 🎳 **Pay per game** whenever you show up: easy, but full price. (Pay-as-you-go)
+- 📅 **Buy a season pass** for a whole year: much cheaper per game, but you promised to keep coming. (Reservation)
+- 🪑 **Standby lane**: super cheap, but if a big group arrives they can ask you to stop. (Spot)
+- 🎟️ **Bring your old tokens** from another alley that accepts them. (Hybrid Benefit)
+
+</Eli10>
+
+## The technical explanation
+
+The consumption-based model tells you *that* you pay for usage. **Pricing models** decide *how much* each unit costs, depending on how much flexibility you are willing to give up.
+
+| Model | Commitment | Discount (vs pay-as-you-go) | Flexibility | Best for |
+| --- | --- | --- | --- | --- |
+| **Pay-as-you-go** | None | None (standard rate) | Highest | New, variable or short-lived workloads |
+| **Reservations** | 1 or 3 years, specific resource type/region | Large (Microsoft cites up to 72% for some VMs) | Lowest (exchanges are possible within rules) | Stable, predictable workloads |
+| **Savings plan for compute** | 1 or 3 years, fixed hourly spend | Significant (Microsoft cites up to 65%) | Applies across sizes, regions and eligible services | Steady spend with changing shapes |
+| **Spot** | None | Deep (up to 90% at times) | Can be evicted at short notice | Batch, rendering, CI, dev/test |
+| **Azure Hybrid Benefit** | Requires eligible existing licences | Removes licence cost | Combines with the models above | Windows Server and SQL Server workloads |
+
+<Callout type="note">
+Discount percentages vary by service, size, region and term, and Microsoft changes them over time. Always check current numbers in the **Azure pricing calculator** before quoting them.
+</Callout>
+
+<Compare
+  caption="Trading flexibility for price"
+  columns={[
+    { title: 'Most flexible', icon: '🔓', tone: 'neutral', items: ['Pay-as-you-go', 'Start, stop, resize any time', 'Highest unit price'] },
+    { title: 'Balanced', icon: '⚖️', tone: 'accent', items: ['Savings plan for compute', 'Commit to spend, not a resource', 'Good discount, adapts to change'] },
+    { title: 'Lowest price', icon: '💰', tone: 'ok', items: ['Reservations: lock in a resource', 'Spot: accept eviction', 'Best for very predictable or very interruptible work'] },
+  ]}
+/>
+
+<TryIt labs="vm-and-cost,scale-sets" text="Watch how VM size and instance count change the bill: the simulator shows a live (illustrative) cost meter." />
+
+<DeepDive title="How commitments are applied on your bill">
+
+Reservations and savings plans are **billing constructs**, not resources. You do not deploy "a reserved VM". You buy a reservation, and the discount automatically applies each hour to matching running resources in the chosen scope (a resource group, a subscription, a management group or the whole billing account).
+
+- If nothing matching runs in a given hour, that hour of commitment is **lost**.
+- Savings plan benefit applies hour by hour to the usage with the biggest discount first, then any overflow is billed at pay-as-you-go.
+- **Instance size flexibility** lets a reservation cover other sizes in the same VM series.
+- Microsoft also offers a **savings plan for databases** (Azure SQL, Cosmos DB, PostgreSQL, MySQL and others), with smaller discounts than the compute plan.
+- Watch **utilisation reports** in Cost Management. Below roughly 90–100% utilisation, you are paying for nothing.
+
+</DeepDive>
+
+## Real-world business scenario
+
+<Scenario
+  company="An online banking platform"
+  industry="Banking"
+  problem="Database servers run 24/7 at a constant size; web servers grow and shrink daily; nightly risk calculations are heavy but restartable. Everything was on pay-as-you-go."
+  service="Three-year reservations for the database tier, a savings plan for the baseline web compute, autoscale on pay-as-you-go above the baseline, Spot VMs for nightly risk jobs, and Azure Hybrid Benefit for SQL Server."
+  why="Each workload got the pricing model matching its shape: predictable, flexible-but-steady, variable, and interruptible."
+  outcome="Compute spend dropped substantially with no change to the applications themselves."
+/>
+
+## When to use it and when not to
+
+<UseWhen
+  use={[
+    '**Pay-as-you-go** for new, uncertain or short-lived workloads.',
+    '**Reservations** for steady workloads that will not change size or region for years.',
+    '**Savings plan** for steady compute spend where the mix of VMs and regions changes.',
+    '**Spot** for work that can be interrupted and restarted.',
+    '**Hybrid Benefit** whenever you own eligible licences.',
+  ]}
+  avoid={[
+    'Committing before you understand the steady baseline. Measure first.',
+    'Spot for production APIs, databases or anything user-facing that cannot be interrupted.',
+  ]}
+/>

@@ -1,0 +1,92 @@
+{
+ "cert": "az-900",
+ "domain": 3,
+ "topic": "azure-policy",
+ "questions": [
+  {
+   "id": "t-po-1",
+   "type": "single",
+   "question": "Which service can deny the creation of resources outside approved regions?",
+   "options": [
+    {
+     "text": "Azure Policy",
+     "why": "Correct."
+    },
+    {
+     "text": "Azure RBAC",
+     "why": "Controls who, not where."
+    },
+    {
+     "text": "Resource locks",
+     "why": "Prevent deletion."
+    },
+    {
+     "text": "Cost Management",
+     "why": "Spending."
+    }
+   ],
+   "answer": [
+    0
+   ],
+   "explanation": "Azure Policy evaluates resource properties.",
+   "objective": "3.2.2"
+  },
+  {
+   "id": "t-po-2",
+   "type": "single",
+   "question": "What is an Azure Policy initiative?",
+   "options": [
+    {
+     "text": "A group of related policy definitions",
+     "why": "Correct."
+    },
+    {
+     "text": "A cost budget",
+     "why": "No."
+    },
+    {
+     "text": "A VM image",
+     "why": "No."
+    },
+    {
+     "text": "A support ticket",
+     "why": "No."
+    }
+   ],
+   "answer": [
+    0
+   ],
+   "explanation": "Initiatives bundle policies.",
+   "objective": "3.2.2"
+  },
+  {
+   "id": "t-po-3",
+   "type": "multi",
+   "question": "Which TWO are Azure Policy effects?",
+   "options": [
+    {
+     "text": "Audit",
+     "why": "Correct."
+    },
+    {
+     "text": "Encrypt",
+     "why": "Not an effect."
+    },
+    {
+     "text": "Deny",
+     "why": "Correct."
+    },
+    {
+     "text": "Scale out",
+     "why": "Not an effect."
+    }
+   ],
+   "answer": [
+    0,
+    2
+   ],
+   "explanation": "Effects include Audit, Deny, Modify and DeployIfNotExists.",
+   "objective": "3.2.2"
+  }
+ ]
+}

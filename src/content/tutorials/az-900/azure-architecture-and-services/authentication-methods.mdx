@@ -1,0 +1,108 @@
+---
+title: "Authentication: SSO, MFA and Passwordless"
+seoTitle: "Azure SSO, MFA and Passwordless Explained | AZ-900"
+description: "Single sign-on, multifactor authentication and passwordless sign-in in Azure explained with examples, interview questions and AZ-900 practice."
+answer: >-
+  **Authentication** proves who you are. **Single sign-on (SSO)** lets you sign in once to access many apps. **Multifactor authentication (MFA)** requires two or more kinds of proof: something you know, something you have, something you are. **Passwordless** methods, such as Windows Hello for Business, the Microsoft Authenticator app and FIDO2 security keys (passkeys), replace passwords with stronger, easier options.
+updated: 2026-11-11
+readingMinutes: 7
+keyTerms:
+  - term: Authentication
+    definition: Proving who you are (AuthN).
+  - term: Authorization
+    definition: Deciding what you are allowed to do (AuthZ).
+  - term: MFA
+    definition: Requiring two or more of something you know, have or are.
+  - term: Passwordless
+    definition: Signing in without a password, using biometrics, a device or a security key.
+interview:
+  - level: beginner
+    q: What is the difference between authentication and authorization?
+    a: >-
+      Authentication checks who you are, like showing your ID. Authorization checks what you are allowed to do, like which rooms your ID card opens.
+    followUps: []
+  - level: intermediate
+    q: Why is MFA so important?
+    a: >-
+      Passwords get phished, guessed or leaked. MFA adds a second factor, like an app approval or fingerprint, so a stolen password alone is not enough. Microsoft reports that MFA blocks the vast majority of account-compromise attacks.
+    followUps: []
+  - level: experienced
+    q: Which MFA methods would you recommend and why?
+    a: >-
+      Phishing-resistant methods first: FIDO2 security keys or passkeys, and Windows Hello for Business. Then the Microsoft Authenticator app with number matching. Avoid SMS and voice calls where possible because they can be intercepted or SIM-swapped.
+    followUps: []
+revision:
+  keyPoints:
+    - SSO = sign in once, access many apps.
+    - MFA = two or more factors (know, have, are).
+    - Passwordless options are Windows Hello for Business, Microsoft Authenticator and FIDO2 keys.
+    - Authentication ≠ authorization.
+  mistakes:
+    - Mixing up authentication (who) and authorization (what).
+  examTips:
+    - '"Something you know, have, are" = **MFA**.'
+    - '"Sign in once for many apps" = **SSO**.'
+  quick:
+    - q: What does SSO stand for?
+      a: Single sign-on.
+    - q: What are the three MFA factor types?
+      a: Something you know, something you have, something you are.
+    - q: Name two passwordless methods.
+      a: Windows Hello for Business and FIDO2 security keys (also Microsoft Authenticator).
+    - q: Is a password plus a security question MFA?
+      a: No, both are something you know.
+    - q: Authentication or authorization? Deciding which files you can open.
+      a: Authorization.
+references:
+  - title: Authentication methods in Microsoft Entra ID
+    url: https://learn.microsoft.com/en-us/entra/identity/authentication/concept-authentication-methods
+related:
+  - microsoft-entra-id
+  - conditional-access
+  - zero-trust
+---
+
+## Start with a question
+
+<Story question="A hacker has your password. Can they get into your account?">
+
+Without MFA, yes. With MFA, they also need your phone or your fingerprint, and they don't have those.
+
+</Story>
+
+## Explain it like I'm 10
+
+<Eli10>
+
+To open a secret clubhouse you need the **password** *and* the **special badge**. Knowing the password isn't enough on its own. That's MFA. And SSO is getting a wristband at a theme park: show it once and ride everything.
+
+</Eli10>
+
+## The technical explanation
+
+<Compare
+  caption="Three ways Azure makes sign-in easier and safer"
+  columns={[
+    { title: 'Single sign-on', icon: '🎟️', tone: 'neutral', items: ['One identity, many apps', 'Fewer passwords to remember', 'Easier to remove access when people leave'] },
+    { title: 'Multifactor authentication', icon: '🔐', tone: 'accent', items: ['Know: password, PIN', 'Have: phone, key', 'Are: fingerprint, face'] },
+    { title: 'Passwordless', icon: '👆', tone: 'ok', items: ['Windows Hello for Business', 'Microsoft Authenticator', 'FIDO2 security keys and passkeys'] },
+  ]}
+/>
+
+## Real-world business scenario
+
+<Scenario
+  company="A university"
+  industry="Education"
+  problem="Student accounts were regularly phished and used to send spam."
+  service="Microsoft Entra MFA with the Authenticator app, and passkeys for staff."
+  why="A stolen password alone no longer grants access."
+  outcome="Compromised accounts dropped sharply."
+/>
+
+## When to use it and when not to
+
+<UseWhen
+  use={['MFA for every user, especially admins.', 'SSO for all business apps.', 'Passwordless where devices support it.']}
+  avoid={['Relying on passwords alone.', 'SMS-only MFA for privileged accounts.']}
+/>

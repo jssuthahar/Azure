@@ -1,0 +1,91 @@
+{
+ "cert": "az-900",
+ "domain": 2,
+ "topic": "external-identities",
+ "questions": [
+  {
+   "id": "t-ex-1",
+   "type": "single",
+   "question": "Partner consultants need access to an internal app using their own work accounts. What should you use?",
+   "options": [
+    {
+     "text": "B2B collaboration (external identities)",
+     "why": "Correct."
+    },
+    {
+     "text": "Create local accounts for each consultant",
+     "why": "Harder to manage and less secure."
+    },
+    {
+     "text": "Azure DNS",
+     "why": "Unrelated."
+    },
+    {
+     "text": "Resource locks",
+     "why": "Unrelated."
+    }
+   ],
+   "answer": [
+    0
+   ],
+   "explanation": "B2B guests sign in with their own credentials.",
+   "objective": "2.4.3"
+  },
+  {
+   "id": "t-ex-2",
+   "type": "single",
+   "question": "Which option lets consumers sign up and sign in to a public-facing app?",
+   "options": [
+    {
+     "text": "Microsoft Entra External ID for customers",
+     "why": "Correct."
+    },
+    {
+     "text": "Entra Domain Services",
+     "why": "Legacy domain features."
+    },
+    {
+     "text": "Azure RBAC",
+     "why": "Permissions."
+    },
+    {
+     "text": "VNet peering",
+     "why": "Networking."
+    }
+   ],
+   "answer": [
+    0
+   ],
+   "explanation": "External ID for customers handles consumer identity.",
+   "objective": "2.4.3"
+  },
+  {
+   "id": "t-ex-3",
+   "type": "single",
+   "question": "How do invited partner users appear in your directory?",
+   "options": [
+    {
+     "text": "As guest users",
+     "why": "Correct."
+    },
+    {
+     "text": "As Owners",
+     "why": "No."
+    },
+    {
+     "text": "As subscriptions",
+     "why": "No."
+    },
+    {
+     "text": "As management groups",
+     "why": "No."
+    }
+   ],
+   "answer": [
+    0
+   ],
+   "explanation": "B2B collaboration users are guests.",
+   "objective": "2.4.3"
+  }
+ ]
+}

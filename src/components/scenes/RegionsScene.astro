@@ -1,0 +1,39 @@
+---
+/** Stylised world map: regions light up, paired regions link, sovereign clouds are marked. */
+interface Props { focus?: 'regions' | 'datacenter' }
+const regions = [
+  { x: 120, y: 120, n: 'East US', p: 1 }, { x: 70, y: 112, n: 'West US 2', p: 1 },
+  { x: 160, y: 205, n: 'Brazil South', p: 2 }, { x: 300, y: 92, n: 'North Europe', p: 3 },
+  { x: 318, y: 106, n: 'West Europe', p: 3 }, { x: 455, y: 150, n: 'Central India', p: 4 },
+  { x: 495, y: 168, n: 'Southeast Asia', p: 5 }, { x: 540, y: 120, n: 'Japan East', p: 6 },
+  { x: 548, y: 230, n: 'Australia East', p: 7 },
+];
+const pairs = [[0, 1], [3, 4]];
+---
+<svg viewBox="0 0 640 300" role="img" aria-label="A world map with Azure regions glowing on every continent. Some regions are linked in pairs for disaster recovery. Sovereign clouds such as Azure Government are separate.">
+  <g fill="#cfe2f5" opacity=".9">
+    <path d="M40 80c30-30 120-40 160-20 20 20 10 50-10 70-20 10-40 30-60 30-30 0-60-20-80-40-10-10-20-30-10-40z" />
+    <path d="M150 170c20-10 50 0 55 20 5 30-10 60-30 70-15 5-25-20-30-40-5-20-10-40 5-50z" />
+    <path d="M270 70c30-15 80-15 100 0 10 15-10 30-30 35-30 5-60 0-75-10-10-10-5-20 5-25z" />
+    <path d="M290 130c25-10 60-5 70 15 10 30 0 70-25 85-20 5-35-20-40-45-5-25-20-45-5-55z" />
+    <path d="M380 70c50-20 150-25 190 0 20 20 0 50-30 60-40 15-80 30-120 20-30-10-60-30-50-55z" />
+    <path d="M510 210c20-10 55-5 60 15 0 20-25 30-45 25-15-5-25-30-15-40z" />
+  </g>
+  {pairs.map(([a, b]) => (
+    <path d={`M${regions[a].x} ${regions[a].y} Q${(regions[a].x + regions[b].x) / 2} ${Math.min(regions[a].y, regions[b].y) - 30} ${regions[b].x} ${regions[b].y}`} fill="none" stroke="#ffb900" stroke-width="2.5" class="a-dash" />
+  ))}
+  {regions.map((r, i) => (
+    <g>
+      <circle cx={r.x} cy={r.y} r="12" fill="#0078d4" opacity=".25" class="a-pulse" style={`animation-delay:-${i * 0.3}s`} />
+      <circle cx={r.x} cy={r.y} r="5" fill="#0078d4" />
+    </g>
+  ))}
+  <g transform="translate(20 248)">
+    <circle cx="8" cy="8" r="5" fill="#0078d4" /><text x="20" y="12" class="sub">Azure region</text>
+    <path d="M110 8h26" stroke="#ffb900" stroke-width="2.5" stroke-dasharray="6 4" /><text x="142" y="12" class="sub">region pair</text>
+    <rect x="232" y="0" width="16" height="16" rx="4" fill="#107c10" /><text x="254" y="12" class="sub">sovereign cloud (separate)</text>
+  </g>
+  <g transform="translate(78 150)"><rect width="74" height="22" rx="6" fill="#107c10" /><text x="37" y="15" text-anchor="middle" fill="#fff" font-size="10" font-weight="700">Azure Gov</text></g>
+  <g transform="translate(560 85)"><rect width="74" height="22" rx="6" fill="#107c10" /><text x="37" y="15" text-anchor="middle" fill="#fff" font-size="10" font-weight="700">21Vianet</text></g>
+  <text x="320" y="24" text-anchor="middle" class="lbl">Azure regions around the world</text>
+</svg>

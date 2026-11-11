@@ -1,0 +1,113 @@
+---
+import { getCollection } from 'astro:content';
+import Base from '../../layouts/Base.astro';
+import Mascot from '../../components/Mascot.astro';
+import InterviewBlock from '../../components/InterviewBlock.astro';
+import { getNav } from '../../lib/learn';
+
+const nav = await getNav();
+const entries = await getCollection('tutorials', (e) => e.id.startsWith('az-900/'));
+const groups = nav
+  .filter((t) => t.published)
+  .map((t) => ({ topic: t, items: entries.find((e) => e.id === t.key)!.data.interview }));
+const all = groups.flatMap((g) => g.items.map((it) => ({ ...it, topic: g.topic.title, url: g.topic.url })));
+const payload = JSON.stringify(all).replace(/</g, '\\u003c');
+const levels = [
+  ['all', 'All levels'],
+  ['beginner', 'Beginner'],
+  ['intermediate', 'Intermediate'],
+  ['experienced', 'Experienced'],
+  ['scenario', 'Scenario'],
+  ['architecture', 'Architecture'],
+];
+const title = 'AZ-900 Interview Questions and Answers (Mock Interview)';
+const description = `${all.length} Azure fundamentals interview questions with model answers and follow-ups, from beginner to architect level, plus an interactive mock interview.`;
+const crumbs = [
+  { name: 'Home', url: '/' },
+  { name: 'AZ-900', url: '/az-900/' },
+  { name: 'Interview questions', url: '/az-900/interview/' },
+];
+---
+<Base title={title} description={description} breadcrumbs={crumbs}>
+  <script type="application/json" id="iv-data" set:html={payload} />
+  <div class="mx-auto max-w-5xl px-4 py-8 sm:px-6">
+    <nav aria-label="Breadcrumb" class="text-sm text-muted"><a href="/">Home</a> / <a href="/az-900/">AZ-900</a> / <span class="text-[var(--text)]">Interview questions</span></nav>
+    <p class="eyebrow mt-6">Interview preparation</p>
+    <h1 class="mt-3 text-3xl font-bold tracking-tight sm:text-4xl">AZ-900 and Azure fundamentals interview questions</h1>
+    <p class="mt-4 max-w-3xl text-lg leading-relaxed text-muted">{all.length} questions from {groups.length} topics, each with a model answer. Many include the follow-up an interviewer is likely to ask next. Use the mock interview to practise thinking on your feet.</p>
+
+    <section class="card mt-8 p-5 sm:p-6" aria-labelledby="mock-title">
+      <div class="flex flex-wrap items-center gap-4">
+        <Mascot size={60} mood="thinking" />
+        <div class="min-w-0 flex-1">
+          <h2 id="mock-title" class="text-xl font-bold">Mock interview</h2>
+          <p class="text-sm text-muted">Nimbus plays the interviewer. Answer out loud, then compare with the model answer.</p>
+        </div>
+        <label class="text-sm">Level
+          <select id="iv-level" class="ml-1 rounded-lg border border-default bg-[var(--bg)] px-2 py-1.5">
+            {levels.map(([v, l]) => <option value={v}>{l}</option>)}
+          </select>
+        </label>
+      </div>
+      <div id="iv-chat" class="mt-5 space-y-3" aria-live="polite"></div>
+      <div class="mt-4 flex flex-wrap gap-2">
+        <button type="button" id="iv-start" class="btn btn-accent btn-sm">Ask me a question</button>
+        <button type="button" id="iv-reveal" class="btn btn-outline btn-sm hidden">Show model answer</button>
+        <button type="button" id="iv-follow" class="btn btn-outline btn-sm hidden">Next follow-up</button>
+      </div>
+    </section>
+
+    <div class="lesson mt-4 !max-w-none">
+      {groups.map((g) => (
+        <InterviewBlock items={g.items} id={`iv-${g.topic.slug}`} heading={g.topic.title} />
+      ))}
+    </div>
+  </div>
+</Base>
+<script>
+  import { countInterview } from '../../lib/progress';
+  type Item = { level: string; q: string; a: string; followUps: { q: string; a: string }[]; topic: string; url: string };
+  const all: Item[] = JSON.parse(document.getElementById('iv-data')!.textContent!);
+  const chat = document.getElementById('iv-chat')!;
+  const start = document.getElementById('iv-start')!;
+  const reveal = document.getElementById('iv-reveal')!;
+  const follow = document.getElementById('iv-follow')!;
+  const level = document.getElementById('iv-level') as HTMLSelectElement;
+  const esc = (s: string) => s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>').replace(/`(.+?)`/g, '<code>$1</code>');
+  let cur: Item | null = null;
+  let step = 0;
+  let pendingAnswer = '';
+  const say = (who: 'i' | 'c', html: string) => {
+    const d = document.createElement('div');
+    d.className = `bubble ${who === 'i' ? 'bubble-interviewer mr-8' : 'bubble-candidate ml-8'}`;
+    d.innerHTML = `<p class="mb-1 text-xs font-bold tracking-wider uppercase ${who === 'i' ? 'text-muted' : 'text-accent'}">${who === 'i' ? 'Interviewer' : 'Model answer'}</p>${html}`;
+    chat.append(d);
+    d.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+  };
+  start.addEventListener('click', () => {
+    const pool = all.filter((i) => level.value === 'all' || i.level === level.value);
+    if (!pool.length) return;
+    cur = pool[Math.floor(Math.random() * pool.length)];
+    step = 0;
+    chat.innerHTML = '';
+    say('i', `<p>${esc(cur.q)}</p><p class="mt-1 text-xs text-muted">Topic: <a class="underline" href="${cur.url}">${cur.topic}</a> · ${cur.level}</p>`);
+    pendingAnswer = cur.a;
+    reveal.classList.remove('hidden');
+    follow.classList.add('hidden');
+    start.textContent = 'Ask a different question';
+    countInterview();
+  });
+  reveal.addEventListener('click', () => {
+    say('c', `<p>${esc(pendingAnswer)}</p>`);
+    reveal.classList.add('hidden');
+    follow.classList.toggle('hidden', !cur || step >= cur.followUps.length);
+  });
+  follow.addEventListener('click', () => {
+    if (!cur) return;
+    const f = cur.followUps[step++];
+    say('i', `<p>${esc(f.q)}</p>`);
+    pendingAnswer = f.a;
+    follow.classList.add('hidden');
+    reveal.classList.remove('hidden');
+  });
+</script>

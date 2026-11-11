@@ -1,0 +1,171 @@
+---
+title: Elasticity
+seoTitle: Elasticity vs Scalability in Cloud Computing | AZ-900
+description: Cloud elasticity explained with autoscaling, an interactive demand chart, how it differs from scalability, interview questions and AZ-900 practice questions.
+answer: >-
+  **Elasticity** is the ability of a cloud system to **automatically add or remove resources in real time** as demand changes, so capacity closely tracks actual usage. It is scalability made automatic and fast. In Azure, elasticity comes from **autoscale** features in services such as Virtual Machine Scale Sets, App Service, Azure Functions and AKS.
+updated: 2026-11-11
+readingMinutes: 7
+keyTerms:
+  - term: Elasticity
+    definition: Automatically and rapidly matching resources to current demand, up and down.
+  - term: Autoscale
+    definition: Rules or metrics that automatically change the number of instances (for example, add 2 instances when CPU > 70%).
+  - term: Scale-in rule
+    definition: The rule that removes instances when demand drops, which is the part that saves money.
+  - term: Cool-down
+    definition: A waiting period after a scale action before the next one, to avoid flapping up and down.
+interview:
+  - level: beginner
+    q: What is elasticity?
+    a: >-
+      Elasticity means the cloud automatically adds resources when demand goes up and removes them when demand goes down, without anyone doing it manually. Like a rubber band that stretches and shrinks back.
+    followUps:
+      - q: How is that different from scalability?
+        a: >-
+          Scalability is the ability to change resources to meet demand, which can be manual. Elasticity is when that scaling happens automatically and quickly in response to real-time demand.
+  - level: intermediate
+    q: How would you configure elasticity for a web app on Azure App Service?
+    a: >-
+      Enable autoscale on the App Service plan with a minimum and maximum instance count, a scale-out rule (for example CPU above 70% for 10 minutes, add 2 instances), a matching scale-in rule (CPU below 30%, remove 1), and cool-down periods. Optionally add schedule-based profiles for known peaks, or use automatic scaling, which scales on HTTP traffic.
+    followUps: []
+  - level: experienced
+    q: What can go wrong with autoscale in production?
+    a: >-
+      Flapping, where rules that are too sensitive or have no cool-down scale out and in repeatedly. Slow start-up, where new instances take minutes to warm up, so the peak passes first (use pre-warming, minimum instances or scheduled scale-out). Missing scale-in rules, so costs never come down. Scaling on the wrong metric, such as CPU when the real bottleneck is a queue length or database. And downstream overload, where scaling out the front end overwhelms a database that cannot scale as fast. You also need quota headroom in the region.
+    followUps: []
+  - level: scenario
+    q: A ticket website gets massive spikes the minute concert tickets go on sale, then quiet within an hour. Which cloud benefit is most important?
+    a: >-
+      Elasticity. Capacity must grow automatically within minutes and shrink straight afterwards so they do not pay for idle servers. Combine autoscale with a scheduled scale-out just before the sale opens, plus a queue for orders.
+    followUps: []
+revision:
+  keyPoints:
+    - Elasticity = **automatic**, **rapid** scaling in both directions as demand changes.
+    - It is a specific kind of scalability; all elastic systems are scalable, but not all scalable systems are elastic.
+    - In Azure, implemented through **autoscale** (Scale Sets, App Service, Functions, AKS, Container Apps).
+    - Saves money by removing capacity automatically when demand drops.
+    - Needs good rules, a minimum and maximum, and cool-down periods.
+  mistakes:
+    - Treating any scaling as elasticity. Manual scaling is scalability, not elasticity.
+    - Forgetting scale-in rules, so capacity never shrinks.
+  examTips:
+    - '"Automatically" + "based on demand" + "add and remove resources" = **elasticity**.'
+    - If the scenario only says "can be increased", without automatic, think **scalability**.
+  quick:
+    - q: What makes elasticity different from scalability?
+      a: Elasticity is automatic and happens in real time based on demand.
+    - q: Which Azure feature provides elasticity for VMs?
+      a: Virtual Machine Scale Sets with autoscale.
+    - q: Why do autoscale rules need a cool-down period?
+      a: To avoid flapping, meaning rapid repeated scale-out and scale-in.
+    - q: Which part of autoscale saves money?
+      a: The scale-in rules that remove unused instances.
+    - q: Name a workload that needs elasticity.
+      a: Ticket sales, flash sales, exam result days, which are all sudden unpredictable spikes.
+references:
+  - title: Describe the benefits of high availability and scalability (Microsoft Learn)
+    url: https://learn.microsoft.com/en-us/training/modules/describe-benefits-use-cloud-services/
+  - title: Autoscale in Azure Monitor
+    url: https://learn.microsoft.com/en-us/azure/azure-monitor/autoscale/autoscale-overview
+  - title: Autoscaling best practices (Azure Architecture Center)
+    url: https://learn.microsoft.com/en-us/azure/architecture/best-practices/auto-scaling
+related:
+  - scalability
+  - serverless
+  - consumption-based-model
+---
+
+## Start with a question
+
+<Story question="Results are published at 10:00. At 9:59 there are 300 visitors. At 10:01 there are 300,000. Who adds the servers?">
+
+No human can react that fast. If someone has to notice the slowdown, log in and add servers, the site will already be down when they finish.
+
+The cloud's answer is **elasticity**: the system watches demand and stretches itself automatically, then shrinks back when the crowd leaves.
+
+</Story>
+
+## Explain it like I'm 10
+
+<Eli10>
+
+Think of a **rubber band** around a stack of cards. Add more cards and the band **stretches** to hold them. Take cards away and it **shrinks back** on its own. You never have to adjust it.
+
+Elastic cloud systems are like that rubber band. **More users? They stretch. Fewer users? They shrink.** Nobody has to push a button.
+
+</Eli10>
+
+## The technical explanation
+
+**Elasticity** is the ability to **automatically** and **rapidly** provision and release resources so that capacity matches demand at any moment. It builds on scalability. Scalability says *you can* add resources; elasticity says *the system does it for you*, in real time.
+
+<DemandChart initial="elastic" caption="Compare all three strategies. Elastic capacity follows demand closely: little waste and almost no users turned away." />
+
+### Scalability vs elasticity
+
+| | Scalability | Elasticity |
+| --- | --- | --- |
+| What it is | Ability to change resources to meet demand | Automatic, real-time adjustment of resources |
+| Trigger | Manual or planned (often) | Metrics or events (CPU, queue length, HTTP requests) |
+| Speed | Minutes to days | Seconds to minutes |
+| Typical tool | Resize a VM, add instances | Autoscale rules, serverless platforms |
+
+### Elasticity in Azure
+
+<Flow
+  caption="How an autoscale rule works"
+  steps={[
+    { title: 'Measure', text: 'Azure Monitor collects metrics: CPU, memory, HTTP queue, Service Bus messages.' },
+    { title: 'Evaluate', text: 'Rule: average CPU > 70% for 10 minutes?' },
+    { title: 'Act', text: 'Add 2 instances (up to the maximum).' },
+    { title: 'Shrink', text: 'CPU < 30%? Remove 1 instance (down to the minimum).' },
+  ]}
+/>
+
+Services with built-in elasticity include **Virtual Machine Scale Sets**, **App Service** autoscale, **Azure Functions** and **Azure Container Apps** (event-driven, including scale to zero), and **AKS** (horizontal pod autoscaler and cluster autoscaler).
+
+<TryIt labs="scale-sets" text="Play the scaling yourself with a VM Scale Set. Autoscale rules would do exactly this automatically." />
+
+<Callout type="exam">
+"Scalability vs elasticity" is one of the most frequently confused pairs in AZ-900. Remember: **elasticity = automatic scalability based on demand.**
+</Callout>
+
+<DeepDive title="Writing autoscale rules that behave">
+
+- Always pair **scale-out** and **scale-in** rules, with a gap between thresholds (70% out, 30% in) to avoid oscillation.
+- Set realistic **minimums** (for availability, at least 2) and **maximums** (to cap cost and protect downstream systems).
+- Scale on the metric that reflects user pain. For workers, **queue length** usually beats CPU.
+- Use **scheduled profiles** for known events and let metric rules handle surprises.
+- Keep start-up time short. Elasticity is only as fast as your instances become healthy.
+
+</DeepDive>
+
+## Real-world business scenario
+
+<Scenario
+  company="A concert ticketing site"
+  industry="Entertainment / e-commerce"
+  problem="Traffic goes from almost nothing to hundreds of times normal when tickets go on sale, and drops within an hour."
+  service="Front end on App Service with a scheduled scale-out 15 minutes before each sale plus CPU-based autoscale; order processing via Service Bus queue and Azure Functions."
+  why="Elasticity handles the unpredictable size of each spike automatically and removes capacity right after, keeping costs low between sales."
+  outcome="Sales opened without crashes, and compute costs between events dropped to a small baseline."
+/>
+
+## When to use it and when not to
+
+<UseWhen
+  use={[
+    'Spiky, unpredictable or event-driven workloads.',
+    'Consumer-facing apps with daily or weekly patterns.',
+    'Background processing where queue length varies widely.',
+  ]}
+  avoid={[
+    'Applications that take a long time to start, unless you pre-warm or keep a minimum.',
+    'Workloads with perfectly flat demand. Fixed capacity plus a reservation is simpler and cheaper.',
+  ]}
+  alternatives={[
+    '**Scheduled scaling** for predictable patterns.',
+    '**Serverless** for event-driven work that scales automatically with no rules to manage.',
+  ]}
+/>

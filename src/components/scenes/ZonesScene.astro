@@ -1,0 +1,57 @@
+---
+/**
+ * high-availability: traffic spread over three zones; one zone fails and the app stays up.
+ * reliability: region A fails and traffic fails over to region B.
+ */
+interface Props { variant?: 'ha' | 'reliability' }
+const { variant = 'ha' } = Astro.props;
+const bldg = (x: number, y: number, label: string, cls = '') => `
+  <g class="${cls}" transform="translate(${x} ${y})">
+    <rect width="96" height="84" rx="8" fill="var(--card)" stroke="#0078d4" stroke-width="2"/>
+    ${[0, 1, 2].map((i) => `<rect x="${12 + i * 26}" y="14" width="18" height="42" rx="3" fill="#0078d4"/>`).join('')}
+    <text x="48" y="74" text-anchor="middle" class="sub">${label}</text>
+  </g>`;
+---
+{variant === 'ha' ? (
+  <svg viewBox="0 0 640 300" role="img" aria-label="Users reach a load balancer that spreads traffic across three availability zones. When zone 2 fails, traffic goes to zones 1 and 3 and the app stays online.">
+    <g transform="translate(30 120)"><circle cx="22" cy="16" r="14" fill="#ffb900" /><path d="M0 64c0-18 10-28 22-28s22 10 22 28z" fill="#ca5010" /><text x="22" y="86" text-anchor="middle" class="lbl">Users</text></g>
+    <path d="M80 150H150" stroke="#0078d4" stroke-width="3" class="a-dash" />
+    <g transform="translate(150 118)"><rect width="80" height="64" rx="12" fill="#243a5e" /><text x="40" y="30" text-anchor="middle" fill="#fff" font-size="11" font-weight="700">LOAD</text><text x="40" y="46" text-anchor="middle" fill="#fff" font-size="11" font-weight="700">BALANCER</text></g>
+    <rect x="270" y="14" width="350" height="272" rx="18" fill="none" stroke="var(--border)" stroke-dasharray="6 6" />
+    <text x="445" y="36" text-anchor="middle" class="lbl">Azure region</text>
+    {[40, 124, 208].map((y, i) => (
+      <g>
+        <path id={`zp${i}`} d={`M230 150 C 270 150, 290 ${y + 42}, 380 ${y + 42}`} fill="none" stroke="#0078d4" stroke-width="2.5" opacity=".5" class={i === 1 ? 'z-path2' : ''} />
+        <circle r="5" fill="#ffb900" class={i === 1 ? 'z-dot2' : ''}><animateMotion dur="1.6s" begin={`-${i * 0.3}s`} repeatCount="indefinite"><mpath href={`#zp${i}`} /></animateMotion></circle>
+      </g>
+    ))}
+    <g set:html={bldg(384, 40, 'Zone 1') + bldg(384, 124, 'Zone 2', 'z-fail') + bldg(384, 208, 'Zone 3')} />
+    <g class="z-x"><circle cx="432" cy="166" r="22" fill="#e74856" /><path d="M422 156l20 20m0-20-20 20" stroke="#fff" stroke-width="5" stroke-linecap="round" /></g>
+    <g transform="translate(500 120)"><rect width="110" height="60" rx="12" fill="#dff6dd" stroke="#107c10" /><text x="55" y="26" text-anchor="middle" font-size="13" font-weight="700" fill="#107c10">✓ App still</text><text x="55" y="44" text-anchor="middle" font-size="13" font-weight="700" fill="#107c10">online</text></g>
+  </svg>
+) : (
+  <svg viewBox="0 0 640 300" role="img" aria-label="The app runs in region A with a copy in region B. When region A has a disaster, traffic fails over to region B and the app recovers.">
+    <g transform="translate(270 16)"><circle cx="50" cy="20" r="16" fill="#ffb900" /><path d="M26 74c0-20 11-30 24-30s24 10 24 30z" fill="#ca5010" /><text x="50" y="94" text-anchor="middle" class="lbl">Users</text></g>
+    <path id="rf-a" d="M300 110 Q220 140 150 180" fill="none" stroke="#0078d4" stroke-width="3" class="rf-to-a" />
+    <path id="rf-b" d="M340 110 Q420 140 490 180" fill="none" stroke="#107c10" stroke-width="3" class="rf-to-b" />
+    <circle r="6" fill="#ffb900" class="rf-dot-a"><animateMotion dur="1.4s" repeatCount="indefinite"><mpath href="#rf-a" /></animateMotion></circle>
+    <circle r="6" fill="#ffb900" class="rf-dot-b"><animateMotion dur="1.4s" repeatCount="indefinite"><mpath href="#rf-b" /></animateMotion></circle>
+    <g set:html={bldg(90, 180, 'Region A (primary)', 'rf-a-bldg') + bldg(450, 180, 'Region B (copy)')} />
+    <path d="M190 222H446" stroke="#8a97a8" stroke-width="2" class="a-dash" />
+    <text x="318" y="214" text-anchor="middle" class="sub">data replicated</text>
+    <g class="rf-x"><circle cx="138" cy="222" r="24" fill="#e74856" /><text x="138" y="230" text-anchor="middle" font-size="22">⚡</text></g>
+    <text x="318" y="290" text-anchor="middle" class="lbl rf-msg-ok">Running normally in region A</text>
+    <text x="318" y="290" text-anchor="middle" class="lbl rf-msg-fail" fill="#107c10">Disaster in A, failed over to region B ✓</text>
+  </svg>
+)}
+<style>
+  :global(.z-fail), .z-path2, .z-dot2 { animation: z-down 8s infinite; }
+  .z-x { animation: z-x 8s infinite; }
+  @keyframes z-down { 0%, 40% { opacity: 1; } 45%, 85% { opacity: 0.15; } 90%, 100% { opacity: 1; } }
+  @keyframes z-x { 0%, 40% { opacity: 0; } 45%, 85% { opacity: 1; } 90%, 100% { opacity: 0; } }
+  .rf-to-a, .rf-dot-a, .rf-msg-ok { animation: z-down 8s infinite; }
+  :global(.rf-a-bldg) { animation: z-down 8s infinite; }
+  .rf-x, .rf-msg-fail { animation: z-x 8s infinite; }
+  .rf-to-b { stroke-dasharray: 6 8; animation: a-dash 1.2s linear infinite, z-x 8s infinite; }
+  .rf-dot-b { animation: z-x 8s infinite; }
+</style>

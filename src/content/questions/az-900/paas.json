@@ -1,0 +1,64 @@
+{
+  "cert": "az-900",
+  "domain": 1,
+  "topic": "paas",
+  "questions": [
+    {
+      "id": "cc-paas-1",
+      "type": "single",
+      "question": "Which cloud service type lets developers deploy applications without managing the underlying operating system?",
+      "options": [
+        { "text": "IaaS", "why": "In IaaS you manage the OS." },
+        { "text": "PaaS", "why": "Correct. The provider manages the OS, runtime and middleware." },
+        { "text": "On-premises", "why": "On-premises means you manage everything." },
+        { "text": "Private cloud", "why": "Private cloud is a deployment model, not a service type." }
+      ],
+      "answer": [1],
+      "explanation": "PaaS abstracts the OS and platform so developers focus on code and data.",
+      "objective": "1.3.2"
+    },
+    {
+      "id": "cc-paas-2",
+      "type": "multi",
+      "question": "Which TWO Azure services are examples of PaaS?",
+      "options": [
+        { "text": "Azure App Service", "why": "Correct. It is a managed web hosting platform." },
+        { "text": "Azure Virtual Machines", "why": "VMs are IaaS." },
+        { "text": "Azure SQL Database", "why": "Correct. It is a managed database engine." },
+        { "text": "Microsoft Outlook (Microsoft 365)", "why": "That is SaaS." }
+      ],
+      "answer": [0, 2],
+      "explanation": "App Service and Azure SQL Database are platform services; VMs are IaaS; Microsoft 365 is SaaS.",
+      "objective": "1.3.2"
+    },
+    {
+      "id": "cc-paas-3",
+      "type": "single",
+      "question": "In a PaaS deployment, which of the following remains the customer's responsibility?",
+      "options": [
+        { "text": "Patching the operating system", "why": "The provider patches the OS in PaaS." },
+        { "text": "Maintaining physical servers", "why": "Always the provider's responsibility in public cloud." },
+        { "text": "The application code and data", "why": "Correct. You always own your app and data." },
+        { "text": "Cooling the datacenter", "why": "Always the provider's responsibility." }
+      ],
+      "answer": [2],
+      "explanation": "In PaaS, customers manage applications, data, identities and access. The provider runs the platform.",
+      "objective": "1.1.2"
+    },
+    {
+      "id": "cc-paas-4",
+      "type": "single",
+      "scenario": "A two-person team is building a new web API. They want automatic scaling and do not want to patch servers.",
+      "question": "Which service type best fits?",
+      "options": [
+        { "text": "IaaS", "why": "IaaS would require them to patch and scale VMs." },
+        { "text": "PaaS", "why": "Correct. App Service gives autoscale and no OS patching." },
+        { "text": "SaaS", "why": "SaaS is finished software; they are building their own API." },
+        { "text": "Private cloud", "why": "That requires buying and running hardware." }
+      ],
+      "answer": [1],
+      "explanation": "PaaS is ideal for teams who want to build custom apps without managing infrastructure.",
+      "objective": "1.3.4"
+    }
+  ]
+}

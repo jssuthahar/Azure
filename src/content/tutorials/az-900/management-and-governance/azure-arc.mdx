@@ -1,0 +1,95 @@
+---
+title: Azure Arc
+seoTitle: Azure Arc Explained Simply | AZ-900
+description: "Azure Arc explained: managing servers, Kubernetes and data services outside Azure (on-premises, edge, other clouds) with Azure tools, plus AZ-900 practice."
+answer: >-
+  **Azure Arc** extends Azure management and governance to resources **outside Azure**: on-premises servers, servers in other clouds, Kubernetes clusters and data services. Once connected, they appear in Azure Resource Manager, so you can organise them with resource groups and tags, govern them with **Azure Policy**, secure them with **Defender for Cloud**, monitor them with **Azure Monitor** and control access with **RBAC**.
+updated: 2026-11-11
+readingMinutes: 5
+keyTerms:
+  - term: Azure Arc
+    definition: Extends Azure management to resources running outside Azure.
+  - term: Arc-enabled server
+    definition: A non-Azure Windows or Linux machine connected to Azure through the Arc agent.
+  - term: Arc-enabled Kubernetes
+    definition: A Kubernetes cluster anywhere, managed and governed from Azure.
+interview:
+  - level: beginner
+    q: What is Azure Arc?
+    a: >-
+      A way to manage servers and clusters that are not in Azure, like on-premises machines or servers in AWS, from the Azure portal using the same Azure tools.
+    followUps: []
+  - level: intermediate
+    q: What can Azure Arc manage?
+    a: >-
+      Servers (Windows and Linux), Kubernetes clusters, Azure data services, SQL Server, and virtual machines in VMware vSphere or System Center VMM environments.
+    followUps: []
+  - level: experienced
+    q: What are the business benefits of Azure Arc?
+    a: >-
+      One control plane and inventory across environments, consistent policy and security, Azure Update Manager and Defender coverage for on-premises servers, and in some cases licensing benefits such as pay-as-you-go Extended Security Updates, without migrating the workloads.
+    followUps: []
+revision:
+  keyPoints:
+    - Azure Arc manages resources outside Azure.
+    - Covers servers, Kubernetes, data services, SQL Server and VMs in VMware/SCVMM.
+    - Use Azure Policy, Defender for Cloud, Monitor, tags and RBAC on them.
+    - Enables consistent hybrid and multi-cloud management.
+  mistakes:
+    - Thinking Arc migrates workloads into Azure. It manages them where they are.
+  examTips:
+    - '"Manage on-premises and multi-cloud servers from Azure" = **Azure Arc**.'
+  quick:
+    - q: What does Azure Arc do?
+      a: Extends Azure management to resources outside Azure.
+    - q: Name three resource types Arc can manage.
+      a: Servers, Kubernetes clusters and data services (also SQL Server).
+    - q: Does Arc move workloads into Azure?
+      a: No, it manages them where they run.
+    - q: Which Azure governance tool can apply rules to Arc servers?
+      a: Azure Policy.
+    - q: Can Arc manage servers in another public cloud?
+      a: Yes.
+references:
+  - title: Azure Arc overview
+    url: https://learn.microsoft.com/en-us/azure/azure-arc/overview
+related:
+  - hybrid-cloud
+  - azure-policy
+  - microsoft-defender-for-cloud
+---
+
+## Start with a question
+
+<Story question="Half your servers are in Azure, a quarter are in your datacenter and the rest are in another cloud. Do you need three management tools?">
+
+Not with **Azure Arc**. It brings all of them into one place: Azure.
+
+</Story>
+
+## Explain it like I'm 10
+
+<Eli10>
+
+Imagine a **universal TV remote** that controls the TV, the music player and the lights, even though they're made by different companies. Azure Arc is a universal remote for servers everywhere.
+
+</Eli10>
+
+## The technical explanation
+
+Install the Arc agent (or connect a cluster), and the resource gets an Azure resource ID. From then on you can apply **Azure Policy**, enable **Defender for Cloud**, collect logs with **Azure Monitor**, patch with **Azure Update Manager** and manage access with **RBAC**, just like a native Azure resource.
+
+## Real-world business scenario
+
+<Scenario
+  company="A retailer with stores and two clouds"
+  industry="Retail"
+  problem="Servers in stores, the datacenter and another cloud had different security tools and no single inventory."
+  service="Connected all servers with Azure Arc, then applied Azure Policy baselines and Defender for Cloud."
+  why="One control plane for governance and security everywhere."
+  outcome="A single inventory and compliance report across all environments."
+/>
+
+## When to use it and when not to
+
+<UseWhen use={['Hybrid or multi-cloud estates that need consistent management.']} avoid={['All-Azure estates (native management already covers you).']} />

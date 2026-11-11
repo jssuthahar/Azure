@@ -1,0 +1,63 @@
+{
+  "cert": "az-900",
+  "domain": 1,
+  "topic": "public-cloud",
+  "questions": [
+    {
+      "id": "cc-public-1",
+      "type": "single",
+      "question": "Which statement describes a public cloud?",
+      "options": [
+        { "text": "Infrastructure used exclusively by one organisation in its own datacenter", "why": "That is a private cloud." },
+        { "text": "Infrastructure owned by a provider and offered to multiple customers over the internet", "why": "Correct. That is the public cloud model." },
+        { "text": "A combination of on-premises and cloud resources", "why": "That is hybrid cloud." },
+        { "text": "A cloud where all customer data is publicly readable", "why": "\"Public\" refers to availability to customers, not data visibility." }
+      ],
+      "answer": [1],
+      "explanation": "Public cloud infrastructure is owned by a provider such as Microsoft and shared by many isolated customers.",
+      "objective": "1.1.3"
+    },
+    {
+      "id": "cc-public-2",
+      "type": "multi",
+      "question": "Which TWO are characteristics of the public cloud?",
+      "options": [
+        { "text": "No capital expenditure is required to start", "why": "Correct. You do not buy hardware." },
+        { "text": "The customer maintains the physical servers", "why": "The provider maintains physical hardware." },
+        { "text": "Resources can be provisioned quickly on demand", "why": "Correct. Self-service, rapid provisioning." },
+        { "text": "The customer must build its own datacenter", "why": "Not required in the public cloud." }
+      ],
+      "answer": [0, 2],
+      "explanation": "Public cloud removes up-front hardware costs and lets you provision resources on demand.",
+      "objective": "1.1.3"
+    },
+    {
+      "id": "cc-public-3",
+      "type": "single",
+      "scenario": "A start-up wants to launch a web app quickly with no hardware purchase and expects unpredictable traffic.",
+      "question": "Which cloud model is the most appropriate?",
+      "options": [
+        { "text": "Private cloud", "why": "Private cloud needs dedicated infrastructure and investment." },
+        { "text": "Public cloud", "why": "Correct. No CapEx, quick start and elastic capacity." },
+        { "text": "On-premises only", "why": "This requires buying hardware and has fixed capacity." },
+        { "text": "None. Web apps cannot run in the cloud", "why": "Web apps are one of the most common cloud workloads." }
+      ],
+      "answer": [1],
+      "explanation": "The public cloud is the natural fit for fast starts and unpredictable demand.",
+      "objective": "1.1.4"
+    },
+    {
+      "id": "cc-public-4",
+      "type": "single",
+      "question": "In a public cloud, many customers share the same physical hardware while being isolated from each other. What is this called?",
+      "options": [
+        { "text": "Multi-tenancy", "why": "Correct. Multiple tenants share infrastructure with logical isolation." },
+        { "text": "Single sign-on", "why": "SSO is an authentication feature." },
+        { "text": "Vertical scaling", "why": "Vertical scaling means making a single resource bigger." },
+        { "text": "Geo-redundancy", "why": "Geo-redundancy is about copying data to another region." }
+      ],
+      "answer": [0],
+      "explanation": "Multi-tenancy is the sharing of infrastructure between isolated customers, the foundation of public cloud economics."
+    }
+  ]
+}

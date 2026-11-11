@@ -1,0 +1,168 @@
+---
+title: Shared Responsibility Model
+seoTitle: Shared Responsibility Model in Azure Explained | AZ-900
+description: The cloud shared responsibility model explained with a clear chart for on-premises, IaaS, PaaS and SaaS, real examples, interview questions and AZ-900 practice.
+answer: >-
+  The **shared responsibility model** defines which security and management tasks belong to the cloud provider and which belong to the customer. Microsoft is always responsible for the **physical** datacenter, hosts and network. The customer is always responsible for its **data, devices, and accounts and identities**. Everything in between shifts depending on whether you use IaaS, PaaS or SaaS.
+updated: 2026-11-11
+readingMinutes: 9
+keyTerms:
+  - term: Shared responsibility model
+    definition: The division of security and operational duties between the cloud provider and the customer.
+  - term: Security OF the cloud
+    definition: The provider's job, which covers physical facilities, hardware, the hypervisor and the provider's own services.
+  - term: Security IN the cloud
+    definition: The customer's job, which covers data, identities, access, configuration and (in IaaS) the OS and apps.
+  - term: Always customer-owned
+    definition: Information and data, devices (mobile and PCs), and accounts and identities, in every model.
+interview:
+  - level: beginner
+    q: What is the shared responsibility model?
+    a: >-
+      It explains who looks after what in the cloud. Microsoft secures the physical side: buildings, servers and network. I am responsible for my data, my user accounts and the devices that access them. The tasks in the middle, like the operating system or applications, depend on whether I use IaaS, PaaS or SaaS.
+    followUps:
+      - q: So with SaaS like Microsoft 365, is the customer responsible for anything?
+        a: >-
+          Yes. Data, devices, and accounts and identities. If a user with a weak password and no MFA gets phished, that is a customer-side failure, not Microsoft's.
+  - level: intermediate
+    q: Walk me through how the responsibility for the operating system changes across the models.
+    a: >-
+      On-premises and IaaS, the customer owns the OS, including patching and hardening. In PaaS and SaaS, the provider manages the OS. That is a big part of why PaaS reduces operational effort.
+    followUps: []
+  - level: experienced
+    q: Where do real-world cloud breaches usually happen in terms of the shared responsibility model?
+    a: >-
+      Almost always on the customer side. Leaked credentials and no MFA, over-privileged identities, storage accounts or databases exposed publicly, unpatched IaaS VMs with open management ports, secrets in source code. The provider's side is rarely the weak point. That is why a cloud security programme focuses on identity (Entra ID, Conditional Access, least privilege), configuration posture (Defender for Cloud, Azure Policy) and data protection.
+    followUps:
+      - q: How do you make customer responsibilities enforceable at scale?
+        a: >-
+          Guardrails, not guidelines. Azure Policy to deny public endpoints and require encryption or tags, management groups to apply them across subscriptions, Defender for Cloud secure score to track posture, and infrastructure as code reviewed in pull requests so misconfigurations are caught before deployment.
+  - level: scenario
+    q: A company's Azure SQL Database was exposed because a developer allowed all public IP addresses in the firewall. Whose responsibility was that?
+    a: >-
+      The customer's. Azure SQL Database is PaaS. Microsoft manages the database engine, OS and infrastructure, but network access configuration, identities and the data are the customer's responsibility.
+    followUps: []
+revision:
+  keyPoints:
+    - "Always Microsoft: physical datacenter, physical network, physical hosts."
+    - "Always customer: information and data, devices, accounts and identities."
+    - "Varies: identity infrastructure, applications, network controls, operating system."
+    - The more managed the service (IaaS → PaaS → SaaS), the more Microsoft takes on.
+    - Most breaches come from customer-side misconfiguration or weak identity.
+  mistakes:
+    - Believing SaaS moves all responsibility to the provider.
+    - Forgetting the OS is the customer's job in IaaS.
+  examTips:
+    - If an answer option says the customer is responsible for physical security in the public cloud, it is wrong.
+    - If an option says the provider is responsible for your data or user accounts, it is wrong in every model.
+  quick:
+    - q: Who is responsible for physical datacenter security in Azure?
+      a: Microsoft.
+    - q: Name the three things that are always the customer's responsibility.
+      a: Information and data, devices, and accounts and identities.
+    - q: Who manages the operating system in PaaS?
+      a: Microsoft (the provider).
+    - q: Who manages the operating system in IaaS?
+      a: The customer.
+    - q: In which model does the customer have the most responsibility?
+      a: On-premises (in the cloud, IaaS).
+references:
+  - title: Shared responsibility in the cloud (Microsoft Learn)
+    url: https://learn.microsoft.com/en-us/azure/security/fundamentals/shared-responsibility
+  - title: Describe the shared responsibility model (AZ-900 module)
+    url: https://learn.microsoft.com/en-us/training/modules/describe-cloud-compute/
+related:
+  - iaas
+  - paas
+  - saas
+  - security
+---
+
+## Start with a question
+
+<Story question="If someone breaks into your rented flat because you left the door unlocked, is that the landlord's fault?">
+
+The landlord is responsible for the building: solid walls, a working front-door lock, a safe staircase. **You** are responsible for locking your own door and not giving your key to strangers.
+
+Cloud security works exactly like this. Many people assume "it is in the cloud, so Microsoft keeps it safe". Microsoft keeps the building safe. **Locking your door is still your job.**
+
+</Story>
+
+## Explain it like I'm 10
+
+<Eli10>
+
+At a **school sleepover in a hotel**, the hotel makes sure the building is safe: fire alarms, locked main doors, security guards. Your teacher makes sure the right children are in the right rooms. And **you** look after your own bag and do not tell anyone your room code.
+
+In the cloud, Microsoft is the hotel, your company's IT team is the teacher, and every user is responsible for their own password. **Everyone has a job. Safety only works if everyone does theirs.**
+
+</Eli10>
+
+## The technical explanation
+
+The **shared responsibility model** divides security and operational duties between the provider and the customer. A useful summary is:
+
+- The provider is responsible for **security *of* the cloud** (facilities, hardware, network, virtualisation, and the managed parts of its services).
+- The customer is responsible for **security *in* the cloud** (what they deploy, configure and store).
+
+How much each side does depends on the service type. Read the chart from left to right: as you move from on-premises to SaaS, more rows turn blue (Microsoft).
+
+<ResponsibilityGrid />
+
+### The three rules to remember
+
+1. **Always Microsoft** (in any Azure model): physical datacenter, physical network, physical hosts.
+2. **Always you**: information and data; devices (mobile and PCs); accounts and identities.
+3. **It depends**: identity and directory infrastructure, applications, network controls and the operating system shift towards Microsoft as you move from IaaS to PaaS to SaaS.
+
+<Flow
+  caption="Example: one company, three services, three different splits"
+  steps={[
+    { title: 'Azure VM (IaaS)', text: 'You patch Windows, configure the firewall rules, secure the app and data.' },
+    { title: 'Azure SQL Database (PaaS)', text: 'Microsoft patches the engine and OS. You control network access, logins and data.' },
+    { title: 'Microsoft 365 (SaaS)', text: 'Microsoft runs the app. You manage users, MFA, sharing settings and data.' },
+  ]}
+/>
+
+<TryIt labs="vm-and-cost,locks-and-tags" text="Practise your side of the model: choose no open ports when you create a VM, and protect a resource group with a lock." />
+
+<DeepDive title="Turning customer responsibilities into controls">
+
+| Customer responsibility | Azure controls that help |
+| --- | --- |
+| Accounts and identities | Microsoft Entra ID, MFA, Conditional Access, Privileged Identity Management, managed identities |
+| Data | Encryption at rest (on by default) with optional customer-managed keys in Key Vault, Microsoft Purview for classification |
+| Network controls | NSGs, Azure Firewall, private endpoints, DDoS Protection |
+| OS (IaaS) | Azure Update Manager, Defender for Servers, just-in-time VM access |
+| Configuration posture | Azure Policy, Defender for Cloud secure score and recommendations |
+
+The model also applies to **resilience**, not only security. Microsoft keeps the platform available within the SLA. Designing your application across zones, backing up your data and testing restores are your job.
+
+</DeepDive>
+
+## Real-world business scenario
+
+<Scenario
+  company="A fintech start-up"
+  industry="Banking"
+  problem="During a security review, auditors asked: 'Who patches the database engine? Who controls who can read customer records?' Nobody could answer clearly."
+  service="Mapped every component to the shared responsibility model and used Azure Policy, Microsoft Entra Conditional Access and Defender for Cloud to cover the customer-side duties."
+  why="The model gave a clear, auditable split. Azure SQL Database patching was Microsoft's, but access control, MFA and data classification were theirs."
+  outcome="The audit passed with a documented responsibility matrix, and two over-privileged accounts and a public firewall rule were fixed along the way."
+/>
+
+## When to use it and when not to
+
+The shared responsibility model is not a service you switch on. It is a lens you should **always** apply. Use it to:
+
+<UseWhen
+  use={[
+    'Decide which service type fits your team. Less operational responsibility usually means PaaS or SaaS.',
+    'Build security checklists and audit evidence for each workload.',
+    'Explain to management why "moving to the cloud" does not remove security work.',
+  ]}
+  avoid={[
+    'Treating the model as a reason to ignore SaaS security. Identity and data are always yours.',
+    'Assuming responsibilities are identical across all services of the same type. Always read each service\'s documentation.',
+  ]}
+/>

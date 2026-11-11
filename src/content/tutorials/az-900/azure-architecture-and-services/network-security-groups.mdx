@@ -1,0 +1,103 @@
+---
+title: Network Security Groups
+seoTitle: Azure Network Security Groups (NSG) Explained | AZ-900
+description: "Azure network security groups explained: allow and deny rules, priorities and where to apply them, with interview questions and AZ-900 practice."
+answer: >-
+  A **network security group (NSG)** is a basic firewall for Azure virtual networks. It contains **security rules** that allow or deny inbound and outbound traffic based on source, destination, port and protocol. You attach an NSG to a **subnet** or a **network interface**, and rules are evaluated in **priority** order.
+updated: 2026-11-11
+readingMinutes: 5
+keyTerms:
+  - term: NSG
+    definition: A set of allow and deny rules that filter network traffic to and from Azure resources.
+  - term: Security rule
+    definition: A rule with priority, source, destination, port, protocol and action (allow or deny).
+  - term: Priority
+    definition: A number from 100 to 4096; lower numbers are processed first.
+interview:
+  - level: beginner
+    q: What is a network security group?
+    a: >-
+      It is a list of firewall rules for Azure networks. Each rule allows or blocks traffic based on where it comes from, where it goes, the port and the protocol.
+    followUps: []
+  - level: intermediate
+    q: How are NSG rules evaluated?
+    a: >-
+      By priority. The lowest number is checked first, and processing stops at the first rule that matches. Default rules allow traffic within the VNet and from the Azure load balancer, and deny other inbound traffic from the internet.
+    followUps: []
+  - level: experienced
+    q: NSG or Azure Firewall?
+    a: >-
+      NSGs are free, distributed, layer 3 and 4 filters on subnets and NICs, ideal for segmentation. Azure Firewall is a managed, stateful, centralised firewall with FQDN filtering, threat intelligence and logging, used in a hub to control traffic between networks and the internet. Most designs use both.
+    followUps: []
+revision:
+  keyPoints:
+    - NSGs filter traffic with allow and deny rules.
+    - Rules use source, destination, port, protocol and priority.
+    - Attach to subnets or network interfaces.
+    - Lower priority numbers are evaluated first.
+  mistakes:
+    - Opening RDP (3389) or SSH (22) to the whole internet.
+  examTips:
+    - '"Allow or deny inbound traffic to VMs by port" = **network security group**.'
+  quick:
+    - q: What does an NSG do?
+      a: Allows or denies network traffic with rules.
+    - q: Where can you attach an NSG?
+      a: To a subnet or a network interface.
+    - q: Which rule is evaluated first, priority 100 or 200?
+      a: "100."
+    - q: Name four rule properties.
+      a: Source, destination, port and protocol (plus priority and action).
+    - q: Is inbound internet traffic allowed by default?
+      a: No, default rules deny it unless you add an allow rule.
+references:
+  - title: Network security groups
+    url: https://learn.microsoft.com/en-us/azure/virtual-network/network-security-groups-overview
+related:
+  - virtual-networks-and-subnets
+  - defense-in-depth
+---
+
+## Start with a question
+
+<Story question="Who decides which visitors can knock on your server’s door?">
+
+A **network security group**: a list of rules saying who may come in, on which door (port), and who must be turned away.
+
+</Story>
+
+## Explain it like I'm 10
+
+<Eli10>
+
+An NSG is like the **guest list at a party**. The bouncer checks each visitor against the list from top to bottom. "Friends from school: allowed. Strangers: not allowed." The first matching rule wins.
+
+</Eli10>
+
+## The technical explanation
+
+| Priority | Name | Port | Source | Action |
+| --- | --- | --- | --- | --- |
+| 100 | Allow-HTTPS | 443 | Internet | Allow |
+| 200 | Allow-SSH-from-office | 22 | 203.0.113.0/24 | Allow |
+| 65500 | DenyAllInBound (default) | Any | Any | Deny |
+
+<TryIt labs="vm-and-cost" text="When you create a VM in the simulator, choose 'None' for public inbound ports. Azure still creates an NSG for it, so look for it in the resource group." />
+
+## Real-world business scenario
+
+<Scenario
+  company="A small software company"
+  industry="Enterprise"
+  problem="A test VM had RDP open to the internet and was attacked by password-guessing bots within hours."
+  service="Removed the open rule, allowed RDP only from the office IP range, and later moved to Azure Bastion."
+  why="NSG rules limit who can reach management ports."
+  outcome="Brute-force attempts stopped immediately."
+/>
+
+## When to use it and when not to
+
+<UseWhen
+  use={['Segment subnets (web, app, data).', 'Restrict management ports to known IPs.']}
+  avoid={['Relying on NSGs alone for advanced inspection. Add Azure Firewall or a WAF where needed.']}
+/>

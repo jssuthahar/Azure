@@ -1,0 +1,91 @@
+{
+ "cert": "az-900",
+ "domain": 2,
+ "topic": "storage-accounts",
+ "questions": [
+  {
+   "id": "t-sa-1",
+   "type": "single",
+   "question": "Which storage account name is valid?",
+   "options": [
+    {
+     "text": "stlearn2026",
+     "why": "Correct."
+    },
+    {
+     "text": "St-Learn",
+     "why": "No capitals or hyphens."
+    },
+    {
+     "text": "my storage",
+     "why": "No spaces."
+    },
+    {
+     "text": "ab",
+     "why": "Must be at least 3 characters."
+    }
+   ],
+   "answer": [
+    0
+   ],
+   "explanation": "Names are 3–24 lowercase letters and numbers.",
+   "objective": "2.3.4"
+  },
+  {
+   "id": "t-sa-2",
+   "type": "single",
+   "question": "Which storage account type is recommended for most scenarios?",
+   "options": [
+    {
+     "text": "Standard general-purpose v2",
+     "why": "Correct."
+    },
+    {
+     "text": "Premium page blobs",
+     "why": "Specialised."
+    },
+    {
+     "text": "Premium file shares",
+     "why": "Specialised."
+    },
+    {
+     "text": "Premium block blobs",
+     "why": "Specialised."
+    }
+   ],
+   "answer": [
+    0
+   ],
+   "explanation": "Standard GPv2 supports all core services and redundancy options.",
+   "objective": "2.3.4"
+  },
+  {
+   "id": "t-sa-3",
+   "type": "single",
+   "question": "Why must a storage account name be globally unique?",
+   "options": [
+    {
+     "text": "It becomes part of the service URL",
+     "why": "Correct."
+    },
+    {
+     "text": "Azure charges per unique name",
+     "why": "No."
+    },
+    {
+     "text": "It is required by Azure Policy",
+     "why": "No."
+    },
+    {
+     "text": "It sets the region",
+     "why": "No."
+    }
+   ],
+   "answer": [
+    0
+   ],
+   "explanation": "Each account has endpoints such as name.blob.core.windows.net.",
+   "objective": "2.3.4"
+  }
+ ]
+}

@@ -1,0 +1,64 @@
+{
+  "cert": "az-900",
+  "domain": 1,
+  "topic": "predictability",
+  "questions": [
+    {
+      "id": "cc-pred-1",
+      "type": "multi",
+      "question": "Predictability in the cloud is usually described in which TWO areas?",
+      "options": [
+        { "text": "Performance", "why": "Correct." },
+        { "text": "Physical security", "why": "Physical security relates to the security benefit." },
+        { "text": "Cost", "why": "Correct." },
+        { "text": "Licensing", "why": "Licensing is not one of the two predictability areas." }
+      ],
+      "answer": [0, 2],
+      "explanation": "Microsoft describes performance predictability and cost predictability.",
+      "objective": "1.2.2"
+    },
+    {
+      "id": "cc-pred-2",
+      "type": "single",
+      "question": "Which tool helps you estimate the monthly cost of Azure services before you deploy them?",
+      "options": [
+        { "text": "Azure pricing calculator", "why": "Correct." },
+        { "text": "Azure Service Health", "why": "Service Health reports service issues." },
+        { "text": "Azure Arc", "why": "Arc extends Azure management to other environments." },
+        { "text": "Microsoft Entra ID", "why": "Entra ID is identity management." }
+      ],
+      "answer": [0],
+      "explanation": "The pricing calculator estimates costs for planned resources.",
+      "objective": "3.1.2"
+    },
+    {
+      "id": "cc-pred-3",
+      "type": "single",
+      "question": "Autoscaling and load balancing mainly contribute to which kind of predictability?",
+      "options": [
+        { "text": "Performance predictability", "why": "Correct. They keep the user experience consistent under load." },
+        { "text": "Cost predictability", "why": "They affect cost, but their main purpose here is consistent performance." },
+        { "text": "Compliance predictability", "why": "This is not one of the predictability categories." },
+        { "text": "Identity predictability", "why": "This is not one of the predictability categories." }
+      ],
+      "answer": [0],
+      "explanation": "Autoscaling, load balancing and HA support performance predictability.",
+      "objective": "1.2.2"
+    },
+    {
+      "id": "cc-pred-4",
+      "type": "single",
+      "scenario": "Finance wants to be alerted when a department's Azure spending is forecast to exceed its monthly limit.",
+      "question": "What should you configure?",
+      "options": [
+        { "text": "A budget with alerts in Microsoft Cost Management", "why": "Correct." },
+        { "text": "A resource lock", "why": "Locks prevent deletion or changes, not overspending." },
+        { "text": "An availability zone", "why": "Zones are for resilience." },
+        { "text": "A virtual network", "why": "Networking is unrelated to cost alerts." }
+      ],
+      "answer": [0],
+      "explanation": "Cost Management budgets can alert on actual and forecast spend, supporting cost predictability.",
+      "objective": "3.1.3"
+    }
+  ]
+}

@@ -1,0 +1,23 @@
+---
+import Base from '../layouts/Base.astro';
+import Mascot from '../components/Mascot.astro';
+import { SITE } from '../config';
+---
+<Base title="About MSDEVBUILD Azure" description="Why MSDEVBUILD Azure exists, how lessons are written and checked against official Microsoft documentation, and who is behind it." wide={false} breadcrumbs={[{ name: 'Home', url: '/' }, { name: 'About', url: '/about/' }]}>
+  <div class="lesson">
+    <p class="eyebrow">About</p>
+    <h1 class="text-4xl font-bold tracking-tight">Teach concepts, not just exam answers</h1>
+    <div class="card flex items-center gap-4 p-5"><Mascot size={64} /><p>MSDEVBUILD Azure is a free learning platform for Microsoft Azure certifications. It starts with AZ-900 Azure Fundamentals.</p></div>
+    <p>It is built by <a href={SITE.main}>{SITE.author}</a>, the person behind the <a href={SITE.blog}>MSDEVBUILD blog</a>. The goal is simple. A student who has never heard of the cloud should leave able to explain Azure clearly, and an engineer with twenty years of experience should still find something useful.</p>
+    <h2 id="how-we-write">How lessons are written</h2>
+    <ul>
+      <li>Every lesson follows the same template: a real problem first, an everyday analogy, the correct technical explanation, a business scenario, when to use it and when not to, interview questions, exam practice and a quick revision sheet.</li>
+      <li>Coverage follows the current official skills outline on Microsoft Learn. Each page lists the exact objective it covers and the date the syllabus was last checked.</li>
+      <li>Technical facts are checked against official Microsoft documentation, which every lesson links to.</li>
+      <li>All practice questions are original. We never publish real, recalled or leaked exam questions.</li>
+      <li>We do not publish empty placeholder pages. Unfinished topics are listed as “coming next” and are not linked.</li>
+    </ul>
+    <h2 id="independent">Independent resource</h2>
+    <p>MSDEVBUILD Azure is not affiliated with or endorsed by Microsoft. Exam details such as price, length and question formats change. Always confirm them on the official exam page before booking.</p>
+  </div>
+</Base>

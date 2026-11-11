@@ -1,0 +1,91 @@
+{
+ "cert": "az-900",
+ "domain": 2,
+ "topic": "compute-types",
+ "questions": [
+  {
+   "id": "t-ct-1",
+   "type": "single",
+   "question": "Which compute type packages an app with its dependencies and shares the host OS kernel?",
+   "options": [
+    {
+     "text": "Containers",
+     "why": "Correct."
+    },
+    {
+     "text": "Virtual machines",
+     "why": "VMs include a full guest OS."
+    },
+    {
+     "text": "Availability sets",
+     "why": "A VM placement feature."
+    },
+    {
+     "text": "Resource groups",
+     "why": "Logical containers."
+    }
+   ],
+   "answer": [
+    0
+   ],
+   "explanation": "Containers virtualise the OS and are lightweight.",
+   "objective": "2.2.1"
+  },
+  {
+   "id": "t-ct-2",
+   "type": "single",
+   "question": "You need to run code each time a message arrives in a queue, without managing servers. Which option fits best?",
+   "options": [
+    {
+     "text": "Azure Functions",
+     "why": "Correct."
+    },
+    {
+     "text": "Azure Virtual Machines",
+     "why": "Requires server management."
+    },
+    {
+     "text": "Azure Virtual Desktop",
+     "why": "Delivers desktops."
+    },
+    {
+     "text": "Azure DNS",
+     "why": "Name resolution."
+    }
+   ],
+   "answer": [
+    0
+   ],
+   "explanation": "Functions are event-driven and serverless.",
+   "objective": "2.2.1"
+  },
+  {
+   "id": "t-ct-3",
+   "type": "single",
+   "question": "Which compute type gives you the most control over the operating system?",
+   "options": [
+    {
+     "text": "Virtual machines",
+     "why": "Correct."
+    },
+    {
+     "text": "Azure Functions",
+     "why": "No OS access."
+    },
+    {
+     "text": "Azure Container Apps",
+     "why": "The platform manages the OS."
+    },
+    {
+     "text": "Azure Logic Apps",
+     "why": "Workflow service."
+    }
+   ],
+   "answer": [
+    0
+   ],
+   "explanation": "VMs are IaaS with full OS control.",
+   "objective": "2.2.1"
+  }
+ ]
+}

@@ -1,0 +1,61 @@
+{
+  "cert": "az-900",
+  "domain": 1,
+  "topic": "reliability",
+  "questions": [
+    {
+      "id": "cc-rel-1",
+      "type": "single",
+      "question": "Which cloud benefit refers to the ability of a system to recover from failures and continue to function?",
+      "options": [
+        { "text": "Reliability", "why": "Correct." },
+        { "text": "Elasticity", "why": "Elasticity is automatic scaling with demand." },
+        { "text": "Predictability", "why": "Predictability is about consistent performance and cost." },
+        { "text": "Agility", "why": "Agility is about speed of provisioning and change." }
+      ],
+      "answer": [0],
+      "explanation": "Reliability is the ability to recover from failures and keep functioning.",
+      "objective": "1.2.2"
+    },
+    {
+      "id": "cc-rel-2",
+      "type": "single",
+      "question": "How does the cloud's decentralised design improve reliability?",
+      "options": [
+        { "text": "It lets you deploy resources in multiple regions and zones, so a failure in one location does not stop the service", "why": "Correct." },
+        { "text": "It guarantees that hardware never fails", "why": "Hardware fails; the design tolerates it." },
+        { "text": "It removes the need for backups", "why": "Backups are still essential." },
+        { "text": "It puts all resources in one large datacenter", "why": "That would be centralised, the opposite." }
+      ],
+      "answer": [0],
+      "explanation": "Global distribution of regions and zones enables failover and recovery.",
+      "objective": "1.2.2"
+    },
+    {
+      "id": "cc-rel-3",
+      "type": "single",
+      "question": "Which Azure service replicates on-premises or Azure VMs to another location so they can fail over during a disaster?",
+      "options": [
+        { "text": "Azure Site Recovery", "why": "Correct." },
+        { "text": "Azure Advisor", "why": "Advisor provides recommendations." },
+        { "text": "Azure Policy", "why": "Policy enforces governance rules." },
+        { "text": "Azure DNS", "why": "Azure DNS hosts DNS domains." }
+      ],
+      "answer": [0],
+      "explanation": "Azure Site Recovery provides replication and orchestrated failover for disaster recovery."
+    },
+    {
+      "id": "cc-rel-4",
+      "type": "single",
+      "question": "A business states it can tolerate losing at most 15 minutes of data after a disaster. What is this requirement called?",
+      "options": [
+        { "text": "Recovery Point Objective (RPO)", "why": "Correct. RPO is the acceptable data loss measured in time." },
+        { "text": "Recovery Time Objective (RTO)", "why": "RTO is how quickly service must be restored." },
+        { "text": "Service Level Agreement (SLA)", "why": "SLAs state provider uptime commitments." },
+        { "text": "Total Cost of Ownership (TCO)", "why": "TCO is about cost, not data loss." }
+      ],
+      "answer": [0],
+      "explanation": "RPO defines acceptable data loss; RTO defines acceptable downtime."
+    }
+  ]
+}

@@ -1,0 +1,91 @@
+{
+ "cert": "az-900",
+ "domain": 2,
+ "topic": "blob-storage-and-tiers",
+ "questions": [
+  {
+   "id": "t-bt-1",
+   "type": "single",
+   "question": "Which access tier has the lowest storage cost but requires rehydration before data can be read?",
+   "options": [
+    {
+     "text": "Archive",
+     "why": "Correct."
+    },
+    {
+     "text": "Hot",
+     "why": "Online, highest storage cost."
+    },
+    {
+     "text": "Cool",
+     "why": "Online."
+    },
+    {
+     "text": "Cold",
+     "why": "Online."
+    }
+   ],
+   "answer": [
+    0
+   ],
+   "explanation": "Archive is offline.",
+   "objective": "2.3.2"
+  },
+  {
+   "id": "t-bt-2",
+   "type": "single",
+   "question": "Data is accessed daily. Which tier is most cost-effective?",
+   "options": [
+    {
+     "text": "Hot",
+     "why": "Correct."
+    },
+    {
+     "text": "Archive",
+     "why": "Offline, expensive to read."
+    },
+    {
+     "text": "Cold",
+     "why": "High access cost."
+    },
+    {
+     "text": "Cool",
+     "why": "Higher access cost than Hot."
+    }
+   ],
+   "answer": [
+    0
+   ],
+   "explanation": "Hot has the lowest access cost.",
+   "objective": "2.3.2"
+  },
+  {
+   "id": "t-bt-3",
+   "type": "single",
+   "question": "What kind of data is Azure Blob Storage designed for?",
+   "options": [
+    {
+     "text": "Unstructured data such as images, video and backups",
+     "why": "Correct."
+    },
+    {
+     "text": "Relational data with SQL joins",
+     "why": "Use a relational database."
+    },
+    {
+     "text": "VM boot volumes only",
+     "why": "Managed Disks."
+    },
+    {
+     "text": "DNS records",
+     "why": "Azure DNS."
+    }
+   ],
+   "answer": [
+    0
+   ],
+   "explanation": "Blob Storage is object storage.",
+   "objective": "2.3.1"
+  }
+ ]
+}

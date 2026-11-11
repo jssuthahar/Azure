@@ -1,0 +1,166 @@
+---
+title: On-premises vs Cloud
+seoTitle: On-premises vs Cloud Computing Explained | AZ-900
+description: On-premises vs cloud compared on cost, control, scaling, security and maintenance, with examples, interview questions and AZ-900 practice.
+answer: >-
+  **On-premises** means you buy, house and run your own servers in your own building or leased datacenter, so you control everything and are responsible for everything. In the **cloud** you rent computing resources from a provider over the internet. The provider runs the hardware, you pay for what you use, and capacity changes in minutes.
+updated: 2026-11-11
+readingMinutes: 8
+keyTerms:
+  - term: On-premises (on-prem)
+    definition: IT infrastructure owned and operated by the organisation itself, in its own building or a leased facility.
+  - term: Datacenter
+    definition: A building that houses servers, storage and networking with power, cooling and physical security.
+  - term: Hardware refresh
+    definition: Replacing ageing servers, typically every 3–5 years, which is a major recurring capital cost on-premises.
+  - term: Lift and shift
+    definition: Moving an application to the cloud with as few changes as possible, usually onto virtual machines.
+interview:
+  - level: beginner
+    q: What is the difference between on-premises and cloud?
+    a: >-
+      On-premises means the company owns and runs its own servers, so it handles purchasing, power, cooling, security and repairs. Cloud means renting those resources from a provider like Azure over the internet. The provider runs the physical side and the company pays for what it uses.
+    followUps:
+      - q: Which one gives more control?
+        a: >-
+          On-premises gives full control over hardware and the physical environment. The cloud trades some of that low-level control for speed, scale and less maintenance, while you still control your configuration, data and access.
+  - level: intermediate
+    q: Name the hidden costs of on-premises infrastructure that people often forget.
+    a: >-
+      Power and cooling, floor space or datacenter leases, physical security, hardware support contracts, spare parts, the hardware refresh every few years, backup and disaster-recovery sites, software licences and, above all, staff time to run it. A server's purchase price is usually a small part of its total cost of ownership.
+    followUps: []
+  - level: experienced
+    q: When is staying on-premises the right architectural decision?
+    a: >-
+      When latency to on-site equipment is critical (manufacturing control systems), when data sovereignty or contractual rules cannot be met by any available region, when there is a large, steady workload on recently purchased hardware, or when the application is tightly coupled to mainframes or hardware that cannot move. Even then, I would look at hybrid patterns, managing on-premises servers with Azure Arc or running Azure services on-premises with Azure Local, to get cloud-style management.
+    followUps: []
+  - level: scenario
+    q: A company's server room lease ends in nine months, and its servers are five years old. What would you recommend?
+    a: >-
+      This is a classic trigger for migration. I would assess workloads with Azure Migrate, move the straightforward ones (lift and shift to VMs, or replatform to PaaS where cheap to do), retire unused systems, and keep anything that truly must stay on-premises in a smaller hybrid footprint. That avoids a costly hardware refresh and a new lease.
+    followUps: []
+revision:
+  keyPoints:
+    - On-premises = you own the hardware, the building concerns and all of the maintenance.
+    - Cloud = you rent capacity; the provider runs the physical infrastructure.
+    - On-prem is CapEx-heavy with fixed capacity; cloud is OpEx with on-demand capacity.
+    - On-prem gives maximum physical control; cloud gives speed, scale and global reach.
+    - Many organisations run a mix of both (hybrid).
+  mistakes:
+    - Comparing only server purchase price with a monthly cloud bill. Compare total cost of ownership.
+    - Assuming on-premises is automatically more secure. Security depends on how well it is run.
+  examTips:
+    - If a scenario stresses "complete control over physical hardware", the answer is usually on-premises or private cloud.
+    - If it stresses "no up-front cost" or "scale quickly", the answer is usually cloud.
+  quick:
+    - q: Who maintains the physical servers on-premises?
+      a: The organisation itself.
+    - q: What is a hardware refresh?
+      a: Replacing ageing servers every few years, a recurring capital cost on-premises.
+    - q: Which model gives more physical control?
+      a: On-premises.
+    - q: What does "lift and shift" mean?
+      a: Moving an application to the cloud with minimal changes, usually onto VMs.
+    - q: Which spending type dominates on-premises - CapEx or OpEx?
+      a: CapEx (capital expenditure).
+references:
+  - title: Describe cloud computing (Microsoft Learn)
+    url: https://learn.microsoft.com/en-us/training/modules/describe-cloud-compute/
+  - title: Azure Migrate overview
+    url: https://learn.microsoft.com/en-us/azure/migrate/migrate-services-overview
+related:
+  - what-is-cloud-computing
+  - capex-vs-opex
+  - hybrid-cloud
+---
+
+## Start with a question
+
+<Story question="Would you rather own a car or use a taxi app?">
+
+Owning a car means you choose the model, decide who drives it and leave your things in the boot. You also pay for it up front, insure it, service it, park it and fix it when it breaks, even in the months you hardly drive.
+
+A taxi app means no purchase, no servicing, and a car whenever you need one. You give up some control and pay per ride.
+
+**On-premises IT is owning the car. The cloud is the taxi app.** Neither is "right" for everyone. It depends on how you travel.
+
+</Story>
+
+## Explain it like I'm 10
+
+<Eli10>
+
+Think about video games. One way is to **buy every game** and keep the discs on your shelf. You own them forever, but you paid for all of them, and old ones gather dust.
+
+The other way is a **game subscription**. You play whatever you want from a huge library, the company keeps it updated, and you never worry about scratched discs.
+
+On-premises computers are the shelf of discs. Cloud computers are the subscription.
+
+</Eli10>
+
+## The technical explanation
+
+**On-premises** (often shortened to *on-prem*) means an organisation runs IT infrastructure that it owns, in a server room or datacenter it controls. It is responsible for the whole stack, from the building and electricity up to the applications.
+
+**Cloud computing** means renting infrastructure and services from a provider over the internet. The provider owns and operates the datacenters, hardware and core networking. The customer configures and uses the services.
+
+| | On-premises | Cloud (Azure) |
+| --- | --- | --- |
+| Up-front cost | High: buy servers, storage, network gear | None or low: pay as you go |
+| Spending model | Mostly CapEx | Mostly OpEx |
+| Time to get a server | Weeks (order, ship, install) | Minutes |
+| Capacity | Fixed until you buy more | Scale up or down on demand |
+| Physical maintenance | Your team | The provider |
+| Physical control | Full | None (you control configuration) |
+| Global reach | Build or lease sites yourself | Deploy to regions worldwide |
+| Disaster recovery | Build and pay for a second site | Use other zones and regions |
+| Security | Entirely your responsibility | Shared with the provider |
+
+<TryIt labs="vm-and-cost" text="No ordering, shipping or racking: create a virtual machine in the simulated portal and see it running moments later." />
+
+<CostChart caption="Illustrative only. On-premises spending arrives in big up-front chunks, including a hardware refresh. Cloud spending is spread evenly and follows usage." />
+
+<DeepDive title="Comparing costs honestly: total cost of ownership (TCO)">
+
+A fair comparison includes everything a workload costs over 3–5 years:
+
+- **On-premises**: hardware (with refresh), software licences, datacenter space or lease, power and cooling, network circuits, backup and DR site, support contracts, and staff time to operate it.
+- **Cloud**: compute, storage, networking (including outbound data transfer), licences (or Azure Hybrid Benefit to reuse existing Windows Server and SQL Server licences), support plan, and the staff time still needed to operate it.
+
+Two traps catch experienced teams. They compare an *optimised* on-prem estate with an *unoptimised* lift-and-shift, and they forget **egress** and cross-region data transfer. Microsoft's pricing calculator estimates cloud costs. Azure Migrate's business case feature compares on-prem and Azure TCO from real discovery data.
+
+</DeepDive>
+
+## Real-world business scenario
+
+<Scenario
+  company="A regional bank"
+  industry="Banking"
+  problem="The core banking system must stay in the bank's own datacenter for regulatory and integration reasons, but its mobile app and analytics needs are growing fast and the datacenter is full."
+  service="Keep the core system on-premises; run the mobile API on Azure App Service and analytics on Azure, connected privately with ExpressRoute."
+  why="Regulated core stays under direct control; customer-facing and bursty analytics workloads get cloud scale without expanding the datacenter."
+  outcome="New mobile features ship faster, month-end analytics finish in hours instead of days, and the datacenter expansion is cancelled."
+/>
+
+This is very common. The choice is rarely "all on-prem" or "all cloud". It is about putting each workload where it fits best, which leads straight to **hybrid cloud**.
+
+## When to use it and when not to
+
+<UseWhen
+  use={[
+    '**Choose cloud** for new applications, variable demand, global users, and when you want managed services.',
+    '**Choose cloud** when a hardware refresh, lease renewal or datacenter capacity limit is approaching.',
+    '**Stay on-premises** for workloads tied to local hardware or very low latency on site.',
+    '**Stay on-premises** where regulation or contracts genuinely require it.',
+  ]}
+  avoid={[
+    'Moving to the cloud without changing anything, then expecting big savings.',
+    'Keeping everything on-premises just because "that is how we have always done it".',
+    'Ignoring skills. Both models need trained people, just different skills.',
+  ]}
+  alternatives={[
+    '**Hybrid cloud**: combine both and connect them securely.',
+    '**Azure Local** (formerly Azure Stack HCI): run Azure-managed infrastructure in your own datacenter.',
+    '**Azure Arc**: manage on-premises servers from Azure with the same tools and policies.',
+  ]}
+/>

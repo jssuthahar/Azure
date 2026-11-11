@@ -1,0 +1,131 @@
+---
+import Base from '../../layouts/Base.astro';
+import Mascot from '../../components/Mascot.astro';
+import { MODULES, SKILLS_MEASURED_AS_OF, SYLLABUS_VERIFIED_ON, STUDY_GUIDE_URL, EXAM_FACTS } from '../../data/az-900/syllabus';
+import { getNav, getQuestionBank, moduleUrl } from '../../lib/learn';
+import { SITE } from '../../config';
+
+const nav = await getNav();
+const bank = await getQuestionBank();
+const published = nav.filter((t) => t.published);
+const topicsFor = (objectiveId: string) => nav.filter((t) => t.objectives.includes(objectiveId));
+
+const title = 'AZ-900 Azure Fundamentals: Free Course & Syllabus';
+const description = 'Free AZ-900 course built on the official skills outline: cloud concepts, Azure architecture and services, management and governance, quizzes and mock exams.';
+const schema = [
+  {
+    '@type': 'Course',
+    '@id': `${SITE.url}/az-900/#course`,
+    name: 'AZ-900: Microsoft Azure Fundamentals — free course',
+    description,
+    url: `${SITE.url}/az-900/`,
+    provider: { '@id': `${SITE.url}/#organization` },
+    inLanguage: 'en',
+    isAccessibleForFree: true,
+    educationalLevel: 'Beginner',
+    teaches: MODULES.map((m) => m.title),
+    syllabusSections: MODULES.map((m) => ({ '@type': 'Syllabus', name: m.title, description: m.summary })),
+    hasCourseInstance: { '@type': 'CourseInstance', courseMode: 'Online', courseWorkload: 'PT12H' },
+    offers: { '@type': 'Offer', category: 'Free', price: 0, priceCurrency: 'USD' },
+  },
+];
+const crumbs = [
+  { name: 'Home', url: '/' },
+  { name: 'AZ-900', url: '/az-900/' },
+];
+---
+<Base title={title} description={description} schema={schema} breadcrumbs={crumbs}>
+  <section class="mx-auto max-w-7xl px-4 pt-10 pb-10 sm:px-6">
+    <nav aria-label="Breadcrumb" class="text-sm text-muted"><a href="/" class="hover:text-[var(--accent-deep)]">Home</a> / <span class="text-[var(--text)]">AZ-900</span></nav>
+    <div class="mt-6 grid gap-8 lg:grid-cols-[1.4fr_1fr] lg:items-start">
+      <div>
+        <p class="eyebrow">Microsoft Azure Fundamentals</p>
+        <h1 class="mt-3 text-4xl font-bold tracking-tight sm:text-5xl">AZ-900 course and syllabus</h1>
+        <p class="mt-5 max-w-2xl text-lg leading-relaxed text-muted">
+          AZ-900 proves you understand cloud concepts and the core of Microsoft Azure. It is the usual first step into an Azure career, and it is the right place to start if you are new. This course follows the <a class="text-accent underline" href={STUDY_GUIDE_URL} rel="noopener">official skills outline</a> topic by topic.
+        </p>
+        <div class="mt-7 flex flex-wrap gap-3">
+          {published[0] && <a class="btn btn-accent" href={published[0].url}>Start lesson 1 →</a>}
+          <a class="btn btn-outline" href="/az-900/mock-exam/">Mock exam ({bank.length} questions)</a>
+          <a class="btn btn-outline" href="/az-900/interview/">Interview questions</a>
+        </div>
+      </div>
+      <div class="card p-5">
+        <div class="flex items-center gap-3"><Mascot size={56} /><p class="font-semibold">Exam at a glance</p></div>
+        <dl class="mt-4 grid grid-cols-2 gap-3 text-sm">
+          <div class="rounded-xl border border-default bg-[var(--bg)] p-3"><dt class="text-muted">Passing score</dt><dd class="text-lg font-bold">{EXAM_FACTS.passingScore} / 1000</dd></div>
+          <div class="rounded-xl border border-default bg-[var(--bg)] p-3"><dt class="text-muted">Level</dt><dd class="text-lg font-bold">Fundamentals</dd></div>
+          <div class="rounded-xl border border-default bg-[var(--bg)] p-3"><dt class="text-muted">Domains</dt><dd class="text-lg font-bold">3</dd></div>
+          <div class="rounded-xl border border-default bg-[var(--bg)] p-3"><dt class="text-muted">Prerequisites</dt><dd class="text-lg font-bold">None</dd></div>
+        </dl>
+        <p class="mt-4 text-xs leading-relaxed text-muted">
+          Syllabus: skills measured as of {SKILLS_MEASURED_AS_OF}, checked against Microsoft Learn on {new Date(SYLLABUS_VERIFIED_ON).toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' })}. Always confirm exam length, price and format on the <a class="underline" href="https://learn.microsoft.com/en-us/credentials/certifications/azure-fundamentals/" rel="noopener">official exam page</a>. Microsoft also offers a free <a class="underline" href={EXAM_FACTS.practiceAssessmentUrl} rel="noopener">practice assessment</a>.
+        </p>
+      </div>
+    </div>
+  </section>
+
+  <section class="mx-auto max-w-7xl px-4 sm:px-6" aria-labelledby="weights">
+    <h2 id="weights" class="text-2xl font-bold tracking-tight">The three exam domains</h2>
+    <div class="mt-5 grid gap-4 md:grid-cols-3">
+      {MODULES.map((m) => {
+        const t = nav.filter((x) => x.module.slug === m.slug);
+        const p = t.filter((x) => x.published).length;
+        return (
+          <a href={`#${m.slug}`} class="card card-link p-5">
+            <div class="flex items-center justify-between"><span class="chip">Domain {m.domain}</span><span class="text-2xl font-bold text-accent">{m.weight}</span></div>
+            <p class="mt-3 text-lg font-semibold">{m.title}</p>
+            <p class="mt-1 text-sm leading-relaxed text-muted">{m.summary}</p>
+            <div class="bar mt-4"><span style={`width:${Math.round((p / t.length) * 100)}%`}></span></div>
+            <p class="mt-1.5 text-xs text-muted">{p} of {t.length} tutorials published</p>
+          </a>
+        );
+      })}
+    </div>
+  </section>
+
+  <section class="mx-auto max-w-7xl px-4 pt-14 sm:px-6" aria-labelledby="syllabus">
+    <h2 id="syllabus" class="text-2xl font-bold tracking-tight">Complete official syllabus</h2>
+    <p class="mt-2 max-w-3xl text-muted">Every objective Microsoft lists, with the tutorials that teach it. Topics marked “coming next” are being written. We do not publish empty pages. Topics marked “beyond the exam” are not in the current outline but come up in real projects and interviews.</p>
+
+    {MODULES.map((m) => {
+      const extra = m.topics.filter((t) => t.beyondExam && t.objectives.length === 0);
+      return (
+        <div id={m.slug} class="mt-10 scroll-mt-24">
+          <div class="flex flex-wrap items-baseline gap-3">
+            <h3 class="text-xl font-bold">Domain {m.domain}: {m.title}</h3>
+            <span class="chip">{m.weight}</span>
+            <a class="text-sm text-accent underline" href={moduleUrl(m.slug)}>Module overview</a>
+          </div>
+          <div class="mt-4 grid gap-4 lg:grid-cols-2">
+            {m.groups.map((g) => (
+              <div class="card p-5">
+                <h4 class="font-semibold">{g.title}</h4>
+                <ul class="mt-3 space-y-3 text-sm">
+                  {g.objectives.map((o) => {
+                    const ts = topicsFor(o.id);
+                    return (
+                      <li>
+                        <p class="font-medium"><span class="text-muted">{o.id}</span> {o.text}</p>
+                        <p class="mt-1 flex flex-wrap gap-1.5">
+                          {ts.map((t) => (t.published ? <a href={t.url} class="chip hover:underline">{t.title}</a> : <span class="chip chip-muted">{t.title} · coming next</span>))}
+                        </p>
+                      </li>
+                    );
+                  })}
+                </ul>
+              </div>
+            ))}
+            {extra.length > 0 && (
+              <div class="card border-dashed p-5">
+                <h4 class="font-semibold">Beyond the exam (real-world extras)</h4>
+                <p class="mt-1 text-sm text-muted">Not listed in the current skills outline, but interviewers and projects expect you to know them.</p>
+                <p class="mt-3 flex flex-wrap gap-1.5 text-sm">{extra.map((t) => (t.published ? <a href={nav.find((n) => n.slug === t.slug)!.url} class="chip">{t.title}</a> : <span class="chip chip-muted">{t.title} · coming next</span>))}</p>
+              </div>
+            )}
+          </div>
+        </div>
+      );
+    })}
+  </section>
+</Base>

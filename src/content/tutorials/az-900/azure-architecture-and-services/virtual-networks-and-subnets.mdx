@@ -1,0 +1,115 @@
+---
+title: Virtual Networks and Subnets
+seoTitle: Azure Virtual Networks (VNet) and Subnets | AZ-900
+description: Azure virtual networks and subnets explained simply, with what they do, address spaces, segmentation, real examples, interview questions and AZ-900 practice.
+answer: >-
+  An **Azure virtual network (VNet)** is your own private network in Azure. It lets Azure resources, such as VMs, talk securely to each other, to the internet and to your on-premises network. A VNet has an address space (for example 10.0.0.0/16) that you divide into **subnets** to group and isolate resources, such as a web subnet and a database subnet.
+updated: 2026-11-11
+readingMinutes: 7
+keyTerms:
+  - term: Virtual network (VNet)
+    definition: A logically isolated private network in Azure, scoped to one region.
+  - term: Address space
+    definition: The private IP range of a VNet, written in CIDR notation such as 10.0.0.0/16.
+  - term: Subnet
+    definition: A segment of a VNet's address space used to group and isolate resources.
+  - term: CIDR
+    definition: Classless Inter-Domain Routing notation for IP ranges, such as /16 or /24.
+interview:
+  - level: beginner
+    q: What is an Azure virtual network?
+    a: >-
+      It is my private network in Azure. My VMs and other resources inside it can talk to each other privately, and I control whether they can reach the internet or my office network.
+    followUps:
+      - q: Why use subnets?
+        a: >-
+          To divide the network into sections, like keeping web servers and databases apart, and apply different security rules to each section.
+  - level: intermediate
+    q: What capabilities does an Azure virtual network provide?
+    a: >-
+      Isolation and segmentation, communication with the internet, communication between Azure resources, communication with on-premises resources through VPN or ExpressRoute, routing of network traffic, filtering with network security groups, and connecting virtual networks with peering.
+    followUps: []
+  - level: experienced
+    q: What would you watch out for when planning VNet address spaces?
+    a: >-
+      Avoid overlapping ranges with on-premises networks and other VNets you may peer with, because overlapping address spaces cannot be connected. Leave room to grow, remember Azure reserves five IP addresses in every subnet, and plan dedicated subnets for services that need them, such as VPN gateways (GatewaySubnet) or Azure Bastion.
+    followUps: []
+revision:
+  keyPoints:
+    - A VNet is a private, isolated network in Azure, scoped to one region.
+    - Address space is defined in CIDR, such as 10.0.0.0/16.
+    - Subnets segment the VNet to group and secure resources.
+    - VNets connect to the internet, other VNets (peering) and on-premises (VPN, ExpressRoute).
+  mistakes:
+    - Thinking one VNet automatically spans multiple regions.
+    - Using overlapping address ranges you later need to connect.
+  examTips:
+    - '"Isolate and segment Azure resources" = **virtual network and subnets**.'
+  quick:
+    - q: What is a VNet?
+      a: A private, isolated network for Azure resources.
+    - q: What is a subnet?
+      a: A segment of a VNet's address space.
+    - q: Is a VNet regional or global?
+      a: Regional.
+    - q: How do you filter traffic between subnets?
+      a: With network security groups.
+    - q: How many IP addresses does Azure reserve in each subnet?
+      a: Five.
+references:
+  - title: What is Azure Virtual Network?
+    url: https://learn.microsoft.com/en-us/azure/virtual-network/virtual-networks-overview
+related:
+  - vnet-peering
+  - network-security-groups
+  - vpn-gateway
+---
+
+## Start with a question
+
+<Story question="How do your cloud servers talk to each other without everyone on the internet listening in?">
+
+They join a **virtual network**: a private network inside Azure that only your resources can use.
+
+</Story>
+
+## Explain it like I'm 10
+
+<Eli10>
+
+A virtual network is like a **school building**. Inside, classrooms (subnets) keep different groups apart. Students can move around inside, but outsiders need to come through the front door, where the guard checks them.
+
+</Eli10>
+
+## The technical explanation
+
+A **VNet** is defined by a private **address space** and divided into **subnets**. Resources in the same VNet can communicate by default; you control everything else.
+
+| Capability | How |
+| --- | --- |
+| Isolation and segmentation | Separate VNets and subnets |
+| Internet communication | Public IPs, load balancers, NAT |
+| Communicate between Azure resources | Same VNet, or peering, or service endpoints |
+| Communicate with on-premises | VPN Gateway or ExpressRoute |
+| Route traffic | System routes, route tables (UDRs) |
+| Filter traffic | Network security groups, Azure Firewall |
+
+<TryIt labs="vm-and-cost" text="When you create a VM in the simulator, Azure creates a virtual network with a default subnet for it. Find it in the resource group." />
+
+## Real-world business scenario
+
+<Scenario
+  company="An online shop"
+  industry="E-commerce"
+  problem="Web servers and the database were on one flat network, so a compromised web server could reach the database directly."
+  service="Created a VNet with a web subnet and a data subnet, and NSG rules allowing only the web subnet to reach the database port."
+  why="Segmentation limits how far an attacker can move."
+  outcome="The database is reachable only from the web tier, closing a major risk."
+/>
+
+## When to use it and when not to
+
+<UseWhen
+  use={['Every IaaS deployment, plus PaaS services that need private connectivity.', 'Separate tiers with subnets and NSGs.']}
+  avoid={['Overlapping address spaces with networks you will need to connect.']}
+/>

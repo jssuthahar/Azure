@@ -1,0 +1,102 @@
+---
+title: Azure Service Health and Azure Status
+seoTitle: Azure Service Health vs Azure Status Explained | AZ-900
+description: "Azure Service Health explained: Azure status, Service Health and Resource Health, with alerts for outages and maintenance, examples and AZ-900 practice."
+answer: >-
+  **Azure Service Health** keeps you informed about the health of Azure itself. It has three parts. **Azure status** is a global view of the health of all Azure services in all regions. **Service Health** is a personalised view of incidents, planned maintenance and advisories that affect *your* services and regions. **Resource Health** shows the health of *your individual* resources, such as a specific VM.
+updated: 2026-11-11
+readingMinutes: 5
+keyTerms:
+  - term: Azure status
+    definition: A public, global page showing the health of all Azure services across regions.
+  - term: Service Health
+    definition: A personalised view of service issues, planned maintenance and advisories affecting your subscriptions.
+  - term: Resource Health
+    definition: The current and past health of your individual resources.
+interview:
+  - level: beginner
+    q: What is Azure Service Health?
+    a: >-
+      A service that tells me when Azure itself has a problem or planned maintenance that could affect my resources, and lets me set alerts for it.
+    followUps: []
+  - level: intermediate
+    q: What is the difference between Azure status, Service Health and Resource Health?
+    a: >-
+      Azure status is the broad, public view of all of Azure. Service Health is personalised to the services and regions I use. Resource Health zooms in on one of my resources, like whether a particular VM is available.
+    followUps: []
+  - level: experienced
+    q: How do you make sure your team hears about Azure incidents quickly?
+    a: >-
+      Create Service Health alerts scoped to the subscriptions, services and regions in use, route them through action groups to email, SMS, Teams or the incident tool, and use Resource Health alerts for critical resources. Keep the post-incident reports for root-cause reviews.
+    followUps: []
+revision:
+  keyPoints:
+    - Azure status = global, all services, all regions.
+    - Service Health = personalised to your services and regions.
+    - Resource Health = your individual resources.
+    - Set up Service Health alerts.
+  mistakes:
+    - Using Azure Advisor to find out about Azure outages.
+  examTips:
+    - '"Notified about planned maintenance affecting my regions" = **Service Health**.'
+    - '"Is my specific VM healthy?" = **Resource Health**.'
+  quick:
+    - q: Which view shows the health of all Azure services globally?
+      a: Azure status.
+    - q: Which view is personalised to your services and regions?
+      a: Service Health.
+    - q: Which view shows the health of one specific VM?
+      a: Resource Health.
+    - q: Name two event types in Service Health.
+      a: Service issues and planned maintenance (also health advisories).
+    - q: How do you get notified automatically?
+      a: Create Service Health alerts with action groups.
+references:
+  - title: Azure Service Health overview
+    url: https://learn.microsoft.com/en-us/azure/service-health/overview
+related:
+  - azure-monitor
+  - azure-advisor
+  - high-availability
+---
+
+## Start with a question
+
+<Story question="Your app is slow. Is it your code, or is Azure having a bad day?">
+
+**Azure Service Health** answers that in seconds.
+
+</Story>
+
+## Explain it like I'm 10
+
+<Eli10>
+
+- **Azure status** is the **national weather report**: is there a storm anywhere?
+- **Service Health** is **your town's forecast**: will the storm hit you?
+- **Resource Health** is looking **out of your own window**: is it raining on your house?
+
+</Eli10>
+
+## The technical explanation
+
+| View | Scope | Shows |
+| --- | --- | --- |
+| Azure status | Global, public | Widespread incidents across Azure |
+| Service Health | Your subscriptions | Service issues, planned maintenance, health and security advisories |
+| Resource Health | Your resources | Current and past availability of each resource |
+
+## Real-world business scenario
+
+<Scenario
+  company="An online ticketing company"
+  industry="Entertainment"
+  problem="During a slowdown the team spent an hour debugging code, only to discover an Azure regional incident."
+  service="Service Health alerts for their regions and services, sent to the on-call channel, plus Resource Health alerts for databases."
+  why="Instant, personalised notifications about platform issues."
+  outcome="The next incident was identified within minutes and traffic was moved to a healthy region."
+/>
+
+## When to use it and when not to
+
+<UseWhen use={['Always set Service Health alerts for production subscriptions.']} avoid={['Relying only on the public status page; it is not personalised.']} />

@@ -1,0 +1,92 @@
+{
+ "cert": "az-900",
+ "domain": 3,
+ "topic": "factors-affecting-cost",
+ "questions": [
+  {
+   "id": "t-fc-1",
+   "type": "multi",
+   "question": "Which TWO factors affect the cost of an Azure VM?",
+   "options": [
+    {
+     "text": "Its size",
+     "why": "Correct."
+    },
+    {
+     "text": "Its name",
+     "why": "Names do not affect cost."
+    },
+    {
+     "text": "The region it runs in",
+     "why": "Correct."
+    },
+    {
+     "text": "The colour of the portal theme",
+     "why": "No."
+    }
+   ],
+   "answer": [
+    0,
+    2
+   ],
+   "explanation": "Resource settings and geography affect price.",
+   "objective": "3.1.1"
+  },
+  {
+   "id": "t-fc-2",
+   "type": "single",
+   "question": "Which type of network traffic is generally NOT charged?",
+   "options": [
+    {
+     "text": "Inbound data into Azure",
+     "why": "Correct."
+    },
+    {
+     "text": "Outbound data to the internet",
+     "why": "Charged."
+    },
+    {
+     "text": "Inter-region transfer",
+     "why": "Charged."
+    },
+    {
+     "text": "None. All traffic is free",
+     "why": "Egress is charged."
+    }
+   ],
+   "answer": [
+    0
+   ],
+   "explanation": "Ingress is generally free; egress is charged.",
+   "objective": "3.1.1"
+  },
+  {
+   "id": "t-fc-3",
+   "type": "single",
+   "question": "After deleting VMs, your storage costs remain high. What is the most likely cause?",
+   "options": [
+    {
+     "text": "Orphaned managed disks",
+     "why": "Correct."
+    },
+    {
+     "text": "Resource tags",
+     "why": "Free."
+    },
+    {
+     "text": "Management groups",
+     "why": "Free."
+    },
+    {
+     "text": "Azure Policy",
+     "why": "Free for built-in policies on Azure resources."
+    }
+   ],
+   "answer": [
+    0
+   ],
+   "explanation": "Maintenance matters: clean up leftover resources.",
+   "objective": "3.1.1"
+  }
+ ]
+}

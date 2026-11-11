@@ -1,0 +1,38 @@
+---
+/** An event wakes a function up, it does its job, then sleeps (and costs nothing). */
+---
+<svg viewBox="0 0 640 300" role="img" aria-label="A photo upload sends an event. The function wakes up, makes a thumbnail, then goes back to sleep. You only pay while it is working.">
+  <!-- event source -->
+  <g transform="translate(40 110)"><rect width="110" height="80" rx="12" fill="var(--card)" stroke="#8a97a8" stroke-width="2" /><text x="55" y="42" text-anchor="middle" font-size="30">📷</text><text x="55" y="68" text-anchor="middle" class="sub">photo uploaded</text></g>
+  <text x="95" y="96" text-anchor="middle" class="lbl">1. Event</text>
+  <!-- lightning travelling -->
+  <path d="M155 150H245" stroke="#8a97a8" stroke-width="2.5" class="a-dash" />
+  <g class="sv-bolt"><path d="M0-12 8-2H2l4 14-12-14h6z" fill="#ffb900" transform="translate(160 150) scale(1.4)" /></g>
+  <!-- function -->
+  <g transform="translate(250 90)">
+    <rect width="150" height="120" rx="18" fill="#0078d4" class="sv-fn" />
+    <text x="75" y="72" text-anchor="middle" fill="#fff" font-size="46" font-style="italic" font-weight="700">ƒ</text>
+    <g class="sv-gear"><circle cx="122" cy="28" r="12" fill="none" stroke="#fff" stroke-width="4" stroke-dasharray="5 4" class="a-spin" style="animation-duration:1.2s" /></g>
+    <text x="75" y="104" text-anchor="middle" fill="#fff" font-size="12" class="sv-work">working…</text>
+    <text x="118" y="28" fill="#fff" font-size="16" class="sv-zzz">z z z</text>
+  </g>
+  <text x="325" y="76" text-anchor="middle" class="lbl">2. Function wakes up</text>
+  <!-- output -->
+  <path d="M405 150H480" stroke="#8a97a8" stroke-width="2.5" class="a-dash" />
+  <g transform="translate(486 110)" class="sv-out"><rect width="110" height="80" rx="12" fill="var(--card)" stroke="#107c10" stroke-width="2" /><rect x="35" y="16" width="40" height="32" rx="4" fill="#9fd0f7" /><path d="M39 44l10-12 8 8 6-6 8 10z" fill="#107c10" /><text x="55" y="68" text-anchor="middle" class="sub">thumbnail ready</text></g>
+  <text x="541" y="96" text-anchor="middle" class="lbl">3. Job done</text>
+  <!-- meter -->
+  <g transform="translate(225 238)"><rect width="200" height="40" rx="20" fill="#243a5e" /><text x="100" y="25" text-anchor="middle" fill="#6ccb5f" font-size="13" font-weight="700" class="sv-pay">💰 paying now</text><text x="100" y="25" text-anchor="middle" fill="#9fd0f7" font-size="13" font-weight="700" class="sv-free">😴 sleeping, paying nothing</text></g>
+</svg>
+<style>
+  .sv-bolt { animation: sv-bolt 4s linear infinite; }
+  @keyframes sv-bolt { 0% { transform: translateX(0); opacity: 1; } 22% { transform: translateX(80px); opacity: 1; } 23%, 100% { opacity: 0; transform: translateX(80px); } }
+  .sv-fn { animation: sv-fn 4s ease infinite; }
+  @keyframes sv-fn { 0%, 20% { fill: #7a8aa3; } 25%, 62% { fill: #0078d4; } 70%, 100% { fill: #7a8aa3; } }
+  .sv-gear, .sv-work, .sv-pay { animation: sv-on 4s infinite; }
+  .sv-zzz, .sv-free { animation: sv-off 4s infinite; }
+  @keyframes sv-on { 0%, 22% { opacity: 0; } 26%, 62% { opacity: 1; } 66%, 100% { opacity: 0; } }
+  @keyframes sv-off { 0%, 22% { opacity: 1; } 26%, 62% { opacity: 0; } 66%, 100% { opacity: 1; } }
+  .sv-out { animation: sv-out 4s infinite; }
+  @keyframes sv-out { 0%, 55% { opacity: 0.25; } 62%, 95% { opacity: 1; } 100% { opacity: 0.25; } }
+</style>

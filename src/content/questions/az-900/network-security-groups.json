@@ -1,0 +1,91 @@
+{
+ "cert": "az-900",
+ "domain": 2,
+ "topic": "network-security-groups",
+ "questions": [
+  {
+   "id": "t-nsg-1",
+   "type": "single",
+   "question": "What does a network security group do?",
+   "options": [
+    {
+     "text": "Allows or denies network traffic using rules",
+     "why": "Correct."
+    },
+    {
+     "text": "Encrypts disks",
+     "why": "Unrelated."
+    },
+    {
+     "text": "Hosts DNS zones",
+     "why": "Unrelated."
+    },
+    {
+     "text": "Creates VMs",
+     "why": "Unrelated."
+    }
+   ],
+   "answer": [
+    0
+   ],
+   "explanation": "NSGs filter traffic by source, destination, port and protocol.",
+   "objective": "2.2.5"
+  },
+  {
+   "id": "t-nsg-2",
+   "type": "single",
+   "question": "Where can a network security group be associated?",
+   "options": [
+    {
+     "text": "With a subnet or a network interface",
+     "why": "Correct."
+    },
+    {
+     "text": "With a management group",
+     "why": "No."
+    },
+    {
+     "text": "With a storage tier",
+     "why": "No."
+    },
+    {
+     "text": "With a subscription only",
+     "why": "No."
+    }
+   ],
+   "answer": [
+    0
+   ],
+   "explanation": "NSGs attach to subnets or NICs.",
+   "objective": "2.2.5"
+  },
+  {
+   "id": "t-nsg-3",
+   "type": "single",
+   "question": "An NSG has an allow rule at priority 300 and a deny rule at priority 200 for the same traffic. What happens?",
+   "options": [
+    {
+     "text": "The traffic is denied",
+     "why": "Correct. Lower numbers are processed first."
+    },
+    {
+     "text": "The traffic is allowed",
+     "why": "Priority 200 is evaluated before 300."
+    },
+    {
+     "text": "Both rules are ignored",
+     "why": "The first match applies."
+    },
+    {
+     "text": "Azure picks randomly",
+     "why": "Evaluation is deterministic."
+    }
+   ],
+   "answer": [
+    0
+   ],
+   "explanation": "Rules are processed in priority order; first match wins.",
+   "objective": "2.2.5"
+  }
+ ]
+}

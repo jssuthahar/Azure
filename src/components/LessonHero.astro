@@ -1,0 +1,40 @@
+---
+import { VISUALS } from '../data/az-900/visuals';
+import CloudScene from './scenes/CloudScene.astro';
+import OnPremCloudScene from './scenes/OnPremCloudScene.astro';
+import CloudModelsScene from './scenes/CloudModelsScene.astro';
+import ServiceStackScene from './scenes/ServiceStackScene.astro';
+import ServerlessScene from './scenes/ServerlessScene.astro';
+import MeterScene from './scenes/MeterScene.astro';
+import ScaleScene from './scenes/ScaleScene.astro';
+import ElasticScene from './scenes/ElasticScene.astro';
+import ZonesScene from './scenes/ZonesScene.astro';
+import ShieldScene from './scenes/ShieldScene.astro';
+import RulesScene from './scenes/RulesScene.astro';
+import ControlPanelScene from './scenes/ControlPanelScene.astro';
+import RegionsScene from './scenes/RegionsScene.astro';
+import HierarchyScene from './scenes/HierarchyScene.astro';
+import NetworkScene from './scenes/NetworkScene.astro';
+import StorageScene from './scenes/StorageScene.astro';
+import IdentityScene from './scenes/IdentityScene.astro';
+
+interface Props { topic: string }
+const v = VISUALS[Astro.props.topic];
+const SCENES = {
+  cloud: CloudScene, onprem: OnPremCloudScene, models: CloudModelsScene, stack: ServiceStackScene,
+  serverless: ServerlessScene, meter: MeterScene, scale: ScaleScene, elastic: ElasticScene,
+  zones: ZonesScene, shield: ShieldScene, rules: RulesScene, control: ControlPanelScene,
+  regions: RegionsScene, hierarchy: HierarchyScene, network: NetworkScene, storage: StorageScene, identity: IdentityScene,
+} as const;
+const Scene = v ? SCENES[v.scene] : null;
+---
+{v && Scene && (
+  <figure class="scene scene-card mt-6">
+    <div class={v.scene === 'stack' ? '' : 'px-2 pt-3 sm:px-6'}><Scene {...(v.props ?? {})} /></div>
+    <figcaption class="flex flex-wrap items-center gap-3 border-t border-[var(--card-line)] bg-[var(--card)] px-4 py-3">
+      <span class="text-xl" aria-hidden="true">🎬</span>
+      <span class="min-w-0 flex-1 text-[1.02rem] font-medium">{v.caption}</span>
+      <button type="button" class="speak-btn text-accent" data-say={v.caption} aria-label="Listen to this picture explained">🔊 Listen</button>
+    </figcaption>
+  </figure>
+)}

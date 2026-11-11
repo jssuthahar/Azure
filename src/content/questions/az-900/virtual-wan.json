@@ -1,0 +1,88 @@
+{
+ "cert": "az-900",
+ "domain": 2,
+ "topic": "virtual-wan",
+ "questions": [
+  {
+   "id": "t-wan-1",
+   "type": "single",
+   "question": "Which service provides Microsoft-managed hubs to connect many branches, remote users, ExpressRoute and VNets?",
+   "options": [
+    {
+     "text": "Azure Virtual WAN",
+     "why": "Correct."
+    },
+    {
+     "text": "Azure DNS",
+     "why": "Name resolution."
+    },
+    {
+     "text": "Availability sets",
+     "why": "VM resilience."
+    },
+    {
+     "text": "Azure Advisor",
+     "why": "Recommendations."
+    }
+   ],
+   "answer": [
+    0
+   ],
+   "explanation": "Virtual WAN unifies networking in managed hubs."
+  },
+  {
+   "id": "t-wan-2",
+   "type": "single",
+   "question": "For a small company with two VNets in one region, what is usually simpler than Virtual WAN?",
+   "options": [
+    {
+     "text": "VNet peering",
+     "why": "Correct."
+    },
+    {
+     "text": "A sovereign region",
+     "why": "Unrelated."
+    },
+    {
+     "text": "Azure Data Box",
+     "why": "Unrelated."
+    },
+    {
+     "text": "Microsoft Purview",
+     "why": "Unrelated."
+    }
+   ],
+   "answer": [
+    0
+   ],
+   "explanation": "Peering is simpler for small estates."
+  },
+  {
+   "id": "t-wan-3",
+   "type": "single",
+   "question": "Who manages a Virtual WAN hub?",
+   "options": [
+    {
+     "text": "Microsoft",
+     "why": "Correct."
+    },
+    {
+     "text": "The customer builds every component",
+     "why": "The hub is managed."
+    },
+    {
+     "text": "The internet provider",
+     "why": "No."
+    },
+    {
+     "text": "Nobody",
+     "why": "It is a managed service."
+    }
+   ],
+   "answer": [
+    0
+   ],
+   "explanation": "Virtual WAN hubs are Microsoft-managed."
+  }
+ ]
+}

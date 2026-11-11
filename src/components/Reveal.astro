@@ -1,0 +1,13 @@
+---
+/** Fades content in as it scrolls into view (skipped for reduced motion). */
+---
+<script>
+  const targets = document.querySelectorAll<HTMLElement>('.lesson figure, .lesson .card, .lesson .eli10, .lesson .story, .lesson .callout, .home-band .example-box, .scene-card');
+  if ('IntersectionObserver' in window && !matchMedia('(prefers-reduced-motion: reduce)').matches) {
+    const io = new IntersectionObserver(
+      (entries) => entries.forEach((e) => { if (e.isIntersecting) { e.target.classList.add('in'); io.unobserve(e.target); } }),
+      { rootMargin: '0px 0px -8% 0px' },
+    );
+    targets.forEach((t) => { t.classList.add('reveal'); io.observe(t); });
+  }
+</script>

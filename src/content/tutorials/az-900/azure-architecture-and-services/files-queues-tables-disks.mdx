@@ -1,0 +1,112 @@
+---
+title: Azure Files, Queues, Tables and Managed Disks
+seoTitle: Azure Files, Queues, Tables and Disks | AZ-900
+description: "Azure Files, Queue Storage, Table Storage and Managed Disks compared simply, with when to use each, interview questions and AZ-900 practice."
+answer: >-
+  Besides Blob Storage, Azure Storage offers **Azure Files** (fully managed file shares over SMB and NFS), **Queue Storage** (large numbers of messages between application components), **Table Storage** (NoSQL key/attribute data) and **Managed Disks** (block-level storage volumes for virtual machines).
+updated: 2026-11-11
+readingMinutes: 6
+keyTerms:
+  - term: Azure Files
+    definition: Managed file shares accessible over SMB or NFS, like a network drive.
+  - term: Queue Storage
+    definition: Stores messages (up to 64 KB each) so app components can work asynchronously.
+  - term: Table Storage
+    definition: Schemaless NoSQL storage of structured key/attribute data.
+  - term: Managed Disk
+    definition: A block storage volume attached to an Azure VM.
+interview:
+  - level: beginner
+    q: Match each storage service to a use case.
+    a: >-
+      Azure Files for shared folders that many computers map as a drive. Queues for passing work messages between parts of an app. Tables for simple NoSQL data such as user settings. Managed Disks for the hard drives of virtual machines.
+    followUps: []
+  - level: intermediate
+    q: Why would an app use a queue?
+    a: >-
+      To decouple components. The front end drops a message on the queue and returns quickly, and back-end workers process messages at their own pace. If workers are slow or down, messages wait instead of being lost, which smooths out traffic spikes.
+    followUps: []
+  - level: experienced
+    q: Azure Files or Blob Storage for a document-processing app?
+    a: >-
+      Azure Files if existing software expects a file system path or SMB share, or for lift-and-shift of file servers. Blob Storage for new cloud-native apps reading through HTTP APIs or SDKs, which is cheaper and more scalable, with tiers and events.
+    followUps: []
+revision:
+  keyPoints:
+    - Azure Files = managed SMB/NFS file shares.
+    - Queues = messages between components (asynchronous processing).
+    - Tables = NoSQL key/attribute data.
+    - Managed Disks = VM block storage.
+  mistakes:
+    - Confusing Queue Storage (messages) with Table Storage (data).
+  examTips:
+    - '"Replace an on-premises file server with SMB shares" = **Azure Files**.'
+    - '"Decouple components with messages" = **Queue Storage**.'
+  quick:
+    - q: Which service provides SMB file shares?
+      a: Azure Files.
+    - q: Which service stores messages between app components?
+      a: Queue Storage.
+    - q: Which service stores NoSQL key/attribute data?
+      a: Table Storage.
+    - q: What provides storage volumes for VMs?
+      a: Managed Disks.
+    - q: How big can a queue message be?
+      a: Up to 64 KB.
+references:
+  - title: Introduction to Azure Storage
+    url: https://learn.microsoft.com/en-us/azure/storage/common/storage-introduction
+related:
+  - storage-accounts
+  - blob-storage-and-tiers
+  - moving-files
+---
+
+## Start with a question
+
+<Story question="Your office file server is full and old. Where do the shared folders go?">
+
+To **Azure Files**: the same mapped drive experience, but managed in the cloud.
+
+</Story>
+
+## Explain it like I'm 10
+
+<Eli10>
+
+- **Files** is the shared class cupboard everyone can open.
+- **Queues** is the teacher's in-tray: notes wait in line until someone handles them.
+- **Tables** is a register with names and ticks.
+- **Disks** are the hard drives inside each classroom computer.
+
+</Eli10>
+
+## The technical explanation
+
+<Compare
+  caption="More Azure Storage services"
+  columns={[
+    { title: 'Azure Files', icon: '📁', tone: 'accent', items: ['SMB and NFS shares', 'Mount from Windows, Linux, macOS', 'Replace file servers', 'Sync with Azure File Sync'] },
+    { title: 'Queues', icon: '✉️', tone: 'neutral', items: ['Messages up to 64 KB', 'Millions of messages', 'Decouple components'] },
+    { title: 'Tables', icon: '🧾', tone: 'neutral', items: ['NoSQL key/attribute', 'Schemaless', 'Cheap, simple'] },
+    { title: 'Managed Disks', icon: '💽', tone: 'ok', items: ['Block storage for VMs', 'HDD, Standard SSD, Premium SSD, Ultra', 'Azure manages the storage'] },
+  ]}
+/>
+
+## Real-world business scenario
+
+<Scenario
+  company="An architecture firm"
+  industry="Enterprise"
+  problem="An ageing on-premises file server held project drawings that 80 staff open as a mapped drive."
+  service="Moved the shares to Azure Files and kept a local cache with Azure File Sync."
+  why="Same drive-letter experience, no server hardware, and cloud backup."
+  outcome="The file server was retired and remote staff can access drawings securely."
+/>
+
+## When to use it and when not to
+
+<UseWhen
+  use={['**Files** for shared drives.', '**Queues** for background job processing.', '**Tables** for simple NoSQL data.', '**Disks** for VMs.']}
+  avoid={['Tables for complex queries (consider Cosmos DB or SQL).']}
+/>

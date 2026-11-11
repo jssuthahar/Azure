@@ -1,0 +1,91 @@
+{
+ "cert": "az-900",
+ "domain": 2,
+ "topic": "files-queues-tables-disks",
+ "questions": [
+  {
+   "id": "t-fq-1",
+   "type": "single",
+   "question": "Which service provides fully managed file shares accessible over SMB?",
+   "options": [
+    {
+     "text": "Azure Files",
+     "why": "Correct."
+    },
+    {
+     "text": "Queue Storage",
+     "why": "Messages."
+    },
+    {
+     "text": "Table Storage",
+     "why": "NoSQL data."
+    },
+    {
+     "text": "Managed Disks",
+     "why": "VM volumes."
+    }
+   ],
+   "answer": [
+    0
+   ],
+   "explanation": "Azure Files offers SMB and NFS shares.",
+   "objective": "2.3.1"
+  },
+  {
+   "id": "t-fq-2",
+   "type": "single",
+   "question": "Which service decouples application components by storing messages?",
+   "options": [
+    {
+     "text": "Queue Storage",
+     "why": "Correct."
+    },
+    {
+     "text": "Azure Files",
+     "why": "File shares."
+    },
+    {
+     "text": "Blob archive tier",
+     "why": "Cold data."
+    },
+    {
+     "text": "Azure DNS",
+     "why": "Names."
+    }
+   ],
+   "answer": [
+    0
+   ],
+   "explanation": "Queues hold messages for asynchronous processing.",
+   "objective": "2.3.1"
+  },
+  {
+   "id": "t-fq-3",
+   "type": "single",
+   "question": "What provides block storage volumes for Azure virtual machines?",
+   "options": [
+    {
+     "text": "Managed Disks",
+     "why": "Correct."
+    },
+    {
+     "text": "Table Storage",
+     "why": "NoSQL."
+    },
+    {
+     "text": "Queue Storage",
+     "why": "Messages."
+    },
+    {
+     "text": "Azure File Sync",
+     "why": "Sync service."
+    }
+   ],
+   "answer": [
+    0
+   ],
+   "explanation": "Managed Disks attach to VMs.",
+   "objective": "2.3.1"
+  }
+ ]
+}

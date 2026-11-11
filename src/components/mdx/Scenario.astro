@@ -1,0 +1,26 @@
+---
+/** Section D: a structured real-world business scenario. */
+interface Props { company: string; industry: string; problem: string; service: string; why: string; outcome: string }
+const p = Astro.props;
+const rows = [
+  ['The problem', p.problem],
+  ['What they used', p.service],
+  ['Why that choice', p.why],
+  ['The result', p.outcome],
+];
+---
+<div class="card p-5">
+  <div class="flex flex-wrap items-center gap-2">
+    <span class="chip">{p.industry}</span>
+    <p class="font-semibold">{p.company}</p>
+  </div>
+  <dl class="mt-4 grid gap-3 sm:grid-cols-2">
+    {rows.map(([k, v]) => (
+      <div class="rounded-xl border border-default bg-[var(--bg)] p-3.5">
+        <dt class="text-xs font-bold tracking-wider uppercase text-muted">{k}</dt>
+        <dd class="mt-1 text-[0.95rem] leading-relaxed" set:html={v} />
+      </div>
+    ))}
+  </dl>
+  <div class="mt-4 space-y-3 leading-relaxed empty:hidden"><slot /></div>
+</div>

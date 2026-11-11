@@ -1,0 +1,105 @@
+---
+import GameLayout from '../../../layouts/GameLayout.astro';
+import { getQuestionBank } from '../../../lib/learn';
+
+const bank = (await getQuestionBank())
+  .filter((q) => q.type === 'single' && !q.scenario && q.question.length <= 170 && q.options.length >= 2)
+  .map((q) => ({ q: q.question, o: q.options.map((x) => x.text), a: q.answer[0], e: q.explanation }));
+const payload = JSON.stringify(bank).replace(/</g, '\\u003c');
+---
+<GameLayout title="Lightning Round" seoTitle="Lightning Round: 60-Second AZ-900 Quiz Game | MSDEVBUILD" description="Answer as many AZ-900 practice questions as you can in 60 seconds. Build combos, beat your best score and earn XP." icon="⚡" intro="60 seconds. As many correct answers as you can. Three in a row starts a combo!" band="band-lilac">
+  <script type="application/json" id="ln-data" set:html={payload} />
+
+  <section id="ln-start" class="text-center">
+    <p class="text-lg">Questions come from all three AZ-900 domains. Wrong answers do not cost points, but they break your combo.</p>
+    <button type="button" id="go" class="big-btn mt-6 !px-10 !py-4 !text-xl">⚡ Start!</button>
+    <p id="ln-best" class="mt-4 text-muted"></p>
+  </section>
+
+  <section id="ln-play" class="hidden">
+    <div class="flex items-center justify-between text-lg">
+      <p>Score <strong id="ln-score" class="text-2xl">0</strong> <span id="ln-combo" class="ml-2 font-semibold text-[var(--warn)]"></span></p>
+      <p class="font-mono text-2xl font-bold tabular-nums" id="ln-time">60</p>
+    </div>
+    <div class="bar mt-2"><span id="ln-bar" style="width:100%"></span></div>
+    <p id="ln-q" class="mt-8 min-h-[4.5rem] text-xl leading-snug font-semibold sm:text-2xl"></p>
+    <div id="ln-opts" class="mt-5 grid gap-3 sm:grid-cols-2"></div>
+  </section>
+
+  <section id="ln-end" class="hidden text-center">
+    <p id="ln-emoji" class="text-7xl"></p>
+    <h2 id="ln-final" class="mt-3 text-3xl font-bold"></h2>
+    <p id="ln-sub" class="mt-1 text-lg text-muted"></p>
+    <div class="mt-6"><button type="button" id="again" class="big-btn">Play again</button></div>
+    <h3 class="mt-10 text-left text-xl font-semibold">Learn from the ones you missed</h3>
+    <ul id="ln-missed" class="mt-3 space-y-3 text-left"></ul>
+  </section>
+</GameLayout>
+<script>
+  import { shuffle, confetti } from '../../../lib/fun';
+  import { load, saveGame } from '../../../lib/progress';
+  type Q = { q: string; o: string[]; a: number; e: string };
+  const bank: Q[] = JSON.parse(document.getElementById('ln-data')!.textContent!);
+  const $ = (id: string) => document.getElementById(id)!;
+  const esc = (s: string) => s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>').replace(/`(.+?)`/g, '<code>$1</code>');
+  let deck: Q[] = [], i = 0, score = 0, combo = 0, end = 0, tick = 0, lock = false, missed: Q[] = [];
+  const best = load().games.lightning;
+  if (best) $('ln-best').textContent = `Your best: ${best}`;
+
+  const show = (id: string) => ['ln-start', 'ln-play', 'ln-end'].forEach((s) => $(s).classList.toggle('hidden', s !== id));
+
+  function start() {
+    deck = shuffle(bank); i = 0; score = 0; combo = 0; missed = []; lock = false;
+    show('ln-play');
+    end = Date.now() + 60_000;
+    clearInterval(tick);
+    tick = window.setInterval(() => {
+      const left = Math.max(0, end - Date.now());
+      $('ln-time').textContent = String(Math.ceil(left / 1000));
+      ($('ln-bar') as HTMLElement).style.width = `${(left / 60000) * 100}%`;
+      ($('ln-bar') as HTMLElement).style.background = left < 10000 ? 'var(--bad)' : '';
+      if (left <= 0) finish();
+    }, 100);
+    render();
+  }
+
+  function render() {
+    const q = deck[i % deck.length];
+    $('ln-q').innerHTML = esc(q.q);
+    const order = shuffle(q.o.map((_, k) => k));
+    $('ln-opts').innerHTML = order.map((k) => `<button type="button" data-k="${k}" class="opt !cursor-pointer text-left text-[1.02rem] !py-3.5">${esc(q.o[k])}</button>`).join('');
+    $('ln-score').textContent = String(score);
+    $('ln-combo').textContent = combo >= 3 ? `🔥 Combo x${combo}` : '';
+  }
+
+  $('ln-opts').addEventListener('click', (e) => {
+    const b = (e.target as HTMLElement).closest<HTMLElement>('[data-k]');
+    if (!b || lock) return;
+    lock = true;
+    const q = deck[i % deck.length];
+    const ok = Number(b.dataset.k) === q.a;
+    if (ok) { combo++; score += combo >= 3 ? 2 : 1; b.dataset.state = 'correct'; }
+    else {
+      combo = 0; missed.push(q); b.dataset.state = 'wrong';
+      $('ln-opts').querySelector<HTMLElement>(`[data-k="${q.a}"]`)!.dataset.state = 'correct';
+    }
+    $('ln-score').textContent = String(score);
+    setTimeout(() => { i++; lock = false; if (Date.now() < end) render(); }, ok ? 350 : 900);
+  });
+
+  function finish() {
+    clearInterval(tick);
+    if ($('ln-play').classList.contains('hidden')) return;
+    const isBest = saveGame('lightning', score, score * 4);
+    show('ln-end');
+    $('ln-emoji').textContent = score >= 15 ? '🚀' : score >= 8 ? '⚡' : '🌱';
+    $('ln-final').textContent = `${score} points!`;
+    $('ln-sub').textContent = isBest ? 'New personal best! 🎉' : `Your best: ${Math.max(score, load().games.lightning ?? 0)}`;
+    $('ln-missed').innerHTML = missed.length
+      ? missed.map((q) => `<li class="rounded-lg bg-[var(--pastel-grey)] p-4"><p class="font-semibold">${esc(q.q)}</p><p class="mt-1 verdict-ok">✓ ${esc(q.o[q.a])}</p><p class="mt-1 text-sm text-muted">${esc(q.e)}</p></li>`).join('')
+      : '<li class="text-muted">None. Flawless! 🏆</li>';
+    if (isBest && score > 0) confetti();
+  }
+  $('go').addEventListener('click', start);
+  $('again').addEventListener('click', start);
+</script>

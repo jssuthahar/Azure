@@ -1,0 +1,92 @@
+{
+ "cert": "az-900",
+ "domain": 2,
+ "topic": "authentication-methods",
+ "questions": [
+  {
+   "id": "t-au-1",
+   "type": "single",
+   "question": "Which authentication method requires two or more types of verification?",
+   "options": [
+    {
+     "text": "Multifactor authentication",
+     "why": "Correct."
+    },
+    {
+     "text": "Single sign-on",
+     "why": "One sign-in, many apps."
+    },
+    {
+     "text": "Azure RBAC",
+     "why": "Authorization."
+    },
+    {
+     "text": "Resource tags",
+     "why": "Metadata."
+    }
+   ],
+   "answer": [
+    0
+   ],
+   "explanation": "MFA uses know, have and are factors.",
+   "objective": "2.4.2"
+  },
+  {
+   "id": "t-au-2",
+   "type": "multi",
+   "question": "Which TWO are passwordless sign-in methods?",
+   "options": [
+    {
+     "text": "Windows Hello for Business",
+     "why": "Correct."
+    },
+    {
+     "text": "A longer password",
+     "why": "Still a password."
+    },
+    {
+     "text": "FIDO2 security key",
+     "why": "Correct."
+    },
+    {
+     "text": "Security questions",
+     "why": "Something you know."
+    }
+   ],
+   "answer": [
+    0,
+    2
+   ],
+   "explanation": "Passwordless options include Windows Hello, Authenticator and FIDO2.",
+   "objective": "2.4.2"
+  },
+  {
+   "id": "t-au-3",
+   "type": "single",
+   "question": "What does single sign-on allow?",
+   "options": [
+    {
+     "text": "Signing in once to access many applications",
+     "why": "Correct."
+    },
+    {
+     "text": "Never signing in",
+     "why": "No."
+    },
+    {
+     "text": "Sharing passwords safely",
+     "why": "No."
+    },
+    {
+     "text": "Bypassing MFA",
+     "why": "No."
+    }
+   ],
+   "answer": [
+    0
+   ],
+   "explanation": "SSO uses one identity for many apps.",
+   "objective": "2.4.2"
+  }
+ ]
+}

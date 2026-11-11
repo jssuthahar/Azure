@@ -1,0 +1,91 @@
+{
+ "cert": "az-900",
+ "domain": 2,
+ "topic": "container-instances-and-aks",
+ "questions": [
+  {
+   "id": "t-ctr-1",
+   "type": "single",
+   "question": "What is the quickest way to run a single container in Azure without managing VMs or a cluster?",
+   "options": [
+    {
+     "text": "Azure Container Instances",
+     "why": "Correct."
+    },
+    {
+     "text": "Azure Kubernetes Service",
+     "why": "More than needed for one container."
+    },
+    {
+     "text": "Azure Virtual Desktop",
+     "why": "Delivers desktops."
+    },
+    {
+     "text": "Azure Arc",
+     "why": "Hybrid management."
+    }
+   ],
+   "answer": [
+    0
+   ],
+   "explanation": "ACI runs containers on demand.",
+   "objective": "2.2.4"
+  },
+  {
+   "id": "t-ctr-2",
+   "type": "single",
+   "question": "Which service should you use to orchestrate hundreds of containers with rolling updates and self-healing?",
+   "options": [
+    {
+     "text": "Azure Kubernetes Service",
+     "why": "Correct."
+    },
+    {
+     "text": "Azure Container Instances",
+     "why": "No orchestration."
+    },
+    {
+     "text": "Azure Blob Storage",
+     "why": "Storage."
+    },
+    {
+     "text": "Azure DNS",
+     "why": "Name resolution."
+    }
+   ],
+   "answer": [
+    0
+   ],
+   "explanation": "AKS is managed Kubernetes.",
+   "objective": "2.2.1"
+  },
+  {
+   "id": "t-ctr-3",
+   "type": "single",
+   "question": "Where do you store private container images in Azure?",
+   "options": [
+    {
+     "text": "Azure Container Registry",
+     "why": "Correct."
+    },
+    {
+     "text": "Azure Queue Storage",
+     "why": "Messages."
+    },
+    {
+     "text": "Azure Table Storage",
+     "why": "NoSQL data."
+    },
+    {
+     "text": "Azure Advisor",
+     "why": "Recommendations."
+    }
+   ],
+   "answer": [
+    0
+   ],
+   "explanation": "ACR stores and manages container images.",
+   "objective": "2.2.4"
+  }
+ ]
+}

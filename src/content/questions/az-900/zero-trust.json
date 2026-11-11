@@ -1,0 +1,92 @@
+{
+ "cert": "az-900",
+ "domain": 2,
+ "topic": "zero-trust",
+ "questions": [
+  {
+   "id": "t-zt-1",
+   "type": "single",
+   "question": "Which is a guiding principle of Zero Trust?",
+   "options": [
+    {
+     "text": "Assume breach",
+     "why": "Correct."
+    },
+    {
+     "text": "Trust the internal network",
+     "why": "The opposite of Zero Trust."
+    },
+    {
+     "text": "Give all users admin rights",
+     "why": "Violates least privilege."
+    },
+    {
+     "text": "Verify once a year",
+     "why": "Verify explicitly, every time."
+    }
+   ],
+   "answer": [
+    0
+   ],
+   "explanation": "Principles: verify explicitly, least privilege, assume breach.",
+   "objective": "2.4.6"
+  },
+  {
+   "id": "t-zt-2",
+   "type": "multi",
+   "question": "Which TWO are Zero Trust principles?",
+   "options": [
+    {
+     "text": "Verify explicitly",
+     "why": "Correct."
+    },
+    {
+     "text": "Implicit trust inside the firewall",
+     "why": "Opposite of Zero Trust."
+    },
+    {
+     "text": "Use least privilege access",
+     "why": "Correct."
+    },
+    {
+     "text": "Share passwords within teams",
+     "why": "Insecure."
+    }
+   ],
+   "answer": [
+    0,
+    2
+   ],
+   "explanation": "Zero Trust never assumes trust based on network location.",
+   "objective": "2.4.6"
+  },
+  {
+   "id": "t-zt-3",
+   "type": "single",
+   "question": "What is the core idea of Zero Trust?",
+   "options": [
+    {
+     "text": "Never trust, always verify",
+     "why": "Correct."
+    },
+    {
+     "text": "Trust but never verify",
+     "why": "No."
+    },
+    {
+     "text": "Only verify external users",
+     "why": "Internal requests are verified too."
+    },
+    {
+     "text": "Disable all access",
+     "why": "No."
+    }
+   ],
+   "answer": [
+    0
+   ],
+   "explanation": "Every request is verified regardless of origin.",
+   "objective": "2.4.6"
+  }
+ ]
+}

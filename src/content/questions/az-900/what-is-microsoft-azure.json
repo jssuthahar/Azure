@@ -1,0 +1,61 @@
+{
+  "cert": "az-900",
+  "domain": 1,
+  "topic": "what-is-microsoft-azure",
+  "questions": [
+    {
+      "id": "cc-azure-1",
+      "type": "single",
+      "question": "Microsoft Azure is best described as which of the following?",
+      "options": [
+        { "text": "A public cloud computing platform offering services such as compute, storage, networking and AI", "why": "Correct. Azure is Microsoft's public cloud platform." },
+        { "text": "A version of the Windows operating system", "why": "Azure is a cloud platform. It runs Windows and Linux workloads." },
+        { "text": "Microsoft's office productivity suite", "why": "That is Microsoft 365, a SaaS product, not Azure." },
+        { "text": "A hardware server that companies buy and install on-premises", "why": "Azure is consumed as a service from Microsoft's datacenters." }
+      ],
+      "answer": [0],
+      "explanation": "Azure is Microsoft's public cloud platform with more than 200 services that you consume on demand."
+    },
+    {
+      "id": "cc-azure-2",
+      "type": "single",
+      "question": "Which tool lets you create and manage Azure resources from a web browser using a graphical interface?",
+      "options": [
+        { "text": "Azure CLI", "why": "Azure CLI is a command-line tool, not a graphical interface." },
+        { "text": "Azure portal", "why": "Correct. The Azure portal is the browser-based graphical console." },
+        { "text": "Azure Data Box", "why": "Data Box is a physical device for transferring large amounts of data." },
+        { "text": "Microsoft Purview", "why": "Purview is for data governance, not general resource management." }
+      ],
+      "answer": [1],
+      "explanation": "The Azure portal (portal.azure.com) is the web-based GUI for managing Azure.",
+      "objective": "3.3.1"
+    },
+    {
+      "id": "cc-azure-3",
+      "type": "single",
+      "question": "Which operating systems can you run on Azure virtual machines?",
+      "options": [
+        { "text": "Windows only", "why": "Azure supports Linux as well. A large share of Azure VMs run Linux." },
+        { "text": "Linux only", "why": "Windows Server and Windows client images are also available." },
+        { "text": "Both Windows and Linux", "why": "Correct. Azure supports many Windows and Linux images." },
+        { "text": "Neither. Azure only runs web apps", "why": "Azure offers full IaaS virtual machines." }
+      ],
+      "answer": [2],
+      "explanation": "Azure supports Windows and many Linux distributions."
+    },
+    {
+      "id": "cc-azure-4",
+      "type": "single",
+      "question": "Every request to create, update or delete an Azure resource, whether from the portal, CLI or PowerShell, is processed by which service?",
+      "options": [
+        { "text": "Azure Resource Manager", "why": "Correct. ARM is the deployment and management layer for all management requests." },
+        { "text": "Azure Monitor", "why": "Azure Monitor collects telemetry. It does not process deployments." },
+        { "text": "Azure DNS", "why": "Azure DNS hosts DNS domains." },
+        { "text": "Azure Advisor", "why": "Advisor gives recommendations and does not process requests." }
+      ],
+      "answer": [0],
+      "explanation": "Azure Resource Manager (ARM) receives, authenticates and authorises all management requests, so every tool gets consistent results.",
+      "objective": "3.3.5"
+    }
+  ]
+}

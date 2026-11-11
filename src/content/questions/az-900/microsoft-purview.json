@@ -1,0 +1,92 @@
+{
+ "cert": "az-900",
+ "domain": 3,
+ "topic": "microsoft-purview",
+ "questions": [
+  {
+   "id": "t-pv-1",
+   "type": "single",
+   "question": "Which service discovers and classifies sensitive data across on-premises, multi-cloud and SaaS sources?",
+   "options": [
+    {
+     "text": "Microsoft Purview",
+     "why": "Correct."
+    },
+    {
+     "text": "Azure Policy",
+     "why": "Resource rules."
+    },
+    {
+     "text": "Azure Advisor",
+     "why": "Recommendations."
+    },
+    {
+     "text": "Azure DNS",
+     "why": "Names."
+    }
+   ],
+   "answer": [
+    0
+   ],
+   "explanation": "Purview provides data governance.",
+   "objective": "3.2.1"
+  },
+  {
+   "id": "t-pv-2",
+   "type": "single",
+   "question": "What is data lineage?",
+   "options": [
+    {
+     "text": "Tracking where data comes from and where it flows",
+     "why": "Correct."
+    },
+    {
+     "text": "A storage tier",
+     "why": "No."
+    },
+    {
+     "text": "A VM size",
+     "why": "No."
+    },
+    {
+     "text": "A firewall rule",
+     "why": "No."
+    }
+   ],
+   "answer": [
+    0
+   ],
+   "explanation": "Lineage shows the journey of data.",
+   "objective": "3.2.1"
+  },
+  {
+   "id": "t-pv-3",
+   "type": "multi",
+   "question": "Microsoft Purview covers which TWO areas?",
+   "options": [
+    {
+     "text": "Data governance",
+     "why": "Correct."
+    },
+    {
+     "text": "VM autoscaling",
+     "why": "No."
+    },
+    {
+     "text": "Risk and compliance",
+     "why": "Correct."
+    },
+    {
+     "text": "DNS hosting",
+     "why": "No."
+    }
+   ],
+   "answer": [
+    0,
+    2
+   ],
+   "explanation": "Purview combines data governance with risk and compliance.",
+   "objective": "3.2.1"
+  }
+ ]
+}

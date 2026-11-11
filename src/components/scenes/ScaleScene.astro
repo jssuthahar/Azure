@@ -1,0 +1,22 @@
+---
+/** Scale up (a bigger server) vs scale out (more servers). */
+const srv = (x: number, cls = '') => `<g class="${cls}" transform="translate(${x} 0)"><rect width="56" height="100" rx="8" fill="#0078d4"/><rect x="9" y="12" width="38" height="10" rx="3" fill="#9fd0f7"/><rect x="9" y="30" width="38" height="10" rx="3" fill="#9fd0f7"/><rect x="9" y="48" width="38" height="10" rx="3" fill="#9fd0f7"/><circle cx="44" cy="84" r="4" fill="#6ccb5f"/></g>`;
+---
+<svg viewBox="0 0 640 300" role="img" aria-label="Scale up makes one server bigger. Scale out adds more servers.">
+  <rect x="20" y="20" width="285" height="260" rx="16" fill="var(--card)" stroke="var(--card-line)" />
+  <text x="162" y="50" text-anchor="middle" class="lbl">⬆️ Scale up (vertical)</text>
+  <g transform="translate(134 110)"><g class="sc-grow" set:html={srv(0)} /></g>
+  <text x="162" y="262" text-anchor="middle" class="sub">same server, more CPU and memory</text>
+
+  <rect x="335" y="20" width="285" height="260" rx="16" fill="var(--card)" stroke="var(--card-line)" />
+  <text x="477" y="50" text-anchor="middle" class="lbl">➡️ Scale out (horizontal)</text>
+  <g transform="translate(375 120)" set:html={srv(0) + srv(75, 'sc-add1') + srv(150, 'sc-add2')} />
+  <text x="477" y="262" text-anchor="middle" class="sub">more servers share the work</text>
+</svg>
+<style>
+  :global(.sc-grow) { animation: sc-grow 4s ease-in-out infinite; transform-box: fill-box; transform-origin: 50% 100%; }
+  @keyframes sc-grow { 0%, 15% { transform: scale(1); } 45%, 75% { transform: scale(1.55); } 100% { transform: scale(1); } }
+  :global(.sc-add1) { animation: sc-add 4s ease infinite; }
+  :global(.sc-add2) { animation: sc-add 4s ease 0.5s infinite; }
+  @keyframes sc-add { 0%, 20% { opacity: 0; } 35%, 80% { opacity: 1; } 95%, 100% { opacity: 0; } }
+</style>

@@ -1,0 +1,108 @@
+---
+title: Azure App Service
+seoTitle: Azure App Service Explained for Beginners | AZ-900
+description: Azure App Service explained, covering web apps, APIs and mobile back ends on PaaS, plans and features, a hands-on lab, interview questions and AZ-900 practice.
+answer: >-
+  **Azure App Service** is a fully managed PaaS for hosting **web apps, REST APIs and mobile back ends**. You deploy your code (.NET, Java, Node.js, Python, PHP) or a container, and Microsoft manages the servers, operating system, patching and load balancing. Built-in features include autoscale, deployment slots, custom domains and HTTPS.
+updated: 2026-11-11
+readingMinutes: 7
+keyTerms:
+  - term: App Service plan
+    definition: The set of compute resources (size and number of instances) your apps run on, and what you pay for.
+  - term: Deployment slot
+    definition: A live staging copy of your app you can swap into production with no downtime.
+  - term: Web app
+    definition: An App Service app that hosts a website or web API.
+interview:
+  - level: beginner
+    q: What is Azure App Service?
+    a: >-
+      A PaaS service for hosting websites and APIs. I upload my code and Azure runs it on servers it manages, including OS updates, scaling and HTTPS.
+    followUps: []
+  - level: intermediate
+    q: What is an App Service plan, and how does pricing work?
+    a: >-
+      The plan defines the region, the instance size and the number of instances. I pay for the plan, not per app, so several apps can share one plan. Tiers range from Free and Basic to Standard and Premium, which add features such as autoscale, deployment slots and VNet integration.
+    followUps: []
+  - level: experienced
+    q: How do you release a new version to App Service with zero downtime?
+    a: >-
+      Deploy to a staging deployment slot, warm it up and test it, then swap it with production. The swap is near-instant, and if something goes wrong I swap back. Slot-specific settings keep things like connection strings separate.
+    followUps: []
+revision:
+  keyPoints:
+    - App Service = PaaS for web apps, APIs and mobile back ends.
+    - Microsoft manages servers, OS, patching and load balancing.
+    - You pay for the App Service plan; several apps can share one.
+    - Features include autoscale, deployment slots, custom domains and HTTPS.
+  mistakes:
+    - Thinking you manage the VMs behind App Service.
+  examTips:
+    - '"Host a web app without managing servers" = **Azure App Service**.'
+  quick:
+    - q: Which cloud service type is App Service?
+      a: PaaS.
+    - q: What do you pay for in App Service?
+      a: The App Service plan (instance size and count).
+    - q: What is a deployment slot?
+      a: A staging copy of an app that can be swapped into production with no downtime.
+    - q: Name three app types App Service can host.
+      a: Web apps, REST APIs and mobile back ends.
+    - q: Who patches the OS behind App Service?
+      a: Microsoft.
+references:
+  - title: App Service overview
+    url: https://learn.microsoft.com/en-us/azure/app-service/overview
+related:
+  - paas
+  - azure-functions
+  - container-instances-and-aks
+---
+
+## Start with a question
+
+<Story question="You have built a website. Where does it live so the world can visit it?">
+
+You could rent a VM and set up a web server yourself, or you could hand your code to **App Service** and let Azure run it.
+
+</Story>
+
+## Explain it like I'm 10
+
+<Eli10>
+
+App Service is like a **stall at a market**. The market gives you the table, the roof, the electricity and security. You just bring your cakes (your website) and sell them.
+
+</Eli10>
+
+## The technical explanation
+
+**Azure App Service** hosts **web apps**, **API apps** and **mobile back ends** on Windows or Linux. You deploy code or containers through Git, GitHub Actions, Azure DevOps, ZIP or FTP.
+
+| Feature | Why it helps |
+| --- | --- |
+| Autoscale | More instances when traffic rises |
+| Deployment slots | Zero-downtime releases with swap and rollback |
+| Custom domains and HTTPS | Professional, secure sites |
+| Built-in authentication | Sign-in with Microsoft Entra ID and others |
+| VNet integration and private endpoints | Private connectivity to databases and services |
+
+<TryIt labs="cloud-shell-webapp" text="Create an App Service plan and a web app with Azure CLI commands, then browse to it in the simulated portal." />
+
+## Real-world business scenario
+
+<Scenario
+  company="An online education start-up"
+  industry="Online education"
+  problem="Developers spent too much time managing VMs for their course website and API."
+  service="Moved the website and API to App Service (Standard tier) with autoscale and deployment slots."
+  why="PaaS removes OS management and makes releases safe."
+  outcome="Releases became daily with zero downtime, and server maintenance work disappeared."
+/>
+
+## When to use it and when not to
+
+<UseWhen
+  use={['Websites, REST APIs and mobile back ends on common runtimes.', 'Teams that want to focus on code.']}
+  avoid={['Apps needing OS-level customisation (use VMs).', 'Short event-driven jobs (use Functions).']}
+/>

@@ -1,0 +1,108 @@
+---
+title: Factors That Affect Azure Costs
+seoTitle: What Affects Azure Costs? Key Cost Factors | AZ-900
+description: "The factors that affect Azure costs explained: resource type, consumption, region, bandwidth, maintenance and more, with tips and AZ-900 practice."
+answer: >-
+  Azure costs depend on several factors: the **resource type** and its settings (size, tier, redundancy), **consumption** (how much and how long you use it), **maintenance** (cleaning up unused resources), **geography** (prices differ by region), **network traffic** (outbound data transfer), the **subscription type** and any **Azure Marketplace** purchases.
+updated: 2026-11-11
+readingMinutes: 6
+keyTerms:
+  - term: Resource type
+    definition: The kind of service and its settings, such as VM size, storage tier or redundancy.
+  - term: Egress
+    definition: Data leaving Azure or moving between regions, which is usually charged.
+  - term: Orphaned resource
+    definition: A resource left behind after its parent is deleted, such as a disk after a VM, which still costs money.
+  - term: Azure Marketplace
+    definition: A store of third-party solutions, billed through your Azure subscription.
+interview:
+  - level: beginner
+    q: What affects how much you pay for Azure?
+    a: >-
+      What you deploy and how big it is, how long it runs, which region it's in, how much data leaves Azure, whether you clean up unused resources, your subscription type and any Marketplace products you buy.
+    followUps: []
+  - level: intermediate
+    q: Why can the same VM cost different amounts?
+    a: >-
+      Region (local costs and taxes differ), OS licensing (Windows costs more than Linux unless using Azure Hybrid Benefit), size and series, pricing model (pay-as-you-go, reservation, savings plan or Spot) and how long it runs.
+    followUps: []
+  - level: experienced
+    q: Which hidden costs do teams often miss?
+    a: >-
+      Egress and cross-region traffic, orphaned disks and public IPs, log ingestion and retention in Log Analytics, premium storage transactions, idle App Service plans, and Marketplace licences billed through Azure.
+    followUps: []
+revision:
+  keyPoints:
+    - Resource type and settings drive cost.
+    - Consumption = how much and how long.
+    - Prices vary by region.
+    - Outbound data transfer is charged; inbound is generally free.
+    - Clean up unused resources (maintenance).
+  mistakes:
+    - Forgetting orphaned disks and IPs after deleting VMs.
+  examTips:
+    - Know the list. Resource type, consumption, maintenance, geography, network traffic, subscription type, Marketplace.
+  quick:
+    - q: Do Azure prices vary by region?
+      a: Yes.
+    - q: Is inbound data transfer usually charged?
+      a: No. Outbound (egress) usually is.
+    - q: What is an orphaned resource?
+      a: A leftover resource, such as a disk after its VM is deleted, that still costs money.
+    - q: How are Marketplace products billed?
+      a: Through your Azure subscription.
+    - q: Name two settings that change a storage account's cost.
+      a: Access tier and redundancy (also performance).
+references:
+  - title: Describe cost management in Azure (Microsoft Learn)
+    url: https://learn.microsoft.com/en-us/training/modules/describe-cost-management-azure/
+related:
+  - pricing-calculator
+  - cost-management
+  - consumption-based-model
+---
+
+## Start with a question
+
+<Story question="Two teams run the same app on Azure. Why does one pay twice as much?">
+
+Different region, bigger sizes, data flowing out of Azure, and forgotten resources. Every one of these is a **cost factor**.
+
+</Story>
+
+## Explain it like I'm 10
+
+<Eli10>
+
+Your phone bill depends on your **plan**, how many **minutes** you use, whether you call **abroad**, how much **data** you download, and whether you forgot to cancel that **extra subscription**. Azure bills work the same way.
+
+</Eli10>
+
+## The technical explanation
+
+| Factor | Example |
+| --- | --- |
+| Resource type | VM size, storage tier and redundancy, database tier |
+| Consumption | Hours a VM runs, GB stored, number of executions |
+| Maintenance | Deleting unused VMs, disks, IPs, old snapshots |
+| Geography | The same service costs different amounts in different regions |
+| Network traffic | Outbound data transfer and inter-region traffic |
+| Subscription type | Free trials, student credits, enterprise agreements |
+| Azure Marketplace | Third-party solutions billed through Azure |
+
+<TryIt labs="vm-and-cost" text="Change VM sizes in the simulator and watch the estimate change, then delete the VM and notice the disk still costs money." />
+
+## Real-world business scenario
+
+<Scenario
+  company="A start-up"
+  industry="Enterprise"
+  problem="The monthly bill doubled without any new features."
+  service="Used Cost Management analysis to find 40 orphaned disks, a forgotten test VM and heavy cross-region traffic."
+  why="Understanding cost factors shows where to look."
+  outcome="The bill dropped back after cleaning up and moving chatty services into one region."
+/>
+
+## When to use it and when not to
+
+<UseWhen use={['Review cost factors before every design decision and monthly afterwards.']} avoid={['Choosing regions or sizes without checking price differences.']} />

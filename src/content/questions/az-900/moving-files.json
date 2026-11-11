@@ -1,0 +1,91 @@
+{
+ "cert": "az-900",
+ "domain": 2,
+ "topic": "moving-files",
+ "questions": [
+  {
+   "id": "t-mf-1",
+   "type": "single",
+   "question": "Which tool copies data to Azure Storage from the command line?",
+   "options": [
+    {
+     "text": "AzCopy",
+     "why": "Correct."
+    },
+    {
+     "text": "Azure Storage Explorer",
+     "why": "GUI."
+    },
+    {
+     "text": "Azure Advisor",
+     "why": "Recommendations."
+    },
+    {
+     "text": "Azure Data Box",
+     "why": "Physical device."
+    }
+   ],
+   "answer": [
+    0
+   ],
+   "explanation": "AzCopy is a CLI utility.",
+   "objective": "2.3.5"
+  },
+  {
+   "id": "t-mf-2",
+   "type": "single",
+   "question": "Which tool keeps an on-premises Windows file server in sync with Azure Files?",
+   "options": [
+    {
+     "text": "Azure File Sync",
+     "why": "Correct."
+    },
+    {
+     "text": "AzCopy",
+     "why": "One-off copies, not continuous sync."
+    },
+    {
+     "text": "Azure DNS",
+     "why": "Names."
+    },
+    {
+     "text": "Azure Migrate",
+     "why": "Migration hub."
+    }
+   ],
+   "answer": [
+    0
+   ],
+   "explanation": "File Sync provides continuous sync and cloud tiering.",
+   "objective": "2.3.5"
+  },
+  {
+   "id": "t-mf-3",
+   "type": "single",
+   "question": "Which tool provides a graphical interface for managing storage and uses AzCopy underneath?",
+   "options": [
+    {
+     "text": "Azure Storage Explorer",
+     "why": "Correct."
+    },
+    {
+     "text": "Azure CLI",
+     "why": "Command line."
+    },
+    {
+     "text": "Azure Policy",
+     "why": "Governance."
+    },
+    {
+     "text": "Azure Monitor",
+     "why": "Monitoring."
+    }
+   ],
+   "answer": [
+    0
+   ],
+   "explanation": "Storage Explorer is a desktop GUI.",
+   "objective": "2.3.5"
+  }
+ ]
+}

@@ -1,0 +1,19 @@
+---
+/** Governance: resources ride a conveyor through an Azure Policy gate; a non-compliant one is denied. */
+---
+<svg viewBox="0 0 640 300" role="img" aria-label="New resources move along a belt through an Azure Policy gate. Resources that follow the rules pass with a green tick. One in a forbidden region is stopped and stamped denied.">
+  <rect x="20" y="190" width="600" height="18" rx="9" fill="#465a7a" />
+  <path d="M30 199H610" stroke="#8a97a8" stroke-width="3" class="a-dash" />
+  <!-- gate -->
+  <g transform="translate(290 70)"><rect width="16" height="125" fill="#243a5e" /><rect x="44" width="16" height="125" fill="#243a5e" /><rect x="-10" y="-14" width="80" height="34" rx="8" fill="#0078d4" /><text x="30" y="7" text-anchor="middle" fill="#fff" font-size="11" font-weight="700">AZURE POLICY</text></g>
+  <text x="320" y="248" text-anchor="middle" class="lbl">Rule: only EU regions, tags required</text>
+  <path id="belt" d="M40 160H620" fill="none" />
+  <g class="rl-ok"><animateMotion dur="6s" repeatCount="indefinite"><mpath href="#belt" /></animateMotion><rect x="-30" y="-26" width="60" height="52" rx="8" fill="#107c10" /><text y="-4" text-anchor="middle" fill="#fff" font-size="10" font-weight="700">West EU</text><text y="14" text-anchor="middle" fill="#fff" font-size="16">✓</text></g>
+  <g><animateMotion dur="6s" begin="-4s" repeatCount="indefinite" keyPoints="0;0.42;0.42" keyTimes="0;0.45;1" calcMode="linear"><mpath href="#belt" /></animateMotion><rect x="-30" y="-26" width="60" height="52" rx="8" fill="#ca5010" /><text y="-4" text-anchor="middle" fill="#fff" font-size="10" font-weight="700">Brazil</text><text y="14" text-anchor="middle" fill="#fff" font-size="16">?</text></g>
+  <g><animateMotion dur="6s" begin="-2s" repeatCount="indefinite"><mpath href="#belt" /></animateMotion><rect x="-30" y="-26" width="60" height="52" rx="8" fill="#107c10" /><text y="-4" text-anchor="middle" fill="#fff" font-size="10" font-weight="700">North EU</text><text y="14" text-anchor="middle" fill="#fff" font-size="16">✓</text></g>
+  <g class="rl-stamp" transform="translate(230 92) rotate(-12)"><rect width="110" height="34" rx="6" fill="none" stroke="#e74856" stroke-width="4" /><text x="55" y="24" text-anchor="middle" fill="#e74856" font-size="18" font-weight="800">DENIED</text></g>
+</svg>
+<style>
+  .rl-stamp { animation: rl-stamp 6s -4s infinite; opacity: 0; }
+  @keyframes rl-stamp { 0%, 43% { opacity: 0; } 47%, 97% { opacity: 1; } 100% { opacity: 0; } }
+</style>

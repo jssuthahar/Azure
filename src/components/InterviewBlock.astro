@@ -1,0 +1,39 @@
+---
+import { inlineMd } from '../lib/learn';
+interface Item { level: string; q: string; a: string; followUps: { q: string; a: string }[] }
+interface Props { items: Item[]; id?: string; heading?: string }
+const { items, id = 'interview-questions', heading = 'Interview preparation' } = Astro.props;
+const levelLabel: Record<string, string> = {
+  beginner: 'Beginner',
+  intermediate: 'Intermediate',
+  experienced: 'Experienced developer',
+  scenario: 'Scenario',
+  architecture: 'Architecture & design',
+};
+---
+<section aria-labelledby={id}>
+  <h2 id={id}>{heading}</h2>
+  <p class="text-muted">Say your answer out loud first, then open the model answer. Interviewers care more about your reasoning than the exact words.</p>
+  <div class="mt-5 space-y-3">
+    {items.map((it) => (
+      <details class="fold card">
+        <summary class="flex items-start gap-3 px-5 py-4">
+          <span class="fold-icon mt-1 text-[0.6rem] text-muted" aria-hidden="true">▶</span>
+          <span class="min-w-0 flex-1">
+            <span class="chip mb-1.5">{levelLabel[it.level]}</span>
+            <span class="block font-semibold leading-snug" set:html={inlineMd(it.q)} />
+          </span>
+        </summary>
+        <div class="space-y-3 border-t border-default px-5 py-4">
+          <div class="bubble bubble-candidate"><p class="mb-1 text-xs font-bold tracking-wider uppercase text-accent">Model answer</p><p set:html={inlineMd(it.a)} /></div>
+          {it.followUps.map((f) => (
+            <>
+              <div class="bubble bubble-interviewer"><p class="mb-1 text-xs font-bold tracking-wider uppercase text-muted">Interviewer follows up</p><p set:html={inlineMd(f.q)} /></div>
+              <div class="bubble bubble-candidate"><p class="mb-1 text-xs font-bold tracking-wider uppercase text-accent">You</p><p set:html={inlineMd(f.a)} /></div>
+            </>
+          ))}
+        </div>
+      </details>
+    ))}
+  </div>
+</section>

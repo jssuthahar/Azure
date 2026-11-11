@@ -1,0 +1,113 @@
+---
+title: VM Scale Sets and Availability Sets
+seoTitle: VM Scale Sets vs Availability Sets Explained | AZ-900
+description: Azure Virtual Machine Scale Sets and availability sets explained, with fault and update domains, autoscale, a hands-on lab and AZ-900 practice.
+answer: >-
+  **Virtual Machine Scale Sets** let you create and manage a group of identical, load-balanced VMs that can **scale out and in automatically** based on demand. **Availability sets** spread your VMs across **fault domains** (separate power and network hardware) and **update domains** (separate maintenance groups), so one hardware failure or update does not take all of them down.
+updated: 2026-11-11
+readingMinutes: 7
+keyTerms:
+  - term: Virtual Machine Scale Set
+    definition: A group of identical VMs that can scale automatically.
+  - term: Availability set
+    definition: Places VMs in different fault and update domains within a datacenter.
+  - term: Fault domain
+    definition: A group of hardware sharing a power source and network switch, like a rack.
+  - term: Update domain
+    definition: A group of VMs that can be rebooted together during planned maintenance.
+interview:
+  - level: beginner
+    q: What is a VM Scale Set?
+    a: >-
+      A group of identical VMs that Azure can add or remove automatically as demand changes, usually behind a load balancer.
+    followUps: []
+  - level: intermediate
+    q: What are fault domains and update domains?
+    a: >-
+      A fault domain is a group of hardware that shares power and networking, like a rack. An update domain is a group of VMs that can be rebooted at the same time for maintenance. An availability set spreads VMs across up to three fault domains and multiple update domains, so failures and updates never hit all VMs at once.
+    followUps: []
+  - level: experienced
+    q: Availability sets, availability zones or scale sets?
+    a: >-
+      Availability sets protect against rack and maintenance failures within one datacenter. Zones protect against a whole datacenter failing, with a higher SLA, and are preferred where available. Scale sets add elastic scaling and can themselves be spread across zones. For new workloads I would use a zone-spanning scale set.
+    followUps: []
+revision:
+  keyPoints:
+    - Scale sets = identical VMs with automatic scaling.
+    - Availability sets = spread VMs across fault and update domains.
+    - Fault domain = shared power/network hardware; update domain = maintenance group.
+    - Availability sets are free; you pay only for the VMs.
+  mistakes:
+    - Mixing up scale sets (scaling) with availability sets (resilience).
+  examTips:
+    - '"Automatically increase the number of identical VMs" = **VM Scale Sets**.'
+    - '"Protect against rack failure and planned maintenance" = **availability set**.'
+  quick:
+    - q: What does a VM Scale Set add?
+      a: Automatic scaling of identical VMs.
+    - q: What is a fault domain?
+      a: A group of hardware sharing power and network, like a rack.
+    - q: What is an update domain?
+      a: A group of VMs rebooted together during planned maintenance.
+    - q: Do availability sets cost extra?
+      a: No. You pay only for the VMs.
+    - q: Which protects against a whole datacenter failure, availability sets or zones?
+      a: Availability zones.
+references:
+  - title: Virtual Machine Scale Sets overview
+    url: https://learn.microsoft.com/en-us/azure/virtual-machine-scale-sets/overview
+  - title: Availability sets overview
+    url: https://learn.microsoft.com/en-us/azure/virtual-machines/availability-set-overview
+related:
+  - virtual-machines
+  - elasticity
+  - availability-zones
+---
+
+## Start with a question
+
+<Story question="How do you handle Black Friday traffic, and make sure one broken rack doesn’t take your shop offline?">
+
+You need two things: **more servers when busy** (scale sets) and **servers spread out so one failure doesn't kill them all** (availability sets).
+
+</Story>
+
+## Explain it like I'm 10
+
+<Eli10>
+
+A **scale set** is like a bakery that hires more bakers when the queue gets long and sends them home when it's quiet.
+
+An **availability set** is like not putting all your eggs in one basket: the bakers work in different kitchens, so one broken oven doesn't stop the bakery.
+
+</Eli10>
+
+## The technical explanation
+
+<Compare
+  caption="Two VM features, two different jobs"
+  columns={[
+    { title: 'VM Scale Sets', icon: '🧮', tone: 'accent', items: ['Group of identical VMs', 'Autoscale on metrics or schedule', 'Load-balanced', 'Can span availability zones', 'Job: scale'] },
+    { title: 'Availability sets', icon: '🧺', tone: 'ok', items: ['Up to 3 fault domains', 'Multiple update domains', 'Within one datacenter', 'No extra cost', 'Job: resilience'] },
+  ]}
+/>
+
+<TryIt labs="scale-sets" text="Create a scale set with 2 instances, scale out to 6 for a sale, then back to 2, and watch the cost meter." />
+
+## Real-world business scenario
+
+<Scenario
+  company="An online electronics retailer"
+  industry="E-commerce"
+  problem="Its web tier ran on 4 fixed VMs: too few at sale time, wasteful the rest of the year."
+  service="Replaced them with a VM Scale Set spread across availability zones with CPU-based autoscale (2 to 20 instances)."
+  why="Scale sets add capacity automatically; zones protect against datacenter failure."
+  outcome="Sales ran smoothly and quiet-month compute costs dropped."
+/>
+
+## When to use it and when not to
+
+<UseWhen
+  use={['**Scale sets** for stateless web or worker tiers with variable demand.', '**Availability sets** for VMs that must survive rack failures and maintenance (where zones are not available).']}
+  avoid={['Scale sets for stateful single servers that cannot run as identical copies.']}
+/>

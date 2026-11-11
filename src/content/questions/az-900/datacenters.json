@@ -1,0 +1,17 @@
+{ "cert": "az-900", "domain": 2, "topic": "datacenters", "questions": [
+  { "id": "t-dc-1", "type": "single", "question": "When you deploy an Azure resource, what can you choose?", "options": [
+    { "text": "The exact datacenter building", "why": "Customers cannot choose individual datacenters." },
+    { "text": "The region, and for zonal services the availability zone", "why": "Correct." },
+    { "text": "The physical server rack", "why": "Azure handles physical placement." },
+    { "text": "The datacenter's security guards", "why": "Physical security is Microsoft's." } ], "answer": [1], "explanation": "You choose a region (and zone); Azure decides the datacenter and server.", "objective": "2.1.3" },
+  { "id": "t-dc-2", "type": "single", "question": "Which order is correct, from smallest to largest?", "options": [
+    { "text": "Datacenter → availability zone → region → geography", "why": "Correct." },
+    { "text": "Region → datacenter → geography → zone", "why": "Incorrect order." },
+    { "text": "Geography → region → zone → datacenter", "why": "This is largest to smallest." },
+    { "text": "Zone → datacenter → region → geography", "why": "Zones contain datacenters, not the reverse." } ], "answer": [0], "explanation": "Datacenters form zones, zones form regions, regions form geographies.", "objective": "2.1.3" },
+  { "id": "t-dc-3", "type": "single", "question": "Who is responsible for the physical security of Azure datacenters?", "options": [
+    { "text": "Microsoft", "why": "Correct. Always the provider's responsibility." },
+    { "text": "The customer", "why": "Customers never manage Azure datacenters." },
+    { "text": "Shared equally", "why": "Physical security is not shared." },
+    { "text": "The local government", "why": "Microsoft operates the facilities." } ], "answer": [0], "explanation": "Physical datacenter security is always Microsoft's responsibility.", "objective": "2.1.3" }
+] }

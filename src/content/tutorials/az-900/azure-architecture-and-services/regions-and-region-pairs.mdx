@@ -1,0 +1,157 @@
+---
+title: Azure Regions, Region Pairs and Sovereign Regions
+seoTitle: Azure Regions, Region Pairs and Sovereign Regions | AZ-900
+description: Azure regions, region pairs and sovereign regions explained simply, with how to choose a region, real examples, interview questions and AZ-900 practice.
+answer: >-
+  An **Azure region** is a geographical area containing one or more datacenters connected by a low-latency network, such as West Europe or Southeast Asia. Many regions are grouped into **region pairs** in the same geography for disaster recovery. **Sovereign regions**, such as Azure Government and Azure operated by 21Vianet in China, are isolated instances of Azure for specific compliance or legal needs.
+updated: 2026-11-11
+readingMinutes: 8
+keyTerms:
+  - term: Region
+    definition: A geographic area with one or more datacenters networked together with low latency.
+  - term: Geography
+    definition: A larger area, usually a country or market, containing one or more regions and respecting data residency boundaries.
+  - term: Region pair
+    definition: Two regions in the same geography linked for resilience, with sequential updates and prioritised recovery.
+  - term: Sovereign region
+    definition: An isolated instance of Azure for government or legal requirements, such as Azure Government or Azure in China.
+interview:
+  - level: beginner
+    q: What is an Azure region and how do you choose one?
+    a: >-
+      A region is a geographic area with one or more Azure datacenters, like West Europe. I choose a region close to my users for low latency, one that meets data residency rules, one that offers the services I need, and I compare prices because they differ by region.
+    followUps:
+      - q: Do all regions have the same services?
+        a: >-
+          No. Newer or preview services often launch in a few regions first, so always check service availability by region before choosing.
+  - level: intermediate
+    q: What are the benefits of region pairs?
+    a: >-
+      Planned platform updates roll out to one region of a pair at a time, so a bad update is less likely to affect both. If there is a broad outage, Microsoft prioritises recovering one region in each pair. Paired regions are usually in the same geography for data residency and, where possible, hundreds of kilometres apart. Some services, such as geo-redundant storage, replicate to the paired region.
+    followUps: []
+  - level: experienced
+    q: Should a multi-region design always use the official region pair?
+    a: >-
+      Not necessarily. Pairs matter for services that replicate only to the pair, such as GRS storage, and for sequential updates. But some newer regions have no pair and rely on availability zones, and you might choose a different secondary for capacity, latency, service availability or cost. For services where you control replication, such as Cosmos DB or Azure SQL geo-replication, pick the secondary that best fits your requirements.
+    followUps: []
+  - level: scenario
+    q: A US federal agency wants to use Azure but must meet strict government compliance rules. What would you suggest?
+    a: >-
+      Azure Government, a sovereign region that is physically isolated from public Azure and operated by screened US personnel, designed for US government agencies and their partners.
+    followUps: []
+revision:
+  keyPoints:
+    - A region = one or more datacenters in a geographic area, connected with low latency.
+    - Choose regions for latency, data residency, service availability and price.
+    - Region pairs give sequential updates, prioritised recovery and replication targets for some services.
+    - Some newer regions have no pair and rely on availability zones.
+    - Sovereign regions (Azure Government, Azure operated by 21Vianet) are isolated from public Azure.
+  mistakes:
+    - Assuming every service exists in every region.
+    - Thinking region pairs automatically replicate all your resources. Replication depends on the service and your settings.
+  examTips:
+    - '"Physically isolated instance for US government agencies" = **Azure Government**.'
+    - '"Updates applied to one region at a time" and "prioritised recovery" = **region pairs**.'
+  quick:
+    - q: What is an Azure region?
+      a: A geographic area containing one or more datacenters connected by a low-latency network.
+    - q: Name two benefits of region pairs.
+      a: Sequential updates and prioritised recovery during a broad outage.
+    - q: Name a sovereign region.
+      a: Azure Government (US) or Azure operated by 21Vianet (China).
+    - q: Why might two regions have different prices?
+      a: Costs such as power, land and taxes differ by location, so prices vary by region.
+    - q: Do all regions have a pair?
+      a: No. Some newer regions have no pair and rely on availability zones.
+references:
+  - title: Azure regions list and region pairs
+    url: https://learn.microsoft.com/en-us/azure/reliability/regions-list
+  - title: Describe the core architectural components of Azure (Microsoft Learn)
+    url: https://learn.microsoft.com/en-us/training/modules/describe-core-architectural-components-of-azure/
+related:
+  - availability-zones
+  - datacenters
+---
+
+## Start with a question
+
+<Story question="If your customers are in India, should your website run on servers in the United States?">
+
+Every message would travel halfway around the world and back, so pages feel slow. And Indian rules for some kinds of data may require it to stay in India.
+
+Azure solves this by having **regions** all over the world. You choose where your resources live.
+
+</Story>
+
+## Explain it like I'm 10
+
+<Eli10>
+
+Imagine a pizza company with kitchens in many cities. You order from the **kitchen closest to you**, so your pizza arrives hot.
+
+Azure regions are Microsoft's "kitchens" around the world. Pick the one near your users and everything is faster. Some kitchens have a **twin** in a nearby city. If one kitchen has a problem, the twin can help.
+
+</Eli10>
+
+## The technical explanation
+
+An **Azure region** is a set of datacenters deployed within a latency-defined area and connected through a dedicated regional low-latency network. Azure has 60+ regions worldwide, grouped into **geographies** such as Europe, Asia Pacific or the United States, which respect data residency and compliance boundaries.
+
+### Choosing a region
+
+| Factor | Why it matters |
+| --- | --- |
+| Proximity to users | Lower latency, faster apps |
+| Data residency and compliance | Some data must stay in a country or geography |
+| Service availability | Not every service or VM size is in every region |
+| Price | The same service can cost different amounts in different regions |
+| Availability zones | Not every region has zones |
+
+### Region pairs
+
+Most regions are paired with another region in the **same geography**, ideally hundreds of kilometres apart:
+
+- **Sequential updates:** planned Azure updates go to one region of a pair at a time.
+- **Prioritised recovery:** in a widespread outage, one region in every pair is recovered first.
+- **Replication target:** some services, such as geo-redundant storage (GRS), replicate to the paired region.
+
+Some newer regions have **no pair** and rely on availability zones for resilience instead.
+
+### Sovereign regions
+
+**Sovereign regions** are instances of Azure isolated from the main public cloud:
+
+- **Azure Government (US):** for US government agencies and partners, physically isolated and operated by screened US personnel.
+- **Azure operated by 21Vianet (China):** Azure in China, operated by a local partner to meet Chinese regulations.
+
+<Callout type="exam">
+Know the difference: a **region** is where your resources run, a **region pair** is for disaster recovery and safe updates, and a **sovereign region** is a separate Azure for legal or compliance isolation.
+</Callout>
+
+## Real-world business scenario
+
+<Scenario
+  company="An online education company in Malaysia"
+  industry="Online education"
+  problem="Students across Southeast Asia complained of slow video loading from servers in the United States, and a new client required data to stay in Asia."
+  service="Moved the platform to the Southeast Asia region, with backups replicated to its paired region, East Asia."
+  why="A nearby region cut latency, and keeping both regions in Asia satisfied the data-residency requirement."
+  outcome="Page loads became noticeably faster for students, and the new client contract was signed."
+/>
+
+## When to use it and when not to
+
+<UseWhen
+  use={[
+    'Pick the region nearest your users for performance.',
+    'Use a second region (often the pair) for disaster recovery of critical systems.',
+    'Use a sovereign region when government or national rules require it.',
+  ]}
+  avoid={[
+    'Spreading one chatty application across distant regions. Latency between them adds up.',
+    'Choosing a region only because it is cheapest, without checking residency rules and service availability.',
+  ]}
+  alternatives={[
+    '**Availability zones** protect against datacenter failures inside one region at lower cost and complexity than multi-region.',
+  ]}
+/>

@@ -1,0 +1,112 @@
+---
+title: "Compute Types: VMs, Containers and Functions"
+seoTitle: "VMs vs Containers vs Functions on Azure | AZ-900"
+description: Virtual machines, containers and Azure Functions compared simply, with when to use each, a decision guide, interview questions and AZ-900 practice.
+answer: >-
+  Azure offers three main compute types. **Virtual machines** virtualise hardware and give you a full operating system to control. **Containers** package an app with its dependencies and share the host OS kernel, so they are lightweight and start in seconds. **Functions** run small pieces of event-driven code with no servers to manage, billed per execution.
+updated: 2026-11-11
+readingMinutes: 7
+keyTerms:
+  - term: Virtual machine
+    definition: Software emulation of a physical computer with its own full OS (IaaS).
+  - term: Container
+    definition: A lightweight package of an app and its dependencies that shares the host's OS kernel.
+  - term: Azure Functions
+    definition: Serverless, event-driven compute that runs code on demand.
+  - term: Orchestration
+    definition: Automatically deploying, scaling and healing many containers, for example with Kubernetes.
+interview:
+  - level: beginner
+    q: Explain the difference between a VM, a container and a function.
+    a: >-
+      A VM is a whole computer with its own operating system that I manage. A container is a lightweight package of just my app and its dependencies that shares the host's OS, so it starts quickly. A function is a small piece of code that runs only when an event happens, with no servers to manage at all.
+    followUps: []
+  - level: intermediate
+    q: Why are containers more lightweight than VMs?
+    a: >-
+      VMs virtualise hardware, so each one boots a full guest OS. Containers virtualise the operating system: they share the host kernel and only package the app and its libraries. That makes them smaller, faster to start and denser on the same hardware.
+    followUps: []
+  - level: experienced
+    q: How would you pick between AKS, Azure Container Apps and Azure Functions for a new microservices system?
+    a: >-
+      Functions for event-driven glue and short tasks. Container Apps for containerised microservices when I want serverless scaling, including to zero, without running Kubernetes myself. AKS when I need full Kubernetes control, custom networking, operators or very large scale and have the skills to run it. I would start with the most managed option that meets the requirements.
+    followUps: []
+revision:
+  keyPoints:
+    - VMs = full OS control, most management (IaaS).
+    - Containers = lightweight, portable, fast start, share the host OS kernel.
+    - Functions = event-driven, serverless, pay per execution.
+    - Container services include Container Instances, Container Apps and AKS.
+  mistakes:
+    - Saying containers include a full OS like a VM.
+  examTips:
+    - '"Run code when an event happens, no servers" = **Azure Functions**.'
+    - '"Package an app with dependencies, start in seconds" = **containers**.'
+  quick:
+    - q: Which compute type gives full control of the OS?
+      a: Virtual machines.
+    - q: What do containers share with their host?
+      a: The operating system kernel.
+    - q: Which compute type is event-driven and serverless?
+      a: Azure Functions.
+    - q: Which Azure service orchestrates many containers with Kubernetes?
+      a: Azure Kubernetes Service (AKS).
+    - q: Which is the quickest way to run a single container?
+      a: Azure Container Instances.
+references:
+  - title: Choose an Azure compute service
+    url: https://learn.microsoft.com/en-us/azure/architecture/guide/technology-choices/compute-decision-tree
+related:
+  - virtual-machines
+  - azure-functions
+  - container-instances-and-aks
+---
+
+## Start with a question
+
+<Story question="Do you need a whole house, a caravan, or just a tent?">
+
+A house gives you everything but takes ages to build. A caravan is quick to move and has what you need. A tent is up in a minute for one night. Azure compute is the same choice: **VMs, containers or functions**.
+
+</Story>
+
+## Explain it like I'm 10
+
+<Eli10>
+
+- 🏠 A **virtual machine** is a whole house: you decorate every room and fix the plumbing.
+- 🚐 A **container** is a caravan: it carries just what you need and goes anywhere quickly.
+- ⛺ A **function** is a pop-up tent: it appears when needed, then packs itself away.
+
+</Eli10>
+
+## The technical explanation
+
+<Compare
+  caption="Three ways to run code on Azure"
+  columns={[
+    { title: 'Virtual machines', icon: '🖥️', tone: 'neutral', items: ['Full guest OS you manage', 'Minutes to start', 'Any software, any configuration', 'Billed while allocated', 'Azure Virtual Machines, VM Scale Sets'] },
+    { title: 'Containers', icon: '📦', tone: 'accent', items: ['App plus dependencies, shared kernel', 'Seconds to start', 'Portable between environments', 'Billed for running containers', 'Container Instances, Container Apps, AKS'] },
+    { title: 'Functions', icon: '⚡', tone: 'ok', items: ['Just your code', 'Event-triggered', 'No servers to manage', 'Pay per execution (consumption plans)', 'Azure Functions'] },
+  ]}
+/>
+
+<TryIt labs="vm-and-cost,cloud-shell-webapp" text="Compare effort: build a full virtual machine in one lab, and a managed web app in the other." />
+
+## Real-world business scenario
+
+<Scenario
+  company="A food delivery platform"
+  industry="Food delivery"
+  problem="It ran everything on VMs: a legacy billing engine, the ordering microservices and small notification jobs, with lots of idle capacity."
+  service="Kept billing on VMs, moved microservices to containers on Azure Container Apps, and moved notifications to Azure Functions."
+  why="Each workload got the lightest compute type that fits its needs."
+  outcome="Less patching, faster deployments, and lower costs for spiky notification traffic."
+/>
+
+## When to use it and when not to
+
+<UseWhen
+  use={['**VMs** for legacy or custom software needing OS control.', '**Containers** for portable microservices and consistent environments.', '**Functions** for short, event-driven tasks.']}
+  avoid={['VMs for tiny jobs that run a few times a day.', 'Functions for long-running, stateful processing.']}
+/>

@@ -1,0 +1,161 @@
+---
+title: Choosing IaaS, PaaS or SaaS
+seoTitle: IaaS vs PaaS vs SaaS – Which to Choose? | AZ-900
+description: IaaS vs PaaS vs SaaS compared side by side with the pizza analogy, a decision guide, use cases for each, interview questions and AZ-900 practice questions.
+answer: >-
+  Choose **IaaS** when you need full control of the operating system or must migrate existing servers unchanged. Choose **PaaS** when you are building or running your own application and want the provider to manage the platform. Choose **SaaS** when a ready-made application already does the job. Moving from IaaS to SaaS, control decreases and so does your management effort.
+updated: 2026-11-11
+readingMinutes: 8
+keyTerms:
+  - term: Control vs convenience
+    definition: The core trade-off. IaaS gives the most control, SaaS the most convenience.
+  - term: Rehost / refactor / replace
+    definition: Migration strategies that roughly map to IaaS (rehost), PaaS (refactor) and SaaS (replace).
+interview:
+  - level: beginner
+    q: Explain IaaS, PaaS and SaaS in one sentence each.
+    a: >-
+      IaaS means renting virtual servers that you manage yourself. PaaS means renting a ready platform where you just deploy your code. SaaS means using finished software over the internet that the provider runs completely.
+    followUps:
+      - q: Can you give me an Azure or Microsoft example for each?
+        a: >-
+          IaaS is Azure Virtual Machines. PaaS is Azure App Service or Azure SQL Database. SaaS is Microsoft 365.
+  - level: intermediate
+    q: Can one solution use all three service types?
+    a: >-
+      Yes, and most do. A company might use Microsoft 365 for email (SaaS), host its customer API on App Service with Azure SQL Database (PaaS), and run a legacy reporting server on a VM (IaaS). You choose per component, not per company.
+    followUps: []
+  - level: experienced
+    q: How do you decide the default compute choice for a new service in an enterprise?
+    a: >-
+      I use a "most managed first" rule. Can a SaaS product do it? If not, can it run as serverless or PaaS (Functions, App Service, Container Apps)? If it needs more control or portability, containers on AKS. Only fall back to VMs when there is a concrete reason, such as OS dependencies, licensing or specialised hardware. Each step down gives more control but adds operational cost, so the burden of proof is on going lower.
+    followUps: []
+  - level: scenario
+    q: A company has three needs. Migrate a legacy app quickly, build a new customer portal, and give staff email. Which service type for each?
+    a: >-
+      Legacy app, IaaS (lift and shift to VMs). Customer portal, PaaS (App Service plus a managed database). Staff email, SaaS (Microsoft 365).
+    followUps: []
+revision:
+  keyPoints:
+    - Control and responsibility are highest in IaaS, then PaaS, then SaaS (lowest).
+    - IaaS suits OS control, lift-and-shift, custom software, test/dev and HPC.
+    - PaaS suits building apps and APIs, managed databases and development speed.
+    - SaaS suits standard business needs such as email, CRM and collaboration.
+    - Real solutions mix all three.
+  mistakes:
+    - Picking one service type for a whole company. Decide per workload.
+    - Defaulting to VMs out of habit when PaaS would remove most operational work.
+  examTips:
+    - Look for the keyword in the scenario. "Control of OS" means IaaS, "focus on code" means PaaS, "just use the app" means SaaS.
+    - Azure Functions is PaaS and serverless; Azure VMs are IaaS; Microsoft 365 is SaaS.
+  quick:
+    - q: Which service type gives the most control?
+      a: IaaS.
+    - q: Which service type suits building a custom web app without managing servers?
+      a: PaaS.
+    - q: Which service type is Microsoft 365?
+      a: SaaS.
+    - q: Which service type fits a lift-and-shift migration?
+      a: IaaS.
+    - q: Can one organisation use IaaS, PaaS and SaaS at the same time?
+      a: Yes. Most organisations do.
+references:
+  - title: Describe cloud service types (Microsoft Learn)
+    url: https://learn.microsoft.com/en-us/training/modules/describe-cloud-service-types/
+  - title: Choose an Azure compute service
+    url: https://learn.microsoft.com/en-us/azure/architecture/guide/technology-choices/compute-decision-tree
+related:
+  - iaas
+  - paas
+  - saas
+  - shared-responsibility-model
+---
+
+## Start with a question
+
+<Story question="You are hungry. Do you cook from scratch, use a meal kit, or order delivery?">
+
+All three get you fed. They differ in **how much you control** (exact ingredients, seasoning) and **how much work you do** (shopping, cooking, washing up).
+
+Cloud service types are the same choice for software. There is no "best" option, only the right one for each situation.
+
+</Story>
+
+## Explain it like I'm 10
+
+<Eli10>
+
+**Pizza time!** Here are four ways to have pizza:
+
+- 🏠 **Make it at home from nothing** (on-premises): buy flour, own an oven, cook, clean. You do it all.
+- 🛒 **Take-and-bake pizza** (IaaS): the shop gives you the base and oven time. You choose toppings and bake it.
+- 🍕 **Pizza delivered** (PaaS): the pizzeria makes and bakes it to your order. You lay the table and serve it.
+- 🍽️ **Dining at a pizza restaurant** (SaaS): you just sit down and eat. Everything else is done for you.
+
+</Eli10>
+
+## The technical explanation
+
+The three service types sit on a scale of **control versus convenience**:
+
+<ResponsibilityGrid />
+
+| | IaaS | PaaS | SaaS |
+| --- | --- | --- | --- |
+| You get | VMs, storage, networks | A managed platform for your code and data | A finished application |
+| You manage | OS, runtime, apps, data, access | Apps, data, access | Data, users, devices, settings |
+| Control | Highest | Medium | Lowest |
+| Management effort | Highest | Medium | Lowest |
+| Azure / Microsoft examples | Virtual Machines, VM Scale Sets | App Service, Azure SQL Database, Functions | Microsoft 365, Dynamics 365 |
+| Typical users | IT administrators, infrastructure teams | Developers | End users and business teams |
+
+### A decision guide
+
+<Flow
+  caption="Most-managed-first: start at the left and only move right when you have a reason"
+  steps={[
+    { title: 'Does a SaaS product do this?', text: 'Yes → <strong>SaaS</strong>. Configure it; do not build it.' },
+    { title: 'Is it your own app on a standard runtime?', text: 'Yes → <strong>PaaS</strong> or serverless.' },
+    { title: 'Need containers or portability?', text: 'Yes → Container Apps or AKS.' },
+    { title: 'Need OS control or no changes?', text: 'Yes → <strong>IaaS</strong> virtual machines.' },
+  ]}
+/>
+
+<TryIt labs="vm-and-cost,cloud-shell-webapp" text="Compare the effort yourself: build an IaaS virtual machine in one lab and a PaaS web app in the other." />
+
+### Use cases at a glance
+
+<Compare
+  caption="Appropriate use cases for each cloud service type (exam objective 1.3.4)"
+  columns={[
+    { title: 'IaaS', icon: '🧱', tone: 'neutral', items: ['Lift-and-shift migration', 'Test and development environments', 'Custom or legacy software needing OS access', 'High-performance computing', 'Storage, backup and recovery'] },
+    { title: 'PaaS', icon: '🧰', tone: 'accent', items: ['Building web apps and APIs', 'Managed databases', 'Development frameworks and DevOps', 'Analytics and business intelligence', 'Event-driven apps (Functions)'] },
+    { title: 'SaaS', icon: '📦', tone: 'ok', items: ['Email and messaging', 'Office and collaboration tools', 'CRM and ERP', 'Business productivity apps', 'Anything you would rather not build'] },
+  ]}
+/>
+
+## Real-world business scenario
+
+<Scenario
+  company="A food delivery company"
+  industry="Food delivery"
+  problem="It needs a customer ordering app, a route-optimisation engine that uses a vendor's Linux-only binary, and email and chat for 400 staff."
+  service="Ordering API on Azure App Service with Azure SQL Database (PaaS); route engine on Azure VMs (IaaS); Microsoft 365 for staff (SaaS)."
+  why="Each component got the most managed option that still met its constraints: PaaS for custom code, IaaS where the vendor binary needs OS control, SaaS for commodity productivity."
+  outcome="The small platform team manages only a handful of VMs; everything else is patched and scaled by Microsoft."
+/>
+
+## When to use each, and when not to
+
+<UseWhen
+  use={[
+    '**IaaS** when you need OS control, specific software, or a fast lift-and-shift.',
+    '**PaaS** for new custom applications, APIs and managed databases.',
+    '**SaaS** for standard business capabilities you do not need to build.',
+  ]}
+  avoid={[
+    '**IaaS** for simple web apps. You inherit patching and scaling you do not need.',
+    '**PaaS** for software that needs OS-level installs or unsupported runtimes.',
+    '**SaaS** when the process is your unique competitive advantage and needs deep customisation.',
+  ]}
+/>

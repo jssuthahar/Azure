@@ -1,0 +1,124 @@
+---
+title: Resources and Resource Groups
+seoTitle: Azure Resources and Resource Groups Explained | AZ-900
+description: Azure resources and resource groups explained simply, with the key rules, how to organise them, a hands-on lab, interview questions and AZ-900 practice.
+answer: >-
+  An **Azure resource** is anything you create in Azure, such as a virtual machine, storage account, database or virtual network. A **resource group** is a logical container that holds related resources so you can manage, secure and delete them together. Every resource must be in exactly one resource group, and resource groups cannot be nested.
+updated: 2026-11-11
+readingMinutes: 7
+keyTerms:
+  - term: Resource
+    definition: A manageable item you create in Azure, such as a VM, storage account or web app.
+  - term: Resource group
+    definition: A logical container for resources that share a lifecycle, owner or purpose.
+  - term: Lifecycle
+    definition: When resources are created, updated and deleted. Resources with the same lifecycle belong in the same group.
+interview:
+  - level: beginner
+    q: What is a resource group?
+    a: >-
+      It is a container that holds related Azure resources, like the VM, database and storage for one app. I can manage access, apply policies, view costs and delete everything in it together.
+    followUps:
+      - q: Can a resource be in two resource groups?
+        a: >-
+          No. A resource belongs to exactly one resource group at a time, although it can be moved to another group.
+  - level: intermediate
+    q: What are the important rules about resource groups?
+    a: >-
+      A resource is in only one group; groups cannot be nested; resources in a group can be in different regions from the group itself; deleting a group deletes everything in it; and access and policies applied to a group are inherited by its resources.
+    followUps: []
+  - level: experienced
+    q: How do you decide how to split resources into resource groups?
+    a: >-
+      Mainly by lifecycle and ownership. Things deployed and deleted together, owned by the same team, go together, for example one group per application per environment such as rg-shop-prod and rg-shop-dev. Shared networking often lives in its own group managed by a platform team. This keeps RBAC, cost reporting and clean-up simple.
+    followUps: []
+  - level: scenario
+    q: A developer finished testing and wants to remove 15 test resources quickly. What is the easiest way?
+    a: >-
+      If they are all in one test resource group, delete the group. Everything inside is deleted in one operation. That is why grouping by lifecycle is so useful.
+    followUps: []
+revision:
+  keyPoints:
+    - A resource is any item you create in Azure.
+    - A resource group is a logical container for related resources.
+    - Each resource is in exactly one group; groups cannot be nested.
+    - Deleting a group deletes all its resources.
+    - Access (RBAC) and policies set on a group are inherited by its resources.
+  mistakes:
+    - Believing resources must be in the same region as their resource group.
+    - Forgetting that deleting a resource group deletes everything inside.
+  examTips:
+    - '"Delete all resources for a project at once" = put them in one **resource group** and delete the group.'
+    - Resource groups **cannot** be nested.
+  quick:
+    - q: How many resource groups can one resource belong to at a time?
+      a: One.
+    - q: Can resource groups be nested?
+      a: No.
+    - q: What happens when you delete a resource group?
+      a: All the resources inside it are deleted too.
+    - q: Must resources be in the same region as their resource group?
+      a: No.
+    - q: What is the best way to group resources?
+      a: By shared lifecycle, owner or purpose, for example one app per environment.
+references:
+  - title: Manage resource groups
+    url: https://learn.microsoft.com/en-us/azure/azure-resource-manager/management/manage-resource-groups-portal
+related:
+  - subscriptions
+  - management-hierarchy
+---
+
+## Start with a question
+
+<Story question="How would you find the 12 things that make up your online shop among 500 things in your company’s Azure?">
+
+Without organisation you would be scrolling forever, and deleting the wrong thing would be easy. Azure gives you **resource groups**: folders that keep related things together.
+
+</Story>
+
+## Explain it like I'm 10
+
+<Eli10>
+
+Think of your **school bag**. Each pencil, book and lunchbox is a "resource". Your bag is the "resource group" that keeps them together. When school ends, you pick up the whole bag, not each pencil separately.
+
+</Eli10>
+
+## The technical explanation
+
+A **resource** is a manageable item in Azure: virtual machines, storage accounts, web apps, databases, virtual networks and so on. Every resource lives in a **resource group**, a logical container managed through Azure Resource Manager.
+
+| Rule | What it means |
+| --- | --- |
+| One group per resource | A resource belongs to exactly one resource group (it can be moved) |
+| No nesting | You cannot put a resource group inside another |
+| Mixed regions | Resources can be in different regions from the group |
+| Delete together | Deleting a group deletes everything in it |
+| Inheritance | RBAC permissions and Azure Policy on a group apply to its resources |
+
+<TryIt labs="first-resource-group,vm-and-cost" text="Create a resource group, put a virtual machine in it, then delete the whole group to remove everything at once." />
+
+## Real-world business scenario
+
+<Scenario
+  company="An online shop"
+  industry="E-commerce"
+  problem="All resources for production, testing and experiments were in one big group. Someone deleted a test database that was actually production."
+  service="Split into rg-shop-prod, rg-shop-test and rg-experiments, with tighter permissions on production."
+  why="Grouping by lifecycle and environment makes access control and clean-up safe and simple."
+  outcome="Testers can delete freely in test groups, and production is protected."
+/>
+
+## When to use it and when not to
+
+<UseWhen
+  use={[
+    'Group resources that share a lifecycle, for example one app in one environment.',
+    'Apply permissions and policies once at the group level.',
+  ]}
+  avoid={[
+    'Putting everything in one giant resource group.',
+    'Mixing production and test resources in the same group.',
+  ]}
+/>

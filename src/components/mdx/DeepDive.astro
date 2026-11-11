@@ -1,0 +1,13 @@
+---
+/** Optional depth for experienced engineers. Collapsed so beginners are not overwhelmed. */
+interface Props { title?: string }
+const { title = 'Going deeper (for experienced engineers)' } = Astro.props;
+---
+<details class="fold card p-0">
+  <summary class="flex items-center gap-3 px-5 py-4 font-semibold">
+    <span class="chip">Architect level</span>
+    <span class="min-w-0 flex-1">{title}</span>
+    <span class="fold-icon text-muted" aria-hidden="true">▶</span>
+  </summary>
+  <div class="space-y-3 border-t border-default px-5 py-4 leading-relaxed"><slot /></div>
+</details>

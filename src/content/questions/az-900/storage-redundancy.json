@@ -1,0 +1,92 @@
+{
+ "cert": "az-900",
+ "domain": 2,
+ "topic": "storage-redundancy",
+ "questions": [
+  {
+   "id": "t-rd-1",
+   "type": "single",
+   "question": "Which redundancy option keeps three copies in a single datacenter?",
+   "options": [
+    {
+     "text": "LRS",
+     "why": "Correct."
+    },
+    {
+     "text": "ZRS",
+     "why": "Across zones."
+    },
+    {
+     "text": "GRS",
+     "why": "Adds a secondary region."
+    },
+    {
+     "text": "GZRS",
+     "why": "Zones plus secondary region."
+    }
+   ],
+   "answer": [
+    0
+   ],
+   "explanation": "LRS is the lowest-cost option.",
+   "objective": "2.3.3"
+  },
+  {
+   "id": "t-rd-2",
+   "type": "single",
+   "question": "Data must survive a datacenter failure but stay within one region. Which option?",
+   "options": [
+    {
+     "text": "ZRS",
+     "why": "Correct."
+    },
+    {
+     "text": "LRS",
+     "why": "One datacenter only."
+    },
+    {
+     "text": "GRS",
+     "why": "Uses a second region."
+    },
+    {
+     "text": "Archive tier",
+     "why": "A tier, not redundancy."
+    }
+   ],
+   "answer": [
+    0
+   ],
+   "explanation": "ZRS spreads copies across availability zones.",
+   "objective": "2.3.3"
+  },
+  {
+   "id": "t-rd-3",
+   "type": "multi",
+   "question": "Which TWO options copy data to a secondary region?",
+   "options": [
+    {
+     "text": "GRS",
+     "why": "Correct."
+    },
+    {
+     "text": "LRS",
+     "why": "Single datacenter."
+    },
+    {
+     "text": "GZRS",
+     "why": "Correct."
+    },
+    {
+     "text": "ZRS",
+     "why": "Single region."
+    }
+   ],
+   "answer": [
+    0,
+    2
+   ],
+   "explanation": "GRS and GZRS (and RA- variants) replicate to a secondary region.",
+   "objective": "2.3.3"
+  }
+ ]
+}

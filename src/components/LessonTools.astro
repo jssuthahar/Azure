@@ -1,0 +1,153 @@
+---
+/**
+ * Lesson toolbar: Beginner/Full view switch and "Listen" (Nimbus reads the
+ * visible lesson aloud, paragraph by paragraph, highlighting as it goes).
+ */
+import Mascot from './Mascot.astro';
+---
+<div class="lesson-tools mt-5 flex flex-wrap items-center gap-3">
+  <div class="view-switch inline-flex rounded-full border border-default bg-[var(--pastel-grey)] p-1 text-sm font-semibold" role="group" aria-label="How much detail">
+    <button type="button" data-view-btn="simple" class="rounded-full px-4 py-1.5">🧒 Beginner view</button>
+    <button type="button" data-view-btn="full" class="rounded-full px-4 py-1.5">🎓 Full lesson</button>
+  </div>
+  <button type="button" id="listen-btn" class="voice-only inline-flex items-center gap-2 rounded-full bg-[#ffd75e] px-4 py-2 text-sm font-bold text-[#0b1020] hover:bg-[#ffcd2e]">
+    <span aria-hidden="true">🔊</span> <span id="listen-label">Listen to this lesson</span>
+  </button>
+  <label class="voice-only flex items-center gap-1.5 text-sm text-muted">Speed
+    <select id="listen-rate" class="rounded-md border border-default bg-[var(--bg)] px-1.5 py-1">
+      <option value="0.8">Slow</option>
+      <option value="1">Normal</option>
+      <option value="1.2">Fast</option>
+    </select>
+  </label>
+</div>
+
+<div id="reader" class="fixed bottom-4 left-4 z-[140] hidden items-center gap-3 rounded-2xl border border-default bg-[var(--card)] py-2 pr-3 pl-2 shadow-xl" role="region" aria-label="Lesson reader">
+  <div class="reader-nimbus"><Mascot size={48} mood="cheer" /></div>
+  <div class="min-w-0">
+    <p class="text-sm font-semibold">Nimbus is reading…</p>
+    <p id="reader-pos" class="text-xs text-muted"></p>
+  </div>
+  <button type="button" id="reader-pause" class="rounded-full bg-[#0078d4] px-3 py-1.5 text-sm font-semibold text-white">⏸ Pause</button>
+  <button type="button" id="reader-stop" class="rounded-full border border-default px-3 py-1.5 text-sm font-semibold" aria-label="Stop reading">⏹</button>
+</div>
+
+<style is:global>
+  [data-view='simple'] [data-view-btn='simple'],
+  [data-view='full'] [data-view-btn='full'] {
+    background: #0078d4;
+    color: #fff;
+  }
+  .no-voice .voice-only,
+  .no-voice .speak-btn {
+    display: none !important;
+  }
+  .reading {
+    background: var(--pastel-yellow);
+    border-radius: 0.35rem;
+    box-shadow: 0 0 0 6px var(--pastel-yellow);
+    transition: background 0.2s;
+  }
+  .reader-nimbus {
+    animation: nimbus-talk 0.9s ease-in-out infinite;
+  }
+  @keyframes nimbus-talk {
+    50% {
+      transform: translateY(-3px) rotate(-3deg);
+    }
+  }
+</style>
+
+<script>
+  import { canSpeak, speak, stopSpeaking, readableText, getRate, setRate } from '../lib/speech';
+
+  /* ---------- Beginner / Full view ---------- */
+  const setView = (v: string) => {
+    document.documentElement.dataset.view = v;
+    try {
+      localStorage.setItem('lesson-view', v);
+    } catch {}
+  };
+  document.querySelectorAll<HTMLButtonElement>('[data-view-btn]').forEach((b) =>
+    b.addEventListener('click', () => {
+      setView(b.dataset.viewBtn!);
+      stop();
+    }),
+  );
+  document.querySelectorAll<HTMLElement>('[data-go-full]').forEach((b) =>
+    b.addEventListener('click', () => {
+      setView('full');
+      document.getElementById(b.dataset.goFull!)?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }),
+  );
+
+  /* ---------- Listen ---------- */
+  const reader = document.getElementById('reader')!;
+  const label = document.getElementById('listen-label')!;
+  const pauseBtn = document.getElementById('reader-pause')!;
+  const rate = document.getElementById('listen-rate') as HTMLSelectElement;
+  rate.value = String(getRate());
+  rate.addEventListener('change', () => setRate(Number(rate.value)));
+
+  let playing = false;
+  let paused = false;
+  let runId = 0;
+
+  const blocks = () => {
+    const root = document.querySelector('article');
+    if (!root) return [];
+    const sel = 'h1, .answer-box p, .lesson h2, .lesson h3, .lesson p, .lesson li, .lesson dd';
+    return [...root.querySelectorAll<HTMLElement>(sel)].filter((el) => {
+      if (el.offsetParent === null) return false; // hidden (e.g. full-only in Beginner view, closed details)
+      if (el.closest('.opt, figure svg, .kc, .exercise-box, details:not([open]), nav, .lesson-tools, table')) return false;
+      if (el.matches('li') && el.querySelector('p')) return false; // read the inner <p> instead
+      return readableText(el).length > 1;
+    });
+  };
+
+  const clearMark = () => document.querySelectorAll('.reading').forEach((e) => e.classList.remove('reading'));
+
+  async function play() {
+    const id = ++runId;
+    const list = blocks();
+    playing = true;
+    paused = false;
+    reader.classList.remove('hidden');
+    reader.classList.add('flex');
+    label.textContent = 'Stop listening';
+    pauseBtn.textContent = '⏸ Pause';
+    for (let i = 0; i < list.length; i++) {
+      if (id !== runId) return;
+      const el = list[i];
+      clearMark();
+      el.classList.add('reading');
+      el.scrollIntoView({ block: 'center', behavior: 'smooth' });
+      document.getElementById('reader-pos')!.textContent = `Part ${i + 1} of ${list.length}`;
+      await speak(readableText(el), Number(rate.value));
+      while (paused && id === runId) await new Promise((r) => setTimeout(r, 200));
+    }
+    if (id === runId) stop();
+  }
+  function stop() {
+    runId++;
+    playing = false;
+    paused = false;
+    stopSpeaking();
+    clearMark();
+    reader.classList.add('hidden');
+    reader.classList.remove('flex');
+    label.textContent = 'Listen to this lesson';
+  }
+  document.getElementById('listen-btn')!.addEventListener('click', () => (playing ? stop() : play()));
+  document.getElementById('reader-stop')!.addEventListener('click', stop);
+  pauseBtn.addEventListener('click', () => {
+    if (!playing) return;
+    paused = !paused;
+    if (paused) speechSynthesis.pause();
+    else speechSynthesis.resume();
+    pauseBtn.textContent = paused ? '▶ Resume' : '⏸ Pause';
+  });
+  window.addEventListener('speech-stop-all', () => playing && stop());
+  window.addEventListener('beforeunload', () => stopSpeaking());
+  if (!canSpeak()) document.documentElement.classList.add('no-voice');
+</script>

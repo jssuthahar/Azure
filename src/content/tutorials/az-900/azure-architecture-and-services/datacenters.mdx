@@ -1,0 +1,119 @@
+---
+title: Azure Datacenters
+seoTitle: Azure Datacenters Explained for Beginners | AZ-900
+description: What Azure datacenters are, how they relate to availability zones and regions, how Microsoft secures them, with interview questions and AZ-900 practice.
+answer: >-
+  **Azure datacenters** are the physical buildings around the world that house the servers, storage and networking equipment running Azure. You never pick an individual datacenter. Datacenters are grouped into **availability zones**, and zones are grouped into **regions**, which is the level you choose.
+updated: 2026-11-11
+readingMinutes: 5
+keyTerms:
+  - term: Datacenter
+    definition: A secure building with racks of servers, power, cooling and networking.
+  - term: Rack
+    definition: A frame holding many servers and network switches inside a datacenter.
+  - term: Physical security
+    definition: Controls such as fences, guards, cameras and multi-step access checks that protect the building and hardware.
+interview:
+  - level: beginner
+    q: What is an Azure datacenter, and can you choose one?
+    a: >-
+      It is a physical building full of servers, storage and network equipment that run Azure. I cannot choose a specific datacenter. I choose a region, and optionally an availability zone, and Azure places my resources in a datacenter there.
+    followUps: []
+  - level: intermediate
+    q: How do datacenters, availability zones and regions relate?
+    a: >-
+      Datacenters are the physical buildings. One or more datacenters with independent power, cooling and networking form an availability zone. Several zones, or one or more datacenters in regions without zones, form a region.
+    followUps: []
+  - level: experienced
+    q: Who is responsible for datacenter security in Azure, and how would you prove it to an auditor?
+    a: >-
+      Microsoft is always responsible for physical datacenter security under the shared responsibility model. For evidence I would use the Microsoft Service Trust Portal, which provides third-party audit reports such as ISO 27001 and SOC reports, rather than trying to inspect the facilities myself.
+    followUps: []
+revision:
+  keyPoints:
+    - Datacenters are the physical buildings that run Azure.
+    - Datacenter → availability zone → region.
+    - Customers choose regions (and zones), never individual datacenters.
+    - Microsoft is always responsible for physical datacenter security.
+  mistakes:
+    - Thinking you can pick a specific datacenter for your resources.
+  examTips:
+    - '"Physical security of the building" is always **Microsoft''s** responsibility.'
+  quick:
+    - q: Can you choose an individual Azure datacenter?
+      a: No. You choose a region and optionally an availability zone.
+    - q: What do one or more datacenters with independent power, cooling and networking form?
+      a: An availability zone.
+    - q: Who secures Azure datacenters?
+      a: Microsoft.
+    - q: Where can you find Azure compliance audit reports?
+      a: The Microsoft Service Trust Portal.
+    - q: What is in a datacenter?
+      a: Servers, storage, networking equipment, power and cooling systems.
+references:
+  - title: Azure global infrastructure
+    url: https://azure.microsoft.com/en-us/explore/global-infrastructure/
+  - title: Azure facilities, premises and physical security
+    url: https://learn.microsoft.com/en-us/azure/security/fundamentals/physical-security
+related:
+  - availability-zones
+  - regions-and-region-pairs
+  - shared-responsibility-model
+---
+
+## Start with a question
+
+<Story question="Where does “the cloud” actually live?">
+
+It is not in the sky. The cloud lives in enormous, highly secure buildings full of servers, humming day and night. These are **datacenters**.
+
+</Story>
+
+## Explain it like I'm 10
+
+<Eli10>
+
+Imagine a giant warehouse filled with thousands of fridges, except they are computers. It has its own power plant, giant air conditioners and security guards at every door.
+
+That warehouse is a datacenter. Microsoft has lots of them, and you rent a tiny piece of them whenever you use Azure.
+
+</Eli10>
+
+## The technical explanation
+
+Azure datacenters are facilities containing racks of servers, storage systems and network equipment, with dedicated power, cooling and networking. Microsoft builds and operates them, and they are protected by layered physical security: perimeter fences, security staff, cameras, biometric access controls and strict processes for destroying old disks.
+
+<Flow
+  caption="How the physical building blocks fit together"
+  steps={[
+    { title: 'Datacenter', text: 'A physical building with servers, power and cooling.' },
+    { title: 'Availability zone', text: 'One or more datacenters with independent power, cooling and networking.' },
+    { title: 'Region', text: 'A geographic area with one or more datacenters, often three or more zones.' },
+    { title: 'Geography', text: 'A market such as Europe or the US, containing regions.' },
+  ]}
+/>
+
+You do **not** choose a datacenter directly. You choose a **region**, and for zonal services an **availability zone**. Azure decides which datacenter and server your resource runs on.
+
+## Real-world business scenario
+
+<Scenario
+  company="A hospital group"
+  industry="Healthcare"
+  problem="Auditors asked how patient data was physically protected after the hospital moved to Azure."
+  service="Used the Microsoft Service Trust Portal to download independent audit reports covering Azure datacenter security."
+  why="Physical security is Microsoft's responsibility, so evidence comes from Microsoft's certified audits."
+  outcome="The audit passed using Microsoft's reports for the physical layer and the hospital's own evidence for data and access controls."
+/>
+
+## When to use it and when not to
+
+<UseWhen
+  use={[
+    'Think about datacenters when explaining how zones and regions work.',
+    'Rely on Microsoft compliance reports for physical security evidence.',
+  ]}
+  avoid={[
+    'Designing as if you could place resources in a particular building. Design with zones and regions instead.',
+  ]}
+/>

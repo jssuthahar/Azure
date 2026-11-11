@@ -1,0 +1,207 @@
+{
+  "cert": "az-900",
+  "domain": 2,
+  "questions": [
+    {
+      "id": "d2-st-1",
+      "type": "single",
+      "question": "Which Azure Storage service is designed for storing massive amounts of unstructured data, such as images, videos and backups?",
+      "options": [
+        { "text": "Azure Blob Storage", "why": "Correct." },
+        { "text": "Azure Queue Storage", "why": "Queues store messages." },
+        { "text": "Azure Table Storage", "why": "Tables store structured NoSQL key/attribute data." },
+        { "text": "Azure Files", "why": "Files provides SMB/NFS file shares." }
+      ],
+      "answer": [0],
+      "explanation": "Blob Storage is object storage for unstructured data.",
+      "objective": "2.3.1"
+    },
+    {
+      "id": "d2-st-2",
+      "type": "single",
+      "scenario": "A company wants to replace an on-premises file server with fully managed file shares that Windows clients can mount using SMB.",
+      "question": "Which service should it use?",
+      "options": [
+        { "text": "Azure Files", "why": "Correct." },
+        { "text": "Azure Blob Storage archive tier", "why": "Archive is offline storage, not a mountable share." },
+        { "text": "Azure Queue Storage", "why": "Queues hold messages." },
+        { "text": "Azure Cosmos DB", "why": "Cosmos DB is a database." }
+      ],
+      "answer": [0],
+      "explanation": "Azure Files offers managed file shares accessible over SMB and NFS.",
+      "objective": "2.3.1"
+    },
+    {
+      "id": "d2-st-3",
+      "type": "single",
+      "question": "Which Azure Storage service stores large numbers of messages so application components can communicate asynchronously?",
+      "options": [
+        { "text": "Azure Queue Storage", "why": "Correct." },
+        { "text": "Azure Disk Storage", "why": "Disks are block storage for VMs." },
+        { "text": "Azure Files", "why": "Files are shares." },
+        { "text": "Azure Table Storage", "why": "Tables store structured data." }
+      ],
+      "answer": [0],
+      "explanation": "Queue Storage decouples components with messages.",
+      "objective": "2.3.1"
+    },
+    {
+      "id": "d2-st-4",
+      "type": "single",
+      "question": "Which blob access tier is the cheapest for storage but keeps data offline and requires rehydration, which can take hours, before it can be read?",
+      "options": [
+        { "text": "Archive", "why": "Correct." },
+        { "text": "Hot", "why": "Hot is for frequently accessed data and is online." },
+        { "text": "Cool", "why": "Cool is online, for infrequently accessed data." },
+        { "text": "Cold", "why": "Cold is online, for rarely accessed data." }
+      ],
+      "answer": [0],
+      "explanation": "Archive has the lowest storage cost and highest access cost and latency. Data must be rehydrated first.",
+      "objective": "2.3.2"
+    },
+    {
+      "id": "d2-st-5",
+      "type": "single",
+      "scenario": "Log files are accessed frequently for the first week, then rarely but must still be readable immediately for audit requests within 60 days.",
+      "question": "After the first week, which tier is the most appropriate?",
+      "options": [
+        { "text": "Cool", "why": "Correct. It is online with lower storage cost for infrequently accessed data kept at least 30 days." },
+        { "text": "Archive", "why": "Archive data is not immediately readable." },
+        { "text": "Hot", "why": "Hot has higher storage cost for infrequent access." },
+        { "text": "Premium SSD managed disk", "why": "That is VM disk storage, not a blob tier." }
+      ],
+      "answer": [0],
+      "explanation": "Cool suits infrequently accessed data that must remain online. Lifecycle management can move blobs automatically.",
+      "objective": "2.3.2"
+    },
+    {
+      "id": "d2-st-6",
+      "type": "single",
+      "question": "Which redundancy option keeps three copies of your data within a single datacenter in the primary region?",
+      "options": [
+        { "text": "Locally redundant storage (LRS)", "why": "Correct." },
+        { "text": "Zone-redundant storage (ZRS)", "why": "ZRS spreads copies across three availability zones." },
+        { "text": "Geo-redundant storage (GRS)", "why": "GRS also copies to a secondary region." },
+        { "text": "Geo-zone-redundant storage (GZRS)", "why": "GZRS uses zones plus a secondary region." }
+      ],
+      "answer": [0],
+      "explanation": "LRS is the cheapest option and protects against drive and rack failures, not a datacenter disaster.",
+      "objective": "2.3.3"
+    },
+    {
+      "id": "d2-st-7",
+      "type": "single",
+      "scenario": "Data must survive the loss of an entire datacenter AND a full regional outage, and the primary copies should be spread across availability zones.",
+      "question": "Which redundancy option should you choose?",
+      "options": [
+        { "text": "GZRS", "why": "Correct. Zone redundancy in the primary region plus geo-replication." },
+        { "text": "LRS", "why": "LRS stays in one datacenter." },
+        { "text": "ZRS", "why": "ZRS does not protect against a regional outage." },
+        { "text": "GRS", "why": "GRS uses LRS in the primary region, not zones." }
+      ],
+      "answer": [0],
+      "explanation": "GZRS = ZRS in the primary region + LRS in the secondary region.",
+      "objective": "2.3.3"
+    },
+    {
+      "id": "d2-st-8",
+      "type": "single",
+      "question": "What do RA-GRS and RA-GZRS add compared with GRS and GZRS?",
+      "options": [
+        { "text": "Read access to the data in the secondary region at any time", "why": "Correct." },
+        { "text": "Write access in both regions at the same time", "why": "Writes go to the primary region." },
+        { "text": "Lower cost than LRS", "why": "Read-access geo options cost more." },
+        { "text": "Automatic tiering to archive", "why": "Unrelated to redundancy." }
+      ],
+      "answer": [0],
+      "explanation": "Read-access geo-redundancy lets applications read from the secondary endpoint even before a failover.",
+      "objective": "2.3.3"
+    },
+    {
+      "id": "d2-st-9",
+      "type": "single",
+      "question": "Which statement about storage account names is true?",
+      "options": [
+        { "text": "They must be globally unique across Azure", "why": "Correct. The name forms part of the public endpoint URL." },
+        { "text": "They must be unique only within a resource group", "why": "Uniqueness is global." },
+        { "text": "They can contain uppercase letters and spaces", "why": "Only lowercase letters and numbers, 3–24 characters." },
+        { "text": "They are generated randomly and cannot be chosen", "why": "You choose the name." }
+      ],
+      "answer": [0],
+      "explanation": "Storage account names are 3–24 lowercase letters and numbers and must be unique across Azure.",
+      "objective": "2.3.4"
+    },
+    {
+      "id": "d2-st-10",
+      "type": "single",
+      "question": "Which storage account type is recommended for most scenarios and supports blobs, files, queues and tables?",
+      "options": [
+        { "text": "Standard general-purpose v2", "why": "Correct." },
+        { "text": "Premium block blobs", "why": "Premium block blobs supports only block and append blobs." },
+        { "text": "Premium file shares", "why": "This supports only file shares." },
+        { "text": "Premium page blobs", "why": "This supports only page blobs." }
+      ],
+      "answer": [0],
+      "explanation": "Standard general-purpose v2 is the default choice for most workloads.",
+      "objective": "2.3.4"
+    },
+    {
+      "id": "d2-st-11",
+      "type": "single",
+      "question": "Which command-line utility copies blobs or files to or from a storage account?",
+      "options": [
+        { "text": "AzCopy", "why": "Correct." },
+        { "text": "Azure File Sync", "why": "File Sync synchronises Windows Server with Azure Files." },
+        { "text": "Azure Data Box", "why": "Data Box is a physical transfer device." },
+        { "text": "Azure Advisor", "why": "Advisor gives recommendations." }
+      ],
+      "answer": [0],
+      "explanation": "AzCopy is a command-line tool for copying data to and from Azure Storage.",
+      "objective": "2.3.5"
+    },
+    {
+      "id": "d2-st-12",
+      "type": "single",
+      "scenario": "A branch office wants to keep its Windows file server but cache frequently used files locally while storing everything centrally in Azure Files.",
+      "question": "Which service fits?",
+      "options": [
+        { "text": "Azure File Sync", "why": "Correct. It syncs Windows Server with Azure Files and supports cloud tiering." },
+        { "text": "AzCopy", "why": "AzCopy copies data but does not continuously sync with caching." },
+        { "text": "Azure Storage Explorer", "why": "Storage Explorer is a GUI management tool." },
+        { "text": "Azure Migrate", "why": "Migrate assesses and migrates workloads." }
+      ],
+      "answer": [0],
+      "explanation": "Azure File Sync turns Windows Server into a fast cache of an Azure file share.",
+      "objective": "2.3.5"
+    },
+    {
+      "id": "d2-st-13",
+      "type": "single",
+      "scenario": "A company must move 200 TB of data to Azure, but its internet connection would take months to upload it.",
+      "question": "What should it use?",
+      "options": [
+        { "text": "Azure Data Box", "why": "Correct. A physical device is shipped, loaded and returned to Microsoft." },
+        { "text": "Azure DNS", "why": "Unrelated." },
+        { "text": "Point-to-site VPN", "why": "Still limited by the same internet connection." },
+        { "text": "Azure Storage Explorer", "why": "It transfers over the network." }
+      ],
+      "answer": [0],
+      "explanation": "Data Box moves large data sets offline when network transfer is impractical.",
+      "objective": "2.3.6"
+    },
+    {
+      "id": "d2-st-14",
+      "type": "single",
+      "question": "Which service provides a central hub to discover, assess and migrate on-premises servers, databases and web apps to Azure?",
+      "options": [
+        { "text": "Azure Migrate", "why": "Correct." },
+        { "text": "Azure Data Box", "why": "Data Box transfers data offline." },
+        { "text": "Azure Arc", "why": "Arc manages resources outside Azure; it is not a migration hub." },
+        { "text": "Microsoft Purview", "why": "Purview governs data." }
+      ],
+      "answer": [0],
+      "explanation": "Azure Migrate unifies discovery, assessment and migration tools.",
+      "objective": "2.3.6"
+    }
+  ]
+}

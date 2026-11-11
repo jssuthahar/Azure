@@ -1,0 +1,109 @@
+---
+title: Azure Resource Manager and ARM Templates
+seoTitle: Azure Resource Manager (ARM) and ARM Templates | AZ-900
+description: "Azure Resource Manager and ARM templates explained: the deployment and management layer for every Azure request, its benefits and declarative JSON templates."
+answer: >-
+  **Azure Resource Manager (ARM)** is the deployment and management service for Azure. Every request, from the portal, CLI, PowerShell, SDKs or templates, goes through ARM, which authenticates and authorises it and then creates, updates or deletes resources. **ARM templates** are declarative **JSON** files that describe the resources to deploy. Bicep is a simpler language that compiles to ARM templates.
+updated: 2026-11-11
+readingMinutes: 6
+keyTerms:
+  - term: Azure Resource Manager
+    definition: The deployment and management layer that processes every Azure management request.
+  - term: ARM template
+    definition: A declarative JSON file that defines Azure resources and their configuration.
+  - term: Idempotent
+    definition: Deploying the same template many times gives the same result.
+interview:
+  - level: beginner
+    q: What is Azure Resource Manager?
+    a: >-
+      The layer that handles every request to create, change or delete Azure resources, whichever tool I use. It checks who I am and whether I'm allowed, then makes the change.
+    followUps: []
+  - level: intermediate
+    q: What are the benefits of Azure Resource Manager?
+    a: >-
+      Manage infrastructure with declarative templates; deploy, manage and monitor resources as a group; redeploy consistently; define dependencies so resources deploy in the right order; apply access control through RBAC; apply tags; and see costs by tag.
+    followUps: []
+  - level: experienced
+    q: ARM templates or Bicep for new projects?
+    a: >-
+      Bicep. It has the same capabilities as ARM templates (it compiles to them) but with cleaner syntax, modules, type safety and better tooling. Existing ARM JSON can be decompiled into Bicep.
+    followUps: []
+revision:
+  keyPoints:
+    - ARM processes every Azure management request.
+    - Provides consistent authentication, RBAC, policy and tagging.
+    - ARM templates = declarative JSON.
+    - Templates are idempotent and handle dependencies.
+    - Bicep compiles to ARM templates.
+  mistakes:
+    - Thinking the portal and CLI use different back ends. They both use ARM.
+  examTips:
+    - '"Deployment and management service for Azure" = **Azure Resource Manager**.'
+    - '"Declarative JSON template" = **ARM template**.'
+  quick:
+    - q: Which service processes all Azure management requests?
+      a: Azure Resource Manager.
+    - q: In what format are ARM templates written?
+      a: JSON.
+    - q: Are ARM templates declarative or imperative?
+      a: Declarative.
+    - q: What does idempotent mean?
+      a: Deploying the same template repeatedly gives the same result.
+    - q: Which language compiles to ARM templates?
+      a: Bicep.
+references:
+  - title: What is Azure Resource Manager?
+    url: https://learn.microsoft.com/en-us/azure/azure-resource-manager/management/overview
+  - title: ARM template overview
+    url: https://learn.microsoft.com/en-us/azure/azure-resource-manager/templates/overview
+related:
+  - infrastructure-as-code
+  - management-hierarchy
+  - cloud-shell-cli-powershell
+---
+
+## Start with a question
+
+<Story question="You click Create in the portal and a teammate runs az vm create. Who actually builds the VM?">
+
+**Azure Resource Manager** builds both. Every tool talks to the same front door.
+
+</Story>
+
+## Explain it like I'm 10
+
+<Eli10>
+
+ARM is the **head chef** in a restaurant. Whether you order from the waiter (portal), the app (CLI) or a written note (template), every order goes to the same chef, who checks it and cooks it the same way.
+
+</Eli10>
+
+## The technical explanation
+
+<Flow
+  caption="Every request goes through Azure Resource Manager"
+  steps={[
+    { title: 'Tools', text: 'Portal, Azure CLI, Azure PowerShell, SDKs, REST, templates.' },
+    { title: 'Azure Resource Manager', text: 'Authenticates (Entra ID), authorises (RBAC), checks Azure Policy.' },
+    { title: 'Resource providers', text: 'Microsoft.Compute, Microsoft.Storage, Microsoft.Network…' },
+    { title: 'Resources', text: 'Created, updated or deleted consistently.' },
+  ]}
+/>
+
+<TryIt labs="sandbox" text="The simulator works like ARM: create a VM in the portal or with az vm create, and both appear in the same place." />
+
+## Real-world business scenario
+
+<Scenario
+  company="A SaaS start-up"
+  industry="Enterprise"
+  problem="Environments were inconsistent because some resources were made in the portal and others by script."
+  service="ARM templates (later Bicep) for every environment, deployed by pipeline."
+  why="Declarative, idempotent templates processed by ARM give identical results."
+  outcome="Dev, test and production finally matched."
+/>
+
+## When to use it and when not to
+
+<UseWhen use={['Use templates for repeatable, reviewable deployments.']} avoid={['Hand-writing large ARM JSON for new projects (prefer Bicep).']} />

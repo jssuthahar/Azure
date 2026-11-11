@@ -1,0 +1,157 @@
+---
+title: Private Cloud
+seoTitle: What is Private Cloud? Definition and Examples | AZ-900
+description: "Private cloud explained: how it differs from on-premises and public cloud, when to choose it, interview questions and AZ-900 practice questions."
+answer: >-
+  A **private cloud** is cloud computing infrastructure used **exclusively by one organisation**. It offers cloud-style self-service, automation and scaling, but on dedicated hardware, usually in the organisation's own datacenter or hosted for it by a third party. You get maximum control and pay the full cost of owning and running it.
+updated: 2026-11-11
+readingMinutes: 7
+keyTerms:
+  - term: Private cloud
+    definition: Cloud infrastructure dedicated to a single organisation, on-premises or hosted by a third party.
+  - term: Single-tenant
+    definition: Infrastructure serving only one customer, the opposite of multi-tenant.
+  - term: Self-service portal
+    definition: A catalogue where internal teams request resources themselves, the "cloud-like" part of a private cloud.
+  - term: Azure Local
+    definition: Microsoft's solution (formerly Azure Stack HCI) for running virtualised workloads on validated hardware in your own location, managed through Azure.
+interview:
+  - level: beginner
+    q: What is a private cloud?
+    a: >-
+      A private cloud is cloud infrastructure that only one organisation uses. Its teams get cloud features like self-service and automation, but the hardware is dedicated to that organisation, often in its own datacenter.
+    followUps:
+      - q: So is every company server room a private cloud?
+        a: >-
+          No. A server room where people raise tickets and wait days for a VM is just traditional on-premises IT. It becomes a private cloud when it offers on-demand self-service, pooled resources, automation and usage metering.
+  - level: intermediate
+    q: Compare private and public cloud on cost and control.
+    a: >-
+      Private cloud gives maximum control over hardware, location and configuration, but the organisation pays up front (CapEx), maintains everything and has limited capacity. Public cloud has no up-front cost, near-unlimited scale and no hardware maintenance, but less physical control.
+    followUps: []
+  - level: experienced
+    q: Many private cloud projects disappoint. Why?
+    a: >-
+      Building the cloud experience is hard. Self-service portals, APIs, metering, automation and fast provisioning take serious engineering, and many projects end up as virtualisation with a ticket system. They also keep the fixed-capacity problem and the hardware refresh cycle. That is why many organisations now prefer hybrid, using public cloud for elastic workloads and cloud-managed on-premises platforms such as Azure Local with Azure Arc for what must stay local.
+    followUps: []
+  - level: scenario
+    q: A defence contractor must keep certain data in its own facility under its own staff's physical control, but wants developers to provision VMs on their own. What model fits?
+    a: >-
+      A private cloud for that sensitive workload, ideally one that is cloud-managed so developers get self-service and consistent tooling. Less sensitive workloads can still go to the public cloud, or a sovereign or government cloud, in a hybrid design.
+    followUps: []
+revision:
+  keyPoints:
+    - Private cloud = cloud capabilities on infrastructure dedicated to **one organisation**.
+    - Can be on-premises or hosted by a third party, but always single-tenant.
+    - Maximum control, privacy and customisation.
+    - Requires CapEx, in-house skills and maintenance; capacity is limited.
+    - Not every server room is a private cloud. Self-service and automation make the difference.
+  mistakes:
+    - Assuming private cloud must be in your own building. A third party can host it.
+    - Assuming private cloud scales like public cloud. It is limited by the hardware bought.
+  examTips:
+    - '"Single organisation", "complete control", "dedicated hardware" all point to **private cloud**.'
+    - The organisation is responsible for hardware maintenance in a private cloud.
+  quick:
+    - q: How many organisations use a private cloud's infrastructure?
+      a: One.
+    - q: Can a private cloud be hosted by a third party?
+      a: Yes, as long as the infrastructure is dedicated to that one organisation.
+    - q: Who maintains the hardware in a private cloud?
+      a: The organisation (or the hosting provider it pays), not shared with other customers.
+    - q: What is the main advantage of a private cloud?
+      a: Maximum control over infrastructure, security and location.
+    - q: What is the main disadvantage?
+      a: High cost (CapEx and operations) and limited scalability.
+references:
+  - title: Describe cloud computing - cloud models (Microsoft Learn)
+    url: https://learn.microsoft.com/en-us/training/modules/describe-cloud-compute/
+  - title: Azure Local overview
+    url: https://learn.microsoft.com/en-us/azure/azure-local/overview
+related:
+  - public-cloud
+  - hybrid-cloud
+  - on-premises-vs-cloud
+---
+
+## Start with a question
+
+<Story question="Why would a bank or a defence company pay more to have a cloud all to itself?">
+
+Shared bus networks are cheap and convenient, yet some people still buy a private car, or even an armoured one. They want to decide exactly who gets in, where it is parked and who services it.
+
+Some organisations feel the same about their computing. They want the **convenience of cloud** (click a button, get a server) without **sharing hardware** with anyone. That is a private cloud.
+
+</Story>
+
+## Explain it like I'm 10
+
+<Eli10>
+
+Remember the public swimming pool from the last lesson? A **private cloud is a swimming pool in your own back garden**. Only your family uses it. You decide the water temperature, the opening hours and who gets invited.
+
+But you had to pay to build it, you have to clean it, and if twenty friends come over at once it gets crowded, because you cannot just make the pool bigger on the spot.
+
+</Eli10>
+
+## The technical explanation
+
+A **private cloud** is a cloud deployment model where the infrastructure is **provisioned for exclusive use by a single organisation**. It can be:
+
+- **On-premises**: in the organisation's own datacenter, run by its own staff, or
+- **Hosted**: in a third-party datacenter, on hardware dedicated to that organisation.
+
+What makes it a *cloud*, not just a server room, is that it offers cloud characteristics to its internal users: **self-service provisioning**, **pooled and virtualised resources**, **automation** and often **usage metering and chargeback** to departments.
+
+| | Private cloud | Public cloud |
+| --- | --- | --- |
+| Tenancy | Single organisation | Many organisations (isolated) |
+| Up-front cost | High (hardware, software, facilities) | None |
+| Hardware maintenance | Organisation | Provider |
+| Scalability | Limited by purchased hardware | Near-unlimited |
+| Control | Maximum | Configuration-level |
+| Typical drivers | Strict compliance, data control, legacy integration | Agility, scale, cost |
+
+<Compare
+  caption="Three ways to run infrastructure"
+  columns={[
+    { title: 'Traditional on-premises', icon: '🗄️', tone: 'neutral', items: ['Dedicated hardware', 'Ticket-based requests', 'Manual provisioning (days or weeks)', 'No metering'] },
+    { title: 'Private cloud', icon: '🏠', tone: 'accent', items: ['Dedicated hardware', 'Self-service portal or API', 'Automated provisioning (minutes)', 'Usage metering and chargeback'] },
+    { title: 'Public cloud', icon: '☁️', tone: 'ok', items: ['Shared, provider-owned hardware', 'Self-service portal or API', 'Automated provisioning (minutes)', 'Pay-as-you-go billing'] },
+  ]}
+/>
+
+<Callout type="exam">
+AZ-900 tests your ability to match a scenario to a model. If the scenario says the organisation **must maintain its own hardware** or needs **complete control**, the answer is usually private cloud. If it says **no capital expenditure**, it is public cloud.
+</Callout>
+
+## Real-world business scenario
+
+<Scenario
+  company="A national healthcare provider"
+  industry="Healthcare"
+  problem="Patient records systems must stay in facilities the provider controls under a national regulation, yet internal teams were waiting weeks for each new server."
+  service="A private cloud built on Azure Local in its two datacenters, with a self-service catalogue for development teams, managed through the Azure portal with Azure Arc."
+  why="Data and hardware stay on-premises to satisfy regulation, while teams get cloud-style self-service and consistent Azure management."
+  outcome="VM delivery went from weeks to under an hour, and non-regulated analytics moved to the public cloud in a hybrid design."
+/>
+
+## When to use it and when not to
+
+<UseWhen
+  use={[
+    'Regulation or policy requires single-tenant infrastructure under your control.',
+    'You need deep customisation of hardware or network that public cloud does not offer.',
+    'Large, stable workloads where you can keep dedicated hardware busy.',
+  ]}
+  avoid={[
+    'Demand is variable or unpredictable. You would need to buy for the peak.',
+    'You lack the skills to build and run a true self-service platform.',
+    'The main motivation is "it feels safer" without a concrete requirement. Public cloud security is very strong when configured well.',
+  ]}
+  alternatives={[
+    '**Public cloud with isolation options**: Dedicated Hosts, confidential computing, private endpoints.',
+    '**Hybrid cloud**: private for what must stay, public for everything else.',
+    '**Sovereign or government clouds** for public-sector requirements.',
+  ]}
+/>

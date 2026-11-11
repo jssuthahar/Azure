@@ -1,0 +1,170 @@
+---
+title: Public Cloud
+seoTitle: What is Public Cloud? Definition and Use Cases | AZ-900
+description: The public cloud model explained simply, with multi-tenancy, benefits, trade-offs, real use cases, interview questions and AZ-900 practice questions.
+answer: >-
+  A **public cloud** is cloud infrastructure owned and operated by a third-party provider, such as Microsoft Azure, and offered to anyone over the internet. Many customers share the provider's hardware but are isolated from each other. There is no hardware to buy, you scale on demand, and you pay for what you use.
+updated: 2026-11-11
+readingMinutes: 7
+keyTerms:
+  - term: Public cloud
+    definition: Cloud services owned and run by a provider and available to any organisation or person over the internet.
+  - term: Multi-tenancy
+    definition: Many customers (tenants) share the same physical infrastructure while remaining logically isolated.
+  - term: Tenant
+    definition: A customer's isolated slice of a shared service, such as their own Microsoft Entra directory.
+  - term: Dedicated host
+    definition: An option to run your VMs on a physical server not shared with other customers, still inside the public cloud.
+interview:
+  - level: beginner
+    q: What is a public cloud? Give an example.
+    a: >-
+      A public cloud is computing infrastructure that a provider owns and runs, and that anyone can sign up to use over the internet. Microsoft Azure, AWS and Google Cloud are examples. You do not buy any hardware; you create resources when needed and pay for usage.
+    followUps:
+      - q: Does "public" mean my data is public?
+        a: >-
+          No. "Public" refers to who can become a customer, not who can see your data. Each customer's resources and data are isolated and protected by identity, encryption and network controls.
+  - level: intermediate
+    q: What are the main advantages and disadvantages of public cloud?
+    a: >-
+      Advantages are no capital expense, near-unlimited scale, a pay-as-you-go model, global reach, and no hardware maintenance. Disadvantages are less control over the physical infrastructure and its location, possible difficulty meeting very specific compliance requirements, dependency on the provider and on network connectivity, and costs that need active management.
+    followUps: []
+  - level: experienced
+    q: Security teams sometimes worry about "noisy neighbours" or side-channel attacks in multi-tenant clouds. How would you respond?
+    a: >-
+      Providers isolate tenants at the hypervisor, network and storage layers and publish their isolation design. For workloads with strict requirements, Azure offers Dedicated Hosts, isolated VM sizes and confidential computing with hardware-based trusted execution environments, which protect data while it is in use. Performance noisy-neighbour effects are managed with resource governance, and premium tiers come with defined performance targets. The real risks in practice are much more often misconfiguration and weak identity than cross-tenant attacks.
+    followUps: []
+  - level: scenario
+    q: A start-up with five people needs to launch an app next month and expects unpredictable growth. Which cloud model fits?
+    a: >-
+      The public cloud. No capital spending, resources in minutes, pay only for what they use, and the ability to scale with growth. A private cloud would require hardware and skills they do not have.
+    followUps: []
+revision:
+  keyPoints:
+    - Public cloud = provider-owned infrastructure available to anyone over the internet.
+    - Multi-tenant. Customers share hardware but are logically isolated.
+    - No CapEx, pay-as-you-go, rapid scaling, global reach.
+    - Less control over physical infrastructure; security is shared.
+    - Azure, AWS and Google Cloud are public clouds.
+  mistakes:
+    - Thinking "public" means data is publicly visible.
+    - Believing the public cloud has no options for dedicated or isolated hardware.
+  examTips:
+    - '"No capital expenditure" + "no hardware to maintain" + "available to anyone" = public cloud.'
+    - Know a typical use case for each model. Public cloud suits new apps, variable demand and start-ups.
+  quick:
+    - q: Who owns the infrastructure in a public cloud?
+      a: The cloud provider.
+    - q: What is multi-tenancy?
+      a: Many customers sharing the same infrastructure while being isolated from each other.
+    - q: Does public cloud require up-front hardware purchases?
+      a: No.
+    - q: Name one disadvantage of public cloud.
+      a: Less physical control and possible difficulty meeting some very specific compliance requirements.
+    - q: Give an example of a public cloud provider.
+      a: Microsoft Azure (also AWS, Google Cloud).
+references:
+  - title: Define cloud models (Microsoft Learn)
+    url: https://learn.microsoft.com/en-us/training/modules/describe-cloud-compute/
+  - title: Isolation in the Azure public cloud
+    url: https://learn.microsoft.com/en-us/azure/security/fundamentals/isolation-choices
+related:
+  - private-cloud
+  - hybrid-cloud
+  - on-premises-vs-cloud
+---
+
+## Start with a question
+
+<Story question="Why does everyone in a city share one bus network instead of each family running its own bus?">
+
+A bus network is expensive to build and run, but when thousands of people share it, each ride costs very little. You do not own the bus, but you can get on whenever you need to.
+
+**The public cloud works the same way.** Microsoft builds enormous datacenters. Millions of customers share them, and each pays only for the "rides" they take.
+
+</Story>
+
+## Explain it like I'm 10
+
+<Eli10>
+
+Think of a **public swimming pool**. Anyone can go. You do not have to build a pool, fill it, clean it or hire lifeguards, because the pool company does all that. You pay for entry and swim.
+
+Lots of people use the same pool, but you each have your own locker with your own lock. In the public cloud, everyone shares the same giant computers, but **your stuff is locked in your own locker** and nobody else can open it.
+
+</Eli10>
+
+## The technical explanation
+
+A **public cloud** is a deployment model in which a cloud provider owns, operates and maintains the infrastructure and makes services available to the general public over the internet. Microsoft Azure is a public cloud.
+
+The defining characteristic is **multi-tenancy**: the same physical servers, storage systems and network devices serve many customers (tenants). Isolation is enforced in software and hardware. Hypervisors separate virtual machines, virtual networks separate traffic, encryption protects data, and identity controls decide who can access what.
+
+| Advantage | Why it matters |
+| --- | --- |
+| No capital expenditure | Nothing to buy; start immediately |
+| Massive scale | Capacity is available when you need it |
+| Pay-as-you-go | Costs follow usage |
+| No hardware maintenance | The provider handles hardware, power, cooling and physical security |
+| Global reach | Deploy close to users in many regions |
+
+| Trade-off | What it means |
+| --- | --- |
+| Less physical control | You cannot choose the exact server or walk into the datacenter |
+| Specific compliance needs | Some requirements may be harder to meet (check region and certification options) |
+| Dependency | You rely on the provider and your connectivity |
+
+<Compare
+  caption="Public cloud: shared building, private rooms"
+  columns={[
+    { title: 'Shared by everyone', icon: '🏢', tone: 'neutral', items: ['Datacenter buildings', 'Physical servers and racks', 'Power, cooling, security guards', 'Global backbone network'] },
+    { title: 'Isolated per customer', icon: '🔐', tone: 'accent', items: ['Your virtual machines and data', 'Your virtual networks', 'Your identities and permissions', 'Your encryption keys (optionally)'] },
+  ]}
+/>
+
+<TryIt labs="first-resource-group" text="Create your own isolated space in a shared public cloud: start with a resource group." />
+
+<DeepDive title="Isolation options inside the public cloud">
+
+If a workload needs more isolation without leaving Azure:
+
+- **Azure Dedicated Host**: a physical server dedicated to your organisation, with your VMs only.
+- **Isolated VM sizes**: sizes that take a whole physical host.
+- **Confidential computing**: VMs and containers that use hardware-based trusted execution environments (for example AMD SEV-SNP or Intel TDX), so data stays encrypted even while in use, protected from the host operator.
+- **Private endpoints**: reach PaaS services over a private IP in your virtual network instead of a public endpoint.
+
+These options let regulated industries use the public cloud without moving to a private cloud.
+
+</DeepDive>
+
+## Real-world business scenario
+
+<Scenario
+  company="A mobile gaming studio"
+  industry="Gaming"
+  problem="A new game might have 1,000 players or 1,000,000 in launch week. Nobody can predict which."
+  service="Game servers on Azure Virtual Machine Scale Sets in several regions, player profiles in Azure Cosmos DB, leaderboards cached in Azure Managed Redis."
+  why="Only a public cloud gives instant, global capacity without buying hardware for a launch that might not take off."
+  outcome="The game scaled to millions of players in its first week, and the studio paid for small capacity during testing."
+/>
+
+## When to use it and when not to
+
+<UseWhen
+  use={[
+    'New applications and start-ups that need to move fast with no up-front cost.',
+    'Variable, seasonal or unpredictable workloads.',
+    'Global audiences that need low latency in many regions.',
+    'Dev and test environments that are created and deleted often.',
+  ]}
+  avoid={[
+    'You need full control of physical hardware or its exact location beyond what regions offer.',
+    'A regulation explicitly prohibits shared or third-party infrastructure.',
+    'Legacy systems that depend on specific on-premises hardware.',
+  ]}
+  alternatives={[
+    '**Private cloud** for maximum control and dedicated infrastructure.',
+    '**Hybrid cloud** to keep some systems on-premises while using the public cloud for others.',
+    '**Sovereign clouds** (for example Azure Government) for specific government requirements.',
+  ]}
+/>

@@ -1,0 +1,164 @@
+{
+  "cert": "az-900",
+  "domain": 3,
+  "questions": [
+    {
+      "id": "d3-cg-1",
+      "type": "multi",
+      "question": "Which TWO factors can affect the cost of Azure resources?",
+      "options": [
+        { "text": "The Azure region where the resource is deployed", "why": "Correct. Prices vary by region." },
+        { "text": "The name you give the resource", "why": "Names do not affect cost." },
+        { "text": "The amount of outbound data transfer (egress)", "why": "Correct. Egress is generally charged." },
+        { "text": "The colour theme of the Azure portal", "why": "Unrelated." }
+      ],
+      "answer": [0, 2],
+      "explanation": "Cost factors include resource type, consumption, maintenance, geography (region), network traffic, subscription type and Marketplace purchases.",
+      "objective": "3.1.1"
+    },
+    {
+      "id": "d3-cg-2",
+      "type": "single",
+      "scenario": "You delete an Azure VM but are still charged for storage each month.",
+      "question": "What is the most likely cause?",
+      "options": [
+        { "text": "The VM's managed disks were not deleted", "why": "Correct. Disks are separate resources and keep billing." },
+        { "text": "Azure charges a permanent fee for deleted VMs", "why": "No such fee exists." },
+        { "text": "Resource tags cost money", "why": "Tags are free." },
+        { "text": "The resource group itself has a monthly cost", "why": "Resource groups are free." }
+      ],
+      "answer": [0],
+      "explanation": "Orphaned disks, public IPs and snapshots continue to incur cost until deleted. Maintenance affects cost.",
+      "objective": "3.1.1"
+    },
+    {
+      "id": "d3-cg-3",
+      "type": "single",
+      "question": "Which tool lets you configure Azure services and see an estimate of their monthly cost before deploying anything?",
+      "options": [
+        { "text": "Azure pricing calculator", "why": "Correct." },
+        { "text": "Azure Service Health", "why": "Service Health reports service issues." },
+        { "text": "Azure Monitor", "why": "Monitor collects telemetry from running resources." },
+        { "text": "Azure Arc", "why": "Arc extends management." }
+      ],
+      "answer": [0],
+      "explanation": "The pricing calculator estimates costs for planned resources; it does not deploy anything.",
+      "objective": "3.1.2"
+    },
+    {
+      "id": "d3-cg-4",
+      "type": "multi",
+      "question": "Which TWO can you do with Microsoft Cost Management?",
+      "options": [
+        { "text": "Analyse spending with cost analysis views", "why": "Correct." },
+        { "text": "Create budgets with alerts", "why": "Correct." },
+        { "text": "Encrypt virtual machine disks", "why": "Unrelated." },
+        { "text": "Create virtual networks", "why": "Unrelated." }
+      ],
+      "answer": [0, 1],
+      "explanation": "Cost Management provides cost analysis, budgets, alerts, forecasts and recommendations.",
+      "objective": "3.1.3"
+    },
+    {
+      "id": "d3-cg-5",
+      "type": "single",
+      "scenario": "Finance needs to see Azure costs split by department and project across many resource groups.",
+      "question": "What should you apply to resources?",
+      "options": [
+        { "text": "Tags such as Department and Project", "why": "Correct. Tags let you filter and group costs." },
+        { "text": "Resource locks", "why": "Locks prevent changes; they do not categorise costs." },
+        { "text": "Availability zones", "why": "Zones are about resilience." },
+        { "text": "Private endpoints", "why": "Networking feature." }
+      ],
+      "answer": [0],
+      "explanation": "Tags are name-value metadata used for cost reporting, ownership and automation.",
+      "objective": "3.1.4"
+    },
+    {
+      "id": "d3-cg-6",
+      "type": "single",
+      "question": "Are tags applied to a resource group automatically inherited by the resources inside it?",
+      "options": [
+        { "text": "No, not by default. You can use Azure Policy to apply or inherit tags", "why": "Correct." },
+        { "text": "Yes, always", "why": "Tags do not inherit automatically." },
+        { "text": "Only for virtual machines", "why": "No resource type inherits tags by default." },
+        { "text": "Only in sovereign regions", "why": "Unrelated." }
+      ],
+      "answer": [0],
+      "explanation": "Resources do not inherit tags by default; Azure Policy can enforce or inherit them.",
+      "objective": "3.1.4"
+    },
+    {
+      "id": "d3-cg-7",
+      "type": "single",
+      "question": "Which service helps an organisation discover, classify and govern data across on-premises, multi-cloud and SaaS sources?",
+      "options": [
+        { "text": "Microsoft Purview", "why": "Correct." },
+        { "text": "Azure Advisor", "why": "Advisor gives resource recommendations." },
+        { "text": "Azure Virtual Desktop", "why": "Unrelated." },
+        { "text": "Azure Load Balancer", "why": "Unrelated." }
+      ],
+      "answer": [0],
+      "explanation": "Microsoft Purview provides unified data governance and risk and compliance solutions.",
+      "objective": "3.2.1"
+    },
+    {
+      "id": "d3-cg-8",
+      "type": "single",
+      "scenario": "All new storage accounts must use secure transfer (HTTPS). Non-compliant accounts must be blocked at creation.",
+      "question": "What should you use?",
+      "options": [
+        { "text": "An Azure Policy with a Deny effect", "why": "Correct." },
+        { "text": "A resource lock", "why": "Locks prevent deletion or changes; they do not validate settings." },
+        { "text": "A tag", "why": "Tags do not enforce settings." },
+        { "text": "Azure Service Health", "why": "Unrelated." }
+      ],
+      "answer": [0],
+      "explanation": "Azure Policy evaluates resource properties and can deny, audit or remediate non-compliance.",
+      "objective": "3.2.2"
+    },
+    {
+      "id": "d3-cg-9",
+      "type": "single",
+      "question": "What is an Azure Policy initiative?",
+      "options": [
+        { "text": "A group of related policy definitions assigned together", "why": "Correct." },
+        { "text": "A type of virtual machine", "why": "Unrelated." },
+        { "text": "A cost budget", "why": "Budgets are in Cost Management." },
+        { "text": "A support plan", "why": "Unrelated." }
+      ],
+      "answer": [0],
+      "explanation": "Initiatives bundle policies to achieve a larger goal, such as a regulatory compliance standard.",
+      "objective": "3.2.2"
+    },
+    {
+      "id": "d3-cg-10",
+      "type": "single",
+      "scenario": "A production database must never be deleted accidentally, but administrators must still be able to change its configuration.",
+      "question": "Which resource lock should you apply?",
+      "options": [
+        { "text": "Delete (CanNotDelete)", "why": "Correct. It allows changes but blocks deletion." },
+        { "text": "ReadOnly", "why": "ReadOnly also blocks configuration changes." },
+        { "text": "No lock. Use a tag instead", "why": "Tags do not prevent deletion." },
+        { "text": "An availability set", "why": "Unrelated." }
+      ],
+      "answer": [0],
+      "explanation": "Delete locks block deletion; ReadOnly locks block deletion and modification.",
+      "objective": "3.2.3"
+    },
+    {
+      "id": "d3-cg-11",
+      "type": "single",
+      "question": "A user with the Owner role tries to delete a resource that has a Delete lock. What happens?",
+      "options": [
+        { "text": "The deletion fails until the lock is removed", "why": "Correct. Locks apply to all users, including Owners." },
+        { "text": "The resource is deleted because Owners bypass locks", "why": "Locks apply regardless of role." },
+        { "text": "The lock is removed automatically", "why": "Locks must be removed explicitly." },
+        { "text": "The resource moves to another region", "why": "Unrelated." }
+      ],
+      "answer": [0],
+      "explanation": "Locks override RBAC permissions. Someone with rights to manage locks must remove the lock first.",
+      "objective": "3.2.3"
+    }
+  ]
+}

@@ -1,0 +1,102 @@
+---
+title: Azure Migrate and Azure Data Box
+seoTitle: Azure Migrate and Azure Data Box Explained | AZ-900
+description: "Azure Migrate and Azure Data Box explained: discovering, assessing and migrating workloads, and moving huge data offline, with AZ-900 practice."
+answer: >-
+  **Azure Migrate** is a central hub of tools to **discover, assess and migrate** on-premises servers, databases, web apps and virtual desktops to Azure, and to track progress in one place. **Azure Data Box** is a rugged physical device Microsoft ships to you. You load it with large amounts of data and send it back, so you can move terabytes when the network is too slow or expensive.
+updated: 2026-11-11
+readingMinutes: 6
+keyTerms:
+  - term: Azure Migrate
+    definition: A unified hub for discovery, assessment and migration of workloads to Azure.
+  - term: Assessment
+    definition: Analysis of readiness, right-sizing and estimated cost before migrating.
+  - term: Azure Data Box
+    definition: A physical storage device for offline transfer of large data sets to or from Azure.
+interview:
+  - level: beginner
+    q: What is Azure Migrate?
+    a: >-
+      A hub in Azure that helps move on-premises systems to the cloud. It discovers what you have, assesses readiness and cost, and helps perform the migration, all tracked in one dashboard.
+    followUps: []
+  - level: intermediate
+    q: When would you use Azure Data Box?
+    a: >-
+      When I need to move a very large amount of data and the network would take too long or cost too much. Examples are a one-time datacenter migration, an initial bulk upload before ongoing sync, or exporting data out of Azure. After upload, Microsoft wipes the device securely.
+    followUps: []
+  - level: experienced
+    q: How would you combine Data Box with online tools?
+    a: >-
+      Seed the bulk of the data with Data Box, then use AzCopy, Azure File Sync or replication to transfer the changes made while the device was in transit. That avoids weeks of network transfer while keeping data current.
+    followUps: []
+revision:
+  keyPoints:
+    - Azure Migrate = discover, assess and migrate workloads, in one hub.
+    - Includes tools for servers, databases, web apps and data.
+    - Azure Data Box = physical device for offline bulk data transfer.
+    - Data Box also works for exporting data out of Azure.
+  mistakes:
+    - Thinking Data Box is a network service.
+  examTips:
+    - '"Move huge amounts of data when the network is too slow" = **Azure Data Box**.'
+    - '"Discover and assess on-premises servers before migration" = **Azure Migrate**.'
+  quick:
+    - q: What are the three main jobs of Azure Migrate?
+      a: Discover, assess and migrate.
+    - q: What is Azure Data Box?
+      a: A physical device for offline transfer of large data to or from Azure.
+    - q: When would you use Data Box instead of the network?
+      a: When the data is too large or the network too slow or costly.
+    - q: Can Data Box export data from Azure?
+      a: Yes.
+    - q: What happens to a Data Box after the data is uploaded?
+      a: Microsoft securely erases it.
+references:
+  - title: About Azure Migrate
+    url: https://learn.microsoft.com/en-us/azure/migrate/migrate-services-overview
+  - title: What is Azure Data Box?
+    url: https://learn.microsoft.com/en-us/azure/databox/data-box-overview
+related:
+  - moving-files
+  - on-premises-vs-cloud
+---
+
+## Start with a question
+
+<Story question="It would take 4 months to upload your data over the office internet. Is there a faster way?">
+
+Yes. Put it in a box and ship it. That's **Azure Data Box**. And for planning the whole move, there's **Azure Migrate**.
+
+</Story>
+
+## Explain it like I'm 10
+
+<Eli10>
+
+Moving house? **Azure Migrate** is the moving company that visits first, makes a list of everything and plans the move. **Data Box** is the giant removal van for the heavy stuff that's too big to carry by hand.
+
+</Eli10>
+
+## The technical explanation
+
+**Azure Migrate** provides integrated tools for discovery, assessment and migration of servers (VMware, Hyper-V, physical), databases (with Database Migration Service), web apps and VDI, plus a **business case** feature comparing on-premises and Azure costs.
+
+**Azure Data Box** devices are encrypted, rugged and shipped by courier. Typical uses: one-time bulk migration, initial data seeding, periodic uploads of large data, and **exporting** data from Azure for disaster recovery or compliance.
+
+## Real-world business scenario
+
+<Scenario
+  company="A media company"
+  industry="Media"
+  problem="Its archive of 300 TB of video had to move to Azure, but the office connection would have taken months."
+  service="Azure Migrate to assess and move the servers; Azure Data Box devices to ship the video archive; AzCopy to sync the final changes."
+  why="Physical transfer for the bulk, network tools for the small delta."
+  outcome="Migration finished in weeks instead of months."
+/>
+
+## When to use it and when not to
+
+<UseWhen
+  use={['**Migrate** for any planned move of on-premises workloads.', '**Data Box** for tens or hundreds of terabytes over limited bandwidth.']}
+  avoid={['Data Box for small data sets that copy quickly over the network.']}
+/>

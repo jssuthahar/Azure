@@ -1,0 +1,92 @@
+{
+ "cert": "az-900",
+ "domain": 2,
+ "topic": "azure-dns",
+ "questions": [
+  {
+   "id": "t-dns-1",
+   "type": "single",
+   "question": "What does Azure DNS do?",
+   "options": [
+    {
+     "text": "Hosts DNS domains and provides name resolution",
+     "why": "Correct."
+    },
+    {
+     "text": "Sells new domain names",
+     "why": "Azure DNS does not sell domains."
+    },
+    {
+     "text": "Encrypts VM disks",
+     "why": "Unrelated."
+    },
+    {
+     "text": "Balances traffic between VMs",
+     "why": "That is a load balancer."
+    }
+   ],
+   "answer": [
+    0
+   ],
+   "explanation": "Azure DNS hosts DNS zones on Azure infrastructure.",
+   "objective": "2.2.5"
+  },
+  {
+   "id": "t-dns-2",
+   "type": "single",
+   "question": "You want names to resolve to private IP addresses only inside your virtual networks. What should you use?",
+   "options": [
+    {
+     "text": "An Azure private DNS zone",
+     "why": "Correct."
+    },
+    {
+     "text": "A public DNS zone only",
+     "why": "Public zones resolve on the internet."
+    },
+    {
+     "text": "A resource tag",
+     "why": "Unrelated."
+    },
+    {
+     "text": "ExpressRoute",
+     "why": "Connectivity, not name resolution."
+    }
+   ],
+   "answer": [
+    0
+   ],
+   "explanation": "Private DNS zones resolve names within VNets.",
+   "objective": "2.2.5"
+  },
+  {
+   "id": "t-dns-3",
+   "type": "multi",
+   "question": "Which TWO features can secure Azure DNS zones?",
+   "options": [
+    {
+     "text": "Azure RBAC",
+     "why": "Correct."
+    },
+    {
+     "text": "Availability sets",
+     "why": "VM feature."
+    },
+    {
+     "text": "Resource locks",
+     "why": "Correct."
+    },
+    {
+     "text": "Spot pricing",
+     "why": "Pricing model."
+    }
+   ],
+   "answer": [
+    0,
+    2
+   ],
+   "explanation": "DNS zones benefit from RBAC, locks and activity logs.",
+   "objective": "2.2.5"
+  }
+ ]
+}

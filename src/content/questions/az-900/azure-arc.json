@@ -1,0 +1,92 @@
+{
+ "cert": "az-900",
+ "domain": 3,
+ "topic": "azure-arc",
+ "questions": [
+  {
+   "id": "t-arc-1",
+   "type": "single",
+   "question": "Which service lets you manage on-premises servers and servers in other clouds with Azure tools?",
+   "options": [
+    {
+     "text": "Azure Arc",
+     "why": "Correct."
+    },
+    {
+     "text": "Azure Migrate",
+     "why": "Moves workloads."
+    },
+    {
+     "text": "Azure DNS",
+     "why": "Names."
+    },
+    {
+     "text": "Azure Data Box",
+     "why": "Offline transfer."
+    }
+   ],
+   "answer": [
+    0
+   ],
+   "explanation": "Arc extends Azure management outside Azure.",
+   "objective": "3.3.3"
+  },
+  {
+   "id": "t-arc-2",
+   "type": "multi",
+   "question": "Which TWO resource types can Azure Arc manage?",
+   "options": [
+    {
+     "text": "Kubernetes clusters",
+     "why": "Correct."
+    },
+    {
+     "text": "Printer drivers",
+     "why": "No."
+    },
+    {
+     "text": "Windows and Linux servers",
+     "why": "Correct."
+    },
+    {
+     "text": "Phone numbers",
+     "why": "No."
+    }
+   ],
+   "answer": [
+    0,
+    2
+   ],
+   "explanation": "Arc manages servers, Kubernetes, data services and more.",
+   "objective": "3.3.3"
+  },
+  {
+   "id": "t-arc-3",
+   "type": "single",
+   "question": "Does Azure Arc migrate workloads into Azure?",
+   "options": [
+    {
+     "text": "No, it manages them where they run",
+     "why": "Correct."
+    },
+    {
+     "text": "Yes, automatically",
+     "why": "That is Azure Migrate."
+    },
+    {
+     "text": "Only databases",
+     "why": "No."
+    },
+    {
+     "text": "Only at night",
+     "why": "No."
+    }
+   ],
+   "answer": [
+    0
+   ],
+   "explanation": "Arc projects external resources into ARM for management.",
+   "objective": "3.3.3"
+  }
+ ]
+}
