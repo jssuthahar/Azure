@@ -12,6 +12,8 @@ npm run dev          # http://localhost:4321
 npm run check:all    # meta lengths + question bank validation + production build
 ```
 
+In repository **Settings → Pages → Build and deployment**, set **Source** to **GitHub Actions**. The branch-based Jekyll builder cannot build this Astro project and will try to parse `.astro` component frontmatter as YAML.
+
 Pushing to `main` deploys to GitHub Pages through `.github/workflows/deploy.yml`. `public/CNAME` points to azure.msdevbuild.com.
 
 ## How it is organised
