@@ -15,7 +15,10 @@ export const SITE = {
   authorImage: '/images/author.jpg',
   authorImageSmall: '/images/author-160.jpg',
   profile: 'https://suthahar.msdevbuild.com',
+  /** Brand promise. Shown everywhere as: MSDEVBUILD · Multi-Stack Dev Build · by Suthahar Jegatheesan */
+  orgFull: 'Multi-Stack Dev Build',
   tagline: 'Multi-Stack Dev Build · by Suthahar Jegatheesan',
+  brandLine: 'MSDEVBUILD · Multi-Stack Dev Build · by Suthahar Jegatheesan',
 } as const;
 
 /** Social profiles (from blog.msdevbuild.com). Used in the footer, About page and schema sameAs. */

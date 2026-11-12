@@ -11,6 +11,7 @@ import { ogImagePath } from '../../../lib/og-pages';
 import { SERVICES } from '../../../data/az-900/services';
 import { sectionKind, SIMPLE_SECTIONS } from '../../../lib/rehype-sections.mjs';
 import Toc from '../../../components/Toc.astro';
+import BrandLine from '../../../components/BrandLine.astro';
 import KnowledgeCheck from '../../../components/KnowledgeCheck.astro';
 import InterviewBlock from '../../../components/InterviewBlock.astro';
 import QuickRevision from '../../../components/QuickRevision.astro';
@@ -147,9 +148,9 @@ const schema = [
       <div class="mt-4 flex flex-wrap gap-2 text-xs">
         <span class="chip">Module {mod.domain}: {mod.shortTitle}</span>
         <span class="chip chip-muted">⏱ {d.readingMinutes} min read</span>
-        <span class="chip chip-muted">Updated {d.updated.toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })}</span>
         {me.beyondExam && <span class="chip">Beyond the exam: real-world knowledge</span>}
       </div>
+      <BrandLine variant="byline" date={d.updated} class="mt-4" />
 
       <LessonTools />
 

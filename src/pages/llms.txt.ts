@@ -17,6 +17,8 @@ export const GET: APIRoute = async () => {
   const lines = [
     `# ${SITE.name}`,
     '',
+    `${SITE.brandLine}. Publisher: ${SITE.org} (${SITE.orgFull}), ${SITE.main}. Author: ${SITE.author}, ${SITE.authorTitle} (${SITE.profile}).`,
+    '',
     `> Free AZ-900 (Microsoft Azure Fundamentals) learning site where you can feel Azure without an Azure account: every lesson has a 30-second answer, a 3D simulation, a simulated Azure portal walkthrough and a practice lab, followed by an explanation, exam tip and quiz. By ${SITE.author} (${SITE.org}).`,
     '',
     `- Content follows Microsoft's official ${exam.code} skills outline (skills measured as of ${exam.skillsMeasuredAsOf}): ${exam.studyGuideUrl}`,

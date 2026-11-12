@@ -1,0 +1,55 @@
+---
+import Base from '../layouts/Base.astro';
+import Mascot from '../components/Mascot.astro';
+import { getNav } from '../lib/learn';
+import { liveExams } from '../data/exams';
+
+/** Shown by the service worker when a page isn't saved and there's no connection. */
+const groups: { title: string; pages: { url: string; title: string }[] }[] = [];
+for (const exam of liveExams()) {
+  const nav = (await getNav(exam.slug)).filter((t) => t.published);
+  for (const m of exam.modules) groups.push({ title: `${exam.code} · ${m.shortTitle}`, pages: nav.filter((t) => t.module.slug === m.slug).map((t) => ({ url: t.url, title: t.title })) });
+  groups.push({ title: `${exam.code} · Practice`, pages: [
+    { url: `/${exam.slug}/`, title: 'Course home' }, { url: `/${exam.slug}/mock-exam/`, title: 'Mock exam' }, { url: `/${exam.slug}/revision/`, title: 'Revision flashcards' },
+    { url: `/${exam.slug}/glossary/`, title: 'Glossary' }, { url: `/${exam.slug}/games/daily/`, title: 'Daily Challenge' }, { url: `/${exam.slug}/games/`, title: 'Games' },
+  ] });
+}
+groups.push({ title: 'More', pages: [{ url: '/', title: 'Home' }, { url: '/progress/', title: 'My progress' }, { url: '/certificate/', title: 'My certificate' }, { url: '/simulator/', title: 'Azure Simulator' }] });
+const payload = JSON.stringify(groups).replace(/</g, '\\u003c');
+---
+<Base title="You're offline | MSDEVBUILD Azure" description="You're offline. Lessons and practice pages saved on this device still open, and your progress keeps saving." breadcrumbs={[{ name: 'Home', url: '/' }, { name: 'Offline', url: '/offline/' }]} noindex wide={false}>
+  <script type="application/json" id="off-data" set:html={payload} />
+  <div class="flex flex-wrap items-center gap-4">
+    <Mascot size={72} mood="thinking" />
+    <div>
+      <p class="eyebrow">No connection</p>
+      <h1 class="mt-2 text-3xl font-bold tracking-tight">You're offline</h1>
+    </div>
+  </div>
+  <p class="mt-4 text-lg leading-relaxed text-muted">This page isn't saved on your device yet. Lessons you've opened before still work. Your progress keeps saving, nothing is lost.</p>
+  <div class="mt-5 flex flex-wrap gap-3">
+    <button type="button" id="off-retry" class="btn btn-accent">↻ Try again</button>
+    <a href="/app/#offline" class="btn btn-outline">Save the whole course for next time</a>
+  </div>
+  <section class="mt-8" aria-labelledby="saved-h">
+    <h2 id="saved-h" class="text-xl font-bold">Saved on this device</h2>
+    <div id="off-list" class="mt-3 space-y-5"><p class="text-muted">Checking…</p></div>
+  </section>
+</Base>
+
+<script>
+  import { savedPaths } from '../lib/pwa';
+  const groups = JSON.parse(document.getElementById('off-data')!.textContent!) as { title: string; pages: { url: string; title: string }[] }[];
+  document.getElementById('off-retry')!.addEventListener('click', () => location.reload());
+  addEventListener('online', () => location.reload());
+  savedPaths().then((have) => {
+    const list = document.getElementById('off-list')!;
+    const esc = (s: string) => s.replace(/&/g, '&amp;').replace(/</g, '&lt;');
+    const html = groups
+      .map((g) => ({ ...g, pages: g.pages.filter((p) => have.has(p.url)) }))
+      .filter((g) => g.pages.length)
+      .map((g) => `<div><h3 class="text-sm font-semibold text-muted">${esc(g.title)}</h3><ul class="mt-2 flex flex-wrap gap-2">${g.pages.map((p) => `<li><a class="chip" href="${p.url}">${esc(p.title)}</a></li>`).join('')}</ul></div>`)
+      .join('');
+    list.innerHTML = html || '<p class="text-muted">Nothing saved yet. Next time you are online, open a few lessons or use <a class="text-accent underline" href="/app/#offline">Save the whole course</a>.</p>';
+  });
+</script>

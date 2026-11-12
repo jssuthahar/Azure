@@ -89,6 +89,7 @@ export function certSvg(c: Cert) {
   <path d="M30 230 C 400 120, 1200 340, 1570 200 L1570 58 Q1570 30 1542 30 L58 30 Q30 30 30 58 Z" fill="#0078d4" opacity=".08"/>
   <g transform="translate(1270 110) scale(0.42)">${badgeSvg(600).replace(/^<svg[^>]*>|<\/svg>$/g, '')}</g>
   <text x="120" y="170" font-family="Segoe UI, Inter, Arial, sans-serif" font-size="34" font-weight="700" fill="#0078d4" letter-spacing="8">MSDEVBUILD AZURE</text>
+  <text x="120" y="206" font-family="Segoe UI, Inter, Arial, sans-serif" font-size="24" fill="#4a5163">Multi-Stack Dev Build · by Suthahar Jegatheesan</text>
   <text x="120" y="290" font-family="Segoe UI, Inter, Arial, sans-serif" font-size="78" font-weight="800" fill="#0b1020">Certificate of Achievement</text>
   <text x="120" y="370" font-family="Segoe UI, Inter, Arial, sans-serif" font-size="32" fill="#4a5163">This certifies that</text>
   <text x="120" y="490" font-family="Georgia, 'Times New Roman', serif" font-size="96" font-style="italic" fill="#003a66">${escX(c.name)}</text>
@@ -98,7 +99,7 @@ export function certSvg(c: Cert) {
   <g font-family="Segoe UI, Inter, Arial, sans-serif" fill="#4a5163" font-size="26">
     <text x="120" y="820">DATE</text><text x="120" y="862" font-size="34" fill="#0b1020" font-weight="600">${prettyDate(c.date)}</text>
     <text x="620" y="820">CERTIFICATE ID</text><text x="620" y="862" font-size="34" fill="#0b1020" font-weight="600">${escX(c.id)}</text>
-    <text x="1120" y="820">ISSUED BY</text><text x="1120" y="862" font-size="34" fill="#0b1020" font-weight="600">Suthahar Jegatheesan</text><text x="1120" y="898" font-size="24">MSDEVBUILD</text>
+    <text x="1120" y="820">ISSUED BY</text><text x="1120" y="862" font-size="34" fill="#0b1020" font-weight="600">Suthahar Jegatheesan</text><text x="1120" y="898" font-size="24">MSDEVBUILD · Multi-Stack Dev Build</text>
   </g>
   <text x="120" y="1010" font-family="Segoe UI, Inter, Arial, sans-serif" font-size="21" fill="#6b7280">Self-assessed practice certificate issued by azure.msdevbuild.com after a browser-based mock exam. It is not a Microsoft certification and is not affiliated with or endorsed by Microsoft.</text>
   <text x="120" y="1042" font-family="Segoe UI, Inter, Arial, sans-serif" font-size="21" fill="#6b7280">Check this certificate: azure.msdevbuild.com/certificate · ID ${escX(c.id)}</text>

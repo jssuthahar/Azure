@@ -3,7 +3,7 @@ title: Public Cloud
 seoTitle: What is Public Cloud? Definition and Use Cases | AZ-900
 description: The public cloud model explained simply, with multi-tenancy, benefits, trade-offs, real use cases, interview questions and AZ-900 practice questions.
 answer: >-
-  A **public cloud** is cloud infrastructure owned and operated by a third-party provider, such as Microsoft Azure, and offered to anyone over the internet. Many customers share the provider's hardware but are isolated from each other. There is no hardware to buy, you scale on demand, and you pay for what you use.
+  A **public cloud** is cloud infrastructure owned and operated by a third-party provider, such as Microsoft Azure, and offered to anyone over the internet. Many customers share the provider's hardware but are isolated from each other. There's no hardware to buy, you scale on demand, and you pay for what you use.
 updated: 2026-11-11
 readingMinutes: 7
 keyTerms:
@@ -19,7 +19,7 @@ interview:
   - level: beginner
     q: What is a public cloud? Give an example.
     a: >-
-      A public cloud is computing infrastructure that a provider owns and runs, and that anyone can sign up to use over the internet. Microsoft Azure, AWS and Google Cloud are examples. You do not buy any hardware; you create resources when needed and pay for usage.
+      A public cloud is computing infrastructure that a provider owns and runs, and that anyone can sign up to use over the internet. Microsoft Azure, AWS and Google Cloud are examples. You don't buy any hardware; you create resources when needed and pay for usage.
     followUps:
       - q: Does "public" mean my data is public?
         a: >-
@@ -32,12 +32,12 @@ interview:
   - level: experienced
     q: Security teams sometimes worry about "noisy neighbours" or side-channel attacks in multi-tenant clouds. How would you respond?
     a: >-
-      Providers isolate tenants at the hypervisor, network and storage layers and publish their isolation design. For workloads with strict requirements, Azure offers Dedicated Hosts, isolated VM sizes and confidential computing with hardware-based trusted execution environments, which protect data while it is in use. Performance noisy-neighbour effects are managed with resource governance, and premium tiers come with defined performance targets. The real risks in practice are much more often misconfiguration and weak identity than cross-tenant attacks.
+      Providers isolate tenants at the hypervisor, network and storage layers and publish their isolation design. For workloads with strict requirements, Azure offers Dedicated Hosts, isolated VM sizes and confidential computing with hardware-based trusted execution environments, which protect data while it's in use. Performance noisy-neighbour effects are managed with resource governance, and premium tiers come with defined performance targets. The real risks in practice are much more often misconfiguration and weak identity than cross-tenant attacks.
     followUps: []
   - level: scenario
     q: A start-up with five people needs to launch an app next month and expects unpredictable growth. Which cloud model fits?
     a: >-
-      The public cloud. No capital spending, resources in minutes, pay only for what they use, and the ability to scale with growth. A private cloud would require hardware and skills they do not have.
+      The public cloud. No capital spending, resources in minutes, pay only for what they use, and the ability to scale with growth. A private cloud would require hardware and skills they don't have.
     followUps: []
 revision:
   keyPoints:
@@ -78,7 +78,7 @@ related:
 
 <Story question="Why does everyone in a city share one bus network instead of each family running its own bus?">
 
-A bus network is expensive to build and run, but when thousands of people share it, each ride costs very little. You do not own the bus, but you can get on whenever you need to.
+A bus network is expensive to build and run, but when thousands of people share it, each ride costs very little. You don't own the bus, but you can get on whenever you need to.
 
 **The public cloud works the same way.** Microsoft builds enormous datacenters. Millions of customers share them, and each pays only for the "rides" they take.
 
@@ -88,7 +88,7 @@ A bus network is expensive to build and run, but when thousands of people share 
 
 <Eli10>
 
-Think of a **public swimming pool**. Anyone can go. You do not have to build a pool, fill it, clean it or hire lifeguards, because the pool company does all that. You pay for entry and swim.
+Think of a **public swimming pool**. Anyone can go. You don't have to build a pool, fill it, clean it or hire lifeguards, because the pool company does all that. You pay for entry and swim.
 
 Lots of people use the same pool, but you each have your own locker with your own lock. In the public cloud, everyone shares the same giant computers, but **your stuff is locked in your own locker** and nobody else can open it.
 
@@ -110,7 +110,7 @@ The defining characteristic is **multi-tenancy**: the same physical servers, sto
 
 | Trade-off | What it means |
 | --- | --- |
-| Less physical control | You cannot choose the exact server or walk into the datacenter |
+| Less physical control | You can't choose the exact server or walk into the datacenter |
 | Specific compliance needs | Some requirements may be harder to meet (check region and certification options) |
 | Dependency | You rely on the provider and your connectivity |
 

@@ -89,7 +89,7 @@ related:
 
 Ten thousand students see an error page. Some lose their answers. The school has to reschedule, and trust is gone.
 
-Now imagine the same exam running on **three servers in three separate buildings**. One crashes, and the other two carry on. Students do not even notice. That is **high availability**.
+Now imagine the same exam running on **three servers in three separate buildings**. One crashes, and the other two carry on. Students don't even notice. That is **high availability**.
 
 </Story>
 
@@ -126,13 +126,13 @@ Microsoft publishes an **SLA** for each service: a formal commitment to a percen
 <TryIt labs="storage-redundancy" text="Choose zone-redundant storage (ZRS) and then geo-zone-redundant storage (GZRS) to protect data against datacenter and regional failures." />
 
 <Callout type="exam">
-For AZ-900 you do not need to memorise every SLA. Understand that **SLAs are expressed as percentages**, that **higher percentages mean less downtime**, that **combining services multiplies their SLAs** (and lowers the total), and that **redundancy across zones or regions** raises availability.
+For AZ-900 you don't need to memorise every SLA. Understand that **SLAs are expressed as percentages**, that **higher percentages mean less downtime**, that **combining services multiplies their SLAs** (and lowers the total), and that **redundancy across zones or regions** raises availability.
 </Callout>
 
 <DeepDive title="Designing HA without wasting money">
 
 - **Start with targets**: agree on an availability objective with the business (for example 99.95%), plus recovery time and recovery point objectives (RTO, RPO) for disasters.
-- **Zone-redundant by default** in regions that support zones. For many PaaS services (App Service Premium, Azure SQL Database, Storage ZRS) it is a configuration flag, often at little or no extra cost.
+- **Zone-redundant by default** in regions that support zones. For many PaaS services (App Service Premium, Azure SQL Database, Storage ZRS) it's a configuration flag, often at little or no extra cost.
 - **Health probes and graceful degradation**: load balancers should remove unhealthy instances quickly; the app should degrade (for example, read-only mode) rather than fail completely.
 - **Deployments cause outages too**: blue-green or slot swaps, feature flags and safe rollout reduce self-inflicted downtime, which is often the biggest source of unavailability.
 - **Multi-region is expensive** in money and complexity (data replication, consistency, failover testing). Use it where the business impact justifies it.

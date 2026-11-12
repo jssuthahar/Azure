@@ -11,8 +11,10 @@
     "check": "astro check",
     "check:meta": "node scripts/check-meta.mjs",
     "check:questions": "node scripts/check-questions.mjs",
-    "check:all": "npm run check:meta && npm run check:questions && astro build",
+    "check:human": "node scripts/check-human.mjs",
+    "check:all": "npm run check:meta && npm run check:questions && npm run check:human && astro build",
     "og": "node scripts/make-og.mjs",
+    "icons": "node scripts/make-icons.mjs",
     "indexnow": "node scripts/indexnow.mjs"
   },
   "dependencies": {

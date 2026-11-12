@@ -3,7 +3,7 @@ title: Resources and Resource Groups
 seoTitle: Azure Resources and Resource Groups Explained | AZ-900
 description: Azure resources and resource groups explained simply, with the key rules, how to organise them, a hands-on lab, interview questions and AZ-900 practice.
 answer: >-
-  An **Azure resource** is anything you create in Azure, such as a virtual machine, storage account, database or virtual network. A **resource group** is a logical container that holds related resources so you can manage, secure and delete them together. Every resource must be in exactly one resource group, and resource groups cannot be nested.
+  An **Azure resource** is anything you create in Azure, such as a virtual machine, storage account, database or virtual network. A **resource group** is a logical container that holds related resources so you can manage, secure and delete them together. Every resource must be in exactly one resource group, and resource groups can't be nested.
 updated: 2026-11-11
 readingMinutes: 7
 keyTerms:
@@ -17,7 +17,7 @@ interview:
   - level: beginner
     q: What is a resource group?
     a: >-
-      It is a container that holds related Azure resources, like the VM, database and storage for one app. I can manage access, apply policies, view costs and delete everything in it together.
+      It's a container that holds related Azure resources, like the VM, database and storage for one app. I can manage access, apply policies, view costs and delete everything in it together.
     followUps:
       - q: Can a resource be in two resource groups?
         a: >-
@@ -25,7 +25,7 @@ interview:
   - level: intermediate
     q: What are the important rules about resource groups?
     a: >-
-      A resource is in only one group; groups cannot be nested; resources in a group can be in different regions from the group itself; deleting a group deletes everything in it; and access and policies applied to a group are inherited by its resources.
+      A resource is in only one group; groups can't be nested; resources in a group can be in different regions from the group itself; deleting a group deletes everything in it; and access and policies applied to a group are inherited by its resources.
     followUps: []
   - level: experienced
     q: How do you decide how to split resources into resource groups?
@@ -35,7 +35,7 @@ interview:
   - level: scenario
     q: A developer finished testing and wants to remove 15 test resources quickly. What is the easiest way?
     a: >-
-      If they are all in one test resource group, delete the group. Everything inside is deleted in one operation. That is why grouping by lifecycle is so useful.
+      If they're all in one test resource group, delete the group. Everything inside is deleted in one operation. That is why grouping by lifecycle is so useful.
     followUps: []
 revision:
   keyPoints:
@@ -92,7 +92,7 @@ A **resource** is a manageable item in Azure: virtual machines, storage accounts
 | Rule | What it means |
 | --- | --- |
 | One group per resource | A resource belongs to exactly one resource group (it can be moved) |
-| No nesting | You cannot put a resource group inside another |
+| No nesting | You can't put a resource group inside another |
 | Mixed regions | Resources can be in different regions from the group |
 | Delete together | Deleting a group deletes everything in it |
 | Inheritance | RBAC permissions and Azure Policy on a group apply to its resources |

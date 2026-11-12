@@ -6,6 +6,7 @@ import TodayBand from '../components/TodayBand.astro';
 import { CERTIFICATIONS } from '../data/certifications';
 import { getNav, getQuestionBank, getTutorial, inlineMd } from '../lib/learn';
 import { SITE } from '../config';
+import BrandLine from '../components/BrandLine.astro';
 import { getExam } from '../data/exams';
 const exam = getExam();
 
@@ -31,13 +32,14 @@ const audiences = [
   { icon: '💻', title: 'Developers', text: 'How Azure services fit into real apps, and when not to use them.' },
   { icon: '🏛️', title: 'Experienced engineers', text: 'Architecture trade-offs, cost, security and scenario interviews.' },
 ];
-const schema = [{ '@type': 'WebPage', '@id': `${SITE.url}/#home`, name: SITE.title, description: SITE.description, url: `${SITE.url}/` }];
+const schema = [{ '@type': 'WebPage', '@id': `${SITE.url}/#home`, name: SITE.title, description: SITE.description, url: `${SITE.url}/`, publisher: { '@id': `${SITE.url}/#organization` }, author: { '@id': `${SITE.url}/#author` } }];
 ---
 <Base title={SITE.title} description={SITE.description} schema={schema}>
   <!-- Hero -->
   <section class="band-navy px-4 py-12 sm:py-16">
     <div class="mx-auto grid max-w-6xl items-center gap-10 lg:grid-cols-[1fr_1.1fr]">
       <div class="text-center lg:text-left">
+        <BrandLine variant="light" class="mb-3" />
         <h1 class="text-5xl font-bold tracking-tight sm:text-7xl">Learn Azure</h1>
         <p class="mt-4 text-xl text-[#ffd75e] sm:text-2xl">The place where you can <em>feel</em> Azure, without an Azure account</p>
         <p class="mt-3 text-white/85">▶ Simulate every concept · 🏢 Walk through a 3D datacenter · 🖥️ Click through the Azure portal · 🔊 Nimbus guides you</p>

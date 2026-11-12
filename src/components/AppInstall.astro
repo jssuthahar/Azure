@@ -1,0 +1,182 @@
+---
+/**
+ * Install-the-app UI, rendered once per page by Base.astro:
+ *  - any element with [data-install] installs: the browser's own dialog when it has one,
+ *    otherwise a sheet with the steps for this device (iPhone/iPad "Add to Home Screen", Mac Safari "Add to Dock"…)
+ *  - a one-time, dismissible banner on phones and tablets after a few page views
+ *  - an "offline" notice, and a Back button inside the installed iPhone/iPad app (iOS gives it no browser back)
+ */
+const shareIcon = '<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3v12M8 7l4-4 4 4"/><path d="M6 11H5a1 1 0 0 0-1 1v8a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1v-8a1 1 0 0 0-1-1h-1"/></svg>';
+const plusIcon = '<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" aria-hidden="true"><rect x="3.5" y="3.5" width="17" height="17" rx="4"/><path d="M12 8v8M8 12h8"/></svg>';
+---
+<dialog id="install-sheet" class="install-sheet" aria-labelledby="is-title">
+  <div class="is-head">
+    <img src="/icons/icon-192.png" alt="" width="56" height="56" class="is-icon" />
+    <div class="min-w-0">
+      <p id="is-title" class="text-lg font-bold">Install MSDEVBUILD Azure</p>
+      <p class="text-sm text-muted">Free · no account · works offline</p>
+    </div>
+    <button type="button" class="is-x" data-close aria-label="Close">✕</button>
+  </div>
+  <ul class="is-perks">
+    <li><span aria-hidden="true">📲</span> Opens from your home screen like an app, full screen</li>
+    <li><span aria-hidden="true">✈️</span> Lessons you've opened (or saved) work without internet</li>
+    <li><span aria-hidden="true">🔥</span> Your progress, XP and certificate stay on this device</li>
+  </ul>
+
+  <ol class="is-steps" data-for="ios-phone" hidden>
+    <li><span class="is-n">1</span><span>Tap the <strong>Share</strong> button <span class="is-glyph" set:html={shareIcon} /> in Safari's bar at the <strong>bottom</strong> of the screen. <span class="text-muted">(In Chrome, it's in the address bar at the top.)</span></span></li>
+    <li><span class="is-n">2</span><span>Scroll down and tap <strong>Add to Home Screen</strong> <span class="is-glyph" set:html={plusIcon} /></span></li>
+    <li><span class="is-n">3</span><span>Tap <strong>Add</strong>. The MSDEVBUILD icon appears on your home screen.</span></li>
+  </ol>
+  <ol class="is-steps" data-for="ios-ipad" hidden>
+    <li><span class="is-n">1</span><span>Tap the <strong>Share</strong> button <span class="is-glyph" set:html={shareIcon} /> at the <strong>top right</strong> of Safari, next to the address bar.</span></li>
+    <li><span class="is-n">2</span><span>Tap <strong>Add to Home Screen</strong> <span class="is-glyph" set:html={plusIcon} /></span></li>
+    <li><span class="is-n">3</span><span>Tap <strong>Add</strong>. Open it from your iPad home screen or Dock, in portrait or landscape.</span></li>
+  </ol>
+  <ol class="is-steps" data-for="android" hidden>
+    <li><span class="is-n">1</span><span>Open the browser menu <strong>⋮</strong> (top right in Chrome).</span></li>
+    <li><span class="is-n">2</span><span>Tap <strong>Install app</strong> or <strong>Add to Home screen</strong>.</span></li>
+    <li><span class="is-n">3</span><span>Tap <strong>Install</strong>.</span></li>
+  </ol>
+  <ol class="is-steps" data-for="mac-safari" hidden>
+    <li><span class="is-n">1</span><span>In Safari's menu bar choose <strong>File → Add to Dock…</strong> (or tap Share <span class="is-glyph" set:html={shareIcon} /> → <strong>Add to Dock</strong>).</span></li>
+    <li><span class="is-n">2</span><span>Click <strong>Add</strong>. It opens in its own window from the Dock and Launchpad.</span></li>
+  </ol>
+  <ol class="is-steps" data-for="desktop" hidden>
+    <li><span class="is-n">1</span><span>In <strong>Chrome</strong> or <strong>Edge</strong>, click the install icon <span class="is-glyph" set:html={plusIcon} /> at the right end of the address bar (or menu <strong>⋮ → Cast, save and share → Install</strong>).</span></li>
+    <li><span class="is-n">2</span><span>Click <strong>Install</strong>. It opens in its own window and from the Start menu or Dock.</span></li>
+    <li><span class="is-n">3</span><span>Using Firefox? It can't install sites; open this page in Chrome or Edge.</span></li>
+  </ol>
+  <p class="is-done" data-for="installed" hidden>✅ You're using the installed app. Nothing more to do.</p>
+
+  <div class="is-foot">
+    <a href="/app/" class="text-sm text-accent underline">Save the whole course for offline ›</a>
+    <button type="button" class="btn btn-accent" data-close>Got it</button>
+  </div>
+</dialog>
+
+<div id="install-banner" class="install-banner" role="region" aria-label="Install the app" hidden>
+  <img src="/icons/icon-192.png" alt="" width="44" height="44" class="rounded-xl" />
+  <p class="min-w-0 flex-1 text-sm leading-snug"><strong>Get the app</strong><br /><span class="text-muted">Learn offline, one tap from your home screen.</span></p>
+  <button type="button" class="btn btn-accent !px-3.5 !py-2 text-sm" data-install>Install</button>
+  <button type="button" class="ib-x" aria-label="Not now">✕</button>
+</div>
+
+<div id="offline-note" class="offline-note" role="status" aria-live="polite" hidden>
+  <span aria-hidden="true">✈️</span> You're offline. Saved lessons still open; your progress is kept and nothing is lost.
+</div>
+
+<style is:global>
+  .install-sheet { width: min(460px, calc(100vw - 24px)); max-height: calc(100dvh - 24px); margin: auto; padding: 0; border: 1px solid var(--card-line); border-radius: 18px; background: var(--card); color: var(--text); box-shadow: 0 24px 70px rgb(0 20 50 / .35); overflow: auto; }
+  .install-sheet::backdrop { background: rgb(5 15 30 / .55); backdrop-filter: blur(2px); }
+  @media (max-width: 640px) {
+    .install-sheet { width: 100vw; max-width: 100vw; margin: auto 0 0; border-radius: 18px 18px 0 0; padding-bottom: env(safe-area-inset-bottom); }
+  }
+  .is-head { display: flex; gap: 14px; align-items: center; padding: 18px 18px 6px; }
+  .is-icon { width: 56px; height: 56px; border-radius: 14px; flex: none; box-shadow: 0 4px 14px rgb(0 60 130 / .25); }
+  .is-x { margin-left: auto; align-self: flex-start; width: 40px; height: 40px; border-radius: 10px; font-size: 18px; color: var(--text-muted); }
+  .is-x:hover { background: var(--pastel-grey); }
+  .is-perks { margin: 8px 18px 4px; display: grid; gap: 6px; font-size: .92rem; }
+  .is-perks li { display: flex; gap: 10px; }
+  .is-steps { margin: 12px 18px 0; padding: 14px; display: grid; gap: 12px; border-radius: 14px; background: var(--pastel-blue); }
+  .is-steps li { display: flex; gap: 12px; align-items: flex-start; line-height: 1.45; }
+  .is-n { flex: none; display: grid; place-items: center; width: 26px; height: 26px; border-radius: 50%; background: #0078d4; color: #fff; font-weight: 700; font-size: .85rem; }
+  .is-glyph { display: inline-grid; place-items: center; vertical-align: -5px; width: 28px; height: 26px; border-radius: 7px; background: var(--card); color: #0a84ff; border: 1px solid var(--card-line); }
+  .is-done { margin: 12px 18px 0; padding: 14px; border-radius: 14px; background: var(--pastel-green, #e6f6e9); font-weight: 600; }
+  .is-foot { display: flex; flex-wrap: wrap; gap: 12px; align-items: center; justify-content: space-between; padding: 16px 18px 18px; }
+
+  .install-banner { position: fixed; z-index: 80; left: max(12px, env(safe-area-inset-left)); right: max(12px, env(safe-area-inset-right)); bottom: calc(12px + env(safe-area-inset-bottom)); display: flex; gap: 12px; align-items: center; max-width: 520px; margin-inline: auto; padding: 10px 10px 10px 12px; border-radius: 16px; border: 1px solid var(--card-line); background: var(--card); color: var(--text); box-shadow: 0 16px 44px rgb(0 30 60 / .28); animation: ib-in .35s ease-out; }
+  .install-banner[hidden] { display: none; }
+  .ib-x { width: 36px; height: 36px; flex: none; border-radius: 10px; color: var(--text-muted); }
+  .ib-x:hover { background: var(--pastel-grey); }
+  @keyframes ib-in { from { transform: translateY(24px); opacity: 0; } }
+  @media (prefers-reduced-motion: reduce) { .install-banner { animation: none; } }
+
+  .offline-note { position: fixed; z-index: 85; left: 50%; transform: translateX(-50%); bottom: calc(12px + env(safe-area-inset-bottom)); width: max-content; max-width: calc(100vw - 24px); padding: 10px 16px; border-radius: 999px; background: #1b2a3d; color: #fff; font-size: .9rem; box-shadow: 0 10px 30px rgb(0 0 0 / .3); }
+  .offline-note[hidden] { display: none; }
+</style>
+
+<script>
+  import { installable, canPrompt, promptInstall, isStandalone, isIOS, isIPad, platform, registerServiceWorker } from '../lib/pwa';
+
+  registerServiceWorker();
+
+  const sheet = document.getElementById('install-sheet') as HTMLDialogElement;
+  const banner = document.getElementById('install-banner')!;
+  const headerBtn = document.getElementById('install-btn');
+  const backBtn = document.getElementById('app-back');
+
+  const stepsKey = () => {
+    if (isStandalone()) return 'installed';
+    if (isIOS()) return isIPad() ? 'ios-ipad' : 'ios-phone';
+    const p = platform();
+    return p === 'android' ? 'android' : p === 'mac-safari' ? 'mac-safari' : 'desktop';
+  };
+
+  function openSheet() {
+    const key = stepsKey();
+    sheet.querySelectorAll<HTMLElement>('[data-for]').forEach((el) => { el.hidden = el.dataset.for !== key; });
+    if (!sheet.open) sheet.showModal();
+  }
+  sheet.addEventListener('click', (e) => {
+    if ((e.target as HTMLElement).closest('[data-close]') || e.target === sheet) sheet.close();
+  });
+
+  async function install() {
+    hideBanner(false);
+    if (canPrompt()) {
+      const r = await promptInstall();
+      if (r !== 'unavailable') return;
+    }
+    openSheet();
+  }
+  document.addEventListener('click', (e) => {
+    const t = (e.target as HTMLElement).closest('[data-install]');
+    if (t) { e.preventDefault(); install(); }
+  });
+
+  /* header button: only when an install is possible right now on this device */
+  const paint = () => { if (headerBtn) headerBtn.hidden = !installable(); };
+  paint();
+  addEventListener('pwa-change', paint);
+
+  /* gentle banner: phones & tablets, after 3 page views, at most once every 21 days */
+  const DISMISS = 'msdb-install-dismissed';
+  function hideBanner(remember = true) {
+    banner.hidden = true;
+    if (remember) try { localStorage.setItem(DISMISS, String(Date.now())); } catch {}
+  }
+  banner.querySelector('.ib-x')?.addEventListener('click', () => hideBanner());
+  let views = 0;
+  try { views = Number(localStorage.getItem('msdb-views') ?? 0) + 1; localStorage.setItem('msdb-views', String(views)); } catch {}
+  const maybeBanner = () => {
+    try {
+      const last = Number(localStorage.getItem(DISMISS) ?? 0);
+      const touch = matchMedia('(pointer: coarse)').matches;
+      const busy = /\/(mock-exam|labs)\//.test(location.pathname) || location.pathname.startsWith('/app/');
+      if (touch && !busy && views >= 3 && Date.now() - last > 21 * 864e5 && installable()) banner.hidden = false;
+    } catch {}
+  };
+  setTimeout(maybeBanner, 2500);
+  addEventListener('pwa-change', () => { if (!installable()) banner.hidden = true; });
+
+  /* offline notice */
+  const note = document.getElementById('offline-note')!;
+  let noteTimer = 0;
+  const net = () => {
+    clearTimeout(noteTimer);
+    note.hidden = navigator.onLine;
+    if (!navigator.onLine) noteTimer = window.setTimeout(() => { note.hidden = true; }, 6000);
+  };
+  addEventListener('online', net);
+  addEventListener('offline', net);
+  if (!navigator.onLine) net();
+
+  /* installed iPhone/iPad app: iOS gives no browser Back button, so we add one */
+  if (backBtn && isStandalone() && isIOS() && location.pathname !== '/') {
+    backBtn.hidden = false;
+    backBtn.addEventListener('click', () => { if (history.length > 1) history.back(); else location.href = '/'; });
+  }
+  if (isStandalone()) document.documentElement.classList.add('app-mode');
+</script>

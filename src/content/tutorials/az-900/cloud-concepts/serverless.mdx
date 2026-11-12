@@ -21,7 +21,7 @@ interview:
   - level: beginner
     q: What does serverless mean if there are still servers?
     a: >-
-      It means I do not manage the servers. The cloud provider runs them, scales them and patches them. I only write the code that runs when an event happens, and usually pay only when it runs.
+      It means I don't manage the servers. The cloud provider runs them, scales them and patches them. I only write the code that runs when an event happens, and usually pay only when it runs.
     followUps:
       - q: Give me an Azure example.
         a: >-
@@ -34,7 +34,7 @@ interview:
   - level: experienced
     q: When would you NOT choose Azure Functions for a workload?
     a: >-
-      For long-running or stateful processing that does not fit function timeouts (unless Durable Functions fits), for steady high-throughput APIs where an always-on App Service or Container Apps is cheaper and has predictable latency, for latency-critical endpoints that cannot tolerate cold starts (unless I pay for pre-warmed instances), and when the team needs full control of the runtime environment. I would also be careful with chatty function-to-function designs that are hard to trace.
+      For long-running or stateful processing that doesn't fit function timeouts (unless Durable Functions fits), for steady high-throughput APIs where an always-on App Service or Container Apps is cheaper and has predictable latency, for latency-critical endpoints that can't tolerate cold starts (unless I pay for pre-warmed instances), and when the team needs full control of the runtime environment. I would also be careful with chatty function-to-function designs that are hard to trace.
     followUps:
       - q: How do you mitigate cold starts?
         a: >-
@@ -42,7 +42,7 @@ interview:
   - level: scenario
     q: A school wants to email parents automatically every time a teacher uploads a report card PDF. Serverless or a VM?
     a: >-
-      Serverless. An Azure Function triggered by the Blob Storage upload, or a Logic App with a ready-made email connector, runs only when a file arrives. There is no server to patch and the cost is close to nothing between uploads.
+      Serverless. An Azure Function triggered by the Blob Storage upload, or a Logic App with a ready-made email connector, runs only when a file arrives. There's no server to patch and the cost is close to nothing between uploads.
     followUps: []
 revision:
   keyPoints:
@@ -85,7 +85,7 @@ related:
 
 <Story question="Why pay for a security guard to stand at the door all night if visitors only arrive twice a day?">
 
-A web server on a VM is like a guard on a 24-hour shift. It is paid every hour, whether ten people arrive or none.
+A web server on a VM is like a guard on a 24-hour shift. It's paid every hour, whether ten people arrive or none.
 
 Now imagine a **doorbell**: nothing happens until someone presses it, then help appears instantly. **Serverless computing works like a doorbell.** Your code sleeps until an event happens, wakes up, does its job, and you pay for that moment.
 
@@ -95,7 +95,7 @@ Now imagine a **doorbell**: nothing happens until someone presses it, then help 
 
 <Eli10>
 
-Think about the **automatic lights** in a school corridor. They switch on only when someone walks past and switch off when the corridor is empty. Nobody has to remember to flip a switch, and the school does not pay for lights in an empty hallway.
+Think about the **automatic lights** in a school corridor. They switch on only when someone walks past and switch off when the corridor is empty. Nobody has to remember to flip a switch, and the school doesn't pay for lights in an empty hallway.
 
 Serverless is automatic lights for computer programs. **The program runs only when something happens**, and nobody has to look after the computer it runs on.
 
@@ -103,7 +103,7 @@ Serverless is automatic lights for computer programs. **The program runs only wh
 
 ## The technical explanation
 
-**Serverless computing** is a cloud execution model in which the provider **dynamically allocates resources on demand**, so developers do not provision, scale or maintain servers. It has three defining traits:
+**Serverless computing** is a cloud execution model in which the provider **dynamically allocates resources on demand**, so developers don't provision, scale or maintain servers. It has three defining traits:
 
 1. **No infrastructure management**: no VMs, no OS patching, no capacity planning.
 2. **Event-driven scaling**: instances are created automatically as events arrive, from zero to many, and removed when idle.
@@ -128,7 +128,7 @@ Serverless is automatic lights for computer programs. **The program runs only wh
 | **Azure Container Apps** | Containers that scale on events, including to zero, without managing Kubernetes |
 
 <Callout type="exam">
-Serverless is **not** a fourth service type that replaces IaaS, PaaS and SaaS. It is an execution model, and Azure Functions is generally described as both **PaaS** and **serverless**. On AZ-900, link serverless with **event-driven**, **no infrastructure management** and **pay only when code runs**.
+Serverless is **not** a fourth service type that replaces IaaS, PaaS and SaaS. It's an execution model, and Azure Functions is generally described as both **PaaS** and **serverless**. On AZ-900, link serverless with **event-driven**, **no infrastructure management** and **pay only when code runs**.
 </Callout>
 
 <DeepDive title="Serverless in production: hosting plans and patterns">

@@ -29,10 +29,10 @@ interview:
   - level: intermediate
     q: What is the difference between a reservation and a savings plan?
     a: >-
-      A reservation commits to a specific resource, such as a VM family and region, and gives the deepest discount if you use exactly that. A savings plan commits to a dollar amount per hour of compute and applies automatically across VM sizes, regions and some other compute services. It is a slightly smaller discount but much more flexible if your workloads change.
+      A reservation commits to a specific resource, such as a VM family and region, and gives the deepest discount if you use exactly that. A savings plan commits to a dollar amount per hour of compute and applies automatically across VM sizes, regions and some other compute services. It's a slightly smaller discount but much more flexible if your workloads change.
     followUps: []
   - level: experienced
-    q: How would you build a cost-optimal purchasing strategy for a mixed estate?
+    q: How would you plan the cheapest sensible mix of pricing options for a mixed estate?
     a: >-
       Measure the steady baseline over a few months. Cover the very stable, predictable part with reservations (often databases and long-lived VMs), cover the remaining stable compute with a savings plan for flexibility, leave the variable portion on pay-as-you-go with autoscale, and push batch and fault-tolerant jobs to Spot. Apply Azure Hybrid Benefit wherever licences allow. Review utilisation of commitments monthly, because unused commitment is wasted money. Advisor and Cost Management show recommendations and utilisation.
     followUps: []
@@ -85,7 +85,7 @@ related:
 
 <Story question="Why does a train ticket bought months ahead cost less than one bought at the station?">
 
-Railways reward you for **committing early**. They can plan capacity, so they give you a discount. Buy at the last minute and you pay full price, but you keep total flexibility. Some railways even sell cheap "standby" tickets: travel only if there is a spare seat.
+Railways reward you for **committing early**. They can plan capacity, so they give you a discount. Buy at the last minute and you pay full price, but you keep total flexibility. Some railways even sell cheap "standby" tickets: travel only if there's a spare seat.
 
 Azure prices compute in almost exactly the same way.
 
@@ -106,7 +106,7 @@ Imagine a **bowling alley**:
 
 ## The technical explanation
 
-The consumption-based model tells you *that* you pay for usage. **Pricing models** decide *how much* each unit costs, depending on how much flexibility you are willing to give up.
+The consumption-based model tells you *that* you pay for usage. **Pricing models** decide *how much* each unit costs, depending on how much flexibility you're willing to give up.
 
 | Model | Commitment | Discount (vs pay-as-you-go) | Flexibility | Best for |
 | --- | --- | --- | --- | --- |
@@ -133,13 +133,13 @@ Discount percentages vary by service, size, region and term, and Microsoft chang
 
 <DeepDive title="How commitments are applied on your bill">
 
-Reservations and savings plans are **billing constructs**, not resources. You do not deploy "a reserved VM". You buy a reservation, and the discount automatically applies each hour to matching running resources in the chosen scope (a resource group, a subscription, a management group or the whole billing account).
+Reservations and savings plans are **billing constructs**, not resources. You don't deploy "a reserved VM". You buy a reservation, and the discount automatically applies each hour to matching running resources in the chosen scope (a resource group, a subscription, a management group or the whole billing account).
 
 - If nothing matching runs in a given hour, that hour of commitment is **lost**.
 - Savings plan benefit applies hour by hour to the usage with the biggest discount first, then any overflow is billed at pay-as-you-go.
 - **Instance size flexibility** lets a reservation cover other sizes in the same VM series.
 - Microsoft also offers a **savings plan for databases** (Azure SQL, Cosmos DB, PostgreSQL, MySQL and others), with smaller discounts than the compute plan.
-- Watch **utilisation reports** in Cost Management. Below roughly 90–100% utilisation, you are paying for nothing.
+- Watch **utilisation reports** in Cost Management. Below roughly 90–100% utilisation, you're paying for nothing.
 
 </DeepDive>
 

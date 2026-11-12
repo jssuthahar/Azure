@@ -54,7 +54,7 @@ export async function renderCard({ eyebrow, title, text = '', accent = '#ffd75e'
   ${titleLines.map((l, i) => `<text x="80" y="${titleY + 50 + i * lh}" font-family="Segoe UI, Helvetica, Arial, sans-serif" font-size="${size}" font-weight="800" fill="#fff">${xml(l)}</text>`).join('')}
   ${textLines.map((l, i) => `<text x="80" y="${textY + 30 + i * 40}" font-family="Segoe UI, Helvetica, Arial, sans-serif" font-size="30" fill="#deecf9">${xml(l)}</text>`).join('')}
   <rect x="0" y="560" width="1200" height="70" fill="#000" opacity=".22"/>
-  <text x="80" y="604" font-family="Segoe UI, Helvetica, Arial, sans-serif" font-size="26" fill="#fff">azure.msdevbuild.com · Feel Azure without an Azure account</text>
+  <text x="80" y="604" font-family="Segoe UI, Helvetica, Arial, sans-serif" font-size="23" fill="#fff"><tspan font-weight="700">MSDEVBUILD</tspan> · Multi-Stack Dev Build · by Suthahar Jegatheesan</text>
   ${badge ? `<text x="1120" y="604" text-anchor="end" font-family="Segoe UI, Helvetica, Arial, sans-serif" font-size="26" font-weight="700" fill="${accent}">${xml(badge)}</text>` : ''}
 </svg>`;
   return sharp(Buffer.from(svg)).png({ compressionLevel: 9, palette: true, quality: 90 }).toBuffer();

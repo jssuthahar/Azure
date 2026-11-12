@@ -46,11 +46,13 @@ const groupActive = (g: Group) => g.items.some((i) => i.href === active);
 ---
 
 <header class="site-header sticky top-0 z-50 border-b border-default bg-[var(--bg)]">
-  <div class="flex h-14 items-center gap-3 px-4 sm:px-6">
-    <a href="/" class="flex shrink-0 items-center gap-2.5" aria-label="MSDEVBUILD Azure — home">
+  <div class="hdr-row flex h-14 items-center gap-3 px-4 sm:px-6">
+    <button id="app-back" type="button" hidden class="-ml-2 grid size-10 shrink-0 place-items-center rounded-md text-2xl leading-none hover:bg-subtle" aria-label="Back">‹</button>
+    <a href="/" class="flex shrink-0 items-center gap-2.5" aria-label={`${SITE.brandLine}: home`}>
       <img src={SITE.authorImageSmall} alt="Suthahar Jegatheesan" width="36" height="36" class="size-9 rounded-full object-cover ring-2 ring-[var(--accent)]/30" />
-      <span class="leading-tight">
-        <span class="block font-semibold tracking-tight"><span class="header-ms">MS</span>DEVBUILD <span class="font-normal text-muted">/ azure</span></span>
+      <span class="brand-text leading-tight">
+        <span class="block font-semibold tracking-tight"><span class="header-ms">MS</span>DEVBUILD <span class="brand-sub font-normal text-muted">/ azure</span></span>
+        <span class="brand-tag hidden text-[11px] text-muted lg:block">{SITE.tagline}</span>
       </span>
     </a>
 
@@ -66,12 +68,16 @@ const groupActive = (g: Group) => g.items.some((i) => i.href === active);
       </datalist>
     </form>
 
-    <div class="ml-auto flex shrink-0 items-center gap-1 md:ml-2">
+    <div class="hdr-actions ml-auto flex shrink-0 items-center gap-1 md:ml-2">
       <a id="xp-chip" href="/progress/" hidden class="flex items-center gap-1.5 rounded-full border border-default bg-[var(--pastel-grey)] px-3 py-1.5 text-sm font-semibold hover:border-[var(--accent)]" title="Your level, XP and learning streak">
         <span id="xp-level"></span><span id="xp-points" class="text-accent"></span><span id="xp-streak" class="hidden"></span>
       </a>
       <button id="search-toggle" type="button" class="rounded-md p-2 hover:bg-subtle md:hidden" aria-label="Search tutorials" aria-expanded="false" aria-controls="topic-search">
         <svg class="size-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7" /><path d="m20 20-3.5-3.5" /></svg>
+      </button>
+      <button id="install-btn" type="button" data-install hidden class="install-btn flex items-center gap-1.5 rounded-full bg-[#0078d4] px-2.5 py-1.5 text-sm font-semibold text-white hover:bg-[#106ebe]" title="Install the app: works offline, opens from your home screen">
+        <svg class="size-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3v11M7.5 9.5 12 14l4.5-4.5" /><path d="M5 17v2a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-2" /></svg>
+        <span class="install-label">Install<span class="hidden lg:inline"> app</span></span>
       </button>
       <CurrencySelect compact class="mr-1" />
       <a href="/about/" class="hidden rounded-md px-3 py-2 text-sm text-muted hover:bg-subtle sm:block">About</a>
@@ -116,6 +122,26 @@ const groupActive = (g: Group) => g.items.some((i) => i.href === active);
     .site-header.search-open #topic-search { display: block; position: absolute; left: .75rem; right: .75rem; top: 3.6rem; max-width: none; z-index: 70; }
     .site-header.search-open #topic-search input { padding-top: .7rem; padding-bottom: .7rem; font-size: 1rem; box-shadow: 0 10px 30px rgb(0 30 60 / .2); background: var(--bg); }
   }
+  .install-btn[hidden] { display: none; }
+  .install-btn, #xp-chip { min-height: 36px; min-width: 36px; justify-content: center; }
+  /* Small phones: the install button shows its icon only */
+  @media (max-width: 400px) {
+    .install-label { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); }
+    .install-btn { padding: .45rem; }
+    /* small phones: keep every header button on screen */
+    .brand-sub { display: none; }
+    .hdr-row { gap: .5rem; padding-inline: .75rem; }
+    .hdr-actions { gap: 0; }
+    .hdr-actions > button, .hdr-actions > a#xp-chip { flex: none; }
+    #theme-toggle, #search-toggle { padding: .45rem; }
+  }
+  /* phones: compact XP chip (level + number); when it's showing, the photo logo stands in for the wordmark */
+  @media (max-width: 639px) {
+    .xp-unit, #xp-streak { display: none !important; }
+    #xp-chip { padding: .3rem .55rem; gap: .25rem; }
+    .site-header:has(#xp-chip:not([hidden])) .brand-text { display: none; }
+  }
+  @media (max-width: 340px) { .brand-text { display: none; } }
   /* Top menu: show a fade + arrow when more items are off to the right */
   .topbar-more { display: none; position: absolute; top: 0; right: 0; bottom: 0; width: 2.6rem; align-items: center; justify-content: flex-end; padding-right: .5rem; color: #fff; font-size: 1.4rem; font-weight: 700; pointer-events: none; background: linear-gradient(90deg, transparent, var(--topbar) 65%); }
   .topbar-wrap.more-right .topbar-more { display: flex; }
@@ -143,7 +169,7 @@ const groupActive = (g: Group) => g.items.some((i) => i.href === active);
     const st = streak(s);
     chip.hidden = s.xp === 0;
     document.getElementById('xp-level')!.textContent = lv.icon;
-    document.getElementById('xp-points')!.textContent = `${s.xp} XP`;
+    document.getElementById('xp-points')!.innerHTML = `${s.xp}<span class="xp-unit"> XP</span>`;
     const se = document.getElementById('xp-streak')!;
     se.textContent = `🔥 ${st}`;
     se.classList.toggle('hidden', st === 0);

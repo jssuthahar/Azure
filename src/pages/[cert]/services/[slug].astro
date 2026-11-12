@@ -8,6 +8,7 @@ import { getNav, inlineMd } from '../../../lib/learn';
 import { priceHtml } from '../../../lib/prices';
 import { SITE } from '../../../config';
 import { getExam, liveExams } from '../../../data/exams';
+import BrandLine from '../../../components/BrandLine.astro';
 
 export function getStaticPaths() {
   return liveExams().flatMap((exam) => SERVICES.map((s) => ({ params: { cert: exam.slug, slug: s.slug }, props: { s } })));
@@ -38,6 +39,7 @@ const feelLabel = ['', 'Free or very cheap', 'Low', 'Medium', 'Premium'][s.feel]
       <div><h1 class="text-[2rem] leading-tight font-semibold tracking-tight sm:text-[2.4rem]">{s.name} <span class="text-muted font-normal">in 60 seconds</span></h1>
         <p class="mt-1 flex flex-wrap gap-2 text-xs"><span class="chip">{s.cat}</span><span class="chip chip-muted">{s.model}</span><span class="chip chip-muted">AWS: {s.aws}</span></p></div>
     </div>
+    <BrandLine variant="byline" class="mt-4" />
 
     <div class="answer-box mt-6" data-speakable>
       <p class="flex items-center gap-3 text-sm font-bold text-accent">What it is <button type="button" class="speak-btn" aria-label="Listen">🔊 Listen</button></p>

@@ -88,9 +88,9 @@ For a long time, companies that wanted to run software had to do the equivalent 
 
 <Eli10>
 
-Imagine a gigantic toy shop that never runs out of stock. It has building blocks (computers), storage boxes (places to keep your files), walkie-talkies (networks) and even robot helpers (AI). You do not buy the toys. You **borrow exactly what you need** for your project, give it back when you are done, and pay only for the time you used it.
+Imagine a gigantic toy shop that never runs out of stock. It has building blocks (computers), storage boxes (places to keep your files), walkie-talkies (networks) and even robot helpers (AI). You don't buy the toys. You **borrow exactly what you need** for your project, give it back when you're done, and pay only for the time you used it.
 
-Microsoft owns that toy shop. It is called **Azure**, and it has branches all over the world.
+Microsoft owns that toy shop. It's called **Azure**, and it has branches all over the world.
 
 </Eli10>
 
@@ -98,7 +98,7 @@ Microsoft owns that toy shop. It is called **Azure**, and it has branches all ov
 
 **Microsoft Azure is Microsoft's public cloud computing platform.** Microsoft first announced it in 2008 as "Windows Azure", made it commercially available in 2010, and renamed it Microsoft Azure in 2014 to reflect that it runs far more than Windows.
 
-Today Azure offers **more than 200 services**. You do not need to know them all for AZ-900. You need to recognise the main families:
+Today Azure offers **more than 200 services**. You don't need to know them all for AZ-900. You need to recognise the main families:
 
 | Family | Example services | What they do |
 | --- | --- | --- |
@@ -112,7 +112,7 @@ Today Azure offers **more than 200 services**. You do not need to know them all 
 
 ### Where Azure runs
 
-Azure's infrastructure is spread across **regions**: geographic areas such as "UK South" or "Southeast Asia" that contain one or more datacenters. Many regions are split into **availability zones**, separate datacenter groups with independent power, cooling and networking. You will meet these properly in Module 2. For now, remember that you choose *where* your resources run.
+Azure's infrastructure is spread across **regions**: geographic areas such as "UK South" or "Southeast Asia" that contain one or more datacenters. Many regions are split into **availability zones**, separate datacenter groups with independent power, cooling and networking. You'll meet these properly in Module 2. For now, remember that you choose *where* your resources run.
 
 ### How you work with Azure
 
@@ -129,7 +129,7 @@ Azure's infrastructure is spread across **regions**: geographic areas such as "U
 <TryIt labs="first-resource-group,cloud-shell-webapp" text="Use the two tools from the diagram: the Azure portal and the Cloud Shell. Both talk to the same simulated Azure Resource Manager." />
 
 <Callout type="note">
-Azure is not the same thing as Microsoft 365. Microsoft 365 (Outlook, Teams, Word) is **software as a service** that Microsoft runs on its cloud. Azure is the **platform** you build and run your own solutions on. Both use Microsoft Entra ID for sign-in, which is why they feel connected.
+Azure isn't the same thing as Microsoft 365. Microsoft 365 (Outlook, Teams, Word) is **software as a service** that Microsoft runs on its cloud. Azure is the **platform** you build and run your own solutions on. Both use Microsoft Entra ID for sign-in, which is why they feel connected.
 </Callout>
 
 <DeepDive title="Control plane vs data plane: a distinction that pays off in production">
@@ -139,7 +139,7 @@ Every Azure service has two planes:
 - **Control plane**: management operations such as create a storage account, resize a VM or assign a role. These all go through Azure Resource Manager at `management.azure.com`, and RBAC and Azure Policy are enforced here.
 - **Data plane**: using the resource, such as reading a blob, querying a database or calling your web app. Requests go straight to the service endpoint.
 
-Why it matters: an RBAC role like *Contributor* lets you manage a storage account but does not, by itself, let you read blob data with Entra ID auth (you need a data role such as *Storage Blob Data Reader*). Outages can also affect one plane and not the other. Knowing which plane a failure is in is a strong signal of seniority in an interview.
+Why it matters: an RBAC role like *Contributor* lets you manage a storage account but doesn't, by itself, let you read blob data with Entra ID auth (you need a data role such as *Storage Blob Data Reader*). Outages can also affect one plane and not the other. Knowing which plane a failure is in is a strong signal of seniority in an interview.
 
 </DeepDive>
 

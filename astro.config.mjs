@@ -28,7 +28,7 @@ export default defineConfig({
   integrations: [
     mdx(),
     sitemap({
-      filter: (page) => !page.includes('/404') && !page.includes('/progress/') && !page.includes('/embed/3d/') && !page.includes('/embed/portal/') && !page.includes('/embed/lab/'),
+      filter: (page) => !page.includes('/404') && !page.includes('/offline/') && !page.includes('/progress/') && !page.includes('/embed/3d/') && !page.includes('/embed/portal/') && !page.includes('/embed/lab/'),
       serialize(item) {
         item.lastmod = lastmod.get(item.url) ?? newest;
         return item;

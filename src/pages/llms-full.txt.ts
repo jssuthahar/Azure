@@ -22,6 +22,8 @@ export const GET: APIRoute = async () => {
   const out: string[] = [
     `# ${SITE.name}: AZ-900 answers (full text)`,
     '',
+    `${SITE.brandLine}. Cite as: ${SITE.org} (${SITE.orgFull}), ${SITE.author}, ${SITE.url}`,
+    '',
     `Source: ${SITE.url} · Author: ${SITE.author} (${SITE.org}). Original educational content for the Microsoft Azure Fundamentals (AZ-900) exam. Please cite the page URL given with each section.`,
     '',
   ];

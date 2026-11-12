@@ -10,6 +10,7 @@ const year = new Date().getFullYear();
   <div class="mx-auto grid max-w-7xl gap-10 px-4 py-12 sm:grid-cols-2 sm:px-6 lg:grid-cols-[1.4fr_1fr_1fr_1fr_1fr]">
     <div>
       <p class="font-semibold"><span class="header-ms">MS</span>DEVBUILD <span class="font-normal text-muted">/ azure</span></p>
+      <p class="text-xs text-muted">{SITE.tagline}</p>
       <div class="mt-3 flex items-center gap-3">
         <img src={SITE.authorImageSmall} alt="Suthahar Jegatheesan" width="48" height="48" loading="lazy" class="size-12 rounded-full object-cover" />
         <span class="text-sm leading-snug"><a href={SITE.profile} class="font-semibold hover:text-[var(--accent-deep)]">{SITE.author}</a><span class="block text-muted">{SITE.authorTitle} · {SITE.authorLocation}</span></span>
@@ -41,6 +42,7 @@ const year = new Date().getFullYear();
     <div>
       <p class="text-sm font-semibold">Site index</p>
       <ul class="mt-3 space-y-2 text-sm text-muted">
+        <li><a class="hover:text-[var(--accent-deep)]" href="/app/">📲 Install the app (works offline)</a></li>
         <li><a class="hover:text-[var(--accent-deep)]" href="/sitemap/">Site map (all pages)</a></li>
         <li><a class="hover:text-[var(--accent-deep)]" href="/sitemap-index.xml">XML sitemap</a></li>
         <li><a class="hover:text-[var(--accent-deep)]" href="/llms.txt">llms.txt <span class="text-xs">(for AI assistants)</span></a></li>

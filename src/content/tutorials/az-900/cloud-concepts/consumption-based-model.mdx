@@ -3,7 +3,7 @@ title: Consumption-Based Model
 seoTitle: Consumption-Based Model (Pay-as-you-go) Explained | AZ-900
 description: "The consumption-based model explained: pay for what you use, how Azure meters resources, cost traps, interview questions and AZ-900 practice."
 answer: >-
-  The **consumption-based model** means you **pay only for the cloud resources you use**, measured by time, quantity or transactions, instead of buying capacity up front. There is no up-front cost, nothing to pay for unused capacity, and you can stop paying by removing resources. It is the pricing foundation of cloud computing and turns IT spending into operating expenditure (OpEx).
+  The **consumption-based model** means you **pay only for the cloud resources you use**, measured by time, quantity or transactions, instead of buying capacity up front. There's no up-front cost, nothing to pay for unused capacity, and you can stop paying by removing resources. It's the pricing foundation of cloud computing and turns IT spending into operating expenditure (OpEx).
 updated: 2026-11-11
 readingMinutes: 7
 keyTerms:
@@ -37,7 +37,7 @@ interview:
   - level: scenario
     q: A student creates a powerful GPU VM for a weekend project and forgets about it for a month. What happens?
     a: >-
-      Under the consumption model they are billed for every hour it was running, which can be very expensive for GPU sizes. The fix is to stop (deallocate) or delete it, set a budget alert, and use auto-shutdown schedules.
+      Under the consumption model they're billed for every hour it was running, which can be very expensive for GPU sizes. The fix is to stop (deallocate) or delete it, set a budget alert, and use auto-shutdown schedules.
     followUps: []
 revision:
   keyPoints:
@@ -118,7 +118,7 @@ In the **consumption-based model**, cloud resources are **metered** and billed a
 <DemandChart modes={['fixed', 'elastic']} initial="fixed" caption="Fixed capacity means paying for the peak all day. Consumption-based, elastic capacity means paying close to what you use." />
 
 <Callout type="warning">
-**A VM that is "Stopped" is not the same as "Stopped (deallocated)".** If you shut down the operating system from inside the VM, Azure still reserves the hardware and keeps charging compute. Stop it from the Azure portal, CLI or PowerShell so it is deallocated. Disks keep billing until you delete them.
+**A VM that is "Stopped" isn't the same as "Stopped (deallocated)".** If you shut down the operating system from inside the VM, Azure still reserves the hardware and keeps charging compute. Stop it from the Azure portal, CLI or PowerShell so it's deallocated. Disks keep billing until you delete them.
 </Callout>
 
 <TryIt labs="vm-and-cost" text="Try the difference between Stop and Deallocate in the simulator and watch the cost meter, including the disk that keeps billing." />

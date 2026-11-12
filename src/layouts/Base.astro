@@ -7,6 +7,7 @@ import XpToast from '../components/XpToast.astro';
 import SpeakButtons from '../components/SpeakButtons.astro';
 import Reveal from '../components/Reveal.astro';
 import CurrencyPrices from '../components/CurrencyPrices.astro';
+import AppInstall from '../components/AppInstall.astro';
 import { SITE, SOCIAL } from '../config';
 import { ogPages, ogImagePath } from '../lib/og-pages';
 
@@ -38,6 +39,7 @@ const graph: Record<string, unknown>[] = [
     '@id': `${SITE.url}/#website`,
     url: `${SITE.url}/`,
     name: SITE.name,
+    alternateName: [SITE.brandLine, `${SITE.org} Azure`],
     description: SITE.description,
     inLanguage: SITE.lang,
     publisher: { '@id': `${SITE.url}/#organization` },
@@ -46,6 +48,8 @@ const graph: Record<string, unknown>[] = [
     '@type': 'Organization',
     '@id': `${SITE.url}/#organization`,
     name: SITE.org,
+    alternateName: [SITE.orgFull, `${SITE.org} (${SITE.orgFull})`],
+    slogan: SITE.tagline,
     url: SITE.main,
     logo: new URL(SITE.authorImage, SITE.url).href,
     sameAs: [SITE.blog, SITE.main, 'https://www.youtube.com/@MSDEVBUILD', 'https://www.linkedin.com/company/31318247/', 'https://www.instagram.com/msdevbuild/'],
@@ -84,16 +88,23 @@ const jsonLd = JSON.stringify({ '@context': 'https://schema.org', '@graph': grap
 <html lang={SITE.lang} data-theme="light">
   <head>
     <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
     <title>{title}</title>
     <meta name="description" content={description} />
     <link rel="canonical" href={canonical} />
     {noindex && <meta name="robots" content="noindex" />}
     <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
     <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+    <link rel="manifest" href="/manifest.webmanifest" />
+    <meta name="mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-title" content="MSDEVBUILD" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+    <meta name="application-name" content="MSDEVBUILD Azure" />
     <link rel="sitemap" href="/sitemap-index.xml" />
     <meta name="theme-color" content="#0078d4" />
     <meta name="author" content={SITE.author} />
+    <meta name="publisher" content={SITE.brandLine} />
 
     <meta property="og:site_name" content={SITE.name} />
     <meta property="og:type" content={type} />
@@ -128,6 +139,8 @@ const jsonLd = JSON.stringify({ '@context': 'https://schema.org', '@graph': grap
         try { if (localStorage.getItem('msdb-nav-rail') === '1') document.documentElement.dataset.nav = 'rail'; } catch {}
         document.documentElement.classList.add('js');
       })();
+      // keep the install prompt if the browser offers it before our scripts load
+      addEventListener('beforeinstallprompt', (e) => { e.preventDefault(); window.__msdbBip = e; });
     </script>
     <script type="application/ld+json" set:html={jsonLd} />
   </head>
@@ -142,5 +155,6 @@ const jsonLd = JSON.stringify({ '@context': 'https://schema.org', '@graph': grap
     <SpeakButtons />
     <Reveal />
     <CurrencyPrices />
+    <AppInstall />
   </body>
 </html>

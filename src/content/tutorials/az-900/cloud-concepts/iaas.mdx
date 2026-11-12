@@ -27,17 +27,17 @@ interview:
   - level: intermediate
     q: Why would you choose IaaS over PaaS?
     a: >-
-      When I need full control of the OS (custom drivers, specific versions, agents), when migrating an existing app quickly without changes (lift and shift), when the software is not supported on a PaaS offering, or for workloads like custom databases or legacy line-of-business apps. The trade-off is that I take on patching, scaling and high-availability design.
+      When I need full control of the OS (custom drivers, specific versions, agents), when migrating an existing app quickly without changes (lift and shift), when the software isn't supported on a PaaS offering, or for workloads like custom databases or legacy line-of-business apps. The trade-off is that I take on patching, scaling and high-availability design.
     followUps: []
   - level: experienced
     q: You inherit 50 lifted-and-shifted VMs. How would you reduce the operational burden and cost?
     a: >-
-      Right-size using Azure Advisor and actual utilisation, shut down or schedule non-production VMs, buy reservations or a savings plan for steady ones, and use Azure Hybrid Benefit for Windows and SQL licences. Automate patching with Azure Update Manager, protect with Azure Backup, and standardise with policy. Then plan a modernisation path, moving web tiers to App Service or containers and databases to Azure SQL, so the platform team stops managing OSes it does not need to.
+      Right-size using Azure Advisor and actual utilisation, shut down or schedule non-production VMs, buy reservations or a savings plan for steady ones, and use Azure Hybrid Benefit for Windows and SQL licences. Automate patching with Azure Update Manager, protect with Azure Backup, and standardise with policy. Then plan a modernisation path, moving web tiers to App Service or containers and databases to Azure SQL, so the platform team stops managing OSes it doesn't need to.
     followUps: []
   - level: scenario
     q: A company runs a 15-year-old Windows application that only installs on a specific Windows Server version and needs a vendor agent. Which service type fits?
     a: >-
-      IaaS, an Azure VM with that Windows Server image. PaaS would not allow the custom installation. The company can modernise later, but IaaS gets it into Azure now with full control of the OS.
+      IaaS, an Azure VM with that Windows Server image. PaaS wouldn't allow the custom installation. The company can modernise later, but IaaS gets it into Azure now with full control of the OS.
     followUps: []
 revision:
   keyPoints:
@@ -98,7 +98,7 @@ IaaS is renting an empty computer. Microsoft gives you the machine, the power an
 
 ## The technical explanation
 
-**Infrastructure as a Service** is the most flexible cloud service type. The provider supplies and manages the **physical datacenter, physical network, physical hosts and the virtualisation layer**. You get virtual machines, disks and virtual networks, and you are responsible for **everything you put on them**: the operating system, patches, middleware, runtimes, applications, data, and their configuration and security.
+**Infrastructure as a Service** is the most flexible cloud service type. The provider supplies and manages the **physical datacenter, physical network, physical hosts and the virtualisation layer**. You get virtual machines, disks and virtual networks, and you're responsible for **everything you put on them**: the operating system, patches, middleware, runtimes, applications, data, and their configuration and security.
 
 <Flow
   caption="The IaaS stack: where Microsoft's job ends and yours begins"

@@ -19,7 +19,7 @@ interview:
   - level: beginner
     q: What is an Azure virtual network?
     a: >-
-      It is my private network in Azure. My VMs and other resources inside it can talk to each other privately, and I control whether they can reach the internet or my office network.
+      It's my private network in Azure. My VMs and other resources inside it can talk to each other privately, and I control whether they can reach the internet or my office network.
     followUps:
       - q: Why use subnets?
         a: >-
@@ -32,7 +32,7 @@ interview:
   - level: experienced
     q: What would you watch out for when planning VNet address spaces?
     a: >-
-      Avoid overlapping ranges with on-premises networks and other VNets you may peer with, because overlapping address spaces cannot be connected. Leave room to grow, remember Azure reserves five IP addresses in every subnet, and plan dedicated subnets for services that need them, such as VPN gateways (GatewaySubnet) or Azure Bastion.
+      Avoid overlapping ranges with on-premises networks and other VNets you may peer with, because overlapping address spaces can't be connected. Leave room to grow, remember Azure reserves five IP addresses in every subnet, and plan dedicated subnets for services that need them, such as VPN gateways (GatewaySubnet) or Azure Bastion.
     followUps: []
 revision:
   keyPoints:

@@ -3,7 +3,7 @@ title: Elasticity
 seoTitle: Elasticity vs Scalability in Cloud Computing | AZ-900
 description: Cloud elasticity explained with autoscaling, an interactive demand chart, how it differs from scalability, interview questions and AZ-900 practice questions.
 answer: >-
-  **Elasticity** is the ability of a cloud system to **automatically add or remove resources in real time** as demand changes, so capacity closely tracks actual usage. It is scalability made automatic and fast. In Azure, elasticity comes from **autoscale** features in services such as Virtual Machine Scale Sets, App Service, Azure Functions and AKS.
+  **Elasticity** is the ability of a cloud system to **automatically add or remove resources in real time** as demand changes, so capacity closely tracks actual usage. It's scalability made automatic and fast. In Azure, elasticity comes from **autoscale** features in services such as Virtual Machine Scale Sets, App Service, Azure Functions and AKS.
 updated: 2026-11-11
 readingMinutes: 7
 keyTerms:
@@ -32,12 +32,12 @@ interview:
   - level: experienced
     q: What can go wrong with autoscale in production?
     a: >-
-      Flapping, where rules that are too sensitive or have no cool-down scale out and in repeatedly. Slow start-up, where new instances take minutes to warm up, so the peak passes first (use pre-warming, minimum instances or scheduled scale-out). Missing scale-in rules, so costs never come down. Scaling on the wrong metric, such as CPU when the real bottleneck is a queue length or database. And downstream overload, where scaling out the front end overwhelms a database that cannot scale as fast. You also need quota headroom in the region.
+      Flapping, where rules that are too sensitive or have no cool-down scale out and in repeatedly. Slow start-up, where new instances take minutes to warm up, so the peak passes first (use pre-warming, minimum instances or scheduled scale-out). Missing scale-in rules, so costs never come down. Scaling on the wrong metric, such as CPU when the real bottleneck is a queue length or database. And downstream overload, where scaling out the front end overwhelms a database that can't scale as fast. You also need quota headroom in the region.
     followUps: []
   - level: scenario
     q: A ticket website gets massive spikes the minute concert tickets go on sale, then quiet within an hour. Which cloud benefit is most important?
     a: >-
-      Elasticity. Capacity must grow automatically within minutes and shrink straight afterwards so they do not pay for idle servers. Combine autoscale with a scheduled scale-out just before the sale opens, plus a queue for orders.
+      Elasticity. Capacity must grow automatically within minutes and shrink straight afterwards so they don't pay for idle servers. Combine autoscale with a scheduled scale-out just before the sale opens, plus a queue for orders.
     followUps: []
 revision:
   keyPoints:
