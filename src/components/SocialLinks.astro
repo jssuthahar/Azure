@@ -1,0 +1,22 @@
+---
+/** Suthahar's social profiles (same as blog.msdevbuild.com). */
+import { SOCIAL } from '../config';
+interface Props { labels?: boolean; class?: string }
+const { labels = false, class: cls = '' } = Astro.props;
+---
+<ul class={`social-links flex flex-wrap items-center gap-2 ${cls}`} aria-label="Follow Suthahar">
+  {SOCIAL.filter((s) => labels || !s.name.startsWith('MSDEVBUILD')).map((s) => (
+    <li>
+      <a href={s.href} target="_blank" rel="noopener me" class={`social-a ${labels ? 'social-wide' : ''}`} aria-label={s.name} title={s.name} style={`--sc:${s.color}`}>
+        <span class="social-ico" aria-hidden="true">{s.icon}</span>{labels && <span>{s.name}</span>}
+      </a>
+    </li>
+  ))}
+</ul>
+<style is:global>
+  .social-a { display: inline-flex; align-items: center; gap: .45rem; border-radius: 999px; border: 1px solid var(--card-line); background: var(--card); color: var(--text) !important; font-size: .85rem; font-weight: 600; text-decoration: none !important; transition: border-color .15s, transform .15s; }
+  .social-a:hover { border-color: var(--sc); transform: translateY(-1px); }
+  .social-a:not(.social-wide) { width: 2.2rem; height: 2.2rem; justify-content: center; }
+  .social-wide { padding: .3rem .8rem .3rem .3rem; }
+  .social-ico { display: grid; place-items: center; width: 1.6rem; height: 1.6rem; border-radius: 999px; background: var(--sc); color: #fff; font-size: .78rem; font-weight: 800; line-height: 1; }
+</style>

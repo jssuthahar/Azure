@@ -3,7 +3,7 @@
   "type": "module",
   "version": "1.0.0",
   "private": true,
-  "description": "Azure certification learning platform (azure.msdevbuild.com) \u2014 starting with AZ-900.",
+  "description": "Azure certification learning platform (azure.msdevbuild.com) — starting with AZ-900.",
   "scripts": {
     "dev": "astro dev",
     "build": "astro build",
@@ -21,10 +21,12 @@
     "@tailwindcss/typography": "0.5.20",
     "@tailwindcss/vite": "4.3.3",
     "astro": "5.18.2",
-    "tailwindcss": "4.3.3"
+    "tailwindcss": "4.3.3",
+    "three": "0.185.1"
   },
   "devDependencies": {
     "@astrojs/check": "0.9.10",
+    "@types/three": "0.185.4",
     "typescript": "5.9.3"
   }
 }

@@ -3,20 +3,19 @@ import Base from '../../layouts/Base.astro';
 import Mascot from '../../components/Mascot.astro';
 import { getQuestionBank, getNav } from '../../lib/learn';
 import { MODULES } from '../../data/az-900/syllabus';
+import { EXAM_ITEMS } from '../../data/az-900/exam-items';
 
 const bank = await getQuestionBank();
 const nav = await getNav();
 const topicTitle = Object.fromEntries(nav.filter((t) => t.published).map((t) => [t.slug, { title: t.title, url: t.url }]));
-const domains = MODULES.map((m) => ({ domain: m.domain, title: m.shortTitle, weight: m.weightMid, count: bank.filter((q) => q.domain === m.domain).length }));
-const payload = JSON.stringify({ bank, domains, topicTitle }).replace(/</g, '\\u003c');
+const domains = MODULES.map((m) => ({ domain: m.domain, title: m.title, short: m.shortTitle, count: bank.filter((q) => q.domain === m.domain).length + EXAM_ITEMS.filter((x) => x.domain === m.domain).length }));
+const choice = bank.map((q) => ({ kind: q.type, id: q.id, domain: q.domain, topic: q.topic, scenario: q.scenario, question: q.question, options: q.options, answer: q.answer, explanation: q.explanation }));
+const payload = JSON.stringify({ choice, domains, topicTitle }).replace(/</g, '\\u003c');
+const total = bank.length + EXAM_ITEMS.length;
 
-const title = 'AZ-900 Mock Exam: Free Timed Practice Test';
-const description = `Free timed AZ-900 practice exam with ${bank.length} original questions weighted by official domain, mark-for-review, scoring and full explanations.`;
-const crumbs = [
-  { name: 'Home', url: '/' },
-  { name: 'AZ-900', url: '/az-900/' },
-  { name: 'Mock exam', url: '/az-900/mock-exam/' },
-];
+const title = 'AZ-900 Mock Exam: Real Exam Experience, Free';
+const description = `Free AZ-900 practice exam that feels like the real Microsoft exam: timer, review screen, drag and drop, Yes/No and drop-down items, score report and certificate.`;
+const crumbs = [{ name: 'Home', url: '/' }, { name: 'AZ-900', url: '/az-900/' }, { name: 'Mock exam', url: '/az-900/mock-exam/' }];
 ---
 <Base title={title} description={description} breadcrumbs={crumbs}>
   <script type="application/json" id="exam-data" set:html={payload} />
@@ -26,351 +25,580 @@ const crumbs = [
       <nav aria-label="Breadcrumb" class="text-sm text-muted"><a href="/">Home</a> / <a href="/az-900/">AZ-900</a> / <span class="text-[var(--text)]">Mock exam</span></nav>
       <div class="mt-6 grid gap-8 lg:grid-cols-[1.4fr_1fr]">
         <div>
-          <p class="eyebrow">Practise under exam conditions</p>
+          <p class="eyebrow">Real exam experience</p>
           <h1 class="mt-3 text-3xl font-bold tracking-tight sm:text-4xl">AZ-900 mock exam</h1>
-          <p class="mt-4 text-lg leading-relaxed text-muted">Questions are drawn at random from a bank of {bank.length} and weighted like the real exam's domains. You get a timer, question navigation and mark-for-review. At the end you see a full review that explains every option.</p>
+          <p class="mt-4 text-lg leading-relaxed text-muted">Sit it like the real Microsoft exam: a full-screen exam room, a countdown timer, <strong>Mark for review</strong>, a review screen, and the same item types: multiple choice, multiple response, <strong>drag and drop</strong>, <strong>build a list</strong>, <strong>drop-down</strong> and a final <strong>Yes/No</strong> section you can’t go back to. Scored on the 1–1000 scale (700 to pass), with a full report and your MSDEVBUILD certificate.</p>
           <div class="callout callout-warning mt-5">
-            <p class="callout-title">Practice questions only</p>
-            <p>Every question here was written for this site to teach the official objectives. None are real, recalled or leaked Microsoft exam questions. The real exam's wording, format and scoring differ.</p>
+            <p class="callout-title">Original practice questions</p>
+            <p>All {total} questions were written for this site from the official AZ-900 skills outline. None are real, recalled or leaked Microsoft exam questions (sharing those breaks Microsoft’s exam agreement). This is a practice simulation, not affiliated with Microsoft or any exam delivery provider.</p>
           </div>
         </div>
         <div class="card flex items-center gap-4 p-5">
           <Mascot size={72} mood="thinking" />
           <div class="text-sm leading-relaxed">
-            <p class="font-semibold">Nimbus's exam tips</p>
-            <p class="mt-1 text-muted">Read the last line of a question first. Rule out options that are obviously wrong. Flag anything you are unsure of, move on, and come back.</p>
+            <p class="font-semibold">Nimbus's exam-room tips</p>
+            <p class="mt-1 text-muted">Read the last line first. Answer everything (there’s no penalty for guessing). Mark tricky ones and use the review screen. In the Yes/No section you can’t go back, so check each statement before you press Next.</p>
           </div>
         </div>
       </div>
 
       <form id="setup-form" class="mt-8 grid gap-4 md:grid-cols-3">
+        <label class="md:col-span-3 flex max-w-md flex-col gap-1 text-sm font-semibold">Candidate name <span class="font-normal text-muted">(shown on your score report and certificate)</span>
+          <input name="name" id="cand-name" maxlength="60" placeholder="Your full name" class="rounded-lg border border-default bg-[var(--bg)] px-3 py-2 text-base font-normal" />
+        </label>
         <label class="opt min-w-0 flex-col !gap-1 p-5">
-          <span class="flex items-center gap-2"><input type="radio" name="mode" value="full" checked /><span class="font-semibold">Full mock exam</span></span>
-          <span class="text-sm text-muted">40 questions · 45 minutes · all three domains weighted 25–30% / 35–40% / 30–35%.</span>
+          <span class="flex items-center gap-2"><input type="radio" name="mode" value="full" checked /><span class="font-semibold">Full exam (certificate)</span></span>
+          <span class="text-sm text-muted">45 questions · 45 minutes · 2 sections · all item types · earns the certificate at 700+.</span>
         </label>
         <label class="opt min-w-0 flex-col !gap-1 p-5">
           <span class="flex items-center gap-2"><input type="radio" name="mode" value="quick" /><span class="font-semibold">Quick practice</span></span>
-          <span class="text-sm text-muted">10 questions · 12 minutes · a short daily warm-up.</span>
+          <span class="text-sm text-muted">12 questions · 15 minutes · a short warm-up with every item type.</span>
         </label>
         <label class="opt min-w-0 flex-col !gap-1 p-5">
           <span class="flex items-center gap-2"><input type="radio" name="mode" value="domain" /><span class="font-semibold">Practise one domain</span></span>
-          <span class="text-sm text-muted">Up to 15 questions · 18 minutes · focus on a weak area.</span>
+          <span class="text-sm text-muted">15 questions · 18 minutes · focus on a weak area.</span>
           <select name="domain" class="mt-2 w-full max-w-full min-w-0 rounded-lg border border-default bg-[var(--bg)] px-2 py-1.5 text-sm" aria-label="Domain">
-            {domains.map((d) => <option value={d.domain}>Domain {d.domain}: {d.title} ({d.count} questions)</option>)}
+            {domains.map((d) => <option value={d.domain}>Domain {d.domain}: {d.short} ({d.count} questions)</option>)}
           </select>
         </label>
         <div class="flex flex-wrap items-center gap-3 md:col-span-3">
-          <button type="submit" class="btn btn-accent">Start exam</button>
+          <button type="submit" class="btn btn-accent">Enter the exam room</button>
           <button type="button" id="resume" class="btn btn-outline hidden">Resume unfinished exam</button>
           <label class="flex items-center gap-2 text-sm text-muted"><input type="checkbox" name="untimed" /> Practice without a timer</label>
         </div>
       </form>
     </section>
 
-    <!-- ============ EXAM ============ -->
-    <section id="exam" class="hidden" aria-label="Exam in progress">
-      <div class="sticky top-16 z-10 -mx-4 mb-5 flex flex-wrap items-center gap-3 border-b border-default bg-[var(--bg)]/95 px-4 py-3 sm:-mx-6 sm:px-6">
-        <p class="font-semibold">Question <span id="q-num">1</span> of <span id="q-total">40</span></p>
-        <span id="q-domain" class="chip"></span>
-        <p class="ml-auto font-mono text-lg font-bold tabular-nums" id="timer" role="timer" aria-live="off">45:00</p>
-        <button type="button" id="submit-exam" class="btn btn-primary btn-sm">Finish &amp; score</button>
-      </div>
-      <div class="grid gap-6 lg:grid-cols-[minmax(0,1fr)_16rem]">
-        <div>
-          <div class="card p-5 sm:p-6">
-            <p id="q-scenario" class="mb-3 hidden rounded-xl bg-subtle p-3 leading-relaxed"></p>
-            <p id="q-text" class="text-lg leading-relaxed font-semibold"></p>
-            <p id="q-hint" class="mt-1 text-sm text-muted"></p>
-            <fieldset id="q-options" class="mt-4 space-y-2"><legend class="sr-only">Answer options</legend></fieldset>
-          </div>
-          <div class="mt-4 flex flex-wrap items-center gap-2">
-            <button type="button" id="prev" class="btn btn-outline btn-sm">← Previous</button>
-            <button type="button" id="flag" class="btn btn-outline btn-sm" aria-pressed="false">⚑ Mark for review</button>
-            <button type="button" id="next" class="btn btn-accent btn-sm ml-auto">Next →</button>
-          </div>
-        </div>
-        <aside class="card h-fit p-4">
-          <p class="text-sm font-semibold">Question navigator</p>
-          <div id="navigator" class="mt-3 grid grid-cols-6 gap-1.5 lg:grid-cols-5"></div>
-          <div class="mt-3 space-y-1 text-xs text-muted">
-            <p><span class="mr-1 inline-block size-3 rounded border border-[var(--accent)] bg-[var(--accent-soft)] align-middle"></span>Answered</p>
-            <p><span class="mr-1 inline-block size-3 rounded-full bg-[var(--warn)] align-middle"></span>Marked for review</p>
-          </div>
-        </aside>
-      </div>
-    </section>
-
     <!-- ============ RESULTS ============ -->
-    <section id="results" class="hidden" aria-labelledby="results-title">
-      <div class="card overflow-hidden">
-        <div class="band flex flex-wrap items-center gap-6 p-6">
-          <div>
-            <p class="text-sm text-white/80">Your result</p>
-            <h2 id="results-title" class="text-4xl font-bold"><span id="r-percent"></span>%</h2>
-            <p id="r-detail" class="text-white/85"></p>
-          </div>
-          <p id="r-verdict" class="ml-auto rounded-2xl bg-white/15 px-4 py-3 text-lg font-semibold"></p>
-        </div>
-        <div class="grid gap-6 p-6 md:grid-cols-2">
-          <div>
-            <h3 class="font-semibold">Performance by domain</h3>
-            <div id="r-domains" class="mt-3 space-y-3"></div>
-          </div>
-          <div>
-            <h3 class="font-semibold">What to do next</h3>
-            <ul id="r-next" class="mt-3 space-y-2 text-sm leading-relaxed"></ul>
-            <p class="mt-4 text-xs text-muted">The "scaled" figure is a rough indication on a 1–1000 scale (passing mark 700). Microsoft's real scoring is not a simple percentage.</p>
-          </div>
-        </div>
-      </div>
-      <div class="mt-8 flex flex-wrap items-center gap-2">
-        <h3 class="mr-auto text-xl font-bold">Review answers</h3>
-        <div role="group" aria-label="Filter review" class="flex gap-1 text-sm">
-          <button type="button" class="btn btn-outline btn-sm" data-filter="all">All</button>
-          <button type="button" class="btn btn-outline btn-sm" data-filter="wrong">Incorrect</button>
-          <button type="button" class="btn btn-outline btn-sm" data-filter="flagged">Flagged</button>
-        </div>
-      </div>
-      <ol id="review" class="mt-4 space-y-4"></ol>
-      <div class="mt-8 flex gap-3"><button type="button" id="again" class="btn btn-accent">Take another exam</button><a href="/progress/" class="btn btn-outline">See my progress</a></div>
-    </section>
+    <section id="results" class="hidden" aria-labelledby="sr-title"></section>
+  </div>
+
+  <!-- ============ EXAM ROOM (full screen) ============ -->
+  <div id="xs" class="xs" hidden role="application" aria-label="Exam">
+    <header class="xs-top">
+      <span class="xs-title">Microsoft Azure Fundamentals (AZ-900) · Practice exam</span>
+      <span class="xs-cand" id="xs-cand"></span>
+      <span class="xs-time" id="xs-time" role="timer" aria-live="off"></span>
+    </header>
+    <div class="xs-sub">
+      <span id="xs-pos"></span>
+      <span class="xs-zoom" aria-label="Text size"><button type="button" data-zoom="-1" title="Smaller text">A−</button><button type="button" data-zoom="1" title="Larger text">A+</button></span>
+      <label class="xs-mark" id="xs-mark-wrap"><input type="checkbox" id="xs-mark" /> Mark for review</label>
+    </div>
+    <main class="xs-body" id="xs-body" tabindex="-1"></main>
+    <footer class="xs-foot" id="xs-foot"></footer>
+    <div class="xs-modal" id="xs-modal" hidden><div class="xs-dialog" role="alertdialog" aria-modal="true" id="xs-dialog"></div></div>
   </div>
 </Base>
 
-<script>
-  import { saveMock } from '../../lib/progress';
+<style is:global>
+  .xs { position: fixed; inset: 0; z-index: 300; display: flex; flex-direction: column; background: #fff; color: #1a1a1a; font: 15px/1.5 'Segoe UI', var(--font-sans); --xs-scale: 1; }
+  .xs[hidden] { display: none; }
+  .xs button { font: inherit; cursor: pointer; }
+  .xs-top { flex: none; display: flex; flex-wrap: wrap; align-items: center; gap: .4rem 1.2rem; padding: .55rem 1rem; background: #2b2b2b; color: #fff; }
+  .xs-title { font-weight: 600; }
+  .xs-cand { opacity: .85; font-size: .9rem; }
+  .xs-time { margin-left: auto; font-variant-numeric: tabular-nums; font-weight: 600; padding: .15rem .6rem; border-radius: 4px; background: #444; }
+  .xs-time.low { background: #c50f1f; }
+  .xs-sub { flex: none; display: flex; align-items: center; gap: 1rem; padding: .45rem 1rem; background: #e9e9e9; border-bottom: 1px solid #cfcfcf; font-weight: 600; }
+  .xs-zoom { display: inline-flex; gap: 2px; margin-left: auto; }
+  .xs-zoom button { padding: .1rem .55rem; border: 1px solid #9a9a9a; background: #fff; border-radius: 3px; }
+  .xs-mark { display: inline-flex; align-items: center; gap: .4rem; font-weight: 600; }
+  .xs-mark[hidden] { display: none; }
+  .xs-body { flex: 1; min-height: 0; overflow: auto; padding: 1.4rem clamp(1rem, 4vw, 3rem) 2rem; font-size: calc(1rem * var(--xs-scale)); }
+  .xs-body:focus { outline: none; }
+  .xs-foot { flex: none; display: flex; gap: .6rem; justify-content: space-between; padding: .6rem 1rem; background: #e9e9e9; border-top: 1px solid #cfcfcf; }
+  .xs-foot .xs-mid { display: flex; gap: .6rem; }
+  .xs-btn { padding: .45rem 1.2rem; border-radius: 3px; border: 1px solid #7a7a7a; background: linear-gradient(#fff, #e6e6e6); color: #1a1a1a; font-weight: 600; }
+  .xs-btn:hover { background: #fff; border-color: #0067b8; }
+  .xs-btn:disabled { opacity: .45; cursor: default; }
+  .xs-btn.primary { background: #0067b8; border-color: #0067b8; color: #fff; }
+  .xs-q { max-width: 980px; }
+  .xs-q h2 { font-size: 1.05em; font-weight: 600; margin: 0 0 .8rem; }
+  .xs-note { color: #444; font-size: .93em; margin: .2rem 0 .9rem; }
+  .xs-scn { background: #f4f4f4; border-left: 4px solid #9a9a9a; padding: .7rem 1rem; margin-bottom: 1rem; }
+  .xs-opts { display: grid; gap: .45rem; margin-top: .6rem; }
+  .xs-opt { display: flex; gap: .7rem; align-items: flex-start; padding: .55rem .8rem; border: 1px solid #c8c8c8; border-radius: 3px; cursor: pointer; }
+  .xs-opt:hover { background: #f3f8fd; }
+  .xs-opt input { margin-top: .3rem; }
+  .xs-yn { border-collapse: collapse; width: 100%; max-width: 980px; }
+  .xs-yn th, .xs-yn td { border: 1px solid #bdbdbd; padding: .6rem .8rem; vertical-align: middle; }
+  .xs-yn th { background: #ececec; text-align: left; }
+  .xs-yn td.c { text-align: center; width: 5rem; }
+  .xs-yn input { width: 1.15rem; height: 1.15rem; }
+  .xs-cols { display: grid; grid-template-columns: minmax(180px, 1fr) minmax(0, 2fr); gap: 1.4rem; align-items: start; }
+  .xs-panel { border: 1px solid #bdbdbd; }
+  .xs-panel > p { margin: 0; padding: .45rem .7rem; background: #ececec; font-weight: 600; border-bottom: 1px solid #bdbdbd; }
+  .xs-panel .xs-in { padding: .6rem; display: grid; gap: .45rem; min-height: 3rem; }
+  .xs-tile { padding: .45rem .7rem; border: 1px solid #8a8a8a; border-radius: 3px; background: #fff; text-align: left; cursor: grab; }
+  .xs-tile[aria-pressed='true'] { outline: 3px solid #0067b8; outline-offset: 1px; }
+  .xs-target { display: grid; grid-template-columns: minmax(150px, 1fr) minmax(0, 1.3fr); gap: .6rem; align-items: center; }
+  .xs-slot { min-height: 2.4rem; padding: .35rem .6rem; border: 2px dashed #8a8a8a; border-radius: 3px; background: #fafafa; text-align: left; }
+  .xs-slot.filled { border-style: solid; border-color: #0067b8; background: #eef5fc; font-weight: 600; }
+  .xs-slot.over { background: #dbeaf8; }
+  .xs-order-row { display: flex; gap: .4rem; align-items: center; }
+  .xs-order-row .xs-tile { flex: 1; }
+  .xs-mini { padding: .2rem .5rem; border: 1px solid #8a8a8a; border-radius: 3px; background: #fff; }
+  .xs-arrows { display: grid; gap: .4rem; align-content: center; justify-items: center; }
+  .xs-sent { font-size: 1.05em; line-height: 2.4; max-width: 900px; }
+  .xs-sent select { font: inherit; padding: .2rem .4rem; border: 1px solid #0067b8; border-radius: 3px; background: #fff; max-width: 100%; }
+  .xs-rev table { border-collapse: collapse; width: 100%; max-width: 980px; }
+  .xs-rev th, .xs-rev td { border: 1px solid #c8c8c8; padding: .4rem .7rem; text-align: left; }
+  .xs-rev th { background: #ececec; }
+  .xs-rev tr.go { cursor: pointer; } .xs-rev tr.go:hover td { background: #f3f8fd; }
+  .xs-filters { display: flex; flex-wrap: wrap; gap: .5rem; margin: .4rem 0 1rem; }
+  .xs-filters button[aria-pressed='true'] { background: #0067b8; color: #fff; border-color: #0067b8; }
+  .xs-modal { position: absolute; inset: 0; background: rgb(0 0 0 / .35); display: grid; place-items: center; padding: 1rem; }
+  .xs-modal[hidden] { display: none; }
+  .xs-dialog { width: min(520px, 100%); background: #fff; border: 1px solid #7a7a7a; box-shadow: 0 12px 40px rgb(0 0 0 / .3); }
+  .xs-dialog h3 { margin: 0; padding: .6rem 1rem; background: #2b2b2b; color: #fff; font-size: 1rem; font-weight: 600; }
+  .xs-dialog .xs-dbody { padding: 1rem; }
+  .xs-dialog .xs-dfoot { display: flex; justify-content: flex-end; gap: .6rem; padding: .7rem 1rem; background: #f0f0f0; }
+  .xs-welcome { max-width: 860px; }
+  .xs-welcome h1 { font-size: 1.5em; font-weight: 600; margin-bottom: .6rem; }
+  .xs-welcome ul { list-style: disc; padding-left: 1.3rem; display: grid; gap: .35rem; margin: .6rem 0 1rem; }
+  .xs-box { border: 1px solid #bdbdbd; background: #fafafa; padding: .9rem 1rem; margin: 1rem 0; }
+  .xs-lock { background: #fff4ce; border: 1px solid #c19c00; padding: .7rem 1rem; margin-bottom: 1rem; }
+  @media (max-width: 720px) { .xs-cols { grid-template-columns: 1fr !important; } .xs-target { grid-template-columns: 1fr; } .xs-title { font-size: .85rem; } .xs-arrows { grid-auto-flow: column; } }
+  /* score report (site look) */
+  .sr-scale { position: relative; height: 14px; border-radius: 999px; background: linear-gradient(90deg, #f3b6b8 0 69.9%, #b7e3b4 70% 100%); }
+  .sr-scale .sr-pass { position: absolute; top: -6px; bottom: -6px; left: 70%; width: 2px; background: #1a1a1a; }
+  .sr-scale .sr-you { position: absolute; top: 50%; width: 18px; height: 18px; margin: -9px 0 0 -9px; border-radius: 50%; border: 3px solid #fff; box-shadow: 0 0 0 2px #0078d4; background: #0078d4; }
+  .sr-item { border: 1px solid var(--card-line); border-radius: 12px; background: var(--card); padding: 1rem 1.2rem; }
+  .sr-item table { width: 100%; border-collapse: collapse; font-size: .95rem; }
+  .sr-item th, .sr-item td { border-bottom: 1px solid var(--card-line); padding: .4rem .5rem; text-align: left; vertical-align: top; }
+  .sr-ok { color: var(--ok); font-weight: 700; } .sr-bad { color: var(--bad); font-weight: 700; } .sr-part { color: var(--warn); font-weight: 700; }
+  .sr-badge { display: inline-flex; padding: .15rem .6rem; border-radius: 999px; font-size: .8rem; font-weight: 700; }
+  .sr-badge.ok { background: var(--ok-soft); color: var(--ok); } .sr-badge.bad { background: var(--bad-soft); color: var(--bad); } .sr-badge.part { background: var(--warn-soft); color: var(--warn); } .sr-badge.none { background: var(--pastel-grey); color: var(--text-muted); }
+</style>
 
-  interface Q {
-    id: string; type: 'single' | 'multi'; scenario?: string; question: string;
-    options: { text: string; why: string }[]; answer: number[]; explanation: string; domain: 1 | 2 | 3; topic?: string;
-  }
-  interface ExamQ extends Q { order: number[] }
-  interface State { mode: string; qs: ExamQ[]; picks: number[][]; flags: boolean[]; cur: number; endsAt: number | null; }
+<script>
+  import { EXAM_ITEMS, type FormatItem } from '../../data/az-900/exam-items';
+  import { buildPaper, emptyResponse, answered, score, result, KIND_LABEL, type Item, type ChoiceItem, type Response, type Paper } from '../../lib/exam';
+  import { saveMock, type MockResult } from '../../lib/progress';
+  import { issueCert, loadCert } from '../../lib/certificate';
+  import { confetti } from '../../lib/fun';
 
   const data = JSON.parse(document.getElementById('exam-data')!.textContent!) as {
-    bank: Q[]; domains: { domain: number; title: string; weight: number; count: number }[]; topicTitle: Record<string, { title: string; url: string }>;
+    choice: ChoiceItem[]; domains: { domain: number; title: string; short: string }[]; topicTitle: Record<string, { title: string; url: string }>;
   };
-  const SKEY = 'msdb-azure-exam-inprogress';
+  const SKEY = 'msdb-azure-exam-v2';
   const $ = <T extends HTMLElement = HTMLElement>(id: string) => document.getElementById(id) as T;
-  const esc = (s: string) => s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>').replace(/`(.+?)`/g, '<code>$1</code>');
-  const shuffle = <T,>(a: T[]) => { const b = [...a]; for (let i = b.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [b[i], b[j]] = [b[j], b[i]]; } return b; };
-  const domainTitle = (d: number) => data.domains.find((x) => x.domain === d)?.title ?? '';
+  const esc = (s: string) => String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/"/g, '&quot;').replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>').replace(/`(.+?)`/g, '<code>$1</code>');
+  const domainTitle = (d: number) => data.domains.find((x) => x.domain === d)?.title ?? `Domain ${d}`;
 
+  type Screen = 'welcome' | 'q' | 'review' | 'sec2';
+  interface State { paper: Paper; responses: Response[]; flags: boolean[]; cur: number; screen: Screen; endsAt: number | null; started: boolean; name: string; section: 1 | 2; scale: number; filter: 'all' | 'incomplete' | 'marked' }
   let st: State | null = null;
-  let tick: number | undefined;
+  let tick = 0;
+  let pick: number | null = null; // selected tile (click-to-place drag and drop)
 
-  const persist = () => { try { st ? sessionStorage.setItem(SKEY, JSON.stringify(st)) : sessionStorage.removeItem(SKEY); } catch {} };
+  const persist = () => { try { if (st) sessionStorage.setItem(SKEY, JSON.stringify(st)); else sessionStorage.removeItem(SKEY); } catch {} };
+  const item = () => st!.paper.items[st!.cur];
+  const sec1Count = () => st!.paper.section2Start;
+  const hasSec2 = () => st!.paper.items.length > st!.paper.section2Start;
 
-  function build(mode: string, domain: number): ExamQ[] {
-    const total = mode === 'full' ? 40 : mode === 'quick' ? 10 : 15;
-    let picked: Q[] = [];
-    if (mode === 'domain') {
-      picked = shuffle(data.bank.filter((q) => q.domain === domain)).slice(0, total);
-    } else {
-      const weights = data.domains.map((d) => d.weight);
-      const sum = weights.reduce((a, b) => a + b, 0);
-      const quota = data.domains.map((d) => Math.round((d.weight / sum) * total));
-      quota[quota.length - 1] += total - quota.reduce((a, b) => a + b, 0);
-      const used = new Set<string>();
-      data.domains.forEach((d, i) => {
-        const pool = shuffle(data.bank.filter((q) => q.domain === d.domain)).slice(0, quota[i]);
-        pool.forEach((q) => used.add(q.id));
-        picked.push(...pool);
-      });
-      if (picked.length < total) picked.push(...shuffle(data.bank.filter((q) => !used.has(q.id))).slice(0, total - picked.length));
-      picked = shuffle(picked);
+  /* ---------- rendering one item in the exam room ---------- */
+  function renderItem(q: Item, r: Response): string {
+    const scn = 'scenario' in q && q.scenario ? `<div class="xs-scn">${esc(q.scenario)}</div>` : '';
+    switch (q.kind) {
+      case 'single':
+      case 'multi': {
+        const multi = q.kind === 'multi';
+        const n = q.answer.length;
+        const note = multi ? `<p class="xs-note">Each correct answer presents part of the solution. <strong>Select ${n === 2 ? 'two' : n === 3 ? 'three' : n}.</strong> NOTE: Each correct selection is worth one point.</p>` : '';
+        return `${scn}<h2>${esc(q.question)}</h2>${note}<div class="xs-opts" role="${multi ? 'group' : 'radiogroup'}">${q.options.map((o, i) => `<label class="xs-opt"><input type="${multi ? 'checkbox' : 'radio'}" name="opt" value="${i}" ${(r as number[]).includes(i) ? 'checked' : ''}><span><strong>${String.fromCharCode(65 + i)}.</strong> ${esc(o.text)}</span></label>`).join('')}</div>`;
+      }
+      case 'yesno':
+        return `${scn}<h2>For each of the following statements, select Yes if the statement is true. Otherwise, select No.</h2><p class="xs-note">NOTE: Each correct selection is worth one point.</p>
+          <table class="xs-yn"><thead><tr><th>Statements</th><th class="c">Yes</th><th class="c">No</th></tr></thead><tbody>${q.statements.map((s, i) => `<tr><td>${esc(s.text)}</td><td class="c"><input type="radio" name="yn${i}" value="1" aria-label="Yes" ${(r as (boolean | null)[])[i] === true ? 'checked' : ''}></td><td class="c"><input type="radio" name="yn${i}" value="0" aria-label="No" ${(r as (boolean | null)[])[i] === false ? 'checked' : ''}></td></tr>`).join('')}</tbody></table>`;
+      case 'match': {
+        const resp = r as (number | null)[];
+        return `${scn}<h2>${esc(q.question)}</h2><p class="xs-note">NOTE: Each correct match is worth one point. Drag an item onto a box, or click an item and then click a box. Click a filled box to clear it.</p>
+          <div class="xs-cols"><div class="xs-panel"><p>${esc(q.itemsLabel)}</p><div class="xs-in">${q.items.map((it, i) => `<button type="button" class="xs-tile" draggable="true" data-tile="${i}" aria-pressed="${pick === i}">${esc(it)}</button>`).join('')}</div></div>
+          <div class="xs-panel"><p>Answer Area</p><div class="xs-in">${q.targets.map((t, i) => `<div class="xs-target"><span>${esc(t.text)}</span><button type="button" class="xs-slot ${resp[i] !== null ? 'filled' : ''}" data-slot="${i}" aria-label="Answer for: ${esc(t.text)}">${resp[i] !== null ? esc(q.items[resp[i]!]) : '&nbsp;'}</button></div>`).join('')}</div></div></div>`;
+      }
+      case 'order': {
+        const seq = r as number[];
+        const left = q.actions.map((_, i) => i).filter((i) => !seq.includes(i));
+        return `${scn}<h2>${esc(q.question)}</h2><p class="xs-note">Select an action and use the arrows, or drag actions into the Answer Area and put them in order.</p>
+          <div class="xs-cols" style="grid-template-columns:minmax(0,1fr) auto minmax(0,1fr)"><div class="xs-panel"><p>Actions</p><div class="xs-in" data-drop="actions">${left.map((i) => `<button type="button" class="xs-tile" draggable="true" data-act-i="${i}" aria-pressed="${pick === i}">${esc(q.actions[i])}</button>`).join('') || '<span class="xs-note">All actions moved.</span>'}</div></div>
+          <div class="xs-arrows"><button type="button" class="xs-mini" data-ord="add" title="Move selected action to the answer area" aria-label="Move to answer area">›</button><button type="button" class="xs-mini" data-ord="remove" title="Move selected action back" aria-label="Move back to actions">‹</button></div>
+          <div class="xs-panel"><p>Answer Area</p><div class="xs-in" data-drop="answer">${seq.map((i, k) => `<div class="xs-order-row"><span>${k + 1}.</span><button type="button" class="xs-tile" draggable="true" data-seq="${k}" aria-pressed="${pick === i}">${esc(q.actions[i])}</button><button type="button" class="xs-mini" data-ord="up" data-k="${k}" aria-label="Move up" ${k === 0 ? 'disabled' : ''}>▲</button><button type="button" class="xs-mini" data-ord="down" data-k="${k}" aria-label="Move down" ${k === seq.length - 1 ? 'disabled' : ''}>▼</button></div>`).join('') || '<span class="xs-note">Move actions here.</span>'}</div></div></div>`;
+      }
+      case 'dropdown': {
+        let b = -1;
+        return `${scn}<h2>${esc(q.question)}</h2><p class="xs-note">NOTE: Each correct selection is worth one point.</p><div class="xs-panel"><p>Answer Area</p><div class="xs-in xs-sent">${q.parts.map((p) => {
+          if (typeof p === 'string') return esc(p);
+          b++;
+          const v = (r as (number | null)[])[b];
+          return `<select data-blank="${b}" aria-label="Choose an option"><option value="" ${v === null ? 'selected' : ''}>▼</option>${p.options.map((o, i) => `<option value="${i}" ${v === i ? 'selected' : ''}>${esc(o)}</option>`).join('')}</select>`;
+        }).join('')}</div></div>`;
+      }
     }
-    return picked.map((q) => ({ ...q, order: shuffle(q.options.map((_, i) => i)) }));
   }
 
-  function show(id: 'setup' | 'exam' | 'results') {
-    (['setup', 'exam', 'results'] as const).forEach((s) => $(s).classList.toggle('hidden', s !== id));
-    window.scrollTo({ top: 0 });
-  }
-
-  function start(mode: string, domain: number, untimed: boolean) {
-    const qs = build(mode, domain);
-    const minutes = mode === 'full' ? 45 : mode === 'quick' ? 12 : 18;
-    st = { mode, qs, picks: qs.map(() => []), flags: qs.map(() => false), cur: 0, endsAt: untimed ? null : Date.now() + minutes * 60_000 };
-    persist();
-    runExam();
-  }
-
-  function runExam() {
-    show('exam');
-    $('q-total').textContent = String(st!.qs.length);
-    renderNav();
-    renderQ();
-    clearInterval(tick);
-    const t = $('timer');
-    if (st!.endsAt) {
-      const upd = () => {
-        const left = Math.max(0, st!.endsAt! - Date.now());
-        const m = Math.floor(left / 60000), s = Math.floor((left % 60000) / 1000);
-        t.textContent = `${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
-        t.style.color = left < 5 * 60_000 ? 'var(--bad)' : '';
-        if (left <= 0) { clearInterval(tick); alert('Time is up! Your exam will now be scored.'); finish(); }
-      };
-      upd();
-      tick = window.setInterval(upd, 1000);
-    } else t.textContent = 'Untimed';
-  }
-
-  function renderQ() {
+  /* ---------- exam room screens ---------- */
+  function paint() {
     const s = st!;
-    const q = s.qs[s.cur];
-    $('q-num').textContent = String(s.cur + 1);
-    $('q-domain').textContent = `Domain ${q.domain}: ${domainTitle(q.domain)}`;
-    const sc = $('q-scenario');
-    sc.classList.toggle('hidden', !q.scenario);
-    sc.innerHTML = q.scenario ? esc(q.scenario) : '';
-    $('q-text').innerHTML = esc(q.question);
-    $('q-hint').textContent = q.type === 'multi' ? `Select ${q.answer.length} answers.` : 'Select one answer.';
-    const box = $('q-options');
-    box.querySelectorAll('label').forEach((l) => l.remove());
-    q.order.forEach((oi) => {
-      const lab = document.createElement('label');
-      lab.className = 'opt';
-      const inp = document.createElement('input');
-      inp.type = q.type === 'multi' ? 'checkbox' : 'radio';
-      inp.name = 'exam-opt';
-      inp.value = String(oi);
-      inp.checked = s.picks[s.cur].includes(oi);
-      const span = document.createElement('span');
-      span.className = 'leading-relaxed';
-      span.innerHTML = esc(q.options[oi].text);
-      lab.append(inp, span);
-      box.append(lab);
-    });
-    $('flag').setAttribute('aria-pressed', String(s.flags[s.cur]));
-    $('flag').textContent = s.flags[s.cur] ? '⚑ Marked for review' : '⚑ Mark for review';
-    ($('prev') as HTMLButtonElement).disabled = s.cur === 0;
-    $('next').textContent = s.cur === s.qs.length - 1 ? 'Review & finish' : 'Next →';
-    paintNav();
-  }
-
-  function renderNav() {
-    const nav = $('navigator');
-    nav.innerHTML = '';
-    st!.qs.forEach((_, i) => {
-      const b = document.createElement('button');
-      b.type = 'button';
-      b.className = 'qnav-btn';
-      b.textContent = String(i + 1);
-      b.setAttribute('aria-label', `Go to question ${i + 1}`);
-      b.addEventListener('click', () => { st!.cur = i; persist(); renderQ(); });
-      nav.append(b);
-    });
-  }
-  function paintNav() {
-    [...$('navigator').children].forEach((b, i) => {
-      b.toggleAttribute('data-answered', st!.picks[i].length > 0);
-      b.toggleAttribute('data-flagged', st!.flags[i]);
-      b.toggleAttribute('data-current', i === st!.cur);
-    });
-  }
-
-  $('q-options').addEventListener('change', () => {
-    st!.picks[st!.cur] = [...$('q-options').querySelectorAll<HTMLInputElement>('input:checked')].map((i) => Number(i.value));
+    const body = $('xs-body');
+    const foot = $('xs-foot');
+    $('xs-cand').textContent = s.name ? `Candidate: ${s.name}` : '';
+    $('xs').style.setProperty('--xs-scale', String(s.scale));
+    $('xs-mark-wrap').hidden = !(s.screen === 'q' && s.section === 1);
+    ($('xs-mark') as HTMLInputElement).checked = s.flags[s.cur] ?? false;
+    const n1 = sec1Count();
+    if (s.screen === 'welcome') {
+      $('xs-pos').textContent = 'Welcome';
+      body.innerHTML = `<div class="xs-welcome"><h1>Welcome${s.name ? `, ${esc(s.name)}` : ''}</h1>
+        <p>This practice exam contains <strong>${s.paper.items.length} questions</strong>${hasSec2() ? ' in <strong>2 sections</strong>' : ''}. ${s.endsAt === null ? 'There is no time limit.' : `You have <strong>${s.paper.minutes} minutes</strong>. The timer starts when you select Start.`}</p>
+        <div class="xs-box"><strong>How the exam works</strong><ul>
+          <li><strong>Multiple choice / multiple response</strong>: select one answer, or the number of answers asked for.</li>
+          <li><strong>Drag and drop</strong>: drag each item to a box in the Answer Area, or click an item then click a box.</li>
+          <li><strong>Build list</strong>: move the right actions into the Answer Area and put them in order.</li>
+          <li><strong>Drop-down</strong>: complete the sentence by choosing from each list.</li>
+          <li><strong>Mark for review</strong> any question and return to it from the <strong>Review screen</strong> before you finish the section.</li>
+          ${hasSec2() ? '<li><strong>Section 2: Yes/No statements.</strong> After you answer a question in this section, you will <strong>not</strong> be able to return to it.</li>' : ''}
+          <li>Questions can be worth more than one point. There is no penalty for a wrong answer, so answer every question.</li>
+        </ul></div>
+        <div class="xs-box"><strong>Practice agreement.</strong> These are original practice questions written by MSDEVBUILD to the official AZ-900 skills outline. They are not real Microsoft exam questions, and this simulation is not affiliated with Microsoft or any exam delivery provider. Your score is an indication only.</div>
+        <p>Select <strong>Start</strong> to begin.</p></div>`;
+      foot.innerHTML = `<button class="xs-btn" data-x="quit">Exit</button><button class="xs-btn primary" data-x="start">Start ▶</button>`;
+      return;
+    }
+    if (s.screen === 'sec2') {
+      $('xs-pos').textContent = 'Section 2';
+      body.innerHTML = `<div class="xs-welcome"><h1>Section 2: Yes/No questions</h1><div class="xs-lock">⚠️ After you answer a question in this section, you will <strong>NOT</strong> be able to return to it. As a result, these questions will not appear in the review screen.</div><p>This section contains <strong>${s.paper.items.length - n1}</strong> questions. Each has several statements; select Yes or No for each one.</p></div>`;
+      foot.innerHTML = `<span></span><button class="xs-btn primary" data-x="sec2go">Next ▶</button>`;
+      persist();
+      return;
+    }
+    if (s.screen === 'review') {
+      $('xs-pos').textContent = 'Review screen · Section 1';
+      const rows = s.paper.items.slice(0, n1).map((q, i) => ({ i, a: answered(q, s.responses[i]), m: s.flags[i] }))
+        .filter((x) => s.filter === 'all' || (s.filter === 'marked' ? x.m : x.a !== 'all'));
+      const inc = s.paper.items.slice(0, n1).filter((q, i) => answered(q, s.responses[i]) !== 'all').length;
+      const marked = s.flags.slice(0, n1).filter(Boolean).length;
+      body.innerHTML = `<div class="xs-rev"><h2 style="font-size:1.1em;font-weight:600">Review your answers</h2><p class="xs-note">Select a question to return to it. ${inc} incomplete · ${marked} marked for review.</p>
+        <div class="xs-filters">${(['all', 'incomplete', 'marked'] as const).map((f) => `<button class="xs-btn" data-filter="${f}" aria-pressed="${s.filter === f}">Review ${f}</button>`).join('')}</div>
+        <table><thead><tr><th>Question</th><th>Type</th><th>Status</th><th>Marked</th></tr></thead><tbody>${rows.map((x) => `<tr class="go" data-goto="${x.i}"><td>Question ${x.i + 1}</td><td>${KIND_LABEL[s.paper.items[x.i].kind]}</td><td>${x.a === 'all' ? 'Answered' : x.a === 'some' ? '<strong>Incomplete</strong>' : '<strong>Unanswered</strong>'}</td><td>${x.m ? '⚑ Marked' : ''}</td></tr>`).join('') || '<tr><td colspan="4">Nothing to show for this filter.</td></tr>'}</tbody></table></div>`;
+      foot.innerHTML = `<span></span><button class="xs-btn primary" data-x="finish1">${hasSec2() ? 'Finish section 1' : 'End exam'}</button>`;
+      persist();
+      return;
+    }
+    const q = item();
+    $('xs-pos').textContent = s.section === 1 ? `Question ${s.cur + 1} of ${n1}${hasSec2() ? ' · Section 1 of 2' : ''}` : `Question ${s.cur - n1 + 1} of ${s.paper.items.length - n1} · Section 2 of 2`;
+    body.innerHTML = `<div class="xs-q">${renderItem(q, s.responses[s.cur])}</div>`;
+    if (s.section === 1) {
+      const last = s.cur === n1 - 1;
+      foot.innerHTML = `<button class="xs-btn" data-x="prev" ${s.cur === 0 ? 'disabled' : ''}>◀ Previous</button><span class="xs-mid"><button class="xs-btn" data-x="review">Review screen</button></span><button class="xs-btn primary" data-x="next">${last ? 'Review ▶' : 'Next ▶'}</button>`;
+    } else {
+      const last = s.cur === s.paper.items.length - 1;
+      foot.innerHTML = `<span></span><button class="xs-btn primary" data-x="next2">${last ? 'Next ▶ (end exam)' : 'Next ▶'}</button>`;
+    }
     persist();
-    paintNav();
-  });
-  $('prev').addEventListener('click', () => { if (st!.cur > 0) { st!.cur--; persist(); renderQ(); } });
-  $('next').addEventListener('click', () => {
-    if (st!.cur < st!.qs.length - 1) { st!.cur++; persist(); renderQ(); } else confirmFinish();
-  });
-  $('flag').addEventListener('click', () => { st!.flags[st!.cur] = !st!.flags[st!.cur]; persist(); renderQ(); });
-  $('submit-exam').addEventListener('click', confirmFinish);
-
-  function confirmFinish() {
-    const un = st!.picks.filter((p) => p.length === 0).length;
-    const fl = st!.flags.filter(Boolean).length;
-    const msg = [un && `${un} unanswered`, fl && `${fl} marked for review`].filter(Boolean).join(' and ');
-    if (!msg || confirm(`You have ${msg}. Finish and see your score?`)) finish();
   }
 
-  const isRight = (q: ExamQ, p: number[]) => p.length === q.answer.length && p.every((x) => q.answer.includes(x));
+  const dialog = (title: string, html: string, buttons: [string, string, boolean?][]) => {
+    $('xs-dialog').innerHTML = `<h3>${esc(title)}</h3><div class="xs-dbody">${html}</div><div class="xs-dfoot">${buttons.map(([l, x, primary]) => `<button class="xs-btn ${primary ? 'primary' : ''}" data-x="${x}">${esc(l)}</button>`).join('')}</div>`;
+    $('xs-modal').hidden = false;
+    $('xs-dialog').querySelector<HTMLElement>('.primary')?.focus();
+  };
+  const closeDialog = () => { $('xs-modal').hidden = true; };
+  const setResp = (r: Response) => { st!.responses[st!.cur] = r; persist(); };
+  const go = (i: number) => { st!.cur = i; st!.screen = 'q'; pick = null; paint(); $('xs-body').scrollTop = 0; $('xs-body').focus(); };
 
+  /* ---------- events ---------- */
+  $('xs').addEventListener('click', (e) => {
+    const t = e.target as HTMLElement;
+    const x = t.closest<HTMLElement>('[data-x]')?.dataset.x;
+    const s = st;
+    if (!s) return;
+    if (x) {
+      const n1 = sec1Count();
+      switch (x) {
+        case 'quit': return dialog('Exit exam', '<p>Leave the exam room? You can resume this exam until you close this browser tab.</p>', [['Stay', 'close', true], ['Exit', 'exit']]);
+        case 'exit': closeDialog(); return closeRoom();
+        case 'close': return closeDialog();
+        case 'start':
+          s.started = true;
+          if (s.endsAt !== null) s.endsAt = Date.now() + s.paper.minutes * 60_000;
+          startTimer();
+          return go(0);
+        case 'prev': return go(Math.max(0, s.cur - 1));
+        case 'next': if (s.cur < n1 - 1) return go(s.cur + 1); s.screen = 'review'; s.filter = 'all'; return paint();
+        case 'review': s.screen = 'review'; s.filter = 'all'; return paint();
+        case 'finish1': {
+          const inc = s.paper.items.slice(0, n1).filter((q, i) => answered(q, s.responses[i]) !== 'all').length;
+          return dialog(hasSec2() ? 'Finish section 1' : 'End exam', `<p>${inc ? `<strong>${inc}</strong> question${inc > 1 ? 's are' : ' is'} incomplete. ` : 'All questions answered. '}${hasSec2() ? 'Once you finish this section, you <strong>cannot return</strong> to it.' : 'Once you end the exam you cannot change your answers.'}</p>`, [['Return to review', 'close'], [hasSec2() ? 'Finish section' : 'End exam', hasSec2() ? 'to-sec2' : 'end', true]]);
+        }
+        case 'to-sec2': closeDialog(); s.section = 2; s.screen = 'sec2'; s.cur = n1; return paint();
+        case 'sec2go': return go(n1);
+        case 'next2': {
+          const incomplete = answered(item(), s.responses[s.cur]) !== 'all';
+          const last = s.cur === s.paper.items.length - 1;
+          if (incomplete) return dialog('Incomplete answer', '<p>You have not answered every statement. After you continue you <strong>cannot return</strong> to this question.</p>', [['Go back', 'close', true], ['Continue', last ? 'end-ask' : 'next2go']]);
+          if (last) return dialog('End exam', '<p>This is the last question. End the exam and see your score report?</p>', [['Cancel', 'close'], ['End exam', 'end', true]]);
+          return go(s.cur + 1);
+        }
+        case 'next2go': closeDialog(); return go(s.cur + 1);
+        case 'end-ask': return dialog('End exam', '<p>End the exam and see your score report?</p>', [['Cancel', 'close'], ['End exam', 'end', true]]);
+        case 'end': closeDialog(); return finish();
+      }
+      return;
+    }
+    const z = t.closest<HTMLElement>('[data-zoom]');
+    if (z) { s.scale = Math.min(1.5, Math.max(0.85, s.scale + Number(z.dataset.zoom) * 0.1)); return paint(); }
+    const f = t.closest<HTMLElement>('[data-filter]');
+    if (f) { s.filter = f.dataset.filter as State['filter']; return paint(); }
+    const g = t.closest<HTMLElement>('[data-goto]');
+    if (g) return go(Number(g.dataset.goto));
+    const q = s.screen === 'q' ? item() : null;
+    if (!q) return;
+    if (q.kind === 'match') {
+      const tile = t.closest<HTMLElement>('[data-tile]');
+      const slot = t.closest<HTMLElement>('[data-slot]');
+      if (tile) { const i = Number(tile.dataset.tile); pick = pick === i ? null : i; return paint(); }
+      if (slot) {
+        const k = Number(slot.dataset.slot);
+        const r = [...(s.responses[s.cur] as (number | null)[])];
+        if (pick !== null) { r[k] = pick; pick = null; } else r[k] = null;
+        setResp(r);
+        return paint();
+      }
+    }
+    if (q.kind === 'order') {
+      const seq = [...(s.responses[s.cur] as number[])];
+      const a = t.closest<HTMLElement>('[data-act-i]');
+      const sq = t.closest<HTMLElement>('[data-seq]');
+      const ord = t.closest<HTMLElement>('[data-ord]');
+      if (a) { const i = Number(a.dataset.actI); pick = pick === i ? null : i; return paint(); }
+      if (sq) { const i = seq[Number(sq.dataset.seq)]; pick = pick === i ? null : i; return paint(); }
+      if (ord) {
+        const op = ord.dataset.ord;
+        if (op === 'add' && pick !== null && !seq.includes(pick)) { seq.push(pick); pick = null; }
+        else if (op === 'remove' && pick !== null && seq.includes(pick)) { seq.splice(seq.indexOf(pick), 1); pick = null; }
+        else if (op === 'up' || op === 'down') { const k = Number(ord.dataset.k), j = op === 'up' ? k - 1 : k + 1; [seq[k], seq[j]] = [seq[j], seq[k]]; }
+        setResp(seq);
+        return paint();
+      }
+    }
+  });
+
+  $('xs').addEventListener('change', (e) => {
+    const t = e.target as HTMLInputElement | HTMLSelectElement;
+    const s = st;
+    if (!s) return;
+    if (t.id === 'xs-mark') { s.flags[s.cur] = (t as HTMLInputElement).checked; persist(); return; }
+    const q = item();
+    if (q.kind === 'single') setResp([Number(t.value)]);
+    if (q.kind === 'multi') setResp([...$('xs-body').querySelectorAll<HTMLInputElement>('input[name="opt"]:checked')].map((x) => Number(x.value)));
+    if (q.kind === 'yesno') { const r = [...(s.responses[s.cur] as (boolean | null)[])]; r[Number(t.name.slice(2))] = t.value === '1'; setResp(r); }
+    if (q.kind === 'dropdown') { const r = [...(s.responses[s.cur] as (number | null)[])]; r[Number((t as HTMLSelectElement).dataset.blank)] = t.value === '' ? null : Number(t.value); setResp(r); }
+  });
+
+  // HTML5 drag and drop (mouse); click-to-place works everywhere, including touch.
+  let dragFrom: { tile?: number; seq?: number } | null = null;
+  $('xs').addEventListener('dragstart', (e) => {
+    const t = e.target as HTMLElement;
+    if (t.dataset.tile) dragFrom = { tile: Number(t.dataset.tile) };
+    else if (t.dataset.actI) dragFrom = { tile: Number(t.dataset.actI) };
+    else if (t.dataset.seq) dragFrom = { seq: Number(t.dataset.seq) };
+    e.dataTransfer?.setData('text/plain', 'x');
+  });
+  $('xs').addEventListener('dragover', (e) => {
+    const zone = (e.target as HTMLElement).closest<HTMLElement>('[data-slot], [data-drop]');
+    if (zone && dragFrom) { e.preventDefault(); zone.classList.add('over'); }
+  });
+  $('xs').addEventListener('dragleave', (e) => { (e.target as HTMLElement).closest('[data-slot]')?.classList.remove('over'); });
+  $('xs').addEventListener('drop', (e) => {
+    e.preventDefault();
+    const s = st, from = dragFrom;
+    dragFrom = null;
+    if (!s || !from) return;
+    const q = item();
+    const t = e.target as HTMLElement;
+    if (q.kind === 'match') {
+      const slot = t.closest<HTMLElement>('[data-slot]');
+      if (slot && from.tile !== undefined) { const r = [...(s.responses[s.cur] as (number | null)[])]; r[Number(slot.dataset.slot)] = from.tile; setResp(r); }
+    }
+    if (q.kind === 'order') {
+      const seq = [...(s.responses[s.cur] as number[])];
+      const zone = t.closest<HTMLElement>('[data-drop]')?.dataset.drop;
+      const overSeq = t.closest<HTMLElement>('[data-seq]');
+      const moving = from.tile ?? seq[from.seq!];
+      if (zone === 'answer') {
+        if (seq.includes(moving)) seq.splice(seq.indexOf(moving), 1);
+        const at = overSeq ? Number(overSeq.dataset.seq) : seq.length;
+        seq.splice(Math.min(at, seq.length), 0, moving);
+      } else if (zone === 'actions' && seq.includes(moving)) seq.splice(seq.indexOf(moving), 1);
+      setResp(seq);
+    }
+    pick = null;
+    paint();
+  });
+
+  /* ---------- timer, open/close, finish ---------- */
+  const fmt = (ms: number) => { const t = Math.max(0, Math.round(ms / 1000)); const h = Math.floor(t / 3600), m = Math.floor((t % 3600) / 60), s = t % 60; return `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`; };
+  function startTimer() {
+    clearInterval(tick);
+    const el = $('xs-time');
+    const upd = () => {
+      if (!st) return;
+      if (st.endsAt === null) { el.textContent = 'Untimed practice'; return; }
+      if (!st.started) { el.textContent = `Time remaining: ${fmt(st.paper.minutes * 60_000)}`; return; }
+      const left = st.endsAt - Date.now();
+      el.textContent = `Time remaining: ${fmt(left)}`;
+      el.classList.toggle('low', left < 5 * 60_000);
+      if (left <= 0) { clearInterval(tick); dialog('Time is up', '<p>The exam time has ended. Your answers will now be scored.</p>', [['See score report', 'end', true]]); }
+    };
+    upd();
+    tick = window.setInterval(upd, 1000);
+  }
+  function openRoom() {
+    $('xs').hidden = false;
+    document.documentElement.style.overflow = 'hidden';
+    startTimer();
+    paint();
+  }
+  function closeRoom() {
+    clearInterval(tick);
+    $('xs').hidden = true;
+    document.documentElement.style.overflow = '';
+  }
   function finish() {
-    clearInterval(tick);
     const s = st!;
-    const ok = s.qs.filter((q, i) => isRight(q, s.picks[i])).length;
-    const total = s.qs.length;
-    const percent = Math.round((ok / total) * 100);
-    const scaled = Math.round(1 + (percent / 100) * 999);
-    const domains: Record<string, { ok: number; total: number }> = {};
-    s.qs.forEach((q, i) => {
-      const k = String(q.domain);
-      domains[k] ??= { ok: 0, total: 0 };
-      domains[k].total++;
-      if (isRight(q, s.picks[i])) domains[k].ok++;
-    });
-    saveMock({ score: ok, total, percent, scaled, mode: s.mode, domains, at: new Date().toISOString() });
-    renderResults(ok, total, percent, scaled, domains);
-    try { sessionStorage.removeItem(SKEY); } catch {}
+    closeRoom();
+    const r = result(s.paper.items, s.responses);
+    const mock: MockResult = { score: r.earned, total: r.possible, percent: r.percent, scaled: r.scaled, mode: s.paper.mode, domains: r.domains, at: new Date().toISOString() };
+    saveMock(mock);
+    st = null;
+    persist();
+    report(s, r, mock);
   }
 
-  function renderResults(ok: number, total: number, percent: number, scaled: number, domains: Record<string, { ok: number; total: number }>) {
-    const s = st!;
-    show('results');
-    $('r-percent').textContent = String(percent);
-    $('r-detail').textContent = `${ok} of ${total} correct · approx. ${scaled} / 1000 scaled`;
-    $('r-verdict').textContent = percent >= 80 ? '🚀 Exam ready' : percent >= 70 ? '👍 Passing range: keep practising' : '📚 Keep going: review weak areas';
-    $('r-domains').innerHTML = Object.entries(domains).sort().map(([d, v]) => {
-      const p = Math.round((v.ok / v.total) * 100);
-      return `<div><div class="flex justify-between text-sm"><span>Domain ${d}: ${domainTitle(Number(d))}</span><span class="font-semibold">${v.ok}/${v.total} (${p}%)</span></div><div class="bar mt-1"><span style="width:${p}%;background:${p >= 70 ? 'var(--ok)' : 'var(--bad)'}"></span></div></div>`;
-    }).join('');
-    const weak = Object.entries(domains).filter(([, v]) => v.ok / v.total < 0.7).map(([d]) => Number(d));
-    const missedTopics = [...new Set(s.qs.filter((q, i) => !isRight(q, s.picks[i]) && q.topic && data.topicTitle[q.topic]).map((q) => q.topic!))].slice(0, 5);
-    const tips: string[] = [];
-    if (weak.length) tips.push(`Focus next on domain ${weak.join(' and ')}: try <em>Practise one domain</em>.`);
-    if (missedTopics.length) tips.push(`Revisit: ${missedTopics.map((t) => `<a class="text-accent underline" href="${data.topicTitle[t].url}">${data.topicTitle[t].title}</a>`).join(', ')}.`);
-    tips.push('Read the explanation for every question you missed, including why the other options are wrong.');
-    if (percent >= 80) tips.push('Consistently scoring 80%+? Try Microsoft\'s free official practice assessment too.');
-    $('r-next').innerHTML = tips.map((t) => `<li class="flex gap-2"><span class="text-accent">›</span><span>${t}</span></li>`).join('');
-
-    $('review').innerHTML = s.qs.map((q, i) => {
-      const right = isRight(q, s.picks[i]);
-      const opts = q.order.map((oi) => {
-        const isAns = q.answer.includes(oi), picked = s.picks[i].includes(oi);
-        const state = isAns ? (picked ? 'correct' : 'missed') : picked ? 'wrong' : '';
-        const mark = isAns ? '✓' : picked ? '✕' : '';
-        return `<div class="opt" data-state="${state}" style="cursor:default"><span class="w-4 font-bold">${mark}</span><span class="flex-1"><span class="block">${esc(q.options[oi].text)}</span><span class="why mt-1 block">${esc(q.options[oi].why)}</span></span></div>`;
-      }).join('');
-      const topic = q.topic && data.topicTitle[q.topic] ? `<a class="text-sm text-accent underline" href="${data.topicTitle[q.topic].url}">Study: ${data.topicTitle[q.topic].title}</a>` : '';
-      return `<li class="card p-5" data-right="${right}" data-flagged="${s.flags[i]}">
-        <div class="flex flex-wrap items-center gap-2 text-sm"><span class="font-semibold ${right ? 'verdict-ok' : 'verdict-bad'}">${right ? '✓ Correct' : s.picks[i].length ? '✕ Incorrect' : '○ Not answered'}</span><span class="text-muted">Question ${i + 1} · Domain ${q.domain}</span>${s.flags[i] ? '<span class="chip">⚑ flagged</span>' : ''}</div>
-        ${q.scenario ? `<p class="mt-2 rounded-xl bg-subtle p-3">${esc(q.scenario)}</p>` : ''}
-        <p class="mt-2 font-semibold">${esc(q.question)}</p>
-        <div class="mt-3 space-y-2">${opts}</div>
-        <p class="mt-3 rounded-xl border border-default bg-[var(--bg)] p-3 text-[0.95rem]"><strong>Explanation:</strong> ${esc(q.explanation)}</p>
-        <div class="mt-2">${topic}</div>
-      </li>`;
-    }).join('');
+  /* ---------- score report ---------- */
+  function reviewItem(q: Item, resp: Response, i: number, flagged: boolean): string {
+    const sc = score(q, resp);
+    const a = answered(q, resp);
+    const state = a === 'none' ? 'none' : sc.earned === sc.possible ? 'ok' : sc.earned > 0 ? 'part' : 'bad';
+    const badge = { ok: '✓ Correct', part: `◐ Partially correct (${sc.earned}/${sc.possible})`, bad: '✕ Incorrect', none: '○ Not answered' }[state];
+    const mark = (ok: boolean) => (ok ? '<span class="sr-ok">✓</span>' : '<span class="sr-bad">✕</span>');
+    let detail = '';
+    switch (q.kind) {
+      case 'single': case 'multi': {
+        const picks = resp as number[];
+        detail = `<div class="mt-3 space-y-2">${q.options.map((o, k) => { const isAns = q.answer.includes(k), picked = picks.includes(k); const s2 = isAns ? (picked ? 'correct' : 'missed') : picked ? 'wrong' : ''; return `<div class="opt" data-state="${s2}" style="cursor:default"><span class="w-4 font-bold">${isAns ? '✓' : picked ? '✕' : ''}</span><span class="flex-1"><span class="block">${esc(o.text)}</span><span class="why mt-1 block">${esc(o.why)}</span></span></div>`; }).join('')}</div>`;
+        break;
+      }
+      case 'yesno': { const rr = resp as (boolean | null)[]; detail = `<table class="mt-3"><thead><tr><th>Statement</th><th>Your answer</th><th>Correct</th></tr></thead><tbody>${q.statements.map((s, k) => `<tr><td>${esc(s.text)}</td><td>${rr[k] === null ? '—' : rr[k] ? 'Yes' : 'No'} ${rr[k] === null ? '' : mark(rr[k] === s.answer)}</td><td><strong>${s.answer ? 'Yes' : 'No'}</strong></td></tr>`).join('')}</tbody></table>`; break; }
+      case 'match': { const rr = resp as (number | null)[]; detail = `<table class="mt-3"><thead><tr><th>Answer area</th><th>Your answer</th><th>Correct</th></tr></thead><tbody>${q.targets.map((t, k) => `<tr><td>${esc(t.text)}</td><td>${rr[k] === null ? '—' : esc(q.items[rr[k]!])} ${rr[k] === null ? '' : mark(rr[k] === t.answer)}</td><td><strong>${esc(q.items[t.answer])}</strong></td></tr>`).join('')}</tbody></table>`; break; }
+      case 'order': { const seq = resp as number[]; detail = `<div class="mt-3 grid gap-3 sm:grid-cols-2"><div><p class="text-sm font-semibold">Your order</p><ol class="mt-1 list-decimal space-y-1 pl-5">${seq.map((x, k) => `<li>${esc(q.actions[x])} ${mark(q.answer[k] === x)}</li>`).join('') || '<li class="text-muted">Nothing placed</li>'}</ol></div><div><p class="text-sm font-semibold">Correct order</p><ol class="mt-1 list-decimal space-y-1 pl-5">${q.answer.map((x) => `<li><strong>${esc(q.actions[x])}</strong></li>`).join('')}</ol></div></div>`; break; }
+      case 'dropdown': { const rr = resp as (number | null)[]; let b = -1; detail = `<p class="mt-3 leading-loose">${q.parts.map((p) => { if (typeof p === 'string') return esc(p); b++; const v = rr[b]; return v === p.answer ? `<span class="sr-badge ok">${esc(p.options[v])}</span>` : `${v === null ? '<span class="sr-badge none">—</span>' : `<s class="sr-badge bad">${esc(p.options[v])}</s>`} <span class="sr-badge ok">${esc(p.options[p.answer])}</span>`; }).join('')}</p>`; break; }
+    }
+    const topic = q.kind === 'single' || q.kind === 'multi' ? q.topic : undefined;
+    const study = topic && data.topicTitle[topic] ? `<a class="text-sm text-accent underline" href="${data.topicTitle[topic].url}">Study: ${data.topicTitle[topic].title}</a>` : '';
+    const text = q.kind === 'yesno' ? 'For each statement, select Yes if it is true. Otherwise, select No.' : q.question;
+    return `<li class="sr-item" data-state="${state}" data-flagged="${flagged}">
+      <div class="flex flex-wrap items-center gap-2 text-sm"><span class="sr-badge ${state}">${badge}</span><span class="text-muted">Question ${i + 1} · ${KIND_LABEL[q.kind]} · Domain ${q.domain}</span>${flagged ? '<span class="chip">⚑ marked</span>' : ''}</div>
+      ${'scenario' in q && q.scenario ? `<p class="mt-2 rounded-xl bg-subtle p-3">${esc(q.scenario)}</p>` : ''}
+      <p class="mt-2 font-semibold">${esc(text)}</p>${detail}
+      <p class="mt-3 rounded-xl border border-default bg-[var(--bg)] p-3 text-[0.95rem]"><strong>Explanation:</strong> ${esc(q.explanation)}</p>${study ? `<div class="mt-2">${study}</div>` : ''}</li>`;
   }
 
-  document.querySelectorAll<HTMLButtonElement>('[data-filter]').forEach((b) =>
-    b.addEventListener('click', () => {
-      const f = b.dataset.filter;
-      $('review').querySelectorAll<HTMLElement>('li').forEach((li) => {
-        li.hidden = f === 'wrong' ? li.dataset.right === 'true' : f === 'flagged' ? li.dataset.flagged !== 'true' : false;
+  function report(s: State, r: ReturnType<typeof result>, mock: MockResult) {
+    $('setup').classList.add('hidden');
+    const out = $('results');
+    out.classList.remove('hidden');
+    const counts = { ok: 0, part: 0, bad: 0, none: 0 };
+    s.paper.items.forEach((q, i) => { const sc = score(q, s.responses[i]); const a = answered(q, s.responses[i]); counts[a === 'none' ? 'none' : sc.earned === sc.possible ? 'ok' : sc.earned > 0 ? 'part' : 'bad']++; });
+    const full = s.paper.mode === 'full';
+    const certOk = full && r.passed;
+    const existing = loadCert();
+    const date = new Date().toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' });
+    out.innerHTML = `
+      <div class="card overflow-hidden">
+        <div class="flex flex-wrap items-center gap-4 border-b border-default p-6">
+          <div class="min-w-0 flex-1"><p class="text-sm font-bold tracking-[0.12em] text-accent uppercase">Score report</p>
+            <h2 id="sr-title" class="mt-1 text-2xl font-bold">Microsoft Azure Fundamentals (AZ-900) · Practice exam</h2>
+            <p class="mt-1 text-sm text-muted">${s.name ? `Candidate: <strong class="text-[var(--text)]">${esc(s.name)}</strong> · ` : ''}${date} · ${full ? 'Full exam' : s.paper.mode === 'quick' ? 'Quick practice' : 'Domain practice'} · ${s.paper.items.length} questions</p></div>
+          <span class="sr-badge ${r.passed ? 'ok' : 'bad'}" style="font-size:1.4rem;padding:.4rem 1.2rem">${r.passed ? 'PASS' : 'FAIL'}</span>
+        </div>
+        <div class="grid gap-8 p-6 md:grid-cols-2">
+          <div>
+            <p class="text-sm text-muted">Your score</p><p class="text-5xl font-bold">${r.scaled}</p><p class="text-sm text-muted">Passing score: <strong>700</strong> · ${r.earned} of ${r.possible} points (${r.percent}%)</p>
+            <div class="sr-scale mt-5" aria-hidden="true"><span class="sr-pass"></span><span class="sr-you" style="left:${r.scaled / 10}%"></span></div>
+            <div class="relative mt-1 h-4 text-xs text-muted"><span class="absolute left-0">1</span><span class="absolute left-[70%] -translate-x-1/2 font-semibold">700 pass</span><span class="absolute right-0">1000</span></div>
+            <div class="mt-5 grid grid-cols-4 gap-2 text-center text-sm">
+              <div class="rounded-lg bg-[var(--ok-soft)] p-2"><p class="text-xl font-bold sr-ok">${counts.ok}</p>Correct</div>
+              <div class="rounded-lg bg-[var(--warn-soft)] p-2"><p class="text-xl font-bold sr-part">${counts.part}</p>Partial</div>
+              <div class="rounded-lg bg-[var(--bad-soft)] p-2"><p class="text-xl font-bold sr-bad">${counts.bad}</p>Incorrect</div>
+              <div class="rounded-lg bg-[var(--pastel-grey)] p-2"><p class="text-xl font-bold">${counts.none}</p>Unanswered</div>
+            </div>
+          </div>
+          <div>
+            <h3 class="font-semibold">Skills measured · your performance</h3>
+            <div class="mt-3 space-y-4">${Object.entries(r.domains).sort().map(([d, v]) => { const p = Math.round((v.ok / Math.max(1, v.total)) * 100); return `<div><div class="flex justify-between gap-2 text-sm"><span>${esc(domainTitle(Number(d)))}</span><span class="font-semibold">${p}%</span></div><div class="bar mt-1"><span style="width:${p}%;background:${p >= 70 ? 'var(--ok)' : 'var(--bad)'}"></span></div><p class="mt-0.5 text-xs text-muted">${p >= 80 ? 'Strong' : p >= 70 ? 'Passing range' : 'Needs work: review this domain'}</p></div>`; }).join('')}</div>
+            <p class="mt-4 text-xs text-muted">The 1–1000 figure is a rough indication on Microsoft’s reporting scale. Real exam scoring is not a simple percentage.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="mt-6 rounded-2xl border-2 ${certOk ? 'border-[#ffb900] bg-[var(--pastel-yellow)]' : 'border-default bg-[var(--card)]'} p-6">
+        ${certOk ? `<div class="flex flex-wrap items-center gap-4"><span class="text-5xl" aria-hidden="true">🏆</span><div class="min-w-0 flex-1"><p class="text-xl font-bold">You passed! Get your MSDEVBUILD certificate</p><p class="text-sm">Your AZ-900 Ready certificate and badge, ready to share on LinkedIn, X and WhatsApp.</p></div></div>
+          <form id="sr-cert-form" class="mt-4 flex flex-col gap-3 sm:flex-row"><label class="flex-1"><span class="sr-only">Name on certificate</span><input id="sr-cert-name" required maxlength="60" value="${esc(s.name || existing?.name || '')}" placeholder="Your full name" class="w-full rounded-md border border-default bg-[var(--bg)] px-4 py-3 text-lg" /></label><button class="rounded-md bg-[#107c10] px-6 py-3 font-semibold text-white hover:bg-[#0b5a0b]">Get my certificate »</button></form>`
+        : `<div class="flex flex-wrap items-center gap-4"><span class="text-4xl" aria-hidden="true">🎓</span><div class="min-w-0 flex-1"><p class="font-bold">${full ? 'Score 700 or more to earn your MSDEVBUILD certificate' : 'Take the full exam to earn your MSDEVBUILD certificate'}</p><p class="text-sm text-muted">${full ? 'Review the questions below, study the domains marked “Needs work”, and try again.' : 'Practice runs don’t issue certificates. The full 45-question exam does, at a score of 700+.'}</p></div><button id="sr-again-top" class="btn btn-accent">${full ? 'Retake the exam' : 'Take the full exam'}</button></div>`}
+      </div>
+
+      <div class="mt-8 flex flex-wrap items-center gap-2">
+        <h3 class="mr-auto text-xl font-bold">Answer summary</h3>
+        <div role="group" aria-label="Filter answers" class="flex flex-wrap gap-1 text-sm">
+          <button type="button" class="btn btn-outline btn-sm" data-rf="all">All (${s.paper.items.length})</button>
+          <button type="button" class="btn btn-outline btn-sm" data-rf="wrong">Incorrect, partial or unanswered (${counts.bad + counts.part + counts.none})</button>
+          <button type="button" class="btn btn-outline btn-sm" data-rf="ok">Correct (${counts.ok})</button>
+          <button type="button" class="btn btn-outline btn-sm" data-rf="marked">Marked</button>
+        </div>
+      </div>
+      <ol id="sr-list" class="mt-4 space-y-4">${s.paper.items.map((q, i) => reviewItem(q, s.responses[i], i, s.flags[i])).join('')}</ol>
+      <div class="mt-8 flex flex-wrap gap-3"><button type="button" id="sr-again" class="btn btn-accent">Take another exam</button><a href="/progress/" class="btn btn-outline">See my progress</a></div>`;
+    scrollTo(0, 0);
+    if (r.passed) confetti(220);
+    const again = () => { out.classList.add('hidden'); $('setup').classList.remove('hidden'); scrollTo(0, 0); };
+    $('sr-again').addEventListener('click', again);
+    document.getElementById('sr-again-top')?.addEventListener('click', again);
+    out.querySelectorAll<HTMLButtonElement>('[data-rf]').forEach((b) => b.addEventListener('click', () => {
+      const f = b.dataset.rf;
+      out.querySelectorAll<HTMLElement>('#sr-list > li').forEach((li) => {
+        li.hidden = f === 'wrong' ? li.dataset.state === 'ok' : f === 'ok' ? li.dataset.state !== 'ok' : f === 'marked' ? li.dataset.flagged !== 'true' : false;
       });
-    }),
-  );
+    }));
+    document.getElementById('sr-cert-form')?.addEventListener('submit', (e) => {
+      e.preventDefault();
+      const name = ($('sr-cert-name') as HTMLInputElement).value.trim();
+      if (!name) return;
+      issueCert(name, mock);
+      location.href = '/certificate/';
+    });
+  }
 
+  /* ---------- setup ---------- */
+  try { ($('cand-name') as HTMLInputElement).value = localStorage.getItem('msdb-exam-name') ?? loadCert()?.name ?? ''; } catch {}
   $('setup-form').addEventListener('submit', (e) => {
     e.preventDefault();
     const fd = new FormData(e.target as HTMLFormElement);
-    start(String(fd.get('mode')), Number(fd.get('domain')), fd.get('untimed') === 'on');
+    const name = String(fd.get('name') ?? '').trim();
+    try { localStorage.setItem('msdb-exam-name', name); } catch {}
+    const paper = buildPaper(String(fd.get('mode')), Number(fd.get('domain')), data.choice, EXAM_ITEMS as FormatItem[]);
+    st = { paper, responses: paper.items.map(emptyResponse), flags: paper.items.map(() => false), cur: 0, screen: 'welcome', endsAt: fd.get('untimed') === 'on' ? null : 0, started: false, name, section: 1, scale: 1, filter: 'all' };
+    persist();
+    openRoom();
   });
-  $('again').addEventListener('click', () => { st = null; persist(); show('setup'); });
-
   try {
     const saved = sessionStorage.getItem(SKEY);
     if (saved) {
       const r = $('resume');
       r.classList.remove('hidden');
-      r.addEventListener('click', () => { st = JSON.parse(saved); runExam(); });
+      r.addEventListener('click', () => { st = JSON.parse(saved); openRoom(); });
     }
   } catch {}
 </script>

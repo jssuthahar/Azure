@@ -1,0 +1,133 @@
+---
+/**
+ * The one "Simulations" area of every lesson: 3D View | Azure Portal | Practice Lab.
+ * Each tab opens in place; nothing navigates away. The 3D engine loads when
+ * its tab is visible, and the practice lab loads the first time its tab opens.
+ * In-lesson "Practise it" buttons (data-sim-tab) switch to a tab and scroll here.
+ */
+import Datacenter3D from './mdx/Datacenter3D.astro';
+import PortalTour from './mdx/PortalTour.astro';
+import { LESSON_SIMS } from '../data/az-900/lesson-sims';
+import { ALL_LABS, type Lab } from '../lib/sim/labs';
+interface Props { slug: string; labs: Lab[] }
+const { slug, labs } = Astro.props;
+const sims = LESSON_SIMS[slug];
+const sandbox = ALL_LABS.find((l) => l.id === 'sandbox')!;
+const labList = [...labs.filter((l) => l.id !== 'sandbox'), sandbox];
+---
+{sims && (
+  <section id="simulations" class="lsims scroll-mt-28" aria-labelledby="simulations-h">
+    <div class="lsims-head">
+      <h2 id="simulations-h" class="text-2xl font-semibold">Simulations</h2>
+      <p class="text-sm text-muted">Feel it before you read it. No Azure account, nothing leaves this page.</p>
+    </div>
+    <div class="lsims-tabs" role="tablist" aria-label="Simulations">
+      <button type="button" role="tab" id="lsim-t-3d" aria-controls="lsim-p-3d" aria-selected="true" data-tab="3d"><span aria-hidden="true">🧊</span> 3D View</button>
+      <button type="button" role="tab" id="lsim-t-portal" aria-controls="lsim-p-portal" aria-selected="false" tabindex="-1" data-tab="portal"><span aria-hidden="true">🖥️</span> Azure Portal</button>
+      <button type="button" role="tab" id="lsim-t-lab" aria-controls="lsim-p-lab" aria-selected="false" tabindex="-1" data-tab="lab"><span aria-hidden="true">🧪</span> Practice Lab</button>
+    </div>
+    <div id="lsim-p-3d" role="tabpanel" aria-labelledby="lsim-t-3d" class="lsims-panel">
+      <Datacenter3D mode={sims.d3.mode} start={sims.d3.start} intro={sims.d3.intro} />
+    </div>
+    <div id="lsim-p-portal" role="tabpanel" aria-labelledby="lsim-t-portal" class="lsims-panel" hidden>
+      <PortalTour id={sims.tour.id} intro={sims.tour.intro} />
+    </div>
+    <div id="lsim-p-lab" role="tabpanel" aria-labelledby="lsim-t-lab" class="lsims-panel" hidden>
+      <div class="lsims-lab">
+        <div class="lsims-lab-pick" role="group" aria-label="Choose a practice lab">
+          {labList.map((l, i) => (
+            <button type="button" class="lsims-lab-btn" data-lab={l.id} aria-pressed={i === 0 ? 'true' : 'false'} title={l.intro}>
+              <span aria-hidden="true">{l.icon}</span> {l.id === 'sandbox' ? 'Free sandbox' : l.title}
+              {l.id !== 'sandbox' && <span class="lsims-lab-meta">{l.tasks.length} tasks · {l.minutes} min</span>}
+            </button>
+          ))}
+        </div>
+        <p class="lsims-lab-intro text-sm text-muted" data-intros={JSON.stringify(Object.fromEntries(labList.map((l) => [l.id, l.intro])))}>{labList[0].intro}</p>
+        <div class="lsims-frame-wrap">
+          <iframe class="lsims-frame" title="Practice lab: simulated Azure portal and Cloud Shell" allow="fullscreen; clipboard-write" loading="lazy"></iframe>
+          <div class="lsims-frame-wait">Loading the practice lab…</div>
+        </div>
+        <p class="text-xs text-muted">🎓 Education-only simulation. Your lab is saved in this browser, so you can leave and continue later.</p>
+      </div>
+    </div>
+  </section>
+)}
+
+<style is:global>
+  .lsims { margin-top: 1.75rem; }
+  .lsims-head { display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: .25rem 1rem; }
+  .lsims-tabs { margin-top: .75rem; display: flex; gap: .25rem; border-bottom: 2px solid var(--card-line); overflow-x: auto; }
+  .lsims-tabs [role='tab'] { flex: none; padding: .6rem 1.1rem; font-weight: 700; border-radius: 10px 10px 0 0; border: 2px solid transparent; border-bottom: 0; margin-bottom: -2px; color: var(--text-muted); white-space: nowrap; }
+  .lsims-tabs [role='tab']:hover { color: var(--text); background: var(--pastel-grey); }
+  .lsims-tabs [role='tab'][aria-selected='true'] { color: var(--accent); background: var(--card); border-color: var(--card-line); border-bottom: 2px solid var(--card); }
+  .lsims-panel > figure { margin-top: 1rem; }
+  .lsims-lab { margin-top: 1rem; display: grid; gap: .6rem; }
+  .lsims-lab-pick { display: flex; flex-wrap: wrap; gap: .5rem; }
+  .lsims-lab-btn { display: inline-flex; align-items: center; gap: .4rem; padding: .45rem .9rem; border-radius: 999px; border: 1.5px solid var(--card-line); font-weight: 600; font-size: .9rem; background: var(--card); }
+  .lsims-lab-btn[aria-pressed='true'] { border-color: #107c10; background: var(--pastel-green); }
+  .lsims-lab-meta { font-weight: 400; font-size: .78rem; color: var(--text-muted); }
+  .lsims-frame-wrap { position: relative; border: 1px solid var(--card-line); border-radius: 14px; overflow: hidden; background: var(--bg); }
+  .lsims-frame { display: block; width: 100%; height: clamp(720px, 92vh, 1000px); border: 0; }
+  .lsims-frame-wait { position: absolute; inset: 0; display: grid; place-items: center; color: var(--text-muted); pointer-events: none; }
+  .lsims-frame-wrap[data-ready] .lsims-frame-wait { display: none; }
+  .sim-jump { display: inline-flex; align-items: center; gap: .4rem; border-radius: 6px; background: #107c10; padding: .5rem 1rem; font-size: .9rem; font-weight: 600; color: #fff !important; text-decoration: none !important; }
+  .sim-jump:hover { background: #0b5a0b; }
+</style>
+
+<script>
+  const root = document.getElementById('simulations');
+  if (root) {
+    const tabs = [...root.querySelectorAll<HTMLButtonElement>('.lsims-tabs > [role="tab"]')];
+    const frame = root.querySelector<HTMLIFrameElement>('.lsims-frame')!;
+    const wrap = root.querySelector<HTMLElement>('.lsims-frame-wrap')!;
+    const intro = root.querySelector<HTMLElement>('.lsims-lab-intro')!;
+    const intros = JSON.parse(intro.dataset.intros!) as Record<string, string>;
+    const labBtns = [...root.querySelectorAll<HTMLButtonElement>('.lsims-lab-btn')];
+    let labId = labBtns[0]?.dataset.lab ?? 'sandbox';
+    let loaded = '';
+
+    const loadLab = () => {
+      if (loaded === labId) return;
+      loaded = labId;
+      wrap.removeAttribute('data-ready');
+      const theme = document.documentElement.dataset.theme === 'dark' ? 'dark' : 'light';
+      frame.src = `/embed/lab/${labId}/?in=lesson&theme=${theme}`;
+    };
+    frame.addEventListener('load', () => { if (frame.src) wrap.setAttribute('data-ready', ''); });
+
+    const select = (name: string, focus = false) => {
+      tabs.forEach((t) => {
+        const on = t.dataset.tab === name;
+        t.setAttribute('aria-selected', String(on));
+        t.tabIndex = on ? 0 : -1;
+        document.getElementById(t.getAttribute('aria-controls')!)!.hidden = !on;
+        if (on && focus) t.focus();
+      });
+      if (name === 'lab') loadLab();
+    };
+    tabs.forEach((t, i) => {
+      t.addEventListener('click', () => select(t.dataset.tab!));
+      t.addEventListener('keydown', (e) => {
+        const d = e.key === 'ArrowRight' ? 1 : e.key === 'ArrowLeft' ? -1 : 0;
+        if (d) { e.preventDefault(); select(tabs[(i + d + tabs.length) % tabs.length].dataset.tab!, true); }
+      });
+    });
+    const pickLab = (id: string) => {
+      if (!labBtns.some((b) => b.dataset.lab === id)) return;
+      labId = id;
+      labBtns.forEach((b) => b.setAttribute('aria-pressed', String(b.dataset.lab === id)));
+      intro.textContent = intros[id] ?? '';
+    };
+    labBtns.forEach((b) => b.addEventListener('click', () => { pickLab(b.dataset.lab!); loadLab(); }));
+
+    // Buttons elsewhere in the lesson: <a href="#simulations" data-sim-tab="lab" data-sim-lab="...">
+    document.addEventListener('click', (e) => {
+      const a = (e.target as HTMLElement).closest<HTMLElement>('[data-sim-tab]');
+      if (!a) return;
+      e.preventDefault();
+      if (a.dataset.simLab) pickLab(a.dataset.simLab);
+      select(a.dataset.simTab!);
+      root.scrollIntoView({ behavior: matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth', block: 'start' });
+    });
+  }
+</script>

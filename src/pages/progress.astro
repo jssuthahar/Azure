@@ -10,7 +10,7 @@ const moduleKeys = Object.fromEntries(MODULES.map((m) => [m.slug, published.filt
 const topics = published.map((t) => ({ key: t.key, title: t.title, url: t.url, module: t.module.slug }));
 const payload = JSON.stringify({ moduleKeys, topics, modules: MODULES.map((m) => ({ slug: m.slug, title: m.shortTitle, domain: m.domain })) }).replace(/</g, '\\u003c');
 ---
-<Base title="My Progress | MSDEVBUILD Azure" description="Your AZ-900 learning progress, knowledge-check scores, mock exam history and achievement badges, saved privately in your browser." noindex>
+<Base breadcrumbs={[{ name: 'Home', url: '/' }, { name: 'My progress', url: '/progress/' }]} title="My Progress | MSDEVBUILD Azure" description="Your AZ-900 learning progress, knowledge-check scores, mock exam history and achievement badges, saved privately in your browser." noindex>
   <script type="application/json" id="pg-data" set:html={payload} />
   <div class="mx-auto max-w-5xl px-4 py-8 sm:px-6">
     <div class="flex flex-wrap items-center gap-4">
@@ -37,6 +37,12 @@ const payload = JSON.stringify({ moduleKeys, topics, modules: MODULES.map((m) =>
       <div class="card p-5"><p class="text-sm text-muted">Best mock exam</p><p class="text-3xl font-bold" id="pg-mock">–</p></div>
     </section>
 
+    <a id="pg-cert" href="/certificate/" class="mt-4 flex flex-wrap items-center gap-4 rounded-2xl border-2 border-[#ffb900] bg-[var(--pastel-yellow)] p-5 hover:ring-2 hover:ring-[var(--accent)]">
+      <span id="pg-cert-badge" class="w-16 shrink-0" aria-hidden="true"></span>
+      <span class="min-w-0 flex-1"><span id="pg-cert-t" class="block text-lg font-bold">AZ-900 Ready certificate</span><span id="pg-cert-s" class="block text-sm">Pass the full mock exam (≈ 700/1000) to earn a free, shareable certificate.</span></span>
+      <span class="nav-btn shrink-0" id="pg-cert-cta">Get it »</span>
+    </a>
+
     <section class="mt-10" aria-labelledby="badges-h">
       <h2 id="badges-h" class="text-xl font-bold">Achievement badges</h2>
       <div id="pg-badges" class="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-4"></div>
@@ -61,6 +67,7 @@ const payload = JSON.stringify({ moduleKeys, topics, modules: MODULES.map((m) =>
 </Base>
 <script>
   import { load, badges, reset, levelFor, streak } from '../lib/progress';
+  import { loadCert, bestFullMock, badgeSvg } from '../lib/certificate';
   const data = JSON.parse(document.getElementById('pg-data')!.textContent!) as {
     moduleKeys: Record<string, string[]>; topics: { key: string; title: string; url: string; module: string }[]; modules: { slug: string; title: string; domain: number }[];
   };
@@ -79,6 +86,14 @@ const payload = JSON.stringify({ moduleKeys, topics, modules: MODULES.map((m) =>
     ($('pg-done-bar') as HTMLElement).style.width = `${data.topics.length ? (done / data.topics.length) * 100 : 0}%`;
     $('pg-quiz').textContent = String(Object.keys(s.quizzes).length);
     $('pg-mock').textContent = s.mocks.length ? `${Math.max(...s.mocks.map((m) => m.percent))}%` : '–';
+    {
+      const cert = loadCert();
+      const best = bestFullMock(s.mocks);
+      $('pg-cert-badge').innerHTML = badgeSvg(64);
+      $('pg-cert-badge').style.filter = cert || best ? '' : 'grayscale(1) opacity(.5)';
+      if (cert) { $('pg-cert-t').textContent = `🏆 ${cert.name} is AZ-900 Ready`; $('pg-cert-s').textContent = `${cert.percent}% · ${cert.id}. View, download or share it.`; $('pg-cert-cta').textContent = 'View »'; }
+      else if (best) { $('pg-cert-t').textContent = '🎉 You earned the AZ-900 Ready certificate'; $('pg-cert-s').textContent = 'Add your name and claim it.'; $('pg-cert-cta').textContent = 'Claim »'; }
+    }
     $('pg-badges').innerHTML = badges(s, data.moduleKeys).map((b) =>
       `<div class="badge-tile card p-4 text-center" data-earned="${b.earned}"><p class="text-3xl" aria-hidden="true">${b.icon}</p><p class="mt-2 font-semibold">${b.title}</p><p class="text-xs text-muted">${b.text}</p><p class="mt-1 text-xs font-semibold ${b.earned ? 'verdict-ok' : 'text-muted'}">${b.earned ? 'Earned' : 'Locked'}</p></div>`).join('');
     $('pg-topics').innerHTML = data.modules.map((m) => {

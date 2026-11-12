@@ -1,0 +1,42 @@
+---
+import Base from '../../../layouts/Base.astro';
+import { getGlossary } from '../../../lib/glossary';
+import { inlineMd } from '../../../lib/learn';
+import { SITE } from '../../../config';
+const terms = await getGlossary();
+const letters = [...new Set(terms.map((t) => t.term[0].toUpperCase()))];
+const crumbs = [{ name: 'Home', url: '/' }, { name: 'AZ-900', url: '/az-900/' }, { name: 'Glossary', url: '/az-900/glossary/' }];
+const url = new URL('/az-900/glossary/', SITE.url).href;
+const schema = [{ '@type': 'DefinedTermSet', '@id': `${url}#set`, name: 'Azure AZ-900 glossary', url, hasDefinedTerm: terms.map((t) => ({ '@type': 'DefinedTerm', name: t.term, description: t.def, url: `${url}#${t.slug}` })) }];
+---
+<Base title={`Azure Glossary: ${terms.length} AZ-900 Terms Explained Simply`} description="Every Azure term you meet in AZ-900, explained in one line: availability zone, RBAC, LRS, VNet, serverless and more, each linked to a full lesson and simulation." schema={schema} breadcrumbs={crumbs}>
+  <div class="mx-auto max-w-4xl px-4 py-10 sm:px-6">
+    <p class="text-sm font-bold tracking-[0.14em] text-accent uppercase">Reference</p>
+    <h1 class="mt-1 text-4xl font-semibold tracking-tight">Azure glossary</h1>
+    <p class="mt-3 text-lg text-muted">{terms.length} terms from the AZ-900 lessons, explained in one line each.</p>
+    <label class="mt-6 block max-w-md"><span class="sr-only">Find a term</span>
+      <input id="g-q" type="search" placeholder="Find a term… e.g. zone" class="w-full rounded-full border border-default bg-[var(--pastel-grey)] px-5 py-2.5 outline-none focus:border-[var(--accent)]" /></label>
+    <nav class="mt-4 flex flex-wrap gap-1 text-sm" aria-label="Letters">{letters.map((l) => <a class="rounded px-2 py-1 font-semibold text-accent hover:bg-[var(--pastel-blue)]" href={`#letter-${l}`}>{l}</a>)}</nav>
+    {letters.map((l) => (
+      <section class="g-sec mt-8" id={`letter-${l}`}>
+        <h2 class="border-b border-default pb-1 text-2xl font-bold text-accent">{l}</h2>
+        <dl class="mt-3 space-y-3">
+          {terms.filter((t) => t.term[0].toUpperCase() === l).map((t) => (
+            <div class="g-item scroll-mt-28" id={t.slug} data-q={`${t.term} ${t.def}`.toLowerCase()}>
+              <dt class="font-semibold">{t.term}</dt>
+              <dd class="mt-0.5 leading-relaxed"><span set:html={inlineMd(t.def)} /> <a class="text-sm text-accent hover:underline" href={t.url}>{t.lesson} ❯</a></dd>
+            </div>
+          ))}
+        </dl>
+      </section>
+    ))}
+  </div>
+</Base>
+<script>
+  const q = document.getElementById('g-q') as HTMLInputElement;
+  q.addEventListener('input', () => {
+    const v = q.value.trim().toLowerCase();
+    document.querySelectorAll<HTMLElement>('.g-item').forEach((d) => (d.hidden = !!v && !d.dataset.q!.includes(v)));
+    document.querySelectorAll<HTMLElement>('.g-sec').forEach((s) => (s.hidden = !s.querySelector('.g-item:not([hidden])')));
+  });
+</script>

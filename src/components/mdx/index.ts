@@ -13,6 +13,8 @@ import SlaCalculator from './SlaCalculator.astro';
 import CostChart from './CostChart.astro';
 import TableWrap from './TableWrap.astro';
 import TryIt from './TryIt.astro';
+import Datacenter3D from './Datacenter3D.astro';
+import PortalTour from './PortalTour.astro';
 
 /** Components available in every tutorial MDX file without an import. */
 export const mdxComponents = {
@@ -30,5 +32,7 @@ export const mdxComponents = {
   SlaCalculator,
   CostChart,
   TryIt,
+  Datacenter3D,
+  PortalTour,
   table: TableWrap,
 };

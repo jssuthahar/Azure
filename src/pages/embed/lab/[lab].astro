@@ -1,0 +1,30 @@
+---
+/** A lab without site chrome: used by the "Try it" panel inside lessons, and embeddable. */
+import EmbedLayout from '../../../layouts/EmbedLayout.astro';
+import Simulator from '../../../components/Simulator.astro';
+import { ALL_LABS, type Lab } from '../../../lib/sim/labs';
+
+export function getStaticPaths() {
+  return ALL_LABS.map((lab) => ({ params: { lab: lab.id }, props: { lab } }));
+}
+const { lab } = Astro.props as { lab: Lab };
+---
+<EmbedLayout title={lab.title} canonical={`/az-900/labs/${lab.id}/`} lesson={{ title: `Open “${lab.title}” full page`, url: `/az-900/labs/${lab.id}/` }}>
+  <p class="lab-embed-intro mb-3 text-sm text-muted"><span aria-hidden="true">{lab.icon}</span> <strong class="text-[var(--text)]">{lab.title}</strong> · {lab.intro}</p>
+  <Simulator lab={lab} />
+</EmbedLayout>
+<script is:inline>
+  if (new URLSearchParams(location.search).get('in') === 'lesson') {
+    document.documentElement.classList.add('in-lesson');
+    // Esc inside the lab closes the lesson's panel (unless typing or in full screen).
+    document.addEventListener('keydown', (e) => {
+      const t = e.target;
+      if (e.key !== 'Escape' || document.fullscreenElement || (t && /^(INPUT|TEXTAREA|SELECT)$/.test(t.tagName))) return;
+      parent.postMessage({ type: 'msdb-lab-close' }, location.origin);
+    });
+  }
+</script>
+<style is:global>
+  .in-lesson .powered { display: none; }
+  .in-lesson .embed-wrap { max-width: none; padding: 10px 14px; }
+</style>

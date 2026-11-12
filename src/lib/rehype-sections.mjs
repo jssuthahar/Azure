@@ -8,7 +8,7 @@ export function sectionKind(text) {
   if (t.includes('start with a question')) return 'story';
   if (t.includes('explain it like')) return 'eli10';
   if (t.includes('real-world') || t.includes('business scenario')) return 'scenario';
-  if (t.startsWith('visual')) return 'visual';
+  if (t.startsWith('visual') || t.startsWith('simulate it')) return 'visual';
   if (t.includes('technical')) return 'technical';
   if (t.includes('when to use')) return 'when';
   return 'other';

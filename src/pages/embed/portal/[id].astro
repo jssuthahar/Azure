@@ -1,0 +1,14 @@
+---
+import EmbedLayout from '../../../layouts/EmbedLayout.astro';
+import PortalTour from '../../../components/mdx/PortalTour.astro';
+import { TOURS } from '../../../data/az-900/portal-tours';
+import { EMBED_LESSON_TOUR } from '../../../data/az-900/embeds';
+
+export function getStaticPaths() {
+  return Object.keys(TOURS).map((id) => ({ params: { id } }));
+}
+const id = Astro.params.id!;
+---
+<EmbedLayout title={TOURS[id].title} canonical={`/embed/portal/${id}/`} lesson={EMBED_LESSON_TOUR[id]}>
+  <PortalTour id={id} embed />
+</EmbedLayout>

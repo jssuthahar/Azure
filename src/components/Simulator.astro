@@ -5,6 +5,7 @@
  */
 import type { Lab } from '../lib/sim/labs';
 import { inlineMd } from '../lib/learn';
+import '../styles/portal.css';
 interface Props { lab: Lab }
 const { lab } = Astro.props;
 ---
@@ -15,6 +16,7 @@ const { lab } = Astro.props;
       <div class="rounded-xl border border-default bg-[var(--card)]">
         <div class="flex items-center justify-between border-b border-default px-4 py-3">
           <p class="font-semibold">Your tasks</p>
+          <button type="button" class="sim-alltasks text-sm text-accent" aria-expanded="false">Show all tasks ▾</button>
           <p class="text-sm"><strong class="sim-done">0</strong>/{lab.tasks.length}</p>
         </div>
         <div class="bar mx-4 mt-3"><span class="sim-bar" style="width:0"></span></div>
@@ -48,13 +50,14 @@ const { lab } = Astro.props;
         </ul>
       </div>
     )}
+    <p class="sim-restored hidden rounded-xl bg-[var(--pastel-blue)] p-3 text-sm">↺ <strong>Welcome back!</strong> Your lab was restored where you left off. Use <strong>↺ Reset</strong> to start again.</p>
     <div class="sim-win hidden rounded-xl bg-[var(--pastel-green)] p-4 text-center">
       <p class="text-5xl">🏆</p>
       <p class="mt-2 text-xl font-bold">Lab complete!</p>
       <p class="mt-2 text-sm leading-relaxed">{lab.wrap}</p>
       <a href="/az-900/labs/" class="nav-btn mt-4">More labs ❯</a>
     </div>
-    <p class="rounded-lg border border-dashed border-default p-3 text-xs leading-relaxed text-muted">🧪 This is a <strong>simulation</strong> built for learning. No Azure account is needed and nothing touches real Azure. Prices shown are illustrative. Screens are simplified versions of the real portal.</p>
+    <p class="sim-disclaimer rounded-lg border border-dashed border-default p-3 text-xs leading-relaxed text-muted">🎓 <strong>For education only.</strong> This is a simulation of the Azure portal and Cloud Shell built for learning. It is not affiliated with or endorsed by Microsoft, needs no Azure account, and nothing touches real Azure or costs money. Prices are illustrative.</p>
   </aside>
 
   <!-- Simulator -->
@@ -64,11 +67,12 @@ const { lab } = Astro.props;
         <button type="button" role="tab" data-tab="portal" class="rounded-full px-4 py-1.5">🖥️ Portal</button>
         <button type="button" role="tab" data-tab="shell" class="rounded-full px-4 py-1.5">⌨️ Cloud Shell</button>
       </div>
-      <span class="sim-cost chip ml-auto">💰 $0.00/mo</span>
+      <span class="sim-cost chip ml-auto">💰 0/mo</span>
+      <button type="button" class="sim-full rounded-full border border-default px-3 py-1.5 text-sm hover:bg-[var(--pastel-grey)]" title="Full screen">⛶ Full screen</button>
       <button type="button" class="sim-reset rounded-full border border-default px-3 py-1.5 text-sm hover:bg-[var(--pastel-grey)]">↺ Reset</button>
     </div>
 
-    <div class="sim-portal relative mt-3 overflow-hidden rounded-xl border border-default bg-[var(--bg)]" data-panel="portal"></div>
+    <div class="sim-portal relative mt-3 overflow-hidden rounded-xl border border-default" data-panel="portal"></div>
 
     <div class="sim-shell mt-3 hidden overflow-hidden rounded-xl border border-[#243a5e] bg-[#0b1020] text-[#e6edf3]" data-panel="shell">
       <div class="flex items-center gap-2 bg-[#243a5e] px-3 py-1.5 text-xs"><span class="font-semibold">Bash</span><span class="rounded bg-white/15 px-1.5 font-bold">PRACTICE</span><span class="text-white/70">Azure Cloud Shell (simulated)</span></div>
@@ -91,6 +95,17 @@ const { lab } = Astro.props;
   .sim-out .err { color: #ff8b94; }
   .sim-out .cmd { color: #9fe870; }
   .sim-out .info { color: #8fcbf7; }
+  .sim-portal { height: clamp(560px, 78vh, 820px); }
+  .sim-alltasks { display: none; margin-left: auto; margin-right: .75rem; }
+  /* Inside a lesson: compact task panel (current task only), portal first in view */
+  .in-lesson .sim-alltasks { display: inline; }
+  .in-lesson .sim-root:not(.show-all) .sim-task:not([data-current]) { display: none; }
+  .in-lesson .sim-disclaimer, .in-lesson .lab-embed-intro { display: none; }
+  .in-lesson .sim-root { gap: .75rem; }
+  .in-lesson .sim-portal { height: clamp(560px, 74vh, 760px); }
+  .sim-root:fullscreen { background: var(--bg); padding: 12px; overflow: auto; grid-template-columns: 20rem minmax(0, 1fr); }
+  .sim-root:fullscreen .sim-portal { height: calc(100vh - 80px); }
+  .sim-root:fullscreen .sim-out { height: calc(100vh - 160px); }
 </style>
 
 <script>
@@ -100,6 +115,7 @@ const { lab } = Astro.props;
   import { ALL_LABS } from '../lib/sim/labs';
   import { saveLab } from '../lib/progress';
   import { confetti } from '../lib/fun';
+  import { money } from '../lib/currency';
 
   document.querySelectorAll<HTMLElement>('.sim-root').forEach((root) => {
     const lab = ALL_LABS.find((l) => l.id === root.dataset.lab)!;
@@ -140,7 +156,7 @@ const { lab } = Astro.props;
     const tasks = [...root.querySelectorAll<HTMLElement>('.sim-task')];
     const doneSet = new Set<number>();
     const check = () => {
-      root.querySelector('.sim-cost')!.textContent = `💰 $${(sim.totalHourly() * 730).toFixed(2)}/mo`;
+      root.querySelector('.sim-cost')!.textContent = `💰 ${money(sim.totalHourly() * 730)}/mo`;
       lab.tasks.forEach((t, i) => {
         if (!doneSet.has(i) && t.check(sim)) {
           doneSet.add(i);
@@ -155,27 +171,55 @@ const { lab } = Astro.props;
       if (doneEl) doneEl.textContent = String(n);
       const bar = root.querySelector<HTMLElement>('.sim-bar');
       if (bar) bar.style.width = `${(n / Math.max(1, lab.tasks.length)) * 100}%`;
-      if (lab.tasks.length && n === lab.tasks.length && !finished) {
-        finished = true;
+      if (lab.tasks.length && n === lab.tasks.length) {
         root.querySelector('.sim-win')!.classList.remove('hidden');
-        saveLab(lab.id);
-        confetti(200);
+        if (!finished) { finished = true; saveLab(lab.id); confetti(200); }
       }
+      scheduleSave();
     };
 
-    const boot = () => {
+    /* ---- remember the lab between visits (this browser only) ---- */
+    const KEY = `msdb-lab-v1-${lab.id}`;
+    let saveTimer = 0;
+    const scheduleSave = () => {
+      clearTimeout(saveTimer);
+      saveTimer = window.setTimeout(() => {
+        try {
+          localStorage.setItem(KEY, JSON.stringify({
+            rgs: sim.rgs, res: sim.res, events: sim.events.slice(-500), view: portal?.view,
+            shell: out.innerHTML.slice(-60_000), history: history.slice(-100), finished, at: Date.now(),
+          }));
+        } catch {}
+      }, 250);
+    };
+    const loadSaved = () => {
+      try { const raw = localStorage.getItem(KEY); return raw ? JSON.parse(raw) : null; } catch { return null; }
+    };
+
+    const boot = (restore = true) => {
       sim = new Sim();
+      const saved = restore ? loadSaved() : null;
+      if (saved) Object.assign(sim, { rgs: saved.rgs ?? [], res: saved.res ?? [], events: saved.events ?? [] });
       // Fresh element so the previous portal's event listeners are dropped.
       const fresh = portalEl.cloneNode(false) as HTMLElement;
       portalEl.replaceWith(fresh);
       portalEl = fresh;
       portal = new Portal(portalEl, sim);
+      portal.onShell = () => show('shell');
+      if (saved?.view) { portal.view = saved.view; portal.render(); }
       sim.onChange(check);
-      banner();
       doneSet.clear();
-      finished = false;
+      finished = Boolean(saved?.finished);
+      history.length = 0;
+      if (saved) {
+        out.innerHTML = saved.shell ?? '';
+        history.push(...(saved.history ?? []));
+        hIdx = history.length;
+        print(`\n↺ Welcome back! Your lab was restored (last saved ${new Date(saved.at).toLocaleString()}). Press ↺ Reset to start over.\n`, 'info');
+      } else banner();
       tasks.forEach((t, i) => { t.removeAttribute('data-done'); t.querySelector('.sim-check')!.textContent = String(i + 1); });
       root.querySelector('.sim-win')?.classList.add('hidden');
+      root.querySelector('.sim-restored')?.classList.toggle('hidden', !saved);
       check();
     };
 
@@ -231,7 +275,23 @@ const { lab } = Astro.props;
         input.setSelectionRange(input.value.length, input.value.length);
       }),
     );
-    root.querySelector('.sim-reset')!.addEventListener('click', () => { if (confirm('Reset the practice world? Everything you created will be removed.')) boot(); });
+    root.querySelector('.sim-reset')!.addEventListener('click', () => {
+      if (!confirm('Reset the practice world? Everything you created will be removed.')) return;
+      try { localStorage.removeItem(KEY); } catch {}
+      boot(false);
+    });
+    const allBtn = root.querySelector<HTMLButtonElement>('.sim-alltasks');
+    allBtn?.addEventListener('click', () => {
+      const on = root.classList.toggle('show-all');
+      allBtn.setAttribute('aria-expanded', String(on));
+      allBtn.textContent = on ? 'Show current task ▴' : 'Show all tasks ▾';
+    });
+    const fullBtn = root.querySelector<HTMLButtonElement>('.sim-full')!;
+    fullBtn.addEventListener('click', () => {
+      if (document.fullscreenElement) document.exitFullscreen().catch(() => {});
+      else root.requestFullscreen?.().catch(() => {});
+    });
+    document.addEventListener('fullscreenchange', () => { fullBtn.textContent = document.fullscreenElement === root ? '✕ Exit full screen' : '⛶ Full screen'; });
 
     boot();
     show(root.dataset.start === 'shell' ? 'shell' : 'portal');

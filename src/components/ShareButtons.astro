@@ -1,0 +1,41 @@
+---
+/** Share a page: LinkedIn, X, WhatsApp, Facebook, copy link, or the device share sheet. */
+interface Props { url?: string; text: string; class?: string }
+const { url, text, class: cls = '' } = Astro.props;
+---
+<div class={`share-row flex flex-wrap items-center gap-2 ${cls}`} data-share-url={url ?? ''} data-share-text={text}>
+  <span class="text-sm font-semibold">Share:</span>
+  <a class="share-b" data-net="linkedin" target="_blank" rel="noopener" href="#">in LinkedIn</a>
+  <a class="share-b" data-net="x" target="_blank" rel="noopener" href="#">𝕏 Post</a>
+  <a class="share-b" data-net="whatsapp" target="_blank" rel="noopener" href="#">💬 WhatsApp</a>
+  <a class="share-b" data-net="facebook" target="_blank" rel="noopener" href="#">f Facebook</a>
+  <button type="button" class="share-b" data-net="copy">🔗 Copy link</button>
+  <button type="button" class="share-b share-native" data-net="native" hidden>📤 Share…</button>
+</div>
+<style is:global>
+  .share-b { display: inline-flex; align-items: center; gap: .3rem; border-radius: 999px; padding: .35rem .8rem; font-size: .85rem; font-weight: 600; border: 1px solid var(--card-line); background: var(--card); color: var(--text) !important; text-decoration: none !important; }
+  .share-b:hover { border-color: #0078d4; }
+</style>
+<script>
+  document.querySelectorAll<HTMLElement>('.share-row').forEach((row) => {
+    const url = () => row.dataset.shareUrl || location.href;
+    const text = () => row.dataset.shareText || document.title;
+    const links: Record<string, () => string> = {
+      linkedin: () => `https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(url())}`,
+      x: () => `https://twitter.com/intent/tweet?text=${encodeURIComponent(text())}&url=${encodeURIComponent(url())}`,
+      whatsapp: () => `https://wa.me/?text=${encodeURIComponent(`${text()} ${url()}`)}`,
+      facebook: () => `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(url())}`,
+    };
+    const paint = () => row.querySelectorAll<HTMLAnchorElement>('a[data-net]').forEach((a) => { a.href = links[a.dataset.net!](); });
+    paint();
+    new MutationObserver(paint).observe(row, { attributes: true, attributeFilter: ['data-share-url', 'data-share-text'] });
+    const native = row.querySelector<HTMLButtonElement>('.share-native')!;
+    if ('share' in navigator) native.hidden = false;
+    native.addEventListener('click', () => navigator.share({ title: text(), text: text(), url: url() }).catch(() => {}));
+    row.querySelector<HTMLButtonElement>('[data-net="copy"]')!.addEventListener('click', async (e) => {
+      const b = e.currentTarget as HTMLButtonElement;
+      try { await navigator.clipboard.writeText(url()); b.textContent = '✅ Copied'; } catch { prompt('Copy this link:', url()); }
+      setTimeout(() => (b.textContent = '🔗 Copy link'), 2000);
+    });
+  });
+</script>

@@ -1,31 +1,54 @@
 ---
 import { getNav } from '../lib/learn';
+import CurrencySelect from './CurrencySelect.astro';
+import { SITE } from '../config';
 
 const path = Astro.url.pathname;
 const nav = await getNav();
 const published = nav.filter((t) => t.published);
 
-/** W3-style topic bar. The most specific matching link is highlighted. */
-const TOPICS = [
-  { label: 'Home', href: '/' },
-  { label: 'AZ-900', href: '/az-900/' },
-  { label: 'Cloud Concepts', href: '/az-900/cloud-concepts/' },
-  { label: 'Architecture & Services', href: '/az-900/azure-architecture-and-services/' },
-  { label: 'Management & Governance', href: '/az-900/management-and-governance/' },
-  { label: '🧪 Practice Labs', href: '/az-900/labs/' },
-  { label: '🎮 Play & Learn', href: '/az-900/games/' },
-  { label: 'Mock Exam', href: '/az-900/mock-exam/' },
-  { label: 'Interview', href: '/az-900/interview/' },
-  { label: 'Revision', href: '/az-900/revision/' },
-  { label: 'My Progress', href: '/progress/' },
+/** Top bar: a few grouped menus instead of one long row of links. */
+interface Item { label: string; href: string; desc: string; icon: string }
+interface Group { label: string; icon: string; items: Item[] }
+const GROUPS: (Group | Item)[] = [
+  { label: 'Home', href: '/', desc: '', icon: '🏠' },
+  { label: 'Learn', icon: '📘', items: [
+    { icon: '🗺️', label: 'AZ-900 course', href: '/az-900/', desc: 'All lessons, in exam order' },
+    { icon: '☁️', label: 'Cloud Concepts', href: '/az-900/cloud-concepts/', desc: 'Domain 1 · what the cloud is' },
+    { icon: '🏗️', label: 'Architecture & Services', href: '/az-900/azure-architecture-and-services/', desc: 'Domain 2 · regions, compute, network, storage, identity' },
+    { icon: '🧭', label: 'Management & Governance', href: '/az-900/management-and-governance/', desc: 'Domain 3 · cost, policy, tools, monitoring' },
+  ] },
+  { label: 'Simulate & Practice', icon: '⚡', items: [
+    { icon: '⚡', label: 'Azure Simulator', href: '/simulator/', desc: '“What happens if…?” in 3D: outages, spikes, bill shock' },
+    { icon: '🧪', label: 'Practice Labs', href: '/az-900/labs/', desc: 'Click around a simulated Azure portal + Cloud Shell' },
+    { icon: '</>', label: 'Embed simulations', href: '/embed/', desc: 'For trainers and bloggers' },
+  ] },
+  { label: 'Exam & Certificate', icon: '🎓', items: [
+    { icon: '📝', label: 'Mock Exam', href: '/az-900/mock-exam/', desc: 'Timed, exam-style practice test' },
+    { icon: '🏆', label: 'Free Certificate', href: '/certificate/', desc: 'Pass the mock exam, share your AZ-900 Ready badge' },
+    { icon: '🃏', label: 'Revision', href: '/az-900/revision/', desc: 'Flashcards and quick notes' },
+    { icon: '💼', label: 'Interview Questions', href: '/az-900/interview/', desc: 'Beginner to architect level' },
+  ] },
+  { label: 'Reference', icon: '📚', items: [
+    { icon: '⚖️', label: 'Compare services', href: '/az-900/compare/', desc: 'Blob vs Files, VM vs Functions, Azure vs AWS…' },
+    { icon: '📚', label: 'Service reference', href: '/az-900/services/', desc: 'Every Azure service in 60 seconds' },
+    { icon: '📖', label: 'Glossary', href: '/az-900/glossary/', desc: 'Azure terms in one line' },
+  ] },
+  { label: 'Play', icon: '🎮', items: [
+    { icon: '🎮', label: 'Play & Learn', href: '/az-900/games/', desc: 'Sort It, Match, Lightning Round, Who Am I?' },
+    { icon: '🔥', label: 'Daily Challenge', href: '/az-900/games/daily/', desc: '5 questions a day, keep your streak' },
+  ] },
+  { label: 'My Progress', href: '/progress/', desc: '', icon: '📈' },
 ];
-const active = TOPICS.filter((t) => (t.href === '/' ? path === '/' : path.startsWith(t.href))).sort((a, b) => b.href.length - a.href.length)[0]?.href;
+const allLinks = GROUPS.flatMap((g) => ('items' in g ? g.items : [g]));
+const active = allLinks.filter((t) => (t.href === '/' ? path === '/' : path.startsWith(t.href))).sort((a, b) => b.href.length - a.href.length)[0]?.href;
+const groupActive = (g: Group) => g.items.some((i) => i.href === active);
 ---
 
 <header class="site-header sticky top-0 z-50 border-b border-default bg-[var(--bg)]">
   <div class="flex h-14 items-center gap-3 px-4 sm:px-6">
     <a href="/" class="flex shrink-0 items-center gap-2.5" aria-label="MSDEVBUILD Azure — home">
-      <img src="/favicon.svg" alt="" width="32" height="32" class="size-8 rounded-lg" />
+      <img src={SITE.authorImageSmall} alt="Suthahar Jegatheesan" width="36" height="36" class="size-9 rounded-full object-cover ring-2 ring-[var(--accent)]/30" />
       <span class="leading-tight">
         <span class="block font-semibold tracking-tight"><span class="header-ms">MS</span>DEVBUILD <span class="font-normal text-muted">/ azure</span></span>
       </span>
@@ -47,6 +70,7 @@ const active = TOPICS.filter((t) => (t.href === '/' ? path === '/' : path.starts
       <a id="xp-chip" href="/progress/" hidden class="flex items-center gap-1.5 rounded-full border border-default bg-[var(--pastel-grey)] px-3 py-1.5 text-sm font-semibold hover:border-[var(--accent)]" title="Your level, XP and learning streak">
         <span id="xp-level"></span><span id="xp-points" class="text-accent"></span><span id="xp-streak" class="hidden"></span>
       </a>
+      <CurrencySelect compact class="mr-1" />
       <a href="/about/" class="hidden rounded-md px-3 py-2 text-sm text-muted hover:bg-subtle sm:block">About</a>
       <button id="theme-toggle" type="button" class="rounded-md p-2 transition-colors hover:bg-subtle" aria-label="Switch colour theme">
         <svg class="size-5 dark:hidden" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8Z" /></svg>
@@ -55,16 +79,45 @@ const active = TOPICS.filter((t) => (t.href === '/' ? path === '/' : path.starts
     </div>
   </div>
 
-  <nav class="topbar overflow-x-auto" aria-label="Tutorials">
-    <ul class="flex h-11 min-w-max items-stretch px-2 text-[0.9rem] sm:px-4">
-      {TOPICS.map((t) => (
+  <nav class="topbar overflow-x-auto" aria-label="Main">
+    <ul class="flex h-11 min-w-max items-stretch px-2 text-[0.92rem] sm:px-4">
+      {GROUPS.map((g, gi) => 'items' in g ? (
         <li class="flex">
-          <a href={t.href} aria-current={active === t.href ? 'page' : undefined} class="flex items-center px-3.5 whitespace-nowrap transition-colors">{t.label}</a>
+          <button type="button" class="tb-group flex items-center gap-1.5 px-3.5 whitespace-nowrap transition-colors" aria-expanded="false" aria-controls={`tb-menu-${gi}`} data-active={groupActive(g) ? '' : undefined}>
+            <span aria-hidden="true">{g.icon}</span>{g.label}<span class="tb-caret" aria-hidden="true">▾</span>
+          </button>
+          <div id={`tb-menu-${gi}`} class="tb-menu" hidden>
+            {g.items.map((i) => (
+              <a href={i.href} class="tb-item" aria-current={active === i.href ? 'page' : undefined}>
+                <span class="tb-ico" aria-hidden="true">{i.icon}</span>
+                <span><span class="tb-label">{i.label}</span><span class="tb-desc">{i.desc}</span></span>
+              </a>
+            ))}
+          </div>
+        </li>
+      ) : (
+        <li class="flex">
+          <a href={g.href} aria-current={active === g.href ? 'page' : undefined} class="flex items-center gap-1.5 px-3.5 whitespace-nowrap transition-colors"><span aria-hidden="true">{g.icon}</span>{g.label}</a>
         </li>
       ))}
     </ul>
   </nav>
 </header>
+
+<style is:global>
+  .topbar .tb-group { color: var(--topbar-text); }
+  .topbar .tb-group:hover, .topbar .tb-group[aria-expanded='true'] { background: rgb(255 255 255 / 0.12); }
+  .topbar .tb-group[data-active] { background: #0078d4; color: #fff; }
+  .tb-caret { font-size: .95em; opacity: .85; transition: transform .15s; }
+  .tb-group[aria-expanded='true'] .tb-caret { transform: rotate(180deg); }
+  .tb-menu { position: fixed; z-index: 60; width: min(360px, calc(100vw - 16px)); padding: 6px; border-radius: 12px; background: var(--card); color: var(--text); border: 1px solid var(--card-line); box-shadow: 0 14px 40px rgb(0 30 60 / .22); }
+  .tb-item { display: flex; gap: 12px; align-items: flex-start; padding: 9px 10px; border-radius: 8px; color: var(--text) !important; }
+  .tb-item:hover, .tb-item:focus-visible { background: var(--pastel-blue) !important; }
+  .tb-item[aria-current='page'] { background: var(--pastel-blue); }
+  .tb-ico { flex: none; display: grid; place-items: center; width: 34px; height: 34px; border-radius: 9px; background: var(--pastel-grey); font-size: 17px; font-weight: 700; }
+  .tb-label { display: block; font-weight: 600; }
+  .tb-desc { display: block; font-size: .82rem; color: var(--text-muted); line-height: 1.35; }
+</style>
 
 <script>
   import { load, levelFor, streak } from '../lib/progress';
@@ -83,6 +136,32 @@ const active = TOPICS.filter((t) => (t.href === '/' ? path === '/' : path.starts
   };
   paintXp();
   window.addEventListener('progress-change', paintXp);
+
+  // Grouped top-bar menus
+  const groups = [...document.querySelectorAll<HTMLButtonElement>('.tb-group')];
+  const menuOf = (b: HTMLButtonElement) => document.getElementById(b.getAttribute('aria-controls')!)!;
+  const closeAll = (except?: HTMLButtonElement) => groups.forEach((b) => { if (b !== except) { b.setAttribute('aria-expanded', 'false'); menuOf(b).hidden = true; } });
+  const place = (b: HTMLButtonElement) => {
+    const r = b.getBoundingClientRect(), m = menuOf(b);
+    m.style.top = `${r.bottom + 4}px`;
+    m.style.left = `${Math.max(8, Math.min(r.left, innerWidth - m.offsetWidth - 8))}px`;
+  };
+  groups.forEach((b) => {
+    b.addEventListener('click', (e) => {
+      e.stopPropagation();
+      const open = b.getAttribute('aria-expanded') !== 'true';
+      closeAll(b);
+      b.setAttribute('aria-expanded', String(open));
+      menuOf(b).hidden = !open;
+      if (open) { place(b); menuOf(b).querySelector<HTMLElement>('a')?.focus({ preventScroll: true }); }
+    });
+  });
+  document.addEventListener('click', (e) => { if (!(e.target as HTMLElement).closest('.tb-menu')) closeAll(); });
+  document.addEventListener('keydown', (e) => { if (e.key === 'Escape') { const open = groups.find((b) => b.getAttribute('aria-expanded') === 'true'); closeAll(); open?.focus(); } });
+  addEventListener('resize', () => closeAll());
+  const follow = () => groups.forEach((b) => { if (b.getAttribute('aria-expanded') === 'true') place(b); });
+  document.querySelector('.topbar')?.addEventListener('scroll', follow, { passive: true });
+  addEventListener('scroll', follow, { passive: true });
   document.getElementById('theme-toggle')?.addEventListener('click', () => {
     const next = document.documentElement.dataset.theme === 'dark' ? 'light' : 'dark';
     document.documentElement.dataset.theme = next;

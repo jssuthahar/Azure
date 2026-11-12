@@ -1,0 +1,12 @@
+---
+/** A currency picker. Every picker on the page stays in sync (default INR). */
+import { CURRENCIES, DEFAULT } from '../lib/currency';
+interface Props { class?: string; compact?: boolean }
+const { class: cls = '', compact = false } = Astro.props;
+---
+<label class={`currency-select inline-flex items-center gap-1 text-sm ${cls}`} title="Show prices in your currency (approximate rates)">
+  <span class={compact ? 'sr-only' : ''}>Currency</span>
+  <select data-currency class="rounded-md border border-default bg-[var(--bg)] px-1.5 py-1 text-sm font-semibold">
+    {Object.entries(CURRENCIES).map(([c, v]) => <option value={c} selected={c === DEFAULT} title={v.name}>{c}</option>)}
+  </select>
+</label>

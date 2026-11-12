@@ -1,0 +1,111 @@
+---
+/**
+ * Guided walkthrough of the (simulated) new Azure portal:
+ *   <PortalTour id="create-vm" intro="..." />
+ * The learner clicks the highlighted element (or Next) to move through the
+ * steps. Tours live in src/data/az-900/portal-tours.ts.
+ */
+import { TOURS } from '../../data/az-900/portal-tours';
+import { inlineMd } from '../../lib/learn';
+import CurrencySelect from '../CurrencySelect.astro';
+import EmbedButton from '../EmbedButton.astro';
+import '../../styles/portal.css';
+interface Props { id: string; intro?: string; title?: string; embed?: boolean }
+const { id, intro, title, embed = false } = Astro.props;
+const tour = TOURS[id];
+if (!tour) throw new Error(`<PortalTour>: unknown tour id "${id}"`);
+const plain = (s: string) => s.replace(/\*\*|\*|`/g, '');
+---
+<figure class="pt-root not-prose" data-tour={JSON.stringify(tour.steps)}>
+  <div class="pt-head">
+    <span class="pt-head-ico" aria-hidden="true">🖥️</span>
+    <span class="min-w-0 flex-1">
+      <span class="block font-semibold leading-snug">{title ?? `Azure portal: ${tour.title}`}</span>
+      <span class="block text-sm text-muted">{intro ? <span set:html={inlineMd(intro)} /> : 'Click the glowing item in the portal, or use Next.'}</span>
+    </span>
+    <span class="flex shrink-0 items-center gap-1.5"><CurrencySelect compact />{!embed && <EmbedButton path={`/embed/portal/${id}/`} title={tour.title} height={860} />}</span>
+  </div>
+  <div class="pt-frame" aria-label="Simulated Azure portal" role="group"><div class="pt-boot">Loading the portal…</div></div>
+  <div class="pt-cap">
+    <div class="pt-progress"><span></span></div>
+    <p class="pt-cap-row"><span class="pt-cap-n"></span> <button type="button" class="speak-btn pt-say" data-say="" aria-label="Listen to this step">🔊</button></p>
+    <p class="pt-cap-t" aria-live="polite">{inlineMd(tour.steps[0].say)}</p>
+    <p class="pt-cap-hint">👆 Click the <strong>glowing</strong> item in the portal to continue</p>
+    <div class="pt-cap-nav">
+      <button type="button" class="pt-back">❮ Back</button>
+      <button type="button" class="pt-next">Next ❯</button>
+    </div>
+  </div>
+  <details class="pt-script">
+    <summary>Read the steps as text</summary>
+    <ol>{tour.steps.map((s) => <li>{plain(s.say)}</li>)}</ol>
+  </details>
+  <p class="pt-disclaimer">🧪 Simulation for learning. Screens are simplified versions of the Azure portal; names, prices and IDs are examples. Nothing here touches real Azure.</p>
+</figure>
+
+
+<script>
+  import { renderStep, type Step } from '../../lib/portal-tour';
+  import { localizeText } from '../../lib/currency';
+
+  const md = (s: string) => s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>').replace(/`(.+?)`/g, '<code>$1</code>').replace(/\*(.+?)\*/g, '<em>$1</em>');
+  const plain = (s: string) => s.replace(/\*\*|\*|`/g, '');
+
+  function scrollIntoFrame(el: HTMLElement) {
+    let p = el.parentElement;
+    while (p && !p.classList.contains('pt-frame')) {
+      const s = getComputedStyle(p);
+      if (/(auto|scroll)/.test(s.overflowY + s.overflowX) && (p.scrollHeight > p.clientHeight || p.scrollWidth > p.clientWidth)) {
+        const r = el.getBoundingClientRect(), pr = p.getBoundingClientRect();
+        if (r.top < pr.top + 8 || r.bottom > pr.bottom - 8) p.scrollTop += r.top - pr.top - p.clientHeight / 3;
+        if (r.left < pr.left || r.right > pr.right) p.scrollLeft += r.left - pr.left - 20;
+      }
+      p = p.parentElement;
+    }
+  }
+
+  function init(root: HTMLElement) {
+    const steps: Step[] = JSON.parse(root.dataset.tour!);
+    const frame = root.querySelector<HTMLElement>('.pt-frame')!;
+    const text = root.querySelector<HTMLElement>('.pt-cap-t')!;
+    const num = root.querySelector<HTMLElement>('.pt-cap-n')!;
+    const say = root.querySelector<HTMLElement>('.pt-say')!;
+    const hint = root.querySelector<HTMLElement>('.pt-cap-hint')!;
+    const bar = root.querySelector<HTMLElement>('.pt-progress span')!;
+    const back = root.querySelector<HTMLButtonElement>('.pt-back')!;
+    const next = root.querySelector<HTMLButtonElement>('.pt-next')!;
+    let i = 0;
+    let target: HTMLElement | null = null;
+
+    const show = (n: number) => {
+      i = Math.max(0, Math.min(steps.length - 1, n));
+      const s = steps[i];
+      frame.innerHTML = localizeText(renderStep(s));
+      text.innerHTML = localizeText(md(s.say));
+      say.dataset.say = plain(s.say);
+      num.textContent = `Step ${i + 1} of ${steps.length}`;
+      bar.style.width = `${((i + 1) / steps.length) * 100}%`;
+      back.disabled = i === 0;
+      next.textContent = i === steps.length - 1 ? '↺ Start again' : 'Next ❯';
+      target = s.t ? frame.querySelector<HTMLElement>(`[data-t="${CSS.escape(s.t)}"]`) : null;
+      hint.hidden = !target;
+      if (target) { target.classList.add('pt-hl'); requestAnimationFrame(() => target && scrollIntoFrame(target)); }
+    };
+
+    frame.addEventListener('click', (e) => {
+      const el = (e.target as HTMLElement).closest<HTMLElement>('[data-t]');
+      if (target && el === target) { show(i + 1); return; }
+      if (target && (e.target as HTMLElement).closest('button, [data-t]')) {
+        hint.classList.remove('pt-nudge');
+        void hint.offsetWidth;
+        hint.classList.add('pt-nudge');
+      }
+    });
+    back.addEventListener('click', () => show(i - 1));
+    next.addEventListener('click', () => show(i === steps.length - 1 ? 0 : i + 1));
+    window.addEventListener('currency-change', () => show(i));
+    show(0);
+  }
+
+  document.querySelectorAll<HTMLElement>('figure.pt-root').forEach(init);
+</script>

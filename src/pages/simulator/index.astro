@@ -1,0 +1,41 @@
+---
+import Base from '../../layouts/Base.astro';
+import { WHATIFS } from '../../data/az-900/whatifs';
+import { SIMS3D } from '../../data/az-900/sims3d';
+import { TOURS } from '../../data/az-900/portal-tours';
+import { EMBED_LESSON_3D } from '../../data/az-900/embeds';
+const crumbs = [{ name: 'Home', url: '/' }, { name: 'Azure Simulator', url: '/simulator/' }];
+---
+<Base title="Azure Simulator: Feel Azure Without an Azure Account" description="Free Azure simulator: pull the plug on a datacenter, survive a Black Friday spike, see a forgotten-VM bill, measure latency, and click through the Azure portal." breadcrumbs={crumbs}>
+  <section class="home-band band-navy">
+    <div class="mx-auto max-w-5xl px-4 py-12 text-center sm:px-6">
+      <h1 class="text-4xl font-bold tracking-tight sm:text-6xl">⚡ The Azure Simulator</h1>
+      <p class="mt-4 text-xl text-[#ffd75e]">Feel Azure without an Azure account. Break things on purpose, safely.</p>
+    </div>
+  </section>
+  <div class="mx-auto max-w-5xl px-4 py-10 sm:px-6">
+    <h2 class="text-3xl font-semibold">🤔 What happens if…?</h2>
+    <p class="mt-2 text-muted">One click, and you see the consequence. Share the ones that surprise you.</p>
+    <ul class="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+      {WHATIFS.map((w) => (
+        <li><a href={`/simulator/${w.slug}/`} class="flex h-full flex-col rounded-xl border border-default bg-[var(--card)] p-5 hover:border-[var(--accent)]">
+          <span class="text-4xl" aria-hidden="true">{w.emoji}</span>
+          <span class="mt-3 text-lg font-semibold leading-snug">{w.q}</span>
+          <span class="mt-auto pt-3 text-sm font-semibold text-[#107c10]">▶ Simulate it »</span>
+        </a></li>
+      ))}
+    </ul>
+
+    <h2 class="mt-14 text-3xl font-semibold">🧊 3D simulations</h2>
+    <ul class="mt-6 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+      {Object.entries(SIMS3D).map(([m, s]) => { const l = EMBED_LESSON_3D[m]; return (
+        <li class="rounded-xl border border-default bg-[var(--card)] p-4"><p class="font-semibold">{s.title}</p><p class="mt-1 text-sm text-muted">{s.steps.length} steps</p>
+          {l && <a class="mt-2 inline-block text-sm font-semibold text-accent hover:underline" href={`${l.url}#simulate-it-in-3d`}>Open in “{l.title}” ❯</a>}</li>
+      ); })}
+    </ul>
+
+    <h2 class="mt-14 text-3xl font-semibold">🖥️ Azure portal walkthroughs</h2>
+    <p class="mt-2 text-muted">{Object.keys(TOURS).length} guided tours of the new Azure portal, simulated. Open one from its lesson, or embed it.</p>
+    <p class="mt-4"><a class="nav-btn" href="/embed/">Browse and embed all simulations ❯</a></p>
+  </div>
+</Base>

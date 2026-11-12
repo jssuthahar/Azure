@@ -1,7 +1,8 @@
 ---
 /**
- * W3Schools-style "Try it Yourself »" box that links a lesson section to one
- * or more simulator labs. Usage in MDX: <TryIt labs="vm-and-cost" text="..." />
+ * "Try it yourself" box inside a lesson. It never leaves the page: the button
+ * switches the lesson's Simulations section to the Practice Lab tab with this
+ * lab selected. Usage in MDX: <TryIt labs="vm-and-cost" text="..." />
  */
 import { ALL_LABS } from '../../lib/sim/labs';
 interface Props { labs: string; text: string }
@@ -9,12 +10,12 @@ const { labs, text } = Astro.props;
 const list = labs.split(',').map((id) => ALL_LABS.find((l) => l.id === id.trim())).filter(Boolean);
 ---
 <aside class="tryit not-prose rounded-xl border-l-[5px] border-[#107c10] bg-[var(--pastel-green)] p-4" aria-label="Try it yourself">
-  <p class="text-sm font-bold verdict-ok">🧪 Try it yourself, no Azure account needed</p>
+  <p class="text-sm font-bold verdict-ok">🧪 Try it yourself, right here</p>
   <p class="mt-1 text-[0.98rem] leading-relaxed">{text}</p>
   <div class="mt-3 flex flex-wrap gap-2">
     {list.map((l) => (
-      <a href={`/az-900/labs/${l!.id}/`} class="inline-flex items-center gap-2 rounded-md bg-[#107c10] px-4 py-2 text-sm font-semibold !text-white !no-underline hover:bg-[#0b5a0b]">
-        <span aria-hidden="true">{l!.icon}</span> {l!.id === 'sandbox' ? 'Open the sandbox' : `Try it Yourself: ${l!.title}`} »
+      <a href="#simulations" class="sim-jump" data-sim-tab="lab" data-sim-lab={l!.id}>
+        <span aria-hidden="true">{l!.icon}</span> {l!.id === 'sandbox' ? 'Open the sandbox' : `Practise: ${l!.title}`} »
       </a>
     ))}
   </div>

@@ -12,7 +12,7 @@ const nav = await getNav();
 const related = lab.topics.map((t) => nav.find((n) => n.slug === t && n.published)).filter(Boolean);
 const idx = ALL_LABS.findIndex((l) => l.id === lab.id);
 const next = ALL_LABS[idx + 1];
-const title = lab.id === 'sandbox' ? 'Azure Sandbox Simulator: Practise Free | MSDEVBUILD' : `Azure Lab: ${lab.title} (Free Simulator) | MSDEVBUILD`;
+const title = lab.id === 'sandbox' ? 'Azure Sandbox Simulator: Practise Free | MSDEVBUILD' : `${lab.title} · Free Azure Lab`.slice(0, 65);
 const description = `${lab.intro}`.slice(0, 155);
 ---
 <Base title={title} description={description} breadcrumbs={[{ name: 'Home', url: '/' }, { name: 'AZ-900', url: '/az-900/' }, { name: 'Practice labs', url: '/az-900/labs/' }, { name: lab.title, url: Astro.url.pathname }]}>

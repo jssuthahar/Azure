@@ -2,6 +2,7 @@
 import Base from '../layouts/Base.astro';
 import Mascot from '../components/Mascot.astro';
 import CloudScene from '../components/scenes/CloudScene.astro';
+import TodayBand from '../components/TodayBand.astro';
 import { CERTIFICATIONS } from '../data/certifications';
 import { MODULES } from '../data/az-900/syllabus';
 import { getNav, getQuestionBank, getTutorial, inlineMd } from '../lib/learn';
@@ -37,8 +38,8 @@ const schema = [{ '@type': 'WebPage', '@id': `${SITE.url}/#home`, name: SITE.tit
     <div class="mx-auto grid max-w-6xl items-center gap-10 lg:grid-cols-[1fr_1.1fr]">
       <div class="text-center lg:text-left">
         <h1 class="text-5xl font-bold tracking-tight sm:text-7xl">Learn Azure</h1>
-        <p class="mt-4 text-xl text-[#ffd75e] sm:text-2xl">From zero to AZ-900 certified, one simple lesson at a time</p>
-        <p class="mt-3 text-white/85">🎬 Animated pictures · 🔊 Nimbus reads to you · 🎮 Games and badges</p>
+        <p class="mt-4 text-xl text-[#ffd75e] sm:text-2xl">The place where you can <em>feel</em> Azure, without an Azure account</p>
+        <p class="mt-3 text-white/85">▶ Simulate every concept · 🏢 Walk through a 3D datacenter · 🖥️ Click through the Azure portal · 🔊 Nimbus guides you</p>
         <form id="hero-search" class="mx-auto mt-7 flex max-w-xl overflow-hidden rounded-full bg-white shadow-lg lg:mx-0" role="search">
           <label for="hero-q" class="sr-only">Search tutorials</label>
           <input id="hero-q" list="topic-list" type="search" placeholder="Search our tutorials, e.g. IaaS or Elasticity" class="min-w-0 flex-1 bg-transparent px-6 py-3.5 text-base text-[#0b1020] outline-none placeholder:text-[#6b7280]" />
@@ -60,6 +61,8 @@ const schema = [{ '@type': 'WebPage', '@id': `${SITE.url}/#home`, name: SITE.tit
       </figure>
     </div>
   </section>
+
+  <TodayBand />
 
   <!-- One band per exam domain -->
   {modules.map(({ m, topics, pub, sample, band, qCount }) => (

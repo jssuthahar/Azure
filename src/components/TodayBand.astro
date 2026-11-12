@@ -1,0 +1,80 @@
+---
+/**
+ * Homepage "Today" band: streak + Daily Challenge, Azure term of the day, and
+ * a "What happens if…?" of the day. Picks rotate by date in the browser, so
+ * the static page stays fresh every day.
+ */
+import { getGlossary } from '../lib/glossary';
+import { WHATIFS } from '../data/az-900/whatifs';
+const terms = (await getGlossary()).map(({ term, def, url, slug }) => ({ term, def, url, slug }));
+const whatifs = WHATIFS.map(({ slug, q, emoji }) => ({ slug, q, emoji }));
+const quick = [
+  ['⚡', 'Azure Simulator', '/simulator/'], ['⚖️', 'Compare services', '/az-900/compare/'], ['📚', 'Service reference', '/az-900/services/'],
+  ['📖', 'Glossary', '/az-900/glossary/'], ['🏆', 'Free certificate', '/certificate/'], ['</>', 'Embed sims', '/embed/'],
+];
+---
+<section class="home-band" aria-labelledby="today-h">
+  <div class="mx-auto max-w-6xl px-4 py-10 sm:px-6">
+    <h2 id="today-h" class="text-3xl font-bold tracking-tight">Today on MSDEVBUILD Azure</h2>
+    <div class="mt-6 grid gap-4 md:grid-cols-3">
+      <a href="/az-900/games/daily/" class="flex flex-col rounded-2xl border-2 border-[#ffb900] bg-[var(--pastel-yellow)] p-5 hover:ring-2 hover:ring-[var(--accent)]">
+        <span class="text-sm font-bold tracking-wide uppercase">🔥 Your streak</span>
+        <span class="mt-1 text-4xl font-bold"><span id="t-streak">0</span> <span class="text-lg font-semibold">day<span id="t-s">s</span></span></span>
+        <span id="t-daily" class="mt-2">Today’s Daily Challenge is waiting: 5 quick questions.</span>
+        <span class="mt-auto pt-4 font-semibold text-accent" id="t-daily-cta">Play today’s challenge »</span>
+      </a>
+      <div class="flex flex-col rounded-2xl border border-default bg-[var(--card)] p-5" data-speakable>
+        <span class="flex items-center gap-2 text-sm font-bold tracking-wide uppercase">📖 Azure term of the day <button type="button" class="speak-btn text-accent" aria-label="Listen">🔊</button></span>
+        <span id="t-term" class="mt-1 text-2xl font-bold">{terms[0]?.term}</span>
+        <span id="t-def" class="mt-2 leading-relaxed">{terms[0]?.def}</span>
+        <span class="mt-auto flex flex-wrap gap-3 pt-4 text-sm font-semibold">
+          <a id="t-term-link" class="text-accent hover:underline" href={terms[0]?.url}>Learn it ❯</a>
+          <a class="text-accent hover:underline" href="/az-900/glossary/">All terms ❯</a>
+          <button type="button" id="t-term-share" class="text-accent hover:underline">Share 📤</button>
+        </span>
+      </div>
+      <a id="t-wi" href={`/simulator/${whatifs[0].slug}/`} class="band-navy flex flex-col rounded-2xl p-5 hover:ring-2 hover:ring-[#ffd75e]">
+        <span class="text-sm font-bold tracking-wide text-[#ffd75e] uppercase">🤔 What happens if…?</span>
+        <span id="t-wi-q" class="mt-2 text-xl font-semibold leading-snug">{whatifs[0].emoji} {whatifs[0].q}</span>
+        <span class="mt-auto pt-4 font-semibold text-[#ffd75e]">▶ Simulate it »</span>
+      </a>
+    </div>
+    <nav class="mt-6 flex flex-wrap gap-2" aria-label="Explore">
+      {quick.map(([i, t, h]) => <a href={h} class="nav-btn"><span aria-hidden="true">{i}</span> {t}</a>)}
+    </nav>
+  </div>
+  <script type="application/json" id="today-data" set:html={JSON.stringify({ terms, whatifs }).replace(/</g, '\\u003c')} />
+</section>
+
+<script>
+  import { load, streak, today } from '../lib/progress';
+  const data = JSON.parse(document.getElementById('today-data')!.textContent!) as { terms: { term: string; def: string; url: string; slug: string }[]; whatifs: { slug: string; q: string; emoji: string }[] };
+  const $ = (id: string) => document.getElementById(id)!;
+  const day = Math.floor(Date.now() / 86_400_000);
+  const t = data.terms[day % data.terms.length];
+  if (t) {
+    $('t-term').textContent = t.term;
+    $('t-def').textContent = t.def.replace(/\*\*/g, '');
+    ($('t-term-link') as HTMLAnchorElement).href = t.url;
+    $('t-term-share').addEventListener('click', async () => {
+      const url = `${location.origin}/az-900/glossary/#${t.slug}`;
+      const text = `☁️ Azure term of the day: ${t.term}. ${t.def.replace(/\*\*/g, '')}`;
+      if (navigator.share) navigator.share({ title: t.term, text, url }).catch(() => {});
+      else { try { await navigator.clipboard.writeText(`${text} ${url}`); $('t-term-share').textContent = '✅ Copied'; } catch {} }
+    });
+  }
+  const w = data.whatifs[day % data.whatifs.length];
+  ($('t-wi') as HTMLAnchorElement).href = `/simulator/${w.slug}/`;
+  $('t-wi-q').textContent = `${w.emoji} ${w.q}`;
+  const paint = () => {
+    const s = load();
+    const n = streak(s);
+    $('t-streak').textContent = String(n);
+    $('t-s').hidden = n === 1;
+    const done = s.daily[today()] !== undefined;
+    $('t-daily').textContent = done ? `✅ Done today (${s.daily[today()]}/5). Come back tomorrow to keep the streak.` : n ? 'Keep your streak alive: play today’s 5-question challenge.' : 'Start a streak: 5 quick questions a day.';
+    $('t-daily-cta').textContent = done ? 'Play again »' : 'Play today’s challenge »';
+  };
+  paint();
+  window.addEventListener('progress-change', paint);
+</script>

@@ -2,13 +2,24 @@
 import Base from '../layouts/Base.astro';
 import Mascot from '../components/Mascot.astro';
 import { SITE } from '../config';
+import SocialLinks from '../components/SocialLinks.astro';
 ---
 <Base title="About MSDEVBUILD Azure" description="Why MSDEVBUILD Azure exists, how lessons are written and checked against official Microsoft documentation, and who is behind it." wide={false} breadcrumbs={[{ name: 'Home', url: '/' }, { name: 'About', url: '/about/' }]}>
   <div class="lesson">
     <p class="eyebrow">About</p>
     <h1 class="text-4xl font-bold tracking-tight">Teach concepts, not just exam answers</h1>
     <div class="card flex items-center gap-4 p-5"><Mascot size={64} /><p>MSDEVBUILD Azure is a free learning platform for Microsoft Azure certifications. It starts with AZ-900 Azure Fundamentals.</p></div>
-    <p>It is built by <a href={SITE.main}>{SITE.author}</a>, the person behind the <a href={SITE.blog}>MSDEVBUILD blog</a>. The goal is simple. A student who has never heard of the cloud should leave able to explain Azure clearly, and an engineer with twenty years of experience should still find something useful.</p>
+    <section class="not-prose mt-6 flex flex-col gap-5 rounded-2xl border border-default bg-[var(--card)] p-6 sm:flex-row sm:items-center" aria-labelledby="author-h">
+      <img src={SITE.authorImage} alt="Suthahar Jegatheesan" width="140" height="140" class="size-32 shrink-0 rounded-full object-cover ring-4 ring-[var(--accent-soft)] sm:size-36" />
+      <div class="min-w-0">
+        <p class="text-xs font-bold tracking-[0.14em] text-accent uppercase">Who is behind it</p>
+        <h2 id="author-h" class="mt-1 text-2xl font-bold">{SITE.author}</h2>
+        <p class="text-muted">{SITE.authorTitle} · {SITE.authorLocation}</p>
+        <p class="mt-2 leading-relaxed">Enterprise architect with 19+ years of experience, publishing as MSDEVBUILD (Multi-Stack Dev Build) since 2007: hands-on Azure, AI, GitHub Copilot, .NET MAUI and Flutter, explained from production. Full profile at <a class="text-accent underline" href={SITE.profile}>suthahar.msdevbuild.com</a>.</p>
+        <SocialLinks labels class="mt-4" />
+      </div>
+    </section>
+    <p>It is built by <a href={SITE.profile}>{SITE.author}</a>, the person behind the <a href={SITE.blog}>MSDEVBUILD blog</a>. The goal is simple. A student who has never heard of the cloud should leave able to explain Azure clearly, and an engineer with twenty years of experience should still find something useful.</p>
     <h2 id="how-we-write">How lessons are written</h2>
     <ul>
       <li>Every lesson follows the same template: a real problem first, an everyday analogy, the correct technical explanation, a business scenario, when to use it and when not to, interview questions, exam practice and a quick revision sheet.</li>

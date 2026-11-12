@@ -1,0 +1,51 @@
+---
+/**
+ * Bare layout for embeddable simulations (/embed/...). No header or footer,
+ * not indexed; a "Powered by MSDEVBUILD" link sends visitors back here.
+ */
+import '@fontsource-variable/inter';
+import '../styles/global.css';
+import SpeakButtons from '../components/SpeakButtons.astro';
+import CurrencyPrices from '../components/CurrencyPrices.astro';
+import { SITE } from '../config';
+interface Props { title: string; canonical: string; lesson?: { title: string; url: string } }
+const { title, canonical, lesson } = Astro.props;
+---
+<!doctype html>
+<html lang="en" data-theme="light">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>{title} · {SITE.name}</title>
+    <meta name="robots" content="noindex, follow" />
+    <link rel="canonical" href={new URL(canonical, SITE.url).href} />
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+    <script is:inline>
+      (() => {
+        const q = new URLSearchParams(location.search).get('theme');
+        let t = q === 'dark' || q === 'light' ? q : null;
+        if (!t) t = matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+        document.documentElement.dataset.theme = t;
+        document.documentElement.classList.add('js');
+      })();
+    </script>
+    <style>
+      body { background: var(--bg); margin: 0; }
+      .embed-wrap { max-width: 920px; margin: 0 auto; padding: 4px 6px 8px; }
+      .embed-wrap > figure { margin-top: 0 !important; }
+      .powered { display: flex; flex-wrap: wrap; justify-content: space-between; gap: .5rem; padding: .5rem .25rem 0; font-size: .82rem; color: var(--text-muted); }
+      .powered a { color: var(--accent); font-weight: 600; }
+    </style>
+  </head>
+  <body>
+    <div class="embed-wrap">
+      <slot />
+      <p class="powered">
+        <a href={`${SITE.url}/?utm_source=embed`} target="_blank" rel="noopener">⚡ Powered by MSDEVBUILD · feel Azure without an Azure account</a>
+        {lesson && <a href={`${SITE.url}${lesson.url}?utm_source=embed`} target="_blank" rel="noopener">Full lesson: {lesson.title} ↗</a>}
+      </p>
+    </div>
+    <SpeakButtons />
+    <CurrencyPrices />
+  </body>
+</html>

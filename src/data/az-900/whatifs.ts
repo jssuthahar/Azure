@@ -1,0 +1,33 @@
+/**
+ * "What happens if…?" scenarios: one shareable page each at /simulator/<slug>/.
+ * Each opens a 3D simulation at the right step; the learner presses the button
+ * and sees the consequence.
+ */
+import type { Mode3D } from './sims3d';
+
+export interface WhatIf {
+  slug: string;
+  q: string;
+  emoji: string;
+  mode: Mode3D;
+  start: number;
+  answer: string;
+  seoTitle: string;
+  description: string;
+  lessons: string[];
+  compare?: string;
+}
+
+export const WHATIFS: WhatIf[] = [
+  { slug: 'region-goes-down', emoji: '🌪️', q: 'What happens if an Azure region goes down?', mode: 'regions', start: 4, seoTitle: 'What Happens If an Azure Region Goes Down? (Simulation)', description: 'Simulate an Azure region outage: see traffic fail over to the paired region, why geo-replication matters and what you must set up in advance.', answer: 'If your app runs in only one region, it goes down with the region. If you planned for it, with data **geo-replicated** to the **paired region** and a failover plan (Site Recovery, Front Door), users are moved to the other region.', lessons: ['reliability', 'regions-and-region-pairs'], compare: 'lrs-vs-zrs-vs-grs-vs-gzrs' },
+  { slug: 'pull-the-plug-zone', emoji: '🔌', q: 'What happens if a datacenter loses power (pull the plug)?', mode: 'zones', start: 4, seoTitle: 'What If an Azure Datacenter Loses Power? Zone Failure Demo', description: 'Pull the plug on an availability zone and watch a zone-redundant app stay online, then see what happens to an app pinned to a single zone.', answer: 'A **zone-redundant** app keeps running in the other two zones and users notice nothing. A **zonal** app pinned to the failed zone goes down. That is why spreading across zones raises the VM SLA to 99.99%.', lessons: ['availability-zones', 'high-availability'], compare: 'availability-sets-vs-zones-vs-scale-sets' },
+  { slug: 'black-friday-traffic-spike', emoji: '📈', q: 'What happens if traffic spikes on Black Friday?', mode: 'scale', start: 1, seoTitle: 'What Happens on a Black Friday Traffic Spike? Azure Scaling Demo', description: 'Simulate a Black Friday traffic spike on Azure: see one server fail, then fix it with scale up, scale out and autoscale, with a live cost meter.', answer: 'A single server overloads and requests fail. **Scaling up** buys time but needs a restart and has a ceiling. **Scaling out** with **autoscale** adds servers as traffic grows and removes them afterwards, so you pay only for the peak while it lasts.', lessons: ['scalability', 'elasticity'], compare: 'vm-vs-app-service-vs-functions' },
+  { slug: 'forgot-to-stop-vm', emoji: '😱', q: 'What happens if I forget to stop my Azure VM?', mode: 'scale', start: 6, seoTitle: 'What If I Forget to Stop My Azure VM? Bill Shock Simulator', description: 'See the bill for an Azure VM left running for a month in INR or your currency, then how auto-shutdown, deallocation and budgets prevent bill shock.', answer: 'A running VM is billed **every hour**, used or not. A forgotten D4s v5 test VM costs about a month of its full price. **Stop (deallocate)** it, set **auto-shutdown**, and create a **budget alert**. Disks still cost a little while stopped.', lessons: ['consumption-based-model', 'cost-management', 'virtual-machines'], compare: 'pay-as-you-go-vs-reserved-vs-spot' },
+  { slug: 'latency-world-map', emoji: '🌍', q: 'How much latency do I get from my city to each Azure region?', mode: 'regions', start: 7, seoTitle: 'Azure Region Latency From Your City: World Map Simulation', description: 'Pick your city and see estimated round-trip latency to Azure regions on a 3D globe. Learn why you should deploy close to your users.', answer: 'Every 100 km of fibre adds about 1 ms of round-trip time, so a region in your own country might be under 10 ms while one on another continent is 100–250 ms. Deploy close to your users, or use Front Door to serve them from the nearest region.', lessons: ['regions-and-region-pairs', 'what-is-microsoft-azure'] },
+  { slug: 'datacenter-fire-data', emoji: '🔥', q: 'What happens to my data if the datacenter catches fire?', mode: 'redundancy', start: 1, seoTitle: 'What Happens to My Azure Data If a Datacenter Burns? (LRS vs GRS)', description: 'Set fire to an Azure datacenter, flood a zone, take down a region, and see which storage redundancy option (LRS, ZRS, GRS, GZRS) keeps your data.', answer: 'With **LRS** all three copies are in that one datacenter, so the data is lost or unavailable. **ZRS** survives (copies in other zones). **GRS/GZRS** survive even a whole region failing, after failover.', lessons: ['storage-redundancy'], compare: 'lrs-vs-zrs-vs-grs-vs-gzrs' },
+  { slug: 'power-cut-datacenter', emoji: '⚡', q: 'What happens in an Azure datacenter during a power cut?', mode: 'datacenter', start: 6, seoTitle: 'What Happens in an Azure Datacenter During a Power Cut?', description: 'Cut the utility power to a 3D Azure datacenter: batteries take over instantly, diesel generators start, servers keep running, and your bill does not change.', answer: 'Batteries (UPS) carry the load instantly, then diesel generators start and power the building. Servers never notice, and the cost of all that backup power is Microsoft’s, not yours.', lessons: ['datacenters', 'shared-responsibility-model'] },
+  { slug: 'hacker-tries-rdp', emoji: '🖥️', q: 'What happens if a hacker tries to RDP into my VM?', mode: 'network', start: 2, seoTitle: 'What If Someone Tries RDP on My Azure VM? NSG Simulation', description: 'Send HTTPS and RDP at an Azure network security group and see the RDP attempt blocked. Learn NSG rule priority and safer admin access with Bastion.', answer: 'If an NSG rule denies port 3389, the packet is dropped before it reaches the VM. If you left RDP open to the internet, attackers will find it within minutes: use **Azure Bastion** or just-in-time access instead.', lessons: ['network-security-groups', 'defense-in-depth'], compare: 'nsg-vs-azure-firewall' },
+  { slug: 'intruder-at-datacenter', emoji: '🚶', q: 'What happens if someone tries to walk into an Azure datacenter?', mode: 'datacenter', start: 1, seoTitle: 'Can Anyone Walk Into an Azure Datacenter? Security Layers Demo', description: 'Try to walk into a 3D Azure datacenter with and without approval and see the physical security layers: perimeter, building, mantrap and data hall.', answer: 'Without an approved access request they are stopped at the gate. Approved visitors still pass ID checks, badge and biometric scans in a mantrap, and are escorted for one approved task. Physical security is always Microsoft’s responsibility.', lessons: ['datacenters', 'security'] },
+];
+
+export const whatIfBySlug = (s: string) => WHATIFS.find((w) => w.slug === s);

@@ -1,0 +1,102 @@
+---
+import Base from '../../layouts/Base.astro';
+import ShareButtons from '../../components/ShareButtons.astro';
+const crumbs = [{ name: 'Home', url: '/' }, { name: 'AZ-900 Ready certificate', url: '/certificate/' }];
+---
+<Base title="AZ-900 Ready Certificate | MSDEVBUILD Azure" description="Earn a free, shareable AZ-900 Ready practice certificate and badge by passing the full MSDEVBUILD AZ-900 mock exam. Share it on LinkedIn, X and WhatsApp." breadcrumbs={crumbs}>
+  <div class="mx-auto max-w-5xl px-4 py-8 sm:px-6">
+    <!-- Earn -->
+    <section id="c-none" hidden class="text-center">
+      <div class="mx-auto w-48" id="c-badge-preview"></div>
+      <h1 class="mt-4 text-4xl font-semibold tracking-tight">Get your free AZ-900 Ready certificate</h1>
+      <p class="mx-auto mt-3 max-w-2xl text-lg text-muted">Pass the <strong>full mock exam</strong> (40 questions) with a scaled score of <strong>700 or more</strong>. Your certificate and badge appear instantly, ready to share on LinkedIn, X, WhatsApp or anywhere.</p>
+      <a href="/az-900/mock-exam/" class="mt-6 inline-flex rounded-md bg-[#107c10] px-6 py-3 text-lg font-semibold !text-white hover:bg-[#0b5a0b]">Take the full mock exam »</a>
+      <p class="mt-6 text-sm text-muted">Free, no sign-up. Stored only in this browser for now.</p>
+    </section>
+
+    <!-- Claim (passed but not yet named) -->
+    <section id="c-claim" hidden class="mx-auto max-w-xl text-center">
+      <h2 class="text-3xl font-semibold">🎉 You passed! Claim your certificate</h2>
+      <p class="mt-2 text-muted">Best full mock: <strong id="c-best"></strong></p>
+      <form id="c-form" class="mt-5 flex flex-col gap-3 sm:flex-row">
+        <label class="flex-1"><span class="sr-only">Your name as it should appear</span>
+          <input id="c-name" required maxlength="60" placeholder="Your full name" class="w-full rounded-md border border-default bg-[var(--bg)] px-4 py-3 text-lg" /></label>
+        <button class="rounded-md bg-[#0078d4] px-6 py-3 font-semibold text-white">Create certificate</button>
+      </form>
+    </section>
+
+    <!-- Show -->
+    <section id="c-show" hidden>
+      <p id="c-warn" hidden class="mb-4 rounded-xl border-l-[5px] border-[var(--bad)] bg-[var(--bad-soft)] p-4">⚠️ This link looks edited: the details don’t match the certificate’s checksum, so it can’t be confirmed.</p>
+      <div class="flex flex-wrap items-center justify-between gap-3">
+        <h2 class="text-3xl font-semibold tracking-tight">🏆 AZ-900 Ready</h2>
+        <span id="c-mine" hidden class="chip">Your certificate</span>
+      </div>
+      <div id="c-svg" class="mt-4 overflow-hidden rounded-2xl border border-default bg-white shadow-lg [&>svg]:h-auto [&>svg]:w-full"></div>
+      <div class="mt-5 flex flex-wrap gap-2">
+        <a id="c-li-add" target="_blank" rel="noopener" class="inline-flex items-center gap-2 rounded-md bg-[#0a66c2] px-4 py-2.5 font-semibold !text-white">in Add to LinkedIn profile</a>
+        <button id="c-dl" type="button" class="rounded-md border border-default px-4 py-2.5 font-semibold">⬇️ Download certificate (PNG)</button>
+        <button id="c-dl-badge" type="button" class="rounded-md border border-default px-4 py-2.5 font-semibold">⬇️ Download badge</button>
+        <button id="c-print" type="button" class="rounded-md border border-default px-4 py-2.5 font-semibold">🖨️ Print / PDF</button>
+      </div>
+      <ShareButtons class="mt-4" text="I’m AZ-900 Ready! 🏆 I passed the full Azure Fundamentals mock exam on MSDEVBUILD. Try it free:" />
+      <p class="mt-6 text-sm text-muted">This is a self-assessed practice certificate from azure.msdevbuild.com. It is not a Microsoft certification. To get certified, book the official AZ-900 exam with Microsoft.</p>
+    </section>
+  </div>
+</Base>
+
+<style is:global>
+  @media print {
+    header, footer, nav, #c-show > :not(#c-svg) { display: none !important; }
+    #c-svg { border: 0 !important; box-shadow: none !important; }
+    @page { size: landscape; margin: 0; }
+  }
+</style>
+
+<script>
+  import { loadCert, issueCert, certFromUrl, certUrl, certSvg, badgeSvg, linkedInAddUrl, downloadPng, bestFullMock, type Cert } from '../../lib/certificate';
+  import { load } from '../../lib/progress';
+  const $ = (id: string) => document.getElementById(id)!;
+
+  const show = (c: Cert, mine: boolean, valid = true) => {
+    $('c-show').hidden = false;
+    $('c-warn').hidden = valid;
+    $('c-mine').hidden = !mine;
+    $('c-svg').innerHTML = certSvg(c);
+    (document.getElementById('c-li-add') as HTMLAnchorElement).href = linkedInAddUrl(c);
+    ($('c-li-add') as HTMLElement).hidden = !mine;
+    const row = document.querySelector<HTMLElement>('.share-row');
+    if (row) row.dataset.shareUrl = certUrl(c);
+    document.title = `${c.name} is AZ-900 Ready | MSDEVBUILD`;
+    $('c-dl').onclick = () => downloadPng(certSvg(c), `AZ-900-Ready-${c.name.replace(/\W+/g, '-')}.png`, 1600, 1130);
+    $('c-dl-badge').onclick = () => downloadPng(badgeSvg(600), 'AZ-900-Ready-badge.png', 600, 600);
+    $('c-print').onclick = () => print();
+  };
+
+  const fromUrl = certFromUrl(location.search);
+  const mineCert = loadCert();
+  if (fromUrl) {
+    show(fromUrl.cert, mineCert?.id === fromUrl.cert.id, fromUrl.valid);
+  } else if (mineCert) {
+    history.replaceState(null, '', certUrl(mineCert).replace(location.origin, ''));
+    show(mineCert, true);
+  } else {
+    const best = bestFullMock(load().mocks);
+    if (best) {
+      $('c-claim').hidden = false;
+      $('c-best').textContent = `${best.percent}% (≈ ${best.scaled}/1000) on ${new Date(best.at).toLocaleDateString()}`;
+      $('c-form').addEventListener('submit', (e) => {
+        e.preventDefault();
+        const name = ($('c-name') as HTMLInputElement).value.trim();
+        if (!name) return;
+        const c = issueCert(name, best);
+        $('c-claim').hidden = true;
+        history.replaceState(null, '', certUrl(c).replace(location.origin, ''));
+        show(c, true);
+      });
+    } else {
+      $('c-none').hidden = false;
+      $('c-badge-preview').innerHTML = badgeSvg(192);
+    }
+  }
+</script>

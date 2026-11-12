@@ -1,0 +1,22 @@
+---
+import EmbedLayout from '../../../layouts/EmbedLayout.astro';
+import Datacenter3D from '../../../components/mdx/Datacenter3D.astro';
+import { SIMS3D, type Mode3D } from '../../../data/az-900/sims3d';
+import { EMBED_LESSON_3D } from '../../../data/az-900/embeds';
+
+export function getStaticPaths() {
+  return (Object.keys(SIMS3D) as Mode3D[]).map((mode) => ({ params: { mode } }));
+}
+const mode = Astro.params.mode as Mode3D;
+const sim = SIMS3D[mode];
+---
+<EmbedLayout title={sim.title} canonical={`/embed/3d/${mode}/`} lesson={EMBED_LESSON_3D[mode]}>
+  <Datacenter3D mode={mode} embed />
+</EmbedLayout>
+<script is:inline>
+  (() => {
+    const s = Number(new URLSearchParams(location.search).get('start'));
+    const f = document.querySelector('figure.d3');
+    if (f && Number.isInteger(s) && s > 0) f.dataset.start = String(s);
+  })();
+</script>

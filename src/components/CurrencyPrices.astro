@@ -1,0 +1,12 @@
+---
+/** Global: paints every [data-usd] price and keeps every currency picker in sync. */
+---
+<script>
+  import { paintPrices, setCurrency, type Code } from '../lib/currency';
+  paintPrices();
+  document.addEventListener('change', (e) => {
+    const t = e.target as HTMLElement;
+    if (t instanceof HTMLSelectElement && t.hasAttribute('data-currency')) setCurrency(t.value as Code);
+  });
+  window.addEventListener('currency-change', () => paintPrices());
+</script>

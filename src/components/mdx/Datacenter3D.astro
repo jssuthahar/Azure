@@ -1,0 +1,223 @@
+---
+/**
+ * Interactive 3D tour (Three.js) used in lessons:
+ *   <Datacenter3D mode="datacenter" intro="..." start={5} />
+ * Modes: datacenter | zones | regions | redundancy | scale | network.
+ * The 3D code loads only when the figure scrolls near the screen. Step text is
+ * rendered as HTML too, so the tour is readable without WebGL.
+ */
+import { SIMS3D, type Mode3D } from '../../data/az-900/sims3d';
+import { inlineMd } from '../../lib/learn';
+import CurrencySelect from '../CurrencySelect.astro';
+import EmbedButton from '../EmbedButton.astro';
+interface Props { mode: Mode3D; intro?: string; start?: number; title?: string; embed?: boolean }
+const { mode, intro, start = 0, title, embed = false } = Astro.props;
+const sim = SIMS3D[mode];
+const steps = sim.steps.map((s) => ({ ...s, html: inlineMd(s.text), say: s.text.replace(/\*\*/g, '') }));
+---
+<figure class="d3 not-prose" data-mode={mode} data-start={start} data-steps={JSON.stringify(steps)}>
+  <div class="d3-head">
+    <span class="d3-badge">3D</span>
+    <span class="min-w-0 flex-1">
+      <span class="block font-semibold leading-snug">{title ?? sim.title}</span>
+      {intro && <span class="block text-sm text-muted" set:html={inlineMd(intro)} />}
+    </span>
+  </div>
+
+  <div class="d3-view" aria-label={`Interactive 3D scene: ${title ?? sim.title}`} role="img">
+    <div class="d3-labels" aria-hidden="true"></div>
+    <div class="d3-hud" role="status" aria-live="polite" hidden></div>
+    <div class="d3-meter" hidden></div>
+    <div class="d3-cost" hidden></div>
+    <p class="d3-hint">🖱️ Drag to rotate · scroll or pinch to zoom</p>
+    <div class="d3-loading"><span class="d3-spin" aria-hidden="true"></span><span>Loading the 3D scene…</span></div>
+    <button type="button" class="d3-start"><span aria-hidden="true">▶</span> Start the 3D simulation</button>
+  </div>
+
+  <div class="d3-panel">
+    <div class="d3-toprow">
+    <div class="d3-dots" role="tablist" aria-label="Tour steps">
+      {steps.map((s, i) => <button type="button" role="tab" class="d3-dot" data-i={i} aria-label={`Step ${i + 1}: ${s.title}`} title={s.title}>{i + 1}</button>)}
+    </div>
+    <span class="d3-tools"><CurrencySelect compact />{!embed && <EmbedButton path={`/embed/3d/${mode}/?start=${start}`} title={title ?? sim.title} height={820} />}</span>
+    </div>
+    <div class="d3-copy">
+      <p class="d3-title"><span class="d3-count"></span> <span class="d3-step-title">{steps[start].title}</span>
+        <button type="button" class="speak-btn d3-say" data-say={steps[start].say} aria-label="Listen to this step">🔊</button></p>
+      <p class="d3-text" set:html={steps[start].html} />
+      <p class="d3-whatif" hidden>🤔 What happens if…</p>
+      <div class="d3-actions"></div>
+      {mode === 'scale' && (
+        <label class="d3-slider"><span>👥 Users</span><input type="range" min="0" max="1000" step="10" value="40" data-control="users" /><output>40</output></label>
+      )}
+    </div>
+    <div class="d3-nav">
+      <button type="button" class="d3-prev" aria-label="Previous step">❮ Back</button>
+      <button type="button" class="d3-next">Next ❯</button>
+    </div>
+  </div>
+
+  <details class="d3-script">
+    <summary>Read this tour as text</summary>
+    <ol>{steps.map((s) => <li><strong>{s.title}.</strong> <span set:html={s.html} /></li>)}</ol>
+  </details>
+</figure>
+
+<style is:global>
+  .d3 { margin-top: 1.5rem; border: 1px solid var(--card-line); border-radius: 18px; overflow: hidden; background: var(--card); box-shadow: var(--glass-shadow); }
+  .d3-head { display: flex; gap: .75rem; align-items: center; padding: .8rem 1rem; border-bottom: 1px solid var(--card-line); }
+  .d3-badge { flex: none; display: grid; place-items: center; width: 2.4rem; height: 2.4rem; border-radius: 12px; background: linear-gradient(135deg, #0078d4, #8764b8); color: #fff; font-weight: 800; font-size: .85rem; }
+  .d3-view { position: relative; height: clamp(300px, 56vw, 470px); background: radial-gradient(120% 90% at 50% 0%, #eaf4fd, #d4e6f6 60%, #c3dbf0); touch-action: none; overflow: hidden; }
+  [data-theme='dark'] .d3-view { background: radial-gradient(120% 90% at 50% 0%, #17304d, #0f2238 60%, #0a1829); }
+  .d3-view canvas { display: block; width: 100% !important; height: 100% !important; cursor: grab; }
+  .d3-view canvas:active { cursor: grabbing; }
+  .d3-labels { position: absolute; inset: 0; pointer-events: none; }
+  .d3-label { position: absolute; left: 0; top: 0; white-space: nowrap; font: 600 12px/1.2 var(--font-sans); padding: 4px 8px; border-radius: 999px; background: rgb(255 255 255 / .92); color: #0b1020; box-shadow: 0 2px 8px rgb(0 40 80 / .18); border: 1px solid rgb(0 120 212 / .25); }
+  .d3-label-strong { background: #0078d4; color: #fff; border-color: #0078d4; font-size: 13px; }
+  .d3-label-ok { background: #107c10; color: #fff; border-color: #107c10; }
+  .d3-hud { position: absolute; left: 12px; right: 12px; top: 12px; max-width: 560px; padding: .6rem .85rem; border-radius: 12px; font-size: .9rem; line-height: 1.4; background: rgb(255 255 255 / .95); color: #0b1020; box-shadow: 0 6px 20px rgb(0 40 80 / .18); border-left: 4px solid #0078d4; }
+  .d3-hud[data-tone='ok'] { border-left-color: #107c10; }
+  .d3-hud[data-tone='bad'] { border-left-color: #c50f1f; }
+  .d3-meter { position: absolute; left: 10px; bottom: 34px; max-width: calc(100% - 20px); padding: .4rem .75rem; border-radius: 10px; background: #0078d4; color: #fff; font-size: .82rem; font-weight: 600; line-height: 1.35; box-shadow: 0 4px 14px rgb(0 40 80 / .25); }
+  .d3-cost { position: absolute; left: 10px; bottom: 8px; max-width: calc(100% - 20px); padding: .35rem .7rem; border-radius: 10px; background: #107c10; color: #fff; font-size: .82rem; font-weight: 600; line-height: 1.35; box-shadow: 0 4px 14px rgb(0 40 80 / .25); }
+  .d3-cost small { font-weight: 400; opacity: .9; }
+  .d3-meter { bottom: 44px !important; }
+  .d3-toprow { display: flex; flex-wrap: wrap; gap: .5rem; align-items: center; justify-content: space-between; }
+  .d3-tools { display: inline-flex; gap: .4rem; align-items: center; }
+  .d3-whatif { margin: .8rem 0 -.2rem; font-size: .8rem; font-weight: 800; letter-spacing: .06em; text-transform: uppercase; color: var(--text-muted); }
+  .d3-whatif[hidden] { display: none; }
+  .d3-hint { position: absolute; right: 10px; top: 8px; margin: 0; font-size: .72rem; color: #3d5068; background: rgb(255 255 255 / .7); padding: 2px 8px; border-radius: 999px; }
+  [data-theme='dark'] .d3-hint { background: rgb(0 0 0 / .4); color: #c9d6e6; }
+  .d3-loading { position: absolute; inset: 0; display: flex; gap: .6rem; align-items: center; justify-content: center; font-size: .9rem; color: var(--text-muted); }
+  .d3-ready .d3-loading { display: none; }
+  .d3-start { display: none; position: absolute; inset: 0; margin: auto; width: max-content; height: max-content; padding: .8rem 1.4rem; border-radius: 999px; background: #107c10; color: #fff; font-weight: 700; font-size: 1rem; box-shadow: 0 8px 24px rgb(0 60 0 / .3); }
+  .d3-tap .d3-start { display: block; }
+  .d3-tap .d3-loading { display: none; }
+  .d3-spin { width: 18px; height: 18px; border-radius: 50%; border: 3px solid #0078d4; border-right-color: transparent; animation: d3spin 1s linear infinite; }
+  @keyframes d3spin { to { transform: rotate(360deg); } }
+  .d3-panel { display: grid; gap: .7rem; padding: .9rem 1rem 1rem; }
+  .d3-dots { display: flex; flex-wrap: wrap; gap: .35rem; }
+  .d3-dot { width: 1.9rem; height: 1.9rem; border-radius: 999px; border: 2px solid var(--card-line); font-size: .78rem; font-weight: 700; color: var(--text-muted); background: var(--bg); }
+  .d3-dot.seen { border-color: #0078d4; color: var(--accent); }
+  .d3-dot[aria-selected='true'] { background: #0078d4; border-color: #0078d4; color: #fff; }
+  .d3-title { margin: 0; font-size: 1.12rem; font-weight: 700; display: flex; align-items: center; gap: .4rem; flex-wrap: wrap; }
+  .d3-count { font-size: .75rem; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; color: var(--accent); }
+  .d3-text { margin: .3rem 0 0; font-size: 1rem; line-height: 1.6; }
+  .d3-actions { display: flex; flex-wrap: wrap; gap: .5rem; margin-top: .7rem; }
+  .d3-actions:empty { display: none; }
+  .d3-act { border-radius: 999px; padding: .45rem .9rem; font-size: .88rem; font-weight: 600; border: 1.5px solid var(--card-line); background: var(--bg); }
+  .d3-act:hover { border-color: #0078d4; }
+  .d3-act[data-kind='ok'] { background: #107c10; border-color: #107c10; color: #fff; }
+  .d3-act[data-kind='danger'] { background: #c50f1f; border-color: #c50f1f; color: #fff; }
+  .d3-slider { display: flex; align-items: center; gap: .6rem; margin-top: .7rem; font-size: .9rem; font-weight: 600; }
+  .d3-slider input { flex: 1; accent-color: #0078d4; }
+  .d3-slider output { min-width: 3ch; text-align: right; font-variant-numeric: tabular-nums; }
+  .d3-nav { display: flex; justify-content: space-between; gap: .5rem; }
+  .d3-nav button { border-radius: 999px; padding: .5rem 1.1rem; font-weight: 700; font-size: .9rem; border: 1.5px solid var(--card-line); }
+  .d3-next { background: #0078d4; color: #fff; border-color: #0078d4 !important; }
+  .d3-nav button:disabled { opacity: .4; }
+  .d3-script { border-top: 1px solid var(--card-line); padding: .6rem 1rem; font-size: .9rem; }
+  .d3-script summary { cursor: pointer; color: var(--accent); font-weight: 600; }
+  .d3-script ol { margin: .5rem 0 0 1.2rem; list-style: decimal; display: grid; gap: .35rem; line-height: 1.5; }
+  .d3-nogl .d3-view { display: none; }
+  .d3-nogl .d3-script { border-top: 0; }
+</style>
+
+<script>
+  type Step = { title: string; html: string; say: string; actions?: { id: string; label: string; kind?: string }[] };
+  import type { Mode3D } from '../../data/az-900/sims3d';
+  import { money } from '../../lib/currency';
+
+  function init(fig: HTMLElement) {
+    const steps: Step[] = JSON.parse(fig.dataset.steps!);
+    const view = fig.querySelector<HTMLElement>('.d3-view')!;
+    const hudEl = fig.querySelector<HTMLElement>('.d3-hud')!;
+    const dots = [...fig.querySelectorAll<HTMLButtonElement>('.d3-dot')];
+    const prev = fig.querySelector<HTMLButtonElement>('.d3-prev')!;
+    const next = fig.querySelector<HTMLButtonElement>('.d3-next')!;
+    const actions = fig.querySelector<HTMLElement>('.d3-actions')!;
+    const slider = fig.querySelector<HTMLInputElement>('[data-control="users"]');
+    let cur = Number(fig.dataset.start ?? 0);
+    let ctl: { go(i: number): void; act(id: string): void; input?(n: string, v: number): void } | null = null;
+
+    const hud = (html: string, tone = 'info') => {
+      hudEl.hidden = !html;
+      hudEl.innerHTML = html;
+      hudEl.dataset.tone = tone;
+    };
+
+    const render = () => {
+      const s = steps[cur];
+      fig.querySelector('.d3-count')!.textContent = `Step ${cur + 1}/${steps.length}`;
+      fig.querySelector('.d3-step-title')!.textContent = s.title;
+      fig.querySelector('.d3-text')!.innerHTML = s.html;
+      fig.querySelector<HTMLElement>('.d3-say')!.dataset.say = `${s.title}. ${s.say}`;
+      dots.forEach((d, i) => { d.setAttribute('aria-selected', String(i === cur)); if (i === cur) d.classList.add('seen'); });
+      prev.disabled = cur === 0;
+      next.textContent = cur === steps.length - 1 ? '↺ Start again' : 'Next ❯';
+      actions.innerHTML = '';
+      fig.querySelector<HTMLElement>('.d3-whatif')!.hidden = !(s.actions ?? []).some((a) => a.label.includes('…'));
+      for (const a of s.actions ?? []) {
+        const b = document.createElement('button');
+        b.type = 'button';
+        b.className = 'd3-act';
+        b.dataset.kind = a.kind ?? 'plain';
+        b.textContent = a.label;
+        b.addEventListener('click', () => ctl?.act(a.id));
+        actions.append(b);
+      }
+      ctl?.go(cur);
+    };
+    const goTo = (i: number) => { cur = (i + steps.length) % steps.length; render(); };
+    prev.addEventListener('click', () => goTo(cur - 1));
+    next.addEventListener('click', () => goTo(cur + 1));
+    dots.forEach((d, i) => d.addEventListener('click', () => goTo(i)));
+    slider?.addEventListener('input', () => {
+      slider.nextElementSibling!.textContent = slider.value;
+      ctl?.input?.('users', Number(slider.value));
+    });
+    render();
+
+    const load = async () => {
+      const lib = await import('../../lib/dc3d');
+      if (!lib.webglOk()) { fig.classList.add('d3-nogl'); fig.querySelector('details')?.setAttribute('open', ''); return; }
+      const setControl = (name: string, value: number) => {
+        if (name === 'users' && slider) { slider.value = String(value); slider.nextElementSibling!.textContent = String(value); }
+      };
+      const meterEl = fig.querySelector<HTMLElement>('.d3-meter')!;
+      const meter = (html: string) => { meterEl.hidden = !html; meterEl.innerHTML = html; };
+      const costEl = fig.querySelector<HTMLElement>('.d3-cost')!;
+      let last: [number, 'hour' | 'month', string] | null = null;
+      const paintCost = () => {
+        if (!last) { costEl.hidden = true; return; }
+        const [usd, per, note] = last;
+        const hourly = per === 'hour' ? usd : usd / 730;
+        const monthly = per === 'month' ? usd : usd * 730;
+        costEl.hidden = false;
+        costEl.innerHTML = `💰 ${per === 'hour' ? `${money(hourly)}/hour ≈ ${money(monthly)}/month` : `${money(monthly)}/month`} <small>· ${note}</small>`;
+      };
+      const cost = (usd: number, per: 'hour' | 'month', note: string) => { last = note ? [usd, per, note] : null; paintCost(); };
+      window.addEventListener('currency-change', paintCost);
+      ctl = lib.mount(fig.dataset.mode as Mode3D, view, fig.querySelector('.d3-labels')!, { hud, setControl, meter, cost, money }).ctl;
+      fig.classList.add('d3-ready');
+      ctl.go(cur);
+    };
+    let started = false;
+    const start = () => { if (started) return; started = true; fig.classList.remove('d3-tap'); load().catch(() => fig.classList.add('d3-nogl')); };
+    // Speed: phones and data-saver connections download the 3D engine only on tap;
+    // larger screens load it when the figure is near the viewport and the browser is idle.
+    const conn = (navigator as Navigator & { connection?: { saveData?: boolean } }).connection;
+    if (conn?.saveData || matchMedia('(max-width: 640px)').matches) {
+      fig.classList.add('d3-tap');
+      fig.querySelector('.d3-start')!.addEventListener('click', start);
+    } else {
+      const idle = (fn: () => void) => ('requestIdleCallback' in window ? requestIdleCallback(fn, { timeout: 2500 }) : setTimeout(fn, 600));
+      const io = new IntersectionObserver((es) => {
+        if (es.some((e) => e.isIntersecting)) { io.disconnect(); idle(start); }
+      }, { rootMargin: '200px' });
+      io.observe(fig);
+    }
+  }
+
+  document.querySelectorAll<HTMLElement>('figure.d3').forEach(init);
+</script>

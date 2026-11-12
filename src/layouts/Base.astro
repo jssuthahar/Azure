@@ -6,7 +6,8 @@ import Footer from '../components/Footer.astro';
 import XpToast from '../components/XpToast.astro';
 import SpeakButtons from '../components/SpeakButtons.astro';
 import Reveal from '../components/Reveal.astro';
-import { SITE } from '../config';
+import CurrencyPrices from '../components/CurrencyPrices.astro';
+import { SITE, SOCIAL } from '../config';
 
 interface Crumb {
   name: string;
@@ -41,8 +42,20 @@ const graph: Record<string, unknown>[] = [
     '@id': `${SITE.url}/#organization`,
     name: SITE.org,
     url: SITE.main,
-    sameAs: [SITE.blog, SITE.main],
-    founder: { '@type': 'Person', name: SITE.author, url: SITE.main },
+    logo: new URL(SITE.authorImage, SITE.url).href,
+    sameAs: [SITE.blog, SITE.main, 'https://www.youtube.com/@MSDEVBUILD', 'https://www.linkedin.com/company/31318247/', 'https://www.instagram.com/msdevbuild/'],
+    founder: { '@id': `${SITE.url}/#author` },
+  },
+  {
+    '@type': 'Person',
+    '@id': `${SITE.url}/#author`,
+    name: SITE.author,
+    url: SITE.profile,
+    image: new URL(SITE.authorImage, SITE.url).href,
+    jobTitle: SITE.authorTitle,
+    homeLocation: { '@type': 'Place', name: SITE.authorLocation },
+    worksFor: { '@id': `${SITE.url}/#organization` },
+    sameAs: [SITE.profile, SITE.blog, ...SOCIAL.filter((s) => !s.name.startsWith('MSDEVBUILD')).map((s) => s.href.split('?')[0]), 'https://learn.microsoft.com/en-us/users/jssuthahar/'],
   },
   ...(breadcrumbs.length
     ? [
@@ -72,6 +85,7 @@ const jsonLd = JSON.stringify({ '@context': 'https://schema.org', '@graph': grap
     <link rel="canonical" href={canonical} />
     {noindex && <meta name="robots" content="noindex" />}
     <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+    <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
     <link rel="sitemap" href="/sitemap-index.xml" />
     <meta name="theme-color" content="#0078d4" />
     <meta name="author" content={SITE.author} />
@@ -110,5 +124,6 @@ const jsonLd = JSON.stringify({ '@context': 'https://schema.org', '@graph': grap
     <XpToast />
     <SpeakButtons />
     <Reveal />
+    <CurrencyPrices />
   </body>
 </html>

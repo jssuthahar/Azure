@@ -1,0 +1,44 @@
+---
+import Base from '../../layouts/Base.astro';
+import Datacenter3D from '../../components/mdx/Datacenter3D.astro';
+import ShareButtons from '../../components/ShareButtons.astro';
+import { WHATIFS, type WhatIf } from '../../data/az-900/whatifs';
+import { comparisonBySlug } from '../../data/az-900/compare';
+import { getNav, inlineMd } from '../../lib/learn';
+import { SITE } from '../../config';
+
+export function getStaticPaths() {
+  return WHATIFS.map((w) => ({ params: { slug: w.slug }, props: { w } }));
+}
+const { w } = Astro.props as { w: WhatIf };
+const nav = await getNav();
+const lessons = w.lessons.map((s) => nav.find((t) => t.slug === s && t.published)).filter(Boolean);
+const cmp = w.compare ? comparisonBySlug(w.compare) : undefined;
+const url = new URL(Astro.url.pathname, SITE.url).href;
+const crumbs = [{ name: 'Home', url: '/' }, { name: 'Azure Simulator', url: '/simulator/' }, { name: w.q, url: Astro.url.pathname }];
+const schema = [{ '@type': 'FAQPage', mainEntity: [{ '@type': 'Question', name: w.q, acceptedAnswer: { '@type': 'Answer', text: w.answer.replace(/\*\*/g, '') } }] }];
+---
+<Base title={w.seoTitle} description={w.description} schema={schema} breadcrumbs={crumbs}>
+  <article class="mx-auto max-w-[960px] px-4 py-8 sm:px-6">
+    <p class="text-sm"><a class="text-accent hover:underline" href="/simulator/">⚡ Azure Simulator</a> <span class="text-muted">› What happens if…?</span></p>
+    <h1 class="mt-2 text-[2rem] leading-tight font-semibold tracking-tight sm:text-[2.4rem]"><span aria-hidden="true">{w.emoji}</span> {w.q}</h1>
+    <p class="mt-3 text-lg text-muted">Press the red button in the simulation below and watch it happen. No Azure account, no bill.</p>
+    <Datacenter3D mode={w.mode} start={w.start} title={w.q} intro="Use the “What happens if…” buttons under the scene." />
+    <div class="answer-box mt-6" data-speakable>
+      <p class="flex items-center gap-3 text-sm font-bold text-accent">The short answer <button type="button" class="speak-btn" aria-label="Listen">🔊 Listen</button></p>
+      <p class="mt-1 text-[1.05rem] leading-relaxed" set:html={inlineMd(w.answer)} />
+    </div>
+    <ShareButtons class="mt-5" url={url} text={`${w.emoji} ${w.q} Try it in this free 3D Azure simulation:`} />
+    <section class="mt-8">
+      <h2 class="text-xl font-semibold">Learn more</h2>
+      <div class="mt-3 flex flex-wrap gap-2">
+        {lessons.map((l) => <a href={l!.url} class="nav-btn">📘 {l!.title} ❯</a>)}
+        {cmp && <a href={`/az-900/compare/${cmp.slug}/`} class="nav-btn">⚖️ {cmp.title} ❯</a>}
+      </div>
+    </section>
+    <section class="mt-10 border-t border-default pt-6">
+      <h2 class="text-xl font-semibold">More “What happens if…?”</h2>
+      <ul class="mt-3 grid gap-2 sm:grid-cols-2">{WHATIFS.filter((x) => x.slug !== w.slug).map((x) => <li><a class="text-accent hover:underline" href={`/simulator/${x.slug}/`}>{x.emoji} {x.q}</a></li>)}</ul>
+    </section>
+  </article>
+</Base>

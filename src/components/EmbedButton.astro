@@ -1,0 +1,45 @@
+---
+/**
+ * "</> Embed" — gives trainers and bloggers an <iframe> snippet for a
+ * simulation. Embeds carry "Powered by MSDEVBUILD", which links back here.
+ */
+import { SITE } from '../config';
+interface Props { path: string; title: string; height?: number }
+const { path, title, height = 760 } = Astro.props;
+const src = new URL(path, SITE.url).href;
+const code = `<iframe src="${src}" title="${title.replace(/"/g, '&quot;')} (MSDEVBUILD simulation)" width="100%" height="${height}" style="border:0;border-radius:12px;max-width:900px" loading="lazy" allow="fullscreen"></iframe>`;
+---
+<details class="embed-btn">
+  <summary title="Embed this simulation on your site">&lt;/&gt; Embed</summary>
+  <div class="embed-pop">
+    <p class="font-semibold">Embed this simulation</p>
+    <p class="text-sm text-muted">Free for trainers, teachers and bloggers. Paste this into your page:</p>
+    <textarea readonly rows="4" aria-label="Embed code">{code}</textarea>
+    <div class="flex flex-wrap gap-2">
+      <button type="button" class="embed-copy" data-code={code}>📋 Copy code</button>
+      <a href={src} target="_blank" rel="noopener" class="embed-open">Preview ↗</a>
+      <a href="/embed/" target="_blank" rel="noopener" class="embed-open">All embeddable sims ↗</a>
+    </div>
+  </div>
+</details>
+
+<style is:global>
+  .embed-btn { position: relative; font-size: .82rem; }
+  .embed-btn > summary { list-style: none; cursor: pointer; padding: .25rem .6rem; border-radius: 6px; border: 1px solid var(--card-line); font-weight: 600; font-family: var(--font-mono); white-space: nowrap; }
+  .embed-btn > summary::-webkit-details-marker { display: none; }
+  .embed-btn[open] > summary { border-color: #0078d4; color: var(--accent); }
+  .embed-pop { position: absolute; right: 0; top: calc(100% + 6px); z-index: 20; width: min(420px, 86vw); display: grid; gap: .5rem; padding: .9rem; border-radius: 12px; background: var(--card); border: 1px solid var(--card-line); box-shadow: 0 12px 32px rgb(0 40 80 / .2); }
+  .embed-pop textarea { width: 100%; font: 12px/1.4 var(--font-mono); padding: .5rem; border-radius: 8px; border: 1px solid var(--card-line); background: var(--bg-code); color: var(--text); resize: none; }
+  .embed-copy, .embed-open { border-radius: 999px; padding: .35rem .8rem; font-weight: 600; border: 1px solid var(--card-line); }
+  .embed-copy { background: #0078d4; color: #fff; border-color: #0078d4; }
+</style>
+
+<script>
+  document.addEventListener('click', async (e) => {
+    const b = (e.target as HTMLElement).closest<HTMLButtonElement>('.embed-copy');
+    if (!b) return;
+    try { await navigator.clipboard.writeText(b.dataset.code!); b.textContent = '✅ Copied'; }
+    catch { b.closest('.embed-pop')?.querySelector('textarea')?.select(); b.textContent = 'Press Ctrl/⌘+C'; }
+    setTimeout(() => (b.textContent = '📋 Copy code'), 2000);
+  });
+</script>

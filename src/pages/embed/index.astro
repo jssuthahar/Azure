@@ -1,0 +1,37 @@
+---
+import Base from '../../layouts/Base.astro';
+import EmbedButton from '../../components/EmbedButton.astro';
+import { SIMS3D } from '../../data/az-900/sims3d';
+import { TOURS } from '../../data/az-900/portal-tours';
+import { EMBED_LESSON_3D, EMBED_LESSON_TOUR } from '../../data/az-900/embeds';
+const crumbs = [{ name: 'Home', url: '/' }, { name: 'Embed simulations', url: '/embed/' }];
+---
+<Base title="Embed Free Azure Simulations on Your Site | MSDEVBUILD" description="Free embeddable Azure simulations for trainers, teachers and bloggers: 3D datacenter, zones, regions, scaling and networking, plus 40+ Azure portal walkthroughs." breadcrumbs={crumbs}>
+  <div class="mx-auto max-w-5xl px-4 py-10 sm:px-6">
+    <h1 class="text-4xl font-semibold tracking-tight">Embed Azure simulations, free</h1>
+    <p class="mt-3 max-w-2xl text-lg text-muted">Teaching Azure? Drop any simulation into your course, blog or LMS with one &lt;iframe&gt;. No sign-up. Each embed shows “Powered by MSDEVBUILD” and links to the full lesson.</p>
+    <p class="mt-2 text-sm text-muted">Tip: add <code>?start=3</code> to open a 3D tour at step 4, and <code>&amp;theme=dark</code> for dark mode.</p>
+
+    <h2 class="mt-10 text-2xl font-semibold">🧊 3D simulations</h2>
+    <ul class="mt-4 grid gap-3 sm:grid-cols-2">
+      {Object.entries(SIMS3D).map(([m, s]) => (
+        <li class="flex items-start justify-between gap-3 rounded-xl border border-default bg-[var(--card)] p-4">
+          <span><span class="block font-semibold">{s.title}</span><span class="block text-sm text-muted">{s.steps.length} steps · used in {EMBED_LESSON_3D[m]?.title}</span>
+            <a class="text-sm text-accent hover:underline" href={`/embed/3d/${m}/`} target="_blank" rel="noopener">Preview ↗</a></span>
+          <EmbedButton path={`/embed/3d/${m}/`} title={s.title} height={820} />
+        </li>
+      ))}
+    </ul>
+
+    <h2 class="mt-10 text-2xl font-semibold">🖥️ Azure portal walkthroughs</h2>
+    <ul class="mt-4 grid gap-3 sm:grid-cols-2">
+      {Object.entries(TOURS).map(([id, t]) => (
+        <li class="flex items-start justify-between gap-3 rounded-xl border border-default bg-[var(--card)] p-4">
+          <span><span class="block font-semibold">{t.title}</span><span class="block text-sm text-muted">{t.steps.length} steps{EMBED_LESSON_TOUR[id] ? ` · used in ${EMBED_LESSON_TOUR[id]!.title}` : ''}</span>
+            <a class="text-sm text-accent hover:underline" href={`/embed/portal/${id}/`} target="_blank" rel="noopener">Preview ↗</a></span>
+          <EmbedButton path={`/embed/portal/${id}/`} title={t.title} height={860} />
+        </li>
+      ))}
+    </ul>
+  </div>
+</Base>

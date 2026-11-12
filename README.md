@@ -37,6 +37,16 @@ Pushing to `main` deploys to GitHub Pages through `.github/workflows/deploy.yml`
 | Azure practice simulator: engine, mock portal, mock CLI, labs | `src/lib/sim/` (`engine.ts`, `portal.ts`, `cli.ts`, `labs.ts`) |
 | Simulator UI and lab pages | `src/components/Simulator.astro`, `src/pages/az-900/labs/` |
 | Games (Daily Challenge, Sort It, Match the Pairs, Lightning Round, Who Am I?) | `src/pages/az-900/games/` |
+| Interactive 3D scenes (Three.js, lazy-loaded): datacenter, zones, regions, redundancy, scale, network | `src/lib/dc3d/`, narration in `src/data/az-900/sims3d.ts`, `<Datacenter3D>` |
+| Guided walkthroughs of the (simulated) new Azure portal | `src/lib/portal-tour.ts`, tours in `src/data/az-900/portal-tours.ts`, `<PortalTour>` |
+| Free-navigation Azure portal simulator used by the labs (education only) | `src/lib/sim/portal.ts`, shared look in `src/styles/portal.css` |
+| Comparison pages (`/az-900/compare/<slug>/`) | `src/data/az-900/compare.ts` |
+| Service reference, "X in 60 seconds" (`/az-900/services/<slug>/`) | `src/data/az-900/services.ts` |
+| "What happens if…?" pages and the Simulator hub (`/simulator/`) | `src/data/az-900/whatifs.ts` |
+| Embeddable sims (`/embed/`, `/embed/3d/<mode>/`, `/embed/portal/<id>/`) | `src/layouts/EmbedLayout.astro`, `src/components/EmbedButton.astro` |
+| Currency (default INR, learner can switch; prices authored in USD) | `src/lib/currency.ts`, `src/lib/prices.ts`, `src/components/CurrencySelect.astro` |
+| AZ-900 Ready certificate + badge (browser-only, self-assessed) | `src/lib/certificate.ts`, `src/pages/certificate/` |
+| Glossary and "Azure term of the day" | `src/lib/glossary.ts`, `src/pages/az-900/glossary/`, `src/components/TodayBand.astro` |
 
 A topic is **published only when its MDX file exists**. Otherwise the syllabus shows it as "coming next" and never links to it, so there are no empty pages.
 
@@ -45,6 +55,7 @@ A topic is **published only when its MDX file exists**. Otherwise the syllabus s
 1. Create `src/content/tutorials/az-900/<module>/<slug>.mdx`. Use a slug already listed in `syllabus.ts`, and copy the frontmatter from an existing lesson.
 2. Follow the lesson template headings: *Start with a question* (`<Story>`), *Explain it like I'm 10* (`<Eli10>`), *The technical explanation*, *Real-world business scenario* (`<Scenario>`), a visual (`<Compare>`, `<Flow>`, `<ResponsibilityGrid>`, `<DemandChart>`, `<SlaCalculator>`, `<CostChart>`), and *When to use it and when not to* (`<UseWhen>`). Put architect-level depth in `<DeepDive>`.
 3. Interview questions, quick revision and references go in frontmatter. The layout renders them.
+   Every lesson follows one flow: **30-second answer → Simulations (3D View | Azure Portal | Practice Lab) → Explanation → Exam tip → Quiz → Previous/Next**. The template renders the Simulations section from `src/data/az-900/lesson-sims.ts`: add the new lesson there with a 3D `mode`/`start`/`intro` and a portal `tour` (add a tour to `portal-tours.ts` if none fits). Never link away mid-lesson: `<TryIt>` switches to the Practice Lab tab in place.
    Add the lesson's animated scene and caption to `visuals.ts`, and its Problem → Solution card to `problem-solution.ts`. Sections titled "Start with a question", "Explain it like I'm 10" and "Real-world business scenario" show in Beginner view; the rest show only in Full lesson.
 4. Add `src/content/questions/az-900/<slug>.json` with `"topic": "<slug>"`. Those questions power the topic's knowledge check **and** the mock exam.
 5. Run `npm run check:all`.
