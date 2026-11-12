@@ -1,0 +1,281 @@
+---
+/**
+ * "What happens if?" traffic simulator: the same traffic hits a fixed set of
+ * on-premises servers and a cloud deployment that autoscales. Slider for any
+ * number of users, or Start simulation to play a whole day hour by hour.
+ * Every number is illustrative and labelled so; costs show in the learner's currency.
+ */
+import type { TrafficActivity } from '../../data/activities';
+interface Props { a: TrafficActivity }
+const { a } = Astro.props;
+const uid = `tr-${a.id}`;
+const sides = [
+  { key: 'onprem', icon: '🏢', title: 'On-premises', tag: `Fixed: ${a.onPremServers} servers bought up front` },
+  { key: 'cloud', icon: '☁️', title: 'Cloud', tag: 'Autoscale: adds and removes servers' },
+];
+---
+<div class="tr">
+  <div class="ila-scenario"><span class="ila-label">The situation</span><p>{a.scenario}</p></div>
+
+  <div class="tr-controls">
+    <label for={`${uid}-users`} class="tr-label">Shoppers online right now: <strong class="tr-users">{a.minUsers.toLocaleString('en-US')}</strong></label>
+    <input id={`${uid}-users`} class="tr-slider" type="range" min="0" max="1000" step="1" value="0" />
+    <div class="tr-scale" aria-hidden="true"><span>{a.minUsers.toLocaleString('en-US')}</span><span>{a.maxUsers.toLocaleString('en-US')}</span></div>
+    <div class="tr-buttons">
+      <button type="button" class="btn btn-accent btn-sm tr-start">▶ Start simulation</button>
+      <button type="button" class="btn btn-outline btn-sm tr-pause" disabled>⏸ Pause</button>
+      <button type="button" class="btn btn-outline btn-sm tr-reset">↺ Reset</button>
+      <span class="tr-clock chip chip-muted" hidden>{a.dayLabel} · <span class="tr-time">00:00</span></span>
+    </div>
+  </div>
+
+  <div class="tr-sides">
+    {sides.map((s) => (
+      <div class="tr-side" data-side={s.key} data-status="healthy">
+        <p class="tr-side-title"><span aria-hidden="true">{s.icon}</span> {s.title}</p>
+        <p class="tr-tag">{s.tag}</p>
+        <div class="tr-racks" aria-hidden="true"></div>
+        <dl class="tr-stats">
+          <div><dt>Servers</dt><dd data-f="servers">0</dd></div>
+          <div><dt>Capacity</dt><dd data-f="capacity">0</dd></div>
+          <div class="tr-cpu"><dt>CPU</dt><dd><span data-f="cpu">0%</span><span class="tr-bar"><span data-f="cpubar"></span></span></dd></div>
+          <div><dt>Status</dt><dd data-f="status" class="tr-status">Healthy</dd></div>
+          <div><dt>Response time</dt><dd data-f="rt">0 ms</dd></div>
+          <div><dt>Cost per hour</dt><dd data-f="cost">0</dd></div>
+          <div><dt>Cost so far</dt><dd data-f="total">0</dd></div>
+        </dl>
+      </div>
+    ))}
+  </div>
+
+  <p class="tr-insight" aria-live="polite"></p>
+  <div class="tr-summary ila-feedback" hidden></div>
+  <p class="tr-note">ⓘ Illustrative simulation. The numbers are made up to show the idea; they aren't Azure prices or performance measurements.</p>
+</div>
+
+<script>
+  import { config, esc, finishActivity, reducedMotion } from '../../lib/activities';
+  import { money } from '../../lib/currency';
+  import type { TrafficActivity } from '../../data/activities';
+
+  type Side = 'onprem' | 'cloud';
+  const HEADROOM = 0.7; // autoscale aims to keep CPU around 70%
+
+  document.querySelectorAll<HTMLElement>('[data-kind="traffic"]').forEach((root) => {
+    const a = config<TrafficActivity>(root);
+    const $ = <T extends HTMLElement>(s: string) => root.querySelector<T>(s)!;
+    const slider = $<HTMLInputElement>('.tr-slider');
+    const startBtn = $<HTMLButtonElement>('.tr-start');
+    const pauseBtn = $<HTMLButtonElement>('.tr-pause');
+    const insight = $('.tr-insight');
+    const summary = $('.tr-summary');
+    const clock = $('.tr-clock');
+
+    const toUsers = (v: number) => Math.round(a.minUsers * Math.pow(a.maxUsers / a.minUsers, v / 1000));
+    const toSlider = (u: number) => Math.round((Math.log(u / a.minUsers) / Math.log(a.maxUsers / a.minUsers)) * 1000);
+    const target = (u: number) => Math.max(1, Math.ceil(u / (a.perServer * HEADROOM)));
+
+    let users = a.minUsers;
+    let cloud = target(users);
+    let running = false;
+    let hour = -1;
+    let loop = 0;
+    let finished = false;
+    let reachedPeak = false;
+    let lastInsight = '';
+    const cost = { onprem: 0, cloud: 0 };
+    let turnedAway = 0;
+
+    const metrics = (servers: number) => {
+      const capacity = servers * a.perServer;
+      const cpu = (users / capacity) * 100;
+      const failing = cpu > 100 ? 1 - capacity / users : 0;
+      const status = cpu > 100 ? 'overloaded' : cpu > 90 ? 'slow' : cpu > 70 ? 'busy' : 'healthy';
+      const rt = cpu <= 60 ? 120 : cpu <= 100 ? Math.round(120 + ((cpu - 60) / 40) ** 2 * 1380) : 0;
+      return { servers, capacity, cpu, failing, status, rt };
+    };
+    const label = { healthy: 'Healthy', busy: 'Busy', slow: 'Slow', overloaded: 'Overloaded' } as const;
+
+    function racks(el: HTMLElement, n: number, status: string) {
+      if (el.dataset.n === String(n) && el.dataset.s === status) return;
+      el.dataset.n = String(n);
+      el.dataset.s = status;
+      const shown = Math.min(n, 60);
+      el.innerHTML = Array.from({ length: shown }, () => '<span class="tr-srv"></span>').join('') + (n > shown ? `<span class="tr-more">+${n - shown}</span>` : '');
+    }
+
+    function paintSide(side: Side, servers: number, hourUsd: number) {
+      const m = metrics(servers);
+      const el = $(`.tr-side[data-side="${side}"]`);
+      el.dataset.status = m.status;
+      const f = (k: string) => el.querySelector<HTMLElement>(`[data-f="${k}"]`)!;
+      f('servers').textContent = String(servers);
+      f('capacity').textContent = `${m.capacity.toLocaleString('en-US')} users`;
+      f('cpu').textContent = `${Math.min(100, Math.round(m.cpu))}%${m.cpu > 100 ? ' (maxed out)' : ''}`;
+      f('cpubar').style.width = `${Math.min(100, m.cpu)}%`;
+      f('status').textContent = m.status === 'overloaded' ? `${label[m.status]}: ~${Math.round(m.failing * 100)}% get errors` : label[m.status as keyof typeof label];
+      f('rt').textContent = m.rt ? `${m.rt.toLocaleString('en-US')} ms` : 'Timing out';
+      f('cost').textContent = money(servers * hourUsd);
+      f('total').textContent = hour === -1 && cost[side] === 0 ? 'Press Start' : money(cost[side]);
+      racks(el.querySelector<HTMLElement>('.tr-racks')!, servers, m.status);
+      return m;
+    }
+
+    function say(key: string, text: string) {
+      if (key === lastInsight) return;
+      lastInsight = key;
+      insight.textContent = text;
+    }
+
+    function paint() {
+      $('.tr-users').textContent = users.toLocaleString('en-US');
+      slider.setAttribute('aria-valuetext', `${users.toLocaleString('en-US')} shoppers`);
+      const op = paintSide('onprem', a.onPremServers, a.onPremServerHourUsd);
+      const cl = paintSide('cloud', cloud, a.cloudServerHourUsd);
+      const want = target(users);
+      if (op.status === 'overloaded' && cloud < want) say('both-up', 'On-premises is overloaded and can’t grow. The cloud is adding servers right now; autoscale takes a moment to catch up.');
+      else if (op.status === 'overloaded') say('op-down', `On-premises is overloaded: about ${Math.round(op.failing * 100)}% of shoppers get errors, and buying servers takes weeks. The cloud added servers and keeps up.`);
+      else if (cloud > want && op.cpu < 40) say('scale-in', 'Traffic is dropping. The cloud hands servers back, so the cost per hour falls. On-premises keeps paying for every server.');
+      else if (op.cpu < 25) say('idle', `Quiet time. On-premises pays for ${a.onPremServers} servers while using only ${Math.max(1, Math.round(op.cpu))}% of them. The cloud runs just ${cloud} server${cloud > 1 ? 's' : ''}.`);
+      else if (cl.status === 'busy' || cl.status === 'slow') say('cl-busy', 'Traffic jumped. The cloud is busy for a moment while autoscale adds servers.');
+      else say('ok', 'Both sides are coping at this level of traffic. Push the slider higher and watch what happens.');
+    }
+
+    /* One clock drives everything: the day replay and the cloud catching up to demand. */
+    function tick() {
+      if (running) {
+        hour++;
+        if (hour >= a.day.length) return endDay();
+        users = a.day[hour];
+        slider.value = String(toSlider(users));
+        $('.tr-time').textContent = `${String(hour).padStart(2, '0')}:00`;
+        cost.onprem += a.onPremServers * a.onPremServerHourUsd;
+        cost.cloud += cloud * a.cloudServerHourUsd;
+        turnedAway += Math.max(0, users - a.onPremServers * a.perServer);
+      }
+      const diff = target(users) - cloud;
+      if (diff > 0) cloud += Math.max(1, Math.ceil(diff * 0.6));
+      else if (diff < 0) cloud -= Math.max(1, Math.ceil(-diff / 3));
+      paint();
+      checkExplored();
+      if (!running && cloud === target(users)) stopLoop();
+    }
+    const speed = () => (reducedMotion() ? 1100 : 750);
+    const startLoop = () => { if (!loop) loop = window.setInterval(tick, speed()); };
+    const stopLoop = () => { clearInterval(loop); loop = 0; };
+
+    function checkExplored() {
+      if (users >= a.maxUsers / 2) reachedPeak = true;
+      if (!finished && !running && reachedPeak && users <= a.maxUsers / 20) complete();
+    }
+    function complete() {
+      if (finished) return;
+      finished = true;
+      finishActivity(root, 1, 1);
+    }
+
+    function endDay() {
+      running = false;
+      hour = -1;
+      startBtn.textContent = '▶ Run the day again';
+      pauseBtn.disabled = true;
+      paint();
+      const peak = Math.max(...a.day);
+      const need = target(peak);
+      summary.hidden = false;
+      summary.innerHTML = `
+        <p class="font-semibold">Day over. Here is what happened (illustrative numbers):</p>
+        <ul class="tr-sum-list">
+          <li>🏢 <strong>On-premises</strong> cost ${esc(money(cost.onprem))} for the day and turned away about <strong>${turnedAway.toLocaleString('en-US')}</strong> shopper visits at the peak.</li>
+          <li>☁️ <strong>Cloud</strong> cost ${esc(money(cost.cloud))} and served everyone, because it grew for the evening rush and shrank afterwards.</li>
+          <li>💡 To survive tonight on its own hardware, the shop would have to own <strong>${need} servers all year</strong>, about ${esc(money(need * 24 * a.onPremServerHourUsd))} every single day, busy or not.</li>
+        </ul>
+        <p class="mt-2">That is cloud computing in one picture: capacity that follows demand, and a bill that follows usage.</p>`;
+      complete();
+    }
+
+    startBtn.addEventListener('click', () => {
+      if (hour === -1) {
+        cost.onprem = 0;
+        cost.cloud = 0;
+        turnedAway = 0;
+        summary.hidden = true;
+      }
+      running = true;
+      clock.hidden = false;
+      startBtn.disabled = true;
+      pauseBtn.disabled = false;
+      pauseBtn.textContent = '⏸ Pause';
+      stopLoop();
+      startLoop();
+      tick();
+    });
+    pauseBtn.addEventListener('click', () => {
+      running = false;
+      startBtn.disabled = false;
+      startBtn.textContent = '▶ Resume';
+      pauseBtn.disabled = true;
+      stopLoop();
+    });
+    $('.tr-reset').addEventListener('click', () => {
+      running = false;
+      stopLoop();
+      hour = -1;
+      users = a.minUsers;
+      cloud = target(users);
+      cost.onprem = 0;
+      cost.cloud = 0;
+      turnedAway = 0;
+      slider.value = '0';
+      clock.hidden = true;
+      summary.hidden = true;
+      startBtn.disabled = false;
+      startBtn.textContent = '▶ Start simulation';
+      pauseBtn.disabled = true;
+      lastInsight = '';
+      paint();
+    });
+    slider.addEventListener('input', () => {
+      if (running) pauseBtn.click();
+      users = toUsers(Number(slider.value));
+      paint();
+      checkExplored();
+      startLoop();
+    });
+    window.addEventListener('currency-change', paint);
+    paint();
+  });
+</script>
+
+<style>
+  .tr-controls { margin-top: 1rem; border-radius: 0.75rem; background: var(--bg-subtle); border: 1px solid var(--border); padding: 0.85rem 1rem; }
+  .tr-label { display: block; font-size: 1rem; }
+  .tr-users { font-size: 1.25rem; color: var(--accent-deep); font-variant-numeric: tabular-nums; }
+  .tr-slider { width: 100%; margin-top: 0.5rem; min-height: 2.25rem; accent-color: #0078d4; cursor: pointer; }
+  .tr-scale { display: flex; justify-content: space-between; font-size: 0.75rem; color: var(--text-muted); }
+  .tr-buttons { display: flex; flex-wrap: wrap; align-items: center; gap: 0.5rem; margin-top: 0.75rem; }
+  .tr-sides { display: grid; gap: 0.75rem; margin-top: 0.75rem; grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  @media (max-width: 559px) { .tr-sides { grid-template-columns: 1fr; } }
+  .tr-side { --tone: var(--ok); border: 2px solid var(--tone); border-radius: 0.75rem; background: var(--card); padding: 0.75rem 0.85rem; transition: border-color 0.3s; }
+  .tr-side[data-status='busy'] { --tone: #c19c00; }
+  .tr-side[data-status='slow'] { --tone: #ca5010; }
+  .tr-side[data-status='overloaded'] { --tone: var(--bad); }
+  .tr-side-title { font-weight: 750; font-size: 1.05rem; }
+  .tr-tag { font-size: 0.8rem; color: var(--text-muted); }
+  .tr-racks { display: flex; flex-wrap: wrap; gap: 3px; min-height: 1.1rem; margin: 0.5rem 0; }
+  :global(.tr-srv) { width: 12px; height: 16px; border-radius: 2px; background: var(--tone); }
+  :global(.tr-more) { font-size: 0.75rem; font-weight: 700; color: var(--text-muted); }
+  .tr-stats { display: grid; gap: 0.2rem 0.75rem; grid-template-columns: 1fr; font-size: 0.9rem; }
+  .tr-stats > div { display: flex; justify-content: space-between; gap: 0.5rem; border-bottom: 1px dashed var(--card-line); padding: 0.2rem 0; }
+  .tr-stats dt { color: var(--text-muted); }
+  .tr-stats dd { font-weight: 650; text-align: right; font-variant-numeric: tabular-nums; }
+  .tr-cpu dd { display: flex; align-items: center; gap: 0.4rem; }
+  .tr-bar { display: inline-block; width: 4.5rem; height: 0.5rem; border-radius: 999px; background: var(--bg-subtle); border: 1px solid var(--border); overflow: hidden; }
+  .tr-bar > span { display: block; height: 100%; background: var(--tone); transition: width 0.4s; }
+  .tr-status { color: var(--tone); }
+  .tr-side[data-status='busy'] .tr-status, .tr-side[data-status='slow'] .tr-status { color: var(--text); }
+  .tr-insight { margin-top: 0.75rem; border-left: 4px solid var(--accent); background: var(--pastel-blue); border-radius: 0.5rem; padding: 0.6rem 0.85rem; font-weight: 600; line-height: 1.5; }
+  .tr-sum-list { margin-top: 0.4rem; display: grid; gap: 0.35rem; }
+  .tr-note { margin-top: 0.6rem; font-size: 0.8rem; color: var(--text-muted); }
+  @media (prefers-reduced-motion: reduce) { .tr * { transition: none !important; } }
+</style>

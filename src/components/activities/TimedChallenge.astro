@@ -1,0 +1,148 @@
+---
+/**
+ * Timed challenge: a countdown per question, a score counter, right/wrong
+ * animation, an explanation after every answer, a final score and Try again.
+ * The timer can be switched off (WCAG 2.2.1: timing adjustable); it pauses while
+ * the explanation is showing.
+ */
+import type { ChallengeActivity } from '../../data/activities';
+interface Props { a: ChallengeActivity }
+const { a } = Astro.props;
+const uid = `tc-${a.id}`;
+---
+<div class="tc">
+  <div class="tc-start">
+    <p>{a.questions.length} questions · {a.seconds} seconds each · faster answers score more points</p>
+    <div class="mt-3 flex flex-wrap items-center gap-3">
+      <button type="button" class="btn btn-accent tc-go">▶ Start challenge</button>
+      <label class="tc-toggle" for={`${uid}-timer`}><input id={`${uid}-timer`} type="checkbox" class="tc-timer" checked /> Use the timer</label>
+    </div>
+  </div>
+
+  <div class="tc-play" hidden>
+    <div class="tc-top">
+      <span class="ila-count">Question <span class="tc-n">1</span> of {a.questions.length}</span>
+      <span class="tc-points" aria-live="off">⭐ <span class="tc-pts">0</span> points</span>
+    </div>
+    <div class="tc-clock"><span class="tc-bar"><span class="tc-fill"></span></span><span class="tc-secs" aria-hidden="true">{a.seconds}s</span></div>
+    <p class="ila-q tc-q" tabindex="-1"></p>
+    <div class="ila-opts tc-opts" role="group" aria-label="Answer options"></div>
+    <div class="ila-feedback tc-fb" hidden>
+      <p class="ila-verdict" aria-live="polite"></p>
+      <p class="tc-why mt-1"></p>
+      <button type="button" class="btn btn-accent btn-sm tc-next mt-3">Next ❯</button>
+    </div>
+  </div>
+
+  <div class="tc-end ila-feedback" hidden>
+    <p class="tc-trophy" aria-hidden="true"></p>
+    <p class="tc-final text-lg font-semibold" tabindex="-1"></p>
+    <ul class="tc-review"></ul>
+    <button type="button" class="btn btn-accent btn-sm tc-again mt-3">↺ Try again</button>
+  </div>
+</div>
+
+<script>
+  import { config, esc, finishActivity, nudge } from '../../lib/activities';
+  import type { ChallengeActivity, ChoiceQuestion } from '../../data/activities';
+
+  document.querySelectorAll<HTMLElement>('[data-kind="challenge"]').forEach((root) => {
+    const a = config<ChallengeActivity>(root);
+    const $ = <T extends HTMLElement>(s: string) => root.querySelector<T>(s)!;
+    const letters = 'ABCDEFGH';
+    let i = 0, right = 0, points = 0, left = a.seconds, timer = 0, useTimer = true;
+    const missed: { q: ChoiceQuestion; pick: number }[] = [];
+
+    const stopClock = () => { clearInterval(timer); timer = 0; };
+    function paintClock() {
+      $('.tc-secs').textContent = useTimer ? `${left}s` : 'No timer';
+      $<HTMLElement>('.tc-fill').style.width = useTimer ? `${(left / a.seconds) * 100}%` : '100%';
+      $('.tc-clock').dataset.low = String(useTimer && left <= 10);
+    }
+    function ask() {
+      const q = a.questions[i];
+      left = a.seconds;
+      $('.tc-n').textContent = String(i + 1);
+      $('.tc-q').textContent = q.q;
+      $('.tc-opts').innerHTML = q.options.map((o, oi) => `<button type="button" class="ila-opt" data-i="${oi}"><span class="ila-letter" aria-hidden="true">${letters[oi]}</span><span class="min-w-0 flex-1">${esc(o.text)}</span></button>`).join('');
+      $('.tc-fb').hidden = true;
+      paintClock();
+      $('.tc-q').focus();
+      if (useTimer) timer = window.setInterval(() => { left--; paintClock(); if (left <= 0) answer(-1); }, 1000);
+    }
+    function answer(pick: number) {
+      stopClock();
+      const q = a.questions[i];
+      const ok = pick === q.answer;
+      if (ok) { right++; points += 10 + (useTimer ? Math.ceil(left / 3) : 5); }
+      else missed.push({ q, pick });
+      $('.tc-pts').textContent = String(points);
+      root.querySelectorAll<HTMLButtonElement>('.tc-opts .ila-opt').forEach((b) => {
+        const oi = Number(b.dataset.i);
+        b.disabled = true;
+        b.dataset.state = oi === q.answer ? (oi === pick ? 'correct' : 'missed') : oi === pick ? 'wrong' : '';
+      });
+      const btn = root.querySelector<HTMLElement>(`.tc-opts [data-i="${pick}"]`);
+      if (btn) nudge(btn, ok);
+      const v = $('.ila-verdict');
+      v.className = `ila-verdict ${ok ? 'verdict-ok' : 'verdict-bad'}`;
+      v.textContent = ok ? `✓ Correct! +${10 + (useTimer ? Math.ceil(left / 3) : 5)} points` : pick === -1 ? `⏰ Time's up. The answer is ${letters[q.answer]}.` : `✕ Not quite. The answer is ${letters[q.answer]}.`;
+      const why = pick >= 0 && !ok ? `${q.options[pick].why} ${q.options[q.answer].why}` : q.options[q.answer].why;
+      $('.tc-why').textContent = why;
+      $('.tc-next').textContent = i + 1 < a.questions.length ? 'Next ❯' : 'See my score';
+      $('.tc-fb').hidden = false;
+    }
+    function finish() {
+      $('.tc-play').hidden = true;
+      const end = $('.tc-end');
+      end.hidden = false;
+      const total = a.questions.length;
+      $('.tc-trophy').textContent = right === total ? '🏆' : right >= total * 0.7 ? '🎉' : '💪';
+      const f = $('.tc-final');
+      f.textContent = `${right} of ${total} correct · ${points} points. ${right === total ? 'Cloud expert!' : right >= total * 0.7 ? 'Nearly there.' : 'Read the explanations and try again.'}`;
+      $('.tc-review').innerHTML = missed.map((m) => `<li><strong>${esc(m.q.q)}</strong><br>${esc(m.q.options[m.q.answer].text)} <span class="ila-why">${esc(m.q.options[m.q.answer].why)}</span></li>`).join('');
+      f.focus();
+      finishActivity(root, right, total);
+    }
+    function go() {
+      useTimer = $<HTMLInputElement>('.tc-timer').checked;
+      i = 0; right = 0; points = 0; missed.length = 0;
+      $('.tc-pts').textContent = '0';
+      $('.tc-start').hidden = true;
+      $('.tc-end').hidden = true;
+      $('.tc-play').hidden = false;
+      ask();
+    }
+
+    $('.tc-opts').addEventListener('click', (e) => {
+      const b = (e.target as HTMLElement).closest<HTMLButtonElement>('.ila-opt');
+      if (b && !b.disabled) answer(Number(b.dataset.i));
+    });
+    $('.tc-next').addEventListener('click', () => { i++; if (i < a.questions.length) ask(); else finish(); });
+    $('.tc-go').addEventListener('click', go);
+    $('.tc-again').addEventListener('click', () => { $('.tc-end').hidden = true; $('.tc-start').hidden = false; $('.tc-go').focus(); });
+    // Pause the clock while the page is hidden (another tab, phone locked) and resume on return.
+    document.addEventListener('visibilitychange', () => {
+      if (!useTimer || $('.tc-play').hidden || !$('.tc-fb').hidden) return;
+      if (document.hidden) stopClock();
+      else if (!timer) timer = window.setInterval(() => { left--; paintClock(); if (left <= 0) answer(-1); }, 1000);
+    });
+  });
+</script>
+
+<style>
+  .tc-start { margin-top: 0.75rem; border-radius: 0.75rem; background: var(--pastel-lilac); padding: 1rem; font-weight: 600; }
+  .tc-toggle { display: inline-flex; align-items: center; gap: 0.45rem; min-height: 2.25rem; font-weight: 600; cursor: pointer; }
+  .tc-toggle input { width: 1.15rem; height: 1.15rem; accent-color: #0078d4; }
+  .tc-top { display: flex; justify-content: space-between; align-items: center; gap: 0.5rem; margin-top: 0.75rem; }
+  .tc-points { font-weight: 750; font-variant-numeric: tabular-nums; }
+  .tc-clock { display: flex; align-items: center; gap: 0.6rem; margin-top: 0.5rem; }
+  .tc-bar { flex: 1; height: 0.6rem; border-radius: 999px; background: var(--bg-subtle); border: 1px solid var(--border); overflow: hidden; }
+  .tc-fill { display: block; height: 100%; background: #0078d4; transition: width 1s linear; }
+  .tc-clock[data-low='true'] .tc-fill { background: var(--bad); }
+  .tc-secs { min-width: 4.5rem; text-align: right; font-weight: 750; font-variant-numeric: tabular-nums; }
+  .tc-trophy { font-size: 3rem; line-height: 1; }
+  .tc-review { display: grid; gap: 0.5rem; margin-top: 0.5rem; font-size: 0.92rem; }
+  .tc-review :global(li) { border-radius: 0.5rem; background: var(--pastel-yellow); padding: 0.5rem 0.75rem; }
+  @media (prefers-reduced-motion: reduce) { .tc-fill { transition: none; } }
+</style>

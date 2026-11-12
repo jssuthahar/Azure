@@ -1,0 +1,71 @@
+---
+/**
+ * One interactive learning activity inside a lesson. In MDX: <Activity id="traffic-spike" />
+ * The id is looked up in the current exam's activities for the current lesson
+ * (src/data/<exam>/activities.ts), so lessons only say *where* an activity goes.
+ * The shell gives every type the same header, XP chip, done tick and reward line;
+ * the type component below does the interaction. Progress stays in this browser.
+ */
+import { examFromPath } from '../data/exams';
+import { activityXp, kindIcon, kindLabel } from '../data/activities';
+import Predict from './activities/Predict.astro';
+import SortBuckets from './activities/SortBuckets.astro';
+import TrafficSim from './activities/TrafficSim.astro';
+import ExploreMap from './activities/ExploreMap.astro';
+import MatchCards from './activities/MatchCards.astro';
+import QuizSteps from './activities/QuizSteps.astro';
+import TimedChallenge from './activities/TimedChallenge.astro';
+import Mission from './activities/Mission.astro';
+
+interface Props { id: string }
+const { id } = Astro.props;
+const exam = examFromPath(Astro.url.pathname);
+const [, , mod, topic] = Astro.url.pathname.split('/');
+const set = exam.activities[topic];
+const a = set?.activities.find((x) => x.id === id);
+if (!set || !a) throw new Error(`<Activity id="${id}" />: no such activity for ${exam.slug}/${topic} in src/data/${exam.slug}/activities.ts`);
+const lessonKey = `${exam.slug}/${mod}/${topic}`;
+const xp = activityXp(a);
+const payload = JSON.stringify(a).replace(/</g, '\\u003c');
+const titleId = `act-${a.id}-title`;
+---
+<section
+  id={`act-${a.id}`}
+  class="ila not-prose"
+  data-activity={a.id}
+  data-kind={a.kind}
+  data-lesson={lessonKey}
+  data-lesson-acts={set.activities.map((x) => x.id).join(',')}
+  data-master={set.master}
+  data-xp={xp}
+  data-title={a.title}
+  aria-labelledby={titleId}
+>
+  <div class="ila-head">
+    <span class="ila-kind"><span aria-hidden="true">{kindIcon(a)}</span> {kindLabel(a)}</span>
+    <span class="ila-meta">
+      <span class="ila-best"></span>
+      <span class="ila-xp">⭐ Up to {xp} XP</span>
+      <span class="ila-tick">✓ Done</span>
+    </span>
+  </div>
+  <h3 id={titleId} class="ila-title">{a.title}</h3>
+  {a.intro && <p class="ila-intro">{a.intro}</p>}
+  <script type="application/json" data-config set:html={payload} />
+  <div class="ila-body">
+    {a.kind === 'predict' && <Predict a={a} />}
+    {a.kind === 'sort' && <SortBuckets a={a} />}
+    {a.kind === 'traffic' && <TrafficSim a={a} />}
+    {a.kind === 'explore' && <ExploreMap a={a} />}
+    {a.kind === 'match' && <MatchCards a={a} />}
+    {a.kind === 'quiz' && <QuizSteps a={a} />}
+    {a.kind === 'challenge' && <TimedChallenge a={a} />}
+    {a.kind === 'mission' && <Mission a={a} />}
+  </div>
+  <p class="ila-reward" aria-live="polite"></p>
+</section>
+<script>
+  import { paintDone } from '../lib/activities';
+  paintDone();
+  window.addEventListener('progress-change', paintDone);
+</script>

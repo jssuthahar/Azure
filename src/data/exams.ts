@@ -17,6 +17,8 @@ import { WHATIFS as az900WhatIfs, type WhatIf } from './az-900/whatifs';
 import { EXAM_ITEMS as az900Items, type FormatItem } from './az-900/exam-items';
 import { VISUALS as az900Visuals, type LessonVisual } from './az-900/visuals';
 import { PROBLEM_SOLUTION as az900Problems, type ProblemSolution } from './az-900/problem-solution';
+import { ACTIVITIES as az900Activities } from './az-900/activities';
+import type { LessonActivities } from './activities';
 import { SORT_SETS as az900Sort, RIDDLES as az900Riddles, type SortSet, type Riddle } from './az-900/games';
 
 export interface Exam {
@@ -43,6 +45,8 @@ export interface Exam {
   visuals: Record<string, LessonVisual>;
   problems: Record<string, ProblemSolution>;
   games: { sortSets: SortSet[]; riddles: Riddle[] };
+  /** Interactive lesson activities, keyed by topic slug (see src/data/activities.ts). */
+  activities: Record<string, LessonActivities>;
 }
 
 const info = (slug: string) => {
@@ -71,6 +75,7 @@ const EXAMS: Record<string, Exam> = {
     visuals: az900Visuals,
     problems: az900Problems,
     games: { sortSets: az900Sort, riddles: az900Riddles },
+    activities: az900Activities,
   },
 };
 

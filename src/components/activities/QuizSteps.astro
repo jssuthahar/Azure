@@ -1,0 +1,103 @@
+---
+/**
+ * One question at a time with instant feedback: why every option is right or
+ * wrong, and the exam idea it connects to. Used for quick checks between ideas
+ * (style "check") and "Can you solve this real-world problem?" (style "scenario").
+ */
+import type { QuizActivity } from '../../data/activities';
+import { inlineMd } from '../../lib/learn';
+interface Props { a: QuizActivity }
+const { a } = Astro.props;
+const letters = 'ABCDEFGH';
+const n = a.questions.length;
+---
+<div class="qz">
+  {a.questions.map((q, qi) => (
+    <div class="qz-step" data-step={qi} hidden={qi > 0}>
+      {n > 1 && <p class="ila-count">{a.style === 'scenario' ? 'Problem' : 'Question'} {qi + 1} of {n}</p>}
+      {q.scenario && <div class="ila-scenario"><span class="ila-label">The business problem</span><p set:html={inlineMd(q.scenario)} /></div>}
+      <p class="ila-q" tabindex="-1">{q.q}</p>
+      <div class="ila-opts" role="group" aria-label={q.q}>
+        {q.options.map((o, oi) => (
+          <button type="button" class="ila-opt" data-i={oi}>
+            <span class="ila-letter" aria-hidden="true">{letters[oi]}</span>
+            <span class="min-w-0 flex-1"><span class="block" set:html={inlineMd(o.text)} /><span class="ila-why" hidden set:html={inlineMd(o.why)} /></span>
+          </button>
+        ))}
+      </div>
+      <div class="ila-feedback" hidden>
+        <p class="ila-verdict" aria-live="polite"></p>
+        {q.concept && <p class="mt-2 text-sm"><span class="chip">💡 Azure idea: {q.concept}</span></p>}
+        <button type="button" class="btn btn-accent btn-sm qz-next mt-3">{qi + 1 < n ? 'Next ❯' : 'See my score'}</button>
+      </div>
+    </div>
+  ))}
+  <div class="qz-end ila-feedback" hidden>
+    <p class="qz-score text-lg font-semibold" tabindex="-1"></p>
+    <button type="button" class="btn btn-outline btn-sm qz-again mt-3">↺ Try again</button>
+  </div>
+</div>
+
+<script>
+  import { config, finishActivity, nudge } from '../../lib/activities';
+  import type { QuizActivity } from '../../data/activities';
+
+  document.querySelectorAll<HTMLElement>('[data-kind="quiz"]').forEach((root) => {
+    const a = config<QuizActivity>(root);
+    const steps = [...root.querySelectorAll<HTMLElement>('.qz-step')];
+    const end = root.querySelector<HTMLElement>('.qz-end')!;
+    let score = 0;
+
+    steps.forEach((step, qi) => {
+      const q = a.questions[qi];
+      step.querySelectorAll<HTMLButtonElement>('.ila-opt').forEach((btn) =>
+        btn.addEventListener('click', () => {
+          const pick = Number(btn.dataset.i);
+          const ok = pick === q.answer;
+          if (ok) score++;
+          step.querySelectorAll<HTMLButtonElement>('.ila-opt').forEach((b) => {
+            const i = Number(b.dataset.i);
+            b.disabled = true;
+            b.dataset.state = i === q.answer ? (i === pick ? 'correct' : 'missed') : i === pick ? 'wrong' : '';
+            b.querySelector<HTMLElement>('.ila-why')!.hidden = false;
+          });
+          nudge(btn, ok);
+          const v = step.querySelector<HTMLElement>('.ila-verdict')!;
+          v.textContent = ok ? '✓ Right. Here is why, and why the others fall short.' : `✕ Not quite. The best answer is ${'ABCDEFGH'[q.answer]}. Read why under each option.`;
+          v.className = `ila-verdict ${ok ? 'verdict-ok' : 'verdict-bad'}`;
+          step.querySelector<HTMLElement>('.ila-feedback')!.hidden = false;
+        }),
+      );
+      step.querySelector('.qz-next')!.addEventListener('click', () => {
+        step.hidden = true;
+        const next = steps[qi + 1];
+        if (next) {
+          next.hidden = false;
+          next.querySelector<HTMLElement>('.ila-q')!.focus();
+          return;
+        }
+        const total = a.questions.length;
+        end.hidden = false;
+        const s = end.querySelector<HTMLElement>('.qz-score')!;
+        s.textContent = `You got ${score} of ${total} right.${score === total ? ' 🎉 Perfect!' : ' Try again to lock it in.'}`;
+        s.focus();
+        finishActivity(root, score, total);
+      });
+    });
+
+    end.querySelector('.qz-again')!.addEventListener('click', () => {
+      score = 0;
+      end.hidden = true;
+      steps.forEach((step, qi) => {
+        step.hidden = qi > 0;
+        step.querySelector<HTMLElement>('.ila-feedback')!.hidden = true;
+        step.querySelectorAll<HTMLButtonElement>('.ila-opt').forEach((b) => {
+          b.disabled = false;
+          b.dataset.state = '';
+          b.querySelector<HTMLElement>('.ila-why')!.hidden = true;
+        });
+      });
+      steps[0].querySelector<HTMLElement>('.ila-q')!.focus();
+    });
+  });
+</script>

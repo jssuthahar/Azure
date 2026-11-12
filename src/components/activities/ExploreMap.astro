@@ -1,0 +1,171 @@
+---
+/**
+ * Click to explore: a small architecture diagram. Each part opens a card (what it
+ * does, why businesses need it, an example, the Azure service) and one exam-style
+ * question. Layout comes from the links: columns by distance from the entry point
+ * on wide screens, rows on phones. Connections are drawn by script and animate
+ * along the path to the selected part.
+ */
+import type { ExploreActivity } from '../../data/activities';
+interface Props { a: ExploreActivity }
+const { a } = Astro.props;
+
+// Depth of each node = steps from the entry point along the links.
+const depth = new Map<string, number>([[a.entry.id, 0]]);
+for (let changed = true; changed; ) {
+  changed = false;
+  for (const [from, to] of a.links) if (depth.has(from) && !depth.has(to)) { depth.set(to, depth.get(from)! + 1); changed = true; }
+}
+const all = [{ ...a.entry, entry: true }, ...a.nodes.map((n) => ({ id: n.id, icon: n.icon, label: n.label, entry: false }))];
+const byDepth = new Map<number, string[]>();
+for (const n of all) { const d = depth.get(n.id) ?? 0; byDepth.set(d, [...(byDepth.get(d) ?? []), n.id]); }
+const cols = byDepth.size;
+const rows = Math.max(...[...byDepth.values()].map((v) => v.length));
+const place = (id: string) => {
+  const d = depth.get(id) ?? 0;
+  const group = byDepth.get(d)!;
+  const single = group.length === 1;
+  return `--c:${d + 1};--r:${single ? 1 : group.indexOf(id) + 1};--s:${single ? rows : 1}`;
+};
+---
+<div class="ex-wrap">
+  <div class="ex-map" style={`--cols:${cols};--rows:${rows}`}>
+    <svg class="ex-lines" aria-hidden="true">
+      {a.links.map(([f, t]) => <line data-from={f} data-to={t} />)}
+    </svg>
+    {all.map((n) => n.entry ? (
+      <div class="ex-node ex-entry" data-node={n.id} style={place(n.id)}>
+        <span class="ex-icon" aria-hidden="true">{n.icon}</span><span class="ex-name">{n.label}</span>
+      </div>
+    ) : (
+      <button type="button" class="ex-node" data-node={n.id} style={place(n.id)} aria-pressed="false">
+        <span class="ex-icon" aria-hidden="true">{n.icon}</span><span class="ex-name">{n.label}</span><span class="ex-check" aria-hidden="true">✓</span>
+      </button>
+    ))}
+  </div>
+  <p class="ila-count mt-3">Explored <span class="ex-done">0</span> of {a.nodes.length}</p>
+  <div class="ex-panel" aria-live="polite">
+    <p class="text-muted">👆 Tap any part of the diagram to see what it does.</p>
+  </div>
+</div>
+
+<script>
+  import { config, esc, finishActivity, nudge } from '../../lib/activities';
+  import type { ExploreActivity } from '../../data/activities';
+
+  document.querySelectorAll<HTMLElement>('[data-kind="explore"]').forEach((root) => {
+    const a = config<ExploreActivity>(root);
+    const map = root.querySelector<HTMLElement>('.ex-map')!;
+    const svg = map.querySelector<SVGSVGElement>('.ex-lines')!;
+    const panel = root.querySelector<HTMLElement>('.ex-panel')!;
+    const answered = new Map<string, boolean>();
+    const letters = 'ABCDEFGH';
+
+    function draw() {
+      const box = map.getBoundingClientRect();
+      svg.setAttribute('viewBox', `0 0 ${box.width} ${box.height}`);
+      const centre = (id: string) => {
+        const r = map.querySelector<HTMLElement>(`[data-node="${id}"] .ex-icon`)!.getBoundingClientRect();
+        return { x: r.left - box.left + r.width / 2, y: r.top - box.top + r.height / 2 };
+      };
+      svg.querySelectorAll('line').forEach((l) => {
+        const p = centre(l.dataset.from!);
+        const q = centre(l.dataset.to!);
+        l.setAttribute('x1', String(p.x)); l.setAttribute('y1', String(p.y));
+        l.setAttribute('x2', String(q.x)); l.setAttribute('y2', String(q.y));
+      });
+    }
+    new ResizeObserver(draw).observe(map);
+
+    // Highlight the path from the entry point to the selected part.
+    function path(id: string) {
+      const on = new Set<string>();
+      let cur = id;
+      for (let guard = 0; guard < 20; guard++) {
+        const link = a.links.find(([, t]) => t === cur);
+        if (!link) break;
+        on.add(`${link[0]}>${link[1]}`);
+        cur = link[0];
+      }
+      svg.querySelectorAll('line').forEach((l) => l.classList.toggle('ex-on', on.has(`${l.dataset.from}>${l.dataset.to}`)));
+    }
+
+    function open(id: string) {
+      const n = a.nodes.find((x) => x.id === id)!;
+      map.querySelectorAll<HTMLButtonElement>('button.ex-node').forEach((b) => b.setAttribute('aria-pressed', String(b.dataset.node === id)));
+      path(id);
+      const done = answered.has(id);
+      panel.innerHTML = `
+        <p class="ex-head"><span aria-hidden="true">${n.icon}</span> ${esc(n.label)} <span class="chip">Azure service: ${esc(n.service)}</span></p>
+        <dl class="ex-facts">
+          <div><dt>What it does</dt><dd>${esc(n.does)}</dd></div>
+          <div><dt>Why businesses need it</dt><dd>${esc(n.why)}</dd></div>
+          <div><dt>Real-world example</dt><dd>${esc(n.example)}</dd></div>
+        </dl>
+        <p class="ila-label mt-3">Exam-style question</p>
+        <p class="ila-q">${esc(n.question.q)}</p>
+        <div class="ila-opts" role="group" aria-label="Answer options">
+          ${n.question.options.map((o, i) => `<button type="button" class="ila-opt" data-i="${i}" ${done ? 'disabled' : ''}><span class="ila-letter" aria-hidden="true">${letters[i]}</span><span class="min-w-0 flex-1"><span class="block">${esc(o.text)}</span><span class="ila-why" ${done ? '' : 'hidden'}>${esc(o.why)}</span></span></button>`).join('')}
+        </div>
+        <p class="ila-verdict mt-2"></p>`;
+      if (done) mark(n.question.answer, -1);
+      panel.querySelectorAll<HTMLButtonElement>('.ila-opt').forEach((btn) =>
+        btn.addEventListener('click', () => {
+          const pick = Number(btn.dataset.i);
+          const ok = pick === n.question.answer;
+          answered.set(id, ok);
+          mark(n.question.answer, pick);
+          nudge(btn, ok);
+          const v = panel.querySelector<HTMLElement>('.ila-verdict')!;
+          const left = a.nodes.filter((x) => !answered.has(x.id)).map((x) => x.label);
+          v.textContent = `${ok ? '✓ Right.' : `✕ Not quite. The answer is ${letters[n.question.answer]}.`} ${left.length ? `Next, try: ${left.join(', ')}.` : 'You explored every part.'}`;
+          v.className = `ila-verdict mt-2 ${ok ? 'verdict-ok' : 'verdict-bad'}`;
+          map.querySelector<HTMLElement>(`[data-node="${id}"]`)!.dataset.explored = 'true';
+          root.querySelector('.ex-done')!.textContent = String(answered.size);
+          if (answered.size === a.nodes.length) finishActivity(root, [...answered.values()].filter(Boolean).length, a.nodes.length);
+        }),
+      );
+    }
+    function mark(answer: number, pick: number) {
+      panel.querySelectorAll<HTMLButtonElement>('.ila-opt').forEach((b) => {
+        const i = Number(b.dataset.i);
+        b.disabled = true;
+        b.dataset.state = i === answer ? (i === pick || pick === -1 ? 'correct' : 'missed') : i === pick ? 'wrong' : '';
+        b.querySelector<HTMLElement>('.ila-why')!.hidden = false;
+      });
+    }
+    map.querySelectorAll<HTMLButtonElement>('button.ex-node').forEach((b) => b.addEventListener('click', () => open(b.dataset.node!)));
+  });
+</script>
+
+<style>
+  .ex-wrap { container-type: inline-size; margin-top: 1rem; }
+  .ex-map {
+    position: relative; display: grid; gap: 1rem 0.5rem; align-items: center; justify-items: center;
+    border-radius: 0.75rem; border: 1px solid var(--card-line); background: linear-gradient(160deg, var(--pastel-blue), var(--card)); padding: 1rem 0.5rem;
+    grid-template-columns: repeat(var(--rows), minmax(0, 1fr)); grid-auto-rows: auto;
+  }
+  .ex-node { position: relative; z-index: 1; grid-column: var(--r) / span var(--s); grid-row: var(--c); display: flex; flex-direction: column; align-items: center; gap: 0.25rem; min-width: 5.5rem; padding: 0.25rem; border-radius: 0.75rem; }
+  @container (min-width: 560px) {
+    .ex-map { grid-template-columns: repeat(var(--cols), minmax(0, 1fr)); grid-template-rows: repeat(var(--rows), auto); }
+    .ex-node { grid-column: var(--c); grid-row: var(--r) / span var(--s); }
+  }
+  .ex-icon { display: grid; place-items: center; width: 3.25rem; height: 3.25rem; border-radius: 999px; background: var(--card); border: 2px solid var(--accent); font-size: 1.5rem; box-shadow: 0 4px 12px -6px rgb(0 90 158 / 0.4); transition: transform 0.15s, background 0.15s; }
+  .ex-name { font-size: 0.85rem; font-weight: 700; line-height: 1.2; text-align: center; }
+  button.ex-node { cursor: pointer; }
+  button.ex-node:hover .ex-icon { transform: translateY(-2px); }
+  button.ex-node[aria-pressed='true'] .ex-icon { background: #0078d4; border-color: #0078d4; }
+  .ex-entry .ex-icon { border-style: dashed; border-color: var(--text-muted); }
+  .ex-check { position: absolute; top: 0; right: 0.9rem; display: none; width: 1.3rem; height: 1.3rem; border-radius: 999px; background: var(--ok); color: #fff; font-size: 0.8rem; font-weight: 800; line-height: 1.3rem; text-align: center; }
+  .ex-node[data-explored='true'] .ex-check { display: block; }
+  .ex-lines { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; }
+  .ex-lines line { stroke: var(--border); stroke-width: 3; stroke-linecap: round; }
+  .ex-lines line.ex-on { stroke: #0078d4; stroke-dasharray: 7 7; animation: ex-flow 0.9s linear infinite; }
+  @keyframes ex-flow { to { stroke-dashoffset: -28; } }
+  .ex-panel { margin-top: 0.5rem; border-radius: 0.75rem; border: 1px solid var(--card-line); background: var(--bg); padding: 0.85rem 1rem; }
+  .ex-panel :global(.ex-head) { display: flex; flex-wrap: wrap; align-items: center; gap: 0.5rem; font-size: 1.1rem; font-weight: 750; }
+  .ex-panel :global(.ex-facts) { display: grid; gap: 0.5rem; margin-top: 0.5rem; }
+  .ex-panel :global(.ex-facts dt) { font-size: 0.75rem; font-weight: 800; letter-spacing: 0.08em; text-transform: uppercase; color: var(--accent-deep); }
+  .ex-panel :global(.ex-facts dd) { font-size: 0.95rem; line-height: 1.55; }
+  @media (prefers-reduced-motion: reduce) { .ex-lines line.ex-on { animation: none; } .ex-icon { transition: none; } }
+</style>

@@ -33,6 +33,10 @@ export interface ProgressState {
   perfectSorts: number;
   detective: number;
   labs: Record<string, string>;
+  /** Interactive lesson activities, keyed `<lessonKey>#<activityId>`. */
+  activities: Record<string, QuizResult>;
+  /** Lessons where every activity is done, with the date. */
+  mastered: Record<string, string>;
 }
 
 const empty = (): ProgressState => ({
@@ -48,6 +52,8 @@ const empty = (): ProgressState => ({
   perfectSorts: 0,
   detective: 0,
   labs: {},
+  activities: {},
+  mastered: {},
 });
 
 export const today = () => {
@@ -199,6 +205,31 @@ export function saveLab(id: string) {
   return first;
 }
 
+/**
+ * Record a finished lesson activity. XP scales with the score and is only paid
+ * for improvement, so replaying is free practice. When every activity in the
+ * lesson is done, the lesson counts as mastered (bonus XP, once).
+ */
+export function saveActivity(lesson: string, id: string, score: number, total: number, xp: number, lessonIds: string[], title: string) {
+  const s = load();
+  const key = `${lesson}#${id}`;
+  const prev = s.activities[key];
+  const firstEver = Object.keys(s.activities).length === 0;
+  const worth = (r?: QuizResult) => (r && r.total ? Math.round((xp * r.score) / r.total) : 0);
+  const now: QuizResult = { score, total: Math.max(1, total), at: new Date().toISOString() };
+  const gained = Math.max(0, worth(now) - worth(prev));
+  if (gained) grant(s, gained, prev ? `Better score: ${title}` : firstEver ? 'Your first cloud challenge' : title);
+  if (!prev || now.score / now.total >= prev.score / prev.total) s.activities[key] = now;
+  let mastered = false;
+  if (!s.mastered[lesson] && lessonIds.length > 0 && lessonIds.every((i) => s.activities[`${lesson}#${i}`])) {
+    s.mastered[lesson] = now.at;
+    grant(s, 50, 'Every activity in this lesson');
+    mastered = true;
+  }
+  save(s);
+  return { gained, first: !prev, firstEver, mastered };
+}
+
 export function reset() {
   try {
     localStorage.removeItem(KEY);
@@ -237,6 +268,8 @@ export function badges(s: ProgressState, moduleKeys: Record<string, string[]>): 
     { id: 'lightning', icon: '⚡', title: 'Lightning Fast', text: 'Score 12 or more in the Lightning Round.', earned: (s.games['lightning'] ?? 0) >= 12 },
     { id: 'detective', icon: '🕵️', title: 'Cloud Detective', text: 'Solve 5 Who Am I? riddles on the first clue.', earned: s.detective >= 5 },
     { id: 'memory', icon: '🧠', title: 'Memory Master', text: 'Clear Match the Pairs in 12 moves or fewer.', earned: (s.games['match'] ?? 0) >= 88 },
+    { id: 'cloud-explorer', icon: '🧩', title: 'Beginner Cloud Explorer', text: 'Finish your first interactive lesson activity.', earned: Object.keys(s.activities ?? {}).length >= 1 },
+    { id: 'lesson-master', icon: '🎓', title: 'Lesson Master', text: 'Finish every interactive activity in a lesson.', earned: Object.keys(s.mastered ?? {}).length >= 1 },
     { id: 'hands-on', icon: '🧪', title: 'Hands-on Hero', text: 'Complete 3 simulator labs.', earned: Object.keys(s.labs).length >= 3 },
     { id: 'streak-3', icon: '🔥', title: 'On Fire', text: 'Learn 3 days in a row.', earned: st >= 3 },
     { id: 'streak-7', icon: '📅', title: 'Week Warrior', text: 'Learn 7 days in a row.', earned: st >= 7 },

@@ -15,6 +15,7 @@ import BrandLine from '../../../components/BrandLine.astro';
 import KnowledgeCheck from '../../../components/KnowledgeCheck.astro';
 import InterviewBlock from '../../../components/InterviewBlock.astro';
 import QuickRevision from '../../../components/QuickRevision.astro';
+import LessonActivities from '../../../components/LessonActivities.astro';
 import { mdxComponents } from '../../../components/mdx';
 import { getNav, getTopicQuestions, moduleUrl, inlineMd } from '../../../lib/learn';
 import { SITE } from '../../../config';
@@ -171,6 +172,8 @@ const schema = [
           {me.objectives.map((o) => ` ${o} ${examObjective(exam, o)}.`)} <span class="text-xs">(Skills measured as of {exam.skillsMeasuredAsOf})</span>
         </p>
       )}
+
+      <LessonActivities exam={exam} topic={topicSlug!} lessonKey={entry.id} />
 
       <!-- 2 · Simulations: 3D View | Azure Portal | Practice Lab -->
       <LessonSimulations slug={topicSlug!} labs={labs} />

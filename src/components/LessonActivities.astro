@@ -1,0 +1,80 @@
+---
+/**
+ * "Learn by doing" strip near the top of a lesson: how many activities the lesson
+ * has, how many the learner has done, XP still on offer, the streak, and a jump
+ * link to each activity (same-page anchors, so the learner stays in the lesson).
+ * Renders nothing for lessons without activities.
+ */
+import type { Exam } from '../data/exams';
+import { activityXp, kindIcon } from '../data/activities';
+interface Props { exam: Exam; topic: string; lessonKey: string }
+const { exam, topic, lessonKey } = Astro.props;
+const set = exam.activities[topic];
+const acts = set?.activities ?? [];
+const maxXp = acts.reduce((n, a) => n + activityXp(a), 0) + 50;
+---
+{acts.length > 0 && (
+  <aside class="la mt-5" data-lesson={lessonKey} data-ids={acts.map((a) => a.id).join(',')} aria-labelledby="la-title">
+    <div class="flex flex-wrap items-center justify-between gap-2">
+      <p id="la-title" class="font-bold">🎮 Learn by doing: {acts.length} activities in this lesson</p>
+      <p class="text-sm"><span class="la-streak"></span> <span class="chip">⭐ Up to {maxXp} XP</span></p>
+    </div>
+    <div class="mt-2 flex items-center gap-3">
+      <div class="bar flex-1" role="progressbar" aria-label="Activities done" aria-valuemin="0" aria-valuemax={acts.length} aria-valuenow="0"><span class="la-fill" style="width:0"></span></div>
+      <span class="la-count text-sm font-semibold">0 of {acts.length} done</span>
+    </div>
+    <ul class="la-list">
+      {acts.map((a) => (
+        <li data-for={a.id}><a href={`#act-${a.id}`} class="la-chip"><span aria-hidden="true">{kindIcon(a)}</span> {a.title}<span class="la-ok" aria-hidden="true"> ✓</span><span class="la-sr sr-only"></span></a></li>
+      ))}
+    </ul>
+    <p class="la-hidden text-sm text-muted" hidden>More activities are waiting in the Full lesson view.</p>
+    <p class="la-master text-sm font-semibold" hidden>🎓 You're a {set!.master}. Every activity in this lesson is done.</p>
+  </aside>
+)}
+<script>
+  import { load, streak } from '../lib/progress';
+  const box = document.querySelector<HTMLElement>('.la');
+  if (box) {
+    const ids = box.dataset.ids!.split(',');
+    const lesson = box.dataset.lesson!;
+    const paint = () => {
+      const s = load();
+      let done = 0;
+      let hidden = 0;
+      ids.forEach((id) => {
+        const ok = Boolean(s.activities[`${lesson}#${id}`]);
+        if (ok) done++;
+        const li = box.querySelector<HTMLElement>(`li[data-for="${id}"]`)!;
+        li.dataset.done = String(ok);
+        li.querySelector('.la-sr')!.textContent = ok ? ' (done)' : '';
+        // In Beginner view some activities sit in hidden sections; hide their chips too.
+        const target = document.getElementById(`act-${id}`);
+        const visible = Boolean(target && target.offsetParent !== null);
+        li.hidden = !visible;
+        if (!visible) hidden++;
+      });
+      box.querySelector<HTMLElement>('.la-fill')!.style.width = `${(done / ids.length) * 100}%`;
+      box.querySelector('[role=progressbar]')!.setAttribute('aria-valuenow', String(done));
+      box.querySelector('.la-count')!.textContent = `${done} of ${ids.length} done`;
+      box.querySelector<HTMLElement>('.la-hidden')!.hidden = hidden === 0;
+      box.querySelector<HTMLElement>('.la-master')!.hidden = !s.mastered[lesson];
+      const st = streak(s);
+      box.querySelector('.la-streak')!.textContent = st > 0 ? `🔥 ${st}-day streak` : '';
+    };
+    paint();
+    window.addEventListener('progress-change', paint);
+    new MutationObserver(paint).observe(document.documentElement, { attributes: true, attributeFilter: ['data-view'] });
+  }
+</script>
+<style>
+  .la { border-radius: 0.85rem; border: 1px solid var(--card-line); background: linear-gradient(135deg, var(--pastel-lilac), var(--pastel-blue)); padding: 0.85rem 1rem; }
+  .la-list { display: flex; flex-wrap: wrap; gap: 0.4rem; margin-top: 0.65rem; }
+  .la-list li[hidden] { display: none; }
+  .la-chip { display: inline-flex; align-items: center; gap: 0.3rem; min-height: 2.25rem; border-radius: 999px; border: 1px solid var(--border); background: var(--card); padding: 0.25rem 0.75rem; font-size: 0.85rem; font-weight: 600; color: var(--text); }
+  .la-chip:hover { border-color: var(--accent); }
+  .la-ok { display: none; color: var(--ok); font-weight: 800; }
+  li[data-done='true'] .la-chip { border-color: var(--ok); background: var(--ok-soft); }
+  li[data-done='true'] .la-ok { display: inline; }
+  .la-hidden, .la-master { margin-top: 0.5rem; }
+</style>

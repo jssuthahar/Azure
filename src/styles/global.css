@@ -747,9 +747,14 @@
     border-radius: inherit;
   }
 
+  /* not earned yet: dim the icon and the card, keep the text readable */
   .badge-tile[data-earned='false'] {
+    border-style: dashed;
+    background: var(--pastel-grey);
+  }
+  .badge-tile[data-earned='false'] > :first-child {
     filter: grayscale(1);
-    opacity: 0.45;
+    opacity: 0.4;
   }
 }
 
@@ -843,3 +848,64 @@
 /* Comfortable tap targets (≥ 24px) for list links in footer and sidebars */
 footer li > a, .page-aside li > a { display: inline-block; padding-block: .2rem; }
 @media (pointer: coarse) { footer li > a, .page-aside li > a { padding-block: .45rem; } }
+
+/* ---------- Interactive learning activities (InteractiveLearningActivity + components/activities/*) ---------- */
+.ila {
+  margin-top: 1.75rem;
+  border: 1px solid var(--card-line);
+  border-top: 5px solid #0078d4;
+  border-radius: 0.9rem;
+  background: var(--card);
+  padding: 1rem 1.1rem 1.1rem;
+  font-size: 1rem;
+  line-height: 1.6;
+  box-shadow: 0 10px 28px -18px rgb(0 90 158 / 0.45);
+}
+.ila[data-kind='predict'] { border-top-color: #8764b8; }
+.ila[data-kind='traffic'] { border-top-color: #107c10; }
+.ila[data-kind='sort'], .ila[data-kind='match'] { border-top-color: #ca5010; }
+.ila[data-kind='challenge'], .ila[data-kind='mission'] { border-top-color: #c19c00; }
+.ila-head { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 0.4rem 0.75rem; }
+.ila-kind { font-size: 0.75rem; font-weight: 800; letter-spacing: 0.1em; text-transform: uppercase; color: var(--accent-deep); }
+.ila-meta { display: inline-flex; flex-wrap: wrap; align-items: center; gap: 0.4rem; font-size: 0.78rem; font-weight: 700; }
+.ila-xp { border-radius: 999px; background: var(--pastel-yellow); padding: 0.1rem 0.6rem; color: var(--text); }
+.ila-best { color: var(--text-muted); }
+.ila-best:empty { display: none; }
+.ila-tick { display: none; border-radius: 999px; background: var(--ok-soft); padding: 0.1rem 0.6rem; color: var(--ok); }
+.ila[data-done='true'] .ila-tick { display: inline-block; }
+.lesson .ila .ila-title, .ila-title { margin-top: 0.35rem; font-size: 1.3rem; font-weight: 700; line-height: 1.3; letter-spacing: -0.01em; }
+.ila-intro { margin-top: 0.3rem; color: var(--text-muted); }
+.ila-label { display: block; font-size: 0.72rem; font-weight: 800; letter-spacing: 0.1em; text-transform: uppercase; color: var(--accent-deep); }
+.ila-scenario { margin-top: 0.85rem; border-radius: 0.65rem; border-left: 4px solid #8764b8; background: var(--pastel-lilac); padding: 0.65rem 0.85rem; }
+.ila-scenario p { margin-top: 0.2rem; }
+.ila-count { margin-top: 0.75rem; font-size: 0.85rem; font-weight: 700; color: var(--text-muted); }
+.ila-q { margin-top: 0.85rem; font-size: 1.05rem; font-weight: 700; line-height: 1.45; }
+.ila-q:focus { outline: none; }
+.ila-q:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; border-radius: 0.25rem; }
+.ila-opts { display: grid; gap: 0.5rem; margin-top: 0.6rem; }
+.ila-opt {
+  display: flex; align-items: flex-start; gap: 0.65rem; width: 100%; min-height: 2.75rem;
+  border: 1.5px solid var(--border); border-radius: 0.75rem; background: var(--bg); color: var(--text);
+  padding: 0.6rem 0.8rem; text-align: left; line-height: 1.45; cursor: pointer; transition: border-color 0.15s, background 0.15s;
+}
+.ila-opt:not(:disabled):hover { border-color: var(--accent); background: var(--accent-soft); }
+.ila-opt:disabled { cursor: default; }
+.ila-letter { display: inline-grid; place-items: center; flex: none; width: 1.6rem; height: 1.6rem; border-radius: 999px; background: var(--bg-subtle); border: 1px solid var(--border); font-size: 0.8rem; font-weight: 800; }
+.ila-opt[data-state='correct'] { border-color: var(--ok); background: var(--ok-soft); }
+.ila-opt[data-state='correct'] .ila-letter { background: var(--ok); border-color: var(--ok); color: var(--bg); }
+.ila-opt[data-state='wrong'] { border-color: var(--bad); background: var(--bad-soft); }
+.ila-opt[data-state='wrong'] .ila-letter { background: var(--bad); border-color: var(--bad); color: var(--bg); }
+.ila-opt[data-state='missed'] { border-color: var(--ok); border-style: dashed; }
+.ila-why { display: block; margin-top: 0.2rem; font-size: 0.88rem; line-height: 1.5; color: var(--text-muted); }
+.ila-why[hidden] { display: none; }
+.ila-feedback { margin-top: 0.75rem; border-radius: 0.65rem; border: 1px solid var(--border); background: var(--bg-subtle); padding: 0.7rem 0.9rem; }
+.ila-verdict { font-weight: 700; }
+.ila-reward { margin-top: 0.75rem; border-radius: 0.65rem; background: var(--pastel-yellow); padding: 0.55rem 0.85rem; font-weight: 700; }
+.ila-reward:empty { margin: 0; padding: 0; } /* stays in the tree so the live region announces */
+.ila [hidden] { display: none !important; }
+.ila button:focus-visible, .ila a:focus-visible, .ila input:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+@media (max-width: 479px) {
+  .ila { padding: 0.85rem 0.8rem 0.95rem; }
+  .lesson .ila .ila-title, .ila-title { font-size: 1.15rem; }
+}
+@media (prefers-reduced-motion: reduce) { .ila-opt { transition: none; } }

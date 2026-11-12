@@ -1,0 +1,123 @@
+---
+/** Match the cards: one situation at a time; pick the idea card it shows. Instant explanation after each pick. */
+import type { MatchActivity } from '../../data/activities';
+interface Props { a: MatchActivity }
+const { a } = Astro.props;
+---
+<div class="mc">
+  <p class="ila-count">Situation <span class="mc-n">1</span> of {a.pairs.length} · <span class="mc-right">0</span> right first time</p>
+  <div class="mc-scn ila-scenario" tabindex="-1"><span class="ila-label">Which characteristic is this?</span><p class="mc-text"></p></div>
+  <div class="mc-deck" role="group" aria-label="Characteristic cards">
+    {a.pairs.map((p, i) => (
+      <button type="button" class="mc-card" data-i={i}>
+        <span class="mc-icon" aria-hidden="true">{p.icon}</span>
+        <span class="mc-term">{p.term}</span>
+        <span class="mc-tick" aria-hidden="true">✓</span>
+      </button>
+    ))}
+  </div>
+  <div class="ila-feedback mc-fb" hidden>
+    <p class="ila-verdict" aria-live="polite"></p>
+    <button type="button" class="btn btn-accent btn-sm mc-next mt-3">Next situation ❯</button>
+  </div>
+  <div class="mc-end ila-feedback" hidden>
+    <p class="mc-score text-lg font-semibold" tabindex="-1"></p>
+    <button type="button" class="btn btn-outline btn-sm mc-again mt-3">↺ Shuffle and play again</button>
+  </div>
+</div>
+
+<script>
+  import { config, esc, finishActivity, nudge } from '../../lib/activities';
+  import { shuffle } from '../../lib/fun';
+  import type { MatchActivity } from '../../data/activities';
+
+  document.querySelectorAll<HTMLElement>('[data-kind="match"]').forEach((root) => {
+    const a = config<MatchActivity>(root);
+    const $ = <T extends HTMLElement>(s: string) => root.querySelector<T>(s)!;
+    const cards = [...root.querySelectorAll<HTMLButtonElement>('.mc-card')];
+    const fb = $('.mc-fb');
+    let order: number[] = [];
+    let step = 0;
+    let right = 0;
+    let locked = false;
+
+    function show() {
+      const p = a.pairs[order[step]];
+      $('.mc-n').textContent = String(step + 1);
+      $('.mc-text').textContent = p.scenario;
+      cards.forEach((c) => (c.dataset.state = c.dataset.matched ? 'matched' : ''));
+      fb.hidden = true;
+      locked = false;
+    }
+    function start() {
+      order = shuffle(a.pairs.map((_, i) => i));
+      step = 0;
+      right = 0;
+      cards.forEach((c) => { delete c.dataset.matched; c.dataset.state = ''; });
+      $('.mc-right').textContent = '0';
+      $('.mc-end').hidden = true;
+      $('.mc-scn').hidden = false;
+      show();
+    }
+
+    cards.forEach((c) =>
+      c.addEventListener('click', () => {
+        if (locked) return;
+        locked = true;
+        const want = order[step];
+        const got = Number(c.dataset.i);
+        const p = a.pairs[want];
+        const ok = got === want;
+        if (ok) right++;
+        $('.mc-right').textContent = String(right);
+        const correct = cards[want];
+        correct.dataset.matched = 'true';
+        correct.dataset.state = 'correct';
+        if (!ok) c.dataset.state = 'wrong';
+        nudge(c, ok);
+        const v = $('.ila-verdict');
+        v.className = `ila-verdict ${ok ? 'verdict-ok' : 'verdict-bad'}`;
+        v.innerHTML = ok
+          ? `✓ Yes: <strong>${esc(p.term)}</strong>. <span class="text-[var(--text)] font-normal">${esc(p.why)}</span>`
+          : `✕ Not this one. <strong>${esc(a.pairs[got].term)}</strong> means ${esc(a.pairs[got].meaning)}. <span class="text-[var(--text)] font-normal">This situation shows <strong>${esc(p.term)}</strong>: ${esc(p.why)}</span>`;
+        $('.mc-next').textContent = step + 1 < order.length ? 'Next situation ❯' : 'See my score';
+        fb.hidden = false;
+      }),
+    );
+    $('.mc-next').addEventListener('click', () => {
+      step++;
+      if (step < order.length) { show(); $('.mc-scn').focus(); return; }
+      fb.hidden = true;
+      $('.mc-scn').hidden = true;
+      const end = $('.mc-end');
+      end.hidden = false;
+      const total = a.pairs.length;
+      const s = $('.mc-score');
+      s.textContent = `${right} of ${total} matched first time.${right === total ? ' 🏆 You know all five characteristics.' : ' Play again to get all five.'}`;
+      s.focus();
+      finishActivity(root, right, total);
+    });
+    $('.mc-again').addEventListener('click', () => { start(); $('.mc-scn').focus(); });
+    start();
+  });
+</script>
+
+<style>
+  .mc-scn { min-height: 6.5rem; }
+  .mc-text { font-size: 1.05rem; font-weight: 600; }
+  .mc-deck { display: grid; gap: 0.5rem; margin-top: 0.75rem; grid-template-columns: repeat(auto-fill, minmax(9.5rem, 1fr)); }
+  .mc-card {
+    position: relative; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 0.3rem; min-height: 6rem;
+    border: 2px solid var(--card-line); border-radius: 0.85rem; background: var(--card); padding: 0.6rem 0.5rem; text-align: center;
+    box-shadow: 0 3px 0 var(--card-line); cursor: pointer; transition: transform 0.15s, border-color 0.15s;
+  }
+  .mc-card:hover { transform: translateY(-2px); border-color: var(--accent); }
+  .mc-icon { font-size: 1.75rem; line-height: 1; }
+  .mc-term { font-size: 0.92rem; font-weight: 700; line-height: 1.25; }
+  .mc-tick { position: absolute; top: 0.35rem; right: 0.45rem; display: none; font-weight: 800; color: var(--ok); }
+  .mc-card[data-matched] .mc-tick { display: block; }
+  .mc-card[data-state='matched'] { border-color: var(--ok); border-style: dashed; }
+  .mc-card[data-state='correct'] { border-color: var(--ok); background: var(--ok-soft); }
+  .mc-card[data-state='wrong'] { border-color: var(--bad); background: var(--bad-soft); }
+  @media (prefers-reduced-motion: reduce) { .mc-card { transition: none; } .mc-card:hover { transform: none; } }
+</style>

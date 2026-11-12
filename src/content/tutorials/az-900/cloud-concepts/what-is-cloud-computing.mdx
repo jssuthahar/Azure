@@ -4,7 +4,7 @@ seoTitle: What is Cloud Computing? Simple Explanation | AZ-900
 description: Cloud computing explained simply, with everyday examples, a real business scenario, interview questions and AZ-900 practice questions with answers.
 answer: >-
   **Cloud computing** is the delivery of computing services (servers, storage, databases, networking, software and analytics) over the internet, on demand. You use what you need, when you need it, and pay for what you use, instead of buying and running your own hardware.
-updated: 2026-11-11
+updated: 2026-11-12
 readingMinutes: 9
 keyTerms:
   - term: Cloud computing
@@ -90,6 +90,8 @@ The obvious fix is "buy more servers". But exams only happen a few days a year. 
 
 </Story>
 
+<Activity id="predict-exam-rush" />
+
 ## Explain it like I'm 10
 
 <Eli10>
@@ -99,6 +101,14 @@ Think about electricity at home. Your family doesn't own a power station. You pl
 **Cloud computing is the same idea for computers.** Instead of buying your own big computers, you borrow them from a company like Microsoft over the internet. Need ten computers for an hour? You get them. Done? Give them back and stop paying.
 
 </Eli10>
+
+<Activity id="check-renting" />
+
+## Simulate it: the festival sale traffic spike
+
+This is the whole idea of cloud computing in one experiment. Same shop, same shoppers, two ways of running the servers. Push the traffic up and see which side survives, then bring it back down and see which side stops paying.
+
+<Activity id="traffic-spike" />
 
 ## The technical explanation
 
@@ -111,6 +121,8 @@ Think about electricity at home. Your family doesn't own a power station. You pl
 - **Analytics and AI**: data warehouses, machine learning, AI services.
 - **Complete software**: email, office apps, CRM (customer relationship management) delivered ready to use.
 
+<Activity id="explore-building-blocks" />
+
 What separates real cloud from an ordinary data centre lease is captured in the widely used NIST definition. It has **five essential characteristics**:
 
 | Characteristic | What it means in practice |
@@ -120,6 +132,8 @@ What separates real cloud from an ordinary data centre lease is captured in the 
 | Resource pooling | The provider shares huge pools of hardware across many customers, keeping each one logically isolated. |
 | Rapid elasticity | Capacity can be added or removed quickly, often automatically. |
 | Measured service | Usage is metered per second, per GB or per request, and you're billed accordingly. |
+
+<Activity id="five-characteristics" />
 
 <Flow
   caption="What happens when you 'create a server' in the cloud"
@@ -162,6 +176,8 @@ For architects the key mental shift is this. Hardware becomes a **programmable, 
 
 The same pattern shows up everywhere: a food delivery app at dinner time, a shopping site on sale day, a bank's month-end batch jobs. The business problem is always some mix of "we need capacity fast", "we do not want to pay for idle machines" and "we do not want to run a datacenter".
 
+<Activity id="real-world-problems" />
+
 ## Visual: owning vs renting computers
 
 <Compare
@@ -171,6 +187,8 @@ The same pattern shows up everywhere: a food delivery app at dinner time, a shop
     { title: 'Rent it (cloud)', icon: '☁️', tone: 'accent', items: ['No up-front hardware cost', 'Ready in minutes', 'Provider runs the datacenter', 'Scale up and down on demand', 'Provider replaces failed hardware'] },
   ]}
 />
+
+<Activity id="own-or-rent" />
 
 ## When to use it and when not to
 
@@ -193,3 +211,11 @@ The same pattern shows up everywhere: a food delivery app at dinner time, a shop
     '**Edge or on-premises extensions** such as Azure Arc or Azure Local for workloads that must stay on site.',
   ]}
 />
+
+## Simulate it: Cloud Expert Challenge
+
+You've seen the problem, run the experiment and sorted the ideas. Now prove it against the clock, then plan a real system the way an architect would.
+
+<Activity id="cloud-expert-challenge" />
+
+<Activity id="architect-mission" />

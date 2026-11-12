@@ -99,7 +99,7 @@ import Mascot from './Mascot.astro';
     const sel = 'h1, .answer-box p, .lesson h2, .lesson h3, .lesson p, .lesson li, .lesson dd';
     return [...root.querySelectorAll<HTMLElement>(sel)].filter((el) => {
       if (el.offsetParent === null) return false; // hidden (e.g. full-only in Beginner view, closed details)
-      if (el.closest('.opt, figure svg, .kc, .exercise-box, details:not([open]), nav, .lesson-tools, table')) return false;
+      if (el.closest('.opt, figure svg, .kc, .exercise-box, .ila, .la, details:not([open]), nav, .lesson-tools, table')) return false;
       if (el.matches('li') && el.querySelector('p')) return false; // read the inner <p> instead
       return readableText(el).length > 1;
     });

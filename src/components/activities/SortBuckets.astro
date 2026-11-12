@@ -1,0 +1,202 @@
+---
+/**
+ * Drag and drop challenge. Three ways to play, all equal:
+ *  - mouse or pen: drag a card onto a box
+ *  - touch: press and hold a card, then drag (a quick tap selects instead, so the page still scrolls)
+ *  - tap or keyboard: select a card (Enter/Space), then press a box's button
+ * Every placement gets instant feedback with the reason; a wrong card moves to the right box.
+ */
+import type { SortActivity } from '../../data/activities';
+interface Props { a: SortActivity }
+const { a } = Astro.props;
+---
+<div class="srt">
+  <p class="ila-count"><span class="srt-left">{a.items.length}</span> cards left · <span class="srt-right">0</span> right first time</p>
+  <div class="srt-pool" role="group" aria-label="Cards to sort">
+    {a.items.map((it, i) => <button type="button" class="srt-card" data-i={i} aria-pressed="false">{it.text}</button>)}
+  </div>
+  <p class="srt-feedback" aria-live="polite">Pick a card to start.</p>
+  <div class="srt-buckets" style={`--n:${a.buckets.length}`}>
+    {a.buckets.map((b, bi) => (
+      <div class="srt-bucket" data-b={bi}>
+        <button type="button" class="srt-drop" data-b={bi}><span aria-hidden="true">{b.icon}</span> {b.label}<span class="sr-only">: put the selected card here</span></button>
+        <ul class="srt-list" aria-label={`Cards in ${b.label}`}></ul>
+      </div>
+    ))}
+  </div>
+  <div class="srt-end ila-feedback" hidden>
+    <p class="srt-score text-lg font-semibold" tabindex="-1"></p>
+    <button type="button" class="btn btn-outline btn-sm srt-again mt-3">↺ Shuffle and try again</button>
+  </div>
+</div>
+
+<script>
+  import { config, esc, finishActivity, nudge } from '../../lib/activities';
+  import { shuffle } from '../../lib/fun';
+  import type { SortActivity } from '../../data/activities';
+
+  document.querySelectorAll<HTMLElement>('[data-kind="sort"]').forEach((root) => {
+    const a = config<SortActivity>(root);
+    const pool = root.querySelector<HTMLElement>('.srt-pool')!;
+    const fb = root.querySelector<HTMLElement>('.srt-feedback')!;
+    const end = root.querySelector<HTMLElement>('.srt-end')!;
+    const cards = () => [...pool.querySelectorAll<HTMLButtonElement>('.srt-card')];
+    let selected: HTMLButtonElement | null = null;
+    let right = 0;
+
+    const order = () => shuffle(cards()).forEach((c) => pool.append(c));
+    const select = (c: HTMLButtonElement | null) => {
+      cards().forEach((x) => x.setAttribute('aria-pressed', String(x === c)));
+      selected = c;
+      if (c) fb.textContent = `Selected “${c.textContent}”. Now choose a box.`;
+    };
+    const counts = () => {
+      root.querySelector('.srt-left')!.textContent = String(cards().length);
+      root.querySelector('.srt-right')!.textContent = String(right);
+    };
+
+    function place(card: HTMLButtonElement, b: number) {
+      const it = a.items[Number(card.dataset.i)];
+      const ok = it.bucket === b;
+      if (ok) right++;
+      const li = document.createElement('li');
+      li.className = 'srt-placed';
+      li.dataset.state = ok ? 'correct' : 'moved';
+      li.innerHTML = `<span class="font-semibold">${ok ? '✓' : '↪'} ${esc(it.text)}</span><span class="ila-why block">${esc(it.why)}</span>`;
+      const list = root.querySelector<HTMLElement>(`.srt-bucket[data-b="${it.bucket}"] .srt-list`)!;
+      list.append(li);
+      nudge(ok ? li : root.querySelector(`.srt-bucket[data-b="${b}"]`)!, ok);
+      fb.innerHTML = ok
+        ? `<span class="verdict-ok font-semibold">✓ Right.</span> ${esc(it.why)}`
+        : `<span class="verdict-bad font-semibold">✕ Not quite. “${esc(it.text)}” belongs in ${esc(a.buckets[it.bucket].label)}.</span> ${esc(it.why)}`;
+      const idx = cards().indexOf(card);
+      card.remove();
+      selected = null;
+      counts();
+      const rest = cards();
+      if (rest.length) {
+        rest[Math.min(idx, rest.length - 1)].focus({ preventScroll: true });
+        return;
+      }
+      end.hidden = false;
+      const total = a.items.length;
+      const s = end.querySelector<HTMLElement>('.srt-score')!;
+      s.textContent = `${right} of ${total} right first time.${right === total ? ' 🏆 Perfect sort!' : ' Read the moved cards, then try again.'}`;
+      finishActivity(root, right, total);
+    }
+
+    root.querySelectorAll<HTMLButtonElement>('.srt-drop').forEach((d) =>
+      d.addEventListener('click', () => {
+        if (!selected) { fb.textContent = 'Pick a card first, then choose its box.'; return; }
+        place(selected, Number(d.dataset.b));
+      }),
+    );
+
+    /* Drag with pointer events: instant for mouse and pen, press-and-hold for touch. */
+    let drag: { card: HTMLButtonElement; ghost: HTMLElement | null; x: number; y: number; ready: boolean; hold: number; pointer: number } | null = null;
+    const bucketAt = (x: number, y: number) => document.elementFromPoint(x, y)?.closest<HTMLElement>('.srt-bucket') ?? null;
+    const hover = (el: HTMLElement | null) => root.querySelectorAll<HTMLElement>('.srt-bucket').forEach((b) => b.classList.toggle('srt-over', b === el));
+    const startGhost = () => {
+      if (!drag) return;
+      drag.ready = true;
+      const g = drag.card.cloneNode(true) as HTMLElement;
+      const r = drag.card.getBoundingClientRect();
+      g.className = 'srt-card srt-ghost';
+      g.style.width = `${r.width}px`;
+      g.style.left = `${drag.x - r.width / 2}px`;
+      g.style.top = `${drag.y - r.height / 2}px`;
+      document.body.append(g);
+      drag.ghost = g;
+      drag.card.classList.add('srt-dragging');
+      select(drag.card);
+    };
+    pool.addEventListener('pointerdown', (e) => {
+      const card = (e.target as HTMLElement).closest<HTMLButtonElement>('.srt-card');
+      if (!card || e.button !== 0) return;
+      drag = { card, ghost: null, x: e.clientX, y: e.clientY, ready: false, hold: 0, pointer: e.pointerId };
+      if (e.pointerType === 'touch') drag.hold = window.setTimeout(startGhost, 220);
+    });
+    window.addEventListener('pointermove', (e) => {
+      if (!drag || e.pointerId !== drag.pointer) return;
+      const moved = Math.hypot(e.clientX - drag.x, e.clientY - drag.y);
+      if (!drag.ready) {
+        if (e.pointerType === 'touch') { if (moved > 8) { clearTimeout(drag.hold); drag = null; } return; }
+        if (moved < 6) return;
+        startGhost();
+      }
+      const g = drag.ghost!;
+      g.style.transform = `translate(${e.clientX - drag.x}px, ${e.clientY - drag.y}px)`;
+      hover(bucketAt(e.clientX, e.clientY));
+    });
+    // Once a touch drag has started, stop the page from scrolling under the finger.
+    window.addEventListener('touchmove', (e) => { if (drag?.ready) e.preventDefault(); }, { passive: false });
+    const endDrag = (e: PointerEvent, cancel = false) => {
+      if (!drag || e.pointerId !== drag.pointer) return;
+      clearTimeout(drag.hold);
+      const d = drag;
+      drag = null;
+      if (!d.ready) return; // a plain click: handled by the click listener
+      d.ghost?.remove();
+      d.card.classList.remove('srt-dragging');
+      hover(null);
+      const b = cancel ? null : bucketAt(e.clientX, e.clientY);
+      // The click that follows a drag must not toggle the selection again.
+      suppressClick = true;
+      setTimeout(() => (suppressClick = false), 0);
+      if (b) place(d.card, Number(b.dataset.b));
+    };
+    let suppressClick = false;
+    window.addEventListener('pointerup', (e) => endDrag(e));
+    window.addEventListener('pointercancel', (e) => endDrag(e, true));
+    pool.addEventListener('click', (e) => {
+      const card = (e.target as HTMLElement).closest<HTMLButtonElement>('.srt-card');
+      if (!card) return;
+      if (suppressClick) return;
+      select(selected === card ? null : card);
+    });
+    pool.addEventListener('contextmenu', (e) => { if ((e.target as HTMLElement).closest('.srt-card')) e.preventDefault(); });
+
+    end.querySelector('.srt-again')!.addEventListener('click', () => {
+      root.querySelectorAll('.srt-list').forEach((l) => (l.innerHTML = ''));
+      const fresh = a.items.map((it, i) => {
+        const b = document.createElement('button');
+        b.type = 'button';
+        b.className = 'srt-card';
+        b.dataset.i = String(i);
+        b.setAttribute('aria-pressed', 'false');
+        b.textContent = it.text;
+        return b;
+      });
+      pool.replaceChildren(...fresh);
+      right = 0;
+      end.hidden = true;
+      order();
+      counts();
+      fb.textContent = 'Pick a card to start.';
+      cards()[0]?.focus();
+    });
+    order();
+  });
+</script>
+
+<style>
+  .srt-pool { display: flex; flex-wrap: wrap; gap: 0.5rem; margin-top: 0.75rem; min-height: 2.5rem; }
+  :global(.srt-card) {
+    min-height: 2.75rem; border: 1.5px solid var(--accent); border-radius: 0.6rem; background: var(--card); color: var(--text);
+    padding: 0.5rem 0.85rem; font-size: 0.95rem; font-weight: 600; line-height: 1.35; text-align: left; cursor: grab;
+    box-shadow: 0 2px 0 var(--accent-soft); user-select: none; -webkit-user-select: none; -webkit-touch-callout: none;
+  }
+  :global(.srt-card[aria-pressed='true']) { background: var(--accent); color: #fff; box-shadow: 0 0 0 3px var(--accent-soft); }
+  :global(.srt-card.srt-dragging) { opacity: 0.35; }
+  :global(.srt-ghost) { position: fixed; z-index: 210; pointer-events: none; cursor: grabbing; background: var(--accent); color: #fff; box-shadow: 0 12px 28px -8px rgb(0 0 0 / 0.35); }
+  .srt-feedback { margin-top: 0.75rem; min-height: 1.6em; font-size: 0.95rem; line-height: 1.55; }
+  .srt-buckets { display: grid; gap: 0.75rem; margin-top: 0.75rem; grid-template-columns: repeat(var(--n), minmax(0, 1fr)); }
+  @media (max-width: 479px) { .srt-buckets { grid-template-columns: 1fr; } }
+  .srt-bucket { border: 2px dashed var(--border); border-radius: 0.75rem; background: var(--bg-subtle); padding: 0.5rem; min-height: 7rem; transition: border-color 0.15s, background 0.15s; }
+  .srt-bucket.srt-over { border-color: var(--accent); border-style: solid; background: var(--accent-soft); }
+  .srt-drop { display: flex; width: 100%; min-height: 2.75rem; align-items: center; justify-content: center; gap: 0.4rem; border-radius: 0.5rem; background: var(--navy-band); color: #fff; font-weight: 700; padding: 0.4rem 0.6rem; }
+  .srt-drop:hover { background: #0078d4; }
+  .srt-list { display: grid; gap: 0.4rem; margin-top: 0.5rem; }
+  :global(.srt-placed) { border-radius: 0.5rem; border: 1.5px solid var(--ok); background: var(--ok-soft); padding: 0.4rem 0.6rem; font-size: 0.9rem; line-height: 1.4; }
+  :global(.srt-placed[data-state='moved']) { border-color: var(--bad); border-style: dashed; background: var(--card); }
+</style>

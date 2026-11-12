@@ -1,0 +1,109 @@
+---
+/**
+ * Final mission: the learner writes a short plan for a business brief, then
+ * sees a model answer per question and ticks the points they covered.
+ * Nothing typed leaves the browser and nothing is stored.
+ */
+import type { MissionActivity } from '../../data/activities';
+interface Props { a: MissionActivity }
+const { a } = Astro.props;
+const uid = `ms-${a.id}`;
+---
+<div class="ms">
+  <div class="ila-scenario ms-brief"><span class="ila-label">Your brief</span><p>{a.brief}</p></div>
+  <form class="ms-form" novalidate>
+    <ol class="ms-tasks">
+      {a.tasks.map((t, i) => (
+        <li class="ms-task">
+          <label for={`${uid}-${i}`} class="ms-prompt"><span class="ms-num">{i + 1}</span> {t.prompt}</label>
+          <textarea id={`${uid}-${i}`} class="ms-input" rows="3" placeholder="Your answer, in your own words"></textarea>
+          <div class="ms-model" hidden>
+            <p class="ila-label">Model answer</p>
+            <p>{t.model}</p>
+            <fieldset class="ms-points">
+              <legend class="text-sm font-semibold">Did your answer cover these? Tick what you got.</legend>
+              {t.points.map((p) => <label class="ms-point"><input type="checkbox" /> <span>{p}</span></label>)}
+            </fieldset>
+          </div>
+        </li>
+      ))}
+    </ol>
+    <p class="ms-nudge" aria-live="polite"></p>
+    <div class="mt-3 flex flex-wrap gap-2">
+      <button type="submit" class="btn btn-accent ms-submit">Submit my plan</button>
+      <button type="button" class="btn btn-accent ms-finish" hidden>✓ Finish mission</button>
+      <button type="button" class="btn btn-outline ms-reset" hidden>↺ Start over</button>
+    </div>
+  </form>
+  <p class="ms-result text-lg font-semibold" tabindex="-1" aria-live="polite"></p>
+</div>
+
+<script>
+  import { finishActivity } from '../../lib/activities';
+
+  document.querySelectorAll<HTMLElement>('[data-kind="mission"]').forEach((root) => {
+    const form = root.querySelector<HTMLFormElement>('.ms-form')!;
+    const inputs = [...root.querySelectorAll<HTMLTextAreaElement>('.ms-input')];
+    const nudgeEl = root.querySelector<HTMLElement>('.ms-nudge')!;
+    const submit = root.querySelector<HTMLButtonElement>('.ms-submit')!;
+    const finish = root.querySelector<HTMLButtonElement>('.ms-finish')!;
+    const reset = root.querySelector<HTMLButtonElement>('.ms-reset')!;
+    const result = root.querySelector<HTMLElement>('.ms-result')!;
+    let warned = false;
+
+    form.addEventListener('submit', (e) => {
+      e.preventDefault();
+      const written = inputs.filter((t) => t.value.trim().length > 0).length;
+      if (written === 0 && !warned) {
+        warned = true;
+        nudgeEl.textContent = 'Give it a go first. Even one line per question helps you remember. Press Submit again to see the model answer anyway.';
+        inputs[0].focus();
+        return;
+      }
+      nudgeEl.textContent = '';
+      root.querySelectorAll<HTMLElement>('.ms-model').forEach((m) => (m.hidden = false));
+      inputs.forEach((t) => (t.readOnly = true));
+      submit.hidden = true;
+      finish.hidden = false;
+      root.querySelector<HTMLElement>('.ms-model')?.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+    });
+    finish.addEventListener('click', () => {
+      const boxes = [...root.querySelectorAll<HTMLInputElement>('.ms-point input')];
+      const got = boxes.filter((b) => b.checked).length;
+      boxes.forEach((b) => (b.disabled = true));
+      finish.hidden = true;
+      reset.hidden = false;
+      const pct = Math.round((got / boxes.length) * 100);
+      result.textContent = `Mission complete: you covered ${got} of ${boxes.length} key points (${pct}%). ${pct >= 75 ? '🚀 You think like a cloud architect.' : 'Read the model answers once more, then try again.'}`;
+      result.focus();
+      finishActivity(root, got, boxes.length);
+    });
+    reset.addEventListener('click', () => {
+      form.reset();
+      inputs.forEach((t) => (t.readOnly = false));
+      root.querySelectorAll<HTMLInputElement>('.ms-point input').forEach((b) => (b.disabled = false));
+      root.querySelectorAll<HTMLElement>('.ms-model').forEach((m) => (m.hidden = true));
+      submit.hidden = false;
+      reset.hidden = true;
+      result.textContent = '';
+      warned = false;
+      inputs[0].focus();
+    });
+  });
+</script>
+
+<style>
+  .ms-tasks { display: grid; gap: 0.85rem; margin-top: 0.85rem; }
+  .ms-task { border-radius: 0.75rem; border: 1px solid var(--card-line); background: var(--bg); padding: 0.75rem 0.85rem; }
+  .ms-prompt { display: flex; align-items: flex-start; gap: 0.5rem; font-weight: 700; line-height: 1.4; }
+  .ms-num { display: inline-grid; place-items: center; flex: none; width: 1.6rem; height: 1.6rem; border-radius: 999px; background: #0078d4; color: #fff; font-size: 0.85rem; }
+  .ms-input { display: block; width: 100%; margin-top: 0.5rem; border: 1.5px solid var(--border); border-radius: 0.5rem; background: var(--card); color: var(--text); padding: 0.55rem 0.7rem; font-size: 16px; line-height: 1.5; resize: vertical; }
+  .ms-input:focus { outline: 2px solid var(--accent); outline-offset: 1px; }
+  .ms-model { margin-top: 0.6rem; border-left: 4px solid var(--ok); border-radius: 0.5rem; background: var(--pastel-green); padding: 0.6rem 0.8rem; line-height: 1.55; }
+  .ms-points { margin-top: 0.5rem; display: grid; gap: 0.25rem; }
+  .ms-point { display: flex; align-items: center; gap: 0.5rem; min-height: 2.25rem; cursor: pointer; }
+  .ms-point input { width: 1.15rem; height: 1.15rem; flex: none; accent-color: var(--ok); }
+  .ms-nudge { margin-top: 0.5rem; color: var(--warn); font-weight: 600; }
+  .ms-nudge:empty, .ms-result:empty { display: none; }
+  .ms-result { margin-top: 0.75rem; }
+</style>
