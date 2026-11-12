@@ -125,6 +125,7 @@ const jsonLd = JSON.stringify({ '@context': 'https://schema.org', '@graph': grap
         let v = null;
         try { v = localStorage.getItem('lesson-view'); } catch {}
         document.documentElement.dataset.view = v || 'simple';
+        try { if (localStorage.getItem('msdb-nav-rail') === '1') document.documentElement.dataset.nav = 'rail'; } catch {}
         document.documentElement.classList.add('js');
       })();
     </script>

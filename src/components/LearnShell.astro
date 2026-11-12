@@ -12,8 +12,7 @@ const { nav, currentKey } = Astro.props;
 const hasAside = Astro.slots.has('aside');
 ---
 <div class="lg:flex">
-  <aside id="lesson-menu" class="side-w3 fixed inset-y-0 left-0 z-[60] w-[17rem] -translate-x-full overflow-y-auto border-r border-default shadow-xl transition-transform lg:sticky lg:top-[var(--header-h)] lg:z-auto lg:h-[calc(100dvh-var(--header-h))] lg:translate-x-0 lg:shadow-none" aria-label="Lesson menu">
-    <button type="button" data-menu-close class="absolute top-3 right-3 rounded-md p-1.5 text-xl leading-none hover:bg-[var(--side-hover)] lg:hidden" aria-label="Close menu">✕</button>
+  <aside id="lesson-menu" class="side-w3 fixed inset-y-0 left-0 z-[60] w-[18rem] -translate-x-full overflow-y-auto overscroll-contain border-r border-default shadow-xl transition-[transform,width] duration-300 lg:sticky lg:top-[var(--header-h)] lg:z-auto lg:h-[calc(100dvh-var(--header-h))] lg:translate-x-0 lg:shadow-none" aria-label="Lesson menu">
     <Sidebar nav={nav} currentKey={currentKey} />
   </aside>
   <div id="menu-scrim" data-menu-close class="fixed inset-0 z-[55] hidden bg-black/40 lg:hidden"></div>
@@ -21,12 +20,12 @@ const hasAside = Astro.slots.has('aside');
   <div class="min-w-0 flex-1">
     <div class="sticky top-[var(--header-h)] z-40 border-b border-default bg-[var(--side-bg)] px-4 py-2 lg:hidden">
       <button type="button" id="menu-open" class="flex items-center gap-2 text-sm font-semibold" aria-controls="lesson-menu" aria-expanded="false">
-        <span class="text-lg leading-none" aria-hidden="true">☰</span> AZ-900 lessons
+        <span class="text-lg leading-none" aria-hidden="true">☰</span> AZ-900 lessons <span class="font-normal text-muted">· tap to browse</span>
       </button>
     </div>
     <div class="flex gap-10 px-4 py-6 sm:px-8 lg:py-8">
       <div class="min-w-0 flex-1"><slot /></div>
-      {hasAside && <aside class="hidden w-56 shrink-0 xl:block"><div class="sticky top-[calc(var(--header-h)+2rem)]"><slot name="aside" /></div></aside>}
+      {hasAside && <aside class="page-aside hidden w-56 shrink-0 xl:block"><div class="sticky top-[calc(var(--header-h)+2rem)]"><slot name="aside" /></div></aside>}
     </div>
   </div>
 </div>
@@ -44,5 +43,5 @@ const hasAside = Astro.slots.has('aside');
   document.addEventListener('keydown', (e) => e.key === 'Escape' && set(false));
   // Keep the current lesson in view inside the long menu.
   const current = menu?.querySelector<HTMLElement>('[aria-current="page"]');
-  if (menu && current) menu.scrollTop = current.offsetTop - menu.clientHeight / 2;
+  if (menu && current) menu.scrollTop = Math.max(0, current.getBoundingClientRect().top - menu.getBoundingClientRect().top - menu.clientHeight / 2);
 </script>

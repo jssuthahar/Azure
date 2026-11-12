@@ -1,73 +1,261 @@
 ---
+/**
+ * Lesson menu: collapsible domain sections (smooth open/close, remembered),
+ * per-domain progress, a quick filter, expand/collapse all, and a desktop
+ * "rail" mode that hides the menu to give the lesson more room.
+ */
 import type { NavTopic } from '../lib/learn';
 import { MODULES } from '../data/az-900/syllabus';
 
 interface Props { nav: NavTopic[]; currentKey?: string }
 const { nav, currentKey } = Astro.props;
+const published = nav.filter((t) => t.published);
+const current = nav.find((t) => t.key === currentKey);
+const position = current ? published.findIndex((t) => t.key === currentKey) + 1 : 0;
+const practice = [
+  { icon: '🧪', label: 'Practice labs', href: '/az-900/labs/' },
+  { icon: '⏱', label: 'Mock exam', href: '/az-900/mock-exam/' },
+  { icon: '🏆', label: 'Certificate', href: '/certificate/' },
+  { icon: '🃏', label: 'Revision flashcards', href: '/az-900/revision/' },
+  { icon: '🎤', label: 'Interview questions', href: '/az-900/interview/' },
+];
 ---
-<nav class="syllabus side-w3 text-[0.95rem]" aria-label="AZ-900 lessons">
-  <div class="flex items-center justify-between pt-5 pr-14 pb-2 pl-4 lg:pr-4">
-    <a href="/az-900/" class="text-xl font-semibold">AZ-900 Tutorial</a>
-    <span class="chip" title="Topics completed" data-progress-total>0%</span>
-  </div>
-  {MODULES.map((m) => {
-    const topics = nav.filter((t) => t.module.slug === m.slug);
-    return (
-      <div class="pb-3">
-        <a href={`/az-900/${m.slug}/`} class="block px-4 pt-4 pb-1.5 text-[0.8rem] font-bold tracking-wide uppercase text-muted hover:text-[var(--accent-deep)]">
-          {m.domain}. {m.shortTitle} <span class="font-normal normal-case">· {m.weight}</span>
-        </a>
-        <ul>
-          {topics.map((t) =>
-            t.published ? (
-              <li>
-                <a href={t.url} data-topic-key={t.key} aria-current={t.key === currentKey ? 'page' : undefined} class="side-link flex items-center gap-2.5 px-4 py-[0.4rem] leading-snug">
-                  <span class="topic-dot" aria-hidden="true">✓</span>
-                  <span class="min-w-0">{t.title}</span>
-                </a>
-              </li>
-            ) : (
-              <li class="flex items-center gap-2.5 px-4 py-[0.4rem] leading-snug text-muted opacity-70" title="Lesson coming soon">
-                <span class="topic-dot opacity-50" aria-hidden="true"></span>
-                <span class="min-w-0">{t.title}</span>
-                <span class="ml-auto shrink-0 text-[0.65rem] tracking-wide uppercase">soon</span>
-              </li>
-            ),
-          )}
-        </ul>
+<nav class="sb" aria-label="AZ-900 lessons" data-current-module={current?.module.slug ?? ''}>
+  <!-- full menu -->
+  <div class="sb-full">
+    <div class="sb-top">
+    <div class="sb-head">
+      <a href="/az-900/" class="sb-title">AZ-900 Tutorial</a>
+      <button type="button" class="sb-icon-btn sb-hide-btn" data-sb-rail aria-label="Hide lesson menu" title="Hide menu (more room to read)">«</button>
+      <button type="button" class="sb-icon-btn sb-close-btn" data-menu-close aria-label="Close menu">✕</button>
+    </div>
+    <div class="sb-overall">
+      <div class="sb-overall-row">
+        <span>{position ? <>Lesson <strong>{position}</strong> of {published.length}</> : <>{published.length} lessons</>}</span>
+        <span class="sb-pct" data-progress-total>0%</span>
       </div>
-    );
-  })}
-  <div class="border-t border-default px-4 py-4 text-sm">
-    <p class="mb-2 text-[0.8rem] font-bold tracking-wide uppercase text-muted">Practice</p>
-    <ul class="space-y-1">
-      <li><a class="text-accent hover:underline" href="/az-900/labs/">🧪 Practice labs (simulator)</a></li>
-      <li><a class="text-accent hover:underline" href="/az-900/mock-exam/">⏱ Mock exam</a></li>
-      <li><a class="text-accent hover:underline" href="/az-900/interview/">🎤 Interview questions</a></li>
-      <li><a class="text-accent hover:underline" href="/az-900/revision/">🃏 Revision flashcards</a></li>
-    </ul>
+      <div class="sb-bar" aria-hidden="true"><span data-progress-bar></span></div>
+    </div>
+    <div class="sb-tools">
+      <label class="sb-search"><span aria-hidden="true">🔍</span><span class="sr-only">Find a lesson</span><input type="search" data-sb-filter placeholder="Find a lesson…" autocomplete="off" /></label>
+      <button type="button" class="sb-text-btn" data-sb-all aria-label="Expand all sections">Expand all</button>
+    </div>
+    </div>
+    <p class="sb-empty" data-sb-none hidden>No lessons match.</p>
+
+    {MODULES.map((m) => {
+      const topics = nav.filter((t) => t.module.slug === m.slug);
+      const pub = topics.filter((t) => t.published);
+      const open = current?.module.slug === m.slug;
+      let n = 0;
+      return (
+        <section class="sb-sec" data-sec={m.slug} data-open={open ? '' : undefined}>
+          <button type="button" class="sb-sec-btn" aria-expanded={open ? 'true' : 'false'} aria-controls={`sb-${m.slug}`}>
+            <span class="sb-num" aria-hidden="true">{m.domain}</span>
+            <span class="sb-sec-txt">
+              <span class="sb-sec-name">{m.shortTitle}</span>
+              <span class="sb-sec-meta">{m.weight} of exam · <span data-sec-count>0</span>/{pub.length} done</span>
+              <span class="sb-sec-bar" aria-hidden="true"><span data-sec-bar></span></span>
+            </span>
+            <span class="sb-chev" aria-hidden="true">⌄</span>
+          </button>
+          <div class="sb-sec-body" id={`sb-${m.slug}`} role="region" aria-label={m.shortTitle}>
+            <div class="sb-sec-inner">
+              <a href={`/az-900/${m.slug}/`} class="sb-overview">Module overview ›</a>
+              <ol class="sb-list">
+                {topics.map((t) => t.published ? (
+                  <li data-title={t.title.toLowerCase()}>
+                    <a href={t.url} class="sb-link" data-topic-key={t.key} aria-current={t.key === currentKey ? 'page' : undefined}>
+                      <span class="sb-dot" aria-hidden="true"><span class="sb-n">{++n}</span><span class="sb-tick">✓</span></span>
+                      <span class="sb-label">{t.title}</span>
+                    </a>
+                  </li>
+                ) : (
+                  <li class="sb-soon" data-title={t.title.toLowerCase()} title="Lesson coming soon"><span class="sb-dot" aria-hidden="true"></span><span class="sb-label">{t.title}</span><span class="sb-soon-tag">soon</span></li>
+                ))}
+              </ol>
+            </div>
+          </div>
+        </section>
+      );
+    })}
+
+    <section class="sb-sec sb-practice" data-sec="practice" data-open>
+      <button type="button" class="sb-sec-btn" aria-expanded="true" aria-controls="sb-practice">
+        <span class="sb-num" aria-hidden="true">★</span>
+        <span class="sb-sec-txt"><span class="sb-sec-name">Practice & exam</span><span class="sb-sec-meta">Labs, mock exam, certificate</span></span>
+        <span class="sb-chev" aria-hidden="true">⌄</span>
+      </button>
+      <div class="sb-sec-body" id="sb-practice"><div class="sb-sec-inner">
+        <ul class="sb-list">{practice.map((p) => <li data-title={p.label.toLowerCase()}><a href={p.href} class="sb-link"><span class="sb-dot sb-emoji" aria-hidden="true">{p.icon}</span><span class="sb-label">{p.label}</span></a></li>)}</ul>
+      </div></div>
+    </section>
+  </div>
+
+  <!-- slim rail (desktop, when the menu is hidden) -->
+  <div class="sb-rail">
+    <button type="button" class="sb-icon-btn" data-sb-rail aria-label="Show lesson menu" title="Show lesson menu">»</button>
+    <span class="sb-rail-pct" data-progress-total>0%</span>
+    {MODULES.map((m) => (
+      <button type="button" class="sb-rail-dom" data-sb-open={m.slug} title={`${m.domain}. ${m.shortTitle}`} aria-label={`Open ${m.shortTitle}`} data-current={current?.module.slug === m.slug ? '' : undefined}>{m.domain}</button>
+    ))}
+    <span class="sb-rail-sep" aria-hidden="true"></span>
+    {practice.map((p) => <a href={p.href} class="sb-rail-link" title={p.label} aria-label={p.label}>{p.icon}</a>)}
   </div>
 </nav>
+
+<style is:global>
+  .sb { font-size: .95rem; }
+  .sb-top { position: sticky; top: 0; z-index: 2; background: var(--side-bg); border-bottom: 1px solid var(--border); box-shadow: 0 6px 12px -10px rgb(0 30 60 / .35); }
+  .sb-head { display: flex; align-items: center; justify-content: space-between; gap: .5rem; padding: 1rem .75rem .35rem 1rem; }
+  .sb-head .sb-close-btn { display: grid; }
+  @media (min-width: 1024px) { .sb-head .sb-close-btn { display: none; } }
+  .sb-top + .sb-empty + .sb-sec, .sb-top + .sb-empty[hidden] + .sb-sec { border-top: 0; }
+  .sb-title { font-size: 1.2rem; font-weight: 700; }
+  .sb-icon-btn { display: grid; place-items: center; width: 2rem; height: 2rem; border-radius: 8px; border: 1px solid var(--border); background: var(--bg); font-size: 1.05rem; font-weight: 700; color: var(--text-muted); }
+  .sb-icon-btn:hover { color: var(--accent); border-color: var(--accent); }
+  .sb-hide-btn { display: none; }
+  @media (min-width: 1024px) { .sb-hide-btn { display: grid; } }
+  .sb-overall { padding: .2rem 1rem .6rem; font-size: .82rem; color: var(--text-muted); }
+  .sb-overall-row { display: flex; justify-content: space-between; align-items: center; }
+  .sb-pct { font-weight: 700; color: var(--accent); }
+  .sb-bar, .sb-sec-bar { display: block; height: 6px; margin-top: .35rem; border-radius: 999px; background: var(--side-hover); overflow: hidden; }
+  .sb-bar > span, .sb-sec-bar > span { display: block; height: 100%; width: 0; border-radius: inherit; background: linear-gradient(90deg, #0078d4, #107c10); transition: width .4s; }
+  .sb-sec-bar { height: 4px; margin-top: .3rem; }
+  .sb-tools { display: flex; gap: .4rem; align-items: center; padding: .2rem 1rem .6rem; }
+  .sb-search { flex: 1; display: flex; align-items: center; gap: .35rem; min-width: 0; padding: .35rem .6rem; border-radius: 8px; border: 1px solid var(--border); background: var(--bg); font-size: .85rem; }
+  .sb-search:focus-within { border-color: var(--accent); }
+  .sb-search input { flex: 1; min-width: 0; background: transparent; outline: 0; }
+  .sb-text-btn { flex: none; font-size: .78rem; font-weight: 600; color: var(--accent); padding: .35rem .3rem; border-radius: 6px; }
+  .sb-text-btn:hover { background: var(--side-hover); }
+  .sb-empty { padding: .5rem 1rem; font-size: .85rem; color: var(--text-muted); }
+  .sb-sec { border-top: 1px solid var(--border); }
+  .sb-sec-btn { display: flex; width: 100%; align-items: center; gap: .65rem; padding: .7rem .9rem .7rem 1rem; text-align: left; }
+  .sb-sec-btn:hover { background: var(--side-hover); }
+  .sb-num { flex: none; display: grid; place-items: center; width: 1.9rem; height: 1.9rem; border-radius: 10px; background: #0078d4; color: #fff; font-weight: 800; font-size: .9rem; }
+  .sb-practice .sb-num { background: #c19c00; }
+  .sb-sec-txt { flex: 1; min-width: 0; display: block; }
+  .sb-sec-name { display: block; font-weight: 700; line-height: 1.25; }
+  .sb-sec-meta { display: block; font-size: .75rem; color: var(--text-muted); margin-top: .1rem; }
+  .sb-chev { flex: none; font-size: 1.1rem; color: var(--text-muted); transition: transform .25s; transform: rotate(-90deg); }
+  .sb-sec[data-open] .sb-chev { transform: rotate(0deg); }
+  .sb-sec-body { display: grid; grid-template-rows: 0fr; transition: grid-template-rows .28s ease; }
+  .sb-sec[data-open] .sb-sec-body { grid-template-rows: 1fr; }
+  .sb-sec-inner { overflow: hidden; }
+  .sb-overview { display: block; padding: .1rem 1rem .35rem 3.55rem; font-size: .8rem; font-weight: 600; color: var(--accent); }
+  .sb-overview:hover { text-decoration: underline; }
+  .sb-list { padding-bottom: .5rem; }
+  .sb-link, .sb-soon { display: flex; align-items: flex-start; gap: .6rem; margin: 1px .5rem; padding: .42rem .6rem; border-radius: 8px; line-height: 1.35; border-left: 3px solid transparent; }
+  .sb-link:hover { background: var(--side-hover); }
+  .sb-link[aria-current='page'] { background: #0078d4; color: #fff; font-weight: 600; box-shadow: 0 2px 8px rgb(0 90 160 / .25); }
+  .sb-soon { color: var(--text-muted); opacity: .75; }
+  .sb-soon-tag { margin-left: auto; font-size: .62rem; text-transform: uppercase; letter-spacing: .06em; }
+  .sb-dot { flex: none; display: grid; place-items: center; width: 1.35rem; height: 1.35rem; margin-top: .05rem; border-radius: 999px; border: 1.5px solid var(--border); font-size: .7rem; font-weight: 700; color: var(--text-muted); background: var(--bg); }
+  .sb-emoji { border: 0; background: transparent; font-size: .95rem; }
+  .sb-tick { display: none; }
+  .sb-link[data-done] .sb-dot { background: #107c10; border-color: #107c10; color: #fff; }
+  .sb-link[data-done] .sb-n { display: none; } .sb-link[data-done] .sb-tick { display: inline; }
+  .sb-link[aria-current='page'] .sb-dot { border-color: #fff; background: #fff; color: #0078d4; }
+  .sb-label { min-width: 0; }
+  .sb-list li[hidden] { display: none; }
+  /* rail */
+  .sb-rail { display: none; }
+  @media (min-width: 1024px) {
+    html[data-nav='rail'] #lesson-menu { width: 4rem !important; }
+    html[data-nav='rail'] .sb-full { display: none; }
+    html[data-nav='rail'] .sb-rail { display: flex; flex-direction: column; align-items: center; gap: .55rem; padding: .9rem 0; }
+  }
+  .sb-rail-pct { font-size: .7rem; font-weight: 700; color: var(--accent); }
+  .sb-rail-dom { width: 2.3rem; height: 2.3rem; border-radius: 10px; background: var(--bg); border: 1.5px solid var(--border); font-weight: 800; color: var(--text); }
+  .sb-rail-dom:hover { border-color: var(--accent); color: var(--accent); }
+  .sb-rail-dom[data-current] { background: #0078d4; border-color: #0078d4; color: #fff; }
+  .sb-rail-sep { width: 1.6rem; height: 1px; background: var(--border); margin: .2rem 0; }
+  .sb-rail-link { display: grid; place-items: center; width: 2.3rem; height: 2.3rem; border-radius: 10px; font-size: 1.05rem; }
+  .sb-rail-link:hover { background: var(--side-hover); }
+  @media (prefers-reduced-motion: reduce) { .sb-sec-body, .sb-chev, .sb-bar > span { transition: none; } }
+</style>
+
 <script>
   import { load } from '../lib/progress';
-  const paint = () => {
-    const s = load();
-    const links = document.querySelectorAll<HTMLElement>('.syllabus [data-topic-key]');
-    const keys = new Set<string>();
-    let done = 0;
-    links.forEach((a) => {
-      const k = a.dataset.topicKey!;
-      const isDone = Boolean(s.done[k]);
-      a.toggleAttribute('data-done', isDone);
-      if (!keys.has(k)) {
-        keys.add(k);
-        if (isDone) done++;
-      }
+  const KEY = 'msdb-nav-open';
+  const nav = document.querySelector<HTMLElement>('.sb');
+  if (nav) {
+    const secs = [...nav.querySelectorAll<HTMLElement>('.sb-sec')];
+    const filter = nav.querySelector<HTMLInputElement>('[data-sb-filter]')!;
+    const allBtn = nav.querySelector<HTMLButtonElement>('[data-sb-all]')!;
+    const currentMod = nav.dataset.currentModule;
+
+    const setOpen = (sec: HTMLElement, on: boolean) => {
+      sec.toggleAttribute('data-open', on);
+      sec.querySelector('.sb-sec-btn')!.setAttribute('aria-expanded', String(on));
+    };
+    const save = () => { try { localStorage.setItem(KEY, JSON.stringify(secs.filter((s) => s.hasAttribute('data-open')).map((s) => s.dataset.sec))); } catch {} };
+    const syncAllBtn = () => {
+      const allOpen = secs.every((s) => s.hasAttribute('data-open'));
+      allBtn.textContent = allOpen ? 'Collapse all' : 'Expand all';
+      allBtn.setAttribute('aria-label', allOpen ? 'Collapse all sections' : 'Expand all sections');
+    };
+
+    // restore remembered sections; the current lesson's domain is always open
+    try {
+      const saved = JSON.parse(localStorage.getItem(KEY) ?? 'null') as string[] | null;
+      if (saved) secs.forEach((s) => setOpen(s, saved.includes(s.dataset.sec!) || s.dataset.sec === currentMod));
+    } catch {}
+    syncAllBtn();
+
+    secs.forEach((s) => s.querySelector('.sb-sec-btn')!.addEventListener('click', () => {
+      setOpen(s, !s.hasAttribute('data-open')); save(); syncAllBtn();
+    }));
+    allBtn.addEventListener('click', () => {
+      const open = !secs.every((s) => s.hasAttribute('data-open'));
+      secs.forEach((s) => setOpen(s, open)); save(); syncAllBtn();
     });
-    document.querySelectorAll('[data-progress-total]').forEach((el) => {
-      el.textContent = keys.size ? `${Math.round((done / keys.size) * 100)}%` : '0%';
+
+    // quick filter
+    filter.addEventListener('input', () => {
+      const q = filter.value.trim().toLowerCase();
+      let any = false;
+      secs.forEach((s) => {
+        let hits = 0;
+        s.querySelectorAll<HTMLElement>('li[data-title]').forEach((li) => { const ok = !q || li.dataset.title!.includes(q); li.hidden = !ok; if (ok) hits++; });
+        s.hidden = !!q && hits === 0;
+        if (q && hits) setOpen(s, true);
+        if (hits) any = true;
+      });
+      nav.querySelector<HTMLElement>('[data-sb-none]')!.hidden = any;
+      if (!q) { try { const saved = JSON.parse(localStorage.getItem(KEY) ?? 'null'); if (saved) secs.forEach((s) => setOpen(s, saved.includes(s.dataset.sec) || s.dataset.sec === currentMod)); } catch {} }
+      syncAllBtn();
     });
-  };
-  paint();
-  window.addEventListener('progress-change', paint);
+
+    // hide / show (desktop rail)
+    const setRail = (on: boolean) => {
+      document.documentElement.dataset.nav = on ? 'rail' : '';
+      try { localStorage.setItem('msdb-nav-rail', on ? '1' : ''); } catch {}
+    };
+    nav.querySelectorAll('[data-sb-rail]').forEach((b) => b.addEventListener('click', () => setRail(document.documentElement.dataset.nav !== 'rail')));
+    nav.querySelectorAll<HTMLElement>('[data-sb-open]').forEach((b) => b.addEventListener('click', () => {
+      setRail(false);
+      const s = secs.find((x) => x.dataset.sec === b.dataset.sbOpen);
+      if (s) { setOpen(s, true); save(); syncAllBtn(); requestAnimationFrame(() => s.scrollIntoView({ block: 'start' })); }
+    }));
+
+    // progress
+    const paint = () => {
+      const st = load();
+      let done = 0, total = 0;
+      secs.forEach((s) => {
+        const links = [...s.querySelectorAll<HTMLElement>('[data-topic-key]')];
+        let d = 0;
+        links.forEach((a) => { const ok = Boolean(st.done[a.dataset.topicKey!]); a.toggleAttribute('data-done', ok); if (ok) d++; });
+        total += links.length; done += d;
+        const c = s.querySelector('[data-sec-count]'); if (c) c.textContent = String(d);
+        const bar = s.querySelector<HTMLElement>('[data-sec-bar]'); if (bar) bar.style.width = `${links.length ? (d / links.length) * 100 : 0}%`;
+      });
+      const pct = total ? Math.round((done / total) * 100) : 0;
+      document.querySelectorAll('[data-progress-total]').forEach((el) => (el.textContent = `${pct}%`));
+      const bar = nav.querySelector<HTMLElement>('[data-progress-bar]'); if (bar) bar.style.width = `${pct}%`;
+    };
+    paint();
+    window.addEventListener('progress-change', paint);
+  }
 </script>

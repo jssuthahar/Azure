@@ -7,8 +7,8 @@
  */
 import { Sim, SimError, SUB_ID, SUB_NAME, REGIONS, VM_SIZES, type Res, type RG, type Via } from './engine';
 
-export const TENANT = 'learn.onmicrosoft.com';
-export const ME = `learner@${TENANT}`;
+export const TENANT = 'msdevbuild.onmicrosoft.com';
+export const ME = 'learner@msdevbuild.com';
 export type Role = 'Owner' | 'Contributor' | 'Reader';
 
 export interface User { upn: string; name: string; guest?: boolean }

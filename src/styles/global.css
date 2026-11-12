@@ -834,5 +834,5 @@
 .text-go { color: #107c10; }
 [data-theme='dark'] .text-go { color: #6ccb5f; }
 /* Comfortable tap targets (≥ 24px) for list links in footer and sidebars */
-footer li > a, aside li > a, .side-w3 li > a { display: inline-block; padding-block: .2rem; }
-@media (pointer: coarse) { footer li > a, aside li > a { padding-block: .45rem; } }
+footer li > a, .page-aside li > a { display: inline-block; padding-block: .2rem; }
+@media (pointer: coarse) { footer li > a, .page-aside li > a { padding-block: .45rem; } }

@@ -416,7 +416,7 @@ export class Portal {
         <button class="pt-tb pa-bell" ${A('pane', 'notes')} title="Notifications" aria-label="Notifications">🔔${this.unread ? `<b class="pa-badge">${this.unread}</b>` : ''}</button>
         <button class="pt-tb" ${A('pane', 'settings')} title="Settings" aria-label="Settings">⚙️</button>
         <button class="pt-tb" ${A('unsupported', 'Help + support')} title="Help" aria-label="Help">？</button>
-        <span class="pt-acct"><span class="pt-acct-n">learner@contoso.com</span><span class="pt-acct-d">DEFAULT DIRECTORY</span></span>
+        <span class="pt-acct"><span class="pt-acct-n">learner@msdevbuild.com</span><span class="pt-acct-d">DEFAULT DIRECTORY</span></span>
         <span class="pt-avatar">L</span>
       </span></div>`;
   }
@@ -690,7 +690,7 @@ export class Portal {
   }
   private activity(filter: (d: Record<string, any>) => boolean) {
     const ev = this.sim.events.filter((e) => !['view', 'cli'].includes(e.type) && filter(e.data)).slice(-30).reverse();
-    return ev.length ? this.table(['Operation name', 'Status', 'Time', 'Event initiated by'], ev.map((e) => [esc(e.type.replace('.', ' · ')), this.status(/blocked|invalid/.test(e.type) ? 'Failed' : 'Succeeded'), new Date(e.at).toLocaleTimeString(), e.data.via === 'cli' ? 'learner@contoso.com (Cloud Shell)' : 'learner@contoso.com'])) : '<p class="pt-p">No activity yet.</p>';
+    return ev.length ? this.table(['Operation name', 'Status', 'Time', 'Event initiated by'], ev.map((e) => [esc(e.type.replace('.', ' · ')), this.status(/blocked|invalid/.test(e.type) ? 'Failed' : 'Succeeded'), new Date(e.at).toLocaleTimeString(), e.data.via === 'cli' ? 'learner@msdevbuild.com (Cloud Shell)' : 'learner@msdevbuild.com'])) : '<p class="pt-p">No activity yet.</p>';
   }
   private iam() {
     return `${this.cmds([['+ Add', A('unsupported', 'Role assignments')], ['Download role assignments', A('unsupported', 'Download')], ['Refresh', NAV(this.view)]])}
@@ -881,7 +881,7 @@ export class Portal {
           <form data-form="cp" class="pa-tagrow"><input class="pa-in" name="q" placeholder="Ask a question or describe a task…"><button class="pt-btn pt-primary">Send</button></form>
           <p class="pt-chat-f">Simulated assistant for education. AI-generated content may be incorrect.</p></div>`, '', 'pt-copane');
       }
-      case 'settings': return wrap('Portal settings', `${this.f('Theme', `<button class="pt-btn" ${A('theme')}>${this.dark ? '☀️ Switch to light' : '🌙 Switch to dark'}</button>`)}${this.f('Language', 'English')}${this.f('Directory', 'Default Directory (contoso.onmicrosoft.com)')}<div class="pt-note-bar info">🎓 This is an education-only simulation of the Azure portal.</div>`);
+      case 'settings': return wrap('Portal settings', `${this.f('Theme', `<button class="pt-btn" ${A('theme')}>${this.dark ? '☀️ Switch to light' : '🌙 Switch to dark'}</button>`)}${this.f('Language', 'English')}${this.f('Directory', 'Default Directory (msdevbuild.onmicrosoft.com)')}<div class="pt-note-bar info">🎓 This is an education-only simulation of the Azure portal.</div>`);
       case 'json': {
         const target = r ?? (this.view.page === 'rg' ? this.sim.rg(this.view.name) : undefined);
         const json = r ? { id: r.id, name: r.name, type: TYPE_INFO[r.type].arm, location: r.location, tags: r.tags, properties: r.props } : target ? { id: `/subscriptions/${SUB_ID}/resourceGroups/${(target as any).name}`, name: (target as any).name, type: 'Microsoft.Resources/resourceGroups', location: (target as any).location, tags: (target as any).tags } : {};

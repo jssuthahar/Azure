@@ -118,7 +118,7 @@ function vmPower(p: Parsed, sim: Sim, action: 'start' | 'stop' | 'deallocate' | 
   return { out: '' };
 }
 const C: Record<string, Handler> = {
-  'account show': (p) => out(p, { id: SUB_ID, name: SUB_NAME, isDefault: true, state: 'Enabled', tenantId: '11111111-2222-3333-4444-555555555555', user: { name: 'learner@example.com', type: 'user' } }),
+  'account show': (p) => out(p, { id: SUB_ID, name: SUB_NAME, isDefault: true, state: 'Enabled', tenantId: '11111111-2222-3333-4444-555555555555', user: { name: 'learner@msdevbuild.com', type: 'user' } }),
   'account list-locations': (p) => {
     const rows = Object.entries(REGIONS).map(([name, displayName]) => ({ DisplayName: displayName, Name: name }));
     return out(p, rows.map((r) => ({ displayName: r.DisplayName, name: r.Name })), rows, ['DisplayName', 'Name']);

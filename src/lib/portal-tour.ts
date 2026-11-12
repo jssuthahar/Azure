@@ -63,7 +63,7 @@ function topbar() {
       <button class="pt-tb" ${T('bell')} title="Notifications">🔔</button>
       <button class="pt-tb" ${T('settings')} title="Settings">⚙️</button>
       <button class="pt-tb" title="Help">？</button>
-      <span class="pt-acct"><span class="pt-acct-n">learner@contoso.com</span><span class="pt-acct-d">DEFAULT DIRECTORY</span></span>
+      <span class="pt-acct"><span class="pt-acct-n">learner@msdevbuild.com</span><span class="pt-acct-d">DEFAULT DIRECTORY</span></span>
       <span class="pt-avatar">L</span>
     </span>
   </div>`;
