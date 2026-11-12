@@ -70,6 +70,9 @@ const groupActive = (g: Group) => g.items.some((i) => i.href === active);
       <a id="xp-chip" href="/progress/" hidden class="flex items-center gap-1.5 rounded-full border border-default bg-[var(--pastel-grey)] px-3 py-1.5 text-sm font-semibold hover:border-[var(--accent)]" title="Your level, XP and learning streak">
         <span id="xp-level"></span><span id="xp-points" class="text-accent"></span><span id="xp-streak" class="hidden"></span>
       </a>
+      <button id="search-toggle" type="button" class="rounded-md p-2 hover:bg-subtle md:hidden" aria-label="Search tutorials" aria-expanded="false" aria-controls="topic-search">
+        <svg class="size-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7" /><path d="m20 20-3.5-3.5" /></svg>
+      </button>
       <CurrencySelect compact class="mr-1" />
       <a href="/about/" class="hidden rounded-md px-3 py-2 text-sm text-muted hover:bg-subtle sm:block">About</a>
       <button id="theme-toggle" type="button" class="rounded-md p-2 transition-colors hover:bg-subtle" aria-label="Switch colour theme">
@@ -79,6 +82,7 @@ const groupActive = (g: Group) => g.items.some((i) => i.href === active);
     </div>
   </div>
 
+  <div class="topbar-wrap relative">
   <nav class="topbar overflow-x-auto" aria-label="Main">
     <ul class="flex h-11 min-w-max items-stretch px-2 text-[0.92rem] sm:px-4">
       {GROUPS.map((g, gi) => 'items' in g ? (
@@ -102,9 +106,19 @@ const groupActive = (g: Group) => g.items.some((i) => i.href === active);
       ))}
     </ul>
   </nav>
+  <span class="topbar-more" aria-hidden="true">›</span>
+  </div>
 </header>
 
 <style is:global>
+  /* Phones: header search opens as a full-width row */
+  @media (max-width: 767px) {
+    .site-header.search-open #topic-search { display: block; position: absolute; left: .75rem; right: .75rem; top: 3.6rem; max-width: none; z-index: 70; }
+    .site-header.search-open #topic-search input { padding-top: .7rem; padding-bottom: .7rem; font-size: 1rem; box-shadow: 0 10px 30px rgb(0 30 60 / .2); background: var(--bg); }
+  }
+  /* Top menu: show a fade + arrow when more items are off to the right */
+  .topbar-more { display: none; position: absolute; top: 0; right: 0; bottom: 0; width: 2.6rem; align-items: center; justify-content: flex-end; padding-right: .5rem; color: #fff; font-size: 1.4rem; font-weight: 700; pointer-events: none; background: linear-gradient(90deg, transparent, var(--topbar) 65%); }
+  .topbar-wrap.more-right .topbar-more { display: flex; }
   .topbar .tb-group { color: var(--topbar-text); }
   .topbar .tb-group:hover, .topbar .tb-group[aria-expanded='true'] { background: rgb(255 255 255 / 0.12); }
   .topbar .tb-group[data-active] { background: #0078d4; color: #fff; }
@@ -136,6 +150,27 @@ const groupActive = (g: Group) => g.items.some((i) => i.href === active);
   };
   paintXp();
   window.addEventListener('progress-change', paintXp);
+
+  // Phones: search toggle
+  const header = document.querySelector<HTMLElement>('.site-header');
+  const sBtn = document.getElementById('search-toggle');
+  sBtn?.addEventListener('click', () => {
+    const open = !header!.classList.contains('search-open');
+    header!.classList.toggle('search-open', open);
+    sBtn.setAttribute('aria-expanded', String(open));
+    if (open) (document.getElementById('topic-q') as HTMLInputElement)?.focus();
+  });
+  document.addEventListener('keydown', (e) => { if (e.key === 'Escape' && header?.classList.contains('search-open')) { header.classList.remove('search-open'); sBtn?.setAttribute('aria-expanded', 'false'); } });
+
+  // Top menu "more" hint
+  const bar = document.querySelector<HTMLElement>('.topbar');
+  const wrap = document.querySelector<HTMLElement>('.topbar-wrap');
+  const more = () => wrap?.classList.toggle('more-right', !!bar && bar.scrollLeft + bar.clientWidth < bar.scrollWidth - 6);
+  bar?.addEventListener('scroll', more, { passive: true });
+  addEventListener('resize', more);
+  more();
+  // keep the active menu item in view on phones
+  bar?.querySelector('[aria-current="page"], .tb-group[data-active]')?.scrollIntoView({ block: 'nearest', inline: 'center' });
 
   // Grouped top-bar menus
   const groups = [...document.querySelectorAll<HTMLButtonElement>('.tb-group')];

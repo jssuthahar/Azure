@@ -8,6 +8,7 @@ import SpeakButtons from '../components/SpeakButtons.astro';
 import Reveal from '../components/Reveal.astro';
 import CurrencyPrices from '../components/CurrencyPrices.astro';
 import { SITE, SOCIAL } from '../config';
+import { ogPages, ogImagePath } from '../lib/og-pages';
 
 interface Crumb {
   name: string;
@@ -21,11 +22,15 @@ interface Props {
   breadcrumbs?: Crumb[];
   noindex?: boolean;
   wide?: boolean;
+  /** ISO date the content was last updated (articles). */
+  modified?: string;
 }
 
-const { title, description, type = 'website', schema = [], breadcrumbs = [], noindex = false, wide = true } = Astro.props;
+const { title, description, type = 'website', schema = [], breadcrumbs = [], noindex = false, wide = true, modified } = Astro.props;
 const canonical = new URL(Astro.url.pathname, SITE.url).href;
-const ogImage = new URL('/og-default.png', SITE.url).href;
+const hasCard = (await ogPages()).has(Astro.url.pathname);
+const ogImage = new URL(hasCard ? ogImagePath(Astro.url.pathname) : '/og-default.png', SITE.url).href;
+const ogAlt = hasCard ? `${title} · MSDEVBUILD Azure` : 'MSDEVBUILD Azure: feel Azure without an Azure account';
 
 const graph: Record<string, unknown>[] = [
   {
@@ -96,9 +101,20 @@ const jsonLd = JSON.stringify({ '@context': 'https://schema.org', '@graph': grap
     <meta property="og:description" content={description} />
     <meta property="og:url" content={canonical} />
     <meta property="og:image" content={ogImage} />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:image:alt" content={ogAlt} />
+    <meta property="og:locale" content="en_US" />
+    {type === 'article' && <meta property="article:author" content={SITE.profile} />}
+    {type === 'article' && modified && <meta property="article:modified_time" content={modified} />}
     <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:site" content="@jssuthahar" />
+    <meta name="twitter:creator" content="@jssuthahar" />
     <meta name="twitter:title" content={title} />
     <meta name="twitter:description" content={description} />
+    <meta name="twitter:image" content={ogImage} />
+    <meta name="twitter:image:alt" content={ogAlt} />
+    <link rel="alternate" type="text/plain" title="AI-readable site map (llms.txt)" href="/llms.txt" />
 
     <script is:inline>
       (() => {

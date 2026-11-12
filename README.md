@@ -88,3 +88,11 @@ Add an entry to `CERTIFICATIONS` (set `status: 'active'` only after verifying th
 ## Adding a practice lab
 
 Add an entry to `LABS` in `src/lib/sim/labs.ts`. Each task has text, optional portal steps and CLI command (shown under "Show me how", with a ▶ Try it button), and a `check(sim)` function that inspects the simulated state or `sim.events`. Put lesson slugs in `topics` so those lessons show a "Try it yourself" box. New commands go in `src/lib/sim/cli.ts`; new resource types and rules in `engine.ts`; new portal screens in `portal.ts`.
+
+## SEO, AEO and GEO
+
+- **Share images**: every lesson, comparison, service, what-if and hub page gets its own 1200×630 card at build time (`src/lib/og.ts`, list in `src/lib/og-pages.ts`, served from `/og/...png`). New pages in those data files get a card automatically.
+- **Structured data**: `Person` + `Organization` on every page (`Base.astro`); lessons add `TechArticle` (with `speakable`), `FAQPage` and `Quiz`; comparisons/services/what-ifs add `FAQPage`; the course page adds a full `Course`; hubs add `ItemList`; the glossary adds `DefinedTermSet`.
+- **Sitemap**: `lastmod` comes from each lesson's `updated:` date (`astro.config.mjs`). Update that date when you change a lesson.
+- **AI assistants (GEO)**: `/llms.txt` (site map with one-line answers) and `/llms-full.txt` (full answers for citation) are generated from the content. `robots.txt` welcomes the main AI crawlers.
+- **After each deploy**: `npm run build && npm run indexnow` notifies Bing/Copilot of changed pages (key file in `public/`). Submit `/sitemap-index.xml` once in Google Search Console and Bing Webmaster Tools.

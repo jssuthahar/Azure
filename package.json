@@ -3,7 +3,7 @@
   "type": "module",
   "version": "1.0.0",
   "private": true,
-  "description": "Azure certification learning platform (azure.msdevbuild.com) — starting with AZ-900.",
+  "description": "Azure certification learning platform (azure.msdevbuild.com) \u2014 starting with AZ-900.",
   "scripts": {
     "dev": "astro dev",
     "build": "astro build",
@@ -12,7 +12,8 @@
     "check:meta": "node scripts/check-meta.mjs",
     "check:questions": "node scripts/check-questions.mjs",
     "check:all": "npm run check:meta && npm run check:questions && astro build",
-    "og": "node scripts/make-og.mjs"
+    "og": "node scripts/make-og.mjs",
+    "indexnow": "node scripts/indexnow.mjs"
   },
   "dependencies": {
     "@astrojs/mdx": "4.3.14",

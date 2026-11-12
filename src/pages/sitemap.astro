@@ -1,0 +1,81 @@
+---
+/** Human-readable site map: every page, grouped. Also good for crawlers (internal links). */
+import Base from '../layouts/Base.astro';
+import { getNav } from '../lib/learn';
+import { MODULES } from '../data/az-900/syllabus';
+import { COMPARISONS } from '../data/az-900/compare';
+import { SERVICES, SERVICE_CATS } from '../data/az-900/services';
+import { WHATIFS } from '../data/az-900/whatifs';
+import { ALL_LABS } from '../lib/sim/labs';
+
+const nav = (await getNav()).filter((t) => t.published);
+const tools: [string, string][] = [
+  ['AZ-900 course and syllabus', '/az-900/'], ['Mock exam', '/az-900/mock-exam/'], ['AZ-900 Ready certificate', '/certificate/'],
+  ['Revision flashcards', '/az-900/revision/'], ['Interview questions', '/az-900/interview/'], ['Glossary', '/az-900/glossary/'],
+  ['Play & Learn games', '/az-900/games/'], ['Daily Challenge', '/az-900/games/daily/'], ['Embed simulations', '/embed/'],
+  ['My progress', '/progress/'], ['About', '/about/'], ['Privacy policy', '/privacy/'], ['Terms and conditions', '/terms/'],
+];
+const machine: [string, string, string][] = [
+  ['XML sitemap', '/sitemap-index.xml', 'For search engines (Google, Bing)'],
+  ['llms.txt', '/llms.txt', 'Site map with one-line answers, for AI assistants'],
+  ['llms-full.txt', '/llms-full.txt', 'Full answers with page links, for AI assistants to cite'],
+  ['robots.txt', '/robots.txt', 'Crawler rules'],
+];
+const crumbs = [{ name: 'Home', url: '/' }, { name: 'Site map', url: '/sitemap/' }];
+const total = nav.length + COMPARISONS.length + SERVICES.length + WHATIFS.length + ALL_LABS.length + tools.length;
+---
+<Base title="Site Map: Every Page on MSDEVBUILD Azure" description={`Every page on MSDEVBUILD Azure in one place: ${nav.length} AZ-900 lessons, comparisons, Azure services in 60 seconds, simulations, labs, mock exam and tools.`} breadcrumbs={crumbs}>
+  <div class="mx-auto max-w-6xl px-4 py-10 sm:px-6">
+    <nav aria-label="Breadcrumb" class="text-sm text-muted"><a class="hover:underline" href="/">Home</a> / <span class="text-[var(--text)]">Site map</span></nav>
+    <h1 class="mt-3 text-4xl font-semibold tracking-tight">Site map</h1>
+    <p class="mt-2 text-lg text-muted">All {total} pages, grouped so you can jump straight to what you need.</p>
+
+    <h2 class="sm-h">📘 AZ-900 lessons</h2>
+    <div class="grid gap-8 md:grid-cols-3">
+      {MODULES.map((m) => (
+        <section>
+          <h3 class="font-semibold"><a class="text-accent hover:underline" href={`/az-900/${m.slug}/`}>Domain {m.domain}: {m.shortTitle}</a></h3>
+          <ol class="sm-list list-decimal pl-5">{nav.filter((t) => t.module.slug === m.slug).map((t) => <li><a href={t.url}>{t.title}</a></li>)}</ol>
+        </section>
+      ))}
+    </div>
+
+    <div class="mt-4 grid gap-8 md:grid-cols-2">
+      <section>
+        <h2 class="sm-h">⚖️ Comparisons</h2>
+        <ul class="sm-list"><li><a href="/az-900/compare/"><strong>All comparisons</strong></a></li>{COMPARISONS.map((c) => <li><a href={`/az-900/compare/${c.slug}/`}>{c.title}</a></li>)}</ul>
+      </section>
+      <section>
+        <h2 class="sm-h">⚡ Simulator and labs</h2>
+        <ul class="sm-list"><li><a href="/simulator/"><strong>Azure Simulator</strong></a></li>{WHATIFS.map((w) => <li><a href={`/simulator/${w.slug}/`}>{w.q}</a></li>)}</ul>
+        <ul class="sm-list mt-4"><li><a href="/az-900/labs/"><strong>Practice labs</strong></a></li>{ALL_LABS.map((l) => <li><a href={`/az-900/labs/${l.id}/`}>{l.icon} {l.title}</a></li>)}</ul>
+      </section>
+    </div>
+
+    <h2 class="sm-h">📚 Azure services in 60 seconds</h2>
+    <p class="-mt-2 mb-3"><a class="text-accent hover:underline" href="/az-900/services/">All services</a></p>
+    <div class="grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
+      {SERVICE_CATS.map((cat) => (
+        <section><h3 class="font-semibold">{cat}</h3><ul class="sm-list">{SERVICES.filter((s) => s.cat === cat).map((s) => <li><a href={`/az-900/services/${s.slug}/`}>{s.name}</a></li>)}</ul></section>
+      ))}
+    </div>
+
+    <div class="mt-4 grid gap-8 md:grid-cols-2">
+      <section>
+        <h2 class="sm-h">🧰 Practice and tools</h2>
+        <ul class="sm-list">{tools.map(([n, h]) => <li><a href={h}>{n}</a></li>)}</ul>
+      </section>
+      <section>
+        <h2 class="sm-h">🤖 For search engines and AI assistants</h2>
+        <ul class="sm-list">{machine.map(([n, h, d]) => <li><a href={h}><code>{n}</code></a> <span class="text-sm text-muted">· {d}</span></li>)}</ul>
+      </section>
+    </div>
+  </div>
+</Base>
+<style>
+  .sm-h { margin: 2.25rem 0 .9rem; font-size: 1.5rem; font-weight: 600; }
+  .sm-list { margin-top: .5rem; display: grid; gap: .1rem; }
+  .sm-list li { padding-block: .2rem; line-height: 1.45; }
+  .sm-list a { color: var(--accent); }
+  .sm-list a:hover { text-decoration: underline; }
+</style>

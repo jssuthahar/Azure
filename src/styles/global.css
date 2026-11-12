@@ -768,10 +768,9 @@
   font-weight: 700;
   line-height: 1.4;
   cursor: pointer;
-  opacity: 0.85;
 }
 .speak-btn:hover {
-  opacity: 1;
+  background: var(--accent-soft);
 }
 .speak-btn[data-on] {
   background: #0078d4;
@@ -828,3 +827,12 @@
   .scene *, .reveal { animation: none !important; transition: none !important; }
   .js .reveal { opacity: 1; transform: none; }
 }
+
+/* UX review fixes */
+.answer-box .speak-btn { color: var(--accent-deep); }
+[data-theme='dark'] .answer-box .speak-btn { color: #9fd0f7; }
+.text-go { color: #107c10; }
+[data-theme='dark'] .text-go { color: #6ccb5f; }
+/* Comfortable tap targets (≥ 24px) for list links in footer and sidebars */
+footer li > a, aside li > a, .side-w3 li > a { display: inline-block; padding-block: .2rem; }
+@media (pointer: coarse) { footer li > a, aside li > a { padding-block: .45rem; } }

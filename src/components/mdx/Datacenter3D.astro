@@ -24,7 +24,7 @@ const steps = sim.steps.map((s) => ({ ...s, html: inlineMd(s.text), say: s.text.
     </span>
   </div>
 
-  <div class="d3-view" aria-label={`Interactive 3D scene: ${title ?? sim.title}`} role="img">
+  <div class="d3-view" aria-label={`Interactive 3D scene: ${title ?? sim.title}`} role="region">
     <div class="d3-labels" aria-hidden="true"></div>
     <div class="d3-hud" role="status" aria-live="polite" hidden></div>
     <div class="d3-meter" hidden></div>
@@ -86,7 +86,7 @@ const steps = sim.steps.map((s) => ({ ...s, html: inlineMd(s.text), say: s.text.
   .d3-tools { display: inline-flex; gap: .4rem; align-items: center; }
   .d3-whatif { margin: .8rem 0 -.2rem; font-size: .8rem; font-weight: 800; letter-spacing: .06em; text-transform: uppercase; color: var(--text-muted); }
   .d3-whatif[hidden] { display: none; }
-  .d3-hint { position: absolute; right: 10px; top: 8px; margin: 0; font-size: .72rem; color: #3d5068; background: rgb(255 255 255 / .7); padding: 2px 8px; border-radius: 999px; }
+  .d3-hint { position: absolute; right: 10px; top: 8px; margin: 0; font-size: .8rem; color: #3d5068; background: rgb(255 255 255 / .7); padding: 2px 8px; border-radius: 999px; }
   [data-theme='dark'] .d3-hint { background: rgb(0 0 0 / .4); color: #c9d6e6; }
   .d3-loading { position: absolute; inset: 0; display: flex; gap: .6rem; align-items: center; justify-content: center; font-size: .9rem; color: var(--text-muted); }
   .d3-ready .d3-loading { display: none; }

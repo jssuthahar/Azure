@@ -8,6 +8,7 @@ import ProblemSolution from '../../../components/ProblemSolution.astro';
 import { labsForTopic, ALL_LABS } from '../../../lib/sim/labs';
 import LessonSimulations from '../../../components/LessonSimulations.astro';
 import { LESSON_SIMS } from '../../../data/az-900/lesson-sims';
+import { ogImagePath } from '../../../lib/og-pages';
 import { COMPARISONS } from '../../../data/az-900/compare';
 import { SERVICES } from '../../../data/az-900/services';
 import { WHATIFS } from '../../../data/az-900/whatifs';
@@ -89,8 +90,30 @@ const schema = [
     citation: d.references.map((r) => r.url),
     // AEO: the 30-second answer is the part voice assistants should read aloud.
     speakable: { '@type': 'SpeakableSpecification', cssSelector: ['.answer-box'] },
-    image: new URL('/og-default.png', SITE.url).href,
+    image: new URL(ogImagePath(Astro.url.pathname), SITE.url).href,
+    datePublished: d.updated.toISOString(),
   },
+  // AEO: the lesson's knowledge check as Quiz / practice-problem structured data.
+  ...(questions.length
+    ? [{
+        '@type': 'Quiz',
+        '@id': `${url}#quiz`,
+        name: `${d.title}: AZ-900 practice quiz`,
+        about: { '@id': `${url}#article` },
+        educationalLevel: 'Beginner',
+        assesses: d.keyTerms.map((k) => k.term),
+        educationalAlignment: me.objectives.map((o) => ({ '@type': 'AlignmentObject', alignmentType: 'assesses', educationalFramework: 'Microsoft AZ-900 skills outline', targetName: `${o} ${objectiveText(o)}` })),
+        hasPart: questions.map((q) => ({
+          '@type': 'Question',
+          eduQuestionType: q.type === 'multi' ? 'Checkbox' : 'Multiple choice',
+          learningResourceType: 'Practice problem',
+          text: q.scenario ? `${q.scenario} ${q.question}` : q.question,
+          encodingFormat: 'text/plain',
+          suggestedAnswer: q.options.map((o, i) => ({ i, o })).filter(({ i }) => !q.answer.includes(i)).map(({ i, o }) => ({ '@type': 'Answer', position: i, text: o.text, comment: { '@type': 'Comment', text: o.why } })),
+          acceptedAnswer: q.answer.map((i) => ({ '@type': 'Answer', position: i, text: q.options[i].text, answerExplanation: { '@type': 'Comment', text: q.explanation } })),
+        })),
+      }]
+    : []),
   // AEO/GEO: questions already answered on the page, as FAQ structured data.
   {
     '@type': 'FAQPage',
@@ -106,7 +129,7 @@ const schema = [
   },
 ];
 ---
-<Base title={d.seoTitle} description={d.description} type="article" schema={schema} breadcrumbs={crumbs}>
+<Base title={d.seoTitle} description={d.description} type="article" schema={schema} breadcrumbs={crumbs} modified={d.updated.toISOString()}>
   <LearnShell nav={nav} currentKey={entry.id}>
     <article class="mx-auto max-w-[860px]">
       <nav aria-label="Breadcrumb" class="text-sm text-muted">

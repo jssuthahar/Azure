@@ -1,12 +1,14 @@
 ---
+import { SITE } from '../../config';
 import Base from '../../layouts/Base.astro';
 import { WHATIFS } from '../../data/az-900/whatifs';
 import { SIMS3D } from '../../data/az-900/sims3d';
 import { TOURS } from '../../data/az-900/portal-tours';
 import { EMBED_LESSON_3D } from '../../data/az-900/embeds';
 const crumbs = [{ name: 'Home', url: '/' }, { name: 'Azure Simulator', url: '/simulator/' }];
+const itemList = [{ '@type': 'ItemList', name: 'Azure Simulator: what happens if…?', numberOfItems: WHATIFS.length, itemListElement: WHATIFS.map((w, i) => ({ '@type': 'ListItem', position: i + 1, name: w.q, url: `${SITE.url}${`/simulator/${w.slug}/`}` })) }];
 ---
-<Base title="Azure Simulator: Feel Azure Without an Azure Account" description="Free Azure simulator: pull the plug on a datacenter, survive a Black Friday spike, see a forgotten-VM bill, measure latency, and click through the Azure portal." breadcrumbs={crumbs}>
+<Base schema={itemList} title="Azure Simulator: Feel Azure Without an Azure Account" description="Free Azure simulator: pull the plug on a datacenter, survive a Black Friday spike, see a forgotten-VM bill, measure latency, and click through the Azure portal." breadcrumbs={crumbs}>
   <section class="home-band band-navy">
     <div class="mx-auto max-w-5xl px-4 py-12 text-center sm:px-6">
       <h1 class="text-4xl font-bold tracking-tight sm:text-6xl">⚡ The Azure Simulator</h1>
@@ -21,7 +23,7 @@ const crumbs = [{ name: 'Home', url: '/' }, { name: 'Azure Simulator', url: '/si
         <li><a href={`/simulator/${w.slug}/`} class="flex h-full flex-col rounded-xl border border-default bg-[var(--card)] p-5 hover:border-[var(--accent)]">
           <span class="text-4xl" aria-hidden="true">{w.emoji}</span>
           <span class="mt-3 text-lg font-semibold leading-snug">{w.q}</span>
-          <span class="mt-auto pt-3 text-sm font-semibold text-[#107c10]">▶ Simulate it »</span>
+          <span class="mt-auto pt-3 text-sm font-semibold text-go">▶ Simulate it »</span>
         </a></li>
       ))}
     </ul>
