@@ -4,16 +4,18 @@ import Datacenter3D from '../../../components/mdx/Datacenter3D.astro';
 import PortalTour from '../../../components/mdx/PortalTour.astro';
 import CurrencySelect from '../../../components/CurrencySelect.astro';
 import { SERVICES, serviceBySlug, type Service } from '../../../data/az-900/services';
-import { comparisonBySlug } from '../../../data/az-900/compare';
 import { getNav, inlineMd } from '../../../lib/learn';
 import { priceHtml } from '../../../lib/prices';
 import { SITE } from '../../../config';
+import { getExam, liveExams } from '../../../data/exams';
 
 export function getStaticPaths() {
-  return SERVICES.map((s) => ({ params: { slug: s.slug }, props: { s } }));
+  return liveExams().flatMap((exam) => SERVICES.map((s) => ({ params: { cert: exam.slug, slug: s.slug }, props: { s } })));
 }
+const exam = getExam(Astro.params.cert);
+const comparisonBySlug = (s: string) => exam.comparisons.find((c) => c.slug === s);
 const { s } = Astro.props as { s: Service };
-const nav = await getNav();
+const nav = await getNav(exam.slug);
 const lesson = nav.find((t) => t.slug === s.lesson && t.published);
 const cmp = s.compare ? comparisonBySlug(s.compare) : undefined;
 const similar = s.similar.map(serviceBySlug).filter(Boolean);
@@ -21,7 +23,7 @@ const url = new URL(Astro.url.pathname, SITE.url).href;
 const short = s.name.replace(/^Azure |^Microsoft /, '');
 const title = `${s.name} in 60 Seconds: What, When, Cost`;
 const description = `${s.name} explained in 60 seconds: what it is, when to use it and when not to, price feel in your currency, a simulation and similar services.`.slice(0, 165);
-const crumbs = [{ name: 'Home', url: '/' }, { name: 'AZ-900', url: '/az-900/' }, { name: 'Service reference', url: '/az-900/services/' }, { name: s.name, url: Astro.url.pathname }];
+const crumbs = [{ name: 'Home', url: '/' }, { name: `${exam.code}`, url: `/${exam.slug}/` }, { name: 'Service reference', url: `/${exam.slug}/services/` }, { name: s.name, url: Astro.url.pathname }];
 const schema = [
   { '@type': 'TechArticle', '@id': `${url}#article`, headline: `${s.name} in 60 seconds`, description, url, inLanguage: 'en', author: { '@id': `${SITE.url}/#author` }, publisher: { '@id': `${SITE.url}/#organization` }, about: { '@type': 'SoftwareApplication', name: s.name, applicationCategory: s.cat, operatingSystem: 'Cloud' } },
   { '@type': 'FAQPage', mainEntity: [[`What is ${s.name}?`, s.what], [`When should I use ${short}?`, s.use.join('; ') + '.'], [`What is the AWS equivalent of ${s.name}?`, s.aws + '.']].map(([q, a]) => ({ '@type': 'Question', name: q, acceptedAnswer: { '@type': 'Answer', text: a } })) },
@@ -30,7 +32,7 @@ const feelLabel = ['', 'Free or very cheap', 'Low', 'Medium', 'Premium'][s.feel]
 ---
 <Base title={title.length > 62 ? `${s.name} in 60 Seconds` : title} description={description} type="article" schema={schema} breadcrumbs={crumbs}>
   <article class="mx-auto max-w-[960px] px-4 py-8 sm:px-6">
-    <nav aria-label="Breadcrumb" class="text-sm text-muted"><a class="hover:underline" href="/az-900/services/">Service reference</a> › <span class="text-[var(--text)]">{s.cat}</span></nav>
+    <nav aria-label="Breadcrumb" class="text-sm text-muted"><a class="hover:underline" href={`/${exam.slug}/services/`}>Service reference</a> › <span class="text-[var(--text)]">{s.cat}</span></nav>
     <div class="mt-3 flex items-center gap-4">
       <span class="grid size-16 shrink-0 place-items-center rounded-2xl bg-[var(--pastel-blue)] text-4xl" aria-hidden="true">{s.icon}</span>
       <div><h1 class="text-[2rem] leading-tight font-semibold tracking-tight sm:text-[2.4rem]">{s.name} <span class="text-muted font-normal">in 60 seconds</span></h1>
@@ -66,13 +68,13 @@ const feelLabel = ['', 'Free or very cheap', 'Low', 'Medium', 'Premium'][s.feel]
 
     <section class="mt-8 flex flex-wrap gap-2">
       {lesson && <a href={lesson.url} class="nav-btn">📘 Full lesson: {lesson.title} ❯</a>}
-      {cmp && <a href={`/az-900/compare/${cmp.slug}/`} class="nav-btn">⚖️ {cmp.title} ❯</a>}
+      {cmp && <a href={`/${exam.slug}/compare/${cmp.slug}/`} class="nav-btn">⚖️ {cmp.title} ❯</a>}
     </section>
 
     {similar.length > 0 && (
       <section class="mt-8" aria-labelledby="similar">
         <h2 id="similar" class="text-xl font-semibold">Similar services</h2>
-        <ul class="mt-3 grid gap-3 sm:grid-cols-3">{similar.map((x) => <li><a href={`/az-900/services/${x!.slug}/`} class="flex items-center gap-3 rounded-xl border border-default bg-[var(--card)] p-3 hover:border-[var(--accent)]"><span class="text-2xl" aria-hidden="true">{x!.icon}</span><span class="font-semibold">{x!.name}</span></a></li>)}</ul>
+        <ul class="mt-3 grid gap-3 sm:grid-cols-3">{similar.map((x) => <li><a href={`/${exam.slug}/services/${x!.slug}/`} class="flex items-center gap-3 rounded-xl border border-default bg-[var(--card)] p-3 hover:border-[var(--accent)]"><span class="text-2xl" aria-hidden="true">{x!.icon}</span><span class="font-semibold">{x!.name}</span></a></li>)}</ul>
       </section>
     )}
   </article>

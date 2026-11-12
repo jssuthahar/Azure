@@ -3,27 +3,29 @@ import Base from '../../../layouts/Base.astro';
 import Simulator from '../../../components/Simulator.astro';
 import { ALL_LABS, type Lab } from '../../../lib/sim/labs';
 import { getNav } from '../../../lib/learn';
+import { getExam, liveExams } from '../../../data/exams';
 
 export function getStaticPaths() {
-  return ALL_LABS.map((lab) => ({ params: { lab: lab.id }, props: { lab } }));
+  return liveExams().flatMap((exam) => ALL_LABS.map((lab) => ({ params: { cert: exam.slug, lab: lab.id }, props: { lab } })));
 }
+const exam = getExam(Astro.params.cert);
 const { lab } = Astro.props as { lab: Lab };
-const nav = await getNav();
+const nav = await getNav(exam.slug);
 const related = lab.topics.map((t) => nav.find((n) => n.slug === t && n.published)).filter(Boolean);
 const idx = ALL_LABS.findIndex((l) => l.id === lab.id);
 const next = ALL_LABS[idx + 1];
 const title = lab.id === 'sandbox' ? 'Azure Sandbox Simulator: Practise Free | MSDEVBUILD' : `${lab.title} · Free Azure Lab`.slice(0, 65);
 const description = `${lab.intro}`.slice(0, 155);
 ---
-<Base title={title} description={description} breadcrumbs={[{ name: 'Home', url: '/' }, { name: 'AZ-900', url: '/az-900/' }, { name: 'Practice labs', url: '/az-900/labs/' }, { name: lab.title, url: Astro.url.pathname }]}>
+<Base title={title} description={description} breadcrumbs={[{ name: 'Home', url: '/' }, { name: `${exam.code}`, url: `/${exam.slug}/` }, { name: 'Practice labs', url: `/${exam.slug}/labs/` }, { name: lab.title, url: Astro.url.pathname }]}>
   <div class="mx-auto max-w-7xl px-4 py-6 sm:px-6">
-    <nav aria-label="Breadcrumb" class="text-sm text-muted"><a class="hover:underline" href="/az-900/labs/">❮ Practice labs</a></nav>
+    <nav aria-label="Breadcrumb" class="text-sm text-muted"><a class="hover:underline" href={`/${exam.slug}/labs/`}>❮ Practice labs</a></nav>
     <div class="mt-2 flex flex-wrap items-end justify-between gap-3">
       <div>
         <h1 class="text-3xl font-bold tracking-tight sm:text-4xl"><span aria-hidden="true">{lab.icon}</span> {lab.title}</h1>
         <p class="mt-1 max-w-3xl text-lg text-muted">{lab.intro}</p>
       </div>
-      {next && <a href={`/az-900/labs/${next.id}/`} class="nav-btn">Next: {next.title} ❯</a>}
+      {next && <a href={`/${exam.slug}/labs/${next.id}/`} class="nav-btn">Next: {next.title} ❯</a>}
     </div>
     {lab.learn.length > 0 && (
       <p class="mt-3 flex flex-wrap gap-2 text-sm"><span class="font-semibold">You will learn:</span>{lab.learn.map((l) => <span class="chip chip-muted">{l}</span>)}</p>

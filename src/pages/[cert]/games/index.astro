@@ -1,17 +1,22 @@
 ---
 import Base from '../../../layouts/Base.astro';
 import Mascot from '../../../components/Mascot.astro';
-import { SORT_SETS, RIDDLES } from '../../../data/az-900/games';
+import { getExam, examStaticPaths } from '../../../data/exams';
+
+export function getStaticPaths() {
+  return examStaticPaths();
+}
+const exam = getExam(Astro.params.cert);
 
 const games = [
-  { href: '/az-900/games/daily/', icon: '📅', title: 'Daily Challenge', text: '5 questions a day, the same for everyone. Keep your streak alive!', band: 'band-yellow', key: 'daily', tag: 'New every day' },
-  { href: '/az-900/games/sort/', icon: '🗂️', title: 'Sort It!', text: `Tap each card into the right bucket. ${SORT_SETS.length} rounds: IaaS/PaaS/SaaS, CapEx/OpEx and more.`, band: 'band-blue', key: 'sort', tag: `${SORT_SETS.length} rounds` },
-  { href: '/az-900/games/match/', icon: '🧠', title: 'Match the Pairs', text: 'Flip cards to match each Azure term with its meaning. Fewer moves, more points.', band: 'band-green', key: 'match', tag: 'Memory game' },
-  { href: '/az-900/games/lightning/', icon: '⚡', title: 'Lightning Round', text: 'How many questions can you answer in 60 seconds? Build combos for bonus points.', band: 'band-lilac', key: 'lightning', tag: '60 seconds' },
-  { href: '/az-900/games/who-am-i/', icon: '🕵️', title: 'Who Am I?', text: `Guess the Azure service from clues. Fewer clues, more points. ${RIDDLES.length} riddles.`, band: 'band-yellow', key: 'whoami', tag: 'Riddles' },
+  { href: `/${exam.slug}/games/daily/`, icon: '📅', title: 'Daily Challenge', text: '5 questions a day, the same for everyone. Keep your streak alive!', band: 'band-yellow', key: 'daily', tag: 'New every day' },
+  { href: `/${exam.slug}/games/sort/`, icon: '🗂️', title: 'Sort It!', text: `Tap each card into the right bucket. ${exam.games.sortSets.length} rounds: IaaS/PaaS/SaaS, CapEx/OpEx and more.`, band: 'band-blue', key: 'sort', tag: `${exam.games.sortSets.length} rounds` },
+  { href: `/${exam.slug}/games/match/`, icon: '🧠', title: 'Match the Pairs', text: 'Flip cards to match each Azure term with its meaning. Fewer moves, more points.', band: 'band-green', key: 'match', tag: 'Memory game' },
+  { href: `/${exam.slug}/games/lightning/`, icon: '⚡', title: 'Lightning Round', text: 'How many questions can you answer in 60 seconds? Build combos for bonus points.', band: 'band-lilac', key: 'lightning', tag: '60 seconds' },
+  { href: `/${exam.slug}/games/who-am-i/`, icon: '🕵️', title: 'Who Am I?', text: `Guess the Azure service from clues. Fewer clues, more points. ${exam.games.riddles.length} riddles.`, band: 'band-yellow', key: 'whoami', tag: 'Riddles' },
 ];
 ---
-<Base title="AZ-900 Games: Learn Azure by Playing | MSDEVBUILD" description="Learn Azure fundamentals the fun way: sorting games, memory pairs, a 60-second lightning quiz, Who Am I riddles and a daily challenge, with XP and badges." breadcrumbs={[{ name: 'Home', url: '/' }, { name: 'AZ-900', url: '/az-900/' }, { name: 'Play & Learn', url: '/az-900/games/' }]}>
+<Base title={`${exam.code} Games: Learn Azure by Playing | MSDEVBUILD`} description="Learn Azure fundamentals the fun way: sorting games, memory pairs, a 60-second lightning quiz, Who Am I riddles and a daily challenge, with XP and badges." breadcrumbs={[{ name: 'Home', url: '/' }, { name: `${exam.code}`, url: `/${exam.slug}/` }, { name: 'Play & Learn', url: `/${exam.slug}/games/` }]}>
   <section class="band-navy px-4 py-12 text-center sm:py-16">
     <Mascot size={96} mood="cheer" class="mx-auto" />
     <h1 class="mt-4 text-4xl font-bold tracking-tight sm:text-6xl">Play &amp; Learn</h1>

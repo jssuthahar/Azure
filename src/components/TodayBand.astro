@@ -5,9 +5,10 @@
  * the static page stays fresh every day.
  */
 import { getGlossary } from '../lib/glossary';
-import { WHATIFS } from '../data/az-900/whatifs';
+import { getExam } from '../data/exams';
+const exam = getExam();
 const terms = (await getGlossary()).map(({ term, def, url, slug }) => ({ term, def, url, slug }));
-const whatifs = WHATIFS.map(({ slug, q, emoji }) => ({ slug, q, emoji }));
+const whatifs = exam.whatIfs.map(({ slug, q, emoji }) => ({ slug, q, emoji }));
 const quick = [
   ['⚡', 'Azure Simulator', '/simulator/'], ['⚖️', 'Compare services', '/az-900/compare/'], ['📚', 'Service reference', '/az-900/services/'],
   ['📖', 'Glossary', '/az-900/glossary/'], ['🏆', 'Free certificate', '/certificate/'], ['</>', 'Embed sims', '/embed/'],

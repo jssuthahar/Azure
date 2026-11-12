@@ -2,13 +2,14 @@
 import Base from '../layouts/Base.astro';
 import Mascot from '../components/Mascot.astro';
 import { getNav } from '../lib/learn';
-import { MODULES } from '../data/az-900/syllabus';
+import { getExam } from '../data/exams';
+const exam = getExam();
 
 const nav = await getNav();
 const published = nav.filter((t) => t.published);
-const moduleKeys = Object.fromEntries(MODULES.map((m) => [m.slug, published.filter((t) => t.module.slug === m.slug).map((t) => t.key)]));
+const moduleKeys = Object.fromEntries(exam.modules.map((m) => [m.slug, published.filter((t) => t.module.slug === m.slug).map((t) => t.key)]));
 const topics = published.map((t) => ({ key: t.key, title: t.title, url: t.url, module: t.module.slug }));
-const payload = JSON.stringify({ moduleKeys, topics, modules: MODULES.map((m) => ({ slug: m.slug, title: m.shortTitle, domain: m.domain })) }).replace(/</g, '\\u003c');
+const payload = JSON.stringify({ moduleKeys, topics, modules: exam.modules.map((m) => ({ slug: m.slug, title: m.shortTitle, domain: m.domain })) }).replace(/</g, '\\u003c');
 ---
 <Base breadcrumbs={[{ name: 'Home', url: '/' }, { name: 'My progress', url: '/progress/' }]} title="My Progress | MSDEVBUILD Azure" description="Your AZ-900 learning progress, knowledge-check scores, mock exam history and achievement badges, saved privately in your browser." noindex>
   <script type="application/json" id="pg-data" set:html={payload} />

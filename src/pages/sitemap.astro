@@ -2,11 +2,10 @@
 /** Human-readable site map: every page, grouped. Also good for crawlers (internal links). */
 import Base from '../layouts/Base.astro';
 import { getNav } from '../lib/learn';
-import { MODULES } from '../data/az-900/syllabus';
-import { COMPARISONS } from '../data/az-900/compare';
 import { SERVICES, SERVICE_CATS } from '../data/az-900/services';
-import { WHATIFS } from '../data/az-900/whatifs';
 import { ALL_LABS } from '../lib/sim/labs';
+import { getExam } from '../data/exams';
+const exam = getExam();
 
 const nav = (await getNav()).filter((t) => t.published);
 const tools: [string, string][] = [
@@ -22,7 +21,7 @@ const machine: [string, string, string][] = [
   ['robots.txt', '/robots.txt', 'Crawler rules'],
 ];
 const crumbs = [{ name: 'Home', url: '/' }, { name: 'Site map', url: '/sitemap/' }];
-const total = nav.length + COMPARISONS.length + SERVICES.length + WHATIFS.length + ALL_LABS.length + tools.length;
+const total = nav.length + exam.comparisons.length + SERVICES.length + exam.whatIfs.length + ALL_LABS.length + tools.length;
 ---
 <Base title="Site Map: Every Page on MSDEVBUILD Azure" description={`Every page on MSDEVBUILD Azure in one place: ${nav.length} AZ-900 lessons, comparisons, Azure services in 60 seconds, simulations, labs, mock exam and tools.`} breadcrumbs={crumbs}>
   <div class="mx-auto max-w-6xl px-4 py-10 sm:px-6">
@@ -32,7 +31,7 @@ const total = nav.length + COMPARISONS.length + SERVICES.length + WHATIFS.length
 
     <h2 class="sm-h">📘 AZ-900 lessons</h2>
     <div class="grid gap-8 md:grid-cols-3">
-      {MODULES.map((m) => (
+      {exam.modules.map((m) => (
         <section>
           <h3 class="font-semibold"><a class="text-accent hover:underline" href={`/az-900/${m.slug}/`}>Domain {m.domain}: {m.shortTitle}</a></h3>
           <ol class="sm-list list-decimal pl-5">{nav.filter((t) => t.module.slug === m.slug).map((t) => <li><a href={t.url}>{t.title}</a></li>)}</ol>
@@ -43,11 +42,11 @@ const total = nav.length + COMPARISONS.length + SERVICES.length + WHATIFS.length
     <div class="mt-4 grid gap-8 md:grid-cols-2">
       <section>
         <h2 class="sm-h">⚖️ Comparisons</h2>
-        <ul class="sm-list"><li><a href="/az-900/compare/"><strong>All comparisons</strong></a></li>{COMPARISONS.map((c) => <li><a href={`/az-900/compare/${c.slug}/`}>{c.title}</a></li>)}</ul>
+        <ul class="sm-list"><li><a href={`/${exam.slug}/compare/`}><strong>All comparisons</strong></a></li>{exam.comparisons.map((c) => <li><a href={`/${exam.slug}/compare/${c.slug}/`}>{c.title}</a></li>)}</ul>
       </section>
       <section>
         <h2 class="sm-h">⚡ Simulator and labs</h2>
-        <ul class="sm-list"><li><a href="/simulator/"><strong>Azure Simulator</strong></a></li>{WHATIFS.map((w) => <li><a href={`/simulator/${w.slug}/`}>{w.q}</a></li>)}</ul>
+        <ul class="sm-list"><li><a href="/simulator/"><strong>Azure Simulator</strong></a></li>{exam.whatIfs.map((w) => <li><a href={`/simulator/${w.slug}/`}>{w.q}</a></li>)}</ul>
         <ul class="sm-list mt-4"><li><a href="/az-900/labs/"><strong>Practice labs</strong></a></li>{ALL_LABS.map((l) => <li><a href={`/az-900/labs/${l.id}/`}>{l.icon} {l.title}</a></li>)}</ul>
       </section>
     </div>

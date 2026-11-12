@@ -1,5 +1,4 @@
 ---
-import { VISUALS } from '../data/az-900/visuals';
 import CloudScene from './scenes/CloudScene.astro';
 import OnPremCloudScene from './scenes/OnPremCloudScene.astro';
 import CloudModelsScene from './scenes/CloudModelsScene.astro';
@@ -17,9 +16,11 @@ import HierarchyScene from './scenes/HierarchyScene.astro';
 import NetworkScene from './scenes/NetworkScene.astro';
 import StorageScene from './scenes/StorageScene.astro';
 import IdentityScene from './scenes/IdentityScene.astro';
+import { examFromPath } from '../data/exams';
+const exam = examFromPath(Astro.url.pathname);
 
 interface Props { topic: string }
-const v = VISUALS[Astro.props.topic];
+const v = exam.visuals[Astro.props.topic];
 const SCENES = {
   cloud: CloudScene, onprem: OnPremCloudScene, models: CloudModelsScene, stack: ServiceStackScene,
   serverless: ServerlessScene, meter: MeterScene, scale: ScaleScene, elastic: ElasticScene,

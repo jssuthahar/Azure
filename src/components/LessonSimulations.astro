@@ -7,11 +7,12 @@
  */
 import Datacenter3D from './mdx/Datacenter3D.astro';
 import PortalTour from './mdx/PortalTour.astro';
-import { LESSON_SIMS } from '../data/az-900/lesson-sims';
 import { ALL_LABS, type Lab } from '../lib/sim/labs';
+import { examFromPath } from '../data/exams';
+const exam = examFromPath(Astro.url.pathname);
 interface Props { slug: string; labs: Lab[] }
 const { slug, labs } = Astro.props;
-const sims = LESSON_SIMS[slug];
+const sims = exam.lessonSims[slug];
 const sandbox = ALL_LABS.find((l) => l.id === 'sandbox')!;
 const labList = [...labs.filter((l) => l.id !== 'sandbox'), sandbox];
 ---

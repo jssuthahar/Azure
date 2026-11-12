@@ -2,8 +2,14 @@
 import { SITE } from '../../../config';
 import Base from '../../../layouts/Base.astro';
 import { SERVICES, SERVICE_CATS } from '../../../data/az-900/services';
-const crumbs = [{ name: 'Home', url: '/' }, { name: 'AZ-900', url: '/az-900/' }, { name: 'Service reference', url: '/az-900/services/' }];
-const itemList = [{ '@type': 'ItemList', name: 'Azure services in 60 seconds', numberOfItems: SERVICES.length, itemListElement: SERVICES.map((s, i) => ({ '@type': 'ListItem', position: i + 1, name: s.name, url: `${SITE.url}${`/az-900/services/${s.slug}/`}` })) }];
+import { getExam, examStaticPaths } from '../../../data/exams';
+
+export function getStaticPaths() {
+  return examStaticPaths();
+}
+const exam = getExam(Astro.params.cert);
+const crumbs = [{ name: 'Home', url: '/' }, { name: `${exam.code}`, url: `/${exam.slug}/` }, { name: 'Service reference', url: `/${exam.slug}/services/` }];
+const itemList = [{ '@type': 'ItemList', name: 'Azure services in 60 seconds', numberOfItems: SERVICES.length, itemListElement: SERVICES.map((s, i) => ({ '@type': 'ListItem', position: i + 1, name: s.name, url: `${SITE.url}/${exam.slug}/services/${s.slug}/` })) }];
 ---
 <Base schema={itemList} title="Azure Service Reference: Every Service in 60 Seconds" description="Every Azure service in 60 seconds: VMs, App Service, Functions, Blob, VNet, Entra ID, Policy and more, with price feel in your currency and a simulation." breadcrumbs={crumbs}>
   <div class="mx-auto max-w-5xl px-4 py-10 sm:px-6">
@@ -18,7 +24,7 @@ const itemList = [{ '@type': 'ItemList', name: 'Azure services in 60 seconds', n
         <ul class="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
           {SERVICES.filter((s) => s.cat === cat).map((s) => (
             <li class="svc-item" data-q={`${s.name} ${s.aws} ${s.cat} ${s.model}`.toLowerCase()}>
-              <a href={`/az-900/services/${s.slug}/`} class="flex h-full gap-3 rounded-xl border border-default bg-[var(--card)] p-4 hover:border-[var(--accent)]">
+              <a href={`/${exam.slug}/services/${s.slug}/`} class="flex h-full gap-3 rounded-xl border border-default bg-[var(--card)] p-4 hover:border-[var(--accent)]">
                 <span class="text-3xl" aria-hidden="true">{s.icon}</span>
                 <span><span class="block font-semibold">{s.name}</span><span class="mt-1 block text-sm text-muted">{s.model} · AWS: {s.aws}</span></span>
               </a>

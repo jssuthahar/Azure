@@ -4,7 +4,7 @@
  * completion. Every item is ORIGINAL, written for this site from the official
  * skills outline. None are real, recalled or leaked Microsoft exam questions.
  */
-export interface Base { id: string; domain: 1 | 2 | 3; objective?: string; scenario?: string; explanation: string }
+export interface Base { id: string; domain: number; objective?: string; scenario?: string; explanation: string }
 export interface YesNo extends Base { kind: 'yesno'; statements: { text: string; answer: boolean }[] }
 export interface Match extends Base { kind: 'match'; question: string; itemsLabel: string; items: string[]; targets: { text: string; answer: number }[] }
 export interface Order extends Base { kind: 'order'; question: string; actions: string[]; answer: number[] }

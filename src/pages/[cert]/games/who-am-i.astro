@@ -1,13 +1,18 @@
 ---
 import GameLayout from '../../../layouts/GameLayout.astro';
-import { RIDDLES } from '../../../data/az-900/games';
 import { getNav } from '../../../lib/learn';
+import { getExam, examStaticPaths } from '../../../data/exams';
 
-const nav = await getNav();
-const riddles = RIDDLES.map((r) => ({ ...r, url: r.topic ? nav.find((t) => t.slug === r.topic && t.published)?.url : undefined }));
+export function getStaticPaths() {
+  return examStaticPaths();
+}
+const exam = getExam(Astro.params.cert);
+
+const nav = await getNav(exam.slug);
+const riddles = exam.games.riddles.map((r) => ({ ...r, url: r.topic ? nav.find((t) => t.slug === r.topic && t.published)?.url : undefined }));
 const payload = JSON.stringify(riddles).replace(/</g, '\\u003c');
 ---
-<GameLayout title="Who Am I?" seoTitle="Who Am I? Guess the Azure Service Game | MSDEVBUILD" description="A riddle game for AZ-900: guess the Azure service from up to three clues. Fewer clues, more points. Great revision for the exam." icon="🕵️" intro="Read the clue and guess the Azure service. Need help? Ask for another clue, but it costs points." band="band-yellow">
+<GameLayout title="Who Am I?" seoTitle="Who Am I? Guess the Azure Service Game | MSDEVBUILD" description={`A riddle game for ${exam.code}: guess the Azure service from up to three clues. Fewer clues, more points. Great revision for the exam.`} icon="🕵️" intro="Read the clue and guess the Azure service. Need help? Ask for another clue, but it costs points." band="band-yellow">
   <script type="application/json" id="wa-data" set:html={payload} />
   <div class="flex items-center justify-between text-lg">
     <p>Riddle <strong id="wa-n">1</strong>/5</p>

@@ -1,7 +1,8 @@
 ---
 import { SITE } from '../config';
 import SocialLinks from './SocialLinks.astro';
-import { MODULES } from '../data/az-900/syllabus';
+import { examFromPath } from '../data/exams';
+const exam = examFromPath(Astro.url.pathname);
 const year = new Date().getFullYear();
 ---
 
@@ -21,10 +22,10 @@ const year = new Date().getFullYear();
     <div>
       <p class="text-sm font-semibold">Azure Tutorials</p>
       <ul class="mt-3 space-y-2 text-sm text-muted">
-        <li><a class="hover:text-[var(--accent-deep)]" href="/az-900/">AZ-900 Azure Fundamentals</a></li>
-        {MODULES.map((m) => <li><a class="hover:text-[var(--accent-deep)]" href={`/az-900/#${m.slug}`}>{m.shortTitle}</a></li>)}
-        <li><a class="hover:text-[var(--accent-deep)]" href="/az-900/mock-exam/">AZ-900 mock exam</a></li>
-        <li><a class="hover:text-[var(--accent-deep)]" href="/az-900/interview/">AZ-900 interview questions</a></li>
+        <li><a class="hover:text-[var(--accent-deep)]" href={`/${exam.slug}/`}>{exam.code} Azure Fundamentals</a></li>
+        {exam.modules.map((m) => <li><a class="hover:text-[var(--accent-deep)]" href={`/${exam.slug}/#${m.slug}`}>{m.shortTitle}</a></li>)}
+        <li><a class="hover:text-[var(--accent-deep)]" href={`/${exam.slug}/mock-exam/`}>{exam.code} mock exam</a></li>
+        <li><a class="hover:text-[var(--accent-deep)]" href={`/${exam.slug}/interview/`}>{exam.code} interview questions</a></li>
       </ul>
     </div>
     <div>

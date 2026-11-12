@@ -5,7 +5,8 @@
  * "rail" mode that hides the menu to give the lesson more room.
  */
 import type { NavTopic } from '../lib/learn';
-import { MODULES } from '../data/az-900/syllabus';
+import { examFromPath } from '../data/exams';
+const exam = examFromPath(Astro.url.pathname);
 
 interface Props { nav: NavTopic[]; currentKey?: string }
 const { nav, currentKey } = Astro.props;
@@ -13,11 +14,11 @@ const published = nav.filter((t) => t.published);
 const current = nav.find((t) => t.key === currentKey);
 const position = current ? published.findIndex((t) => t.key === currentKey) + 1 : 0;
 const practice = [
-  { icon: '🧪', label: 'Practice labs', href: '/az-900/labs/' },
-  { icon: '⏱', label: 'Mock exam', href: '/az-900/mock-exam/' },
+  { icon: '🧪', label: 'Practice labs', href: `/${exam.slug}/labs/` },
+  { icon: '⏱', label: 'Mock exam', href: `/${exam.slug}/mock-exam/` },
   { icon: '🏆', label: 'Certificate', href: '/certificate/' },
-  { icon: '🃏', label: 'Revision flashcards', href: '/az-900/revision/' },
-  { icon: '🎤', label: 'Interview questions', href: '/az-900/interview/' },
+  { icon: '🃏', label: 'Revision flashcards', href: `/${exam.slug}/revision/` },
+  { icon: '🎤', label: 'Interview questions', href: `/${exam.slug}/interview/` },
 ];
 ---
 <nav class="sb" aria-label="AZ-900 lessons" data-current-module={current?.module.slug ?? ''}>
@@ -25,7 +26,7 @@ const practice = [
   <div class="sb-full">
     <div class="sb-top">
     <div class="sb-head">
-      <a href="/az-900/" class="sb-title">AZ-900 Tutorial</a>
+      <a href={`/${exam.slug}/`} class="sb-title">{exam.code} Tutorial</a>
       <button type="button" class="sb-icon-btn sb-hide-btn" data-sb-rail aria-label="Hide lesson menu" title="Hide menu (more room to read)">«</button>
       <button type="button" class="sb-icon-btn sb-close-btn" data-menu-close aria-label="Close menu">✕</button>
     </div>
@@ -43,7 +44,7 @@ const practice = [
     </div>
     <p class="sb-empty" data-sb-none hidden>No lessons match.</p>
 
-    {MODULES.map((m) => {
+    {exam.modules.map((m) => {
       const topics = nav.filter((t) => t.module.slug === m.slug);
       const pub = topics.filter((t) => t.published);
       const open = current?.module.slug === m.slug;
@@ -61,7 +62,7 @@ const practice = [
           </button>
           <div class="sb-sec-body" id={`sb-${m.slug}`} role="region" aria-label={m.shortTitle}>
             <div class="sb-sec-inner">
-              <a href={`/az-900/${m.slug}/`} class="sb-overview">Module overview ›</a>
+              <a href={`/${exam.slug}/${m.slug}/`} class="sb-overview">Module overview ›</a>
               <ol class="sb-list">
                 {topics.map((t) => t.published ? (
                   <li data-title={t.title.toLowerCase()}>
@@ -96,7 +97,7 @@ const practice = [
   <div class="sb-rail">
     <button type="button" class="sb-icon-btn" data-sb-rail aria-label="Show lesson menu" title="Show lesson menu">»</button>
     <span class="sb-rail-pct" data-progress-total>0%</span>
-    {MODULES.map((m) => (
+    {exam.modules.map((m) => (
       <button type="button" class="sb-rail-dom" data-sb-open={m.slug} title={`${m.domain}. ${m.shortTitle}`} aria-label={`Open ${m.shortTitle}`} data-current={current?.module.slug === m.slug ? '' : undefined}>{m.domain}</button>
     ))}
     <span class="sb-rail-sep" aria-hidden="true"></span>

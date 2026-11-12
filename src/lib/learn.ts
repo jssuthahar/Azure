@@ -1,12 +1,11 @@
 import { getCollection, type CollectionEntry } from 'astro:content';
-import { MODULES, type SyllabusModule, type SyllabusTopic } from '../data/az-900/syllabus';
+import type { SyllabusModule, SyllabusTopic } from '../data/types';
+import { getExam, PRIMARY_EXAM } from '../data/exams';
 import type { Question } from '../content.config';
 
-export const CERT = 'az-900';
-
-export const topicUrl = (moduleSlug: string, topicSlug: string) => `/${CERT}/${moduleSlug}/${topicSlug}/`;
-export const moduleUrl = (moduleSlug: string) => `/${CERT}/${moduleSlug}/`;
-export const topicKey = (moduleSlug: string, topicSlug: string) => `${CERT}/${moduleSlug}/${topicSlug}`;
+export const topicUrl = (moduleSlug: string, topicSlug: string, cert = PRIMARY_EXAM) => `/${cert}/${moduleSlug}/${topicSlug}/`;
+export const moduleUrl = (moduleSlug: string, cert = PRIMARY_EXAM) => `/${cert}/${moduleSlug}/`;
+export const topicKey = (moduleSlug: string, topicSlug: string, cert = PRIMARY_EXAM) => `${cert}/${moduleSlug}/${topicSlug}`;
 
 export interface NavTopic extends SyllabusTopic {
   module: SyllabusModule;
@@ -15,14 +14,14 @@ export interface NavTopic extends SyllabusTopic {
   published: boolean;
 }
 
-/** Every syllabus topic, in teaching order, flagged with whether its tutorial exists. */
-export async function getNav(): Promise<NavTopic[]> {
+/** Every syllabus topic of an exam, in teaching order, flagged with whether its tutorial exists. */
+export async function getNav(cert = PRIMARY_EXAM): Promise<NavTopic[]> {
   const entries = await getCollection('tutorials');
   const ids = new Set(entries.map((e) => e.id));
-  return MODULES.flatMap((module) =>
+  return getExam(cert).modules.flatMap((module) =>
     module.topics.map((t) => {
-      const key = topicKey(module.slug, t.slug);
-      return { ...t, module, url: topicUrl(module.slug, t.slug), key, published: ids.has(key) };
+      const key = topicKey(module.slug, t.slug, cert);
+      return { ...t, module, url: topicUrl(module.slug, t.slug, cert), key, published: ids.has(key) };
     }),
   );
 }
@@ -32,7 +31,7 @@ export async function getTutorial(key: string): Promise<CollectionEntry<'tutoria
 }
 
 export interface BankQuestion extends Question {
-  domain: 1 | 2 | 3;
+  domain: number;
   topic?: string;
 }
 
@@ -60,13 +59,13 @@ function shuffleOptions<T extends Question>(q: T): T {
   return { ...q, options: order.map((i) => q.options[i]), answer: q.answer.map((a) => order.indexOf(a)).sort((a, b) => a - b) };
 }
 
-export async function getQuestionBank(): Promise<BankQuestion[]> {
-  const files = await getCollection('questions', (f) => f.data.cert === CERT);
+export async function getQuestionBank(cert = PRIMARY_EXAM): Promise<BankQuestion[]> {
+  const files = await getCollection('questions', (f) => f.data.cert === cert);
   return files.flatMap((f) => f.data.questions.map((q) => shuffleOptions({ ...q, domain: f.data.domain, topic: f.data.topic })));
 }
 
-export async function getTopicQuestions(topicSlug: string): Promise<Question[]> {
-  const files = await getCollection('questions', (f) => f.data.cert === CERT && f.data.topic === topicSlug);
+export async function getTopicQuestions(topicSlug: string, cert = PRIMARY_EXAM): Promise<Question[]> {
+  const files = await getCollection('questions', (f) => f.data.cert === cert && f.data.topic === topicSlug);
   return files.flatMap((f) => f.data.questions.map(shuffleOptions));
 }
 

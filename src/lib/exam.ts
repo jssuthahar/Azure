@@ -7,7 +7,7 @@
 import type { FormatItem } from '../data/az-900/exam-items';
 
 export interface ChoiceItem {
-  kind: 'single' | 'multi'; id: string; domain: 1 | 2 | 3; topic?: string; scenario?: string;
+  kind: 'single' | 'multi'; id: string; domain: number; topic?: string; scenario?: string;
   question: string; options: { text: string; why: string }[]; answer: number[]; explanation: string;
 }
 export type Item = ChoiceItem | FormatItem;
@@ -16,12 +16,17 @@ export interface Paper { mode: string; items: Item[]; section2Start: number; min
 
 const shuffle = <T,>(a: T[]) => { const b = [...a]; for (let i = b.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [b[i], b[j]] = [b[j], b[i]]; } return b; };
 
-/** Assemble a paper. Yes/No series go into a final section, as on the real exam. */
-export function buildPaper(mode: string, domain: number, choice: ChoiceItem[], formats: FormatItem[]): Paper {
+/**
+ * Assemble a paper. Yes/No series go into a final section, as on the real exam.
+ * `domainWeights` maps each exam area to its share of the exam (e.g. the
+ * syllabus weight midpoints); values are normalised, so any scale works.
+ */
+export function buildPaper(mode: string, domain: number, choice: ChoiceItem[], formats: FormatItem[], domainWeights: Record<number, number>): Paper {
   const plan = mode === 'full' ? { total: 45, yesno: 6, formats: 12, minutes: 45 } : mode === 'quick' ? { total: 12, yesno: 2, formats: 3, minutes: 15 } : { total: 15, yesno: 2, formats: 4, minutes: 18 };
-  const weights = mode === 'domain' ? { [domain]: 1 } : { 1: 0.275, 2: 0.375, 3: 0.35 };
-  const doms = Object.keys(weights).map(Number) as (1 | 2 | 3)[];
-  const share = (n: number) => { const out: Record<number, number> = {}; let left = n; doms.forEach((d, i) => { out[d] = i === doms.length - 1 ? left : Math.round(n * (weights as Record<number, number>)[d]); left -= out[d]; }); return out; };
+  const sum = Object.values(domainWeights).reduce((a, b) => a + b, 0) || 1;
+  const weights: Record<number, number> = mode === 'domain' ? { [domain]: 1 } : Object.fromEntries(Object.entries(domainWeights).map(([d, w]) => [d, w / sum]));
+  const doms = Object.keys(weights).map(Number);
+  const share = (n: number) => { const out: Record<number, number> = {}; let left = n; doms.forEach((d, i) => { out[d] = i === doms.length - 1 ? left : Math.round(n * weights[d]); left -= out[d]; }); return out; };
   const take = <T extends { domain: number }>(pool: T[], per: Record<number, number>) => doms.flatMap((d) => shuffle(pool.filter((q) => q.domain === d)).slice(0, per[d]));
   const yn = take(formats.filter((f) => f.kind === 'yesno'), share(plan.yesno));
   const fm = take(formats.filter((f) => f.kind !== 'yesno'), share(plan.formats));

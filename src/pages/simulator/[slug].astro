@@ -2,18 +2,19 @@
 import Base from '../../layouts/Base.astro';
 import Datacenter3D from '../../components/mdx/Datacenter3D.astro';
 import ShareButtons from '../../components/ShareButtons.astro';
-import { WHATIFS, type WhatIf } from '../../data/az-900/whatifs';
-import { comparisonBySlug } from '../../data/az-900/compare';
 import { getNav, inlineMd } from '../../lib/learn';
 import { SITE } from '../../config';
+import { getExam } from '../../data/exams';
+import type { WhatIf } from '../../data/az-900/whatifs';
+const exam = getExam();
 
 export function getStaticPaths() {
-  return WHATIFS.map((w) => ({ params: { slug: w.slug }, props: { w } }));
+  return getExam().whatIfs.map((w) => ({ params: { slug: w.slug }, props: { w } }));
 }
 const { w } = Astro.props as { w: WhatIf };
 const nav = await getNav();
 const lessons = w.lessons.map((s) => nav.find((t) => t.slug === s && t.published)).filter(Boolean);
-const cmp = w.compare ? comparisonBySlug(w.compare) : undefined;
+const cmp = w.compare ? exam.comparisons.find((c) => c.slug === w.compare) : undefined;
 const url = new URL(Astro.url.pathname, SITE.url).href;
 const crumbs = [{ name: 'Home', url: '/' }, { name: 'Azure Simulator', url: '/simulator/' }, { name: w.q, url: Astro.url.pathname }];
 const schema = [{ '@type': 'FAQPage', mainEntity: [{ '@type': 'Question', name: w.q, acceptedAnswer: { '@type': 'Answer', text: w.answer.replace(/\*\*/g, '') } }] }];
@@ -33,12 +34,12 @@ const schema = [{ '@type': 'FAQPage', mainEntity: [{ '@type': 'Question', name: 
       <h2 class="text-xl font-semibold">Learn more</h2>
       <div class="mt-3 flex flex-wrap gap-2">
         {lessons.map((l) => <a href={l!.url} class="nav-btn">📘 {l!.title} ❯</a>)}
-        {cmp && <a href={`/az-900/compare/${cmp.slug}/`} class="nav-btn">⚖️ {cmp.title} ❯</a>}
+        {cmp && <a href={`/${exam.slug}/compare/${cmp.slug}/`} class="nav-btn">⚖️ {cmp.title} ❯</a>}
       </div>
     </section>
     <section class="mt-10 border-t border-default pt-6">
       <h2 class="text-xl font-semibold">More “What happens if…?”</h2>
-      <ul class="mt-3 grid gap-2 sm:grid-cols-2">{WHATIFS.filter((x) => x.slug !== w.slug).map((x) => <li><a class="text-accent hover:underline" href={`/simulator/${x.slug}/`}>{x.emoji} {x.q}</a></li>)}</ul>
+      <ul class="mt-3 grid gap-2 sm:grid-cols-2">{exam.whatIfs.filter((x) => x.slug !== w.slug).map((x) => <li><a class="text-accent hover:underline" href={`/simulator/${x.slug}/`}>{x.emoji} {x.q}</a></li>)}</ul>
     </section>
   </article>
 </Base>

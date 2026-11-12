@@ -4,9 +4,10 @@ import Mascot from '../components/Mascot.astro';
 import CloudScene from '../components/scenes/CloudScene.astro';
 import TodayBand from '../components/TodayBand.astro';
 import { CERTIFICATIONS } from '../data/certifications';
-import { MODULES } from '../data/az-900/syllabus';
 import { getNav, getQuestionBank, getTutorial, inlineMd } from '../lib/learn';
 import { SITE } from '../config';
+import { getExam } from '../data/exams';
+const exam = getExam();
 
 const nav = await getNav();
 const published = nav.filter((t) => t.published);
@@ -15,7 +16,7 @@ const first = published[0];
 
 const bands = ['band-blue', 'band-yellow', 'band-green'];
 const modules = await Promise.all(
-  MODULES.map(async (m, i) => {
+  exam.modules.map(async (m, i) => {
     const topics = nav.filter((t) => t.module.slug === m.slug);
     const pub = topics.filter((t) => t.published);
     const sample = pub[0] ? await getTutorial(pub[0].key) : undefined;

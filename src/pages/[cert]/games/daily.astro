@@ -1,14 +1,20 @@
 ---
 import GameLayout from '../../../layouts/GameLayout.astro';
 import { getQuestionBank } from '../../../lib/learn';
+import { getExam, examStaticPaths } from '../../../data/exams';
 
-const bank = (await getQuestionBank())
+export function getStaticPaths() {
+  return examStaticPaths();
+}
+const exam = getExam(Astro.params.cert);
+
+const bank = (await getQuestionBank(exam.slug))
   .filter((q) => q.type === 'single')
   .sort((a, b) => a.id.localeCompare(b.id))
   .map((q) => ({ id: q.id, s: q.scenario, q: q.question, o: q.options.map((x) => x.text), w: q.options.map((x) => x.why), a: q.answer[0], e: q.explanation }));
 const payload = JSON.stringify(bank).replace(/</g, '\\u003c');
 ---
-<GameLayout title="Daily Challenge" seoTitle="AZ-900 Daily Challenge: 5 Questions a Day | MSDEVBUILD" description="Five AZ-900 practice questions every day, the same for every learner. Build a daily learning streak and earn bonus XP." icon="📅" intro="Five questions, once a day. Keep your 🔥 streak going!" band="band-yellow">
+<GameLayout title="Daily Challenge" seoTitle={`${exam.code} Daily Challenge: 5 Questions a Day | MSDEVBUILD`} description={`Five ${exam.code} practice questions every day, the same for every learner. Build a daily learning streak and earn bonus XP.`} icon="📅" intro="Five questions, once a day. Keep your 🔥 streak going!" band="band-yellow">
   <script type="application/json" id="dc-data" set:html={payload} />
   <div class="flex flex-wrap items-center justify-between gap-3">
     <p class="text-lg font-semibold" id="dc-date"></p>
@@ -32,7 +38,7 @@ const payload = JSON.stringify(bank).replace(/</g, '\\u003c');
     <p id="dc-sub" class="mt-1 text-lg"></p>
     <p id="dc-next-in" class="mt-4 text-muted"></p>
     <div class="mt-6 flex flex-wrap justify-center gap-3">
-      <a href="/az-900/games/" class="big-btn">More games ❯</a>
+      <a href={`/${exam.slug}/games/`} class="big-btn">More games ❯</a>
       <button type="button" id="dc-replay" class="big-btn big-btn-light">Replay today's questions</button>
     </div>
   </section>

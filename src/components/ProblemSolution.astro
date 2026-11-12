@@ -1,11 +1,12 @@
 ---
+import { examFromPath } from '../data/exams';
+const exam = examFromPath(Astro.url.pathname);
 /**
  * Problem → Solution card. On scroll the pains are "solved" one by one;
  * "▶ Show me" replays it while Nimbus reads each pair aloud.
  */
-import { PROBLEM_SOLUTION } from '../data/az-900/problem-solution';
 interface Props { topic: string }
-const ps = PROBLEM_SOLUTION[Astro.props.topic];
+const ps = exam.problems[Astro.props.topic];
 ---
 {ps && (
   <section class="ps mt-6 overflow-hidden rounded-2xl border border-[var(--card-line)] bg-[var(--card)]" aria-label="Problem and solution">

@@ -1,17 +1,23 @@
 ---
 import GameLayout from '../../../layouts/GameLayout.astro';
 import { getQuestionBank } from '../../../lib/learn';
+import { getExam, examStaticPaths } from '../../../data/exams';
 
-const bank = (await getQuestionBank())
+export function getStaticPaths() {
+  return examStaticPaths();
+}
+const exam = getExam(Astro.params.cert);
+
+const bank = (await getQuestionBank(exam.slug))
   .filter((q) => q.type === 'single' && !q.scenario && q.question.length <= 170 && q.options.length >= 2)
   .map((q) => ({ q: q.question, o: q.options.map((x) => x.text), a: q.answer[0], e: q.explanation }));
 const payload = JSON.stringify(bank).replace(/</g, '\\u003c');
 ---
-<GameLayout title="Lightning Round" seoTitle="Lightning Round: 60-Second AZ-900 Quiz Game | MSDEVBUILD" description="Answer as many AZ-900 practice questions as you can in 60 seconds. Build combos, beat your best score and earn XP." icon="⚡" intro="60 seconds. As many correct answers as you can. Three in a row starts a combo!" band="band-lilac">
+<GameLayout title="Lightning Round" seoTitle={`Lightning Round: 60-Second ${exam.code} Quiz Game | MSDEVBUILD`} description={`Answer as many ${exam.code} practice questions as you can in 60 seconds. Build combos, beat your best score and earn XP.`} icon="⚡" intro="60 seconds. As many correct answers as you can. Three in a row starts a combo!" band="band-lilac">
   <script type="application/json" id="ln-data" set:html={payload} />
 
   <section id="ln-start" class="text-center">
-    <p class="text-lg">Questions come from all three AZ-900 domains. Wrong answers do not cost points, but they break your combo.</p>
+    <p class="text-lg">Questions come from all three {exam.code} domains. Wrong answers do not cost points, but they break your combo.</p>
     <button type="button" id="go" class="big-btn mt-6 !px-10 !py-4 !text-xl">⚡ Start!</button>
     <p id="ln-best" class="mt-4 text-muted"></p>
   </section>

@@ -2,9 +2,15 @@
 import { getCollection } from 'astro:content';
 import Base from '../../layouts/Base.astro';
 import { getNav, inlineMd } from '../../lib/learn';
+import { getExam, examStaticPaths } from '../../data/exams';
 
-const nav = await getNav();
-const entries = await getCollection('tutorials', (e) => e.id.startsWith('az-900/'));
+export function getStaticPaths() {
+  return examStaticPaths();
+}
+const exam = getExam(Astro.params.cert);
+
+const nav = await getNav(exam.slug);
+const entries = await getCollection('tutorials', (e) => e.id.startsWith(`${exam.slug}/`));
 const published = nav.filter((t) => t.published);
 const cards = published.flatMap((t) => entries.find((e) => e.id === t.key)!.data.revision.quick.map((c) => ({ ...c, topic: t.title, url: t.url })));
 const glossary = [
@@ -13,20 +19,20 @@ const glossary = [
   ).values(),
 ].sort((a, b) => a.term.localeCompare(b.term));
 const payload = JSON.stringify(cards).replace(/</g, '\\u003c');
-const title = 'AZ-900 Revision: Flashcards and Glossary';
-const description = `Last-minute AZ-900 revision: ${cards.length} flashcards and a ${glossary.length}-term Azure glossary built from every published tutorial.`;
+const title = `${exam.code} Revision: Flashcards and Glossary`;
+const description = `Last-minute ${exam.code} revision: ${cards.length} flashcards and a ${glossary.length}-term Azure glossary built from every published tutorial.`;
 const crumbs = [
   { name: 'Home', url: '/' },
-  { name: 'AZ-900', url: '/az-900/' },
-  { name: 'Revision', url: '/az-900/revision/' },
+  { name: `${exam.code}`, url: `/${exam.slug}/` },
+  { name: 'Revision', url: `/${exam.slug}/revision/` },
 ];
 ---
 <Base title={title} description={description} breadcrumbs={crumbs}>
   <script type="application/json" id="fc-data" set:html={payload} />
   <div class="mx-auto max-w-4xl px-4 py-8 sm:px-6">
-    <nav aria-label="Breadcrumb" class="text-sm text-muted"><a href="/">Home</a> / <a href="/az-900/">AZ-900</a> / <span class="text-[var(--text)]">Revision</span></nav>
+    <nav aria-label="Breadcrumb" class="text-sm text-muted"><a href="/">Home</a> / <a href={`/${exam.slug}/`}>{exam.code}</a> / <span class="text-[var(--text)]">Revision</span></nav>
     <p class="eyebrow mt-6">Quick revision</p>
-    <h1 class="mt-3 text-3xl font-bold tracking-tight sm:text-4xl">AZ-900 flashcards and glossary</h1>
+    <h1 class="mt-3 text-3xl font-bold tracking-tight sm:text-4xl">{exam.code} flashcards and glossary</h1>
     <p class="mt-3 text-muted">{cards.length} flashcards from {published.length} topics. Try to answer before you flip the card.</p>
 
     <section class="card mt-8 p-6" aria-label="Flashcards">

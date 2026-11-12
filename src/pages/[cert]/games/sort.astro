@@ -1,13 +1,18 @@
 ---
 import GameLayout from '../../../layouts/GameLayout.astro';
-import { SORT_SETS } from '../../../data/az-900/games';
 import { getNav } from '../../../lib/learn';
+import { getExam, examStaticPaths } from '../../../data/exams';
 
-const nav = await getNav();
-const sets = SORT_SETS.map((s) => ({ ...s, topicUrl: nav.find((t) => t.slug === s.topic && t.published)?.url }));
+export function getStaticPaths() {
+  return examStaticPaths();
+}
+const exam = getExam(Astro.params.cert);
+
+const nav = await getNav(exam.slug);
+const sets = exam.games.sortSets.map((s) => ({ ...s, topicUrl: nav.find((t) => t.slug === s.topic && t.published)?.url }));
 const payload = JSON.stringify(sets).replace(/</g, '\\u003c');
 ---
-<GameLayout title="Sort It!" seoTitle="Sort It! AZ-900 Cloud Sorting Game | MSDEVBUILD" description="A fun AZ-900 sorting game: tap each card into IaaS, PaaS or SaaS, CapEx or OpEx, public, private or hybrid, and more. Instant feedback and XP." icon="🗂️" intro="Tap the bucket where each card belongs. Get them all right for a perfect round!">
+<GameLayout title="Sort It!" seoTitle={`Sort It! ${exam.code} Cloud Sorting Game | MSDEVBUILD`} description={`A fun ${exam.code} sorting game: tap each card into IaaS, PaaS or SaaS, CapEx or OpEx, public, private or hybrid, and more. Instant feedback and XP.`} icon="🗂️" intro="Tap the bucket where each card belongs. Get them all right for a perfect round!">
   <script type="application/json" id="sort-data" set:html={payload} />
 
   <section id="pick">

@@ -7,11 +7,8 @@ import LessonHero from '../../../components/LessonHero.astro';
 import ProblemSolution from '../../../components/ProblemSolution.astro';
 import { labsForTopic, ALL_LABS } from '../../../lib/sim/labs';
 import LessonSimulations from '../../../components/LessonSimulations.astro';
-import { LESSON_SIMS } from '../../../data/az-900/lesson-sims';
 import { ogImagePath } from '../../../lib/og-pages';
-import { COMPARISONS } from '../../../data/az-900/compare';
 import { SERVICES } from '../../../data/az-900/services';
-import { WHATIFS } from '../../../data/az-900/whatifs';
 import { sectionKind, SIMPLE_SECTIONS } from '../../../lib/rehype-sections.mjs';
 import Toc from '../../../components/Toc.astro';
 import KnowledgeCheck from '../../../components/KnowledgeCheck.astro';
@@ -19,21 +16,26 @@ import InterviewBlock from '../../../components/InterviewBlock.astro';
 import QuickRevision from '../../../components/QuickRevision.astro';
 import { mdxComponents } from '../../../components/mdx';
 import { getNav, getTopicQuestions, moduleUrl, inlineMd } from '../../../lib/learn';
-import { moduleBySlug, objectiveText, SKILLS_MEASURED_AS_OF } from '../../../data/az-900/syllabus';
 import { SITE } from '../../../config';
+import { getExam, liveExams, moduleBySlug as examModule, objectiveText as examObjective } from '../../../data/exams';
 
 export async function getStaticPaths() {
-  const entries = await getCollection('tutorials', (e) => e.id.startsWith('az-900/'));
-  return entries.map((entry) => {
-    const [, module, topic] = entry.id.split('/');
-    return { params: { module, topic }, props: { entry } };
-  });
+  const out = [];
+  for (const exam of liveExams()) {
+    const entries = await getCollection('tutorials', (e) => e.id.startsWith(`${exam.slug}/`));
+    for (const entry of entries) {
+      const [, module, topic] = entry.id.split('/');
+      out.push({ params: { cert: exam.slug, module, topic }, props: { entry } });
+    }
+  }
+  return out;
 }
+const exam = getExam(Astro.params.cert);
 
 const { entry } = Astro.props;
 const { module: moduleSlug, topic: topicSlug } = Astro.params;
-const mod = moduleBySlug(moduleSlug!)!;
-const nav = await getNav();
+const mod = examModule(exam, moduleSlug!)!;
+const nav = await getNav(exam.slug);
 const me = nav.find((t) => t.key === entry.id)!;
 const published = nav.filter((t) => t.published);
 const idx = published.findIndex((t) => t.key === entry.id);
@@ -42,17 +44,17 @@ const next = published[idx + 1];
 const related = entry.data.related.map((slug) => nav.find((t) => t.slug === slug && t.published)).filter(Boolean);
 
 const { Content, headings } = await render(entry);
-const questions = await getTopicQuestions(topicSlug!);
+const questions = await getTopicQuestions(topicSlug!, exam.slug);
 // Labs for the Practice Lab tab: those the lesson text mentions first, then the topic's labs.
 const tryItLabs = [...(entry.body ?? '').matchAll(/<TryIt labs="([^"]+)"/g)].flatMap((m) => m[1].split(',').map((x) => x.trim()));
 const labs = [...new Set([...tryItLabs, ...labsForTopic(topicSlug!).map((l) => l.id)])].map((id) => ALL_LABS.find((l) => l.id === id)).filter((l): l is NonNullable<typeof l> => Boolean(l));
 const d = entry.data;
-const hasSims = Boolean(LESSON_SIMS[topicSlug!]);
+const hasSims = Boolean(exam.lessonSims[topicSlug!]);
 const examTips = d.revision.examTips ?? [];
 // Topic cluster links for the sidebar (comparisons, service reference, what-ifs about this lesson).
-const lessonCompares = COMPARISONS.filter((c) => c.lessons.includes(topicSlug!));
+const lessonCompares = exam.comparisons.filter((c) => c.lessons.includes(topicSlug!));
 const lessonServices = SERVICES.filter((s) => s.lesson === topicSlug);
-const lessonWhatIfs = WHATIFS.filter((w) => w.lessons.includes(topicSlug!));
+const lessonWhatIfs = exam.whatIfs.filter((w) => w.lessons.includes(topicSlug!));
 
 // Same flow on every lesson: answer → Simulations → Explanation → Exam tip → Quiz → Previous/Next.
 const toc = [
@@ -67,8 +69,8 @@ const toc = [
 const url = new URL(Astro.url.pathname, SITE.url).href;
 const crumbs = [
   { name: 'Home', url: '/' },
-  { name: 'AZ-900', url: '/az-900/' },
-  { name: mod.shortTitle, url: moduleUrl(mod.slug) },
+  { name: `${exam.code}`, url: `/${exam.slug}/` },
+  { name: mod.shortTitle, url: moduleUrl(mod.slug, exam.slug) },
   { name: d.title, url: Astro.url.pathname },
 ];
 const schema = [
@@ -82,8 +84,8 @@ const schema = [
     dateModified: d.updated.toISOString(),
     author: { '@id': `${SITE.url}/#author` },
     publisher: { '@id': `${SITE.url}/#organization` },
-    isPartOf: { '@id': `${SITE.url}/az-900/#course` },
-    about: me.objectives.map((o) => ({ '@type': 'Thing', name: objectiveText(o) })),
+    isPartOf: { '@id': `${SITE.url}/${exam.slug}/#course` },
+    about: me.objectives.map((o) => ({ '@type': 'Thing', name: examObjective(exam, o) })),
     educationalLevel: 'Beginner to advanced',
     learningResourceType: 'Tutorial',
     teaches: d.keyTerms.map((k) => k.term),
@@ -98,11 +100,11 @@ const schema = [
     ? [{
         '@type': 'Quiz',
         '@id': `${url}#quiz`,
-        name: `${d.title}: AZ-900 practice quiz`,
+        name: `${d.title}: ${exam.code} practice quiz`,
         about: { '@id': `${url}#article` },
         educationalLevel: 'Beginner',
         assesses: d.keyTerms.map((k) => k.term),
-        educationalAlignment: me.objectives.map((o) => ({ '@type': 'AlignmentObject', alignmentType: 'assesses', educationalFramework: 'Microsoft AZ-900 skills outline', targetName: `${o} ${objectiveText(o)}` })),
+        educationalAlignment: me.objectives.map((o) => ({ '@type': 'AlignmentObject', alignmentType: 'assesses', educationalFramework: `Microsoft ${exam.code} skills outline`, targetName: `${o} ${examObjective(exam, o)}` })),
         hasPart: questions.map((q) => ({
           '@type': 'Question',
           eduQuestionType: q.type === 'multi' ? 'Checkbox' : 'Multiple choice',
@@ -121,7 +123,7 @@ const schema = [
     mainEntity: [
       [/^(what|why|how|when|which)\b/i.test(d.title) ? `${d.title.replace(/\?$/, '')}?`
         : d.title.includes(': ') ? `What is ${d.title.replace(/^(.*?): (.*)$/, '$1 ($2)')}?`
-        : /^(\w+ing|factors)\b|\bvs\b| and /i.test(d.title) ? `What do you need to know about ${d.title} for AZ-900?`
+        : /^(\w+ing|factors)\b|\bvs\b| and /i.test(d.title) ? `What do you need to know about ${d.title} for ${exam.code}?`
         : `What is ${d.title.replace(/^The /, 'the ')}?`, d.answer],
       ...d.revision.quick.map((x) => [x.q, x.a]),
       ...d.interview.filter((x) => x.level === 'beginner').slice(0, 2).map((x) => [x.q, x.a]),
@@ -165,7 +167,7 @@ const schema = [
       {me.objectives.length > 0 && (
         <p class="mt-3 text-sm text-muted">
           <span class="font-semibold text-[var(--text)]">Exam objective:</span>
-          {me.objectives.map((o) => ` ${o} ${objectiveText(o)}.`)} <span class="text-xs">(Skills measured as of {SKILLS_MEASURED_AS_OF})</span>
+          {me.objectives.map((o) => ` ${o} ${examObjective(exam, o)}.`)} <span class="text-xs">(Skills measured as of {exam.skillsMeasuredAsOf})</span>
         </p>
       )}
 
@@ -214,12 +216,12 @@ const schema = [
       </div>
 
       <div class="mt-6 flex items-center justify-between gap-3 border-t border-default pt-6">
-        {prev ? <a href={prev.url} class="nav-btn" rel="prev">❮ Previous</a> : <a href="/az-900/" class="nav-btn">❮ Home</a>}
-        {next ? <a href={next.url} class="nav-btn" rel="next">Next ❯</a> : <a href="/az-900/mock-exam/" class="nav-btn">Mock exam ❯</a>}
+        {prev ? <a href={prev.url} class="nav-btn" rel="prev">❮ Previous</a> : <a href={`/${exam.slug}/`} class="nav-btn">❮ Home</a>}
+        {next ? <a href={next.url} class="nav-btn" rel="next">Next ❯</a> : <a href={`/${exam.slug}/mock-exam/`} class="nav-btn">Mock exam ❯</a>}
       </div>
       {next && <p class="mt-2 text-right text-sm text-muted">Next up: <a class="text-accent hover:underline" href={next.url}>{next.title}</a></p>}
 
-      <a href="/az-900/games/" class="mt-8 flex items-center gap-4 rounded-lg bg-[var(--pastel-lilac)] p-4 hover:ring-2 hover:ring-[var(--accent)]">
+      <a href={`/${exam.slug}/games/`} class="mt-8 flex items-center gap-4 rounded-lg bg-[var(--pastel-lilac)] p-4 hover:ring-2 hover:ring-[var(--accent)]">
         <span class="text-4xl" aria-hidden="true">🎮</span>
         <span class="min-w-0 flex-1"><span class="block font-semibold">Lesson done? Make it stick with a quick game</span><span class="block text-sm text-muted">Sort It, Match the Pairs, Lightning Round and Who Am I? Earn XP and badges.</span></span>
         <span class="nav-btn shrink-0">Play ❯</span>
@@ -240,13 +242,13 @@ const schema = [
       {lessonCompares.length > 0 && (
         <div>
           <p class="mb-2 text-xs font-bold tracking-[0.14em] uppercase text-muted">Compare</p>
-          <ul class="space-y-1 text-sm">{lessonCompares.map((c) => <li><a class="text-accent hover:underline" href={`/az-900/compare/${c.slug}/`}>⚖️ {c.title}</a></li>)}</ul>
+          <ul class="space-y-1 text-sm">{lessonCompares.map((c) => <li><a class="text-accent hover:underline" href={`/${exam.slug}/compare/${c.slug}/`}>⚖️ {c.title}</a></li>)}</ul>
         </div>
       )}
       {lessonServices.length > 0 && (
         <div>
           <p class="mb-2 text-xs font-bold tracking-[0.14em] uppercase text-muted">In 60 seconds</p>
-          <ul class="space-y-1 text-sm">{lessonServices.map((s) => <li><a class="text-accent hover:underline" href={`/az-900/services/${s.slug}/`}>{s.icon} {s.name}</a></li>)}</ul>
+          <ul class="space-y-1 text-sm">{lessonServices.map((s) => <li><a class="text-accent hover:underline" href={`/${exam.slug}/services/${s.slug}/`}>{s.icon} {s.name}</a></li>)}</ul>
         </div>
       )}
       {lessonWhatIfs.length > 0 && (

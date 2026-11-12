@@ -14,43 +14,20 @@
  * projects and interviews, even though the current outline does not list them.
  */
 
+import type { ObjectiveGroup, SyllabusTopic, SyllabusModule, ExamFacts } from '../types';
+export type { ObjectiveGroup, SyllabusTopic, SyllabusModule, ExamFacts };
+
 export const SKILLS_MEASURED_AS_OF = 'July 20, 2026';
 export const SYLLABUS_VERIFIED_ON = '2026-11-11';
 export const STUDY_GUIDE_URL =
   'https://learn.microsoft.com/en-us/credentials/certifications/resources/study-guides/az-900';
-export const EXAM_FACTS = {
+export const EXAM_FACTS: ExamFacts = {
   passingScore: 700,
   scoreScale: '1–1000',
   durationMinutes: 45,
   practiceAssessmentUrl:
     'https://learn.microsoft.com/en-us/credentials/certifications/exams/az-900/practice/assessment?assessment-type=practice&assessmentId=23',
 };
-
-export interface ObjectiveGroup {
-  title: string;
-  objectives: { id: string; text: string }[];
-}
-
-export interface SyllabusTopic {
-  slug: string;
-  title: string;
-  /** Objective ids from the official outline this topic covers. */
-  objectives: string[];
-  beyondExam?: boolean;
-}
-
-export interface SyllabusModule {
-  slug: string;
-  domain: 1 | 2 | 3;
-  title: string;
-  shortTitle: string;
-  weight: string;
-  /** Midpoint of the weight range, used to size mock exams. */
-  weightMid: number;
-  summary: string;
-  groups: ObjectiveGroup[];
-  topics: SyllabusTopic[];
-}
 
 export const MODULES: SyllabusModule[] = [
   {

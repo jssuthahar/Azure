@@ -2,9 +2,15 @@
 import Base from '../../../layouts/Base.astro';
 import Mascot from '../../../components/Mascot.astro';
 import { LABS, SANDBOX } from '../../../lib/sim/labs';
+import { getExam, examStaticPaths } from '../../../data/exams';
+
+export function getStaticPaths() {
+  return examStaticPaths();
+}
+const exam = getExam(Astro.params.cert);
 const bands = ['band-blue', 'band-green', 'band-yellow', 'band-lilac'];
 ---
-<Base title="Azure Practice Labs: Free Simulator, No Account | MSDEVBUILD" description="Practise Azure hands-on in a free simulator: create resource groups, VMs, storage and web apps in a mock portal and Cloud Shell. No Azure account needed." breadcrumbs={[{ name: 'Home', url: '/' }, { name: 'AZ-900', url: '/az-900/' }, { name: 'Practice labs', url: '/az-900/labs/' }]}>
+<Base title="Azure Practice Labs: Free Simulator, No Account | MSDEVBUILD" description="Practise Azure hands-on in a free simulator: create resource groups, VMs, storage and web apps in a mock portal and Cloud Shell. No Azure account needed." breadcrumbs={[{ name: 'Home', url: '/' }, { name: `${exam.code}`, url: `/${exam.slug}/` }, { name: 'Practice labs', url: `/${exam.slug}/labs/` }]}>
   <section class="band-navy px-4 py-12 sm:py-16">
     <div class="mx-auto grid max-w-6xl items-center gap-8 lg:grid-cols-[1.3fr_1fr]">
       <div class="text-center lg:text-left">
@@ -15,8 +21,8 @@ const bands = ['band-blue', 'band-green', 'band-yellow', 'band-lilac'];
           {['✅ No Azure account', '✅ No credit card', '✅ Nothing to install', '✅ Zero cost, zero risk'].map((t) => <li class="rounded-full bg-white/10 px-3 py-1">{t}</li>)}
         </ul>
         <div class="mt-7 flex flex-wrap justify-center gap-3 lg:justify-start">
-          <a href={`/az-900/labs/${LABS[0].id}/`} class="big-btn !bg-[#ffd75e] !text-[#0b1020]">Start lab 1 ❯</a>
-          <a href="/az-900/labs/sandbox/" class="big-btn big-btn-light">🎛️ Free sandbox</a>
+          <a href={`/${exam.slug}/labs/${LABS[0].id}/`} class="big-btn !bg-[#ffd75e] !text-[#0b1020]">Start lab 1 ❯</a>
+          <a href={`/${exam.slug}/labs/sandbox/`} class="big-btn big-btn-light">🎛️ Free sandbox</a>
         </div>
       </div>
       <div class="rounded-2xl bg-[#0b1020] p-4 font-mono text-[0.8rem] leading-relaxed text-[#e6edf3] shadow-2xl">
@@ -34,7 +40,7 @@ const bands = ['band-blue', 'band-green', 'band-yellow', 'band-lilac'];
     <div class="flex items-center gap-3"><Mascot size={52} /><h2 class="text-2xl font-bold">Guided labs</h2></div>
     <div class="mt-5 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
       {LABS.map((l, i) => (
-        <a href={`/az-900/labs/${l.id}/`} class={`${bands[i % bands.length]} group flex flex-col rounded-2xl p-6 transition-transform hover:-translate-y-1`} data-lab={l.id}>
+        <a href={`/${exam.slug}/labs/${l.id}/`} class={`${bands[i % bands.length]} group flex flex-col rounded-2xl p-6 transition-transform hover:-translate-y-1`} data-lab={l.id}>
           <div class="flex items-start justify-between"><span class="text-5xl transition-transform group-hover:scale-110" aria-hidden="true">{l.icon}</span><span class="lab-done hidden rounded-full bg-[var(--ok)] px-2.5 py-1 text-xs font-bold text-white">✓ Done</span></div>
           <p class="mt-3 text-xs font-bold tracking-wide uppercase text-muted">Lab {i + 1} · {l.level} · ⏱ {l.minutes} min · {l.start === 'shell' ? '⌨️ Cloud Shell' : '🖥️ Portal'}</p>
           <h3 class="mt-1 text-xl font-bold">{l.title}</h3>
@@ -42,7 +48,7 @@ const bands = ['band-blue', 'band-green', 'band-yellow', 'band-lilac'];
           <span class="nav-btn mt-5 self-start">Start lab ❯</span>
         </a>
       ))}
-      <a href="/az-900/labs/sandbox/" class="flex flex-col rounded-2xl border-2 border-dashed border-default p-6 hover:border-[var(--accent)]">
+      <a href={`/${exam.slug}/labs/sandbox/`} class="flex flex-col rounded-2xl border-2 border-dashed border-default p-6 hover:border-[var(--accent)]">
         <span class="text-5xl" aria-hidden="true">{SANDBOX.icon}</span>
         <h3 class="mt-3 text-xl font-bold">{SANDBOX.title}</h3>
         <p class="mt-1.5 flex-1 text-[0.95rem] leading-relaxed">{SANDBOX.intro}</p>
@@ -51,7 +57,7 @@ const bands = ['band-blue', 'band-green', 'band-yellow', 'band-lilac'];
     </div>
     <div class="callout callout-note mt-10">
       <p class="callout-title">Ready for the real thing?</p>
-      <p>The simulator teaches the ideas and the clicks. When you want to try real Azure, Microsoft Learn's free AZ-900 training modules include hands-on exercises. <a class="underline" href="https://learn.microsoft.com/en-us/training/courses/az-900t00" rel="noopener">Explore Microsoft Learn</a>.</p>
+      <p>The simulator teaches the ideas and the clicks. When you want to try real Azure, Microsoft Learn's free {exam.code} training modules include hands-on exercises. <a class="underline" href={exam.courseUrl} rel="noopener">Explore Microsoft Learn</a>.</p>
     </div>
   </div>
 </Base>

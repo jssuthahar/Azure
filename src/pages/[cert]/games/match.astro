@@ -1,8 +1,14 @@
 ---
 import { getCollection } from 'astro:content';
 import GameLayout from '../../../layouts/GameLayout.astro';
+import { getExam, examStaticPaths } from '../../../data/exams';
 
-const entries = await getCollection('tutorials', (e) => e.id.startsWith('az-900/'));
+export function getStaticPaths() {
+  return examStaticPaths();
+}
+const exam = getExam(Astro.params.cert);
+
+const entries = await getCollection('tutorials', (e) => e.id.startsWith(`${exam.slug}/`));
 const seen = new Set<string>();
 const pairs = entries
   .flatMap((e) => e.data.keyTerms)
@@ -10,7 +16,7 @@ const pairs = entries
   .map((k) => ({ term: k.term, def: k.definition.replace(/\*\*/g, '') }));
 const payload = JSON.stringify(pairs).replace(/</g, '\\u003c');
 ---
-<GameLayout title="Match the Pairs" seoTitle="Match the Pairs: AZ-900 Memory Game | MSDEVBUILD" description="A memory card game for AZ-900: flip cards to match Azure and cloud terms with their meanings. Fewer moves means more points and XP." icon="🧠" intro="Flip two cards at a time. Match each blue term with its meaning." band="band-green">
+<GameLayout title="Match the Pairs" seoTitle={`Match the Pairs: ${exam.code} Memory Game | MSDEVBUILD`} description={`A memory card game for ${exam.code}: flip cards to match Azure and cloud terms with their meanings. Fewer moves means more points and XP.`} icon="🧠" intro="Flip two cards at a time. Match each blue term with its meaning." band="band-green">
   <script type="application/json" id="match-data" set:html={payload} />
   <div class="flex flex-wrap items-center justify-between gap-3">
     <p class="text-lg">Moves: <strong id="moves">0</strong> · Pairs: <strong id="found">0</strong>/6 · ⏱ <span id="time">0</span>s</p>

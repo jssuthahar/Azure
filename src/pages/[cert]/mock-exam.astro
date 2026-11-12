@@ -2,35 +2,40 @@
 import Base from '../../layouts/Base.astro';
 import Mascot from '../../components/Mascot.astro';
 import { getQuestionBank, getNav } from '../../lib/learn';
-import { MODULES } from '../../data/az-900/syllabus';
-import { EXAM_ITEMS } from '../../data/az-900/exam-items';
+import { getExam, examStaticPaths } from '../../data/exams';
 
-const bank = await getQuestionBank();
-const nav = await getNav();
+export function getStaticPaths() {
+  return examStaticPaths();
+}
+const exam = getExam(Astro.params.cert);
+
+const bank = await getQuestionBank(exam.slug);
+const nav = await getNav(exam.slug);
 const topicTitle = Object.fromEntries(nav.filter((t) => t.published).map((t) => [t.slug, { title: t.title, url: t.url }]));
-const domains = MODULES.map((m) => ({ domain: m.domain, title: m.title, short: m.shortTitle, count: bank.filter((q) => q.domain === m.domain).length + EXAM_ITEMS.filter((x) => x.domain === m.domain).length }));
+const domains = exam.modules.map((m) => ({ domain: m.domain, title: m.title, short: m.shortTitle, count: bank.filter((q) => q.domain === m.domain).length + exam.examItems.filter((x) => x.domain === m.domain).length }));
 const choice = bank.map((q) => ({ kind: q.type, id: q.id, domain: q.domain, topic: q.topic, scenario: q.scenario, question: q.question, options: q.options, answer: q.answer, explanation: q.explanation }));
-const payload = JSON.stringify({ choice, domains, topicTitle }).replace(/</g, '\\u003c');
-const total = bank.length + EXAM_ITEMS.length;
+const weights = Object.fromEntries(exam.modules.map((m) => [m.domain, m.weightMid]));
+const payload = JSON.stringify({ choice, domains, topicTitle, items: exam.examItems, weights, code: exam.code, name: exam.name }).replace(/</g, '\\u003c');
+const total = bank.length + exam.examItems.length;
 
-const title = 'AZ-900 Mock Exam: Real Exam Experience, Free';
-const description = `Free AZ-900 practice exam that feels like the real Microsoft exam: timer, review screen, drag and drop, Yes/No and drop-down items, score report and certificate.`;
-const crumbs = [{ name: 'Home', url: '/' }, { name: 'AZ-900', url: '/az-900/' }, { name: 'Mock exam', url: '/az-900/mock-exam/' }];
+const title = `${exam.code} Mock Exam: Real Exam Experience, Free`;
+const description = `Free ${exam.code} practice exam that feels like the real Microsoft exam: timer, review screen, drag and drop, Yes/No and drop-down items, score report and certificate.`;
+const crumbs = [{ name: 'Home', url: '/' }, { name: `${exam.code}`, url: `/${exam.slug}/` }, { name: 'Mock exam', url: `/${exam.slug}/mock-exam/` }];
 ---
 <Base title={title} description={description} breadcrumbs={crumbs}>
   <script type="application/json" id="exam-data" set:html={payload} />
   <div class="mx-auto max-w-6xl px-4 py-8 sm:px-6">
     <!-- ============ SETUP ============ -->
     <section id="setup">
-      <nav aria-label="Breadcrumb" class="text-sm text-muted"><a href="/">Home</a> / <a href="/az-900/">AZ-900</a> / <span class="text-[var(--text)]">Mock exam</span></nav>
+      <nav aria-label="Breadcrumb" class="text-sm text-muted"><a href="/">Home</a> / <a href={`/${exam.slug}/`}>{exam.code}</a> / <span class="text-[var(--text)]">Mock exam</span></nav>
       <div class="mt-6 grid gap-8 lg:grid-cols-[1.4fr_1fr]">
         <div>
           <p class="eyebrow">Real exam experience</p>
-          <h1 class="mt-3 text-3xl font-bold tracking-tight sm:text-4xl">AZ-900 mock exam</h1>
+          <h1 class="mt-3 text-3xl font-bold tracking-tight sm:text-4xl">{exam.code} mock exam</h1>
           <p class="mt-4 text-lg leading-relaxed text-muted">Sit it like the real Microsoft exam: a full-screen exam room, a countdown timer, <strong>Mark for review</strong>, a review screen, and the same item types: multiple choice, multiple response, <strong>drag and drop</strong>, <strong>build a list</strong>, <strong>drop-down</strong> and a final <strong>Yes/No</strong> section you can’t go back to. Scored on the 1–1000 scale (700 to pass), with a full report and your MSDEVBUILD certificate.</p>
           <div class="mt-5 rounded-xl border-l-[5px] border-[#0078d4] bg-[var(--pastel-blue)] p-4 text-[0.95rem] leading-relaxed">
             <p class="font-bold text-accent">✍️ Original practice questions</p>
-            <p>All {total} questions were written for this site from the official AZ-900 skills outline. None are real, recalled or leaked Microsoft exam questions (sharing those breaks Microsoft’s exam agreement). This is a practice simulation, not affiliated with Microsoft or any exam delivery provider.</p>
+            <p>All {total} questions were written for this site from the official {exam.code} skills outline. None are real, recalled or leaked Microsoft exam questions (sharing those breaks Microsoft’s exam agreement). This is a practice simulation, not affiliated with Microsoft or any exam delivery provider.</p>
           </div>
         </div>
         <div class="card flex items-center gap-4 p-5">
@@ -76,7 +81,7 @@ const crumbs = [{ name: 'Home', url: '/' }, { name: 'AZ-900', url: '/az-900/' },
   <!-- ============ EXAM ROOM (full screen) ============ -->
   <div id="xs" class="xs" hidden role="application" aria-label="Exam">
     <header class="xs-top">
-      <span class="xs-title">Microsoft Azure Fundamentals (AZ-900) · Practice exam</span>
+      <span class="xs-title">{exam.name} ({exam.code}) · Practice exam</span>
       <span class="xs-cand" id="xs-cand"></span>
       <span class="xs-time" id="xs-time" role="timer" aria-live="off"></span>
     </header>
@@ -173,14 +178,14 @@ const crumbs = [{ name: 'Home', url: '/' }, { name: 'AZ-900', url: '/az-900/' },
 </style>
 
 <script>
-  import { EXAM_ITEMS, type FormatItem } from '../../data/az-900/exam-items';
+  import type { FormatItem } from '../../data/az-900/exam-items';
   import { buildPaper, emptyResponse, answered, score, result, KIND_LABEL, type Item, type ChoiceItem, type Response, type Paper } from '../../lib/exam';
   import { saveMock, type MockResult } from '../../lib/progress';
   import { issueCert, loadCert } from '../../lib/certificate';
   import { confetti } from '../../lib/fun';
 
   const data = JSON.parse(document.getElementById('exam-data')!.textContent!) as {
-    choice: ChoiceItem[]; domains: { domain: number; title: string; short: string }[]; topicTitle: Record<string, { title: string; url: string }>;
+    choice: ChoiceItem[]; items: FormatItem[]; weights: Record<number, number>; code: string; name: string; domains: { domain: number; title: string; short: string }[]; topicTitle: Record<string, { title: string; url: string }>;
   };
   const SKEY = 'msdb-azure-exam-v2';
   const $ = <T extends HTMLElement = HTMLElement>(id: string) => document.getElementById(id) as T;
@@ -261,7 +266,7 @@ const crumbs = [{ name: 'Home', url: '/' }, { name: 'AZ-900', url: '/az-900/' },
           ${hasSec2() ? '<li><strong>Section 2: Yes/No statements.</strong> After you answer a question in this section, you will <strong>not</strong> be able to return to it.</li>' : ''}
           <li>Questions can be worth more than one point. There is no penalty for a wrong answer, so answer every question.</li>
         </ul></div>
-        <div class="xs-box"><strong>Practice agreement.</strong> These are original practice questions written by MSDEVBUILD to the official AZ-900 skills outline. They are not real Microsoft exam questions, and this simulation is not affiliated with Microsoft or any exam delivery provider. Your score is an indication only.</div>
+        <div class="xs-box"><strong>Practice agreement.</strong> These are original practice questions written by MSDEVBUILD to the official ${data.code} skills outline. They are not real Microsoft exam questions, and this simulation is not affiliated with Microsoft or any exam delivery provider. Your score is an indication only.</div>
         <p>Select <strong>Start</strong> to begin.</p></div>`;
       foot.innerHTML = `<button class="xs-btn" data-x="quit">Exit</button><button class="xs-btn primary" data-x="start">Start ▶</button>`;
       return;
@@ -520,7 +525,7 @@ const crumbs = [{ name: 'Home', url: '/' }, { name: 'AZ-900', url: '/az-900/' },
       <div class="card overflow-hidden">
         <div class="flex flex-wrap items-center gap-4 border-b border-default p-6">
           <div class="min-w-0 flex-1"><p class="text-sm font-bold tracking-[0.12em] text-accent uppercase">Score report</p>
-            <h2 id="sr-title" class="mt-1 text-2xl font-bold">Microsoft Azure Fundamentals (AZ-900) · Practice exam</h2>
+            <h2 id="sr-title" class="mt-1 text-2xl font-bold">${data.name} (${data.code}) · Practice exam</h2>
             <p class="mt-1 text-sm text-muted">${s.name ? `Candidate: <strong class="text-[var(--text)]">${esc(s.name)}</strong> · ` : ''}${date} · ${full ? 'Full exam' : s.paper.mode === 'quick' ? 'Quick practice' : 'Domain practice'} · ${s.paper.items.length} questions</p></div>
           <span class="sr-badge ${r.passed ? 'ok' : 'bad'}" style="font-size:1.4rem;padding:.4rem 1.2rem">${r.passed ? 'PASS' : 'FAIL'}</span>
         </div>
@@ -545,7 +550,7 @@ const crumbs = [{ name: 'Home', url: '/' }, { name: 'AZ-900', url: '/az-900/' },
       </div>
 
       <div class="mt-6 rounded-2xl border-2 ${certOk ? 'border-[#ffb900] bg-[var(--pastel-yellow)]' : 'border-default bg-[var(--card)]'} p-6">
-        ${certOk ? `<div class="flex flex-wrap items-center gap-4"><span class="text-5xl" aria-hidden="true">🏆</span><div class="min-w-0 flex-1"><p class="text-xl font-bold">You passed! Get your MSDEVBUILD certificate</p><p class="text-sm">Your AZ-900 Ready certificate and badge, ready to share on LinkedIn, X and WhatsApp.</p></div></div>
+        ${certOk ? `<div class="flex flex-wrap items-center gap-4"><span class="text-5xl" aria-hidden="true">🏆</span><div class="min-w-0 flex-1"><p class="text-xl font-bold">You passed! Get your MSDEVBUILD certificate</p><p class="text-sm">Your ${data.code} Ready certificate and badge, ready to share on LinkedIn, X and WhatsApp.</p></div></div>
           <form id="sr-cert-form" class="mt-4 flex flex-col gap-3 sm:flex-row"><label class="flex-1"><span class="sr-only">Name on certificate</span><input id="sr-cert-name" required maxlength="60" value="${esc(s.name || existing?.name || '')}" placeholder="Your full name" class="w-full rounded-md border border-default bg-[var(--bg)] px-4 py-3 text-lg" /></label><button class="rounded-md bg-[#107c10] px-6 py-3 font-semibold text-white hover:bg-[#0b5a0b]">Get my certificate »</button></form>`
         : `<div class="flex flex-wrap items-center gap-4"><span class="text-4xl" aria-hidden="true">🎓</span><div class="min-w-0 flex-1"><p class="font-bold">${full ? 'Score 700 or more to earn your MSDEVBUILD certificate' : 'Take the full exam to earn your MSDEVBUILD certificate'}</p><p class="text-sm text-muted">${full ? 'Review the questions below, study the domains marked “Needs work”, and try again.' : 'Practice runs don’t issue certificates. The full 45-question exam does, at a score of 700+.'}</p></div><button id="sr-again-top" class="btn btn-accent">${full ? 'Retake the exam' : 'Take the full exam'}</button></div>`}
       </div>
@@ -588,7 +593,7 @@ const crumbs = [{ name: 'Home', url: '/' }, { name: 'AZ-900', url: '/az-900/' },
     const fd = new FormData(e.target as HTMLFormElement);
     const name = String(fd.get('name') ?? '').trim();
     try { localStorage.setItem('msdb-exam-name', name); } catch {}
-    const paper = buildPaper(String(fd.get('mode')), Number(fd.get('domain')), data.choice, EXAM_ITEMS as FormatItem[]);
+    const paper = buildPaper(String(fd.get('mode')), Number(fd.get('domain')), data.choice, data.items, data.weights);
     st = { paper, responses: paper.items.map(emptyResponse), flags: paper.items.map(() => false), cur: 0, screen: 'welcome', endsAt: fd.get('untimed') === 'on' ? null : 0, started: false, name, section: 1, scale: 1, filter: 'all' };
     persist();
     openRoom();

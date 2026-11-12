@@ -3,21 +3,23 @@ import Base from '../../../layouts/Base.astro';
 import Datacenter3D from '../../../components/mdx/Datacenter3D.astro';
 import PortalTour from '../../../components/mdx/PortalTour.astro';
 import CurrencySelect from '../../../components/CurrencySelect.astro';
-import { COMPARISONS, type Comparison } from '../../../data/az-900/compare';
 import { getNav, inlineMd } from '../../../lib/learn';
 import { priceHtml } from '../../../lib/prices';
 import { SITE } from '../../../config';
+import { getExam, liveExams } from '../../../data/exams';
+import type { Comparison } from '../../../data/az-900/compare';
 
 export function getStaticPaths() {
-  return COMPARISONS.map((c) => ({ params: { slug: c.slug }, props: { c } }));
+  return liveExams().flatMap((exam) => exam.comparisons.map((c) => ({ params: { cert: exam.slug, slug: c.slug }, props: { c } })));
 }
+const exam = getExam(Astro.params.cert);
 const { c } = Astro.props as { c: Comparison };
-const nav = await getNav();
+const nav = await getNav(exam.slug);
 const lessons = c.lessons.map((s) => nav.find((t) => t.slug === s && t.published)).filter(Boolean);
-const others = COMPARISONS.filter((x) => x.slug !== c.slug);
+const others = exam.comparisons.filter((x) => x.slug !== c.slug);
 const url = new URL(Astro.url.pathname, SITE.url).href;
 const plain = (s: string) => s.replace(/\*\*|`/g, '');
-const crumbs = [{ name: 'Home', url: '/' }, { name: 'AZ-900', url: '/az-900/' }, { name: 'Compare', url: '/az-900/compare/' }, { name: c.title, url: Astro.url.pathname }];
+const crumbs = [{ name: 'Home', url: '/' }, { name: exam.code, url: `/${exam.slug}/` }, { name: 'Compare', url: `/${exam.slug}/compare/` }, { name: c.title, url: Astro.url.pathname }];
 const schema = [
   { '@type': 'TechArticle', '@id': `${url}#article`, headline: c.title, description: c.description, url, inLanguage: 'en', author: { '@id': `${SITE.url}/#author` }, publisher: { '@id': `${SITE.url}/#organization` }, about: c.cols.map((n) => ({ '@type': 'Thing', name: n })) },
   { '@type': 'FAQPage', mainEntity: [[`What is the difference between ${c.cols.join(' and ')}?`, c.answer], ...c.faq].map(([q, a]) => ({ '@type': 'Question', name: q, acceptedAnswer: { '@type': 'Answer', text: plain(a) } })) },
@@ -70,7 +72,7 @@ const schema = [
     )}
 
     <aside class="mt-8 rounded-xl border-l-[5px] border-[#c19c00] bg-[var(--pastel-yellow)] p-4" aria-label="Exam tip">
-      <p class="text-sm font-bold">🎯 AZ-900 exam tip</p>
+      <p class="text-sm font-bold">🎯 {exam.code} exam tip</p>
       <p class="mt-1 leading-relaxed" set:html={inlineMd(c.examTip)} />
     </aside>
 
@@ -90,7 +92,7 @@ const schema = [
 
     <section class="mt-10 border-t border-default pt-6" aria-labelledby="more">
       <h2 id="more" class="text-xl font-semibold">More comparisons</h2>
-      <ul class="mt-3 grid gap-2 text-[0.95rem] sm:grid-cols-2">{others.map((o) => <li><a class="text-accent hover:underline" href={`/az-900/compare/${o.slug}/`}>{o.title}</a></li>)}</ul>
+      <ul class="mt-3 grid gap-2 text-[0.95rem] sm:grid-cols-2">{others.map((o) => <li><a class="text-accent hover:underline" href={`/${exam.slug}/compare/${o.slug}/`}>{o.title}</a></li>)}</ul>
     </section>
   </article>
 </Base>
