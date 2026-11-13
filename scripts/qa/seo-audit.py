@@ -132,7 +132,7 @@ lessons=[f'/{e}/{m}/{f[:-4]}/' for e in os.listdir(TUT) for m in os.listdir(os.p
 lessons=[u for u in lessons if u in pages]
 for u in lessons:
     if 'FAQPage' not in pages[u].types and 'QAPage' not in pages[u].types: issues['lesson without FAQPage schema (AEO)'].append(u)
-# GEO: one consistent entity (MSDEVBUILD = Multi-Stack Dev Build, by Suthahar Jegatheesan)
+# GEO: one consistent entity (MSDEVBUILD = Multi-Stack Dev Build)
 BRAND='Multi-Stack Dev Build'
 for u,p in pages.items():
     for raw in p.ld:

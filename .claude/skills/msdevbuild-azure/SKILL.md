@@ -6,7 +6,7 @@ description: House rules for azure.msdevbuild.com (MSDEVBUILD Azure certificatio
 # MSDEVBUILD Azure: how we build
 
 Astro 5 static site (MDX content collections, Tailwind 4), deployed to GitHub Pages at https://azure.msdevbuild.com.
-Owner and author: **Suthahar Jegatheesan**. Brand: **MSDEVBUILD · Multi-Stack Dev Build · by Suthahar Jegatheesan**.
+Owner and author: **Suthahar Jegatheesan**. Brand: **MSDEVBUILD · Multi-Stack Dev Build**.
 Promise to learners: *feel Azure without an Azure account*, then pass the exam and the interview.
 
 Read the reference file for the area you are touching before you start:
@@ -37,7 +37,7 @@ Read the reference file for the area you are touching before you start:
 - Body sections, in order: `## Start with a question` (Story) → `## Explain it like I'm 10` (Eli10) → `## The technical explanation` → `## Real-world business scenario` → `## When to use it and when not to`. These exact headings drive Beginner view.
 
 **Brand line everywhere**
-- Wording is always `MSDEVBUILD · Multi-Stack Dev Build · by Suthahar Jegatheesan`. Never retype it: use `SITE.brandLine`, `SITE.tagline`, `SITE.orgFull` from `src/config.ts`, or the `<BrandLine />` component (`variant="byline" | "inline" | "light"`).
+- Wording is always `MSDEVBUILD · Multi-Stack Dev Build`. No author name in the brand line (owner's decision, 13 Nov 2026); the author stays in schema (Person, TechArticle author), the About page and the footer author card. Never retype it: use `SITE.brandLine`, `SITE.tagline`, `SITE.orgFull` from `src/config.ts`, or the `<BrandLine />` component (`variant="byline" | "inline" | "light"`).
 - Comparisons and service pages show `<BrandLine variant="byline" />` under the title. **Lessons do not** (owner's decision, 13 Nov 2026): they show an `Updated <date>` chip (`.lesson-updated`) instead; the author stays in the TechArticle schema. The header and footer still carry the brand line.
 - It already lives in the header, footer, home hero, share images, certificate, embeds, manifest, llms files and schema. New surfaces get it too.
 
@@ -67,7 +67,7 @@ npm run qa             # browser checks on the build: lessons, layout, a11y, pwa
 npm run verify
 ```
 
-`npm run qa -- lessons` (or `layout`, `a11y`, `pwa`) runs one check. Screenshots for a visual check go to the OS temp folder `msdb-qa-shots/`; look at phone and iPad sizes for anything visual you changed.
+`npm run qa -- lessons` (or `layout`, `a11y`, `pwa`, `exam`) runs one check. `exam` walks the mock exam room end to end (welcome, agreement, tools, review grid, section 2, score report) for every live exam; run it after any change to `mock-exam.astro` or `src/lib/exam.ts`. Screenshots for a visual check go to the OS temp folder `msdb-qa-shots/`; look at phone and iPad sizes for anything visual you changed.
 
 4. Report what changed and what was verified, plainly. If a check fails, say so and fix it; do not weaken a check to make it pass.
 

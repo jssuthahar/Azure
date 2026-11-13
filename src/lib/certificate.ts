@@ -89,7 +89,7 @@ export function certSvg(c: Cert) {
   <path d="M30 230 C 400 120, 1200 340, 1570 200 L1570 58 Q1570 30 1542 30 L58 30 Q30 30 30 58 Z" fill="#0078d4" opacity=".08"/>
   <g transform="translate(1270 110) scale(0.42)">${badgeSvg(600).replace(/^<svg[^>]*>|<\/svg>$/g, '')}</g>
   <text x="120" y="170" font-family="Segoe UI, Inter, Arial, sans-serif" font-size="34" font-weight="700" fill="#0078d4" letter-spacing="8">MSDEVBUILD AZURE</text>
-  <text x="120" y="206" font-family="Segoe UI, Inter, Arial, sans-serif" font-size="24" fill="#4a5163">Multi-Stack Dev Build · by Suthahar Jegatheesan</text>
+  <text x="120" y="206" font-family="Segoe UI, Inter, Arial, sans-serif" font-size="24" fill="#4a5163">Multi-Stack Dev Build</text>
   <text x="120" y="290" font-family="Segoe UI, Inter, Arial, sans-serif" font-size="78" font-weight="800" fill="#0b1020">Certificate of Achievement</text>
   <text x="120" y="370" font-family="Segoe UI, Inter, Arial, sans-serif" font-size="32" fill="#4a5163">This certifies that</text>
   <text x="120" y="490" font-family="Georgia, 'Times New Roman', serif" font-size="96" font-style="italic" fill="#003a66">${escX(c.name)}</text>

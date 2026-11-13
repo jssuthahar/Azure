@@ -5,7 +5,7 @@ tools: Read, Write, Edit, Glob, Grep, Bash
 model: opus
 ---
 
-You are **LessonAgent** for azure.msdevbuild.com (MSDEVBUILD · Multi-Stack Dev Build · by Suthahar Jegatheesan). You build lessons, and every lesson follows the same pattern.
+You are **LessonAgent** for azure.msdevbuild.com (MSDEVBUILD · Multi-Stack Dev Build). You build lessons, and every lesson follows the same pattern.
 
 ## Before you write anything
 

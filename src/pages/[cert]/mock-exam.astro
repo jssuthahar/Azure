@@ -1,6 +1,7 @@
 ---
 import Base from '../../layouts/Base.astro';
 import Mascot from '../../components/Mascot.astro';
+import { SITE } from '../../config';
 import { getQuestionBank, getNav } from '../../lib/learn';
 import { getExam, examStaticPaths } from '../../data/exams';
 
@@ -32,7 +33,7 @@ const crumbs = [{ name: 'Home', url: '/' }, { name: `${exam.code}`, url: `/${exa
         <div>
           <p class="eyebrow">Real exam experience</p>
           <h1 class="mt-3 text-3xl font-bold tracking-tight sm:text-4xl">{exam.code} mock exam</h1>
-          <p class="mt-4 text-lg leading-relaxed text-muted">Sit it like the real Microsoft exam: a full-screen exam room, a countdown timer, <strong>Mark for review</strong>, a review screen, and the same item types: multiple choice, multiple response, <strong>drag and drop</strong>, <strong>build a list</strong>, <strong>drop-down</strong> and a final <strong>Yes/No</strong> section you can’t go back to. Scored on the 1–1000 scale (700 to pass), with a full report and your MSDEVBUILD certificate.</p>
+          <p class="mt-4 text-lg leading-relaxed text-muted">Sit it like the real Microsoft exam: a full-screen exam room with the same flow (welcome, agreement, exam features, then the sections), a countdown timer you can hide, zoom and high contrast, <strong>Mark for review</strong>, a review grid, and the same item types: multiple choice, multiple response, <strong>drag and drop</strong>, <strong>build a list</strong>, <strong>drop-down</strong> and a final <strong>Yes/No</strong> section you can’t go back to. Scored on the 1–1000 scale (700 to pass), with a full report and your MSDEVBUILD certificate.</p>
           <div class="mt-5 rounded-xl border-l-[5px] border-[#0078d4] bg-[var(--pastel-blue)] p-4 text-[0.95rem] leading-relaxed">
             <p class="font-bold text-accent">✍️ Original practice questions</p>
             <p>All {total} questions were written for this site from the official {exam.code} skills outline. None are real, recalled or leaked Microsoft exam questions (sharing those breaks Microsoft’s exam agreement). This is a practice simulation, not affiliated with Microsoft or any exam delivery provider, and a good score here doesn’t guarantee a pass on the real exam.</p>
@@ -79,92 +80,149 @@ const crumbs = [{ name: 'Home', url: '/' }, { name: `${exam.code}`, url: `/${exa
   </div>
 
   <!-- ============ EXAM ROOM (full screen) ============ -->
-  <div id="xs" class="xs" hidden role="application" aria-label="Exam">
+  <div id="xs" class="xs" hidden role="application" aria-label={`${exam.code} practice exam`} data-brand={SITE.brandLine}>
     <header class="xs-top">
+      <span class="xs-brand">
+        <img src={SITE.authorImageSmall} alt="" width="30" height="30" />
+        <span class="xs-brand-txt"><strong>MSDEVBUILD</strong><small>{SITE.orgFull}</small></span>
+      </span>
       <span class="xs-title">{exam.name} ({exam.code}) · Practice exam</span>
       <span class="xs-cand" id="xs-cand"></span>
-      <span class="xs-time" id="xs-time" role="timer" aria-live="off"></span>
+      <span class="xs-clock">
+        <span class="xs-time" id="xs-time" role="timer" aria-live="off"></span>
+        <button type="button" class="xs-tool xs-tool-dark" data-tool="time" id="xs-hide-time">Hide time</button>
+      </span>
     </header>
     <div class="xs-sub">
-      <span id="xs-pos"></span>
-      <span class="xs-zoom" aria-label="Text size"><button type="button" data-zoom="-1" title="Smaller text">A−</button><button type="button" data-zoom="1" title="Larger text">A+</button></span>
-      <label class="xs-mark" id="xs-mark-wrap"><input type="checkbox" id="xs-mark" /> Mark for review</label>
+      <span id="xs-pos" class="xs-pos"></span>
+      <span class="xs-tools">
+        <button type="button" class="xs-tool xs-markbtn" data-tool="mark" id="xs-mark" aria-pressed="false"><span aria-hidden="true">⚑</span><span class="xs-lbl">Mark for review</span></button>
+        <span class="xs-zoom" role="group" aria-label="Zoom">
+          <button type="button" class="xs-tool" data-zoom="-1"><span aria-hidden="true">−</span><span class="xs-lbl xs-sr">Zoom out</span></button>
+          <span id="xs-zoom-pct" class="xs-zoom-pct" aria-live="polite">100%</span>
+          <button type="button" class="xs-tool" data-zoom="1"><span aria-hidden="true">+</span><span class="xs-lbl xs-sr">Zoom in</span></button>
+        </span>
+        <button type="button" class="xs-tool" data-tool="contrast" id="xs-contrast" aria-pressed="false"><span aria-hidden="true">◐</span><span class="xs-lbl">Contrast</span></button>
+        <button type="button" class="xs-tool" data-tool="help"><span aria-hidden="true">?</span><span class="xs-lbl">Help</span></button>
+      </span>
     </div>
-    <main class="xs-body" id="xs-body" tabindex="-1"></main>
+    <main class="xs-body" id="xs-body" tabindex="0" aria-label="Question area"></main>
     <footer class="xs-foot" id="xs-foot"></footer>
-    <div class="xs-modal" id="xs-modal" hidden><div class="xs-dialog" role="alertdialog" aria-modal="true" id="xs-dialog"></div></div>
+    <div class="xs-modal" id="xs-modal" hidden><div class="xs-dialog" role="alertdialog" aria-modal="true" aria-labelledby="xs-dlg-title" id="xs-dialog"></div></div>
   </div>
 </Base>
 
 <style is:global>
-  .xs { position: fixed; inset: 0; z-index: 300; display: flex; flex-direction: column; background: #fff; color: #1a1a1a; font: 15px/1.5 'Segoe UI', var(--font-sans); --xs-scale: 1; }
+  .xs { --xs-bg: #fff; --xs-fg: #1a1a1a; --xs-muted: #444; --xs-bar: #e9e9e9; --xs-line: #bdbdbd; --xs-head: #ececec; --xs-soft: #f4f4f4; --xs-hover: #f3f8fd; --xs-acc: #0067b8; --xs-acc-fg: #fff; --xs-sel: #eef5fc; --xs-top: #1b2a3d; --xs-top-fg: #fff; --xs-warn-bg: #fff4ce; --xs-warn-line: #c19c00;
+    position: fixed; inset: 0; z-index: 300; display: flex; flex-direction: column; background: var(--xs-bg); color: var(--xs-fg); font: 15px/1.5 'Segoe UI', var(--font-sans); --xs-scale: 1; }
+  .xs.hc { --xs-bg: #000; --xs-fg: #fff; --xs-muted: #e6e6e6; --xs-bar: #1a1a1a; --xs-line: #8a8a8a; --xs-head: #222; --xs-soft: #141414; --xs-hover: #262626; --xs-acc: #ffd75e; --xs-acc-fg: #000; --xs-sel: #2a2400; --xs-top: #000; --xs-warn-bg: #2a2400; --xs-warn-line: #ffd75e; }
   .xs[hidden] { display: none; }
-  .xs button { font: inherit; cursor: pointer; }
-  .xs-top { flex: none; display: flex; flex-wrap: wrap; align-items: center; gap: .4rem 1.2rem; padding: .55rem 1rem; background: #2b2b2b; color: #fff; }
+  .xs button { font: inherit; cursor: pointer; color: inherit; }
+  .xs :focus-visible { outline: 3px solid var(--xs-acc); outline-offset: 2px; }
+  .xs-top { flex: none; display: flex; flex-wrap: wrap; align-items: center; gap: .4rem 1.1rem; padding: .45rem 1rem; padding-top: max(.45rem, env(safe-area-inset-top)); background: var(--xs-top); color: var(--xs-top-fg); border-bottom: 3px solid #0078d4; }
+  .xs-brand { display: inline-flex; align-items: center; gap: .5rem; padding-right: 1rem; border-right: 1px solid rgb(255 255 255 / .25); }
+  .xs-brand img { width: 30px; height: 30px; border-radius: 50%; object-fit: cover; border: 2px solid #0078d4; }
+  .xs-brand-txt { display: flex; flex-direction: column; line-height: 1.1; }
+  .xs-brand-txt strong { letter-spacing: .04em; }
+  .xs-brand-txt small { font-size: .72rem; color: #c9d6e6; }
+  .xs.hc .xs-brand-txt small { color: #fff; }
   .xs-title { font-weight: 600; }
-  .xs-cand { opacity: .85; font-size: .9rem; }
-  .xs-time { margin-left: auto; font-variant-numeric: tabular-nums; font-weight: 600; padding: .15rem .6rem; border-radius: 4px; background: #444; }
+  .xs-cand { font-size: .9rem; color: #dfe7f1; }
+  .xs.hc .xs-cand { color: #fff; }
+  .xs-clock { margin-left: auto; display: inline-flex; align-items: center; gap: .5rem; }
+  .xs-time { font-variant-numeric: tabular-nums; font-weight: 600; padding: .2rem .6rem; border-radius: 4px; background: #2e4560; }
+  .xs-time[hidden] { display: none; }
   .xs-time.low { background: #c50f1f; }
-  .xs-sub { flex: none; display: flex; align-items: center; gap: 1rem; padding: .45rem 1rem; background: #e9e9e9; border-bottom: 1px solid #cfcfcf; font-weight: 600; }
-  .xs-zoom { display: inline-flex; gap: 2px; margin-left: auto; }
-  .xs-zoom button { padding: .1rem .55rem; border: 1px solid #9a9a9a; background: #fff; border-radius: 3px; }
-  .xs-mark { display: inline-flex; align-items: center; gap: .4rem; font-weight: 600; }
-  .xs-mark[hidden] { display: none; }
+  .xs-sub { flex: none; display: flex; flex-wrap: wrap; align-items: center; gap: .4rem 1rem; padding: .35rem 1rem; background: var(--xs-bar); border-bottom: 1px solid var(--xs-line); }
+  .xs-pos { font-weight: 600; }
+  .xs-tools { display: flex; flex-wrap: wrap; align-items: center; gap: .4rem; margin-left: auto; }
+  .xs-tool { display: inline-flex; align-items: center; justify-content: center; gap: .35rem; min-height: 36px; min-width: 36px; padding: .2rem .7rem; border: 1px solid var(--xs-line); border-radius: 3px; background: var(--xs-bg); font-weight: 600; }
+  .xs-tool:hover { border-color: var(--xs-acc); }
+  .xs-tool[hidden] { display: none; }
+  .xs-tool[aria-pressed='true'] { background: var(--xs-acc); border-color: var(--xs-acc); color: var(--xs-acc-fg); }
+  .xs-tool-dark { background: transparent; color: #fff; border-color: rgb(255 255 255 / .5); font-weight: 500; font-size: .85rem; }
+  .xs-zoom { display: inline-flex; align-items: center; gap: 2px; }
+  .xs-zoom-pct { min-width: 3.2rem; text-align: center; font-variant-numeric: tabular-nums; font-weight: 600; }
+  .xs-sr { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; border: 0; }
   .xs-body { flex: 1; min-height: 0; overflow: auto; padding: 1.4rem clamp(1rem, 4vw, 3rem) 2rem; font-size: calc(1rem * var(--xs-scale)); }
-  .xs-body:focus { outline: none; }
-  .xs-foot { flex: none; display: flex; gap: .6rem; justify-content: space-between; padding: .6rem 1rem; background: #e9e9e9; border-top: 1px solid #cfcfcf; }
+  .xs-body:focus:not(:focus-visible) { outline: none; }
+  .xs-body:focus-visible { outline-offset: -3px; }
+  .xs-foot { flex: none; display: flex; align-items: center; gap: .6rem; justify-content: space-between; padding: .55rem 1rem; padding-bottom: max(.55rem, env(safe-area-inset-bottom)); background: var(--xs-bar); border-top: 1px solid var(--xs-line); }
   .xs-foot .xs-mid { display: flex; gap: .6rem; }
-  .xs-btn { padding: .45rem 1.2rem; border-radius: 3px; border: 1px solid #7a7a7a; background: linear-gradient(#fff, #e6e6e6); color: #1a1a1a; font-weight: 600; }
-  .xs-btn:hover { background: #fff; border-color: #0067b8; }
+  .xs-btn { min-height: 38px; white-space: nowrap; padding: .45rem 1.2rem; border-radius: 3px; border: 1px solid var(--xs-line); background: var(--xs-bg); color: var(--xs-fg); font-weight: 600; }
+  .xs-btn:hover { border-color: var(--xs-acc); }
   .xs-btn:disabled { opacity: .45; cursor: default; }
-  .xs-btn.primary { background: #0067b8; border-color: #0067b8; color: #fff; }
+  .xs-btn.primary { background: var(--xs-acc); border-color: var(--xs-acc); color: var(--xs-acc-fg); }
   .xs-q { max-width: 980px; }
   .xs-q h2 { font-size: 1.05em; font-weight: 600; margin: 0 0 .8rem; }
-  .xs-note { color: #444; font-size: .93em; margin: .2rem 0 .9rem; }
-  .xs-scn { background: #f4f4f4; border-left: 4px solid #9a9a9a; padding: .7rem 1rem; margin-bottom: 1rem; }
+  .xs-note { color: var(--xs-muted); font-size: .93em; margin: .2rem 0 .9rem; }
+  .xs-scn { background: var(--xs-soft); border-left: 4px solid var(--xs-line); padding: .7rem 1rem; margin-bottom: 1rem; }
   .xs-opts { display: grid; gap: .45rem; margin-top: .6rem; }
-  .xs-opt { display: flex; gap: .7rem; align-items: flex-start; padding: .55rem .8rem; border: 1px solid #c8c8c8; border-radius: 3px; cursor: pointer; }
-  .xs-opt:hover { background: #f3f8fd; }
-  .xs-opt input { margin-top: .3rem; }
+  .xs-opt { display: flex; gap: .7rem; align-items: flex-start; padding: .55rem .8rem; border: 1px solid var(--xs-line); border-radius: 3px; cursor: pointer; }
+  .xs-opt:hover { background: var(--xs-hover); }
+  .xs-opt:has(input:checked) { border-color: var(--xs-acc); background: var(--xs-sel); }
+  .xs-opt input { margin-top: .3rem; accent-color: var(--xs-acc); }
   .xs-yn { border-collapse: collapse; width: 100%; max-width: 980px; }
-  .xs-yn th, .xs-yn td { border: 1px solid #bdbdbd; padding: .6rem .8rem; vertical-align: middle; }
-  .xs-yn th { background: #ececec; text-align: left; }
+  .xs-yn th, .xs-yn td { border: 1px solid var(--xs-line); padding: .6rem .8rem; vertical-align: middle; }
+  .xs-yn th { background: var(--xs-head); text-align: left; }
   .xs-yn td.c { text-align: center; width: 5rem; }
-  .xs-yn input { width: 1.15rem; height: 1.15rem; }
+  .xs-yn input { width: 1.15rem; height: 1.15rem; accent-color: var(--xs-acc); }
   .xs-cols { display: grid; grid-template-columns: minmax(180px, 1fr) minmax(0, 2fr); gap: 1.4rem; align-items: start; }
-  .xs-panel { border: 1px solid #bdbdbd; }
-  .xs-panel > p { margin: 0; padding: .45rem .7rem; background: #ececec; font-weight: 600; border-bottom: 1px solid #bdbdbd; }
+  .xs-panel { border: 1px solid var(--xs-line); }
+  .xs-panel > p { margin: 0; padding: .45rem .7rem; background: var(--xs-head); font-weight: 600; border-bottom: 1px solid var(--xs-line); }
   .xs-panel .xs-in { padding: .6rem; display: grid; gap: .45rem; min-height: 3rem; }
-  .xs-tile { padding: .45rem .7rem; border: 1px solid #8a8a8a; border-radius: 3px; background: #fff; text-align: left; cursor: grab; }
-  .xs-tile[aria-pressed='true'] { outline: 3px solid #0067b8; outline-offset: 1px; }
+  .xs-tile { padding: .45rem .7rem; border: 1px solid var(--xs-line); border-radius: 3px; background: var(--xs-bg); text-align: left; cursor: grab; }
+  .xs-tile[aria-pressed='true'] { outline: 3px solid var(--xs-acc); outline-offset: 1px; }
   .xs-target { display: grid; grid-template-columns: minmax(150px, 1fr) minmax(0, 1.3fr); gap: .6rem; align-items: center; }
-  .xs-slot { min-height: 2.4rem; padding: .35rem .6rem; border: 2px dashed #8a8a8a; border-radius: 3px; background: #fafafa; text-align: left; }
-  .xs-slot.filled { border-style: solid; border-color: #0067b8; background: #eef5fc; font-weight: 600; }
-  .xs-slot.over { background: #dbeaf8; }
+  .xs-slot { min-height: 2.4rem; padding: .35rem .6rem; border: 2px dashed var(--xs-line); border-radius: 3px; background: var(--xs-soft); text-align: left; }
+  .xs-slot.filled { border-style: solid; border-color: var(--xs-acc); background: var(--xs-sel); font-weight: 600; }
+  .xs-slot.over { background: var(--xs-hover); }
   .xs-order-row { display: flex; gap: .4rem; align-items: center; }
   .xs-order-row .xs-tile { flex: 1; }
-  .xs-mini { padding: .2rem .5rem; border: 1px solid #8a8a8a; border-radius: 3px; background: #fff; }
+  .xs-mini { min-width: 36px; min-height: 36px; padding: .2rem .5rem; border: 1px solid var(--xs-line); border-radius: 3px; background: var(--xs-bg); }
   .xs-arrows { display: grid; gap: .4rem; align-content: center; justify-items: center; }
   .xs-sent { font-size: 1.05em; line-height: 2.4; max-width: 900px; }
-  .xs-sent select { font: inherit; padding: .2rem .4rem; border: 1px solid #0067b8; border-radius: 3px; background: #fff; max-width: 100%; }
-  .xs-rev table { border-collapse: collapse; width: 100%; max-width: 980px; }
-  .xs-rev th, .xs-rev td { border: 1px solid #c8c8c8; padding: .4rem .7rem; text-align: left; }
-  .xs-rev th { background: #ececec; }
-  .xs-rev tr.go { cursor: pointer; } .xs-rev tr.go:hover td { background: #f3f8fd; }
+  .xs-sent select { font: inherit; padding: .2rem .4rem; border: 1px solid var(--xs-acc); border-radius: 3px; background: var(--xs-bg); color: var(--xs-fg); max-width: 100%; }
+  .xs-rev { max-width: 1040px; }
+  .xs-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: .5rem; }
+  .xs-cell { display: grid; grid-template-columns: 1fr auto; gap: .1rem .4rem; align-content: start; min-height: 3.6rem; padding: .5rem .7rem; text-align: left; border: 1px solid var(--xs-line); border-left-width: 5px; border-radius: 3px; background: var(--xs-bg); }
+  .xs-cell:hover { background: var(--xs-hover); }
+  .xs-cell b { font-weight: 600; }
+  .xs-cell .st { grid-column: 1 / -1; font-size: .82em; color: var(--xs-muted); }
+  .xs-cell[data-a='all'] { border-left-color: #107c10; }
+  .xs-cell[data-a='some'], .xs-cell[data-a='none'] { border-left-color: #c50f1f; }
+  .xs-cell[data-a='some'] .st, .xs-cell[data-a='none'] .st { color: var(--xs-fg); }
+  .xs-cell .fl { color: var(--xs-acc); font-weight: 700; }
+  .xs.hc .xs-cell[data-a='all'] { border-left-color: #6ccb5f; } .xs.hc .xs-cell[data-a='some'], .xs.hc .xs-cell[data-a='none'] { border-left-color: #ff99a4; }
+  .xs-legend { display: flex; flex-wrap: wrap; gap: .4rem 1.2rem; margin: 0 0 .8rem; font-size: .88em; color: var(--xs-muted); }
+  .xs-legend i { display: inline-block; width: .8rem; height: .8rem; margin-right: .35rem; vertical-align: -1px; border-radius: 2px; }
   .xs-filters { display: flex; flex-wrap: wrap; gap: .5rem; margin: .4rem 0 1rem; }
-  .xs-filters button[aria-pressed='true'] { background: #0067b8; color: #fff; border-color: #0067b8; }
-  .xs-modal { position: absolute; inset: 0; background: rgb(0 0 0 / .35); display: grid; place-items: center; padding: 1rem; }
+  .xs-filters button[aria-pressed='true'] { background: var(--xs-acc); color: var(--xs-acc-fg); border-color: var(--xs-acc); }
+  .xs-modal { position: absolute; inset: 0; background: rgb(0 0 0 / .45); display: grid; place-items: center; padding: 1rem; }
   .xs-modal[hidden] { display: none; }
-  .xs-dialog { width: min(520px, 100%); background: #fff; border: 1px solid #7a7a7a; box-shadow: 0 12px 40px rgb(0 0 0 / .3); }
-  .xs-dialog h3 { margin: 0; padding: .6rem 1rem; background: #2b2b2b; color: #fff; font-size: 1rem; font-weight: 600; }
+  .xs-dialog { width: min(560px, 100%); max-height: calc(100% - 2rem); overflow: auto; background: var(--xs-bg); border: 1px solid var(--xs-line); box-shadow: 0 12px 40px rgb(0 0 0 / .3); }
+  .xs-dialog h3 { position: sticky; top: 0; margin: 0; padding: .6rem 1rem; background: var(--xs-top); color: #fff; font-size: 1rem; font-weight: 600; }
   .xs-dialog .xs-dbody { padding: 1rem; }
-  .xs-dialog .xs-dfoot { display: flex; justify-content: flex-end; gap: .6rem; padding: .7rem 1rem; background: #f0f0f0; }
+  .xs-dialog .xs-dbody ul { list-style: disc; padding-left: 1.2rem; display: grid; gap: .3rem; }
+  .xs-dialog .xs-dfoot { display: flex; justify-content: flex-end; gap: .6rem; padding: .7rem 1rem; background: var(--xs-bar); }
+  .xs-kbd { display: inline-block; padding: 0 .35rem; border: 1px solid var(--xs-line); border-radius: 3px; background: var(--xs-soft); font: .85em ui-monospace, monospace; }
   .xs-welcome { max-width: 860px; }
   .xs-welcome h1 { font-size: 1.5em; font-weight: 600; margin-bottom: .6rem; }
+  .xs-welcome h2 { font-size: 1.1em; font-weight: 600; margin: 1rem 0 .3rem; }
   .xs-welcome ul { list-style: disc; padding-left: 1.3rem; display: grid; gap: .35rem; margin: .6rem 0 1rem; }
-  .xs-box { border: 1px solid #bdbdbd; background: #fafafa; padding: .9rem 1rem; margin: 1rem 0; }
-  .xs-lock { background: #fff4ce; border: 1px solid #c19c00; padding: .7rem 1rem; margin-bottom: 1rem; }
-  @media (max-width: 720px) { .xs-cols { grid-template-columns: 1fr !important; } .xs-target { grid-template-columns: 1fr; } .xs-title { font-size: .85rem; } .xs-arrows { grid-auto-flow: column; } }
+  .xs-welcome ol { list-style: decimal; padding-left: 1.3rem; display: grid; gap: .45rem; margin: .6rem 0 1rem; }
+  .xs-facts { display: grid; grid-template-columns: max-content 1fr; gap: .35rem 1.2rem; margin: 1rem 0; padding: .9rem 1rem; border: 1px solid var(--xs-line); background: var(--xs-soft); }
+  .xs-facts dt { font-weight: 600; }
+  .xs-box { border: 1px solid var(--xs-line); background: var(--xs-soft); padding: .9rem 1rem; margin: 1rem 0; }
+  .xs-terms { max-height: 46vh; overflow: auto; }
+  .xs-brandline { margin-top: 1.4rem; padding-top: .8rem; border-top: 1px solid var(--xs-line); font-size: .85em; color: var(--xs-muted); }
+  .xs-lock { background: var(--xs-warn-bg); border: 1px solid var(--xs-warn-line); padding: .7rem 1rem; margin-bottom: 1rem; }
+  .xs-steps { display: flex; flex-wrap: wrap; gap: .3rem; margin-bottom: 1rem; font-size: .82em; }
+  .xs-steps span { padding: .15rem .6rem; border-radius: 999px; border: 1px solid var(--xs-line); color: var(--xs-muted); }
+  .xs-steps span[aria-current='step'] { background: var(--xs-acc); border-color: var(--xs-acc); color: var(--xs-acc-fg); font-weight: 600; }
+  @media (max-width: 720px) { .xs-cols { grid-template-columns: 1fr !important; } .xs-target { grid-template-columns: 1fr; } .xs-title { font-size: .85rem; flex-basis: 100%; order: 3; } .xs-cand { display: none; } .xs-arrows { grid-auto-flow: column; } .xs-brand { border: 0; padding: 0; } .xs-brand-txt small { display: none; } .xs-btn { padding: .45rem .8rem; } }
+  @media (max-width: 420px) { .xs-btn { padding: .45rem .55rem; } .xs-foot { gap: .35rem; } }
+  @media (max-width: 560px) { .xs-lbl { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; } .xs-tools { margin-left: 0; } .xs-facts { grid-template-columns: 1fr; } .xs-grid { grid-template-columns: repeat(auto-fill, minmax(120px, 1fr)); } }
   /* score report (site look) */
   .sr-scale { position: relative; height: 14px; border-radius: 999px; background: linear-gradient(90deg, #f3b6b8 0 69.9%, #b7e3b4 70% 100%); }
   .sr-scale .sr-pass { position: absolute; top: -6px; bottom: -6px; left: 70%; width: 2px; background: #1a1a1a; }
@@ -192,8 +250,21 @@ const crumbs = [{ name: 'Home', url: '/' }, { name: `${exam.code}`, url: `/${exa
   const esc = (s: string) => String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/"/g, '&quot;').replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>').replace(/`(.+?)`/g, '<code>$1</code>');
   const domainTitle = (d: number) => data.domains.find((x) => x.domain === d)?.title ?? `Domain ${d}`;
 
-  type Screen = 'welcome' | 'q' | 'review' | 'sec2';
-  interface State { paper: Paper; responses: Response[]; flags: boolean[]; cur: number; screen: Screen; endsAt: number | null; started: boolean; name: string; section: 1 | 2; scale: number; filter: 'all' | 'incomplete' | 'marked' }
+  type Screen = 'welcome' | 'agree' | 'intro' | 'start' | 'q' | 'review' | 'sec2';
+  interface State { paper: Paper; responses: Response[]; flags: boolean[]; cur: number; screen: Screen; endsAt: number | null; started: boolean; name: string; section: 1 | 2; scale: number; filter: 'all' | 'incomplete' | 'marked'; contrast?: boolean; hideTime?: boolean }
+  const BRAND = $('xs').dataset.brand ?? '';
+  const PRE: [Screen, string][] = [['welcome', 'Welcome'], ['agree', 'Agreement'], ['intro', 'Exam features'], ['start', 'Start']];
+  const steps = (cur: Screen) => `<p class="xs-steps" aria-label="Before the exam">${PRE.map(([k, l], i) => `<span ${k === cur ? 'aria-current="step"' : ''}>${i + 1}. ${l}</span>`).join('')}</p>`;
+  const brandFoot = () => `<p class="xs-brandline">Practice exam by ${esc(BRAND)}. Not affiliated with Microsoft or any exam delivery provider.</p>`;
+  const tools = () => `<ul>
+          <li><strong>Previous</strong> and <strong>Next</strong> move between questions. <strong>Review screen</strong> shows every question in the section.</li>
+          <li><strong>⚑ Mark for review</strong> flags a question so you can find it fast on the review screen.</li>
+          <li><strong>− / +</strong> zooms the question text from 90% to 180%.</li>
+          <li><strong>◐ Contrast</strong> switches to white text on black.</li>
+          <li><strong>Hide time</strong> hides the countdown. It shows again in the last 5 minutes.</li>
+          <li><strong>? Help</strong> opens these instructions at any time.</li>
+          <li>Keyboard: <span class="xs-kbd">Alt+N</span> next, <span class="xs-kbd">Alt+P</span> previous, <span class="xs-kbd">Alt+R</span> review screen, <span class="xs-kbd">Alt+M</span> mark for review.</li>
+        </ul>`;
   let st: State | null = null;
   let tick = 0;
   let pick: number | null = null; // selected tile (click-to-place drag and drop)
@@ -250,25 +321,66 @@ const crumbs = [{ name: 'Home', url: '/' }, { name: `${exam.code}`, url: `/${exa
     const foot = $('xs-foot');
     $('xs-cand').textContent = s.name ? `Candidate: ${s.name}` : '';
     $('xs').style.setProperty('--xs-scale', String(s.scale));
-    $('xs-mark-wrap').hidden = !(s.screen === 'q' && s.section === 1);
-    ($('xs-mark') as HTMLInputElement).checked = s.flags[s.cur] ?? false;
+    $('xs').classList.toggle('hc', !!s.contrast);
+    $('xs-contrast').setAttribute('aria-pressed', String(!!s.contrast));
+    $('xs-zoom-pct').textContent = `${Math.round(s.scale * 100)}%`;
+    $('xs-mark').hidden = !(s.screen === 'q' && s.section === 1);
+    $('xs-mark').setAttribute('aria-pressed', String(s.flags[s.cur] ?? false));
+    $('xs-hide-time').hidden = s.endsAt === null;
     const n1 = sec1Count();
     if (s.screen === 'welcome') {
       $('xs-pos').textContent = 'Welcome';
-      body.innerHTML = `<div class="xs-welcome"><h1>Welcome${s.name ? `, ${esc(s.name)}` : ''}</h1>
-        <p>This practice exam contains <strong>${s.paper.items.length} questions</strong>${hasSec2() ? ' in <strong>2 sections</strong>' : ''}. ${s.endsAt === null ? 'There is no time limit.' : `You have <strong>${s.paper.minutes} minutes</strong>. The timer starts when you select Start.`}</p>
-        <div class="xs-box"><strong>How the exam works</strong><ul>
+      body.innerHTML = `<div class="xs-welcome">${steps('welcome')}<h1>Welcome to the MSDEVBUILD practice exam${s.name ? `, ${esc(s.name)}` : ''}</h1>
+        <p>This screen works like the one you'll see on exam day. Take a moment to check the details below before you go on.</p>
+        <dl class="xs-facts"><dt>Exam</dt><dd>${esc(data.name)} (${esc(data.code)}) practice exam</dd>
+          <dt>Candidate</dt><dd>${s.name ? esc(s.name) : 'Not given'}</dd>
+          <dt>Questions</dt><dd>${s.paper.items.length}${hasSec2() ? ` in 2 sections (${n1} + ${s.paper.items.length - n1})` : ''}</dd>
+          <dt>Time</dt><dd>${s.endsAt === null ? 'No time limit' : `${s.paper.minutes} minutes. The timer starts when you start the section.`}</dd>
+          <dt>Passing score</dt><dd>700 on a scale of 1 to 1000</dd></dl>
+        <p>Select <strong>Next</strong> to read the practice agreement.</p>${brandFoot()}</div>`;
+      foot.innerHTML = `<button class="xs-btn" data-x="quit">Exit</button><button class="xs-btn primary" data-x="screen" data-s="agree">Next ▶</button>`;
+      persist();
+      return;
+    }
+    if (s.screen === 'agree') {
+      $('xs-pos').textContent = 'Practice agreement';
+      body.innerHTML = `<div class="xs-welcome">${steps('agree')}<h1>Practice agreement and terms of use</h1>
+        <div class="xs-box xs-terms" tabindex="0" aria-label="Agreement text"><ol>
+          <li>Every question in this exam was written by MSDEVBUILD from the official ${esc(data.code)} skills outline. None are real, recalled or leaked Microsoft exam questions.</li>
+          <li>This is a practice simulation for learning. It isn't affiliated with, endorsed by or delivered by Microsoft or any exam delivery provider.</li>
+          <li>Your score is a rough indication. A pass here doesn't guarantee a pass on the real exam, and the MSDEVBUILD certificate isn't a Microsoft credential.</li>
+          <li>Your answers, score and certificate stay in this browser. Nothing is sent anywhere, and there's no sign-in.</li>
+          <li>On the real exam you sign a non-disclosure agreement and can't share its questions. Please don't post real exam content here or anywhere else.</li>
+        </ol></div>
+        <p>Select <strong>Accept</strong> to continue, or <strong>Decline</strong> to leave the exam.</p>${brandFoot()}</div>`;
+      foot.innerHTML = `<button class="xs-btn" data-x="screen" data-s="welcome">◀ Previous</button><span class="xs-mid"><button class="xs-btn" data-x="decline">Decline</button><button class="xs-btn primary" data-x="screen" data-s="intro">Accept ▶</button></span>`;
+      persist();
+      return;
+    }
+    if (s.screen === 'intro') {
+      $('xs-pos').textContent = 'Exam features';
+      body.innerHTML = `<div class="xs-welcome">${steps('intro')}<h1>How this exam works</h1>
+        <h2>Question types</h2><ul>
           <li><strong>Multiple choice / multiple response</strong>: select one answer, or the number of answers asked for.</li>
-          <li><strong>Drag and drop</strong>: drag each item to a box in the Answer Area, or click an item then click a box.</li>
+          <li><strong>Drag and drop</strong>: drag each item to a box in the Answer Area, or select an item and then select a box.</li>
           <li><strong>Build list</strong>: move the right actions into the Answer Area and put them in order.</li>
           <li><strong>Drop-down</strong>: complete the sentence by choosing from each list.</li>
-          <li><strong>Mark for review</strong> any question and return to it from the <strong>Review screen</strong> before you finish the section.</li>
-          ${hasSec2() ? '<li><strong>Section 2: Yes/No statements.</strong> After you answer a question in this section, you will <strong>not</strong> be able to return to it.</li>' : ''}
-          <li>Questions can be worth more than one point. There is no penalty for a wrong answer, so answer every question.</li>
-        </ul></div>
-        <div class="xs-box"><strong>Practice agreement.</strong> These are original practice questions written by MSDEVBUILD to the official ${data.code} skills outline. They are not real Microsoft exam questions, and this simulation is not affiliated with Microsoft or any exam delivery provider. Your score is an indication only.</div>
-        <p>Select <strong>Start</strong> to begin.</p></div>`;
-      foot.innerHTML = `<button class="xs-btn" data-x="quit">Exit</button><button class="xs-btn primary" data-x="start">Start ▶</button>`;
+          ${hasSec2() ? '<li><strong>Yes/No statements</strong> (Section 2): once you answer a question and select Next, you <strong>can\'t</strong> return to it.</li>' : ''}
+        </ul>
+        <h2>Tools on screen</h2>${tools()}
+        <div class="xs-box">Questions can be worth more than one point. There's no penalty for a wrong answer, so answer every question.</div>${brandFoot()}</div>`;
+      foot.innerHTML = `<button class="xs-btn" data-x="screen" data-s="agree">◀ Previous</button><button class="xs-btn primary" data-x="screen" data-s="start">Next ▶</button>`;
+      persist();
+      return;
+    }
+    if (s.screen === 'start') {
+      $('xs-pos').textContent = hasSec2() ? 'Section 1 of 2' : 'Start';
+      body.innerHTML = `<div class="xs-welcome">${steps('start')}<h1>${hasSec2() ? 'Section 1 of 2' : 'Ready to start'}</h1>
+        <p>This ${hasSec2() ? 'section' : 'exam'} contains <strong>${n1} questions</strong>. You can mark questions, go back and change answers until you finish ${hasSec2() ? 'the section' : 'the exam'} from the review screen.</p>
+        ${s.endsAt === null ? '<p>There is no time limit.</p>' : `<p>You have <strong>${s.paper.minutes} minutes</strong> for the whole exam. The timer starts when you select <strong>Start</strong>.</p>`}
+        <p>Good luck. Read the last line of each question first.</p>${brandFoot()}</div>`;
+      foot.innerHTML = `<button class="xs-btn" data-x="screen" data-s="intro">◀ Previous</button><button class="xs-btn primary" data-x="start">Start ▶</button>`;
+      persist();
       return;
     }
     if (s.screen === 'sec2') {
@@ -279,15 +391,18 @@ const crumbs = [{ name: 'Home', url: '/' }, { name: `${exam.code}`, url: `/${exa
       return;
     }
     if (s.screen === 'review') {
-      $('xs-pos').textContent = 'Review screen · Section 1';
+      $('xs-pos').textContent = hasSec2() ? 'Review screen · Section 1 of 2' : 'Review screen';
       const rows = s.paper.items.slice(0, n1).map((q, i) => ({ i, a: answered(q, s.responses[i]), m: s.flags[i] }))
         .filter((x) => s.filter === 'all' || (s.filter === 'marked' ? x.m : x.a !== 'all'));
       const inc = s.paper.items.slice(0, n1).filter((q, i) => answered(q, s.responses[i]) !== 'all').length;
       const marked = s.flags.slice(0, n1).filter(Boolean).length;
-      body.innerHTML = `<div class="xs-rev"><h2 style="font-size:1.1em;font-weight:600">Review your answers</h2><p class="xs-note">Select a question to return to it. ${inc} incomplete · ${marked} marked for review.</p>
-        <div class="xs-filters">${(['all', 'incomplete', 'marked'] as const).map((f) => `<button class="xs-btn" data-filter="${f}" aria-pressed="${s.filter === f}">Review ${f}</button>`).join('')}</div>
-        <table><thead><tr><th>Question</th><th>Type</th><th>Status</th><th>Marked</th></tr></thead><tbody>${rows.map((x) => `<tr class="go" data-goto="${x.i}"><td>Question ${x.i + 1}</td><td>${KIND_LABEL[s.paper.items[x.i].kind]}</td><td>${x.a === 'all' ? 'Answered' : x.a === 'some' ? '<strong>Incomplete</strong>' : '<strong>Unanswered</strong>'}</td><td>${x.m ? '⚑ Marked' : ''}</td></tr>`).join('') || '<tr><td colspan="4">Nothing to show for this filter.</td></tr>'}</tbody></table></div>`;
-      foot.innerHTML = `<span></span><button class="xs-btn primary" data-x="finish1">${hasSec2() ? 'Finish section 1' : 'End exam'}</button>`;
+      const label = (a: string) => (a === 'all' ? 'Answered' : a === 'some' ? 'Incomplete' : 'Unanswered');
+      body.innerHTML = `<div class="xs-rev"><h2 style="font-size:1.1em;font-weight:600">Review your answers</h2>
+        <p class="xs-note">Select a question to go back to it. <strong>${inc}</strong> incomplete · <strong>${marked}</strong> marked for review.${hasSec2() ? ' Section 2 questions don\'t appear here.' : ''}</p>
+        <div class="xs-filters" role="group" aria-label="Filter questions">${(['all', 'incomplete', 'marked'] as const).map((f) => `<button class="xs-btn" data-filter="${f}" aria-pressed="${s.filter === f}">Review ${f}</button>`).join('')}</div>
+        <p class="xs-legend"><span><i style="background:#107c10"></i>Answered</span><span><i style="background:#c50f1f"></i>Incomplete or unanswered</span><span>⚑ Marked for review</span></p>
+        <div class="xs-grid">${rows.map((x) => `<button type="button" class="xs-cell" data-goto="${x.i}" data-a="${x.a}"><b>Question ${x.i + 1}</b>${x.m ? '<span class="fl" aria-label="Marked for review">⚑</span>' : '<span></span>'}<span class="st">${label(x.a)} · ${KIND_LABEL[s.paper.items[x.i].kind]}</span></button>`).join('') || '<p>Nothing to show for this filter.</p>'}</div></div>`;
+      foot.innerHTML = `<button class="xs-btn" data-x="resume-q">◀ Back to question ${s.cur + 1}</button><button class="xs-btn primary" data-x="finish1">${hasSec2() ? 'Finish section 1' : 'End exam'}</button>`;
       persist();
       return;
     }
@@ -305,11 +420,11 @@ const crumbs = [{ name: 'Home', url: '/' }, { name: `${exam.code}`, url: `/${exa
   }
 
   const dialog = (title: string, html: string, buttons: [string, string, boolean?][]) => {
-    $('xs-dialog').innerHTML = `<h3>${esc(title)}</h3><div class="xs-dbody">${html}</div><div class="xs-dfoot">${buttons.map(([l, x, primary]) => `<button class="xs-btn ${primary ? 'primary' : ''}" data-x="${x}">${esc(l)}</button>`).join('')}</div>`;
+    $('xs-dialog').innerHTML = `<h3 id="xs-dlg-title">${esc(title)}</h3><div class="xs-dbody">${html}</div><div class="xs-dfoot">${buttons.map(([l, x, primary]) => `<button class="xs-btn ${primary ? 'primary' : ''}" data-x="${x}">${esc(l)}</button>`).join('')}</div>`;
     $('xs-modal').hidden = false;
     $('xs-dialog').querySelector<HTMLElement>('.primary')?.focus();
   };
-  const closeDialog = () => { $('xs-modal').hidden = true; };
+  const closeDialog = () => { $('xs-modal').hidden = true; $('xs-body').focus({ preventScroll: true }); };
   const setResp = (r: Response) => { st!.responses[st!.cur] = r; persist(); };
   const go = (i: number) => { st!.cur = i; st!.screen = 'q'; pick = null; paint(); $('xs-body').scrollTop = 0; $('xs-body').focus(); };
 
@@ -325,6 +440,9 @@ const crumbs = [{ name: 'Home', url: '/' }, { name: `${exam.code}`, url: `/${exa
         case 'quit': return dialog('Exit exam', '<p>Leave the exam room? You can resume this exam until you close this browser tab.</p>', [['Stay', 'close', true], ['Exit', 'exit']]);
         case 'exit': closeDialog(); return closeRoom();
         case 'close': return closeDialog();
+        case 'screen': s.screen = t.closest<HTMLElement>('[data-s]')!.dataset.s as Screen; paint(); $('xs-body').scrollTop = 0; return $('xs-body').focus();
+        case 'decline': return dialog('Decline agreement', '<p>You need to accept the practice agreement to sit this exam. Decline and leave the exam room?</p>', [['Back to agreement', 'close', true], ['Leave exam', 'exit']]);
+        case 'resume-q': return go(s.cur);
         case 'start':
           s.started = true;
           if (s.endsAt !== null) s.endsAt = Date.now() + s.paper.minutes * 60_000;
@@ -353,7 +471,12 @@ const crumbs = [{ name: 'Home', url: '/' }, { name: `${exam.code}`, url: `/${exa
       return;
     }
     const z = t.closest<HTMLElement>('[data-zoom]');
-    if (z) { s.scale = Math.min(1.5, Math.max(0.85, s.scale + Number(z.dataset.zoom) * 0.1)); return paint(); }
+    if (z) { s.scale = Math.round(Math.min(1.8, Math.max(0.9, s.scale + Number(z.dataset.zoom) * 0.1)) * 10) / 10; $('xs').style.setProperty('--xs-scale', String(s.scale)); $('xs-zoom-pct').textContent = `${Math.round(s.scale * 100)}%`; persist(); return; }
+    const tool = t.closest<HTMLElement>('[data-tool]')?.dataset.tool;
+    if (tool === 'mark') { s.flags[s.cur] = !s.flags[s.cur]; $('xs-mark').setAttribute('aria-pressed', String(s.flags[s.cur])); persist(); return; }
+    if (tool === 'contrast') { s.contrast = !s.contrast; $('xs').classList.toggle('hc', s.contrast); $('xs-contrast').setAttribute('aria-pressed', String(s.contrast)); persist(); return; }
+    if (tool === 'time') { s.hideTime = !s.hideTime; persist(); return updTime(); }
+    if (tool === 'help') return dialog('Help', `<p>This is the ${esc(data.code)} practice exam by MSDEVBUILD.</p>${tools()}`, [['Close', 'close', true]]);
     const f = t.closest<HTMLElement>('[data-filter]');
     if (f) { s.filter = f.dataset.filter as State['filter']; return paint(); }
     const g = t.closest<HTMLElement>('[data-goto]');
@@ -394,12 +517,24 @@ const crumbs = [{ name: 'Home', url: '/' }, { name: `${exam.code}`, url: `/${exa
     const t = e.target as HTMLInputElement | HTMLSelectElement;
     const s = st;
     if (!s) return;
-    if (t.id === 'xs-mark') { s.flags[s.cur] = (t as HTMLInputElement).checked; persist(); return; }
     const q = item();
     if (q.kind === 'single') setResp([Number(t.value)]);
     if (q.kind === 'multi') setResp([...$('xs-body').querySelectorAll<HTMLInputElement>('input[name="opt"]:checked')].map((x) => Number(x.value)));
     if (q.kind === 'yesno') { const r = [...(s.responses[s.cur] as (boolean | null)[])]; r[Number(t.name.slice(2))] = t.value === '1'; setResp(r); }
     if (q.kind === 'dropdown') { const r = [...(s.responses[s.cur] as (number | null)[])]; r[Number((t as HTMLSelectElement).dataset.blank)] = t.value === '' ? null : Number(t.value); setResp(r); }
+  });
+
+  document.addEventListener('keydown', (e) => {
+    const s = st;
+    if (!s || $('xs').hidden) return;
+    const modalOpen = !$('xs-modal').hidden;
+    if (e.key === 'Escape' && modalOpen) { const c = $('xs-dialog').querySelector<HTMLElement>('[data-x="close"]'); if (c) { e.preventDefault(); closeDialog(); } return; }
+    if (!e.altKey || modalOpen) return;
+    const press = (sel: string) => { const b = document.querySelector<HTMLButtonElement>(sel); if (b && !b.disabled && !b.hidden) { e.preventDefault(); b.click(); } };
+    if (e.code === 'KeyN') press('#xs-foot .xs-btn.primary');
+    else if (e.code === 'KeyP') press('#xs-foot [data-x="prev"], #xs-foot [data-x="screen"]:first-child');
+    else if (e.code === 'KeyR') press('#xs-foot [data-x="review"]');
+    else if (e.code === 'KeyM') press('#xs-mark');
   });
 
   // HTML5 drag and drop (mouse); click-to-place works everywhere, including touch.
@@ -445,20 +580,24 @@ const crumbs = [{ name: 'Home', url: '/' }, { name: `${exam.code}`, url: `/${exa
 
   /* ---------- timer, open/close, finish ---------- */
   const fmt = (ms: number) => { const t = Math.max(0, Math.round(ms / 1000)); const h = Math.floor(t / 3600), m = Math.floor((t % 3600) / 60), s = t % 60; return `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`; };
+  function updTime() {
+    if (!st) return;
+    const el = $('xs-time');
+    const btn = $('xs-hide-time');
+    if (st.endsAt === null) { el.hidden = false; el.textContent = 'Untimed practice'; return; }
+    const left = st.started ? st.endsAt - Date.now() : st.paper.minutes * 60_000;
+    const low = st.started && left < 5 * 60_000;
+    el.hidden = !!st.hideTime && !low;
+    btn.textContent = el.hidden ? 'Show time' : 'Hide time';
+    btn.hidden = low;
+    el.textContent = `Time remaining: ${fmt(left)}`;
+    el.classList.toggle('low', low);
+    if (st.started && left <= 0) { clearInterval(tick); dialog('Time is up', '<p>The exam time has ended. Your answers will now be scored.</p>', [['See score report', 'end', true]]); }
+  }
   function startTimer() {
     clearInterval(tick);
-    const el = $('xs-time');
-    const upd = () => {
-      if (!st) return;
-      if (st.endsAt === null) { el.textContent = 'Untimed practice'; return; }
-      if (!st.started) { el.textContent = `Time remaining: ${fmt(st.paper.minutes * 60_000)}`; return; }
-      const left = st.endsAt - Date.now();
-      el.textContent = `Time remaining: ${fmt(left)}`;
-      el.classList.toggle('low', left < 5 * 60_000);
-      if (left <= 0) { clearInterval(tick); dialog('Time is up', '<p>The exam time has ended. Your answers will now be scored.</p>', [['See score report', 'end', true]]); }
-    };
-    upd();
-    tick = window.setInterval(upd, 1000);
+    updTime();
+    tick = window.setInterval(updTime, 1000);
   }
   function openRoom() {
     $('xs').hidden = false;

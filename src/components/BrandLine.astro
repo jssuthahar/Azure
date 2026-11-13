@@ -1,7 +1,7 @@
 ---
 /**
  * The brand line, worded the same everywhere:
- *   MSDEVBUILD · Multi-Stack Dev Build · by Suthahar Jegatheesan
+ *   MSDEVBUILD · Multi-Stack Dev Build
  * variant "byline" adds the author photo and is used on articles (lessons, comparisons, service pages).
  */
 import { SITE } from '../config';
@@ -13,12 +13,12 @@ const when = date?.toLocaleDateString('en-GB', { day: 'numeric', month: 'short',
   <p class={`brand-byline flex items-center gap-2.5 text-sm ${cls}`}>
     <img src={SITE.authorImageSmall} alt="" width="32" height="32" loading="lazy" class="size-8 shrink-0 rounded-full object-cover ring-2 ring-[var(--accent)]/25" />
     <span class="leading-snug">
-      <strong class="font-semibold"><span class="header-ms">MS</span>DEVBUILD</strong><span class="text-muted"> · {SITE.orgFull} · </span><span class="whitespace-nowrap"><span class="text-muted">by </span><a href={SITE.profile} rel="author" class="font-semibold hover:underline">{SITE.author}</a></span>
-      {when && <span class="block text-xs text-muted">{SITE.authorTitle} · updated <time datetime={date!.toISOString().slice(0, 10)}>{when}</time></span>}
+      <strong class="font-semibold"><span class="header-ms">MS</span>DEVBUILD</strong><span class="text-muted"> · {SITE.orgFull}</span>
+      {when && <span class="block text-xs text-muted">Updated <time datetime={date!.toISOString().slice(0, 10)}>{when}</time></span>}
     </span>
   </p>
 ) : (
   <p class={`brand-line text-sm ${variant === 'light' ? 'text-white/80' : 'text-muted'} ${cls}`}>
-    <strong class={variant === 'light' ? 'text-white' : 'text-[var(--text)]'}>MSDEVBUILD</strong> · {SITE.orgFull} · <span class="whitespace-nowrap">by <a href={SITE.profile} rel="author" class="underline-offset-2 hover:underline">{SITE.author}</a></span>
+    <strong class={variant === 'light' ? 'text-white' : 'text-[var(--text)]'}>MSDEVBUILD</strong> · {SITE.orgFull}
   </p>
 )}

@@ -1,6 +1,6 @@
 # azure.msdevbuild.com
 
-Free Azure certification learning site (AZ-900 live, AI-900 next) by **MSDEVBUILD · Multi-Stack Dev Build · by Suthahar Jegatheesan**. Astro 5 + MDX + Tailwind 4, static, GitHub Pages.
+Free Azure certification learning site (AZ-900 live, AI-900 next) by **MSDEVBUILD · Multi-Stack Dev Build**. Astro 5 + MDX + Tailwind 4, static, GitHub Pages.
 
 **Before any change, use the `msdevbuild-azure` skill** (`.claude/skills/msdevbuild-azure/`). It holds the house rules for content, voice, SEO/AEO/GEO, style, phones/iPad/PWA, accessibility and adding exams.
 

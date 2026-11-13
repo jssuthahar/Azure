@@ -5,7 +5,7 @@ const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="630">
 <rect width="1200" height="630" fill="url(#g)"/>
 <circle cx="1050" cy="90" r="260" fill="#ffffff" opacity=".06"/><circle cx="1120" cy="560" r="200" fill="#ffffff" opacity=".05"/>
 <text x="80" y="120" font-family="Segoe UI, Helvetica, Arial, sans-serif" font-size="34" font-weight="700" fill="#8fcbf7">MSDEVBUILD / azure</text>
-<text x="80" y="160" font-family="Segoe UI, Helvetica, Arial, sans-serif" font-size="24" fill="#c7e0f4">Multi-Stack Dev Build · by Suthahar Jegatheesan</text>
+<text x="80" y="160" font-family="Segoe UI, Helvetica, Arial, sans-serif" font-size="24" fill="#c7e0f4">Multi-Stack Dev Build</text>
 <text x="80" y="270" font-family="Segoe UI, Helvetica, Arial, sans-serif" font-size="84" font-weight="800" fill="#fff">Learn Azure.</text>
 <text x="80" y="370" font-family="Segoe UI, Helvetica, Arial, sans-serif" font-size="84" font-weight="800" fill="#fff">Pass AZ-900.</text>
 <text x="80" y="470" font-family="Segoe UI, Helvetica, Arial, sans-serif" font-size="36" fill="#deecf9">Free tutorials · quizzes · mock exams · interview prep</text>
