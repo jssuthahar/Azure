@@ -1,0 +1,179 @@
+---
+/**
+ * Personal study plan. The learner enters an exam date and daily minutes; the
+ * page builds a day-by-day schedule from the lessons they haven't finished
+ * (src/lib/plan.ts) and offers calendar reminders as an .ics file.
+ */
+import { getCollection } from 'astro:content';
+import Base from '../../layouts/Base.astro';
+import Mascot from '../../components/Mascot.astro';
+import { getNav } from '../../lib/learn';
+import { SITE } from '../../config';
+import { getExam, examStaticPaths } from '../../data/exams';
+
+export function getStaticPaths() {
+  return examStaticPaths();
+}
+const exam = getExam(Astro.params.cert);
+const nav = (await getNav(exam.slug)).filter((t) => t.published);
+const entries = await getCollection('tutorials', (e) => e.id.startsWith(`${exam.slug}/`));
+const lessons = nav.map((t) => ({ key: t.key, title: t.title, url: t.url, domain: t.module.domain, minutes: entries.find((e) => e.id === t.key)?.data.readingMinutes ?? 8 }));
+const totalMinutes = lessons.reduce((s, l) => s + l.minutes + 10, 0);
+const payload = JSON.stringify({ cert: exam.slug, code: exam.code, lessons, base: `/${exam.slug}/`, site: SITE.url }).replace(/</g, '\\u003c');
+
+const title = `${exam.code} Study Plan: Free Day-by-Day Schedule`;
+const description = `Make a free ${exam.code} study plan: pick your exam date and daily time, get a day-by-day schedule of lessons, mocks and revision, plus calendar reminders.`;
+const crumbs = [{ name: 'Home', url: '/' }, { name: exam.code, url: `/${exam.slug}/` }, { name: 'Study plan', url: `/${exam.slug}/study-plan/` }];
+---
+<Base title={title} description={description} breadcrumbs={crumbs}>
+  <script type="application/json" id="plan-data" set:html={payload} />
+  <div class="mx-auto max-w-4xl px-4 py-8 sm:px-6">
+    <nav aria-label="Breadcrumb" class="text-sm text-muted"><a href="/">Home</a> / <a href={`/${exam.slug}/`}>{exam.code}</a> / <span class="text-[var(--text)]">Study plan</span></nav>
+    <div class="mt-6 flex flex-wrap items-center gap-4">
+      <Mascot size={64} />
+      <div class="min-w-0 flex-1">
+        <p class="eyebrow">Your schedule, your pace</p>
+        <h1 class="mt-2 text-3xl font-bold tracking-tight sm:text-4xl">{exam.code} study plan</h1>
+      </div>
+    </div>
+    <p class="mt-4 text-muted">
+      Pick your exam date and how long you can study each day. You'll get a plan that covers all {lessons.length} lessons (about {Math.round(totalMinutes / 60)} hours with the simulations and quizzes), then leaves the last few days for mock exams and revision. Miss a day? The plan moves the work forward on its own. It's saved only in this browser.
+    </p>
+
+    <form id="pl-form" class="card mt-8 grid gap-4 p-5 sm:grid-cols-2 sm:p-6">
+      <label class="block"><span class="text-sm font-semibold">Exam date</span>
+        <input id="pl-date" type="date" required class="mt-1 block min-h-[42px] w-full rounded-md border border-default bg-[var(--bg)] px-3" /></label>
+      <label class="block"><span class="text-sm font-semibold">Time each day</span>
+        <select id="pl-min" class="mt-1 block min-h-[42px] w-full rounded-md border border-default bg-[var(--bg)] px-3">
+          <option value="20">20 minutes</option><option value="30">30 minutes</option><option value="45" selected>45 minutes</option><option value="60">1 hour</option><option value="90">1 hour 30</option><option value="120">2 hours</option>
+        </select></label>
+      <label class="block"><span class="text-sm font-semibold">Reminder time</span>
+        <input id="pl-time" type="time" value="19:00" class="mt-1 block min-h-[42px] w-full rounded-md border border-default bg-[var(--bg)] px-3" /></label>
+      <label class="flex min-h-[42px] items-center gap-3 self-end"><input id="pl-wk" type="checkbox" checked class="h-5 w-5" /><span class="text-sm font-semibold">Study at weekends too</span></label>
+      <div class="flex flex-wrap gap-2 sm:col-span-2">
+        <button type="submit" class="btn btn-accent">Make my plan</button>
+        <button type="button" id="pl-clear" class="btn btn-outline hidden">Delete plan</button>
+      </div>
+      <p id="pl-err" class="hidden text-sm verdict-bad sm:col-span-2" role="alert"></p>
+    </form>
+
+    <section id="pl-out" class="mt-8 hidden" aria-labelledby="pl-sum-h">
+      <div class="band-navy rounded-2xl p-5 sm:p-6">
+        <h2 id="pl-sum-h" class="text-2xl font-bold"><span id="pl-count"></span></h2>
+        <p id="pl-sum" class="mt-2 text-white/85"></p>
+        <div class="mt-4 flex flex-wrap gap-2">
+          <button type="button" id="pl-ics" class="btn !bg-[#ffd75e] !text-[#0b1020]">📅 Add reminders to my calendar</button>
+          <a href={`/${exam.slug}/practice/`} class="btn btn-outline !border-white/40 !text-white">Smart practice ❯</a>
+        </div>
+        <p class="mt-2 text-xs text-white/70">Downloads a calendar file with a daily study reminder and your exam date. Open it on your phone or computer to add it to Google Calendar, Outlook or Apple Calendar.</p>
+      </div>
+      <p id="pl-warn" class="mt-4 hidden rounded-xl border-l-[5px] border-[var(--warn)] bg-[var(--warn-soft)] p-4 text-sm"></p>
+
+      <h2 class="mt-8 text-xl font-bold">Day by day</h2>
+      <ol id="pl-days" class="mt-4 space-y-3"></ol>
+      <button type="button" id="pl-more" class="btn btn-outline mt-4 hidden">Show the whole plan</button>
+    </section>
+  </div>
+</Base>
+
+<script>
+  import { load, today } from '../../lib/progress';
+  import { loadPlan, savePlan, buildSchedule, planIcs, addDays, type PlanSettings, type PlanItem } from '../../lib/plan';
+
+  const data = JSON.parse(document.getElementById('plan-data')!.textContent!) as {
+    cert: string; code: string; base: string; site: string; lessons: { key: string; title: string; url: string; minutes: number; domain: number }[];
+  };
+  const $ = <T extends HTMLElement = HTMLElement>(id: string) => document.getElementById(id) as T;
+  const esc = (s: string) => s.replace(/&/g, '&amp;').replace(/</g, '&lt;');
+  const pretty = (d: string, opts: Intl.DateTimeFormatOptions = { weekday: 'short', day: 'numeric', month: 'short' }) => new Date(`${d}T00:00:00`).toLocaleDateString('en-GB', opts);
+  const icon: Record<PlanItem['kind'], string> = { lesson: '📘', practice: '🧠', mock: '⏱️', revise: '📝', examday: '✅', exam: '🏁' };
+  let showAll = false;
+
+  $<HTMLInputElement>('pl-date').min = addDays(today(), 1);
+
+  function fill(p: PlanSettings) {
+    $<HTMLInputElement>('pl-date').value = p.examDate;
+    $<HTMLSelectElement>('pl-min').value = String(p.minutes);
+    $<HTMLInputElement>('pl-time').value = p.time;
+    $<HTMLInputElement>('pl-wk').checked = p.weekends;
+  }
+
+  function render() {
+    const plan = loadPlan(data.cert);
+    $('pl-clear').classList.toggle('hidden', !plan);
+    if (!plan) { $('pl-out').classList.add('hidden'); return; }
+    const done = new Set(Object.keys(load().done));
+    const s = buildSchedule(plan, data.lessons, done, data.base);
+    $('pl-out').classList.remove('hidden');
+    $('pl-count').textContent = s.daysToExam > 0 ? `${s.daysToExam} day${s.daysToExam > 1 ? 's' : ''} to your ${data.code} exam` : s.daysToExam === 0 ? `Exam day. Good luck!` : 'Your exam date has passed';
+    $('pl-sum').textContent = s.daysToExam < 0
+      ? 'Pick a new date to make a fresh plan.'
+      : `${s.lessonsLeft} lesson${s.lessonsLeft === 1 ? '' : 's'} left across ${s.studyDays} study day${s.studyDays === 1 ? '' : 's'}.${s.lessonsEnd ? ` Lessons finish on ${pretty(s.lessonsEnd, { day: 'numeric', month: 'long' })}, then it's mocks and revision.` : ' All lessons done: the plan is mocks and revision now.'}`;
+    const warn = $('pl-warn');
+    if (s.daysToExam >= 0 && s.neededMinutes > plan.minutes + 5) {
+      warn.textContent = `Heads up: to cover every lesson before the review days you need about ${s.neededMinutes} minutes a day, not ${plan.minutes}. The plan below assumes ${s.neededMinutes}. Pick a later date or more time each day if that's too much.`;
+      warn.classList.remove('hidden');
+    } else warn.classList.add('hidden');
+
+    const t = today();
+    const list = showAll ? s.days : s.days.slice(0, 14);
+    $('pl-days').innerHTML = list.map((d) => {
+      const isToday = d.date === t;
+      const mins = d.items.reduce((a, x) => a + x.minutes, 0);
+      const rows = d.items.map((it) => {
+        const ck = it.kind === 'lesson' ? done.has(it.key!) : Boolean(plan.checked[`${d.date}|${it.kind}`]);
+        const box = it.kind === 'lesson' || it.kind === 'exam'
+          ? `<span class="w-6 text-center" aria-label="${ck ? 'Done' : 'Not done yet'}">${ck ? '✅' : '⬜'}</span>`
+          : `<input type="checkbox" class="pl-tick h-5 w-5" data-k="${d.date}|${it.kind}" ${ck ? 'checked' : ''} aria-label="Mark done: ${esc(it.title)}" />`;
+        return `<li class="flex items-center gap-3">${box}<a class="min-w-0 flex-1 hover:underline ${ck ? 'text-muted line-through' : ''}" href="${it.url}">${icon[it.kind]} ${esc(it.title)}</a>${it.minutes ? `<span class="chip chip-muted shrink-0">${it.minutes} min</span>` : ''}</li>`;
+      }).join('');
+      return `<li class="card p-4 ${isToday ? 'ring-2 ring-[var(--accent)]' : ''}" ${isToday ? 'id="pl-today"' : ''}>
+        <p class="flex flex-wrap items-center justify-between gap-2 text-sm font-bold"><span>${isToday ? 'Today · ' : ''}${pretty(d.date)}${d.review ? ' <span class="chip">Review</span>' : ''}</span>${mins ? `<span class="text-muted font-semibold">about ${mins} min</span>` : ''}</p>
+        <ul class="mt-2 space-y-2 text-[0.95rem]">${rows}</ul></li>`;
+    }).join('') || '<li class="text-muted">No study days left before the exam date.</li>';
+    $('pl-more').classList.toggle('hidden', showAll || s.days.length <= 14);
+  }
+
+  $('pl-form').addEventListener('submit', (e) => {
+    e.preventDefault();
+    const date = $<HTMLInputElement>('pl-date').value;
+    const err = $('pl-err');
+    if (!date || date <= today()) { err.textContent = 'Pick an exam date after today.'; err.classList.remove('hidden'); return; }
+    err.classList.add('hidden');
+    const prev = loadPlan(data.cert);
+    savePlan(data.cert, {
+      examDate: date,
+      minutes: Number($<HTMLSelectElement>('pl-min').value),
+      weekends: $<HTMLInputElement>('pl-wk').checked,
+      time: $<HTMLInputElement>('pl-time').value || '19:00',
+      created: prev?.created ?? today(),
+      checked: prev?.checked ?? {},
+    });
+    render();
+    $('pl-out').scrollIntoView({ block: 'start' });
+  });
+  $('pl-clear').addEventListener('click', () => { if (confirm('Delete this study plan?')) { savePlan(data.cert, null); render(); } });
+  $('pl-more').addEventListener('click', () => { showAll = true; render(); });
+  $('pl-days').addEventListener('change', (e) => {
+    const box = (e.target as HTMLElement).closest<HTMLInputElement>('.pl-tick');
+    const plan = loadPlan(data.cert);
+    if (!box || !plan) return;
+    if (box.checked) plan.checked[box.dataset.k!] = true; else delete plan.checked[box.dataset.k!];
+    savePlan(data.cert, plan);
+    render();
+  });
+  $('pl-ics').addEventListener('click', () => {
+    const plan = loadPlan(data.cert);
+    if (!plan) return;
+    const ics = planIcs(plan, data.code, `${data.site}${data.base}study-plan/`, `${data.site}${data.base}exam-day/`);
+    const a = Object.assign(document.createElement('a'), { href: URL.createObjectURL(new Blob([ics], { type: 'text/calendar' })), download: `${data.cert}-study-plan.ics` });
+    a.click();
+    setTimeout(() => URL.revokeObjectURL(a.href), 2000);
+  });
+  window.addEventListener('progress-change', render);
+
+  const existing = loadPlan(data.cert);
+  if (existing) fill(existing);
+  else $<HTMLInputElement>('pl-date').value = addDays(today(), 28);
+  render();
+</script>

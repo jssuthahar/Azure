@@ -292,8 +292,27 @@ function suggest(path: string): string {
   return best && best[1] > 0 ? `\nDid you mean 'az ${best[0]}'?` : '';
 }
 
-/** Run one command line and return what the terminal should print. */
+/** Run one command line and return what the terminal should print. `a && b` runs b only if a worked, like bash. */
 export function runCli(line: string, sim: Sim): CliResult {
+  const parts = line.split(/\s+&&\s+/).filter((x) => x.trim());
+  if (parts.length < 2) return runOne(line, sim);
+  const outs: string[] = [];
+  for (let i = 0; i < parts.length; i++) {
+    const r = runOne(parts[i], sim);
+    if (r.clear) continue;
+    if (r.confirm) {
+      // Ask first; after a yes, carry on with the rest of the chain.
+      const { question, then } = r.confirm;
+      const rest = parts.slice(i + 1).join(' && ');
+      return { out: outs.join('\n') || undefined, confirm: { question, then: () => { const a = then(); if (a.error || !rest) return a; const b = runCli(rest, sim); return { ...b, out: [a.out, b.out].filter(Boolean).join('\n') || undefined }; } } };
+    }
+    if (r.error) return { ...r, error: [...outs, r.error].join('\n') };
+    if (r.out) outs.push(r.out);
+  }
+  return { out: outs.join('\n') };
+}
+
+function runOne(line: string, sim: Sim): CliResult {
   const tokens = tokenize(line.trim());
   if (!tokens.length) return { out: '' };
   const first = tokens[0].toLowerCase();

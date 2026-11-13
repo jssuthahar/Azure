@@ -1,0 +1,169 @@
+---
+/**
+ * Exam-day guide: booking, free voucher routes, the online-proctoring
+ * checklist (with ticks saved in this browser), what happens on the day,
+ * and the retake policy. Policy facts checked against Microsoft Learn on
+ * 13 Nov 2026; every section links to the official page so learners can
+ * confirm the current rules.
+ */
+import Base from '../../layouts/Base.astro';
+import Mascot from '../../components/Mascot.astro';
+import { SITE } from '../../config';
+import { getExam, examStaticPaths } from '../../data/exams';
+
+export function getStaticPaths() {
+  return examStaticPaths();
+}
+const exam = getExam(Astro.params.cert);
+const f = exam.facts;
+const VERIFIED = '13 November 2026';
+const L = {
+  register: 'https://learn.microsoft.com/en-us/credentials/certifications/register-schedule-exam',
+  online: 'https://learn.microsoft.com/en-us/credentials/certifications/online-exams',
+  systemTest: 'https://system-test.onvue.com/system_test?customer=pearson_vue&clientcode=MICROSOFT&locale=en_US',
+  sandbox: 'https://go.microsoft.com/fwlink/?linkid=2226877',
+  profile: 'https://learn.microsoft.com/en-us/credentials/certifications/manage-certification-profile',
+  accommodations: 'https://learn.microsoft.com/en-us/credentials/certifications/request-accommodations',
+  cancel: 'https://learn.microsoft.com/en-us/credentials/support/reschedule-and-cancellation-policy',
+  retake: 'https://learn.microsoft.com/en-us/credentials/support/retake-policy',
+  scoring: 'https://learn.microsoft.com/en-us/credentials/certifications/exam-scoring-reports',
+  renew: 'https://learn.microsoft.com/en-us/credentials/certifications/renew-your-microsoft-certification-faq',
+  support: 'https://learn.microsoft.com/en-us/credentials/support/help',
+};
+
+const weekBefore = [
+  ['Run the system test on the same computer, network and room you will use.', L.systemTest],
+  ['Check the name on your Microsoft certification profile matches your government ID exactly, middle names and spelling included.', L.profile],
+  ['Try the exam sandbox once, so the screens and question types feel familiar.', L.sandbox],
+  ['Add your mobile number, with country code, to your profile. The proctor calls it if your connection drops.', L.online],
+  ['Need extra time or assistive technology? Request it before you book, not after.', L.accommodations],
+] as const;
+const online = [
+  'A walled room with the door closed. Nobody else comes in during the exam.',
+  'Clear desk: no books, notepads, sticky notes, pens or whiteboards within reach.',
+  'Extra monitors unplugged and turned away. Other computers in the room switched off.',
+  'Phone out of arm’s reach, but close enough to hear if the proctor calls.',
+  'A drink is fine in a clear, spill-proof container. No eating or chewing gum.',
+  'Run the system test again on the day, close every other app and turn off pop-up blockers.',
+  'Have your phone ready to photograph your face, your ID and the room during check-in.',
+  'No help from anyone and no AI tools during the exam.',
+];
+const faqs = [
+  { q: `How do I book the ${exam.code} exam?`, a: `Open the ${exam.code} page on Microsoft Learn, choose Schedule exam, sign in and pick online proctored or a Pearson VUE test centre. You can have at most two Microsoft exams booked at a time.` },
+  { q: 'Can I get a free Microsoft exam voucher?', a: 'Sometimes. Microsoft gives free or discounted vouchers through time-limited events such as Microsoft Virtual Training Days, Learn challenges and events like Ignite. There is no permanent free voucher, so watch Microsoft Learn for current offers.' },
+  { q: 'When can I check in for an online exam?', a: 'From 30 minutes before your appointment until 15 minutes after it. Check-in usually takes about 15 minutes, so start early.' },
+  { q: 'What if I need to cancel or reschedule?', a: 'Do it at least 24 hours before the appointment. Later than that, or not turning up, and you lose the exam fee or voucher.' },
+  { q: `What happens if I fail ${exam.code}?`, a: 'Wait 24 hours before the second attempt. After that there is a 14-day wait between attempts, with at most five attempts in 12 months. Retakes are paid.' },
+  { q: `Does the ${exam.code} certification expire?`, a: 'No. Microsoft fundamentals certifications do not expire and do not need renewing.' },
+];
+const title = `${exam.code} Exam Day: Booking, Checklist and Retakes`;
+const description = `Your ${exam.code} exam-day guide: how to book, free voucher routes, the online-proctoring checklist, check-in times, scoring and the retake policy.`;
+const crumbs = [{ name: 'Home', url: '/' }, { name: exam.code, url: `/${exam.slug}/` }, { name: 'Exam day', url: `/${exam.slug}/exam-day/` }];
+const schema = [{
+  '@type': 'FAQPage',
+  '@id': `${SITE.url}/${exam.slug}/exam-day/#faq`,
+  mainEntity: faqs.map((x) => ({ '@type': 'Question', name: x.q, acceptedAnswer: { '@type': 'Answer', text: x.a } })),
+}];
+const ext = { target: '_blank', rel: 'noopener' };
+---
+<Base title={title} description={description} breadcrumbs={crumbs} schema={schema}>
+  <div class="mx-auto max-w-4xl px-4 py-8 sm:px-6">
+    <nav aria-label="Breadcrumb" class="text-sm text-muted"><a href="/">Home</a> / <a href={`/${exam.slug}/`}>{exam.code}</a> / <span class="text-[var(--text)]">Exam day</span></nav>
+    <div class="mt-6 flex flex-wrap items-center gap-4">
+      <Mascot size={64} mood="cheer" />
+      <div class="min-w-0 flex-1">
+        <p class="eyebrow">From booking to result</p>
+        <h1 class="mt-2 text-3xl font-bold tracking-tight sm:text-4xl">{exam.code} exam-day guide</h1>
+      </div>
+    </div>
+    <div class="answer-box mt-5" data-speakable>
+      <p class="text-sm font-bold text-accent">30-second answer</p>
+      <p class="mt-1 text-[1.05rem] leading-relaxed">Book on Microsoft Learn, online or at a test centre. Run the system test and match your profile name to your ID a week before. On the day, check in up to 30 minutes early with a clear desk and your phone out of reach. You need {f.passingScore} out of 1000, and if it doesn't go your way, you can retake after 24 hours.</p>
+    </div>
+    <p class="mt-3 text-xs text-muted">Policies checked on Microsoft Learn on {VERIFIED}. Microsoft can change them, so each section links to the official page. This guide is from MSDEVBUILD and isn't affiliated with Microsoft or Pearson VUE.</p>
+
+    <div class="lesson mt-8 !max-w-none">
+      <h2 id="book">1. Book the exam</h2>
+      <p>Go to the <a href={exam.info.officialUrl} {...ext}>{exam.code} page on Microsoft Learn ↗</a>, choose <strong>Schedule exam</strong> and sign in with the Microsoft account you'll keep for your certifications. You'll pick one of two options:</p>
+      <ul>
+        <li><strong>Online proctored</strong> from home or the office. Convenient, but your computer, room and internet connection all have to pass the rules below.</li>
+        <li><strong>A Pearson VUE test centre</strong>. A quiet, ready-made room with no software to install. A good choice if your connection is shaky or you share your home.</li>
+      </ul>
+      <p>You can have at most two Microsoft exams booked at once. If plans change, cancel or reschedule at least <strong>24 hours</strong> ahead. Leave it later, or don't turn up, and the fee or voucher is gone. <a href={L.cancel} {...ext}>Cancellation policy ↗</a></p>
+
+      <h2 id="voucher">2. Pay less, or nothing</h2>
+      <p>Microsoft sometimes gives free or discounted exam vouchers through <strong>Microsoft Virtual Training Days</strong>, Microsoft Learn challenges and big events. These offers come and go, and each has its own terms, so read them before you book. There isn't a permanent free voucher, whatever a forum post says. If your employer pays for training, ask before you pay yourself.</p>
+
+      <h2 id="week-before">3. A week before</h2>
+    </div>
+    <ul class="mt-3 space-y-2" id="ed-week">
+      {weekBefore.map(([t, href], i) => (
+        <li><label class="flex items-start gap-3 rounded-xl border border-default bg-[var(--card)] p-3"><input type="checkbox" class="ed-tick mt-1 h-5 w-5 shrink-0" data-k={`w${i}`} /><span>{t} <a class="text-accent underline" href={href} {...ext}>Open ↗</a></span></label></li>
+      ))}
+    </ul>
+
+    <div class="lesson mt-8 !max-w-none"><h2 id="online">4. Online exam: the room checklist</h2><p>The greeter checks all of this before your exam starts. Fixing it beforehand saves a stressful check-in. <a href={L.online} {...ext}>Full rules on Microsoft Learn ↗</a></p></div>
+    <ul class="mt-3 space-y-2">
+      {online.map((t, i) => (
+        <li><label class="flex items-start gap-3 rounded-xl border border-default bg-[var(--card)] p-3"><input type="checkbox" class="ed-tick mt-1 h-5 w-5 shrink-0" data-k={`o${i}`} /><span>{t}</span></label></li>
+      ))}
+    </ul>
+    <p class="mt-2 text-sm text-muted"><span id="ed-count">0</span> of {weekBefore.length + online.length} ticked. Your ticks stay in this browser. <button type="button" id="ed-reset" class="text-accent underline">Clear</button></p>
+
+    <div class="lesson mt-8 !max-w-none">
+      <h2 id="on-the-day">5. On the day</h2>
+      <ul>
+        <li><strong>Check in early.</strong> For an online exam you can start from 30 minutes before your time until 15 minutes after. Check-in takes about 15 minutes: you take photos of your face, ID and room on your phone, then a greeter reviews them.</li>
+        <li><strong>Waiting is normal.</strong> After check-in you're placed in a queue for a proctor. If nobody appears within 30 minutes, use the Pearson OnVUE live chat.</li>
+        <li><strong>Time.</strong> {exam.code} gives you about {f.durationMinutes} minutes for the questions, plus time for the agreement and survey screens.</li>
+        <li><strong>Pace yourself.</strong> Answer every question, as a blank always scores zero. Mark the ones you're unsure of and come back. If a section warns that you can't return to it, believe it. Finish your review before you move on.</li>
+        <li><strong>Connection drops?</strong> Stay at your desk. The proctor tries chat, then your phone. Ask for a Pearson VUE case number: you'll need it if you want the retake wait waived.</li>
+      </ul>
+
+      <h2 id="after">6. After the exam</h2>
+      <ul>
+        <li><strong>Your result shows straight away.</strong> You need {f.passingScore} on a scale of {f.scoreScale}. It's a scaled score, so it isn't the same as getting {Math.round(f.passingScore / 10)}% of questions right. <a href={L.scoring} {...ext}>How scoring works ↗</a></li>
+        <li><strong>Passed?</strong> The certification appears on your Microsoft Learn profile, where you can share it. Fundamentals certifications <strong>don't expire</strong>, so there's no renewal to worry about. <a href={L.renew} {...ext}>Renewal FAQ ↗</a></li>
+        <li><strong>Didn't pass?</strong> It happens to plenty of good engineers. Use the score report to see your weakest area, then drill it in <a href={`/${exam.slug}/practice/`}>smart practice</a>.</li>
+      </ul>
+
+      <h2 id="retake">7. The retake rules</h2>
+      <ul>
+        <li>Wait <strong>24 hours</strong> after a first fail before you retake.</li>
+        <li>After that, wait <strong>14 days</strong> between each attempt.</li>
+        <li>At most <strong>5 attempts in 12 months</strong>, counted from your first try.</li>
+        <li>Each retake is paid, unless your voucher or offer says otherwise.</li>
+        <li>The waiting period is only waived for internet or equipment failures during the exam, and only with a Pearson VUE case number.</li>
+      </ul>
+      <p><a href={L.retake} {...ext}>Retake policy on Microsoft Learn ↗</a> · <a href={L.support} {...ext}>Credentials support ↗</a></p>
+
+      <h2 id="faq">Quick answers</h2>
+      {faqs.map((x) => <><h3>{x.q}</h3><p>{x.a}</p></>)}
+    </div>
+
+    <div class="mt-10 flex flex-wrap gap-3">
+      <a href={`/${exam.slug}/cheat-sheet/#last-30`} class="btn btn-accent">⏰ The last 30 minutes</a>
+      <a href={`/${exam.slug}/mock-exam/`} class="btn btn-outline">Full mock exam</a>
+      <a href={`/${exam.slug}/study-plan/`} class="btn btn-outline">📅 Study plan</a>
+    </div>
+  </div>
+</Base>
+
+<script>
+  const KEY = 'msdb-exam-day-' + location.pathname.split('/')[1];
+  const ticks = [...document.querySelectorAll<HTMLInputElement>('.ed-tick')];
+  const read = (): Record<string, boolean> => { try { return JSON.parse(localStorage.getItem(KEY) || '{}'); } catch { return {}; } };
+  const count = () => { document.getElementById('ed-count')!.textContent = String(ticks.filter((t) => t.checked).length); };
+  const saved = read();
+  ticks.forEach((t) => {
+    t.checked = Boolean(saved[t.dataset.k!]);
+    t.addEventListener('change', () => {
+      const s = read();
+      if (t.checked) s[t.dataset.k!] = true; else delete s[t.dataset.k!];
+      try { localStorage.setItem(KEY, JSON.stringify(s)); } catch {}
+      count();
+    });
+  });
+  document.getElementById('ed-reset')!.addEventListener('click', () => { try { localStorage.removeItem(KEY); } catch {} ticks.forEach((t) => (t.checked = false)); count(); });
+  count();
+</script>

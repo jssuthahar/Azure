@@ -1,7 +1,8 @@
 ---
 import Base from '../layouts/Base.astro';
 import Mascot from '../components/Mascot.astro';
-import { getNav } from '../lib/learn';
+import { getCollection } from 'astro:content';
+import { getNav, getQuestionBank } from '../lib/learn';
 import { getExam } from '../data/exams';
 const exam = getExam();
 
@@ -9,7 +10,11 @@ const nav = await getNav();
 const published = nav.filter((t) => t.published);
 const moduleKeys = Object.fromEntries(exam.modules.map((m) => [m.slug, published.filter((t) => t.module.slug === m.slug).map((t) => t.key)]));
 const topics = published.map((t) => ({ key: t.key, title: t.title, url: t.url, module: t.module.slug }));
-const payload = JSON.stringify({ moduleKeys, topics, modules: exam.modules.map((m) => ({ slug: m.slug, title: m.shortTitle, domain: m.domain })) }).replace(/</g, '\\u003c');
+const entries = await getCollection('tutorials', (e) => e.id.startsWith(`${exam.slug}/`));
+const bank = (await getQuestionBank(exam.slug)).map((q) => ({ id: q.id, domain: q.domain, topic: q.topic }));
+const lessons = published.map((t) => ({ key: t.key, title: t.title, url: t.url, domain: t.module.domain, minutes: entries.find((e) => e.id === t.key)?.data.readingMinutes ?? 8 }));
+const weights = Object.fromEntries(exam.modules.map((m) => [m.domain, m.weightMid]));
+const payload = JSON.stringify({ moduleKeys, topics, modules: exam.modules.map((m) => ({ slug: m.slug, title: m.shortTitle, domain: m.domain })), cert: exam.slug, bank, lessons, weights }).replace(/</g, '\\u003c');
 ---
 <Base breadcrumbs={[{ name: 'Home', url: '/' }, { name: 'My progress', url: '/progress/' }]} title="My Progress | MSDEVBUILD Azure" description="Your AZ-900 learning progress, knowledge-check scores, mock exam history and achievement badges, saved privately in your browser." noindex>
   <script type="application/json" id="pg-data" set:html={payload} />
@@ -36,6 +41,20 @@ const payload = JSON.stringify({ moduleKeys, topics, modules: exam.modules.map((
       <div class="card p-5"><p class="text-sm text-muted">Topics completed</p><p class="text-3xl font-bold" id="pg-done">0</p><div class="bar mt-2"><span id="pg-done-bar" style="width:0"></span></div></div>
       <div class="card p-5"><p class="text-sm text-muted">Knowledge checks taken</p><p class="text-3xl font-bold" id="pg-quiz">0</p></div>
       <div class="card p-5"><p class="text-sm text-muted">Best mock exam</p><p class="text-3xl font-bold" id="pg-mock">–</p></div>
+    </section>
+
+    <section class="mt-4 grid gap-4 md:grid-cols-2" aria-label="Readiness and today's plan">
+      <a href={`/${exam.slug}/practice/`} class="card card-link p-5">
+        <p class="text-sm text-muted">{exam.code} exam readiness</p>
+        <p class="text-3xl font-bold"><span id="pg-ready">0</span>% <span id="pg-ready-l" class="text-base font-semibold"></span></p>
+        <div class="bar mt-2"><span id="pg-ready-bar" style="width:0"></span></div>
+        <p class="mt-2 text-sm"><span id="pg-due">0</span> reviews due today · <span class="font-semibold text-accent">Smart practice ❯</span></p>
+      </a>
+      <a href={`/${exam.slug}/study-plan/`} class="card card-link p-5">
+        <p class="text-sm text-muted">📅 Today's plan</p>
+        <ul id="pg-today" class="mt-2 space-y-1 text-sm"><li class="text-muted">No study plan yet. Pick your exam date and get a day-by-day schedule.</li></ul>
+        <p class="mt-2 text-sm font-semibold text-accent" id="pg-plan-cta">Make my plan ❯</p>
+      </a>
     </section>
 
     <a id="pg-cert" href="/certificate/" class="mt-4 flex flex-wrap items-center gap-4 rounded-2xl border-2 border-[#ffb900] bg-[var(--pastel-yellow)] p-5 hover:ring-2 hover:ring-[var(--accent)]">
@@ -67,9 +86,13 @@ const payload = JSON.stringify({ moduleKeys, topics, modules: exam.modules.map((
   </div>
 </Base>
 <script>
-  import { load, badges, reset, levelFor, streak } from '../lib/progress';
+  import { load, badges, reset, levelFor, streak, today } from '../lib/progress';
   import { loadCert, bestFullMock, badgeSvg } from '../lib/certificate';
+  import { readiness } from '../lib/review';
+  import { loadPlan, buildSchedule } from '../lib/plan';
   const data = JSON.parse(document.getElementById('pg-data')!.textContent!) as {
+    cert: string; bank: { id: string; domain: number; topic?: string }[]; weights: Record<number, number>;
+    lessons: { key: string; title: string; url: string; minutes: number; domain: number }[];
     moduleKeys: Record<string, string[]>; topics: { key: string; title: string; url: string; module: string }[]; modules: { slug: string; title: string; domain: number }[];
   };
   const $ = (id: string) => document.getElementById(id)!;
@@ -86,6 +109,21 @@ const payload = JSON.stringify({ moduleKeys, topics, modules: exam.modules.map((
     $('pg-done').textContent = `${done} / ${data.topics.length}`;
     ($('pg-done-bar') as HTMLElement).style.width = `${data.topics.length ? (done / data.topics.length) * 100 : 0}%`;
     $('pg-quiz').textContent = String(Object.keys(s.quizzes).length);
+    {
+      const r = readiness(data.cert, data.bank, data.weights, s.mocks);
+      $('pg-ready').textContent = String(r.percent);
+      $('pg-ready-l').textContent = r.label;
+      ($('pg-ready-bar') as HTMLElement).style.width = `${r.percent}%`;
+      $('pg-due').textContent = String(r.due);
+      const plan = loadPlan(data.cert);
+      if (plan) {
+        const days = buildSchedule(plan, data.lessons, new Set(Object.keys(s.done)), `/${data.cert}/`).days;
+        const day = days.find((d) => d.date === today());
+        const esc = (x: string) => x.replace(/&/g, '&amp;').replace(/</g, '&lt;');
+        $('pg-today').innerHTML = !day && days[0] ? `<li class="text-muted">A day off today. Next study day: ${new Date(`${days[0].date}T00:00:00`).toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'short' })}.</li>` : day ? day.items.map((it) => `<li>${it.kind === 'lesson' && s.done[it.key!] ? '✅' : '•'} ${esc(it.title)}${it.minutes ? ` <span class="text-muted">(${it.minutes} min)</span>` : ''}</li>`).join('') : '<li class="text-muted">Your exam date has passed. Set a new one.</li>';
+        $('pg-plan-cta').textContent = 'Open my plan ❯';
+      }
+    }
     $('pg-mock').textContent = s.mocks.length ? `${Math.max(...s.mocks.map((m) => m.percent))}%` : '–';
     {
       const cert = loadCert();

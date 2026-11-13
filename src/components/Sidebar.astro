@@ -15,9 +15,13 @@ const current = nav.find((t) => t.key === currentKey);
 const position = current ? published.findIndex((t) => t.key === currentKey) + 1 : 0;
 const practice = [
   { icon: '🧪', label: 'Practice labs', href: `/${exam.slug}/labs/` },
+  { icon: '🧠', label: 'Smart practice', href: `/${exam.slug}/practice/` },
   { icon: '⏱', label: 'Mock exam', href: `/${exam.slug}/mock-exam/` },
+  { icon: '📅', label: 'Study plan', href: `/${exam.slug}/study-plan/` },
   { icon: '🏆', label: 'Certificate', href: '/certificate/' },
   { icon: '🃏', label: 'Revision flashcards', href: `/${exam.slug}/revision/` },
+  { icon: '📝', label: 'Cheat sheet', href: `/${exam.slug}/cheat-sheet/` },
+  { icon: '✅', label: 'Exam day guide', href: `/${exam.slug}/exam-day/` },
   { icon: '🎤', label: 'Interview questions', href: `/${exam.slug}/interview/` },
 ];
 ---

@@ -239,6 +239,7 @@ const crumbs = [{ name: 'Home', url: '/' }, { name: `${exam.code}`, url: `/${exa
   import type { FormatItem } from '../../data/az-900/exam-items';
   import { buildPaper, emptyResponse, answered, score, result, KIND_LABEL, type Item, type ChoiceItem, type Response, type Paper } from '../../lib/exam';
   import { saveMock, type MockResult } from '../../lib/progress';
+  import { recordAnswers } from '../../lib/review';
   import { issueCert, loadCert } from '../../lib/certificate';
   import { confetti } from '../../lib/fun';
 
@@ -616,6 +617,8 @@ const crumbs = [{ name: 'Home', url: '/' }, { name: `${exam.code}`, url: `/${exa
     const r = result(s.paper.items, s.responses);
     const mock: MockResult = { score: r.earned, total: r.possible, percent: r.percent, scaled: r.scaled, mode: s.paper.mode, domains: r.domains, at: new Date().toISOString() };
     saveMock(mock);
+    // Every answered item feeds spaced repetition; full marks count as right.
+    recordAnswers(location.pathname.split('/')[1], s.paper.items.map((q, i) => ({ q, i, sc: score(q, s.responses[i]) })).filter(({ q, i }) => answered(q, s.responses[i]) !== 'none').map(({ q, sc }) => ({ id: q.id, ok: sc.earned === sc.possible })));
     st = null;
     persist();
     report(s, r, mock);

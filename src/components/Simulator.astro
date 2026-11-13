@@ -247,7 +247,8 @@ const { lab } = Astro.props;
     });
     const handle = (r: CliResult) => {
       if (r.clear) { out.innerHTML = ''; return; }
-      if (r.confirm) { pending = r.confirm; prompt.textContent = r.confirm.question; return; }
+      // A chain (a && b) can print earlier output and then stop at a y/n question.
+      if (r.confirm) { if (r.out) print(r.out); pending = r.confirm; prompt.textContent = r.confirm.question; return; }
       if (r.error) print(`ERROR: ${r.error}`, 'err');
       if (r.out) print(r.out);
       if (r.open) { portal.openResource(r.open); print('(Opened in the Portal tab.)', 'info'); }

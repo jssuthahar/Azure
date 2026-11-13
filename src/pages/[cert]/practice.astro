@@ -1,0 +1,252 @@
+---
+/**
+ * Smart practice: readiness score per exam area, spaced repetition and
+ * weak-topic drills, built on src/lib/review.ts. Everything runs in the
+ * browser; answers from lesson quizzes and mock exams feed the same deck.
+ */
+import Base from '../../layouts/Base.astro';
+import Mascot from '../../components/Mascot.astro';
+import { getQuestionBank, getNav } from '../../lib/learn';
+import { getExam, examStaticPaths } from '../../data/exams';
+
+export function getStaticPaths() {
+  return examStaticPaths();
+}
+const exam = getExam(Astro.params.cert);
+const bank = await getQuestionBank(exam.slug);
+const nav = await getNav(exam.slug);
+const topics = Object.fromEntries(nav.filter((t) => t.published).map((t) => [t.slug, { title: t.title, url: t.url, domain: t.module.domain }]));
+const domains = exam.modules.map((m) => ({ domain: m.domain, short: m.shortTitle, weight: m.weightMid, label: m.weight }));
+const qs = bank.map((q) => ({ id: q.id, domain: q.domain, topic: q.topic, type: q.type, scenario: q.scenario, question: q.question, options: q.options, answer: q.answer, explanation: q.explanation }));
+const payload = JSON.stringify({ cert: exam.slug, code: exam.code, qs, topics, domains }).replace(/</g, '\\u003c');
+
+const title = `${exam.code} Smart Practice: Readiness Score and Weak Areas`;
+const description = `Free ${exam.code} smart practice: see your exam readiness by domain, review missed questions on a spaced schedule and drill your weakest topics.`;
+const crumbs = [{ name: 'Home', url: '/' }, { name: exam.code, url: `/${exam.slug}/` }, { name: 'Smart practice', url: `/${exam.slug}/practice/` }];
+---
+<Base title={title} description={description} breadcrumbs={crumbs}>
+  <script type="application/json" id="sp-data" set:html={payload} />
+  <div class="mx-auto max-w-5xl px-4 py-8 sm:px-6">
+    <nav aria-label="Breadcrumb" class="text-sm text-muted"><a href="/">Home</a> / <a href={`/${exam.slug}/`}>{exam.code}</a> / <span class="text-[var(--text)]">Smart practice</span></nav>
+    <div class="mt-6 flex flex-wrap items-center gap-4">
+      <Mascot size={64} mood="cheer" />
+      <div class="min-w-0 flex-1">
+        <p class="eyebrow">Practice that adapts to you</p>
+        <h1 class="mt-2 text-3xl font-bold tracking-tight sm:text-4xl">{exam.code} smart practice</h1>
+      </div>
+    </div>
+    <p class="mt-4 max-w-3xl text-muted">
+      Every question you answer here, in a lesson quiz or in a mock exam is remembered. Get one wrong and it comes back tomorrow. Get it right and it returns in 3 days, then a week, then a month. Your readiness score shows which exam areas still need work. {bank.length} original practice questions, saved only in this browser.
+    </p>
+
+    <!-- Readiness -->
+    <section class="card mt-8 p-5 sm:p-6" aria-labelledby="ready-h">
+      <div class="flex flex-wrap items-end justify-between gap-3">
+        <div>
+          <h2 id="ready-h" class="text-sm font-bold tracking-wider uppercase text-muted">Exam readiness</h2>
+          <p class="mt-1 text-4xl font-bold"><span id="sp-pct">0</span>% <span id="sp-label" class="text-lg font-semibold"></span></p>
+        </div>
+        <p class="text-sm text-muted"><span id="sp-answered">0</span> of {bank.length} questions practised · <strong id="sp-due" class="text-[var(--text)]">0</strong> due for review today</p>
+      </div>
+      <div id="sp-domains" class="mt-5 grid gap-4 sm:grid-cols-3"></div>
+      <p class="mt-4 text-xs text-muted">How it's worked out: each exam area scores how well you know its questions (unseen ones count as zero). After a mock exam, your latest three mock results count for half. Areas are weighted like the real {exam.code}. It's a guide for your practice, not a promise of a pass.</p>
+    </section>
+
+    <!-- Start -->
+    <section id="sp-start" class="mt-8" aria-labelledby="start-h">
+      <h2 id="start-h" class="text-xl font-bold">Start a session</h2>
+      <div class="mt-4 grid gap-3 sm:grid-cols-2">
+        <button type="button" class="sp-mode card p-4 text-left hover:ring-2 hover:ring-[var(--accent)]" data-mode="smart"><span class="block font-semibold">🧠 Smart mix</span><span class="block text-sm text-muted">Reviews due today first, then new questions from your weakest areas.</span></button>
+        <button type="button" class="sp-mode card p-4 text-left hover:ring-2 hover:ring-[var(--accent)]" data-mode="mistakes"><span class="block font-semibold">🔁 My mistakes</span><span class="block text-sm text-muted">Only questions you got wrong last time. <span id="sp-wrong-n"></span></span></button>
+        <button type="button" class="sp-mode card p-4 text-left hover:ring-2 hover:ring-[var(--accent)]" data-mode="new"><span class="block font-semibold">✨ Questions I haven't seen</span><span class="block text-sm text-muted">Fresh questions only, from every area.</span></button>
+        <div class="card p-4">
+          <label for="sp-domain" class="block font-semibold">🎯 One exam area</label>
+          <div class="mt-2 flex flex-wrap gap-2">
+            <select id="sp-domain" class="min-h-[40px] flex-1 rounded-md border border-default bg-[var(--bg)] px-3">
+              {domains.map((d) => <option value={d.domain}>Domain {d.domain}: {d.short}</option>)}
+            </select>
+            <button type="button" id="sp-domain-go" class="btn btn-outline btn-sm">Start</button>
+          </div>
+        </div>
+      </div>
+      <p class="mt-3 flex flex-wrap items-center gap-2 text-sm">
+        <label for="sp-size">Questions per session</label>
+        <select id="sp-size" class="min-h-[36px] rounded-md border border-default bg-[var(--bg)] px-2"><option>10</option><option>20</option><option>5</option></select>
+      </p>
+      <p id="sp-empty" class="mt-3 hidden rounded-xl bg-[var(--warn-soft)] p-3 text-sm" role="status"></p>
+    </section>
+
+    <!-- Session -->
+    <section id="sp-run" class="mt-8 hidden" aria-label="Practice question">
+      <div class="flex items-center justify-between gap-3 text-sm text-muted">
+        <span id="sp-count"></span>
+        <button type="button" id="sp-quit" class="btn btn-outline btn-sm">End session</button>
+      </div>
+      <div class="bar mt-2"><span id="sp-bar" style="width:0"></span></div>
+      <form id="sp-form" class="card mt-4 p-5" novalidate>
+        <p id="sp-meta" class="text-xs font-bold tracking-wider uppercase text-muted"></p>
+        <p id="sp-scen" class="mt-2 hidden rounded-xl bg-subtle p-3 text-[0.95rem] leading-relaxed"></p>
+        <p id="sp-q" class="mt-2 font-semibold leading-relaxed"></p>
+        <fieldset class="mt-3 space-y-2"><legend class="sr-only">Options</legend><div id="sp-opts" class="space-y-2"></div></fieldset>
+        <div id="sp-fb" class="mt-3 hidden rounded-xl border border-default bg-[var(--bg)] p-3 text-[0.95rem] leading-relaxed" aria-live="polite"></div>
+        <div class="mt-4 flex flex-wrap gap-2">
+          <button type="submit" id="sp-check" class="btn btn-accent">Check</button>
+          <button type="button" id="sp-next" class="btn btn-primary hidden">Next ❯</button>
+        </div>
+      </form>
+    </section>
+
+    <!-- Summary -->
+    <section id="sp-done" class="card mt-8 hidden p-6 text-center" aria-live="polite">
+      <p class="text-4xl" aria-hidden="true">🎯</p>
+      <p id="sp-done-t" class="mt-2 text-2xl font-bold"></p>
+      <p id="sp-done-s" class="mt-1 text-muted"></p>
+      <div class="mt-4 flex flex-wrap justify-center gap-2">
+        <button type="button" id="sp-again" class="btn btn-accent">Another session</button>
+        <a href={`/${exam.slug}/mock-exam/`} class="btn btn-outline">Take a mock exam</a>
+      </div>
+    </section>
+
+    <!-- Weak topics -->
+    <section class="mt-10" aria-labelledby="weak-h">
+      <h2 id="weak-h" class="text-xl font-bold">Topics to revisit</h2>
+      <p class="mt-1 text-sm text-muted">Lessons where your latest answers were mostly wrong. Re-read the lesson, then come back for a smart mix.</p>
+      <ul id="sp-weak" class="mt-4 grid gap-2 sm:grid-cols-2"></ul>
+    </section>
+
+    <div class="mt-10 flex flex-wrap gap-3 text-sm">
+      <a href={`/${exam.slug}/study-plan/`} class="btn btn-outline">📅 My study plan</a>
+      <a href={`/${exam.slug}/cheat-sheet/`} class="btn btn-outline">📝 Cheat sheets</a>
+      <button type="button" id="sp-reset" class="btn btn-outline">Reset practice history</button>
+    </div>
+  </div>
+</Base>
+
+<script>
+  import { load, addXP } from '../../lib/progress';
+  import { readiness, topicStats, buildSession, recordAnswers, resetDeck, loadDeck, cardKey, type PracticeMode } from '../../lib/review';
+  import { confetti } from '../../lib/fun';
+
+  type Q = { id: string; domain: number; topic?: string; type: 'single' | 'multi'; scenario?: string; question: string; options: { text: string; why: string }[]; answer: number[]; explanation: string };
+  const data = JSON.parse(document.getElementById('sp-data')!.textContent!) as {
+    cert: string; code: string; qs: Q[]; topics: Record<string, { title: string; url: string; domain: number }>; domains: { domain: number; short: string; weight: number; label: string }[];
+  };
+  const $ = (id: string) => document.getElementById(id)!;
+  const byId = new Map(data.qs.map((q) => [q.id, q]));
+  const weights = Object.fromEntries(data.domains.map((d) => [d.domain, d.weight]));
+  const esc = (s: string) => s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>').replace(/`(.+?)`/g, '<code>$1</code>');
+  const toneColor = { ok: 'var(--ok)', warn: 'var(--warn)', bad: 'var(--bad)' } as const;
+
+  let weakOrder: number[] = [];
+  function paint() {
+    const r = readiness(data.cert, data.qs, weights, load().mocks);
+    $('sp-pct').textContent = String(r.percent);
+    $('sp-label').textContent = `· ${r.label}`;
+    ($('sp-label') as HTMLElement).style.color = toneColor[r.tone];
+    $('sp-answered').textContent = String(r.answered);
+    $('sp-due').textContent = String(r.due);
+    weakOrder = [...r.domains].sort((a, b) => a.percent - b.percent).map((d) => d.domain);
+    $('sp-domains').innerHTML = r.domains.map((d) => {
+      const meta = data.domains.find((x) => x.domain === d.domain)!;
+      const col = d.percent >= 70 ? 'var(--ok)' : d.percent >= 50 ? 'var(--warn)' : 'var(--bad)';
+      return `<div><div class="flex justify-between gap-2 text-sm"><span class="font-semibold">${esc(meta.short)}</span><span class="font-bold">${d.percent}%</span></div>
+        <div class="bar mt-1"><span style="width:${d.percent}%;background:${col}"></span></div>
+        <p class="mt-1 text-xs text-muted">${d.seen}/${d.total} practised${d.mock !== null ? ` · mocks ${d.mock}%` : ''} · ${esc(meta.label)} of the exam</p></div>`;
+    }).join('');
+    const deck = loadDeck();
+    const wrong = data.qs.filter((q) => deck[cardKey(data.cert, q.id)]?.ok === false).length;
+    $('sp-wrong-n').textContent = wrong ? `${wrong} waiting.` : 'None yet.';
+    const weak = topicStats(data.cert, data.qs).filter((t) => t.accuracy !== null && t.seen >= 2 && t.accuracy < 0.6 && data.topics[t.topic]).sort((a, b) => a.accuracy! - b.accuracy!).slice(0, 8);
+    $('sp-weak').innerHTML = weak.length
+      ? weak.map((t) => { const m = data.topics[t.topic]; return `<li><a href="${m.url}" class="flex items-center gap-3 rounded-xl border border-default bg-[var(--card)] px-3 py-2 text-sm hover:border-[var(--accent)]"><span aria-hidden="true">📘</span><span class="flex-1">${esc(m.title)}</span><span class="chip">${Math.round(t.accuracy! * 100)}% right</span></a></li>`; }).join('')
+      : '<li class="text-sm text-muted">Nothing flagged yet. Answer a few sessions and this list fills in.</li>';
+  }
+
+  /* ---------- session ---------- */
+  let session: Q[] = [];
+  let at = 0, right = 0;
+  let results: { id: string; ok: boolean }[] = [];
+
+  function start(mode: PracticeMode) {
+    const size = Number(($('sp-size') as HTMLSelectElement).value) || 10;
+    session = buildSession(data.cert, data.qs, mode, size, weakOrder).map((id) => byId.get(id)!).filter(Boolean);
+    const empty = $('sp-empty');
+    if (!session.length) {
+      empty.textContent = mode === 'mistakes' ? 'No mistakes to review. Nice work. Try a smart mix instead.' : 'Nothing left in this set. Try a smart mix.';
+      empty.classList.remove('hidden');
+      return;
+    }
+    empty.classList.add('hidden');
+    at = 0; right = 0; results = [];
+    $('sp-start').classList.add('hidden');
+    $('sp-done').classList.add('hidden');
+    $('sp-run').classList.remove('hidden');
+    show();
+    $('sp-run').scrollIntoView({ block: 'start' });
+  }
+
+  function show() {
+    const q = session[at];
+    const topic = q.topic ? data.topics[q.topic] : undefined;
+    $('sp-count').textContent = `Question ${at + 1} of ${session.length} · ${right} right so far`;
+    ($('sp-bar') as HTMLElement).style.width = `${(at / session.length) * 100}%`;
+    $('sp-meta').textContent = `${topic ? topic.title : `Domain ${q.domain}`}${q.type === 'multi' ? ` · Select ${q.answer.length}` : ''}`;
+    const scen = $('sp-scen');
+    scen.innerHTML = q.scenario ? esc(q.scenario) : '';
+    scen.classList.toggle('hidden', !q.scenario);
+    $('sp-q').innerHTML = esc(q.question);
+    const kind = q.type === 'multi' ? 'checkbox' : 'radio';
+    $('sp-opts').innerHTML = q.options.map((o, i) => `<label class="opt" data-o="${i}"><input type="${kind}" name="sp-o" value="${i}" /><span class="min-w-0 flex-1"><span class="block leading-relaxed">${esc(o.text)}</span><span class="why mt-1 hidden">${esc(o.why)}</span></span></label>`).join('');
+    $('sp-fb').classList.add('hidden');
+    $('sp-check').classList.remove('hidden');
+    $('sp-next').classList.add('hidden');
+    $('sp-opts').querySelector<HTMLInputElement>('input')?.focus({ preventScroll: true });
+  }
+
+  $('sp-form').addEventListener('submit', (e) => {
+    e.preventDefault();
+    const q = session[at];
+    const picked = new Set([...$('sp-opts').querySelectorAll<HTMLInputElement>('input:checked')].map((i) => Number(i.value)));
+    if (!picked.size) { $('sp-fb').textContent = 'Pick an answer first.'; $('sp-fb').classList.remove('hidden'); return; }
+    const correct = new Set(q.answer);
+    const ok = picked.size === correct.size && [...picked].every((p) => correct.has(p));
+    if (ok) right++;
+    results.push({ id: q.id, ok });
+    $('sp-opts').querySelectorAll<HTMLElement>('.opt').forEach((opt) => {
+      const i = Number(opt.dataset.o);
+      opt.dataset.state = correct.has(i) ? (picked.has(i) ? 'correct' : 'missed') : picked.has(i) ? 'wrong' : '';
+      opt.querySelector('.why')?.classList.remove('hidden');
+      opt.querySelector('input')!.disabled = true;
+    });
+    const topic = q.topic ? data.topics[q.topic] : undefined;
+    $('sp-fb').innerHTML = `<p class="font-semibold ${ok ? 'verdict-ok' : 'verdict-bad'}">${ok ? '✓ Correct. See you again in a few days.' : '✕ Not quite. This one comes back tomorrow.'}</p><p class="mt-1">${esc(q.explanation)}</p>${topic ? `<p class="mt-2 text-sm"><a class="text-accent underline" href="${topic.url}" target="_blank" rel="noopener">Re-read: ${esc(topic.title)} ↗</a></p>` : ''}`;
+    $('sp-fb').classList.remove('hidden');
+    $('sp-check').classList.add('hidden');
+    $('sp-next').classList.remove('hidden');
+    $('sp-next').textContent = at + 1 < session.length ? 'Next ❯' : 'See my result ❯';
+    $('sp-next').focus({ preventScroll: true });
+  });
+
+  function finish() {
+    recordAnswers(data.cert, results);
+    const n = results.length;
+    if (right) addXP(right * 4, 'Smart practice');
+    $('sp-run').classList.add('hidden');
+    $('sp-start').classList.remove('hidden');
+    $('sp-done').classList.remove('hidden');
+    $('sp-done-t').textContent = n ? `${right} of ${n} right` : 'Session ended';
+    $('sp-done-s').textContent = n ? (right === n ? 'Perfect round. Those questions now wait longer before coming back.' : `${n - right} question${n - right > 1 ? 's' : ''} will come back tomorrow. Your readiness score is updated above.`) : 'Nothing answered, so nothing changed.';
+    if (n && right === n) confetti(160);
+    paint();
+    $('sp-done').scrollIntoView({ block: 'center' });
+  }
+
+  $('sp-next').addEventListener('click', () => { at++; if (at < session.length) show(); else finish(); });
+  $('sp-quit').addEventListener('click', finish);
+  $('sp-again').addEventListener('click', () => start('smart'));
+  document.querySelectorAll<HTMLButtonElement>('.sp-mode').forEach((b) => b.addEventListener('click', () => start(b.dataset.mode as PracticeMode)));
+  $('sp-domain-go').addEventListener('click', () => start(`domain-${($('sp-domain') as HTMLSelectElement).value}` as PracticeMode));
+  $('sp-reset').addEventListener('click', () => { if (confirm(`Forget every ${data.code} practice answer in this browser? Your XP and badges stay.`)) { resetDeck(data.cert); paint(); } });
+  window.addEventListener('review-change', paint);
+  paint();
+</script>

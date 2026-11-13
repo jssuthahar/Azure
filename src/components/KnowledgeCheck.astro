@@ -5,8 +5,9 @@ import { inlineMd } from '../lib/learn';
 interface Props { questions: Question[]; topicKey: string; id?: string }
 const { questions, topicKey, id = 'knowledge-check' } = Astro.props;
 const answers = JSON.stringify(questions.map((q) => q.answer));
+const ids = JSON.stringify(questions.map((q) => q.id));
 ---
-<section class="kc" data-topic-key={topicKey} data-answers={answers} aria-labelledby={id}>
+<section class="kc" data-topic-key={topicKey} data-answers={answers} data-ids={ids} aria-labelledby={id}>
   <h2 id={id}>Test yourself with exercises</h2>
   <p class="text-muted">
     {questions.length} original practice questions in the AZ-900 style. Pick your answers, then check them. You will see why each option is right or wrong. Score 75% or more and this topic is marked complete.
@@ -46,21 +47,25 @@ const answers = JSON.stringify(questions.map((q) => q.answer));
 </section>
 <script>
   import { saveQuiz } from '../lib/progress';
+  import { recordAnswers } from '../lib/review';
   import { confetti } from '../lib/fun';
   document.querySelectorAll<HTMLElement>('.kc').forEach((root) => {
     const answers: number[][] = JSON.parse(root.dataset.answers!);
+    const ids: string[] = JSON.parse(root.dataset.ids || '[]');
     const form = root.querySelector('form')!;
     const retry = root.querySelector<HTMLButtonElement>('.kc-retry')!;
     const scoreEl = root.querySelector<HTMLElement>('.kc-score')!;
     form.addEventListener('submit', (e) => {
       e.preventDefault();
       let score = 0;
+      const results: { id: string; ok: boolean }[] = [];
       root.querySelectorAll<HTMLFieldSetElement>('fieldset[data-q]').forEach((fs) => {
         const qi = Number(fs.dataset.q);
         const correct = new Set(answers[qi]);
         const picked = new Set([...fs.querySelectorAll<HTMLInputElement>('input:checked')].map((i) => Number(i.value)));
         const ok = picked.size === correct.size && [...picked].every((p) => correct.has(p));
         if (ok) score++;
+        if (ids[qi] && picked.size) results.push({ id: ids[qi], ok });
         fs.querySelectorAll<HTMLElement>('.opt').forEach((opt) => {
           const oi = Number(opt.dataset.o);
           opt.dataset.state = correct.has(oi) ? (picked.has(oi) ? 'correct' : 'missed') : picked.has(oi) ? 'wrong' : '';
@@ -79,6 +84,8 @@ const answers = JSON.stringify(questions.map((q) => q.answer));
       form.querySelector<HTMLButtonElement>('button[type=submit]')!.disabled = true;
       retry.classList.remove('hidden');
       saveQuiz(root.dataset.topicKey!, score, total);
+      // Feed spaced repetition: missed questions come back in Smart practice.
+      recordAnswers(root.dataset.topicKey!.split('/')[0], results);
       if (pct >= 75) confetti(pct === 100 ? 220 : 120);
     });
     retry.addEventListener('click', () => {

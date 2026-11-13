@@ -76,6 +76,21 @@ const crumbs = [
     </div>
   </section>
 
+  <section class="mx-auto max-w-7xl px-4 pb-12 sm:px-6" aria-labelledby="toolkit">
+    <h2 id="toolkit" class="text-2xl font-bold tracking-tight">Pass with a plan</h2>
+    <p class="mt-2 max-w-3xl text-muted">Lessons teach it. These make it stick, and they're all free.</p>
+    <div class="mt-5 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+      {[
+        ['📅', 'Study plan', `/${exam.slug}/study-plan/`, 'Pick your exam date and daily time. Get a day-by-day plan with calendar reminders.'],
+        ['🧠', 'Smart practice', `/${exam.slug}/practice/`, 'Your readiness score by domain. Questions you miss come back until you get them right.'],
+        ['📝', 'Cheat sheet', `/${exam.slug}/cheat-sheet/`, 'One printable page per domain, plus the last 30 minutes before the exam. You can listen to it too.'],
+        ['✅', 'Exam day guide', `/${exam.slug}/exam-day/`, 'Booking, free voucher routes, the online check-in checklist and the retake rules.'],
+      ].map(([icon, t, href, d]) => (
+        <a href={href} class="card card-link p-5"><span class="text-3xl" aria-hidden="true">{icon}</span><p class="mt-2 text-lg font-semibold">{t}</p><p class="mt-1 text-sm leading-relaxed text-muted">{d}</p></a>
+      ))}
+    </div>
+  </section>
+
   <section class="mx-auto max-w-7xl px-4 sm:px-6" aria-labelledby="weights">
     <h2 id="weights" class="text-2xl font-bold tracking-tight">The three exam domains</h2>
     <div class="mt-5 grid gap-4 md:grid-cols-3">

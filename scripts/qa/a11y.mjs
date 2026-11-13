@@ -9,7 +9,7 @@ import { launch, BASE, IPHONE_UA, finish } from './lib.mjs';
 const axe = readFileSync(createRequire(import.meta.url).resolve('axe-core/axe.min.js'), 'utf8');
 const PAGES = [
   ['/', null], ['/az-900/', null], ['/az-900/cloud-concepts/capex-vs-opex/', null], ['/az-900/compare/blob-vs-files-vs-disk/', null],
-  ['/az-900/services/virtual-machines/', null], ['/az-900/mock-exam/', null], ['/progress/', null], ['/certificate/', null], ['/app/', null], ['/offline/', null],
+  ['/az-900/services/virtual-machines/', null], ['/az-900/mock-exam/', null], ['/az-900/practice/', null], ['/az-900/study-plan/', null], ['/az-900/cheat-sheet/', null], ['/az-900/exam-day/', null], ['/progress/', null], ['/certificate/', null], ['/app/', null], ['/offline/', null],
   ['/az-900/glossary/', async (p) => { await p.click('#install-btn'); await p.waitForTimeout(300); }],
 ];
 const b = await launch();

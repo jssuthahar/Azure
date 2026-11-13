@@ -2,14 +2,14 @@
  * Full QA on the built site. Starts `astro preview` on :4399, runs the browser checks, stops the server.
  *
  *   npm run qa                      everything (build first: npm run build)
- *   npm run qa -- lessons layout    only some: lessons | layout | a11y | pwa | exam | present
+ *   npm run qa -- lessons layout    only some: lessons | layout | a11y | pwa | exam | present | tools
  *
  * Needs Google Chrome installed (or CHROME_PATH). The SEO audit runs without a browser: npm run qa:seo
  */
 import { spawn, spawnSync } from 'node:child_process';
 import { existsSync } from 'node:fs';
 
-const ALL = ['lessons', 'layout', 'a11y', 'pwa', 'exam', 'present'];
+const ALL = ['lessons', 'layout', 'a11y', 'pwa', 'exam', 'present', 'tools'];
 const pick = process.argv.slice(2).filter((a) => ALL.includes(a));
 const checks = pick.length ? pick : ALL;
 if (!existsSync('dist/index.html')) { console.error('No build found. Run: npm run build'); process.exit(1); }

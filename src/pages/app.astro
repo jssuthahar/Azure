@@ -12,7 +12,7 @@ for (const exam of exams) {
   const nav = (await getNav(exam.slug)).filter((t) => t.published);
   lessons += nav.length;
   offline.push(`/${exam.slug}/`, ...exam.modules.map((m) => `/${exam.slug}/${m.slug}/`), ...nav.map((t) => t.url));
-  offline.push(...['mock-exam', 'revision', 'glossary', 'interview', 'games', 'games/daily', 'games/sort', 'games/match', 'games/lightning', 'games/who-am-i'].map((p) => `/${exam.slug}/${p}/`));
+  offline.push(...['mock-exam', 'practice', 'study-plan', 'cheat-sheet', 'exam-day', 'revision', 'glossary', 'interview', 'games', 'games/daily', 'games/sort', 'games/match', 'games/lightning', 'games/who-am-i'].map((p) => `/${exam.slug}/${p}/`));
   offline.push(...exam.whatIfs.map((w) => `/simulator/${w.slug}/`));
 }
 const urls = [...new Set(offline)];

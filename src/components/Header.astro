@@ -26,7 +26,11 @@ const GROUPS: (Group | Item)[] = [
   { label: 'Exam & Certificate', icon: '🎓', items: [
     { icon: '📝', label: 'Mock Exam', href: '/az-900/mock-exam/', desc: 'Timed, exam-style practice test' },
     { icon: '🏆', label: 'Free Certificate', href: '/certificate/', desc: 'Pass the mock exam, share your AZ-900 Ready badge' },
+    { icon: '🧠', label: 'Smart Practice', href: '/az-900/practice/', desc: 'Readiness score, mistakes come back, weak topics' },
+    { icon: '📅', label: 'Study Plan', href: '/az-900/study-plan/', desc: 'Day-by-day plan to your exam date, with reminders' },
     { icon: '🃏', label: 'Revision', href: '/az-900/revision/', desc: 'Flashcards and quick notes' },
+    { icon: '📝', label: 'Cheat Sheet', href: '/az-900/cheat-sheet/', desc: 'Printable one-pagers per domain, with audio' },
+    { icon: '✅', label: 'Exam Day Guide', href: '/az-900/exam-day/', desc: 'Booking, free vouchers, check-in, retakes' },
     { icon: '💼', label: 'Interview Questions', href: '/az-900/interview/', desc: 'Beginner to architect level' },
   ] },
   { label: 'Reference', icon: '📚', items: [
@@ -65,6 +69,10 @@ const groupActive = (g: Group) => g.items.some((i) => i.href === active);
         <option value="AZ-900 mock exam" data-url="/az-900/mock-exam/" />
         <option value="Interview questions" data-url="/az-900/interview/" />
         <option value="Revision flashcards" data-url="/az-900/revision/" />
+        <option value="Smart practice and readiness score" data-url="/az-900/practice/" />
+        <option value="Study plan" data-url="/az-900/study-plan/" />
+        <option value="Cheat sheet" data-url="/az-900/cheat-sheet/" />
+        <option value="Exam day guide" data-url="/az-900/exam-day/" />
       </datalist>
     </form>
 

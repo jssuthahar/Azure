@@ -1,0 +1,138 @@
+---
+/**
+ * Revision pack: a printable one-page-per-domain cheat sheet built from every
+ * lesson's answer, key points, exam tips and common mistakes, plus a "last 30
+ * minutes" sheet of look-alike services and exam-room reminders. Each domain
+ * can be read aloud by the browser's own voice (no server).
+ */
+import { getCollection } from 'astro:content';
+import Base from '../../layouts/Base.astro';
+import { getNav, inlineMd } from '../../lib/learn';
+import { getExam, examStaticPaths } from '../../data/exams';
+
+export function getStaticPaths() {
+  return examStaticPaths();
+}
+const exam = getExam(Astro.params.cert);
+const nav = (await getNav(exam.slug)).filter((t) => t.published);
+const entries = await getCollection('tutorials', (e) => e.id.startsWith(`${exam.slug}/`));
+const sheets = exam.modules.map((m) => ({
+  ...m,
+  lessons: nav.filter((t) => t.module.slug === m.slug).map((t) => {
+    const d = entries.find((e) => e.id === t.key)!.data;
+    return { title: d.title, url: t.url, answer: d.answer, points: d.revision.keyPoints.slice(0, 3), tip: d.revision.examTips[0], trap: d.revision.mistakes[0] };
+  }),
+})).filter((m) => m.lessons.length);
+const f = exam.facts;
+
+const title = `${exam.code} Cheat Sheet: Printable Revision by Domain`;
+const description = `Free printable ${exam.code} cheat sheet: every lesson's answer, key points, exam tips and traps by domain, plus a last-30-minutes sheet you can listen to.`;
+const crumbs = [{ name: 'Home', url: '/' }, { name: exam.code, url: `/${exam.slug}/` }, { name: 'Cheat sheet', url: `/${exam.slug}/cheat-sheet/` }];
+---
+<Base title={title} description={description} breadcrumbs={crumbs}>
+  <div class="cs mx-auto max-w-5xl px-4 py-8 sm:px-6">
+    <nav aria-label="Breadcrumb" class="cs-noprint text-sm text-muted"><a href="/">Home</a> / <a href={`/${exam.slug}/`}>{exam.code}</a> / <span class="text-[var(--text)]">Cheat sheet</span></nav>
+    <p class="eyebrow mt-6">Revision pack</p>
+    <h1 class="mt-2 text-3xl font-bold tracking-tight sm:text-4xl">{exam.code} cheat sheet</h1>
+    <p class="mt-3 max-w-3xl text-muted">One sheet per exam area, made from the {nav.length} lessons on this site. Print it, save it as a PDF, or press Listen and revise on a walk. Each line links back to its lesson if something doesn't make sense.</p>
+    <div class="cs-noprint mt-5 flex flex-wrap gap-2">
+      <button type="button" id="cs-print" class="btn btn-accent">🖨️ Print or save as PDF</button>
+      <a href="#last-30" class="btn btn-outline">⏰ The last 30 minutes</a>
+      {sheets.map((m) => <a href={`#${m.slug}`} class="btn btn-outline">{m.shortTitle}</a>)}
+    </div>
+
+    <section id="last-30" class="cs-sheet card mt-8 scroll-mt-28 p-5 sm:p-6" aria-labelledby="last-30-h" data-cs-say>
+      <div class="flex flex-wrap items-center justify-between gap-3">
+        <h2 id="last-30-h" class="text-2xl font-bold">⏰ The last 30 minutes before the exam</h2>
+        <button type="button" class="cs-listen cs-noprint btn btn-outline btn-sm" aria-pressed="false">🔊 Listen</button>
+      </div>
+      <p class="mt-2 text-muted">Don't learn anything new now. Read this once, then put it away.</p>
+      <h3 class="mt-5 font-bold">In the exam room</h3>
+      <ul class="mt-2 list-disc space-y-1 pl-5">
+        <li>You have about {f.durationMinutes} minutes for the questions. The pass mark is {f.passingScore} on a scale of {f.scoreScale}, which isn't the same as {Math.round(f.passingScore / 10)}% of questions right.</li>
+        <li>Answer every question. There's no penalty for a wrong guess, but a blank always scores zero.</li>
+        <li>Mark anything you're unsure of for review and move on. Come back at the end with fresh eyes.</li>
+        <li>If a section warns that you can't return to it, believe it. Review everything before you leave.</li>
+        <li>Read the last line of a long scenario first, so you know what you're looking for.</li>
+        <li>Watch for "least", "most cost-effective" and "minimise administrative effort". They decide which correct-looking option is the right one.</li>
+      </ul>
+      {exam.comparisons.length > 0 && (
+        <>
+          <h3 class="mt-5 font-bold">Look-alikes people mix up</h3>
+          <dl class="mt-2 grid gap-3 sm:grid-cols-2">
+            {exam.comparisons.map((c) => (
+              <div class="rounded-xl bg-subtle p-3"><dt class="font-semibold"><a href={`/${exam.slug}/compare/${c.slug}/`} class="hover:underline">{c.title}</a></dt><dd class="mt-1 text-[0.95rem]" set:html={inlineMd(c.examTip || c.answer)} /></div>
+            ))}
+          </dl>
+        </>
+      )}
+    </section>
+
+    {sheets.map((m) => (
+      <section id={m.slug} class="cs-sheet mt-10 scroll-mt-28" aria-labelledby={`${m.slug}-h`} data-cs-say>
+        <div class="flex flex-wrap items-center justify-between gap-3 border-b-2 border-[var(--accent)] pb-2">
+          <h2 id={`${m.slug}-h`} class="text-2xl font-bold">Domain {m.domain}: {m.shortTitle} <span class="text-base font-semibold text-muted">({m.weight} of the exam)</span></h2>
+          <button type="button" class="cs-listen cs-noprint btn btn-outline btn-sm" aria-pressed="false">🔊 Listen</button>
+        </div>
+        <div class="mt-4 grid gap-3 md:grid-cols-2">
+          {m.lessons.map((l) => (
+            <article class="cs-card card p-4">
+              <h3 class="font-bold"><a href={l.url} class="hover:underline">{l.title}</a></h3>
+              <p class="mt-1 text-[0.95rem]" set:html={inlineMd(l.answer)} />
+              <ul class="mt-2 list-disc space-y-0.5 pl-5 text-sm">{l.points.map((p) => <li set:html={inlineMd(p)} />)}</ul>
+              {l.tip && <p class="mt-2 text-sm"><strong>🎯 Exam tip:</strong> <span set:html={inlineMd(l.tip)} /></p>}
+              {l.trap && <p class="mt-1 text-sm"><strong>⚠️ Watch out:</strong> <span set:html={inlineMd(l.trap)} /></p>}
+            </article>
+          ))}
+        </div>
+      </section>
+    ))}
+
+    <div class="cs-noprint mt-10 flex flex-wrap gap-3">
+      <a href={`/${exam.slug}/practice/`} class="btn btn-accent">🧠 Smart practice</a>
+      <a href={`/${exam.slug}/revision/`} class="btn btn-outline">Flashcards</a>
+      <a href={`/${exam.slug}/exam-day/`} class="btn btn-outline">✅ Exam-day checklist</a>
+    </div>
+  </div>
+</Base>
+
+<style is:global>
+  @media print {
+    header, footer, #ask, .cs-noprint, .install-banner { display: none !important; }
+    body { background: #fff !important; color: #000 !important; }
+    .cs .card { box-shadow: none !important; border: 1px solid #bbb !important; background: #fff !important; }
+    .cs-sheet { break-before: page; }
+    .cs-card { break-inside: avoid; }
+    .cs a { color: inherit !important; text-decoration: none !important; }
+  }
+</style>
+
+<script>
+  import { canSpeak, speak, stopSpeaking } from '../../lib/speech';
+  document.getElementById('cs-print')!.addEventListener('click', () => print());
+  let playing: HTMLButtonElement | null = null;
+  const reset = (b: HTMLButtonElement) => { b.textContent = '🔊 Listen'; b.setAttribute('aria-pressed', 'false'); };
+  document.querySelectorAll<HTMLButtonElement>('.cs-listen').forEach((btn) => {
+    if (!canSpeak()) { btn.hidden = true; return; }
+    btn.addEventListener('click', async () => {
+      const was = playing === btn;
+      stopSpeaking();
+      if (playing) reset(playing);
+      playing = null;
+      if (was) return;
+      playing = btn;
+      btn.textContent = '⏹ Stop';
+      btn.setAttribute('aria-pressed', 'true');
+      // Read one heading, paragraph or bullet at a time so long sheets aren't cut off.
+      const parts = [...btn.closest('[data-cs-say]')!.querySelectorAll('h2, h3, p, li, dt, dd')]
+        .filter((n) => !n.closest('.cs-noprint') && !n.querySelector('p, li'))
+        .map((n) => n.textContent!.replace(/\s+/g, ' ').trim())
+        .filter(Boolean);
+      for (const t of parts) {
+        if (playing !== btn) return;
+        await speak(t);
+      }
+      if (playing === btn) { reset(btn); playing = null; }
+    });
+  });
+</script>

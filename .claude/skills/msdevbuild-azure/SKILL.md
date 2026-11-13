@@ -53,6 +53,13 @@ Read the reference file for the area you are touching before you start:
 - Never hard-code `az-900`, `AZ-900` or AZ-900 data in shared code. Get the exam from `src/data/exams.ts`: `getExam(Astro.params.cert)` on exam pages, `examFromPath(Astro.url.pathname)` in shared components, `getExam()` on site-wide pages.
 - **Ask Nimbus chatbot** (`src/components/AskBot.astro`, mounted in `Base.astro`): free, in-browser search over `/<exam>/ask-index.json`, built by `src/lib/ask-index.ts` from lesson answers, interview Q&A, quick revision, exam tips, glossary and comparisons; ranked by `src/lib/ask.ts`. A new exam joins automatically once it is live. No AI backend and nothing the learner types leaves the browser (owner's choice, 13 Nov 2026). If answers drift, retune `MIN_SCORE` against real and off-topic questions.
 
+**Study tools (all free, all in the browser; owner's decision, 13 Nov 2026: no paid tier, nothing labelled premium)**
+- **Smart practice** `/<exam>/practice/` + `src/lib/review.ts`: Leitner spaced repetition (`msdb-azure-review-v1`, cards keyed `<exam>:<questionId>`) and the readiness score. Lesson quizzes (`KnowledgeCheck`) and the mock exam record every answer into it, so question ids must stay stable.
+- **Study plan** `/<exam>/study-plan/` + `src/lib/plan.ts`: exam date + minutes/day → schedule rebuilt from today; reminders are an `.ics` download (no push server). My Progress shows today's plan.
+- **Lesson tutor**: Ask Nimbus on a lesson offers "explain it another way" chips from that lesson's own content (`tutor` map in `ask-index.ts`: Eli10, business scenario, mistakes/tips, interview, quick revision, key terms). Opened by any `[data-tutor-open]` button (in `LessonTools`). Still no AI backend. Keep the `## Explain it like I'm 10` and `## Real-world business scenario` headings or the tutor loses text.
+- **Cheat sheet** `/<exam>/cheat-sheet/` (printable, per-domain Listen) and **Exam day guide** `/<exam>/exam-day/` (policies checked on Microsoft Learn; re-check the date stamp `VERIFIED` when touching it).
+- New labs need every task checkable from simulator events; the Cloud Shell accepts `a && b` chains. `npm run qa -- tools` walks these end to end.
+
 ## Workflow
 
 1. Read the relevant reference file(s) above and look at a neighbouring example (an existing lesson, page or component) before writing.

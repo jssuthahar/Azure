@@ -27,6 +27,8 @@ const year = new Date().getFullYear();
         {exam.modules.map((m) => <li><a class="hover:text-[var(--accent-deep)]" href={`/${exam.slug}/#${m.slug}`}>{m.shortTitle}</a></li>)}
         <li><a class="hover:text-[var(--accent-deep)]" href={`/${exam.slug}/mock-exam/`}>{exam.code} mock exam</a></li>
         <li><a class="hover:text-[var(--accent-deep)]" href={`/${exam.slug}/interview/`}>{exam.code} interview questions</a></li>
+        <li><a class="hover:text-[var(--accent-deep)]" href={`/${exam.slug}/study-plan/`}>{exam.code} study plan</a></li>
+        <li><a class="hover:text-[var(--accent-deep)]" href={`/${exam.slug}/exam-day/`}>{exam.code} exam day guide</a></li>
       </ul>
     </div>
     <div>

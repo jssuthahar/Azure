@@ -5,6 +5,11 @@
  * glossary and comparisons. Free and private: the exam's answer index
  * (/<exam>/ask-index.json) is loaded on first use and ranked in the browser.
  * Nothing the learner types leaves the device.
+ *
+ * On a lesson, Nimbus is also the lesson tutor: it explains the same lesson
+ * another way (simpler, a real example, the exam traps, a deeper technical
+ * answer), quizzes the learner and lists key terms, all from that lesson's own
+ * content in the index. Any button with [data-tutor-open] opens it.
  */
 import { liveExams } from '../data/exams';
 const exams = liveExams().map((e) => ({ slug: e.slug, code: e.code, name: e.name }));
@@ -34,7 +39,7 @@ const here = exams.find((e) => e.slug === Astro.url.pathname.split('/')[1])?.slu
 
 <script>
   import { makeRanker, ask, type Ranker } from '../lib/ask';
-  import type { AskIndex, AskEntry } from '../lib/ask-index';
+  import type { AskIndex, AskEntry, TutorEntry } from '../lib/ask-index';
 
   type Exam = { slug: string; code: string; name: string };
   const root = document.getElementById('ask')!;
@@ -133,6 +138,8 @@ const here = exams.find((e) => e.slug === Astro.url.pathname.split('/')[1])?.slu
     }
     current = loaded.get(slug)!;
     lockInput(false, `Ask about ${exam.code}…`);
+    const lesson = current.idx.tutor?.[location.pathname];
+    if (lesson && slug === here) return tutorHello(lesson);
     const f = document.createDocumentFragment();
     f.append(text(`Great, ${exam.code} it is. Ask me anything from the lessons. A few to try:`));
     f.append(chips(current.idx.suggest.map((q) => ({ label: q, on: () => question(q) }))));
@@ -150,6 +157,45 @@ const here = exams.find((e) => e.slug === Astro.url.pathname.split('/')[1])?.slu
       f.append(el('p', 'ask-more', 'Related:'));
       f.append(chips(others.map((o) => ({ label: o.q, on: () => { say(text(o.q), 'me'); answer(o, []); } }))));
     }
+    say(f);
+  }
+
+  /* ---------- lesson tutor ---------- */
+  let quizAt = 0, deepAt = 0;
+  const list = (items: string[]) => { const ul = el('ul', 'ask-list'); for (const i of items) ul.append(el('li', '', i)); return ul; };
+  function tutorChips(t: TutorEntry) {
+    const opts = [
+      t.simple && { label: '🧒 Explain it simpler', on: () => tutorSay(t, 'Explain it simpler', [text(short(t.simple, 700))]) },
+      t.example && { label: '🏢 Show me a real example', on: () => tutorSay(t, 'Show me a real example', [text(short(t.example, 700))]) },
+      t.traps.length && { label: '🎯 What are the exam traps?', on: () => tutorSay(t, 'What are the exam traps?', [list(t.traps.slice(0, 5))]) },
+      t.deeper.length && { label: '🔬 Go deeper', on: () => { const d = t.deeper[deepAt++ % t.deeper.length]; tutorSay(t, 'Go deeper', [el('p', 'ask-strong', d.q), text(short(d.a, 700))]); } },
+      t.quiz.length && { label: '❓ Quiz me', on: () => quizMe(t) },
+      t.terms.length && { label: '📖 Key terms', on: () => tutorSay(t, 'Key terms', [list(t.terms.slice(0, 6).map((k) => `${k.term}: ${k.def}`))]) },
+    ].filter(Boolean) as { label: string; on: () => void }[];
+    return chips(opts);
+  }
+  function tutorHello(t: TutorEntry) {
+    const f = document.createDocumentFragment();
+    f.append(text(`I’m your tutor for “${t.t}”. Didn’t click the first time? Pick another way to see it, or type any question.`));
+    f.append(tutorChips(t));
+    say(f);
+    input.focus();
+  }
+  function tutorSay(t: TutorEntry, ask: string, nodes: Node[]) {
+    say(text(ask), 'me');
+    const f = document.createDocumentFragment();
+    f.append(...nodes);
+    f.append(el('p', 'ask-more', 'Try another way:'));
+    f.append(tutorChips(t));
+    say(f);
+  }
+  function quizMe(t: TutorEntry) {
+    const q = t.quiz[quizAt++ % t.quiz.length];
+    say(text('Quiz me'), 'me');
+    const f = document.createDocumentFragment();
+    f.append(el('p', 'ask-strong', q.q));
+    f.append(el('p', 'ask-more', 'Say your answer in your head, then check.'));
+    f.append(chips([{ label: 'Show the answer', on: () => tutorSay(t, 'Show the answer', [text(q.a)]) }, { label: 'Skip, next question', on: () => quizMe(t) }]));
     say(f);
   }
 
@@ -198,6 +244,14 @@ const here = exams.find((e) => e.slug === Astro.url.pathname.split('/')[1])?.slu
     fab.focus();
   }
   fab.addEventListener('click', () => (panel.hidden ? open() : close()));
+  document.addEventListener('click', (e) => {
+    if (!(e.target as HTMLElement).closest?.('[data-tutor-open]')) return;
+    const wasStarted = started;
+    open();
+    // Already chatting: put the lesson tutor options back at the bottom.
+    const lesson = current?.idx.tutor?.[location.pathname];
+    if (wasStarted && lesson) tutorHello(lesson);
+  });
   document.getElementById('ask-close')!.addEventListener('click', close);
   switchBtn.addEventListener('click', pickExam);
   panel.addEventListener('keydown', (e) => { if (e.key === 'Escape') close(); });
@@ -243,6 +297,9 @@ const here = exams.find((e) => e.slug === Astro.url.pathname.split('/')[1])?.slu
   .ask-log :global(.ask-msg p + p), .ask-log :global(.ask-msg p + .ask-chips), .ask-log :global(.ask-chips + p) { margin-top: 8px; }
   .ask-log :global(.ask-bot) { align-self: flex-start; background: var(--card); border: 1px solid var(--card-line); border-bottom-left-radius: 4px; }
   .ask-log :global(.ask-me) { align-self: flex-end; background: #005a9e; color: #fff; border-bottom-right-radius: 4px; }
+  .ask-log :global(.ask-strong) { font-weight: 700; }
+  .ask-log :global(.ask-list) { margin: 0; padding-left: 1.1rem; list-style: disc; }
+  .ask-log :global(.ask-list li + li) { margin-top: 4px; }
   .ask-log :global(.ask-src), .ask-log :global(.ask-more) { font-size: .82rem; color: var(--text-muted); }
   .ask-log :global(.ask-link) { color: var(--accent-deep); font-weight: 600; text-decoration: underline; text-underline-offset: 2px; }
   .ask-log :global(.ask-chips) { display: flex; flex-wrap: wrap; gap: 6px; }

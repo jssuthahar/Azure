@@ -47,6 +47,10 @@ export const GET: APIRoute = async () => {
     `- [AZ-900 mock exam](${u(`/${exam.slug}/mock-exam/`)}): timed practice exam in the style of the real Microsoft exam (multiple choice, drag and drop, build list, drop-down, Yes/No), scored 1–1000 with 700 to pass.`,
     `- [AZ-900 Ready certificate](${u('/certificate/')}): free shareable practice certificate for passing the full mock exam (self-assessed, not a Microsoft certification).`,
     `- [Practice labs](${u(`/${exam.slug}/labs/`)}): simulated Azure portal and Cloud Shell with guided tasks.`,
+    `- [Smart practice](${u(`/${exam.slug}/practice/`)}): exam readiness score by domain, spaced repetition of missed questions and weak-topic drills.`,
+    `- [Study plan](${u(`/${exam.slug}/study-plan/`)}): day-by-day schedule from today to your exam date, with calendar reminders.`,
+    `- [Cheat sheet](${u(`/${exam.slug}/cheat-sheet/`)}): printable one-page revision per domain and a last-30-minutes sheet.`,
+    `- [Exam day guide](${u(`/${exam.slug}/exam-day/`)}): booking, free voucher routes, online proctoring checklist, scoring and the retake policy.`,
     `- [Azure glossary](${u(`/${exam.slug}/glossary/`)}): AZ-900 terms in one line each.`,
     `- [Interview questions](${u(`/${exam.slug}/interview/`)}), [revision flashcards](${u(`/${exam.slug}/revision/`)}), [embeddable simulations](${u('/embed/')}).`,
     '');
