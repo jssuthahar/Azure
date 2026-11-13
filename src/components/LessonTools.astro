@@ -5,11 +5,14 @@
  */
 import Mascot from './Mascot.astro';
 ---
-<div class="lesson-tools mt-5 flex flex-wrap items-center gap-3">
+<div class="lesson-tools mt-5 flex flex-wrap items-center gap-3" data-slide-skip>
   <div class="view-switch inline-flex rounded-full border border-default bg-[var(--pastel-grey)] p-1 text-sm font-semibold" role="group" aria-label="How much detail">
     <button type="button" data-view-btn="simple" class="rounded-full px-4 py-1.5">🧒 Beginner view</button>
     <button type="button" data-view-btn="full" class="rounded-full px-4 py-1.5">🎓 Full lesson</button>
   </div>
+  <button type="button" data-present-open class="present-open inline-flex items-center gap-2 rounded-full bg-[#0078d4] px-4 py-2 text-sm font-bold text-white hover:bg-[#005a9e]" aria-label="Slide mode: read the lesson one part at a time, full screen">
+    <span aria-hidden="true">▶</span> Slide mode
+  </button>
   <button type="button" id="listen-btn" class="voice-only inline-flex items-center gap-2 rounded-full bg-[#ffd75e] px-4 py-2 text-sm font-bold text-[#0b1020] hover:bg-[#ffcd2e]">
     <span aria-hidden="true">🔊</span> <span id="listen-label">Listen to this lesson</span>
   </button>
@@ -22,7 +25,7 @@ import Mascot from './Mascot.astro';
   </label>
 </div>
 
-<div id="reader" class="fixed bottom-4 left-4 z-[140] hidden items-center gap-3 rounded-2xl border border-default bg-[var(--card)] py-2 pr-3 pl-2 shadow-xl" role="region" aria-label="Lesson reader">
+<div id="reader" data-slide-skip class="fixed bottom-4 left-4 z-[140] hidden items-center gap-3 rounded-2xl border border-default bg-[var(--card)] py-2 pr-3 pl-2 shadow-xl" role="region" aria-label="Lesson reader">
   <div class="reader-nimbus"><Mascot size={48} mood="cheer" /></div>
   <div class="min-w-0">
     <p class="text-sm font-semibold">Nimbus is reading…</p>
@@ -51,6 +54,160 @@ import Mascot from './Mascot.astro';
   .reader-nimbus {
     animation: nimbus-talk 0.9s ease-in-out infinite;
   }
+  /* ---------- Slide mode (src/lib/present.ts) ---------- */
+  .present-ui {
+    display: none;
+  }
+  html.presenting {
+    overflow: hidden;
+  }
+  html.presenting body {
+    overflow: hidden;
+  }
+  html.presenting article[data-present-root] {
+    position: fixed;
+    inset: 0;
+    z-index: 150;
+    max-width: none;
+    margin: 0;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    background: var(--bg);
+    padding: calc(4.25rem + env(safe-area-inset-top)) max(1rem, calc((100% - 920px) / 2), env(safe-area-inset-right))
+      calc(5.5rem + env(safe-area-inset-bottom)) max(1rem, calc((100% - 920px) / 2), env(safe-area-inset-left));
+  }
+  html.presenting article[data-present-root] > .present-ui {
+    display: block;
+  }
+  html.presenting [data-slide-off],
+  html.presenting [data-slide-skip] {
+    display: none !important;
+  }
+  /* No gap or divider line above the first part of a slide. */
+  html.presenting article .present-first,
+  html.presenting article .present-first > h2:first-child {
+    margin-top: 0 !important;
+    border-top: 0;
+    padding-top: 0;
+  }
+  html.presenting article .lesson {
+    font-size: 1.08rem;
+  }
+  html.presenting article [tabindex='-1']:focus {
+    outline: none;
+  }
+  .present-in {
+    animation: present-in 0.28s ease-out;
+  }
+  @keyframes present-in {
+    from {
+      opacity: 0;
+      transform: translateX(14px);
+    }
+  }
+  .present-top,
+  .present-bottom {
+    position: fixed;
+    left: 0;
+    right: 0;
+    z-index: 151;
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    background: var(--card);
+    padding-left: max(1rem, env(safe-area-inset-left));
+    padding-right: max(1rem, env(safe-area-inset-right));
+  }
+  .present-top {
+    top: 0;
+    padding-top: calc(0.6rem + env(safe-area-inset-top));
+    padding-bottom: 0.6rem;
+    border-bottom: 1px solid var(--card-line);
+  }
+  .present-bottom {
+    bottom: 0;
+    justify-content: space-between;
+    padding-top: 0.75rem;
+    padding-bottom: calc(0.75rem + env(safe-area-inset-bottom));
+    border-top: 1px solid var(--card-line);
+  }
+  .present-pos {
+    min-width: 0;
+    flex: 1;
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+    font-size: 0.95rem;
+  }
+  .present-count {
+    font-weight: 800;
+    color: var(--accent);
+    margin-right: 0.35rem;
+  }
+  .present-title {
+    font-weight: 600;
+  }
+  .present-bar {
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: -1px;
+    height: 3px;
+    background: transparent;
+  }
+  .present-bar span {
+    display: block;
+    height: 100%;
+    background: #0078d4;
+    transition: width 0.25s;
+  }
+  .present-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    min-height: 44px;
+    border-radius: 999px;
+    border: 1px solid var(--border);
+    background: var(--bg);
+    padding: 0.5rem 1.1rem;
+    font-weight: 700;
+    color: var(--text);
+  }
+  .present-btn:disabled {
+    cursor: not-allowed;
+    border-style: dashed;
+    color: var(--text-muted);
+  }
+  .present-primary:not(:disabled) {
+    background: #0078d4;
+    border-color: #0078d4;
+    color: #fff;
+  }
+  .present-primary:not(:disabled):hover {
+    background: #005a9e;
+  }
+  .present-hint {
+    font-size: 0.85rem;
+    color: var(--text-muted);
+  }
+  @media (max-width: 480px) {
+    .present-hint {
+      display: none;
+    }
+  }
+  @media (max-width: 360px) {
+    .present-exit .present-word {
+      display: none;
+    }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .present-in {
+      animation: none;
+    }
+    .present-bar span {
+      transition: none;
+    }
+  }
   @keyframes nimbus-talk {
     50% {
       transform: translateY(-3px) rotate(-3deg);
@@ -60,6 +217,9 @@ import Mascot from './Mascot.astro';
 
 <script>
   import { canSpeak, speak, stopSpeaking, readableText, getRate, setRate } from '../lib/speech';
+  import { initPresent } from '../lib/present';
+
+  initPresent();
 
   /* ---------- Beginner / Full view ---------- */
   const setView = (v: string) => {

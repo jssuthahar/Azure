@@ -32,6 +32,7 @@ Prefer Tailwind utilities in markup; put shared or stateful styles in `global.cs
 - Grouped top menu: Learn · Simulate & Practice · Exam & Certificate · Reference · Play · My Progress. Add items to an existing group; don't add a new top-level entry casually.
 - Lesson sidebar: collapsible domains, progress per domain, filter, expand/collapse all, desktop rail mode.
 - Keep learners in place: simulations, labs and quizzes run inside the page.
+- **Slide mode** (owner's request, 13 Nov 2026): every lesson can be read full screen, one part per screen, with Next / Previous, ← → keys, swipe and Escape to exit. Button in `LessonTools.astro`, engine `src/lib/present.ts`, check `npm run qa -- present`. It hides parts in place, so quizzes and simulations keep working. Each `## ` section is one slide; when you add a new part to the lesson template, give it a hint if it shouldn't be its own slide: `data-slide-group="intro|finish"`, `data-slide-join`, `data-slide-with-prev` or `data-slide-skip`.
 
 ## Phones and iPads (checked by `npm run qa -- layout`)
 
