@@ -56,13 +56,13 @@ const crumbs = [{ name: 'Home', url: '/' }, { name: exam.code, url: `/${exam.slu
     <section id="sp-start" class="mt-8" aria-labelledby="start-h">
       <h2 id="start-h" class="text-xl font-bold">Start a session</h2>
       <div class="mt-4 grid gap-3 sm:grid-cols-2">
-        <button type="button" class="sp-mode card p-4 text-left hover:ring-2 hover:ring-[var(--accent)]" data-mode="smart"><span class="block font-semibold">🧠 Smart mix</span><span class="block text-sm text-muted">Reviews due today first, then new questions from your weakest areas.</span></button>
-        <button type="button" class="sp-mode card p-4 text-left hover:ring-2 hover:ring-[var(--accent)]" data-mode="mistakes"><span class="block font-semibold">🔁 My mistakes</span><span class="block text-sm text-muted">Only questions you got wrong last time. <span id="sp-wrong-n"></span></span></button>
-        <button type="button" class="sp-mode card p-4 text-left hover:ring-2 hover:ring-[var(--accent)]" data-mode="new"><span class="block font-semibold">✨ Questions I haven't seen</span><span class="block text-sm text-muted">Fresh questions only, from every area.</span></button>
-        <div class="card p-4">
+        <button type="button" class="sp-mode card w-full min-w-0 whitespace-normal p-4 text-left hover:ring-2 hover:ring-[var(--accent)]" data-mode="smart"><span class="block font-semibold">🧠 Smart mix</span><span class="block text-sm text-muted">Reviews due today first, then new questions from your weakest areas.</span></button>
+        <button type="button" class="sp-mode card w-full min-w-0 whitespace-normal p-4 text-left hover:ring-2 hover:ring-[var(--accent)]" data-mode="mistakes"><span class="block font-semibold">🔁 My mistakes</span><span class="block text-sm text-muted">Only questions you got wrong last time. <span id="sp-wrong-n"></span></span></button>
+        <button type="button" class="sp-mode card w-full min-w-0 whitespace-normal p-4 text-left hover:ring-2 hover:ring-[var(--accent)]" data-mode="new"><span class="block font-semibold">✨ Questions I haven't seen</span><span class="block text-sm text-muted">Fresh questions only, from every area.</span></button>
+        <div class="card min-w-0 p-4">
           <label for="sp-domain" class="block font-semibold">🎯 One exam area</label>
           <div class="mt-2 flex flex-wrap gap-2">
-            <select id="sp-domain" class="min-h-[40px] flex-1 rounded-md border border-default bg-[var(--bg)] px-3">
+            <select id="sp-domain" class="min-h-[40px] w-full min-w-0 flex-1 rounded-md border border-default bg-[var(--bg)] px-3">
               {domains.map((d) => <option value={d.domain}>Domain {d.domain}: {d.short}</option>)}
             </select>
             <button type="button" id="sp-domain-go" class="btn btn-outline btn-sm">Start</button>
