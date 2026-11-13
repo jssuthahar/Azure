@@ -48,7 +48,12 @@ const schema = [{ '@type': 'WebPage', '@id': `${SITE.url}/#home`, name: SITE.tit
           <input id="hero-q" list="topic-list" type="search" placeholder="Search our tutorials, e.g. IaaS or Elasticity" class="min-w-0 flex-1 bg-transparent px-6 py-3.5 text-base text-[#0b1020] outline-none placeholder:text-[#6b7280]" />
           <button type="submit" class="bg-[#0078d4] px-6 font-semibold text-white hover:bg-[#005a9e]">Search</button>
         </form>
-        {first && <p class="mt-5"><a href={first.url} class="text-lg text-white underline underline-offset-4 hover:text-[#ffd75e]">Not sure where to begin? Start lesson 1 ❯</a></p>}
+        {first && (
+          <p class="mt-5 flex flex-wrap items-center justify-center gap-3 lg:justify-start">
+            <a href={first.url} id="hero-start" class="rounded-full bg-[#ffd75e] px-6 py-3 text-lg font-bold text-[#0b1020] hover:bg-[#ffcd2e]">Start lesson 1 ❯</a>
+            <a href={`/${exam.slug}/`} class="text-lg text-white underline underline-offset-4 hover:text-[#ffd75e]">See all {published.length} lessons</a>
+          </p>
+        )}
         <dl class="mt-8 flex flex-wrap justify-center gap-x-10 gap-y-3 text-white/90 lg:justify-start">
           <div><dt class="text-sm text-white/70">Lessons ready</dt><dd class="text-3xl font-bold">{published.length}</dd></div>
           <div><dt class="text-sm text-white/70">Practice questions</dt><dd class="text-3xl font-bold">{bank.length}</dd></div>
@@ -241,6 +246,15 @@ const schema = [{ '@type': 'WebPage', '@id': `${SITE.url}/#home`, name: SITE.tit
   </section>
 </Base>
 <script>
+  // Returning learner: the main button picks up where they left off.
+  try {
+    const last = JSON.parse(localStorage.getItem('msdb-last-lesson') || 'null');
+    const start = document.getElementById('hero-start') as HTMLAnchorElement | null;
+    if (start && last?.url?.startsWith('/') && !last.url.startsWith('//') && last.title) {
+      start.href = last.url;
+      start.textContent = `Continue: ${last.title} ❯`;
+    }
+  } catch {}
   const form = document.getElementById('hero-search') as HTMLFormElement | null;
   const input = document.getElementById('hero-q') as HTMLInputElement | null;
   const go = () => {

@@ -6,10 +6,24 @@
  */
 import Sidebar from './Sidebar.astro';
 import type { NavTopic } from '../lib/learn';
+import { examFromPath } from '../data/exams';
 
-interface Props { nav: NavTopic[]; currentKey?: string }
-const { nav, currentKey } = Astro.props;
+interface Lesson { url: string; title: string }
+interface Props {
+  nav: NavTopic[];
+  currentKey?: string;
+  /** Lesson pages: neighbours and sections for the sticky lesson bar. */
+  prev?: Lesson;
+  next?: Lesson;
+  sections?: { slug: string; text: string }[];
+  shareText?: string;
+}
+const { nav, currentKey, prev, next, sections = [], shareText } = Astro.props;
+const exam = examFromPath(Astro.url.pathname);
 const hasAside = Astro.slots.has('aside');
+const published = nav.filter((t) => t.published);
+const position = currentKey ? published.findIndex((t) => t.key === currentKey) + 1 : 0;
+const isLesson = position > 0;
 ---
 <div class="lg:flex">
   <aside id="lesson-menu" class="side-w3 fixed inset-y-0 left-0 z-[60] w-[18rem] -translate-x-full overflow-y-auto overscroll-contain border-r border-default shadow-xl transition-[transform,width] duration-300 lg:sticky lg:top-[var(--header-h)] lg:z-auto lg:h-[calc(100dvh-var(--header-h))] lg:translate-x-0 lg:shadow-none" aria-label="Lesson menu">
@@ -18,10 +32,29 @@ const hasAside = Astro.slots.has('aside');
   <div id="menu-scrim" data-menu-close class="fixed inset-0 z-[55] hidden bg-black/40 lg:hidden"></div>
 
   <div class="min-w-0 flex-1">
-    <div class="sticky top-[var(--header-h)] z-40 border-b border-default bg-[var(--side-bg)] px-4 py-2 lg:hidden">
-      <button type="button" id="menu-open" class="flex items-center gap-2 text-sm font-semibold" aria-controls="lesson-menu" aria-expanded="false">
-        <span class="text-lg leading-none" aria-hidden="true">☰</span> AZ-900 lessons <span class="font-normal text-muted">· tap to browse</span>
-      </button>
+    <div class={`lesson-bar sticky top-[var(--header-h)] z-40 border-b border-default bg-[var(--side-bg)] px-3 py-1.5 sm:px-4 ${isLesson ? '' : 'lg:hidden'}`}>
+      <div class="flex items-center gap-2">
+        <button type="button" id="menu-open" class="lb-btn lg:hidden" aria-label={`${exam.code} lessons menu`} aria-controls="lesson-menu" aria-expanded="false">
+          <span class="text-lg leading-none" aria-hidden="true">☰</span> <span class="lb-label"><span class="lb-long">{exam.code} </span>lessons</span>
+        </button>
+        {isLesson && <span class="lb-pos text-sm text-muted">Lesson <strong class="text-[var(--text)]">{position}</strong> of {published.length}</span>}
+        {sections.length > 0 && (
+          <label class="lb-jump ml-auto xl:hidden">
+            <span class="sr-only">Jump to a section of this lesson</span>
+            <select data-lb-jump>
+              <option value="">Jump to…</option>
+              {sections.map((s) => <option value={s.slug}>{s.text}</option>)}
+            </select>
+          </label>
+        )}
+        {isLesson && (
+          <div class={`flex items-center gap-1.5 ${sections.length ? 'xl:ml-auto' : 'ml-auto'}`}>
+            {prev ? <a href={prev.url} class="lb-btn lb-icon" aria-label={`Previous lesson: ${prev.title}`} title={prev.title}>❮<span class="lb-word">Prev</span></a> : <span class="lb-btn lb-icon lb-off" aria-hidden="true">❮</span>}
+            {next ? <a href={next.url} class="lb-btn lb-icon" aria-label={`Next lesson: ${next.title}`} title={next.title}><span class="lb-word">Next</span>❯</a> : <a href={`/${exam.slug}/mock-exam/`} class="lb-btn lb-icon" aria-label="Mock exam">Mock exam ❯</a>}
+            {shareText && <button type="button" class="lb-btn lb-share" data-lb-share data-share-text={shareText} aria-label="Share this lesson"><span aria-hidden="true">📤</span><span class="lb-word">Share</span></button>}
+          </div>
+        )}
+      </div>
     </div>
     <div class="flex gap-10 px-4 py-6 sm:px-8 lg:py-8">
       <div class="min-w-0 flex-1"><slot /></div>
@@ -43,5 +76,36 @@ const hasAside = Astro.slots.has('aside');
   document.addEventListener('keydown', (e) => e.key === 'Escape' && set(false));
   // Keep the current lesson in view inside the long menu.
   const current = menu?.querySelector<HTMLElement>('[aria-current="page"]');
+  // Jump to a section (phones and iPads, where the "On this page" column is hidden).
+  document.querySelector<HTMLSelectElement>('[data-lb-jump]')?.addEventListener('change', (e) => {
+    const sel = e.currentTarget as HTMLSelectElement;
+    const target = sel.value && document.getElementById(sel.value);
+    sel.value = '';
+    if (!target) return;
+    // Sections that only the full lesson shows: switch view first.
+    if (!target.offsetParent) document.querySelector<HTMLButtonElement>('[data-view-btn="full"]')?.click();
+    requestAnimationFrame(() => { target.scrollIntoView({ behavior: 'smooth', block: 'start' }); history.replaceState(null, '', `#${target.id}`); });
+  });
+  // Share: the phone's own share sheet when there is one, otherwise the share buttons at the end.
+  document.querySelector<HTMLButtonElement>('[data-lb-share]')?.addEventListener('click', (e) => {
+    const text = (e.currentTarget as HTMLElement).dataset.shareText || document.title;
+    if ('share' in navigator) { navigator.share({ title: text, text, url: location.href.split('#')[0] }).catch(() => {}); return; }
+    const box = document.getElementById('share-lesson');
+    box?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    box?.querySelector<HTMLElement>('.share-b')?.focus({ preventScroll: true });
+  });
   if (menu && current) menu.scrollTop = Math.max(0, current.getBoundingClientRect().top - menu.getBoundingClientRect().top - menu.clientHeight / 2);
 </script>
+
+<style is:global>
+  @layer components {
+  .lb-btn { display: inline-flex; align-items: center; gap: .35rem; min-height: 36px; padding: 0 .7rem; border-radius: 8px; font-size: .875rem; font-weight: 600; color: var(--text); text-decoration: none; white-space: nowrap; }
+  a.lb-btn, .lb-share { border: 1px solid var(--card-line); background: var(--card); }
+  a.lb-btn:hover, .lb-share:hover { border-color: var(--accent); color: var(--accent-deep); }
+  .lb-icon { min-width: 36px; justify-content: center; }
+  .lb-off { opacity: .35; }
+  .lb-jump select { min-height: 36px; max-width: 9.5rem; border: 1px solid var(--card-line); border-radius: 8px; background: var(--card); color: var(--text); padding: 0 .4rem; font-size: 16px; }
+  @media (max-width: 479px) { .lb-word, .lb-pos, .lb-long { display: none; } .lb-jump select { max-width: 8rem; } }
+  @media (max-width: 419px) { .lb-label { display: none; } }
+  }
+</style>

@@ -12,6 +12,7 @@ import { SERVICES } from '../../../data/az-900/services';
 import { sectionKind, SIMPLE_SECTIONS } from '../../../lib/rehype-sections.mjs';
 import Toc from '../../../components/Toc.astro';
 import BrandLine from '../../../components/BrandLine.astro';
+import ShareButtons from '../../../components/ShareButtons.astro';
 import KnowledgeCheck from '../../../components/KnowledgeCheck.astro';
 import InterviewBlock from '../../../components/InterviewBlock.astro';
 import QuickRevision from '../../../components/QuickRevision.astro';
@@ -69,6 +70,7 @@ const toc = [
 ];
 
 const url = new URL(Astro.url.pathname, SITE.url).href;
+const shareText = `${d.title}: a free ${exam.code} lesson with simulations and a quiz`;
 const crumbs = [
   { name: 'Home', url: '/' },
   { name: `${exam.code}`, url: `/${exam.slug}/` },
@@ -134,7 +136,7 @@ const schema = [
 ];
 ---
 <Base title={d.seoTitle} description={d.description} type="article" schema={schema} breadcrumbs={crumbs} modified={d.updated.toISOString()}>
-  <LearnShell nav={nav} currentKey={entry.id}>
+  <LearnShell nav={nav} currentKey={entry.id} prev={prev} next={next} sections={toc} shareText={shareText}>
     <article class="mx-auto max-w-[860px]">
       <nav aria-label="Breadcrumb" class="text-sm text-muted">
         <ol class="flex flex-wrap items-center gap-1.5">
@@ -225,6 +227,12 @@ const schema = [
       </div>
       {next && <p class="mt-2 text-right text-sm text-muted">Next up: <a class="text-accent hover:underline" href={next.url}>{next.title}</a></p>}
 
+      <section id="share-lesson" class="mt-8 scroll-mt-28 rounded-lg border border-default bg-[var(--card)] p-4" aria-labelledby="share-lesson-h">
+        <h2 id="share-lesson-h" class="text-base font-semibold">Studying with a friend? Send them this lesson</h2>
+        <p class="mt-1 text-sm text-muted">It's free and needs no sign-up. Their progress saves in their own browser.</p>
+        <ShareButtons url={url} text={shareText} class="mt-3" />
+      </section>
+
       <a href={`/${exam.slug}/games/`} class="mt-8 flex items-center gap-4 rounded-lg bg-[var(--pastel-lilac)] p-4 hover:ring-2 hover:ring-[var(--accent)]">
         <span class="text-4xl" aria-hidden="true">🎮</span>
         <span class="min-w-0 flex-1"><span class="block font-semibold">Lesson done? Make it stick with a quick game</span><span class="block text-sm text-muted">Sort It, Match the Pairs, Lightning Round and Who Am I? Earn XP and badges.</span></span>
@@ -266,6 +274,11 @@ const schema = [
 </Base>
 <script>
   import { load, setDone } from '../../../lib/progress';
+  // Remember this lesson so the home page can offer "Continue where you left off".
+  try {
+    const h1 = document.querySelector('article h1')?.textContent?.trim();
+    if (h1) localStorage.setItem('msdb-last-lesson', JSON.stringify({ url: location.pathname, title: h1 }));
+  } catch {}
   const btn = document.getElementById('mark-done') as HTMLButtonElement | null;
   if (btn) {
     const key = btn.dataset.key!;
