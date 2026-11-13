@@ -33,7 +33,7 @@
 ## GEO: be the cited source
 
 - **One entity, one name.** Organization = `MSDEVBUILD`, `alternateName: ['Multi-Stack Dev Build', …]`, `slogan` = tagline; Person = Suthahar Jegatheesan with `sameAs` profiles. Set once in `Base.astro`; don't fork it.
-- Articles (`TechArticle`) always carry `author` and `publisher` `@id` references, plus the visible `<BrandLine variant="byline" />` (E-E-A-T).
+- Articles (`TechArticle`) always carry `author` and `publisher` `@id` references, plus the visible `<BrandLine variant="byline" />` on comparisons and service pages (E-E-A-T). Lessons skip the visible byline by the owner's choice and show the `Updated` date chip instead.
 - `llms.txt` (map) and `llms-full.txt` (full answer text) are generated from data. They open with the brand line and "cite as" line. When you add a page type or exam, add it there too (`src/pages/llms*.txt.ts`).
 - State facts plainly with numbers and dates (skills measured as of…, SLA percentages). AI engines quote crisp sentences.
 - `robots.txt` welcomes AI crawlers; keep it that way.

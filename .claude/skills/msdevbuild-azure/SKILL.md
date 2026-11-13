@@ -13,6 +13,7 @@ Read the reference file for the area you are touching before you start:
 
 | Working on | Read |
 | --- | --- |
+| Creating or rewriting a lesson (the fixed pattern + 3D View / Azure Portal / Practice Lab checklist) | [references/lesson-pattern.md](references/lesson-pattern.md), or hand it to the `lesson-agent` (`.claude/agents/lesson-agent.md`) |
 | A lesson, quiz questions, comparisons, services, what-ifs | [references/content.md](references/content.md) |
 | Any wording a learner or search engine will see | [references/voice.md](references/voice.md) |
 | Titles, descriptions, schema, llms.txt, sitemap, share images | [references/seo-aeo-geo.md](references/seo-aeo-geo.md) |
@@ -37,7 +38,7 @@ Read the reference file for the area you are touching before you start:
 
 **Brand line everywhere**
 - Wording is always `MSDEVBUILD · Multi-Stack Dev Build · by Suthahar Jegatheesan`. Never retype it: use `SITE.brandLine`, `SITE.tagline`, `SITE.orgFull` from `src/config.ts`, or the `<BrandLine />` component (`variant="byline" | "inline" | "light"`).
-- Articles (lessons, comparisons, service pages) show `<BrandLine variant="byline" />` under the title.
+- Comparisons and service pages show `<BrandLine variant="byline" />` under the title. **Lessons do not** (owner's decision, 13 Nov 2026): they show an `Updated <date>` chip (`.lesson-updated`) instead; the author stays in the TechArticle schema. The header and footer still carry the brand line.
 - It already lives in the header, footer, home hero, share images, certificate, embeds, manifest, llms files and schema. New surfaces get it too.
 
 **Writing sounds like a person** (enforced by `npm run check:human`)
@@ -50,6 +51,7 @@ Read the reference file for the area you are touching before you start:
 
 **Multi-exam engine**
 - Never hard-code `az-900`, `AZ-900` or AZ-900 data in shared code. Get the exam from `src/data/exams.ts`: `getExam(Astro.params.cert)` on exam pages, `examFromPath(Astro.url.pathname)` in shared components, `getExam()` on site-wide pages.
+- **Ask Nimbus chatbot** (`src/components/AskBot.astro`, mounted in `Base.astro`): free, in-browser search over `/<exam>/ask-index.json`, built by `src/lib/ask-index.ts` from lesson answers, interview Q&A, quick revision, exam tips, glossary and comparisons; ranked by `src/lib/ask.ts`. A new exam joins automatically once it is live. No AI backend and nothing the learner types leaves the browser (owner's choice, 13 Nov 2026). If answers drift, retune `MIN_SCORE` against real and off-topic questions.
 
 ## Workflow
 

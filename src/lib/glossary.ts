@@ -1,10 +1,11 @@
 import { getNav, getTutorial } from './learn';
+import { PRIMARY_EXAM } from '../data/exams';
 
 export interface Term { term: string; def: string; slug: string; lesson: string; url: string }
 
 /** Every key term from every published lesson, de-duplicated, A–Z. */
-export async function getGlossary(): Promise<Term[]> {
-  const nav = (await getNav()).filter((t) => t.published);
+export async function getGlossary(cert = PRIMARY_EXAM): Promise<Term[]> {
+  const nav = (await getNav(cert)).filter((t) => t.published);
   const seen = new Map<string, Term>();
   for (const t of nav) {
     const e = await getTutorial(t.key);

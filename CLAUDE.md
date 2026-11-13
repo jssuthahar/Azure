@@ -6,6 +6,7 @@ Free Azure certification learning site (AZ-900 live, AI-900 next) by **MSDEVBUIL
 
 Always:
 - Lesson flow: 30-second answer → Simulations (3D View | Azure Portal | Practice Lab) → Explanation → Exam tip → Quiz → Previous/Next. Learners never leave the lesson mid-way.
+- Every new or rewritten lesson (any exam) follows `.claude/skills/msdevbuild-azure/references/lesson-pattern.md`; use the `lesson-agent` (`.claude/agents/lesson-agent.md`) for lesson work.
 - Brand line on every surface via `SITE.brandLine` / `<BrandLine />`; never retype it.
 - Writing must read as human-written (`npm run check:human`); exam questions stay formal.
 - Original practice questions only, never real exam content. Simulators are labelled education-only.

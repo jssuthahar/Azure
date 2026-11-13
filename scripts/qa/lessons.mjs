@@ -27,14 +27,14 @@ for (const url of urls) {
       const h = a.getAttribute('href');
       if (inside && !h.startsWith('#') && a.target !== '_blank' && !a.closest('#references')) away.push(h);
     }
-    return { order, d3: !!sim?.querySelector('figure.d3'), portal: !!sim?.querySelector('figure.pt-root'), lab: !!sim?.querySelector('.lsims-frame'), away, byline: !!document.querySelector('.brand-byline') };
+    return { order, d3: !!sim?.querySelector('figure.d3'), portal: !!sim?.querySelector('figure.pt-root'), lab: !!sim?.querySelector('.lsims-frame'), away, updated: !!document.querySelector('.lesson-updated time') };
   });
   const found = r.order.filter((x) => x >= 0);
   if (r.order.slice(0, 4).some((x) => x < 0) || found.join() !== [...found].sort((a, b) => a - b).join()) fail.push(`${url} lesson flow out of order ${JSON.stringify(r.order)}`);
   if (!r.d3) fail.push(`${url} has no 3D View`);
   if (!r.portal) fail.push(`${url} has no Azure Portal tour`);
   if (!r.lab) fail.push(`${url} has no Practice Lab`);
-  if (!r.byline) fail.push(`${url} has no brand byline`);
+  if (!r.updated) fail.push(`${url} has no visible updated date`);
   if (r.away.length) fail.push(`${url} sends the learner away mid-lesson → ${[...new Set(r.away)].join(', ')}`);
 }
 await b.close();

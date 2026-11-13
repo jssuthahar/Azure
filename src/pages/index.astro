@@ -32,9 +32,12 @@ const audiences = [
   { icon: '💻', title: 'Developers', text: 'How Azure services fit into real apps, and when not to use them.' },
   { icon: '🏛️', title: 'Experienced engineers', text: 'Architecture trade-offs, cost, security and scenario interviews.' },
 ];
-const schema = [{ '@type': 'WebPage', '@id': `${SITE.url}/#home`, name: SITE.title, description: SITE.description, url: `${SITE.url}/`, publisher: { '@id': `${SITE.url}/#organization` }, author: { '@id': `${SITE.url}/#author` } }];
+// Home targets the queries learners type (exam code, free, practice exam, labs), not just the brand name.
+const homeTitle = `Free ${exam.code} Tutorials, Practice Exams & Azure Labs | MSDEVBUILD`;
+const homeDescription = `Learn Microsoft Azure ${exam.code} from scratch: free lessons, 3D simulations, portal practice labs, mock exams, quizzes and interview questions. No Azure account needed.`;
+const schema = [{ '@type': 'WebPage', '@id': `${SITE.url}/#home`, name: homeTitle, description: homeDescription, url: `${SITE.url}/`, publisher: { '@id': `${SITE.url}/#organization` }, author: { '@id': `${SITE.url}/#author` } }];
 ---
-<Base title={SITE.title} description={SITE.description} schema={schema}>
+<Base title={homeTitle} description={homeDescription} schema={schema}>
   <!-- Hero -->
   <section class="band-navy px-4 py-12 sm:py-16">
     <div class="mx-auto grid max-w-6xl items-center gap-10 lg:grid-cols-[1fr_1.1fr]">

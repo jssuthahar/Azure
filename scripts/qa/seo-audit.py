@@ -4,7 +4,7 @@ Checks: title 20-65 chars, description 70-165, one h1, canonical, Open Graph/Twi
 button names, valid JSON-LD + BreadcrumbList, heading order, broken internal links, trailing slashes,
 duplicate titles/descriptions, sitemap coverage (indexable in, noindex out), FAQPage on every lesson (AEO),
 and the brand/entity signals for GEO (Organization alternateName + slogan, TechArticle author + publisher,
-visible brand byline on lessons). Exits 1 if anything is found."""
+visible updated date on lessons). Exits 1 if anything is found."""
 import os, re, json, sys, collections
 from html.parser import HTMLParser
 
@@ -145,7 +145,7 @@ for u,p in pages.items():
                 issues['TechArticle without author + publisher (GEO/E-E-A-T)'].append(u)
 for u in lessons:
     html=open(os.path.join(DIST,u.strip('/'),'index.html'),encoding='utf-8').read()
-    if 'brand-byline' not in html: issues['lesson without brand byline'].append(u)
+    if 'lesson-updated' not in html: issues['lesson without visible updated date'].append(u)
 counts=collections.Counter(t for p in pages.values() for t in getattr(p,'types',[]) )
 print(f'pages audited: {len(pages)} | lessons: {len(lessons)} | sitemap URLs: {len(in_sm)}')
 print('schema types:', dict(counts.most_common(14)))

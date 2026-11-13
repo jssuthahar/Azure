@@ -1,0 +1,264 @@
+---
+/**
+ * "Ask Nimbus": a floating chat on every page. The learner picks an exam, asks a
+ * question, and gets the closest answers from this site's own lessons, FAQs,
+ * glossary and comparisons. Free and private: the exam's answer index
+ * (/<exam>/ask-index.json) is loaded on first use and ranked in the browser.
+ * Nothing the learner types leaves the device.
+ */
+import { liveExams } from '../data/exams';
+const exams = liveExams().map((e) => ({ slug: e.slug, code: e.code, name: e.name }));
+const here = exams.find((e) => e.slug === Astro.url.pathname.split('/')[1])?.slug ?? '';
+---
+<div id="ask" data-exams={JSON.stringify(exams)} data-here={here}>
+  <button id="ask-fab" type="button" class="ask-fab" aria-expanded="false" aria-controls="ask-panel" aria-label="Ask Nimbus a question about your exam">
+    <svg width="22" height="22" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M4 5.5A2.5 2.5 0 0 1 6.5 3h11A2.5 2.5 0 0 1 20 5.5v8a2.5 2.5 0 0 1-2.5 2.5H10l-4.2 3.6c-.5.4-1.3.1-1.3-.6V16A2.5 2.5 0 0 1 4 13.5z" fill="currentColor" /><circle cx="8.5" cy="9.5" r="1.2" fill="#005a9e" /><circle cx="12" cy="9.5" r="1.2" fill="#005a9e" /><circle cx="15.5" cy="9.5" r="1.2" fill="#005a9e" /></svg>
+    <span>Ask</span>
+  </button>
+
+  <section id="ask-panel" class="ask-panel" role="dialog" aria-labelledby="ask-title" hidden>
+    <div class="ask-head">
+      <p id="ask-title" class="ask-title">Ask Nimbus <span id="ask-exam" class="ask-exam"></span></p>
+      <button id="ask-switch" type="button" class="ask-hbtn" hidden>Change exam</button>
+      <button id="ask-close" type="button" class="ask-hbtn ask-x" aria-label="Close chat">✕</button>
+    </div>
+    <div id="ask-log" class="ask-log" role="log" aria-live="polite"></div>
+    <form id="ask-form" class="ask-form" autocomplete="off">
+      <label for="ask-q" class="sr-only">Your question</label>
+      <input id="ask-q" type="text" enterkeyhint="send" maxlength="200" placeholder="Pick an exam first" disabled />
+      <button type="submit" class="ask-send" disabled>Ask</button>
+    </form>
+    <p class="ask-note">Answers come from MSDEVBUILD lessons and stay on your device. Education only, not affiliated with Microsoft.</p>
+  </section>
+</div>
+
+<script>
+  import { makeRanker, ask, type Ranker } from '../lib/ask';
+  import type { AskIndex, AskEntry } from '../lib/ask-index';
+
+  type Exam = { slug: string; code: string; name: string };
+  const root = document.getElementById('ask')!;
+  const exams: Exam[] = JSON.parse(root.dataset.exams || '[]');
+  const here = root.dataset.here || '';
+  const fab = document.getElementById('ask-fab') as HTMLButtonElement;
+  const panel = document.getElementById('ask-panel')!;
+  const log = document.getElementById('ask-log')!;
+  const form = document.getElementById('ask-form') as HTMLFormElement;
+  const input = document.getElementById('ask-q') as HTMLInputElement;
+  const send = form.querySelector('button') as HTMLButtonElement;
+  const examChip = document.getElementById('ask-exam')!;
+  const switchBtn = document.getElementById('ask-switch') as HTMLButtonElement;
+  const KEY = 'msdb-ask-exam';
+  // Below this the best match is usually off-topic (tuned on real and junk questions).
+  const MIN_SCORE = 12;
+  // On a lesson, links open in a new tab so the learner never loses their place.
+  const newTab = !!document.querySelector('.lesson-updated');
+
+  const loaded = new Map<string, { idx: AskIndex; r: Ranker }>();
+  let current: { idx: AskIndex; r: Ranker } | null = null;
+  let started = false;
+
+  const el = <K extends keyof HTMLElementTagNameMap>(tag: K, cls = '', text = '') => {
+    const n = document.createElement(tag);
+    if (cls) n.className = cls;
+    if (text) n.textContent = text;
+    return n;
+  };
+  const link = (text: string, href: string, cls = 'ask-link') => {
+    const a = el('a', cls, text);
+    a.href = href;
+    if (newTab) { a.target = '_blank'; a.rel = 'noopener'; }
+    return a;
+  };
+  const scrollDown = () => requestAnimationFrame(() => (log.scrollTop = log.scrollHeight));
+  const say = (node: Node, who: 'bot' | 'me' = 'bot') => {
+    const b = el('div', `ask-msg ask-${who}`);
+    b.append(node);
+    log.append(b);
+    scrollDown();
+    return b;
+  };
+  const text = (s: string) => el('p', '', s);
+  const chips = (items: { label: string; on: () => void }[]) => {
+    const w = el('div', 'ask-chips');
+    for (const it of items) {
+      const c = el('button', 'ask-chip', it.label);
+      c.type = 'button';
+      c.addEventListener('click', it.on);
+      w.append(c);
+    }
+    return w;
+  };
+  const short = (s: string, max = 460) => {
+    if (s.length <= max) return s;
+    const cut = s.slice(0, max);
+    const end = Math.max(cut.lastIndexOf('. '), cut.lastIndexOf('? '));
+    return (end > 200 ? cut.slice(0, end + 1) : cut.replace(/\s+\S*$/, '')) + ' …';
+  };
+
+  function lockInput(on: boolean, placeholder: string) {
+    input.disabled = send.disabled = on;
+    input.placeholder = placeholder;
+  }
+
+  function pickExam() {
+    current = null;
+    examChip.textContent = '';
+    switchBtn.hidden = true;
+    lockInput(true, 'Pick an exam first');
+    const f = document.createDocumentFragment();
+    f.append(text('Hi, I’m Nimbus. Which exam are you studying for?'));
+    f.append(chips(exams.map((e) => ({ label: `${e.code} · ${e.name}`, on: () => choose(e.slug) }))));
+    say(f);
+  }
+
+  async function choose(slug: string) {
+    const exam = exams.find((e) => e.slug === slug);
+    if (!exam) return pickExam();
+    try { localStorage.setItem(KEY, slug); } catch {}
+    examChip.textContent = exam.code;
+    switchBtn.hidden = exams.length < 2;
+    lockInput(true, 'Loading answers…');
+    try {
+      if (!loaded.has(slug)) {
+        const res = await fetch(`/${slug}/ask-index.json`);
+        if (!res.ok) throw new Error(String(res.status));
+        const idx: AskIndex = await res.json();
+        loaded.set(slug, { idx, r: makeRanker(idx.entries) });
+      }
+    } catch {
+      lockInput(true, 'Offline');
+      say(text('I couldn’t load the answers just now. Check your connection and open me again.'));
+      return;
+    }
+    current = loaded.get(slug)!;
+    lockInput(false, `Ask about ${exam.code}…`);
+    const f = document.createDocumentFragment();
+    f.append(text(`Great, ${exam.code} it is. Ask me anything from the lessons. A few to try:`));
+    f.append(chips(current.idx.suggest.map((q) => ({ label: q, on: () => question(q) }))));
+    say(f);
+    input.focus();
+  }
+
+  function answer(e: AskEntry, others: AskEntry[]) {
+    const f = document.createDocumentFragment();
+    f.append(text(short(e.a)));
+    const src = el('p', 'ask-src');
+    src.append(`${e.k} · ${e.t} · `, link(e.k === 'Glossary' ? 'See in glossary' : e.k === 'Comparison' ? 'Open comparison' : 'Open lesson', e.u));
+    f.append(src);
+    if (others.length) {
+      f.append(el('p', 'ask-more', 'Related:'));
+      f.append(chips(others.map((o) => ({ label: o.q, on: () => { say(text(o.q), 'me'); answer(o, []); } }))));
+    }
+    say(f);
+  }
+
+  function question(q: string) {
+    if (!current) return;
+    say(text(q), 'me');
+    const all = ask(current.r, q, 3);
+    const hits = all.filter((h, i) => i === 0 || h.score >= Math.max(MIN_SCORE, all[0].score * 0.45));
+    if (!hits.length || hits[0].score < MIN_SCORE) {
+      const f = document.createDocumentFragment();
+      f.append(text(`I couldn’t find that in the ${current.idx.exam.code} lessons. Try other words, like the service name, or look here:`));
+      const w = el('div', 'ask-chips');
+      for (const l of current.idx.links) w.append(link(l.label, l.url, 'ask-chip'));
+      f.append(w);
+      say(f);
+      return;
+    }
+    answer(hits[0].e, hits.slice(1).map((h) => h.e));
+  }
+
+  form.addEventListener('submit', (ev) => {
+    ev.preventDefault();
+    const q = input.value.trim();
+    if (!q) return;
+    input.value = '';
+    question(q);
+  });
+
+  function open() {
+    panel.hidden = false;
+    fab.setAttribute('aria-expanded', 'true');
+    root.classList.add('is-open');
+    if (!started) {
+      started = true;
+      let saved = '';
+      try { saved = localStorage.getItem(KEY) || ''; } catch {}
+      const slug = here || (exams.some((e) => e.slug === saved) ? saved : '');
+      if (slug) choose(slug);
+      else pickExam();
+    } else if (!input.disabled) input.focus();
+  }
+  function close() {
+    panel.hidden = true;
+    fab.setAttribute('aria-expanded', 'false');
+    root.classList.remove('is-open');
+    fab.focus();
+  }
+  fab.addEventListener('click', () => (panel.hidden ? open() : close()));
+  document.getElementById('ask-close')!.addEventListener('click', close);
+  switchBtn.addEventListener('click', pickExam);
+  panel.addEventListener('keydown', (e) => { if (e.key === 'Escape') close(); });
+</script>
+
+<style>
+  .ask-fab {
+    position: fixed; z-index: 90;
+    right: max(16px, env(safe-area-inset-right)); bottom: calc(16px + env(safe-area-inset-bottom));
+    display: inline-flex; align-items: center; gap: 6px; min-height: 48px; padding: 0 18px 0 14px;
+    border-radius: 999px; border: 0; background: #005a9e; color: #fff; font-weight: 600;
+    box-shadow: 0 10px 28px -6px rgb(0 60 120 / .45); cursor: pointer;
+  }
+  .ask-fab:hover { background: #003a66; }
+  .ask-fab:focus-visible { outline: 3px solid var(--accent); outline-offset: 3px; }
+  /* make room for the install banner and the lesson reader; step aside in the exam room */
+  :global(body:has(.install-banner)) .ask-fab, :global(body:has(.install-banner)) .ask-panel { bottom: calc(96px + env(safe-area-inset-bottom)); }
+  :global(body:has(.install-banner)) .ask-panel { height: min(580px, calc(100dvh - 180px)); }
+  :global(body:has(#xs:not([hidden]))) #ask { display: none; }
+  #ask.is-open .ask-fab { display: none; }
+
+  .ask-panel {
+    position: fixed; z-index: 95;
+    right: max(12px, env(safe-area-inset-right)); bottom: calc(12px + env(safe-area-inset-bottom));
+    width: min(390px, calc(100vw - 24px)); height: min(580px, calc(100dvh - 96px));
+    display: flex; flex-direction: column;
+    border-radius: 18px; border: 1px solid var(--card-line); background: var(--card); color: var(--text);
+    box-shadow: 0 20px 50px -10px rgb(0 30 60 / .35); overflow: hidden;
+  }
+  .ask-panel[hidden] { display: none; }
+  .ask-head { display: flex; align-items: center; gap: 6px; padding: 10px 10px 10px 16px; background: #005a9e; color: #fff; }
+  .ask-title { flex: 1; margin: 0; font-weight: 700; }
+  .ask-exam { margin-left: 4px; padding: 2px 8px; border-radius: 999px; background: rgb(255 255 255 / .2); font-size: .8rem; font-weight: 600; }
+  .ask-exam:empty { display: none; }
+  .ask-hbtn { min-height: 36px; min-width: 36px; padding: 0 10px; border-radius: 10px; border: 0; background: rgb(255 255 255 / .16); color: #fff; font-size: .85rem; cursor: pointer; }
+  .ask-hbtn:hover { background: rgb(255 255 255 / .28); }
+  .ask-hbtn:focus-visible { outline: 2px solid #fff; outline-offset: 2px; }
+  .ask-hbtn[hidden] { display: none; }
+
+  .ask-log { flex: 1; overflow-y: auto; overscroll-behavior: contain; padding: 14px; display: flex; flex-direction: column; gap: 10px; background: var(--bg-subtle); }
+  .ask-log :global(.ask-msg) { max-width: 92%; padding: 10px 12px; border-radius: 14px; font-size: .95rem; line-height: 1.5; overflow-wrap: anywhere; }
+  .ask-log :global(.ask-msg p) { margin: 0; }
+  .ask-log :global(.ask-msg p + p), .ask-log :global(.ask-msg p + .ask-chips), .ask-log :global(.ask-chips + p) { margin-top: 8px; }
+  .ask-log :global(.ask-bot) { align-self: flex-start; background: var(--card); border: 1px solid var(--card-line); border-bottom-left-radius: 4px; }
+  .ask-log :global(.ask-me) { align-self: flex-end; background: #005a9e; color: #fff; border-bottom-right-radius: 4px; }
+  .ask-log :global(.ask-src), .ask-log :global(.ask-more) { font-size: .82rem; color: var(--text-muted); }
+  .ask-log :global(.ask-link) { color: var(--accent-deep); font-weight: 600; text-decoration: underline; text-underline-offset: 2px; }
+  .ask-log :global(.ask-chips) { display: flex; flex-wrap: wrap; gap: 6px; }
+  .ask-log :global(.ask-chip) {
+    display: inline-flex; align-items: center; min-height: 36px; padding: 6px 12px; border-radius: 999px;
+    border: 1px solid var(--card-line); background: var(--accent-soft); color: var(--text);
+    font-size: .85rem; text-align: left; text-decoration: none; cursor: pointer;
+  }
+  .ask-log :global(.ask-chip:hover) { border-color: var(--accent); }
+  .ask-log :global(.ask-chip:focus-visible) { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+  .ask-form { display: flex; gap: 8px; padding: 10px; border-top: 1px solid var(--card-line); }
+  .ask-form input { flex: 1; min-width: 0; min-height: 42px; padding: 0 14px; border-radius: 999px; border: 1px solid var(--card-line); background: var(--bg); color: var(--text); font-size: 16px; }
+  .ask-form input:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-soft); }
+  .ask-send { min-height: 42px; padding: 0 16px; border-radius: 999px; border: 0; background: #005a9e; color: #fff; font-weight: 600; cursor: pointer; }
+  .ask-send:disabled, .ask-form input:disabled { opacity: .6; cursor: not-allowed; }
+  .ask-note { margin: 0; padding: 0 12px 10px; font-size: .72rem; color: var(--text-muted); }
+  @media print { #ask { display: none; } }
+</style>
