@@ -1,0 +1,108 @@
+---
+/**
+ * Big search box with live results (ARIA combobox). Searches certifications,
+ * lessons, comparisons, glossary terms and tools from a build-time index, all
+ * in the browser. Enter opens the highlighted result (the first one by default).
+ */
+import { buildSearchIndex } from '../../lib/search-index';
+interface Props { id?: string; placeholder?: string; class?: string }
+const { id = 'site-search', placeholder = 'Search certifications, lessons and Azure terms…', class: cls = '' } = Astro.props;
+const rows = await buildSearchIndex();
+const json = JSON.stringify(rows).replace(/</g, '\\u003c');
+---
+<div class={`ss ${cls}`} data-ss>
+  <form class="ss-form" role="search" action="/sitemap/" data-ss-form>
+    <label for={`${id}-q`} class="sr-only">Search the site</label>
+    <svg class="ss-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7" /><path d="m20 20-3.5-3.5" /></svg>
+    <input id={`${id}-q`} type="search" name="q" autocomplete="off" spellcheck="false" placeholder={placeholder}
+      role="combobox" aria-autocomplete="list" aria-expanded="false" aria-controls={`${id}-list`} data-ss-input />
+    <button type="submit" class="ss-go">Search</button>
+  </form>
+  <ul id={`${id}-list`} class="ss-list" role="listbox" aria-label="Search results" hidden data-ss-list></ul>
+  <p class="sr-only" aria-live="polite" data-ss-status></p>
+  <script type="application/json" data-ss-data set:html={json} />
+</div>
+
+<style is:global>
+  @layer components {
+    .ss { position: relative; width: 100%; }
+    .ss-form { display: flex; align-items: center; overflow: hidden; border-radius: 999px; background: #fff; box-shadow: 0 12px 36px -10px rgb(0 20 50 / .45); }
+    .ss-ico { flex: none; width: 20px; height: 20px; margin-left: 18px; color: #4a5163; }
+    .ss-form input { min-width: 0; flex: 1; background: transparent; padding: 15px 12px; font-size: 1rem; color: #0b1020; outline: none; }
+    .ss-form input::placeholder { color: #5b6475; }
+    .ss-form:focus-within { outline: 3px solid #ffd75e; outline-offset: 2px; }
+    .ss-go { align-self: stretch; padding: 0 22px; font-weight: 700; color: #fff; background: #0078d4; }
+    .ss-go:hover { background: #005a9e; }
+    .ss-list { position: absolute; z-index: 45; left: 0; right: 0; top: calc(100% + 8px); max-height: min(420px, 60vh); overflow-y: auto; padding: 6px; border-radius: 16px; background: var(--card); color: var(--text); border: 1px solid var(--card-line); box-shadow: 0 20px 50px -12px rgb(0 20 50 / .4); text-align: left; }
+    .ss-opt { display: flex; align-items: center; gap: 12px; padding: 9px 10px; border-radius: 10px; cursor: pointer; min-height: 44px; }
+    .ss-opt[aria-selected='true'], .ss-opt:hover { background: var(--pastel-blue); }
+    .ss-kind { flex: none; min-width: 4.6rem; text-align: center; border-radius: 999px; padding: 2px 8px; font-size: .72rem; font-weight: 700; background: var(--pastel-grey); color: var(--text-muted); border: 1px solid var(--card-line); }
+    .ss-kind[data-k='Lesson'] { color: var(--accent-deep); }
+    .ss-kind[data-k='Course'] { color: var(--ok); }
+    .ss-txt { min-width: 0; }
+    .ss-t { display: block; font-weight: 600; line-height: 1.3; }
+    .ss-m { display: block; font-size: .8rem; color: var(--text-muted); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .ss-none { padding: 12px; font-size: .92rem; color: var(--text-muted); }
+    @media (max-width: 479px) { .ss-go { padding: 0 14px; } .ss-ico { margin-left: 14px; } .ss-kind { min-width: 0; } }
+  }
+</style>
+
+<script>
+  interface Row { t: string; k: string; u: string; m: string; x?: string }
+  const esc = (s: string) => s.replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' })[c]!);
+  document.querySelectorAll<HTMLElement>('[data-ss]').forEach((root) => {
+    const rows: Row[] = JSON.parse(root.querySelector('[data-ss-data]')!.textContent || '[]');
+    const input = root.querySelector<HTMLInputElement>('[data-ss-input]')!;
+    const list = root.querySelector<HTMLUListElement>('[data-ss-list]')!;
+    const status = root.querySelector<HTMLElement>('[data-ss-status]')!;
+    const form = root.querySelector<HTMLFormElement>('[data-ss-form]')!;
+    const KIND = { Course: 0, Lesson: 1, Tool: 2, Compare: 3, Term: 4 } as Record<string, number>;
+    let hits: Row[] = [];
+    let sel = -1;
+
+    const score = (r: Row, q: string, words: string[]) => {
+      const t = r.t.toLowerCase();
+      const all = `${t} ${r.m.toLowerCase()} ${(r.x ?? '').toLowerCase()}`;
+      if (!words.every((w) => all.includes(w))) return -1;
+      let s = 0;
+      if (t === q) s += 100;
+      else if (t.startsWith(q)) s += 60;
+      else if (t.includes(q)) s += 40;
+      s += words.filter((w) => t.includes(w)).length * 10;
+      return s - (KIND[r.k] ?? 5);
+    };
+    const close = () => { list.hidden = true; input.setAttribute('aria-expanded', 'false'); input.removeAttribute('aria-activedescendant'); sel = -1; };
+    const paintSel = () => {
+      list.querySelectorAll<HTMLElement>('.ss-opt').forEach((o, i) => o.setAttribute('aria-selected', String(i === sel)));
+      const cur = list.querySelector<HTMLElement>(`#${input.id}-o${sel}`);
+      if (cur) { input.setAttribute('aria-activedescendant', cur.id); cur.scrollIntoView({ block: 'nearest' }); } else input.removeAttribute('aria-activedescendant');
+    };
+    const render = () => {
+      const q = input.value.trim().toLowerCase();
+      if (!q) { close(); status.textContent = ''; return; }
+      const words = q.split(/\s+/).filter(Boolean);
+      hits = rows.map((r) => [r, score(r, q, words)] as const).filter(([, s]) => s >= 0).sort((a, b) => b[1] - a[1]).slice(0, 8).map(([r]) => r);
+      sel = hits.length ? 0 : -1;
+      list.innerHTML = hits.length
+        ? hits.map((r, i) => `<li id="${input.id}-o${i}" role="option" class="ss-opt" aria-selected="${i === 0}" data-u="${esc(r.u)}"><span class="ss-kind" data-k="${esc(r.k)}">${esc(r.k)}</span><span class="ss-txt"><span class="ss-t">${esc(r.t)}</span><span class="ss-m">${esc(r.m)}</span></span></li>`).join('')
+        : `<li class="ss-none" role="presentation">No match for “${esc(input.value.trim())}”. Try a service name such as Blob Storage or a term such as IaaS.</li>`;
+      list.hidden = false;
+      input.setAttribute('aria-expanded', 'true');
+      status.textContent = hits.length ? `${hits.length} result${hits.length > 1 ? 's' : ''}` : 'No results';
+      paintSel();
+    };
+    const go = (i = sel) => { const r = hits[i]; if (r) location.href = r.u; };
+
+    input.addEventListener('input', render);
+    input.addEventListener('focus', () => { if (input.value.trim()) render(); });
+    input.addEventListener('keydown', (e) => {
+      if (e.key === 'ArrowDown' && hits.length) { e.preventDefault(); if (list.hidden) render(); sel = (sel + 1) % hits.length; paintSel(); }
+      else if (e.key === 'ArrowUp' && hits.length) { e.preventDefault(); sel = (sel - 1 + hits.length) % hits.length; paintSel(); }
+      else if (e.key === 'Escape' && !list.hidden) { e.stopPropagation(); close(); }
+    });
+    list.addEventListener('mousedown', (e) => e.preventDefault());
+    list.addEventListener('click', (e) => { const o = (e.target as HTMLElement).closest<HTMLElement>('.ss-opt'); if (o?.dataset.u) location.href = o.dataset.u; });
+    form.addEventListener('submit', (e) => { e.preventDefault(); if (!hits.length) render(); go(sel < 0 ? 0 : sel); });
+    input.addEventListener('blur', () => setTimeout(close, 120));
+  });
+</script>

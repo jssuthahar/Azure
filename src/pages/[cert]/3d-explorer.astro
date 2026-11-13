@@ -1,0 +1,103 @@
+---
+/**
+ * 3D Explorer: every 3D scene of the exam in one place. The scene runs in the
+ * same embeddable player the lessons use; the steps are printed beside it as
+ * text, so nothing depends on the canvas alone.
+ */
+import LearningLayout from '../../layouts/LearningLayout.astro';
+import { getNav, inlineMd } from '../../lib/learn';
+import { SITE } from '../../config';
+import { getExam, examStaticPaths } from '../../data/exams';
+
+export function getStaticPaths() {
+  return examStaticPaths();
+}
+const exam = getExam(Astro.params.cert);
+const x = `/${exam.slug}`;
+const nav = await getNav(exam.slug);
+const scenes = Object.entries(exam.sims3d).map(([mode, s]) => ({ mode, ...s, lesson: exam.lesson3d[mode] }));
+const first = scenes[0];
+
+const title = `${exam.code} 3D Explorer: Datacenters, Zones & Regions in 3D`;
+const description = `Explore Azure in 3D for ${exam.code}: walk a datacenter, fail an availability zone, replicate storage across regions and watch identity checks, step by step.`;
+const crumbs = [
+  { name: 'Home', url: '/' },
+  { name: exam.code, url: `${x}/` },
+  { name: '3D Explorer', url: `${x}/3d-explorer/` },
+];
+const schema = [{
+  '@type': 'ItemList',
+  name: `${exam.code} 3D Explorer`,
+  numberOfItems: scenes.length,
+  itemListElement: scenes.map((s, i) => ({ '@type': 'ListItem', position: i + 1, name: s.title, url: `${SITE.url}${x}/3d-explorer/#${s.mode}` })),
+}];
+---
+<LearningLayout title={title} description={description} breadcrumbs={crumbs} schema={schema} nav={nav}>
+  <div class="mx-auto max-w-[1000px]">
+    <nav aria-label="Breadcrumb" class="text-sm text-muted"><a class="hover:underline" href="/">Home</a> › <a class="hover:underline" href={`${x}/`}>{exam.code}</a> › <span class="text-[var(--text)]">3D Explorer</span></nav>
+    <h1 class="mt-3 text-[2rem] leading-tight font-bold tracking-tight sm:text-[2.4rem]">3D cloud and datacenter explorer</h1>
+    <p class="mt-2 max-w-3xl text-muted">Pick a scene, then step through it. Drag to turn the view, and press the “…what if” buttons to break things on purpose. Every step is also written out below the scene.</p>
+
+    <div class="x3-tabs mt-6" role="tablist" aria-label="3D scenes">
+      {scenes.map((s, i) => (
+        <button type="button" role="tab" class="x3-tab" id={`x3t-${s.mode}`} aria-controls="x3-panel" aria-selected={i === 0 ? 'true' : 'false'} tabindex={i === 0 ? 0 : -1} data-mode={s.mode}>{s.title.split(':')[0]}</button>
+      ))}
+    </div>
+
+    <div id="x3-panel" role="tabpanel" aria-labelledby={`x3t-${first.mode}`} class="mt-4">
+      <div class="x3-frame">
+        <iframe src={`/embed/3d/${first.mode}/`} title={`${first.title} (3D simulation)`} loading="lazy" allow="fullscreen" data-x3-frame></iframe>
+      </div>
+      {scenes.map((s, i) => (
+        <section class="x3-steps" data-x3-steps={s.mode} hidden={i !== 0} aria-labelledby={`x3h-${s.mode}`}>
+          <div class="flex flex-wrap items-baseline justify-between gap-2">
+            <h2 id={`x3h-${s.mode}`} class="text-xl font-bold">{s.title}</h2>
+            {s.lesson && <a href={s.lesson.url} class="text-sm font-semibold text-accent hover:underline">Learn it in “{s.lesson.title}” →</a>}
+          </div>
+          <ol class="x3-list">
+            {s.steps.map((st) => <li><h3 class="font-semibold">{st.title}</h3><p class="mt-1 text-sm leading-relaxed text-muted" set:html={inlineMd(st.text)} /></li>)}
+          </ol>
+        </section>
+      ))}
+    </div>
+    <p class="mt-6 text-xs text-muted">Simulations for education only. They show how Azure behaves; they are not connected to Microsoft Azure.</p>
+  </div>
+</LearningLayout>
+
+<style>
+  .x3-tabs { display: flex; flex-wrap: wrap; gap: .5rem; }
+  .x3-tab { min-height: 40px; padding: 0 .95rem; border-radius: 999px; border: 1px solid var(--card-line); background: var(--card); font-size: .9rem; font-weight: 600; color: var(--text); }
+  .x3-tab:hover { border-color: var(--accent); }
+  .x3-tab[aria-selected='true'] { background: #0078d4; border-color: #0078d4; color: #fff; }
+  .x3-frame { overflow: hidden; border-radius: 16px; border: 1px solid var(--card-line); background: var(--card); }
+  .x3-frame iframe { display: block; width: 100%; height: 760px; border: 0; }
+  @media (max-width: 639px) { .x3-frame iframe { height: 680px; } }
+  .x3-steps { margin-top: 1.5rem; }
+  .x3-list { margin-top: 1rem; display: grid; gap: .75rem; counter-reset: x3; }
+  .x3-list li { position: relative; padding: .85rem 1rem .85rem 3.1rem; border-radius: 12px; border: 1px solid var(--card-line); background: var(--card); counter-increment: x3; }
+  .x3-list li::before { content: counter(x3); position: absolute; left: .9rem; top: .85rem; display: grid; place-items: center; width: 1.6rem; height: 1.6rem; border-radius: 999px; background: var(--pastel-blue); color: var(--accent-deep); font-size: .8rem; font-weight: 800; }
+</style>
+
+<script>
+  const tabs = [...document.querySelectorAll<HTMLButtonElement>('.x3-tab')];
+  const frame = document.querySelector<HTMLIFrameElement>('[data-x3-frame]');
+  const panel = document.getElementById('x3-panel');
+  const select = (t: HTMLButtonElement, focus = false) => {
+    const mode = t.dataset.mode!;
+    tabs.forEach((b) => { const on = b === t; b.setAttribute('aria-selected', String(on)); b.tabIndex = on ? 0 : -1; });
+    panel?.setAttribute('aria-labelledby', t.id);
+    document.querySelectorAll<HTMLElement>('[data-x3-steps]').forEach((s) => (s.hidden = s.dataset.x3Steps !== mode));
+    if (frame) { frame.src = `/embed/3d/${mode}/`; frame.title = `${t.textContent} (3D simulation)`; }
+    if (focus) t.focus();
+    history.replaceState(null, '', `#${mode}`);
+  };
+  tabs.forEach((t, i) => {
+    t.addEventListener('click', () => select(t));
+    t.addEventListener('keydown', (e) => {
+      const d = e.key === 'ArrowRight' ? 1 : e.key === 'ArrowLeft' ? -1 : 0;
+      if (d) { e.preventDefault(); select(tabs[(i + d + tabs.length) % tabs.length], true); }
+    });
+  });
+  const start = tabs.find((t) => `#${t.dataset.mode}` === location.hash);
+  if (start) select(start);
+</script>

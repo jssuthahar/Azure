@@ -1,34 +1,82 @@
 ---
-import Base from '../../layouts/Base.astro';
+/**
+ * Course details: everything a learner should understand before starting.
+ * Home (discover) → this page (understand) → /<exam>/learn/ (learn).
+ */
+import { getCollection } from 'astro:content';
+import CourseDetailsLayout from '../../layouts/CourseDetailsLayout.astro';
+import BrandLine from '../../components/BrandLine.astro';
 import Mascot from '../../components/Mascot.astro';
+import CertIcon from '../../components/course/CertIcon.astro';
+import Curriculum from '../../components/course/Curriculum.astro';
+import CourseFeatures from '../../components/course/CourseFeatures.astro';
 import { getNav, getQuestionBank, moduleUrl } from '../../lib/learn';
+import { getGlossary } from '../../lib/glossary';
+import { LABS } from '../../lib/sim/labs';
 import { SITE } from '../../config';
+import { difficulty } from '../../data/certifications';
 import { getExam, examStaticPaths } from '../../data/exams';
 
 export function getStaticPaths() {
   return examStaticPaths();
 }
 const exam = getExam(Astro.params.cert);
+const c = exam.course;
+const x = `/${exam.slug}`;
 
 const nav = await getNav(exam.slug);
 const bank = await getQuestionBank(exam.slug);
 const published = nav.filter((t) => t.published);
 const topicsFor = (objectiveId: string) => nav.filter((t) => t.objectives.includes(objectiveId));
+const entries = await getCollection('tutorials', (e) => e.id.startsWith(`${exam.slug}/`));
+const interviewCount = entries.reduce((n, e) => n + e.data.interview.length, 0);
+const glossaryCount = (await getGlossary(exam.slug)).length;
+const tours = new Set(Object.values(exam.lessonSims).map((s) => s.tour.id)).size;
+const scenes = Object.keys(exam.sims3d).length;
+const updated = entries.reduce((d, e) => (e.data.updated > d ? e.data.updated : d), new Date(0));
+const updatedText = updated.toLocaleDateString('en-GB', { month: 'long', year: 'numeric' });
+const shortName = exam.name.replace(/^Microsoft /, '');
 
-const title = `${exam.code} Azure Fundamentals: Free Course & Syllabus`;
-const description = `Free ${exam.code} course built on the official skills outline: cloud concepts, Azure architecture and services, management and governance, quizzes and mock exams.`;
+const includes: [string, string][] = [
+  ['📘', `${published.length} step-by-step lessons`],
+  ['✅', `${bank.length} original practice questions`],
+  ['🧊', `${scenes} interactive 3D scenes`],
+  ['🖥️', `${tours} Azure portal walkthroughs`],
+  ['🧪', `${LABS.length} hands-on labs + Cloud Shell`],
+  ['⏱️', 'Timed mock exams with a score report'],
+  ['💼', `${interviewCount} interview questions with answers`],
+  ['📖', `${glossaryCount}-term glossary, cheat sheet, flashcards`],
+  ['🏆', 'Shareable practice certificate'],
+  ['📲', 'Works offline as an installable app'],
+];
+const sequence = [
+  ['📘', 'Read the lesson', 'Start with the 30-second answer, then the story and explanation.'],
+  ['🧊', 'Feel it', 'Use the 3D view, the portal walkthrough and the lab in the lesson.'],
+  ['✅', 'Pass the quiz', 'Score 75% or more and the lesson is marked complete.'],
+  ['🧠', 'Fix weak spots', 'Smart practice brings back what you missed.'],
+  ['⏱️', 'Sit mock exams', 'Aim for 80% twice in a row before you book.'],
+  ['💼', 'Get interview ready', 'Turn what you know into answers for real jobs.'],
+];
+
+const title = `${exam.code} ${shortName}: Free Course & Syllabus`;
+const description = `Free ${exam.code} course on the official skills outline: ${published.length} lessons, 3D simulations, portal labs, ${bank.length} practice questions and mock exams.`;
+const crumbs = [
+  { name: 'Home', url: '/' },
+  { name: 'Certifications', url: '/certifications/' },
+  { name: `${exam.code}`, url: `${x}/` },
+];
 const schema = [
   {
     '@type': 'Course',
-    '@id': `${SITE.url}/${exam.slug}/#course`,
-    name: `${exam.code}: Microsoft Azure Fundamentals, free course`,
+    '@id': `${SITE.url}${x}/#course`,
+    name: `${exam.code}: ${exam.name}, free course`,
     description,
-    url: `${SITE.url}/${exam.slug}/`,
+    url: `${SITE.url}${x}/`,
     provider: { '@id': `${SITE.url}/#organization` },
     inLanguage: 'en',
     isAccessibleForFree: true,
-    educationalLevel: 'Beginner',
-    teaches: exam.modules.map((m) => m.title),
+    educationalLevel: difficulty(exam.info),
+    teaches: [...exam.modules.map((m) => m.title), ...c.outcomes],
     syllabusSections: exam.modules.map((m) => ({ '@type': 'Syllabus', name: m.title, description: m.summary })),
     hasCourseInstance: { '@type': 'CourseInstance', courseMode: 'Online', courseWorkload: 'PT12H', instructor: { '@id': `${SITE.url}/#author` } },
     creator: { '@id': `${SITE.url}/#author` },
@@ -39,68 +87,113 @@ const schema = [
     hasPart: published.map((t, i) => ({ '@type': 'LearningResource', position: i + 1, name: t.title, url: `${SITE.url}${t.url}`, learningResourceType: 'Lesson with 3D simulation, portal walkthrough and quiz' })),
     offers: { '@type': 'Offer', category: 'Free', price: 0, priceCurrency: 'USD' },
   },
-];
-const crumbs = [
-  { name: 'Home', url: '/' },
-  { name: `${exam.code}`, url: `/${exam.slug}/` },
+  {
+    '@type': 'FAQPage',
+    '@id': `${SITE.url}${x}/#faq`,
+    mainEntity: c.faq.map((f) => ({ '@type': 'Question', name: f.q, acceptedAnswer: { '@type': 'Answer', text: f.a } })),
+  },
 ];
 ---
-<Base title={title} description={description} schema={schema} breadcrumbs={crumbs}>
-  <section class="mx-auto max-w-7xl px-4 pt-10 pb-10 sm:px-6">
-    <nav aria-label="Breadcrumb" class="text-sm text-muted"><a href="/" class="hover:text-[var(--accent-deep)]">Home</a> / <span class="text-[var(--text)]">{exam.code}</span></nav>
-    <div class="mt-6 grid gap-8 lg:grid-cols-[1.4fr_1fr] lg:items-start">
-      <div>
-        <p class="eyebrow">Microsoft Azure Fundamentals</p>
-        <h1 class="mt-3 text-4xl font-bold tracking-tight sm:text-5xl">{exam.code} course and syllabus</h1>
-        <p class="mt-5 max-w-2xl text-lg leading-relaxed text-muted">
-          {exam.code} proves you understand cloud concepts and the core of Microsoft Azure. It is the usual first step into an Azure career, and it is the right place to start if you are new. This course follows the <a class="text-accent underline" href={exam.studyGuideUrl} rel="noopener">official skills outline</a> topic by topic.
-        </p>
-        <div class="mt-7 flex flex-wrap gap-3">
-          {published[0] && <a class="btn btn-accent" href={published[0].url}>Start lesson 1 →</a>}
-          <a class="btn btn-outline" href={`/${exam.slug}/mock-exam/`}>Mock exam ({bank.length} questions)</a>
-          <a class="btn btn-outline" href={`/${exam.slug}/interview/`}>Interview questions</a>
-        </div>
+<CourseDetailsLayout title={title} description={description} schema={schema} breadcrumbs={crumbs}
+  eyebrow={`${exam.info.level} certification · ${exam.code}`} heading={c.title} subtitle={c.subtitle}>
+  <Fragment slot="hero">
+    <ul class="cd-badges">
+      <li class="cd-badge cd-badge-free">Free</li>
+      <li class="cd-badge">{difficulty(exam.info)} friendly</li>
+      <li class="cd-badge">{published.length} lessons</li>
+      <li class="cd-badge">{bank.length} questions</li>
+      <li class="cd-badge">No Azure account needed</li>
+    </ul>
+    <p class="cd-by">Updated {updatedText} · Follows the skills outline as of {exam.skillsMeasuredAsOf} · English</p>
+    <BrandLine variant="light" class="mt-2" />
+  </Fragment>
+
+  <Fragment slot="card">
+    <div class="cd-banner">
+      <CertIcon icon={exam.info.icon} size={52} />
+      <span class="cd-banner-code">{exam.code}</span>
+      <span class="cd-banner-name">{shortName}</span>
+    </div>
+    <div class="cd-card-in">
+      <p class="cd-price">Free <span>· every lesson, lab and mock exam</span></p>
+      <a href={`${x}/learn/`} class="btn btn-accent cd-card-btn" data-start-learning>Start learning</a>
+      <a href={`${x}/mock-exam/`} class="btn btn-outline cd-card-btn mt-2">Take a mock exam</a>
+      <div class="cd-progress" data-cd-progress hidden>
+        <div class="flex justify-between text-sm"><span>Your progress</span><strong data-cd-pct>0%</strong></div>
+        <div class="bar mt-1.5"><span data-cd-bar style="width:0%"></span></div>
       </div>
-      <div class="card p-5">
-        <div class="flex items-center gap-3"><Mascot size={56} /><p class="font-semibold">Exam at a glance</p></div>
-        <dl class="mt-4 grid grid-cols-2 gap-3 text-sm">
-          <div class="rounded-xl border border-default bg-[var(--bg)] p-3"><dt class="text-muted">Passing score</dt><dd class="text-lg font-bold">{exam.facts.passingScore} / 1000</dd></div>
-          <div class="rounded-xl border border-default bg-[var(--bg)] p-3"><dt class="text-muted">Level</dt><dd class="text-lg font-bold">Fundamentals</dd></div>
-          <div class="rounded-xl border border-default bg-[var(--bg)] p-3"><dt class="text-muted">Domains</dt><dd class="text-lg font-bold">3</dd></div>
-          <div class="rounded-xl border border-default bg-[var(--bg)] p-3"><dt class="text-muted">Prerequisites</dt><dd class="text-lg font-bold">None</dd></div>
-        </dl>
-        <p class="mt-4 text-xs leading-relaxed text-muted">
-          Syllabus: skills measured as of {exam.skillsMeasuredAsOf}, checked against Microsoft Learn on {new Date(exam.syllabusVerifiedOn).toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' })}. Always confirm exam length, price and format on the <a class="underline" href="https://learn.microsoft.com/en-us/credentials/certifications/azure-fundamentals/" rel="noopener">official exam page</a>. Microsoft also offers a free <a class="underline" href={exam.facts.practiceAssessmentUrl} rel="noopener">practice assessment</a>.
-        </p>
-      </div>
+      <h2 class="cd-inc-h">This course includes</h2>
+      <ul class="cd-inc">
+        {includes.map(([ic, t]) => <li><span aria-hidden="true">{ic}</span>{t}</li>)}
+      </ul>
+      <h2 class="cd-inc-h">Exam at a glance</h2>
+      <dl class="cd-facts">
+        <div><dt>Passing score</dt><dd>{exam.facts.passingScore} / 1000</dd></div>
+        <div><dt>Level</dt><dd>{exam.info.level}</dd></div>
+        <div><dt>Domains</dt><dd>{exam.modules.length}</dd></div>
+        <div><dt>Prerequisites</dt><dd>None</dd></div>
+      </dl>
+      <p class="cd-note">
+        Syllabus checked against Microsoft Learn on {new Date(exam.syllabusVerifiedOn).toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' })}. Confirm length, price and format on the <a class="underline" rel="noopener">Coming Soon</a>. Microsoft also offers a free <a class="underline" href={exam.facts.practiceAssessmentUrl} rel="noopener">practice assessment</a>.
+      </p>
+    </div>
+  </Fragment>
+
+  <!-- What you will learn -->
+  <section class="cd-sec" aria-labelledby="learn-h">
+    <div class="cd-learn">
+      <h2 id="learn-h" class="cd-h2">What you'll learn</h2>
+      <ul class="cd-learn-list">
+        {c.outcomes.map((o) => <li><span aria-hidden="true">✓</span>{o}</li>)}
+      </ul>
     </div>
   </section>
 
-  <section class="mx-auto max-w-7xl px-4 pb-12 sm:px-6" aria-labelledby="toolkit">
-    <h2 id="toolkit" class="text-2xl font-bold tracking-tight">Pass with a plan</h2>
-    <p class="mt-2 max-w-3xl text-muted">Lessons teach it. These make it stick, and they're all free.</p>
-    <div class="mt-5 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-      {[
-        ['📅', 'Study plan', `/${exam.slug}/study-plan/`, 'Pick your exam date and daily time. Get a day-by-day plan with calendar reminders.'],
-        ['🧠', 'Smart practice', `/${exam.slug}/practice/`, 'Your readiness score by domain. Questions you miss come back until you get them right.'],
-        ['📝', 'Cheat sheet', `/${exam.slug}/cheat-sheet/`, 'One printable page per domain, plus the last 30 minutes before the exam. You can listen to it too.'],
-        ['✅', 'Exam day guide', `/${exam.slug}/exam-day/`, 'Booking, free voucher routes, the online check-in checklist and the retake rules.'],
-      ].map(([icon, t, href, d]) => (
-        <a href={href} class="card card-link p-5"><span class="text-3xl" aria-hidden="true">{icon}</span><p class="mt-2 text-lg font-semibold">{t}</p><p class="mt-1 text-sm leading-relaxed text-muted">{d}</p></a>
+  <!-- About -->
+  <section class="cd-sec" aria-labelledby="about-h">
+    <h2 id="about-h" class="cd-h2">About this course</h2>
+    {c.intro.map((p) => <p class="cd-p">{p}</p>)}
+    <p class="cd-p">The lessons follow the <a class="text-accent underline" href={exam.studyGuideUrl} rel="noopener">official skills outline</a> in order, and the mock exam is weighted the same way as the real one.</p>
+    <h3 class="cd-h3">Requirements</h3>
+    <ul class="cd-req">{c.requirements.map((r) => <li>{r}</li>)}</ul>
+  </section>
+
+  <!-- Audience -->
+  <section class="cd-sec" aria-labelledby="who-h">
+    <h2 id="who-h" class="cd-h2">Who this course is for</h2>
+    <div class="cd-who">
+      {c.audience.map((a) => (
+        <div class="cd-who-card"><span class="text-3xl" aria-hidden="true">{a.icon}</span><h3 class="mt-2 font-semibold">{a.title}</h3><p class="mt-1 text-sm leading-relaxed text-muted">{a.text}</p></div>
       ))}
     </div>
   </section>
 
-  <section class="mx-auto max-w-7xl px-4 sm:px-6" aria-labelledby="weights">
-    <h2 id="weights" class="text-2xl font-bold tracking-tight">The three exam domains</h2>
+  <!-- Curriculum -->
+  <section id="curriculum" class="cd-sec scroll-mt-28" aria-labelledby="cur-h">
+    <h2 id="cur-h" class="cd-h2">Course curriculum</h2>
+    <p class="cd-p">Every lesson has the same flow: a 30-second answer, simulations (3D view, Azure portal and practice lab), the explanation, an exam tip and a quiz.</p>
+    <div class="mt-4"><Curriculum exam={exam} /></div>
+  </section>
+
+  <!-- Features -->
+  <section id="features" class="cd-sec scroll-mt-28" aria-labelledby="feat-h">
+    <h2 id="feat-h" class="cd-h2">How you'll learn</h2>
+    <p class="cd-p">Ten ways to learn and check yourself, all free and all inside your browser.</p>
+    <div class="mt-5"><CourseFeatures slug={exam.slug} /></div>
+  </section>
+
+  <!-- Exam domains -->
+  <section id="weights" class="cd-sec scroll-mt-28" aria-labelledby="weights-h">
+    <h2 id="weights-h" class="cd-h2">Exam domains</h2>
+    <p class="cd-p">Microsoft weights the exam by domain. Spend your time in roughly the same proportion.</p>
     <div class="mt-5 grid gap-4 md:grid-cols-3">
       {exam.modules.map((m) => {
-        const t = nav.filter((x) => x.module.slug === m.slug);
-        const p = t.filter((x) => x.published).length;
+        const t = nav.filter((y) => y.module.slug === m.slug);
+        const p = t.filter((y) => y.published).length;
         return (
           <a href={`#${m.slug}`} class="card card-link p-5">
             <div class="flex items-center justify-between"><span class="chip">Domain {m.domain}</span><span class="text-2xl font-bold text-accent">{m.weight}</span></div>
-            <p class="mt-3 text-lg font-semibold">{m.title}</p>
+            <h3 class="mt-3 text-lg font-semibold">{m.title}</h3>
             <p class="mt-1 text-sm leading-relaxed text-muted">{m.summary}</p>
             <div class="bar mt-4"><span style={`width:${Math.round((p / t.length) * 100)}%`}></span></div>
             <p class="mt-1.5 text-xs text-muted">{p} of {t.length} tutorials published</p>
@@ -110,20 +203,53 @@ const crumbs = [
     </div>
   </section>
 
-  <section class="mx-auto max-w-7xl px-4 pt-14 sm:px-6" aria-labelledby="syllabus">
-    <h2 id="syllabus" class="text-2xl font-bold tracking-tight">Complete official syllabus</h2>
-    <p class="mt-2 max-w-3xl text-muted">Every objective Microsoft lists, with the tutorials that teach it. Topics marked “coming next” are being written. We do not publish empty pages. Topics marked “beyond the exam” are not in the current outline but come up in real projects and interviews.</p>
+  <!-- Roadmap + sequence -->
+  <section id="roadmap" class="cd-sec scroll-mt-28" aria-labelledby="road-h">
+    <h2 id="road-h" class="cd-h2">Preparation roadmap</h2>
+    <p class="cd-p">A four-week plan at about 20 minutes a day. Want one built around your exam date? Use the <a class="text-accent underline" href={`${x}/study-plan/`}>study plan</a>.</p>
+    <ol class="cd-road">
+      {c.roadmap.map((r, i) => (
+        <li><span class="cd-road-n" aria-hidden="true">{i + 1}</span><div><h3 class="font-semibold">{r.title}</h3><p class="mt-1 text-sm leading-relaxed text-muted">{r.text}</p></div></li>
+      ))}
+    </ol>
+    <h3 class="cd-h3">Recommended learning sequence</h3>
+    <ol class="cd-seq">
+      {sequence.map(([ic, t, d], i) => (
+        <li><span class="cd-seq-ic" aria-hidden="true">{ic}</span><span class="cd-seq-n">Step {i + 1}</span><span class="font-semibold">{t}</span><span class="text-sm text-muted">{d}</span></li>
+      ))}
+    </ol>
+  </section>
 
+  <!-- Toolkit -->
+  <section class="cd-sec" aria-labelledby="toolkit">
+    <h2 id="toolkit" class="cd-h2">Pass with a plan</h2>
+    <p class="cd-p">Lessons teach it. These make it stick, and they're all free.</p>
+    <div class="mt-5 grid gap-4 sm:grid-cols-2">
+      {[
+        ['📅', 'Study plan', `${x}/study-plan/`, 'Pick your exam date and daily time. Get a day-by-day plan with calendar reminders.'],
+        ['🧠', 'Smart practice', `${x}/practice/`, 'Your readiness score by domain. Questions you miss come back until you get them right.'],
+        ['📝', 'Cheat sheet', `${x}/cheat-sheet/`, 'One printable page per domain, plus the last 30 minutes before the exam. You can listen to it too.'],
+        ['✅', 'Exam day guide', `${x}/exam-day/`, 'Booking, free voucher routes, the online check-in checklist and the retake rules.'],
+      ].map(([icon, t, href, d]) => (
+        <a href={href} class="card card-link p-5"><span class="text-3xl" aria-hidden="true">{icon}</span><h3 class="mt-2 text-lg font-semibold">{t}</h3><p class="mt-1 text-sm leading-relaxed text-muted">{d}</p></a>
+      ))}
+    </div>
+  </section>
+
+  <!-- Official syllabus (exam objectives) -->
+  <section id="syllabus" class="cd-sec scroll-mt-28" aria-labelledby="syllabus-h">
+    <h2 id="syllabus-h" class="cd-h2">Exam objectives: the complete official syllabus</h2>
+    <p class="cd-p">Every objective Microsoft lists, with the tutorials that teach it. Topics marked “coming next” are being written. We do not publish empty pages. Topics marked “beyond the exam” are not in the current outline but come up in real projects and interviews.</p>
     {exam.modules.map((m) => {
       const extra = m.topics.filter((t) => t.beyondExam && t.objectives.length === 0);
       return (
-        <div id={m.slug} class="mt-10 scroll-mt-24">
+        <div id={m.slug} class="mt-8 scroll-mt-28">
           <div class="flex flex-wrap items-baseline gap-3">
             <h3 class="text-xl font-bold">Domain {m.domain}: {m.title}</h3>
             <span class="chip">{m.weight}</span>
             <a class="text-sm text-accent underline" href={moduleUrl(m.slug, exam.slug)}>Module overview</a>
           </div>
-          <div class="mt-4 grid gap-4 lg:grid-cols-2">
+          <div class="mt-4 grid gap-4 xl:grid-cols-2">
             {m.groups.map((g) => (
               <div class="card p-5">
                 <h4 class="font-semibold">{g.title}</h4>
@@ -154,4 +280,91 @@ const crumbs = [
       );
     })}
   </section>
-</Base>
+
+  <!-- FAQ -->
+  <section id="faq" class="cd-sec scroll-mt-28" aria-labelledby="faq-h">
+    <h2 id="faq-h" class="cd-h2">Frequently asked questions</h2>
+    <div class="faq mt-4">
+      {c.faq.map((f) => (
+        <details class="faq-item"><summary><h3 class="faq-q">{f.q}</h3></summary><p class="faq-a">{f.a}</p></details>
+      ))}
+    </div>
+  </section>
+
+  <!-- Final CTA -->
+  <section class="cd-sec" aria-labelledby="ready-h">
+    <div class="cd-ready">
+      <Mascot size={64} mood="cheer" />
+      <div class="min-w-0 flex-1">
+        <h2 id="ready-h" class="text-2xl font-bold">Ready when you are</h2>
+        <p class="mt-1 text-muted">Lesson 1 takes about ten minutes. Your progress is saved in this browser as you go.</p>
+      </div>
+      <a href={`${x}/learn/`} class="btn btn-accent cd-card-btn sm:w-auto" data-start-learning>Start learning</a>
+    </div>
+  </section>
+</CourseDetailsLayout>
+
+<style>
+  .cd-badges { display: flex; flex-wrap: wrap; gap: .5rem; margin-top: 1.1rem; }
+  .cd-badge { border-radius: 999px; border: 1px solid rgb(255 255 255 / .3); padding: .2rem .75rem; font-size: .85rem; font-weight: 600; color: #fff; }
+  .cd-badge-free { background: #ffd75e; border-color: #ffd75e; color: #0b1020; }
+  .cd-by { margin-top: .9rem; font-size: .9rem; color: #c9d6e6; }
+
+  .cd-banner { position: relative; display: grid; grid-template-columns: auto 1fr; align-items: center; column-gap: .9rem; padding: 1.4rem 1.25rem; color: #fff; background: radial-gradient(14rem 8rem at 90% 0%, rgb(255 255 255 / .22), transparent 70%), linear-gradient(135deg, #0078d4, #3a2f9e); }
+  .cd-banner > :global(svg) { grid-row: span 2; }
+  .cd-banner-code { font-size: 1.8rem; font-weight: 800; line-height: 1; }
+  .cd-banner-name { font-size: .92rem; opacity: .95; }
+  .cd-card-in { padding: 1.25rem; }
+  .cd-price { font-size: 1.9rem; font-weight: 800; line-height: 1.1; }
+  .cd-price span { font-size: .9rem; font-weight: 500; color: var(--text-muted); }
+  .cd-card-btn { width: 100%; justify-content: center; min-height: 46px; font-size: 1rem; }
+  .cd-card-in > .cd-card-btn:first-of-type { margin-top: 1rem; }
+  .cd-progress { margin-top: 1rem; }
+  .cd-inc-h { margin-top: 1.4rem; font-size: 1rem; font-weight: 700; }
+  .cd-inc { margin-top: .6rem; display: grid; gap: .45rem; font-size: .9rem; }
+  .cd-inc li { display: flex; gap: .6rem; }
+  .cd-facts { margin-top: .6rem; display: grid; grid-template-columns: 1fr 1fr; gap: .5rem; font-size: .85rem; }
+  .cd-facts div { border-radius: 10px; border: 1px solid var(--card-line); background: var(--bg); padding: .55rem .7rem; }
+  .cd-facts dt { color: var(--text-muted); }
+  .cd-facts dd { font-weight: 700; font-size: 1rem; }
+  .cd-note { margin-top: 1rem; font-size: .75rem; line-height: 1.55; color: var(--text-muted); }
+
+  .cd-sec { margin-top: 3rem; }
+  .cd-sec:first-child { margin-top: 0; }
+  .cd-h2 { font-size: 1.6rem; font-weight: 800; letter-spacing: -.01em; }
+  .cd-h3 { margin-top: 1.6rem; font-size: 1.15rem; font-weight: 700; }
+  .cd-p { margin-top: .6rem; line-height: 1.7; color: var(--text-muted); max-width: 70ch; }
+  .cd-learn { border-radius: 16px; border: 1px solid var(--card-line); background: var(--card); padding: 1.4rem; }
+  .cd-learn-list { margin-top: 1rem; display: grid; gap: .65rem 1.75rem; font-size: .95rem; line-height: 1.5; }
+  @media (min-width: 720px) { .cd-learn-list { grid-template-columns: 1fr 1fr; } }
+  .cd-learn-list li { display: flex; gap: .65rem; }
+  .cd-learn-list span { color: var(--ok); font-weight: 800; }
+  .cd-req { margin-top: .6rem; display: grid; gap: .4rem; padding-left: 1.2rem; list-style: disc; color: var(--text-muted); }
+  .cd-who { margin-top: 1rem; display: grid; gap: 1rem; grid-template-columns: repeat(auto-fill, minmax(min(100%, 14rem), 1fr)); }
+  .cd-who-card { border-radius: 16px; border: 1px solid var(--card-line); background: var(--card); padding: 1.1rem; }
+  .cd-road { margin-top: 1.2rem; display: grid; gap: 0; }
+  .cd-road li { position: relative; display: flex; gap: 1rem; padding-bottom: 1.2rem; }
+  .cd-road li:not(:last-child)::before { content: ''; position: absolute; left: 1.05rem; top: 2.3rem; bottom: .2rem; width: 2px; background: var(--card-line); }
+  .cd-road-n { flex: none; display: grid; place-items: center; width: 2.2rem; height: 2.2rem; border-radius: 999px; background: #0078d4; color: #fff; font-weight: 800; }
+  .cd-seq { margin-top: 1rem; display: grid; gap: .75rem; grid-template-columns: repeat(auto-fill, minmax(min(100%, 12.5rem), 1fr)); }
+  .cd-seq li { display: flex; flex-direction: column; gap: .2rem; border-radius: 14px; border: 1px solid var(--card-line); background: var(--card); padding: 1rem; }
+  .cd-seq-ic { font-size: 1.5rem; }
+  .cd-seq-n { font-size: .72rem; font-weight: 800; letter-spacing: .06em; text-transform: uppercase; color: var(--accent-deep); }
+  .cd-ready { display: flex; flex-wrap: wrap; align-items: center; gap: 1rem 1.25rem; border-radius: 18px; background: var(--pastel-blue); padding: 1.4rem; }
+</style>
+
+<script>
+  import { load } from '../../lib/progress';
+  // Returning learner: "Continue learning" and their course progress in the summary card.
+  try {
+    const s = load();
+    const rows = [...document.querySelectorAll<HTMLElement>('.cur-row[data-topic-key]')];
+    const done = rows.filter((r) => s.done[r.dataset.topicKey!]).length;
+    if (done > 0) {
+      const pct = Math.round((done / rows.length) * 100);
+      document.querySelectorAll<HTMLAnchorElement>('[data-start-learning]').forEach((a) => (a.textContent = 'Continue learning'));
+      const box = document.querySelector<HTMLElement>('[data-cd-progress]');
+      if (box) { box.hidden = false; box.querySelector('[data-cd-pct]')!.textContent = `${pct}%`; box.querySelector<HTMLElement>('[data-cd-bar]')!.style.width = `${pct}%`; }
+    }
+  } catch {}
+</script>

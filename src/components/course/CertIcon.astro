@@ -1,0 +1,16 @@
+---
+/** Line-art glyph for a certification card. Decorative: the code and name sit beside it as text. */
+import type { Certification } from '../../data/certifications';
+interface Props { icon?: Certification['icon']; size?: number; class?: string }
+const { icon = 'cloud', size = 40, class: cls = '' } = Astro.props;
+---
+<svg class={cls} width={size} height={size} viewBox="0 0 48 48" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+  {icon === 'cloud' && <><path d="M14 36h21a8 8 0 0 0 1-15.9A11 11 0 0 0 15.3 18 9 9 0 0 0 14 36Z" /><path d="M20 30l4-4 4 4M24 26v10" /></>}
+  {icon === 'ai' && <><rect x="12" y="12" width="24" height="24" rx="5" /><path d="M19 30l5-12 5 12M21 26h6M18 6v6M30 6v6M18 36v6M30 36v6M6 18h6M6 30h6M36 18h6M36 30h6" /></>}
+  {icon === 'data' && <><ellipse cx="24" cy="12" rx="13" ry="5" /><path d="M11 12v12c0 2.8 5.8 5 13 5s13-2.2 13-5V12M11 24v12c0 2.8 5.8 5 13 5s13-2.2 13-5V24" /></>}
+  {icon === 'admin' && <><rect x="8" y="9" width="32" height="12" rx="3" /><rect x="8" y="27" width="32" height="12" rx="3" /><path d="M14 15h.01M14 33h.01M21 15h12M21 33h12" /></>}
+  {icon === 'code' && <><path d="M17 15 8 24l9 9M31 15l9 9-9 9M27 10l-6 28" /></>}
+  {icon === 'shield' && <><path d="M24 5 9 11v11c0 10 6.4 17.6 15 21 8.6-3.4 15-11 15-21V11L24 5Z" /><path d="m17 24 5 5 9-10" /></>}
+  {icon === 'architect' && <><path d="M8 40h32M12 40V22l12-12 12 12v18" /><path d="M20 40V30h8v10M24 10v6" /></>}
+  {icon === 'devops' && <><path d="M15 17c-5 0-9 3-9 7s4 7 9 7c8 0 10-14 18-14 5 0 9 3 9 7s-4 7-9 7c-8 0-10-14-18-14Z" /></>}
+</svg>

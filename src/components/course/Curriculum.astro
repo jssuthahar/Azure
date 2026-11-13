@@ -1,0 +1,132 @@
+---
+/**
+ * Course curriculum as accordions: one per exam domain, each lesson with its
+ * one-line description and the practice it offers (3D, portal, lab, quiz,
+ * activities). Ticks fill in from this browser's progress.
+ * Plain <details>, so it works without JavaScript and every lesson link is in the HTML.
+ */
+import { getCollection } from 'astro:content';
+import type { Exam } from '../../data/exams';
+import { getNav, getQuestionBank } from '../../lib/learn';
+import { labsForTopic } from '../../lib/sim/labs';
+interface Props { exam: Exam; openFirst?: boolean; headingLevel?: 'h3' | 'h2' }
+const { exam, openFirst = true, headingLevel = 'h3' } = Astro.props;
+const H = headingLevel;
+const nav = await getNav(exam.slug);
+const entries = new Map((await getCollection('tutorials', (e) => e.id.startsWith(`${exam.slug}/`))).map((e) => [e.id, e]));
+const bank = await getQuestionBank(exam.slug);
+const qByTopic = bank.reduce<Record<string, number>>((m, q) => { if (q.topic) m[q.topic] = (m[q.topic] ?? 0) + 1; return m; }, {});
+const total = nav.filter((t) => t.published).length;
+let n = 0;
+---
+<div class="cur" data-cur>
+  <div class="cur-head">
+    <p class="cur-sum">{exam.modules.length} domains · {total} lessons · {bank.length} practice questions</p>
+    <button type="button" class="cur-all" data-cur-all aria-pressed="false">Expand all domains</button>
+  </div>
+  {exam.modules.map((m, i) => {
+    const topics = nav.filter((t) => t.module.slug === m.slug);
+    const pub = topics.filter((t) => t.published);
+    return (
+      <details class="cur-mod" open={openFirst && i === 0 ? true : undefined} data-mod={m.slug}>
+        <summary class="cur-summary">
+          <span class="cur-chev" aria-hidden="true"></span>
+          <span class="cur-mtxt">
+            <H class="cur-mtitle">Domain {m.domain}: {m.shortTitle}</H>
+            <span class="cur-mmeta">{pub.length} lessons · {m.weight} of the exam · <span data-mod-done>0</span> done</span>
+          </span>
+        </summary>
+        <div class="cur-body">
+          <p class="cur-mdesc">{m.summary}</p>
+          <ol class="cur-list">
+            {topics.map((t) => {
+              if (!t.published) return <li class="cur-row cur-soon"><span class="cur-n" aria-hidden="true">·</span><span class="cur-txt"><span class="cur-t">{t.title}</span><span class="cur-d">Coming next</span></span></li>;
+              const e = entries.get(t.key);
+              const sims = exam.lessonSims[t.slug];
+              const labs = labsForTopic(t.slug).length;
+              const q = qByTopic[t.slug] ?? 0;
+              const acts = exam.activities[t.slug];
+              const tags = [
+                sims && ['🧊', '3D'], sims && ['🖥️', 'Portal'], labs > 0 && ['🧪', labs > 1 ? `${labs} labs` : 'Lab'],
+                q > 0 && ['✅', `${q}-question quiz`], acts && ['🎯', 'Activities'], t.beyondExam && ['⭐', 'Beyond the exam'],
+              ].filter(Boolean) as [string, string][];
+              return (
+                <li class="cur-row" data-topic-key={t.key}>
+                  <span class="cur-n" aria-hidden="true"><span class="cur-num">{++n}</span><span class="cur-tick">✓</span></span>
+                  <span class="cur-txt">
+                    <a href={t.url} class="cur-t">{t.title}</a>
+                    {e && <span class="cur-d">{e.data.description}</span>}
+                    {tags.length > 0 && <span class="cur-tags">{tags.map(([ic, l]) => <span class="cur-tag"><span aria-hidden="true">{ic}</span> {l}</span>)}</span>}
+                  </span>
+                </li>
+              );
+            })}
+          </ol>
+        </div>
+      </details>
+    );
+  })}
+</div>
+
+<style is:global>
+  @layer components {
+    .cur-head { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: .5rem 1rem; margin-bottom: .75rem; }
+    .cur-sum { font-size: .92rem; color: var(--text-muted); }
+    .cur-all { min-height: 36px; padding: 0 .4rem; font-size: .9rem; font-weight: 700; color: var(--accent-deep); }
+    .cur-all:hover { text-decoration: underline; }
+    .cur-mod { border: 1px solid var(--card-line); background: var(--card); }
+    .cur-mod + .cur-mod { border-top: 0; }
+    .cur-mod:first-of-type { border-radius: 14px 14px 0 0; }
+    .cur-mod:last-of-type { border-radius: 0 0 14px 14px; }
+    .cur-summary { display: flex; gap: .85rem; align-items: center; padding: 1rem 1.1rem; cursor: pointer; list-style: none; background: var(--pastel-grey); min-height: 44px; }
+    .cur-summary::-webkit-details-marker { display: none; }
+    .cur-summary:hover { background: var(--pastel-blue); }
+    .cur-chev { flex: none; width: .65rem; height: .65rem; border-right: 2.5px solid currentColor; border-bottom: 2.5px solid currentColor; transform: rotate(-45deg); transition: transform .2s; }
+    .cur-mod[open] .cur-chev { transform: rotate(45deg); }
+    .cur-mtitle { font-size: 1.05rem; font-weight: 700; line-height: 1.3; }
+    .cur-mmeta { display: block; margin-top: .15rem; font-size: .85rem; color: var(--text-muted); }
+    .cur-body { padding: .25rem 1.1rem 1rem; border-top: 1px solid var(--card-line); }
+    .cur-mdesc { margin: .75rem 0 .25rem; font-size: .93rem; color: var(--text-muted); line-height: 1.55; }
+    .cur-row { display: flex; gap: .85rem; padding: .8rem 0; border-bottom: 1px dashed var(--card-line); }
+    .cur-row:last-child { border-bottom: 0; }
+    .cur-n { flex: none; display: grid; place-items: center; width: 1.9rem; height: 1.9rem; border-radius: 999px; border: 1.5px solid var(--card-line); font-size: .78rem; font-weight: 700; color: var(--text-muted); }
+    .cur-tick { display: none; }
+    .cur-row[data-done] .cur-n { background: var(--ok); border-color: var(--ok); color: #fff; }
+    .cur-row[data-done] .cur-num { display: none; }
+    .cur-row[data-done] .cur-tick { display: inline; }
+    .cur-txt { min-width: 0; }
+    .cur-t { display: block; font-weight: 600; line-height: 1.35; }
+    a.cur-t { color: var(--accent-deep); }
+    a.cur-t:hover { text-decoration: underline; }
+    .cur-d { display: block; margin-top: .2rem; font-size: .88rem; line-height: 1.5; color: var(--text-muted); }
+    .cur-tags { display: flex; flex-wrap: wrap; gap: .35rem; margin-top: .45rem; }
+    .cur-tag { border-radius: 999px; border: 1px solid var(--card-line); background: var(--pastel-grey); padding: 1px 8px; font-size: .74rem; font-weight: 600; color: var(--text-muted); }
+    .cur-soon .cur-t { color: var(--text-muted); }
+  }
+</style>
+
+<script>
+  import { load } from '../../lib/progress';
+  document.querySelectorAll<HTMLElement>('[data-cur]').forEach((root) => {
+    const paint = () => {
+      const done = load().done;
+      root.querySelectorAll<HTMLElement>('.cur-mod').forEach((mod) => {
+        let n = 0;
+        mod.querySelectorAll<HTMLElement>('[data-topic-key]').forEach((row) => { const d = Boolean(done[row.dataset.topicKey!]); row.toggleAttribute('data-done', d); if (d) n++; });
+        const c = mod.querySelector('[data-mod-done]'); if (c) c.textContent = String(n);
+      });
+    };
+    paint();
+    window.addEventListener('progress-change', paint);
+    const btn = root.querySelector<HTMLButtonElement>('[data-cur-all]');
+    const mods = [...root.querySelectorAll<HTMLDetailsElement>('.cur-mod')];
+    const sync = () => { const all = mods.every((m) => m.open); btn!.textContent = all ? 'Collapse all domains' : 'Expand all domains'; btn!.setAttribute('aria-pressed', String(all)); };
+    btn?.addEventListener('click', () => { const open = !mods.every((m) => m.open); mods.forEach((m) => (m.open = open)); sync(); });
+    mods.forEach((m) => m.addEventListener('toggle', sync));
+    sync();
+    // Opening a link to #<module> opens that domain.
+    const hash = location.hash.slice(1);
+    const target = hash && mods.find((m) => m.dataset.mod === hash);
+    if (target) target.open = true;
+  });
+</script>

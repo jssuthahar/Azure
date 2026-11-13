@@ -9,7 +9,7 @@ const exam = getExam();
 
 const nav = (await getNav()).filter((t) => t.published);
 const tools: [string, string][] = [
-  ['AZ-900 course and syllabus', '/az-900/'], ['Mock exam', '/az-900/mock-exam/'], ['AZ-900 Ready certificate', '/certificate/'],
+  ['All certification courses', '/certifications/'], [`${exam.code} course details and syllabus`, `/${exam.slug}/`], [`${exam.code} learning dashboard`, `/${exam.slug}/learn/`], ['3D explorer', `/${exam.slug}/3d-explorer/`], ['Mock exam', '/az-900/mock-exam/'], ['AZ-900 Ready certificate', '/certificate/'],
   ['Smart practice', '/az-900/practice/'], ['Study plan', '/az-900/study-plan/'], ['Cheat sheet', '/az-900/cheat-sheet/'], ['Exam day guide', '/az-900/exam-day/'],
   ['Revision flashcards', '/az-900/revision/'], ['Interview questions', '/az-900/interview/'], ['Glossary', '/az-900/glossary/'],
   ['Play & Learn games', '/az-900/games/'], ['Daily Challenge', '/az-900/games/daily/'], ['Embed simulations', '/embed/'], ['Install the app (offline)', '/app/'],

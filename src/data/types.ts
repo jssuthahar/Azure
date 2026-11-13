@@ -33,3 +33,15 @@ export interface ExamFacts {
   durationMinutes: number;
   practiceAssessmentUrl: string;
 }
+
+/** Course details page copy (src/data/<exam>/course.ts). */
+export interface CourseInfo {
+  title: string;
+  subtitle: string;
+  intro: string[];
+  audience: { icon: string; title: string; text: string }[];
+  outcomes: string[];
+  requirements: string[];
+  roadmap: { title: string; text: string }[];
+  faq: { q: string; a: string }[];
+}

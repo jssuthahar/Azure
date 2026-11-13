@@ -1,0 +1,76 @@
+---
+/** Certification catalogue: every Microsoft exam we teach or plan to, grouped by level. */
+import PublicLayout from '../layouts/PublicLayout.astro';
+import CertCard from '../components/course/CertCard.astro';
+import { CERTIFICATIONS } from '../data/certifications';
+import { liveExams } from '../data/exams';
+import { getNav, getQuestionBank } from '../lib/learn';
+import { SITE } from '../config';
+
+const counts: Record<string, { lessons: number; questions: number }> = {};
+for (const e of liveExams()) counts[e.slug] = { lessons: (await getNav(e.slug)).filter((t) => t.published).length, questions: (await getQuestionBank(e.slug)).length };
+const LEVELS = [
+  { id: 'Fundamentals', label: 'Fundamentals', note: 'Beginner. No experience needed: start here.' },
+  { id: 'Associate', label: 'Associate', note: 'Intermediate. For people who build or run Azure workloads.' },
+  { id: 'Expert', label: 'Expert', note: 'Advanced. Design and DevOps at scale.' },
+] as const;
+const live = CERTIFICATIONS.filter((c) => c.status === 'active');
+
+const title = 'Microsoft Azure Certification Courses, Free | MSDEVBUILD';
+const description = `Free Microsoft certification courses by level: ${live.map((c) => c.code).join(', ')} available now, with Associate and Expert courses such as AZ-104 and AZ-305 on the way.`;
+const crumbs = [{ name: 'Home', url: '/' }, { name: 'Certifications', url: '/certifications/' }];
+const schema = [{
+  '@type': 'ItemList',
+  name: 'MSDEVBUILD certification courses',
+  itemListElement: live.map((c, i) => ({ '@type': 'ListItem', position: i + 1, url: `${SITE.url}/${c.slug}/`, name: `${c.code}: ${c.name}` })),
+}];
+---
+<PublicLayout title={title} description={description} breadcrumbs={crumbs} schema={schema}>
+  <section class="ct-hero">
+    <div class="mx-auto max-w-6xl px-4 py-12 sm:px-6">
+      <nav aria-label="Breadcrumb" class="text-sm text-[#c9d6e6]"><a href="/" class="font-semibold text-[#8fcbf7] hover:underline">Home</a> › <span>Certifications</span></nav>
+      <h1 class="mt-4 text-4xl font-extrabold tracking-tight sm:text-5xl">Microsoft certification courses</h1>
+      <p class="mt-3 max-w-2xl text-lg text-[#e3ebf5]">Free, beginner-friendly courses with simulations, labs and mock exams. Choose a level, open a course and see everything it covers before you start.</p>
+      <div class="ct-filter mt-6" role="group" aria-label="Filter by level">
+        <button type="button" class="ct-f" aria-pressed="true" data-level="">All levels</button>
+        {LEVELS.map((l) => <button type="button" class="ct-f" aria-pressed="false" data-level={l.id}>{l.label}</button>)}
+      </div>
+    </div>
+  </section>
+
+  <div class="mx-auto max-w-6xl px-4 py-10 sm:px-6">
+    {LEVELS.map((l) => {
+      const list = CERTIFICATIONS.filter((c) => c.level === l.id);
+      return list.length > 0 && (
+        <section class="ct-level mt-10 first:mt-0" data-level-sec={l.id} aria-labelledby={`lv-${l.id}`}>
+          <h2 id={`lv-${l.id}`} class="text-2xl font-bold">{l.label}</h2>
+          <p class="mt-1 text-muted">{l.note}</p>
+          <ul class="mt-5 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
+            {list.map((c) => <li id={c.slug} class="scroll-mt-32"><CertCard cert={c} lessons={counts[c.slug]?.lessons} questions={counts[c.slug]?.questions} /></li>)}
+          </ul>
+        </section>
+      );
+    })}
+    <div class="callout callout-note mt-12">
+      <p class="callout-title">Why these exams, and why not AZ-204?</p>
+      <p>Microsoft retires and renames exams often. AZ-204 (Azure Developer Associate) retired on 31 July 2026 and AI-200 replaced it, so that's the developer course we plan. We check every exam on Microsoft Learn before a course goes live, and a course only opens once its lessons, questions and mock exam are ready.</p>
+    </div>
+  </div>
+</PublicLayout>
+
+<style>
+  .ct-hero { color: #fff; background: radial-gradient(50rem 26rem at 90% -20%, rgb(0 120 212 / .55), transparent 70%), #101c2e; }
+  .ct-filter { display: flex; flex-wrap: wrap; gap: .5rem; }
+  .ct-f { min-height: 40px; padding: 0 1rem; border-radius: 999px; border: 1px solid rgb(255 255 255 / .35); color: #fff; font-weight: 600; font-size: .92rem; }
+  .ct-f:hover { border-color: #ffd75e; }
+  .ct-f[aria-pressed='true'] { background: #ffd75e; border-color: #ffd75e; color: #0b1020; }
+</style>
+
+<script>
+  const btns = [...document.querySelectorAll<HTMLButtonElement>('.ct-f')];
+  btns.forEach((b) => b.addEventListener('click', () => {
+    btns.forEach((x) => x.setAttribute('aria-pressed', String(x === b)));
+    const lv = b.dataset.level;
+    document.querySelectorAll<HTMLElement>('[data-level-sec]').forEach((s) => (s.hidden = Boolean(lv) && s.dataset.levelSec !== lv));
+  }));
+</script>

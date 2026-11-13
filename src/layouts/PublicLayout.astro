@@ -1,0 +1,9 @@
+---
+/**
+ * Discovery pages (home, certification catalogue, about): the public menus
+ * Home · Certifications · About · My Account and the full site footer.
+ */
+import Base from './Base.astro';
+type Props = Omit<Parameters<typeof Base>[0], 'chrome'>;
+---
+<Base {...Astro.props} chrome="public"><slot /></Base>

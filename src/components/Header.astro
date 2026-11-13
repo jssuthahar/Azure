@@ -2,54 +2,65 @@
 import { getNav } from '../lib/learn';
 import CurrencySelect from './CurrencySelect.astro';
 import { SITE } from '../config';
+import { examFromPath } from '../data/exams';
+import CertIcon from './course/CertIcon.astro';
 
+interface Props {
+  /** 'public' = discovery menus (home, catalogue, about); 'learn' = only the current exam's learning menus. */
+  mode?: 'public' | 'learn';
+}
+const { mode = 'public' } = Astro.props;
 const path = Astro.url.pathname;
-const nav = await getNav();
+const exam = examFromPath(path);
+const x = `/${exam.slug}`;
+const nav = await getNav(exam.slug);
 const published = nav.filter((t) => t.published);
 
 /** Top bar: a few grouped menus instead of one long row of links. */
 interface Item { label: string; href: string; desc: string; icon: string }
 interface Group { label: string; icon: string; items: Item[] }
-const GROUPS: (Group | Item)[] = [
+const PUBLIC: (Group | Item)[] = [
   { label: 'Home', href: '/', desc: '', icon: '🏠' },
-  { label: 'Learn', icon: '📘', items: [
-    { icon: '🗺️', label: 'AZ-900 course', href: '/az-900/', desc: 'All lessons, in exam order' },
-    { icon: '☁️', label: 'Cloud Concepts', href: '/az-900/cloud-concepts/', desc: 'Domain 1 · what the cloud is' },
-    { icon: '🏗️', label: 'Architecture & Services', href: '/az-900/azure-architecture-and-services/', desc: 'Domain 2 · regions, compute, network, storage, identity' },
-    { icon: '🧭', label: 'Management & Governance', href: '/az-900/management-and-governance/', desc: 'Domain 3 · cost, policy, tools, monitoring' },
+  { label: 'Certifications', href: '/certifications/', desc: '', icon: '🎓' },
+  { label: 'About', href: '/about/', desc: '', icon: 'ℹ️' },
+  { label: 'My Account', href: '/progress/', desc: '', icon: '👤' },
+];
+// Learning environment: only this exam. Order follows the learner's journey.
+const LEARN: (Group | Item)[] = [
+  { label: 'Overview', href: `${x}/learn/`, desc: '', icon: '🧭' },
+  { label: 'Lessons', icon: '📘', items: [
+    { icon: '🗂️', label: 'All lessons', href: `${x}/learn/#curriculum`, desc: `${published.length} lessons in exam order, with your progress` },
+    ...exam.modules.map((m) => ({ icon: String(m.domain), label: m.shortTitle, href: `${x}/${m.slug}/`, desc: `Domain ${m.domain} · ${m.weight} of the exam` })),
   ] },
-  { label: 'Simulate & Practice', icon: '⚡', items: [
-    { icon: '⚡', label: 'Azure Simulator', href: '/simulator/', desc: '“What happens if…?” in 3D: outages, spikes, bill shock' },
-    { icon: '🧪', label: 'Practice Labs', href: '/az-900/labs/', desc: 'Click around a simulated Azure portal + Cloud Shell' },
+  { label: 'Practice', icon: '🧠', items: [
+    { icon: '🧠', label: 'Smart Practice', href: `${x}/practice/`, desc: 'Readiness score, mistakes come back, weak topics' },
+    { icon: '📅', label: 'Study Plan', href: `${x}/study-plan/`, desc: 'Day-by-day plan to your exam date, with reminders' },
+    { icon: '🃏', label: 'Revision', href: `${x}/revision/`, desc: 'Flashcards and quick notes' },
+    { icon: '🎮', label: 'Play & Learn', href: `${x}/games/`, desc: 'Sort It, Match, Lightning Round, Who Am I?' },
+    { icon: '🔥', label: 'Daily Challenge', href: `${x}/games/daily/`, desc: '5 questions a day, keep your streak' },
+  ] },
+  { label: 'Practice Labs', href: `${x}/labs/`, desc: '', icon: '🧪' },
+  { label: 'Simulations', href: '/simulator/', desc: '', icon: '⚡' },
+  { label: '3D Explorer', href: `${x}/3d-explorer/`, desc: '', icon: '🧊' },
+  { label: 'Mock Exams', href: `${x}/mock-exam/`, desc: '', icon: '⏱️' },
+  { label: 'Interview Prep', href: `${x}/interview/`, desc: '', icon: '💼' },
+  { label: 'Resources', icon: '📚', items: [
+    { icon: '📝', label: 'Cheat Sheet', href: `${x}/cheat-sheet/`, desc: 'Printable one-pagers per domain, with audio' },
+    { icon: '✅', label: 'Exam Day Guide', href: `${x}/exam-day/`, desc: 'Booking, free vouchers, check-in, retakes' },
+    { icon: '⚖️', label: 'Compare services', href: `${x}/compare/`, desc: 'Blob vs Files, VM vs Functions, Azure vs AWS…' },
+    { icon: '📚', label: 'Service reference', href: `${x}/services/`, desc: 'Every Azure service in 60 seconds' },
+    { icon: '📖', label: 'Glossary', href: `${x}/glossary/`, desc: 'Azure terms in one line' },
+    { icon: '🏆', label: 'Free Certificate', href: '/certificate/', desc: `Pass the mock exam, share your ${exam.code} Ready badge` },
     { icon: '</>', label: 'Embed simulations', href: '/embed/', desc: 'For trainers and bloggers' },
   ] },
-  { label: 'Exam & Certificate', icon: '🎓', items: [
-    { icon: '📝', label: 'Mock Exam', href: '/az-900/mock-exam/', desc: 'Timed, exam-style practice test' },
-    { icon: '🏆', label: 'Free Certificate', href: '/certificate/', desc: 'Pass the mock exam, share your AZ-900 Ready badge' },
-    { icon: '🧠', label: 'Smart Practice', href: '/az-900/practice/', desc: 'Readiness score, mistakes come back, weak topics' },
-    { icon: '📅', label: 'Study Plan', href: '/az-900/study-plan/', desc: 'Day-by-day plan to your exam date, with reminders' },
-    { icon: '🃏', label: 'Revision', href: '/az-900/revision/', desc: 'Flashcards and quick notes' },
-    { icon: '📝', label: 'Cheat Sheet', href: '/az-900/cheat-sheet/', desc: 'Printable one-pagers per domain, with audio' },
-    { icon: '✅', label: 'Exam Day Guide', href: '/az-900/exam-day/', desc: 'Booking, free vouchers, check-in, retakes' },
-    { icon: '💼', label: 'Interview Questions', href: '/az-900/interview/', desc: 'Beginner to architect level' },
-  ] },
-  { label: 'Reference', icon: '📚', items: [
-    { icon: '⚖️', label: 'Compare services', href: '/az-900/compare/', desc: 'Blob vs Files, VM vs Functions, Azure vs AWS…' },
-    { icon: '📚', label: 'Service reference', href: '/az-900/services/', desc: 'Every Azure service in 60 seconds' },
-    { icon: '📖', label: 'Glossary', href: '/az-900/glossary/', desc: 'Azure terms in one line' },
-  ] },
-  { label: 'Play', icon: '🎮', items: [
-    { icon: '🎮', label: 'Play & Learn', href: '/az-900/games/', desc: 'Sort It, Match, Lightning Round, Who Am I?' },
-    { icon: '🔥', label: 'Daily Challenge', href: '/az-900/games/daily/', desc: '5 questions a day, keep your streak' },
-  ] },
-  { label: 'My Progress', href: '/progress/', desc: '', icon: '📈' },
 ];
+const GROUPS = mode === 'learn' ? LEARN : PUBLIC;
 const allLinks = GROUPS.flatMap((g) => ('items' in g ? g.items : [g]));
-const active = allLinks.filter((t) => (t.href === '/' ? path === '/' : path.startsWith(t.href))).sort((a, b) => b.href.length - a.href.length)[0]?.href;
+const active = allLinks.filter((t) => !t.href.includes('#') && (t.href === '/' ? path === '/' : path.startsWith(t.href))).sort((a, b) => b.href.length - a.href.length)[0]?.href;
 const groupActive = (g: Group) => g.items.some((i) => i.href === active);
 ---
 
-<header class="site-header sticky top-0 z-50 border-b border-default bg-[var(--bg)]">
+<header class="site-header sticky top-0 z-50 border-b border-default bg-[var(--bg)]" data-mode={mode}>
   <div class="hdr-row flex h-14 items-center gap-3 px-4 sm:px-6">
     <button id="app-back" type="button" hidden class="-ml-2 grid size-10 shrink-0 place-items-center rounded-md text-2xl leading-none hover:bg-subtle" aria-label="Back">‹</button>
     <a href="/" class="flex shrink-0 items-center gap-2.5" aria-label={`${SITE.brandLine}: home`}>
@@ -66,13 +77,15 @@ const groupActive = (g: Group) => g.items.some((i) => i.href === active);
       <svg class="pointer-events-none absolute top-2.5 left-3.5 size-4 text-muted" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7" /><path d="m20 20-3.5-3.5" /></svg>
       <datalist id="topic-list">
         {published.map((t) => <option value={t.title} data-url={t.url} />)}
-        <option value="AZ-900 mock exam" data-url="/az-900/mock-exam/" />
-        <option value="Interview questions" data-url="/az-900/interview/" />
-        <option value="Revision flashcards" data-url="/az-900/revision/" />
-        <option value="Smart practice and readiness score" data-url="/az-900/practice/" />
-        <option value="Study plan" data-url="/az-900/study-plan/" />
-        <option value="Cheat sheet" data-url="/az-900/cheat-sheet/" />
-        <option value="Exam day guide" data-url="/az-900/exam-day/" />
+        <option value={`${exam.code} mock exam`} data-url={`${x}/mock-exam/`} />
+        <option value="Interview questions" data-url={`${x}/interview/`} />
+        <option value="Revision flashcards" data-url={`${x}/revision/`} />
+        <option value="Smart practice and readiness score" data-url={`${x}/practice/`} />
+        <option value="Study plan" data-url={`${x}/study-plan/`} />
+        <option value="Cheat sheet" data-url={`${x}/cheat-sheet/`} />
+        <option value="Exam day guide" data-url={`${x}/exam-day/`} />
+        <option value="3D explorer" data-url={`${x}/3d-explorer/`} />
+        <option value="Learning dashboard" data-url={`${x}/learn/`} />
       </datalist>
     </form>
 
@@ -88,7 +101,6 @@ const groupActive = (g: Group) => g.items.some((i) => i.href === active);
         <span class="install-label">Install<span class="hidden lg:inline"> app</span></span>
       </button>
       <CurrencySelect compact class="mr-1" />
-      <a href="/about/" class="hidden rounded-md px-3 py-2 text-sm text-muted hover:bg-subtle sm:block">About</a>
       <button id="theme-toggle" type="button" class="rounded-md p-2 transition-colors hover:bg-subtle" aria-label="Switch colour theme">
         <svg class="size-5 dark:hidden" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8Z" /></svg>
         <svg class="hidden size-5 dark:block" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="4" /><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4" /></svg>
@@ -97,12 +109,22 @@ const groupActive = (g: Group) => g.items.some((i) => i.href === active);
   </div>
 
   <div class="topbar-wrap relative">
-  <nav class="topbar overflow-x-auto" aria-label="Main">
+  <nav class="topbar overflow-x-auto" aria-label={mode === 'learn' ? `${exam.code} learning` : 'Main'}>
     <ul class="flex h-11 min-w-max items-stretch px-2 text-[0.92rem] sm:px-4">
+      {mode === 'learn' && (
+        <li class="tb-course-li flex items-center">
+          <a href={`${x}/`} class="tb-course" title={`${exam.code} course details`}>
+            <span class="tb-course-badge" aria-hidden="true"><CertIcon icon={exam.info.icon} size={18} /></span>
+            <span class="tb-course-code">{exam.code}</span>
+            <span class="tb-course-name">{exam.name.replace(/^Microsoft /, '')}</span>
+            <span class="sr-only"> course details</span>
+          </a>
+        </li>
+      )}
       {GROUPS.map((g, gi) => 'items' in g ? (
         <li class="flex">
           <button type="button" class="tb-group flex items-center gap-1.5 px-3.5 whitespace-nowrap transition-colors" aria-expanded="false" aria-controls={`tb-menu-${gi}`} data-active={groupActive(g) ? '' : undefined}>
-            <span aria-hidden="true">{g.icon}</span>{g.label}<span class="tb-caret" aria-hidden="true">▾</span>
+            <span class="tb-gi" aria-hidden="true">{g.icon}</span>{g.label}<span class="tb-caret" aria-hidden="true">▾</span>
           </button>
           <div id={`tb-menu-${gi}`} class="tb-menu" hidden>
             {g.items.map((i) => (
@@ -115,9 +137,16 @@ const groupActive = (g: Group) => g.items.some((i) => i.href === active);
         </li>
       ) : (
         <li class="flex">
-          <a href={g.href} aria-current={active === g.href ? 'page' : undefined} class="flex items-center gap-1.5 px-3.5 whitespace-nowrap transition-colors"><span aria-hidden="true">{g.icon}</span>{g.label}</a>
+          <a href={g.href} aria-current={active === g.href ? 'page' : undefined} class="flex items-center gap-1.5 px-3.5 whitespace-nowrap transition-colors"><span class="tb-gi" aria-hidden="true">{g.icon}</span>{g.label}</a>
         </li>
       ))}
+      {mode === 'learn' && (
+        <li class="tb-prog-li flex items-center">
+          <a href={`${x}/learn/`} class="tb-prog" data-tb-prog={exam.slug} data-total={published.length} title="Your course progress">
+            <span class="tb-ring" style="--p:0" aria-hidden="true"></span><span><span data-tb-pct>0%</span> complete</span>
+          </a>
+        </li>
+      )}
     </ul>
   </nav>
   <span class="topbar-more" aria-hidden="true">›</span>
@@ -131,6 +160,40 @@ const groupActive = (g: Group) => g.items.some((i) => i.href === active);
     .site-header.search-open #topic-search input { padding-top: .7rem; padding-bottom: .7rem; font-size: 1rem; box-shadow: 0 10px 30px rgb(0 30 60 / .2); background: var(--bg); }
   }
   .install-btn[hidden] { display: none; }
+  /* Learning environment: a light course bar (badge · text tabs with underline · progress) */
+  .site-header[data-mode='learn'] .topbar { background: var(--bg); color: var(--text); border-top: 1px solid var(--border); }
+  .site-header[data-mode='learn'] .topbar ul { gap: .1rem; }
+  .site-header[data-mode='learn'] .tb-gi { display: none; }
+  .site-header[data-mode='learn'] .topbar li > a:not(.tb-course):not(.tb-prog),
+  .site-header[data-mode='learn'] .topbar .tb-group { position: relative; padding-inline: .8rem; color: var(--text-muted); font-weight: 600; background: none; }
+  .site-header[data-mode='learn'] .topbar li > a:not(.tb-course):not(.tb-prog):hover,
+  .site-header[data-mode='learn'] .topbar .tb-group:hover { color: var(--text); background: none; }
+  .site-header[data-mode='learn'] .topbar .tb-group[aria-expanded='true'] { color: var(--text); background: var(--pastel-grey); }
+  .site-header[data-mode='learn'] .topbar a[aria-current='page'],
+  .site-header[data-mode='learn'] .topbar .tb-group[data-active] { color: var(--accent-deep); background: none; }
+  .site-header[data-mode='learn'] .topbar a[aria-current='page']::after,
+  .site-header[data-mode='learn'] .topbar .tb-group[data-active]::after { content: ''; position: absolute; left: .8rem; right: .8rem; bottom: 0; height: 3px; border-radius: 3px 3px 0 0; background: var(--accent); }
+  .site-header[data-mode='learn'] .topbar-more { color: var(--text); background: linear-gradient(90deg, transparent, var(--bg) 65%); }
+  .tb-course { display: flex; align-items: center; gap: .55rem; height: 100%; padding: 0 1rem 0 .25rem; margin-right: .35rem; border-right: 1px solid var(--border); color: var(--text) !important; white-space: nowrap; }
+  .tb-course:hover .tb-course-code { color: var(--accent-deep); }
+  .tb-course-badge { display: grid; place-items: center; width: 28px; height: 28px; border-radius: 8px; color: #fff; background: linear-gradient(135deg, #0078d4, #3a2f9e); }
+  .tb-course-code { font-weight: 800; letter-spacing: -.01em; }
+  .tb-course-name { font-size: .82rem; color: var(--text-muted); }
+  @media (max-width: 1439px) { .tb-course-name { display: none; } }
+  /* the course badge stays pinned at the left while the tabs scroll */
+  .tb-course-li { position: sticky; left: 0; z-index: 1; background: var(--bg); margin-left: -.5rem; padding-left: .5rem; }
+  @media (max-width: 639px) { .tb-course-code { display: none; } .tb-course { padding-right: .7rem; margin-right: .15rem; } }
+  .tb-prog-li { margin-left: auto; padding-left: 1rem; }
+  .tb-prog { display: flex; align-items: center; gap: .5rem; padding: .3rem .75rem; border-radius: 999px; border: 1px solid var(--border); font-size: .8rem; font-weight: 600; color: var(--text-muted) !important; white-space: nowrap; }
+  .tb-prog:hover { border-color: var(--accent); color: var(--text) !important; }
+  .tb-ring { width: 20px; height: 20px; border-radius: 999px; background: conic-gradient(var(--accent) calc(var(--p) * 1%), var(--border) 0); -webkit-mask: radial-gradient(circle, transparent 5.5px, #000 6px); mask: radial-gradient(circle, transparent 5.5px, #000 6px); }
+  @media (max-width: 1279px) { .tb-prog-li { display: none; } }
+  .site-header[data-mode='public'] .topbar ul { justify-content: center; }
+  @media (max-width: 479px) {
+    .site-header[data-mode='public'] .topbar ul { justify-content: flex-start; padding-inline: .25rem; }
+    .site-header[data-mode='public'] .topbar a { padding-inline: .7rem; }
+    .site-header[data-mode='public'] .topbar a > span[aria-hidden] { display: none; }
+  }
   .install-btn, #xp-chip { min-height: 36px; min-width: 36px; justify-content: center; }
   /* Small phones: the install button shows its icon only */
   @media (max-width: 400px) {
@@ -184,6 +247,18 @@ const groupActive = (g: Group) => g.items.some((i) => i.href === active);
   };
   paintXp();
   window.addEventListener('progress-change', paintXp);
+  // Learning bar: course progress ring (lesson keys start with the exam slug).
+  const prog = document.querySelector<HTMLElement>('[data-tb-prog]');
+  const paintProg = () => {
+    if (!prog) return;
+    const total = Number(prog.dataset.total) || 1;
+    const done = Object.keys(load().done).filter((k) => k.startsWith(`${prog.dataset.tbProg}/`)).length;
+    const pct = Math.min(100, Math.round((done / total) * 100));
+    prog.querySelector<HTMLElement>('.tb-ring')!.style.setProperty('--p', String(pct));
+    prog.querySelector('[data-tb-pct]')!.textContent = `${pct}%`;
+  };
+  paintProg();
+  window.addEventListener('progress-change', paintProg);
 
   // Phones: search toggle
   const header = document.querySelector<HTMLElement>('.site-header');

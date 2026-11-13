@@ -1,0 +1,71 @@
+---
+/**
+ * Learning environment home for one exam: learner profile, course progress,
+ * Continue, the learning tools and the full curriculum. Reached from the
+ * course details page's Start learning button.
+ */
+import LearningLayout from '../../layouts/LearningLayout.astro';
+import LearnerCard from '../../components/course/LearnerCard.astro';
+import Curriculum from '../../components/course/Curriculum.astro';
+import { getNav } from '../../lib/learn';
+import { SITE } from '../../config';
+import { getExam, examStaticPaths } from '../../data/exams';
+
+export function getStaticPaths() {
+  return examStaticPaths();
+}
+const exam = getExam(Astro.params.cert);
+const x = `/${exam.slug}`;
+const nav = await getNav(exam.slug);
+const published = nav.filter((t) => t.published);
+
+const tools: [string, string, string, string][] = [
+  ['🧠', 'Practice', `${x}/practice/`, 'Readiness score and spaced repetition'],
+  ['🧪', 'Practice Labs', `${x}/labs/`, 'Portal and Cloud Shell tasks'],
+  ['⚡', 'Simulations', '/simulator/', 'What happens if a region goes down?'],
+  ['🧊', '3D Explorer', `${x}/3d-explorer/`, 'Datacenters, zones and regions in 3D'],
+  ['⏱️', 'Mock Exams', `${x}/mock-exam/`, 'Timed, weighted like the real exam'],
+  ['💼', 'Interview Prep', `${x}/interview/`, 'Model answers and follow-ups'],
+  ['📅', 'Study Plan', `${x}/study-plan/`, 'A schedule to your exam date'],
+  ['📝', 'Resources', `${x}/cheat-sheet/`, 'Cheat sheet, flashcards, glossary'],
+];
+const title = `${exam.code} Learning Dashboard: Lessons, Progress & Practice`;
+const description = `Your ${exam.code} learning space: all ${published.length} lessons in exam order, your progress and streak, and quick links to labs, 3D simulations and mock exams.`;
+const crumbs = [
+  { name: 'Home', url: '/' },
+  { name: exam.code, url: `${x}/` },
+  { name: 'Learn', url: `${x}/learn/` },
+];
+const schema = [{ '@type': 'WebPage', '@id': `${SITE.url}${x}/learn/#page`, name: title, description, url: `${SITE.url}${x}/learn/`, isPartOf: { '@id': `${SITE.url}${x}/#course` } }];
+---
+<LearningLayout title={title} description={description} breadcrumbs={crumbs} schema={schema} nav={nav}>
+  <div class="mx-auto max-w-[1000px]">
+    <nav aria-label="Breadcrumb" class="text-sm text-muted"><a class="hover:underline" href="/">Home</a> › <a class="hover:underline" href={`${x}/`}>{exam.code}</a> › <span class="text-[var(--text)]">Learn</span></nav>
+    <h1 class="mt-3 text-[2rem] leading-tight font-bold tracking-tight sm:text-[2.4rem]">{exam.code} learning dashboard</h1>
+    <p class="mt-2 text-muted">Pick up where you left off, or open any lesson below. Everything stays on this device.</p>
+
+    <div class="mt-6"><LearnerCard exam={exam} nav={nav} /></div>
+
+    <section class="mt-10" aria-labelledby="tools-h">
+      <h2 id="tools-h" class="text-xl font-bold">Learning tools</h2>
+      <ul class="ld-tools mt-4">
+        {tools.map(([ic, t, href, d]) => (
+          <li><a href={href} class="ld-tool"><span class="ld-ic" aria-hidden="true">{ic}</span><span class="min-w-0"><span class="block font-semibold">{t}</span><span class="block text-xs text-muted">{d}</span></span></a></li>
+        ))}
+      </ul>
+    </section>
+
+    <section id="curriculum" class="mt-10 scroll-mt-40" aria-labelledby="cur-h">
+      <h2 id="cur-h" class="text-xl font-bold">All lessons</h2>
+      <p class="mt-1 text-sm text-muted">In exam order. A green tick means the lesson is complete.</p>
+      <div class="mt-4"><Curriculum exam={exam} /></div>
+    </section>
+  </div>
+</LearningLayout>
+
+<style>
+  .ld-tools { display: grid; gap: .75rem; grid-template-columns: repeat(auto-fill, minmax(min(100%, 13.5rem), 1fr)); }
+  .ld-tool { display: flex; align-items: center; gap: .75rem; height: 100%; min-height: 56px; border-radius: 14px; border: 1px solid var(--card-line); background: var(--card); padding: .75rem .9rem; transition: border-color .2s; }
+  .ld-tool:hover, .ld-tool:focus-visible { border-color: var(--accent); }
+  .ld-ic { display: grid; place-items: center; flex: none; width: 2.5rem; height: 2.5rem; border-radius: 12px; background: var(--pastel-blue); font-size: 1.25rem; }
+</style>

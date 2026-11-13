@@ -2,9 +2,26 @@
 import { SITE } from '../config';
 import SocialLinks from './SocialLinks.astro';
 import { examFromPath } from '../data/exams';
+interface Props { /** Learning environment: one quiet row instead of the full site footer. */ compact?: boolean }
+const { compact = false } = Astro.props;
 const exam = examFromPath(Astro.url.pathname);
 const year = new Date().getFullYear();
 ---
+{compact ? (
+<footer class="learn-foot mt-16 border-t border-default bg-[var(--bg)]">
+  <div class="mx-auto flex max-w-7xl flex-col gap-3 px-4 py-6 text-sm text-muted sm:px-6 lg:flex-row lg:items-center lg:justify-between">
+    <p class="font-semibold text-[var(--text)]">{SITE.brandLine}</p>
+    <ul class="flex flex-wrap gap-x-5 gap-y-1">
+      <li><a class="hover:text-[var(--accent-deep)]" href={`/${exam.slug}/`}>{exam.code} course details</a></li>
+      <li><a class="hover:text-[var(--accent-deep)]" href="/">All certifications</a></li>
+      <li><a class="hover:text-[var(--accent-deep)]" href="/progress/">My progress</a></li>
+      <li><a class="hover:text-[var(--accent-deep)]" href="/privacy/">Privacy</a></li>
+      <li><a class="hover:text-[var(--accent-deep)]" href="/terms/">Terms</a></li>
+    </ul>
+  </div>
+  <p class="border-t border-default px-4 py-4 text-center text-xs text-muted">© {year} {SITE.org}. Independent learning resource, not affiliated with or endorsed by Microsoft. Practice questions are original, not actual exam questions.</p>
+</footer>
+) : (
 
 <footer class="mt-20 border-t border-default bg-[var(--bg)]/80">
   <div class="mx-auto grid max-w-7xl gap-10 px-4 py-12 sm:grid-cols-2 sm:px-6 lg:grid-cols-[1.4fr_1fr_1fr_1fr_1fr]">
@@ -23,7 +40,8 @@ const year = new Date().getFullYear();
     <div>
       <p class="text-sm font-semibold">Azure Tutorials</p>
       <ul class="mt-3 space-y-2 text-sm text-muted">
-        <li><a class="hover:text-[var(--accent-deep)]" href={`/${exam.slug}/`}>{exam.code} Azure Fundamentals</a></li>
+        <li><a class="hover:text-[var(--accent-deep)]" href="/certifications/">All certifications</a></li>
+        <li><a class="hover:text-[var(--accent-deep)]" href={`/${exam.slug}/`}>{exam.code} {exam.name.replace(/^Microsoft /, '')}</a></li>
         {exam.modules.map((m) => <li><a class="hover:text-[var(--accent-deep)]" href={`/${exam.slug}/#${m.slug}`}>{m.shortTitle}</a></li>)}
         <li><a class="hover:text-[var(--accent-deep)]" href={`/${exam.slug}/mock-exam/`}>{exam.code} mock exam</a></li>
         <li><a class="hover:text-[var(--accent-deep)]" href={`/${exam.slug}/interview/`}>{exam.code} interview questions</a></li>
@@ -65,3 +83,4 @@ const year = new Date().getFullYear();
   </div>
   <div class="border-t border-default py-5 text-center text-xs text-muted">© {year} {SITE.org}. Microsoft, Azure and related marks are trademarks of the Microsoft group of companies.</div>
 </footer>
+)}

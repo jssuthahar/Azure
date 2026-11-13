@@ -9,7 +9,10 @@
  *   4. add lessons in src/content/tutorials/<exam>/ and questions in src/content/questions/<exam>/
  */
 import { CERTIFICATIONS, type Certification } from './certifications';
-import type { SyllabusModule, ExamFacts } from './types';
+import type { SyllabusModule, ExamFacts, CourseInfo } from './types';
+import { COURSE as az900Course } from './az-900/course';
+import { SIMS3D as az900Sims3d, type Sim3D } from './az-900/sims3d';
+import { EMBED_LESSON_3D as az900Embed3d } from './az-900/embeds';
 import * as az900 from './az-900/syllabus';
 import { LESSON_SIMS as az900Sims, type LessonSims } from './az-900/lesson-sims';
 import { COMPARISONS as az900Compare, type Comparison } from './az-900/compare';
@@ -47,6 +50,11 @@ export interface Exam {
   games: { sortSets: SortSet[]; riddles: Riddle[] };
   /** Interactive lesson activities, keyed by topic slug (see src/data/activities.ts). */
   activities: Record<string, LessonActivities>;
+  /** Course details page copy (audience, outcomes, roadmap, FAQ). */
+  course: CourseInfo;
+  /** 3D scenes, and the lesson each one links back to (3D Explorer). */
+  sims3d: Record<string, Sim3D>;
+  lesson3d: Record<string, { title: string; url: string } | undefined>;
 }
 
 const info = (slug: string) => {
@@ -76,6 +84,9 @@ const EXAMS: Record<string, Exam> = {
     problems: az900Problems,
     games: { sortSets: az900Sort, riddles: az900Riddles },
     activities: az900Activities,
+    course: az900Course,
+    sims3d: az900Sims3d,
+    lesson3d: az900Embed3d,
   },
 };
 

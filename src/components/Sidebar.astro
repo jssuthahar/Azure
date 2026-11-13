@@ -25,7 +25,7 @@ const practice = [
   { icon: '🎤', label: 'Interview questions', href: `/${exam.slug}/interview/` },
 ];
 ---
-<nav class="sb" aria-label="AZ-900 lessons" data-current-module={current?.module.slug ?? ''}>
+<nav class="sb" aria-label={`${exam.code} lessons`} data-current-module={current?.module.slug ?? ''}>
   <!-- full menu -->
   <div class="sb-full">
     <div class="sb-top">
@@ -34,6 +34,11 @@ const practice = [
       <button type="button" class="sb-icon-btn sb-hide-btn" data-sb-rail aria-label="Hide lesson menu" title="Hide menu (more room to read)">«</button>
       <button type="button" class="sb-icon-btn sb-close-btn" data-menu-close aria-label="Close menu">✕</button>
     </div>
+    <a href="/progress/" class="sb-learner" title="My progress, badges and certificate">
+      <span class="sb-learner-ic" aria-hidden="true" data-sb-lv-ic>🌱</span>
+      <span class="sb-learner-txt"><span class="sb-learner-name" data-sb-lv>Cloud Seed</span><span class="sb-learner-xp"><span data-sb-xp>0</span> XP · 🔥 <span data-sb-streak>0</span></span></span>
+      <span class="sr-only">: open my progress</span>
+    </a>
     <div class="sb-overall">
       <div class="sb-overall-row">
         <span>{position ? <>Lesson <strong>{position}</strong> of {published.length}</> : <>{published.length} lessons</>}</span>
@@ -121,6 +126,12 @@ const practice = [
   .sb-icon-btn:hover { color: var(--accent); border-color: var(--accent); }
   .sb-hide-btn { display: none; }
   @media (min-width: 1024px) { .sb-hide-btn { display: grid; } }
+  .sb-learner { display: flex; align-items: center; gap: .6rem; margin: 0 .75rem .35rem; padding: .45rem .6rem; min-height: 44px; border-radius: 10px; background: var(--card); border: 1px solid var(--card-line); color: var(--text); }
+  .sb-learner:hover { border-color: var(--accent); }
+  .sb-learner-ic { display: grid; place-items: center; flex: none; width: 1.9rem; height: 1.9rem; border-radius: 999px; background: var(--pastel-blue); font-size: 1rem; }
+  .sb-learner-txt { min-width: 0; line-height: 1.2; }
+  .sb-learner-name { display: block; font-size: .85rem; font-weight: 700; }
+  .sb-learner-xp { display: block; font-size: .75rem; color: var(--text-muted); }
   .sb-overall { padding: .2rem 1rem .6rem; font-size: .82rem; color: var(--text-muted); }
   .sb-overall-row { display: flex; justify-content: space-between; align-items: center; }
   .sb-pct { font-weight: 700; color: var(--accent); }
@@ -181,7 +192,7 @@ const practice = [
 </style>
 
 <script>
-  import { load } from '../lib/progress';
+  import { load, levelFor, streak } from '../lib/progress';
   const KEY = 'msdb-nav-open';
   const nav = document.querySelector<HTMLElement>('.sb');
   if (nav) {
@@ -259,6 +270,10 @@ const practice = [
       const pct = total ? Math.round((done / total) * 100) : 0;
       document.querySelectorAll('[data-progress-total]').forEach((el) => (el.textContent = `${pct}%`));
       const bar = nav.querySelector<HTMLElement>('[data-progress-bar]'); if (bar) bar.style.width = `${pct}%`;
+      // learner profile row
+      const lv = levelFor(st.xp);
+      const set = (sel: string, v: string) => { const el = nav.querySelector(sel); if (el) el.textContent = v; };
+      set('[data-sb-lv-ic]', lv.icon); set('[data-sb-lv]', lv.name); set('[data-sb-xp]', String(st.xp)); set('[data-sb-streak]', String(streak(st)));
     };
     paint();
     window.addEventListener('progress-change', paint);

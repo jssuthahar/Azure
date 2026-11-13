@@ -10,7 +10,7 @@ const DEVICES = [
   ['iPad mini', 744, 1133], ['iPad Air', 820, 1180], ['iPad Air landscape', 1180, 820],
   ['iPad Pro 13', 1032, 1376], ['iPad Pro landscape', 1376, 1032],
 ];
-const PAGES = ['/', '/az-900/', '/az-900/cloud-concepts/', '/az-900/cloud-concepts/iaas/', '/az-900/azure-architecture-and-services/storage-accounts/',
+const PAGES = ['/', '/certifications/', '/az-900/', '/az-900/learn/', '/az-900/3d-explorer/', '/az-900/cloud-concepts/', '/az-900/cloud-concepts/iaas/', '/az-900/azure-architecture-and-services/storage-accounts/',
   '/az-900/compare/blob-vs-files-vs-disk/', '/az-900/services/', '/az-900/mock-exam/', '/az-900/labs/', '/az-900/labs/sandbox/', '/simulator/region-goes-down/',
   '/az-900/games/', '/az-900/games/sort/', '/az-900/glossary/', '/az-900/revision/', '/az-900/practice/', '/az-900/study-plan/', '/az-900/cheat-sheet/', '/az-900/exam-day/', '/az-900/interview/', '/progress/', '/certificate/', '/app/', '/sitemap/', '/embed/'];
 

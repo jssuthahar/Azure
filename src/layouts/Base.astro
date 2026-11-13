@@ -11,6 +11,7 @@ import CurrencyPrices from '../components/CurrencyPrices.astro';
 import AppInstall from '../components/AppInstall.astro';
 import { SITE, SOCIAL } from '../config';
 import { ogPages, ogImagePath } from '../lib/og-pages';
+import { liveExams } from '../data/exams';
 
 interface Crumb {
   name: string;
@@ -26,9 +27,19 @@ interface Props {
   wide?: boolean;
   /** ISO date the content was last updated (articles). */
   modified?: string;
+  /**
+   * Which site chrome to show. 'public' = discovery menus (home, catalogue, course details);
+   * 'learn' = the exam's own learning menus only. Default: worked out from the URL, so every
+   * page inside an exam (except its course details page) is part of the learning environment.
+   */
+  chrome?: 'public' | 'learn';
 }
 
 const { title, description, type = 'website', schema = [], breadcrumbs = [], noindex = false, wide = true, modified } = Astro.props;
+const path = Astro.url.pathname;
+const seg = path.split('/')[1];
+const inExam = liveExams().some((e) => e.slug === seg) && path !== `/${seg}/`;
+const chrome = Astro.props.chrome ?? (inExam || path.startsWith('/simulator/') ? 'learn' : 'public');
 const canonical = new URL(Astro.url.pathname, SITE.url).href;
 const hasCard = (await ogPages()).has(Astro.url.pathname);
 const ogImage = new URL(hasCard ? ogImagePath(Astro.url.pathname) : '/og-default.png', SITE.url).href;
@@ -145,13 +156,13 @@ const jsonLd = JSON.stringify({ '@context': 'https://schema.org', '@graph': grap
     </script>
     <script type="application/ld+json" set:html={jsonLd} />
   </head>
-  <body class="flex min-h-dvh flex-col">
+  <body class="flex min-h-dvh flex-col" data-chrome={chrome}>
     <a href="#main" class="skip-link">Skip to content</a>
-    <Header />
+    <Header mode={chrome} />
     <main id="main" class="flex-1">
       {wide ? <slot /> : <div class="mx-auto max-w-4xl px-4 py-10 sm:px-6"><slot /></div>}
     </main>
-    <Footer />
+    <Footer compact={chrome === 'learn'} />
     <XpToast />
     <SpeakButtons />
     <Reveal />

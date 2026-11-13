@@ -1,0 +1,37 @@
+---
+/**
+ * The learning environment for one exam: its own menus only (no marketing
+ * navigation), the collapsible lesson sidebar with progress, the lesson bar
+ * (position, Previous / Next, share) and a quiet footer.
+ * Pass `shell={false}` for pages that already list every lesson (the learning
+ * dashboard) or want the full width; the exam menu stays.
+ */
+import Base from './Base.astro';
+import LearnShell from '../components/LearnShell.astro';
+import type { NavTopic } from '../lib/learn';
+
+type BaseProps = Omit<Parameters<typeof Base>[0], 'chrome'>;
+interface Lesson { url: string; title: string }
+type Props = BaseProps & {
+  nav: NavTopic[];
+  currentKey?: string;
+  prev?: Lesson;
+  next?: Lesson;
+  sections?: { slug: string; text: string }[];
+  shareText?: string;
+  /** false = no lesson sidebar (pages that already list every lesson, e.g. the learning dashboard). */
+  shell?: boolean;
+};
+const { nav, currentKey, prev, next, sections, shareText, shell = true, ...base } = Astro.props;
+const hasAside = Astro.slots.has('aside');
+---
+<Base {...base} chrome="learn">
+  {shell ? (
+  <LearnShell nav={nav} currentKey={currentKey} prev={prev} next={next} sections={sections} shareText={shareText}>
+    <slot />
+    {hasAside && <Fragment slot="aside"><slot name="aside" /></Fragment>}
+  </LearnShell>
+  ) : (
+    <div class="px-4 py-6 sm:px-8 lg:py-8"><slot /></div>
+  )}
+</Base>

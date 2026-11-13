@@ -1,7 +1,6 @@
 ---
 import { getCollection, render } from 'astro:content';
-import Base from '../../../layouts/Base.astro';
-import LearnShell from '../../../components/LearnShell.astro';
+import LearningLayout from '../../../layouts/LearningLayout.astro';
 import LessonTools from '../../../components/LessonTools.astro';
 import LessonHero from '../../../components/LessonHero.astro';
 import ProblemSolution from '../../../components/ProblemSolution.astro';
@@ -134,8 +133,8 @@ const schema = [
   },
 ];
 ---
-<Base title={d.seoTitle} description={d.description} type="article" schema={schema} breadcrumbs={crumbs} modified={d.updated.toISOString()}>
-  <LearnShell nav={nav} currentKey={entry.id} prev={prev} next={next} sections={toc} shareText={shareText}>
+<LearningLayout title={d.seoTitle} description={d.description} type="article" schema={schema} breadcrumbs={crumbs} modified={d.updated.toISOString()}
+  nav={nav} currentKey={entry.id} prev={prev} next={next} sections={toc} shareText={shareText}>
     <article class="mx-auto max-w-[860px]" data-present-root>
       <nav aria-label="Breadcrumb" class="text-sm text-muted" data-slide-skip>
         <ol class="flex flex-wrap items-center gap-1.5">
@@ -269,8 +268,7 @@ const schema = [
         </div>
       )}
     </div>
-  </LearnShell>
-</Base>
+</LearningLayout>
 <script>
   import { load, setDone } from '../../../lib/progress';
   // Remember this lesson so the home page can offer "Continue where you left off".

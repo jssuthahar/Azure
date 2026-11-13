@@ -1,0 +1,104 @@
+---
+/**
+ * Learner profile + course progress, read from this browser (no account).
+ * Shows level, XP, streak, lessons done, best mock score and a Continue button
+ * that resumes the last lesson or the first one not yet done.
+ */
+import type { NavTopic } from '../../lib/learn';
+import type { Exam } from '../../data/exams';
+interface Props { exam: Exam; nav: NavTopic[] }
+const { exam, nav } = Astro.props;
+const lessons = nav.filter((t) => t.published).map((t) => ({ k: t.key, u: t.url, t: t.title }));
+const json = JSON.stringify(lessons).replace(/</g, '\\u003c');
+---
+<section class="lc" aria-labelledby="lc-h" data-lc data-exam={exam.slug}>
+  <div class="lc-who">
+    <span class="lc-avatar" aria-hidden="true" data-lc-icon>🌱</span>
+    <div class="min-w-0">
+      <h2 id="lc-h" class="lc-name"><span data-lc-name>Learner</span></h2>
+      <p class="lc-level"><span data-lc-level>Cloud Seed</span> · <span data-lc-xp>0</span> XP · 🔥 <span data-lc-streak>0</span>-day streak</p>
+    </div>
+  </div>
+  <div class="lc-prog">
+    <div class="flex items-baseline justify-between gap-3">
+      <p class="font-semibold">{exam.code} course progress</p>
+      <p class="lc-pct" data-lc-pct>0%</p>
+    </div>
+    <div class="bar mt-2" role="progressbar" aria-label={`${exam.code} course progress`} aria-valuemin="0" aria-valuemax="100" aria-valuenow="0" data-lc-bar><span style="width:0%"></span></div>
+    <dl class="lc-stats">
+      <div><dt>Lessons done</dt><dd><span data-lc-done>0</span> / {lessons.length}</dd></div>
+      <div><dt>Quizzes passed</dt><dd data-lc-quiz>0</dd></div>
+      <div><dt>Labs finished</dt><dd data-lc-labs>0</dd></div>
+      <div><dt>Best mock exam</dt><dd data-lc-mock>Not yet</dd></div>
+    </dl>
+  </div>
+  <div class="lc-next">
+    <p class="text-sm text-muted" data-lc-next-label>Start here</p>
+    <p class="lc-next-t" data-lc-next-title>{lessons[0]?.t}</p>
+    <a href={lessons[0]?.u} class="btn btn-accent lc-btn" data-lc-next>Start lesson 1 <span aria-hidden="true">→</span></a>
+    <p class="mt-2 text-xs text-muted">Saved in this browser. No sign-in needed.</p>
+  </div>
+  <script type="application/json" data-lc-data set:html={json} />
+</section>
+
+<style is:global>
+  @layer components {
+    .lc { display: grid; gap: 1.25rem; border-radius: 18px; border: 1px solid var(--card-line); background: var(--card); padding: 1.25rem; box-shadow: 0 14px 34px -22px rgb(0 40 90 / .45); }
+    @media (min-width: 900px) { .lc { grid-template-columns: minmax(0, 1.7fr) minmax(0, 1fr); column-gap: 1.5rem; padding: 1.5rem; } .lc-who, .lc-prog { grid-column: 1; } .lc-next { grid-column: 2; grid-row: 1 / span 2; align-self: stretch; display: flex; flex-direction: column; justify-content: center; } }
+    .lc-who { display: flex; align-items: center; gap: .9rem; }
+    .lc-avatar { display: grid; place-items: center; flex: none; width: 3.6rem; height: 3.6rem; border-radius: 999px; font-size: 1.9rem; background: linear-gradient(135deg, var(--pastel-blue), var(--pastel-lilac)); border: 2px solid var(--accent); }
+    .lc-name { font-size: 1.2rem; font-weight: 800; overflow-wrap: anywhere; }
+    .lc-level { font-size: .88rem; color: var(--text-muted); }
+    .lc-pct { font-size: 1.5rem; font-weight: 800; color: var(--accent-deep); }
+    .lc-stats { margin-top: .9rem; display: grid; grid-template-columns: repeat(2, 1fr); gap: .5rem; font-size: .82rem; }
+    @media (min-width: 560px) and (max-width: 899px), (min-width: 1280px) { .lc-stats { grid-template-columns: repeat(4, 1fr); } }
+    .lc-stats div { border-radius: 10px; background: var(--pastel-grey); border: 1px solid var(--card-line); padding: .45rem .6rem; }
+    .lc-stats dt { color: var(--text-muted); }
+    .lc-stats dd { font-weight: 800; font-size: 1rem; }
+    .lc-next { border-radius: 14px; background: var(--pastel-blue); padding: 1rem; }
+    .lc-next-t { margin-top: .15rem; font-weight: 700; line-height: 1.35; }
+    .lc-btn { margin-top: .75rem; width: 100%; justify-content: center; min-height: 44px; }
+  }
+</style>
+
+<script>
+  import { load, levelFor, streak } from '../../lib/progress';
+  import { loadCert } from '../../lib/certificate';
+  document.querySelectorAll<HTMLElement>('[data-lc]').forEach((root) => {
+    const lessons: { k: string; u: string; t: string }[] = JSON.parse(root.querySelector('[data-lc-data]')!.textContent || '[]');
+    const $ = (s: string) => root.querySelector<HTMLElement>(`[data-lc-${s}]`)!;
+    const paint = () => {
+      const s = load();
+      const lv = levelFor(s.xp);
+      const keys = new Set(lessons.map((l) => l.k));
+      const done = lessons.filter((l) => s.done[l.k]).length;
+      const pct = lessons.length ? Math.round((done / lessons.length) * 100) : 0;
+      let name = '';
+      try { name = loadCert()?.name ?? ''; } catch {}
+      $('name').textContent = name || 'Learner';
+      $('icon').textContent = lv.icon;
+      $('level').textContent = `Level ${lv.level}: ${lv.name}`;
+      $('xp').textContent = String(s.xp);
+      $('streak').textContent = String(streak(s));
+      $('pct').textContent = `${pct}%`;
+      const bar = $('bar'); bar.setAttribute('aria-valuenow', String(pct)); bar.querySelector<HTMLElement>('span')!.style.width = `${pct}%`;
+      $('done').textContent = String(done);
+      $('quiz').textContent = String(Object.entries(s.quizzes).filter(([k, q]) => keys.has(k) && q.score / q.total >= 0.75).length);
+      $('labs').textContent = String(Object.keys(s.labs).length);
+      const best = s.mocks.reduce((b, m) => Math.max(b, m.percent), -1);
+      $('mock').textContent = best >= 0 ? `${best}%` : 'Not yet';
+      // Continue: the last lesson opened (if not finished), else the first one not done.
+      let last: { url?: string; title?: string } | null = null;
+      try { last = JSON.parse(localStorage.getItem('msdb-last-lesson') || 'null'); } catch {}
+      const lastL = last?.url ? lessons.find((l) => l.u === last!.url) : undefined;
+      const next = lastL && !s.done[lastL.k] ? lastL : lessons.find((l) => !s.done[l.k]);
+      const a = $('next') as HTMLAnchorElement;
+      if (!next) { $('next-label').textContent = 'Every lesson done'; $('next-title').textContent = 'Time for a full mock exam'; a.href = `/${root.dataset.exam}/mock-exam/`; a.textContent = 'Take the mock exam →'; return; }
+      a.href = next.u;
+      if (done > 0 || next === lastL) { $('next-label').textContent = 'Continue where you left off'; a.textContent = 'Continue learning →'; }
+      $('next-title').textContent = next.t;
+    };
+    paint();
+    window.addEventListener('progress-change', paint);
+  });
+</script>

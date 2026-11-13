@@ -909,3 +909,16 @@ footer li > a, .page-aside li > a { display: inline-block; padding-block: .2rem;
   .lesson .ila .ila-title, .ila-title { font-size: 1.15rem; }
 }
 @media (prefers-reduced-motion: reduce) { .ila-opt { transition: none; } }
+
+/* ---------- FAQ accordion (home, course details) ---------- */
+@layer components {
+  .faq { border-radius: 14px; border: 1px solid var(--card-line); background: var(--card); overflow: hidden; }
+  .faq-item + .faq-item { border-top: 1px solid var(--card-line); }
+  .faq-item summary { display: flex; align-items: center; justify-content: space-between; gap: 1rem; padding: 1rem 1.15rem; min-height: 48px; cursor: pointer; list-style: none; }
+  .faq-item summary::-webkit-details-marker { display: none; }
+  .faq-item summary::after { content: '+'; flex: none; font-size: 1.4rem; font-weight: 600; line-height: 1; color: var(--accent-deep); transition: transform .2s; }
+  .faq-item[open] summary::after { transform: rotate(45deg); }
+  .faq-item summary:hover { background: var(--pastel-grey); }
+  .faq-q { font-size: 1rem; font-weight: 650; line-height: 1.4; }
+  .faq-a { padding: 0 1.15rem 1.1rem; line-height: 1.65; color: var(--text-muted); }
+}

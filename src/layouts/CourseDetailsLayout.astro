@@ -1,0 +1,73 @@
+---
+/**
+ * Course details ("understand before you start"): a dark course banner with the
+ * title and promise on the left, a sticky summary card with the Start Learning
+ * call to action on the right, then the page's own sections. Public menus,
+ * because the learner has not entered the course yet.
+ *
+ * Slots: default (sections, rendered in the left column on desktop),
+ *        `card` (the summary card), `hero` (extra hero content under the subtitle).
+ */
+import Base from './Base.astro';
+type BaseProps = Omit<Parameters<typeof Base>[0], 'chrome'>;
+type Props = BaseProps & {
+  eyebrow: string;
+  heading: string;
+  subtitle: string;
+};
+const { eyebrow, heading, subtitle, ...base } = Astro.props;
+const crumbs = base.breadcrumbs ?? [];
+---
+<Base {...base} chrome="public">
+  <section class="cd-hero" aria-labelledby="cd-title">
+    <div class="cd-wrap cd-hero-in">
+      <div class="cd-main">
+        {crumbs.length > 1 && (
+          <nav aria-label="Breadcrumb" class="cd-crumbs">
+            <ol>
+              {crumbs.slice(0, -1).map((c) => <li><a href={c.url}>{c.name}</a><span aria-hidden="true">›</span></li>)}
+              <li aria-current="page">{crumbs[crumbs.length - 1].name}</li>
+            </ol>
+          </nav>
+        )}
+        <p class="cd-eyebrow">{eyebrow}</p>
+        <h1 id="cd-title" class="cd-title">{heading}</h1>
+        <p class="cd-sub">{subtitle}</p>
+        <slot name="hero" />
+      </div>
+    </div>
+  </section>
+  <div class="cd-wrap cd-grid">
+    <aside class="cd-card-col" aria-label="Course summary">
+      <div class="cd-card"><slot name="card" /></div>
+    </aside>
+    <div class="cd-body"><slot /></div>
+  </div>
+</Base>
+
+<style is:global>
+  @layer components {
+    .cd-wrap { max-width: 80rem; margin-inline: auto; padding-inline: 1rem; }
+    @media (min-width: 640px) { .cd-wrap { padding-inline: 1.5rem; } }
+    .cd-hero { color: #fff; background: radial-gradient(60rem 30rem at 85% -10%, rgb(0 120 212 / .55), transparent 70%), radial-gradient(40rem 24rem at -10% 120%, rgb(135 100 184 / .35), transparent 70%), #101c2e; }
+    .cd-hero-in { padding-block: 2.25rem 2.5rem; }
+    .cd-main { max-width: 46rem; }
+    .cd-crumbs ol { display: flex; flex-wrap: wrap; gap: .4rem; font-size: .88rem; color: #c9d6e6; }
+    .cd-crumbs li { display: flex; gap: .4rem; }
+    .cd-crumbs a { color: #8fcbf7; font-weight: 600; }
+    .cd-crumbs a:hover { text-decoration: underline; }
+    .cd-eyebrow { margin-top: 1.1rem; font-size: .8rem; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; color: #ffd75e; }
+    .cd-title { margin-top: .5rem; font-size: clamp(1.9rem, 4.5vw, 2.9rem); font-weight: 800; line-height: 1.12; letter-spacing: -.02em; }
+    .cd-sub { margin-top: .9rem; font-size: 1.15rem; line-height: 1.55; color: #e3ebf5; }
+    .cd-grid { display: grid; gap: 2rem; padding-top: 1.5rem; }
+    .cd-card { border-radius: 18px; border: 1px solid var(--card-line); background: var(--card); box-shadow: 0 24px 50px -24px rgb(0 30 70 / .45); overflow: hidden; }
+    .cd-body { min-width: 0; }
+    @media (min-width: 1024px) {
+      .cd-grid { grid-template-columns: minmax(0, 1fr) 22rem; column-gap: 3rem; padding-top: 0; }
+      .cd-main { max-width: calc(100% - 25rem); }
+      .cd-card-col { grid-column: 2; grid-row: 1; margin-top: -16rem; }
+      .cd-card { position: sticky; top: calc(var(--header-h) + 1rem); max-height: calc(100dvh - var(--header-h) - 2rem); overflow-y: auto; overscroll-behavior: contain; }
+      .cd-body { grid-column: 1; grid-row: 1; padding-top: 2rem; }
+    }
+  }
+</style>

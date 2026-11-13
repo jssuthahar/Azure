@@ -29,7 +29,12 @@ Prefer Tailwind utilities in markup; put shared or stateful styles in `global.cs
 
 ## Navigation principles
 
-- Grouped top menu: Learn · Simulate & Practice · Exam & Certificate · Reference · Play · My Progress. Add items to an existing group; don't add a new top-level entry casually.
+- **Three experiences** (owner's request, 13 Nov 2026): Home = discover → `/<exam>/` course details = understand → `/<exam>/learn/` and every page inside the exam = learn.
+  - Layouts: `PublicLayout` (home, `/certifications/`, about), `CourseDetailsLayout` (dark banner + sticky summary card with Start learning), `LearningLayout` (exam menus + `LearnShell` sidebar + quiet footer). `Base` picks the chrome from the URL (`chrome` prop): any `/<live exam>/…` page except the course details page, and `/simulator/`, get the learning chrome automatically.
+  - Public top menu: Home · Certifications · About · My Account (`/progress/`; there is no sign-in). Never put lesson menus here.
+  - Learning top menu (one exam only): ‹ exam chip (back to course details) · Overview · Lessons ▾ · Practice ▾ · Practice Labs · Simulations · 3D Explorer · Mock Exams · Interview Prep · Resources ▾. Add new exam tools to an existing group.
+  - Shared parts in `src/components/course/`: `CertCard`, `CertIcon`, `SiteSearch` (home search over `src/lib/search-index.ts`), `Curriculum` (accordion with progress ticks), `CourseFeatures` (`src/data/course-features.ts`), `LearnerCard`. Course copy per exam: `src/data/<exam>/course.ts` (`exam.course`).
+  - Planned exams never get an empty course page: their card links to Microsoft Learn until the course is live.
 - Lesson sidebar: collapsible domains, progress per domain, filter, expand/collapse all, desktop rail mode.
 - Keep learners in place: simulations, labs and quizzes run inside the page.
 - **Slide mode** (owner's request, 13 Nov 2026): every lesson can be read full screen, one part per screen, with Next / Previous, ← → keys, swipe and Escape to exit. Button in `LessonTools.astro`, engine `src/lib/present.ts`, check `npm run qa -- present`. It hides parts in place, so quizzes and simulations keep working. Each `## ` section is one slide; when you add a new part to the lesson template, give it a hint if it shouldn't be its own slide: `data-slide-group="intro|finish"`, `data-slide-join`, `data-slide-with-prev` or `data-slide-skip`.

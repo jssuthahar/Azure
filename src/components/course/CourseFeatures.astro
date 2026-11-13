@@ -1,0 +1,36 @@
+---
+/** The ten learning features of a course, each linking to the real tool. */
+import { COURSE_FEATURES } from '../../data/course-features';
+interface Props { slug: string; headingLevel?: 'h3' | 'h4'; only?: string[] }
+const { slug, headingLevel = 'h3', only } = Astro.props;
+const H = headingLevel;
+const list = only ? COURSE_FEATURES.filter((f) => only.includes(f.id)) : COURSE_FEATURES;
+---
+<ul class="cf-grid">
+  {list.map((f, i) => (
+    <li class="cf" data-feature={f.id}>
+      <span class={`cf-ico cf-ico-${i % 5}`} aria-hidden="true">{f.icon}</span>
+      <H class="cf-title">{f.title}</H>
+      <p class="cf-text">{f.text}</p>
+      <a href={f.href(slug)} class="cf-link">{f.cta}<span class="sr-only">: {f.title}</span> <span aria-hidden="true">→</span></a>
+    </li>
+  ))}
+</ul>
+
+<style is:global>
+  @layer components {
+    .cf-grid { display: grid; gap: 1rem; grid-template-columns: repeat(auto-fill, minmax(min(100%, 15.5rem), 1fr)); }
+    .cf { display: flex; flex-direction: column; padding: 1.25rem; border-radius: 16px; border: 1px solid var(--card-line); background: var(--card); transition: border-color .2s, transform .2s; }
+    .cf:hover, .cf:focus-within { border-color: var(--accent); transform: translateY(-2px); }
+    .cf-ico { display: grid; place-items: center; width: 3rem; height: 3rem; border-radius: 14px; font-size: 1.5rem; }
+    .cf-ico-0 { background: var(--pastel-blue); }
+    .cf-ico-1 { background: var(--pastel-yellow); }
+    .cf-ico-2 { background: var(--pastel-green); }
+    .cf-ico-3 { background: var(--pastel-lilac); }
+    .cf-ico-4 { background: var(--pastel-grey); }
+    .cf-title { margin-top: .85rem; font-size: 1.05rem; font-weight: 700; line-height: 1.3; }
+    .cf-text { margin-top: .4rem; font-size: .9rem; line-height: 1.55; color: var(--text-muted); }
+    .cf-link { margin-top: auto; padding-top: .8rem; font-size: .9rem; font-weight: 700; color: var(--accent-deep); }
+    .cf-link:hover { text-decoration: underline; }
+  }
+</style>

@@ -44,6 +44,9 @@ export const GET: APIRoute = async () => {
   lines.push('', '## Azure Simulator: what happens if…?', '');
   for (const w of exam.whatIfs) lines.push(`- [${w.q}](${u(`/simulator/${w.slug}/`)}): ${plain(w.answer)}`);
   lines.push('', '## Practice and tools', '',
+    `- [All certification courses](${u('/certifications/')}): every Microsoft certification course on the site by level, with which ones are live and which are planned.`,
+    `- [${exam.code} learning dashboard](${u(`/${exam.slug}/learn/`)}): every lesson in exam order with the learner's progress, plus links to labs, simulations and mock exams.`,
+    `- [${exam.code} 3D explorer](${u(`/${exam.slug}/3d-explorer/`)}): all 3D scenes (datacenter, availability zones, regions, storage redundancy, scaling, networking, governance, identity) with written steps.`,
     `- [AZ-900 mock exam](${u(`/${exam.slug}/mock-exam/`)}): timed practice exam in the style of the real Microsoft exam (multiple choice, drag and drop, build list, drop-down, Yes/No), scored 1–1000 with 700 to pass.`,
     `- [AZ-900 Ready certificate](${u('/certificate/')}): free shareable practice certificate for passing the full mock exam (self-assessed, not a Microsoft certification).`,
     `- [Practice labs](${u(`/${exam.slug}/labs/`)}): simulated Azure portal and Cloud Shell with guided tasks.`,
