@@ -1,0 +1,59 @@
+---
+/**
+ * "Hands-On Labs" for every section (objective group) of one exam domain.
+ * Used on the domain page and the labs page. Ticks labs the learner finished (browser only).
+ */
+import type { SyllabusModule } from '../data/types';
+import { sectionLabs } from '../lib/section-labs';
+
+interface Props { mod: SyllabusModule; examSlug: string; headingLevel?: 'h2' | 'h3' }
+const { mod, examSlug, headingLevel = 'h2' } = Astro.props;
+const sections = sectionLabs(mod);
+const H = headingLevel;
+const S = headingLevel === 'h2' ? 'h3' : 'h4';
+const id = `labs-${mod.slug}`;
+---
+<section class="seclabs" aria-labelledby={id}>
+  <H id={id} class="seclabs-h">{headingLevel === 'h2' ? 'Hands-On Labs' : `Domain ${mod.domain}: ${mod.shortTitle}`}</H>
+  {headingLevel === 'h2' && <p class="seclabs-sub">Every section of this domain has guided labs in the practice portal and Cloud Shell. No Azure account, nothing to pay, and your progress stays in this browser.</p>}
+  <div class="seclabs-grid">
+    {sections.map((s) => (
+      <div class="seclabs-card">
+        <S class="seclabs-title"><span class="seclabs-num">{s.number}</span> {s.group.title}</S>
+        <ul class="seclabs-list">
+          {s.labs.slice(0, 5).map((l) => (
+            <li><a href={`/${examSlug}/labs/${l.id}/`} data-seclab={l.id}>
+              <span aria-hidden="true">{l.icon}</span>
+              <span class="seclabs-name">{l.title}</span>
+              <span class="seclabs-meta">{l.tasks.length} tasks · {l.minutes} min<span class="seclabs-done" hidden> · ✓ done</span></span>
+            </a></li>
+          ))}
+        </ul>
+        {s.labs.length > 5 && <p class="seclabs-more">+ {s.labs.length - 5} more on the <a href={`/${examSlug}/labs/#by-section`}>labs page</a></p>}
+      </div>
+    ))}
+  </div>
+</section>
+<style>
+  .seclabs { margin-top: 2.5rem; }
+  .seclabs-h { font-size: 1.5rem; font-weight: 650; }
+  .seclabs-sub { margin-top: .35rem; color: var(--text-muted); }
+  .seclabs-grid { margin-top: 1rem; display: grid; gap: 1rem; grid-template-columns: repeat(auto-fill, minmax(min(100%, 22rem), 1fr)); }
+  .seclabs-card { border: 1px solid var(--border); border-radius: .75rem; background: var(--card); padding: 1rem; min-width: 0; }
+  .seclabs-title { font-weight: 650; line-height: 1.35; }
+  .seclabs-num { display: inline-block; margin-right: .3rem; border-radius: 999px; background: var(--accent-soft); color: var(--accent-deep); padding: .05rem .5rem; font-size: .8rem; }
+  .seclabs-list { margin-top: .6rem; display: grid; gap: .25rem; }
+  .seclabs-list a { display: grid; grid-template-columns: 1.6rem minmax(0, 1fr); column-gap: .35rem; align-items: start; min-height: 36px; padding: .4rem .5rem; border-radius: .5rem; }
+  .seclabs-list a:hover, .seclabs-list a:focus-visible { background: var(--pastel-blue); }
+  .seclabs-name { font-weight: 600; color: var(--accent-deep); overflow-wrap: anywhere; }
+  .seclabs-meta { grid-column: 2; font-size: .8rem; color: var(--text-muted); }
+  .seclabs-more { margin-top: .4rem; font-size: .85rem; color: var(--text-muted); }
+  .seclabs-more a { text-decoration: underline; }
+</style>
+<script>
+  import { load } from '../lib/progress';
+  const done = load().labs ?? {};
+  document.querySelectorAll<HTMLElement>('[data-seclab]').forEach((a) => {
+    if (done[a.dataset.seclab!]) a.querySelector<HTMLElement>('.seclabs-done')?.removeAttribute('hidden');
+  });
+</script>

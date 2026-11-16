@@ -109,7 +109,8 @@ const { lab } = Astro.props;
 </style>
 
 <script>
-  import { Sim, SUB_NAME } from '../lib/sim/engine';
+  import { SUB_NAME } from '../lib/sim/engine';
+  import { World } from '../lib/sim/world';
   import { runCli, COMPLETIONS, type CliResult } from '../lib/sim/cli';
   import { Portal } from '../lib/sim/portal';
   import { ALL_LABS } from '../lib/sim/labs';
@@ -117,9 +118,12 @@ const { lab } = Astro.props;
   import { confetti } from '../lib/fun';
   import { money } from '../lib/currency';
 
+  /** Extra state the practice world keeps beyond resource groups and resources. */
+  const WORLD_KEYS = ['users', 'groups', 'roles', 'current', 'ca', 'mgs', 'subParent', 'policies', 'budgets', 'outage', 'notices', 'migrate', 'databox'] as const;
+
   document.querySelectorAll<HTMLElement>('.sim-root').forEach((root) => {
     const lab = ALL_LABS.find((l) => l.id === root.dataset.lab)!;
-    let sim = new Sim();
+    let sim = new World();
     let portal: Portal;
     let portalEl = root.querySelector<HTMLElement>('.sim-portal')!;
     const out = root.querySelector<HTMLElement>('.sim-out')!;
@@ -187,6 +191,7 @@ const { lab } = Astro.props;
         try {
           localStorage.setItem(KEY, JSON.stringify({
             rgs: sim.rgs, res: sim.res, events: sim.events.slice(-500), view: portal?.view,
+            world: Object.fromEntries(WORLD_KEYS.map((k) => [k, sim[k]])),
             shell: out.innerHTML.slice(-60_000), history: history.slice(-100), finished, at: Date.now(),
           }));
         } catch {}
@@ -197,9 +202,9 @@ const { lab } = Astro.props;
     };
 
     const boot = (restore = true) => {
-      sim = new Sim();
+      sim = new World();
       const saved = restore ? loadSaved() : null;
-      if (saved) Object.assign(sim, { rgs: saved.rgs ?? [], res: saved.res ?? [], events: saved.events ?? [] });
+      if (saved) Object.assign(sim, { rgs: saved.rgs ?? [], res: saved.res ?? [], events: saved.events ?? [] }, saved.world ?? {});
       // Fresh element so the previous portal's event listeners are dropped.
       const fresh = portalEl.cloneNode(false) as HTMLElement;
       portalEl.replaceWith(fresh);

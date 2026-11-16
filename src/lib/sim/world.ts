@@ -95,7 +95,7 @@ export class World extends Sim {
     const who = this.principalsOf(upn);
     return this.roles.filter((r) => who.includes(r.principal) && (r.scope === 'subscription' || (rg && r.scope.toLowerCase() === `rg/${rg.toLowerCase()}`))).map((r) => r.role);
   }
-  need(action: 'read' | 'write' | 'delete' | 'authorize', rg?: string, op = 'write') {
+  allow(action: 'read' | 'write' | 'delete' | 'authorize', rg?: string, op = 'write') {
     const roles = this.rolesAt(this.current, rg);
     const ok = action === 'read' ? roles.length > 0 : action === 'authorize' ? roles.includes('Owner') : roles.some((r) => r === 'Owner' || r === 'Contributor');
     if (!ok) {
@@ -109,7 +109,7 @@ export class World extends Sim {
     return this.users.find((u) => u.upn.toLowerCase() === v || u.upn.split('@')[0].toLowerCase() === v || u.name.toLowerCase() === v);
   }
   createUser(name: string, upn: string, via: Via = 'cli') {
-    this.need('authorize', undefined, 'Microsoft.Directory/users/create');
+    this.allow('authorize', undefined, 'Microsoft.Directory/users/create');
     if (!upn || !/^[^@\s]+@[^@\s]+$/.test(upn)) throw new SimError(`'${upn}' is not a valid user principal name, such as sam@${TENANT}.`);
     if (this.findUser(upn)) throw new SimError(`A user with the principal name '${upn}' already exists.`, 'Conflict');
     const u = { upn, name: name || upn.split('@')[0] };
@@ -126,7 +126,7 @@ export class World extends Sim {
     this.notify('ok', 'Invitation sent', `${email} can now sign in with their own account as a guest (B2B collaboration).`);
   }
   createGroup(name: string, via: Via = 'cli') {
-    this.need('authorize', undefined, 'Microsoft.Directory/groups/create');
+    this.allow('authorize', undefined, 'Microsoft.Directory/groups/create');
     if (!name) throw new SimError('A group display name is required.');
     if (this.groups.some((g) => g.name.toLowerCase() === name.toLowerCase())) throw new SimError(`Group '${name}' already exists.`, 'Conflict');
     this.groups.push({ name, members: [] });
@@ -141,7 +141,7 @@ export class World extends Sim {
     this.emit('group.member', { group: g.name, upn: u.upn, via });
   }
   assignRole(assignee: string, role: string, rg: string | undefined, via: Via = 'cli') {
-    this.need('authorize', rg, 'Microsoft.Authorization/roleAssignments/write');
+    this.allow('authorize', rg, 'Microsoft.Authorization/roleAssignments/write');
     const r = (['Owner', 'Contributor', 'Reader'] as Role[]).find((x) => x.toLowerCase() === (role ?? '').toLowerCase());
     if (!r) throw new SimError(`Role '${role}' doesn't exist. Try Owner, Contributor or Reader.`, 'RoleDefinitionNotFound');
     let principal: string;
@@ -214,7 +214,7 @@ export class World extends Sim {
     return chain;
   }
   assignPolicy(name: string, def: string, value: string[], scope: string, via: Via = 'cli') {
-    this.need('authorize', scope.startsWith('rg/') ? scope.slice(3) : undefined, 'Microsoft.Authorization/policyAssignments/write');
+    this.allow('authorize', scope.startsWith('rg/') ? scope.slice(3) : undefined, 'Microsoft.Authorization/policyAssignments/write');
     const d = (Object.keys(POLICY_DEFS) as PolicyDef[]).find((k) => k === def || POLICY_DEFS[k].display.toLowerCase() === (def ?? '').toLowerCase());
     if (!d) throw new SimError(`Policy definition '${def}' was not found. Run 'az policy definition list -o table' to see what's available.`, 'PolicyDefinitionNotFound');
     if (!value.length) throw new SimError(`This policy needs a value for '${POLICY_DEFS[d].param}', e.g. --params ${POLICY_DEFS[d].param}=${d === 'allowed-locations' ? 'westeurope,northeurope' : d === 'require-tag' ? 'owner' : 'Standard_B1s,Standard_B2s'}`);
@@ -261,15 +261,15 @@ export class World extends Sim {
 
   /* ================= RBAC + policy hooks on core operations ================= */
   createRg(name: string, location: string, tags: Record<string, string> = {}, via: Via = 'portal') {
-    this.need('write', undefined, 'Microsoft.Resources/subscriptions/resourceGroups/write');
+    this.allow('write', undefined, 'Microsoft.Resources/subscriptions/resourceGroups/write');
     return super.createRg(name, location, tags, via);
   }
   deleteRg(name: string, via: Via = 'portal') {
-    this.need('delete', name, 'Microsoft.Resources/subscriptions/resourceGroups/delete');
+    this.allow('delete', name, 'Microsoft.Resources/subscriptions/resourceGroups/delete');
     return super.deleteRg(name, via);
   }
   protected add(type: any, rg: RG, name: string, location: string, props: Record<string, any>, tags: Record<string, string> = {}) {
-    this.need('write', rg.name, `${type}/write`);
+    this.allow('write', rg.name, `${type}/write`);
     if (this.outage && props.zone === this.outage.zone && location === this.outage.location) props.zoneDown = true;
     return super.add(type, rg, name, location, props, tags);
   }
@@ -306,18 +306,18 @@ export class World extends Sim {
     return super.createVmss(o, via);
   }
   powerVm(rg: string, name: string, action: 'start' | 'stop' | 'deallocate' | 'restart', via: Via = 'portal') {
-    this.need('write', rg, `virtualMachines/${action}/action`);
+    this.allow('write', rg, `virtualMachines/${action}/action`);
     const vm = super.powerVm(rg, name, action, via);
     if (action !== 'start' && action !== 'restart') vm.props.cpu = 0;
     else vm.props.cpu = 8;
     return vm;
   }
   deleteRes(r: Res, via: Via = 'portal') {
-    this.need('delete', r.rg, `${r.type}/delete`);
+    this.allow('delete', r.rg, `${r.type}/delete`);
     return super.deleteRes(r, via);
   }
   deleteVm(rg: string, name: string, via: Via = 'portal') {
-    this.need('delete', rg, 'virtualMachines/delete');
+    this.allow('delete', rg, 'virtualMachines/delete');
     return super.deleteVm(rg, name, via);
   }
 
@@ -613,7 +613,7 @@ export class World extends Sim {
     return a;
   }
   tagResource(r: Res, tags: Record<string, string>, via: Via = 'cli') {
-    this.need('write', r.rg, 'tags/write');
+    this.allow('write', r.rg, 'tags/write');
     Object.assign(r.tags, tags);
     this.emit('res.tag', { rg: r.rg, name: r.name, type: r.type, tags: r.tags, via });
     return r;

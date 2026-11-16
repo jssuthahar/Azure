@@ -6,7 +6,9 @@
 import { launch, BASE, watch, finish } from './lib.mjs';
 
 /** Guided labs whose every task can be completed with its own "Try it in Cloud Shell" command. */
-const LABS_CLI_ONLY = ['tags-chargeback', 'vm-power-states', 'cli-storage', 'readonly-lock', 'scale-sets'];
+const LABS_CLI_ONLY = ['tags-chargeback', 'vm-power-states', 'cli-storage', 'readonly-lock', 'scale-sets',
+  'service-models', 'serverless-function', 'hybrid-arc', 'containers', 'build-network', 'vpn-gateway', 'dns-private-endpoint',
+  'identity-access', 'conditional-access', 'policy-guardrails', 'bicep-deploy', 'monitor-alerts', 'migrate-databox'];
 
 const b = await launch();
 const fail = [];

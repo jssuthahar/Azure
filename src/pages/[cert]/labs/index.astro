@@ -1,6 +1,7 @@
 ---
 import Base from '../../../layouts/Base.astro';
 import Mascot from '../../../components/Mascot.astro';
+import SectionLabs from '../../../components/SectionLabs.astro';
 import { LABS, SANDBOX } from '../../../lib/sim/labs';
 import { getExam, examStaticPaths } from '../../../data/exams';
 
@@ -10,7 +11,7 @@ export function getStaticPaths() {
 const exam = getExam(Astro.params.cert);
 const bands = ['band-blue', 'band-green', 'band-yellow', 'band-lilac'];
 ---
-<Base title="Azure Practice Labs: Free Simulator, No Account | MSDEVBUILD" description="Practise Azure hands-on in a free simulator: create resource groups, VMs, storage and web apps in a mock portal and Cloud Shell. No Azure account needed." breadcrumbs={[{ name: 'Home', url: '/' }, { name: `${exam.code}`, url: `/${exam.slug}/` }, { name: 'Practice labs', url: `/${exam.slug}/labs/` }]}>
+<Base title="Azure Practice Labs: Free Simulator, No Account | MSDEVBUILD" description="Free Azure hands-on labs for every exam section: VMs, storage, networks, identity, policy and monitoring in a mock portal and Cloud Shell. No account." breadcrumbs={[{ name: 'Home', url: '/' }, { name: `${exam.code}`, url: `/${exam.slug}/` }, { name: 'Practice labs', url: `/${exam.slug}/labs/` }]}>
   <section class="band-navy px-4 py-12 sm:py-16">
     <div class="mx-auto grid max-w-6xl items-center gap-8 lg:grid-cols-[1.3fr_1fr]">
       <div class="text-center lg:text-left">
@@ -55,6 +56,11 @@ const bands = ['band-blue', 'band-green', 'band-yellow', 'band-lilac'];
         <span class="nav-btn mt-5 self-start">Open sandbox ❯</span>
       </a>
     </div>
+    <section id="by-section" class="mt-12 scroll-mt-28" aria-labelledby="by-section-h">
+      <h2 id="by-section-h" class="text-2xl font-bold">Hands-On Labs for every exam section</h2>
+      <p class="mt-1 text-muted">Pick the {exam.code} section you're studying and practise it straight away.</p>
+      {exam.modules.map((m) => <SectionLabs mod={m} examSlug={exam.slug} headingLevel="h3" />)}
+    </section>
     <div class="callout callout-note mt-10">
       <p class="callout-title">Ready for the real thing?</p>
       <p>The simulator teaches the ideas and the clicks. When you want to try real Azure, Microsoft Learn's free {exam.code} training modules include hands-on exercises. <a class="underline" href={exam.courseUrl} rel="noopener">Explore Microsoft Learn</a>.</p>

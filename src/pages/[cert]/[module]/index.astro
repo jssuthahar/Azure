@@ -1,5 +1,6 @@
 ---
 import LearningLayout from '../../../layouts/LearningLayout.astro';
+import SectionLabs from '../../../components/SectionLabs.astro';
 import { getNav, getTutorial } from '../../../lib/learn';
 import { getExam, liveExams } from '../../../data/exams';
 import type { SyllabusModule } from '../../../data/types';
@@ -60,5 +61,6 @@ const crumbs = [
           ),
         )}
       </ol>
+      <SectionLabs mod={mod} examSlug={exam.slug} />
     </div>
 </LearningLayout>
