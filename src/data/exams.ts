@@ -24,6 +24,7 @@ import { VISUALS as az900Visuals, type LessonVisual } from './az-900/visuals';
 import { PROBLEM_SOLUTION as az900Problems, type ProblemSolution } from './az-900/problem-solution';
 import { ACTIVITIES as az900Activities } from './az-900/activities';
 import type { LessonActivities } from './activities';
+import { SERVICES as az900Services, type Service } from './az-900/services';
 import { SORT_SETS as az900Sort, RIDDLES as az900Riddles, type SortSet, type Riddle } from './az-900/games';
 
 export interface Exam {
@@ -59,6 +60,8 @@ export interface Exam {
   lesson3d: Record<string, { title: string; url: string } | undefined>;
   /** Guided Azure portal walkthroughs, keyed by tour id (lessonSims[].tour.id). */
   tours: Record<string, Tour>;
+  /** "Every service in 60 seconds" reference for this exam. */
+  services: Service[];
 }
 
 const info = (slug: string) => {
@@ -92,6 +95,7 @@ const EXAMS: Record<string, Exam> = {
     sims3d: az900Sims3d,
     lesson3d: az900Embed3d,
     tours: az900Tours,
+    services: az900Services,
   },
 };
 

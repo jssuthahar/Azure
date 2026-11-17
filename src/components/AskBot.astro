@@ -328,6 +328,16 @@ const here = exams.find((e) => e.slug === Astro.url.pathname.split('/')[1])?.slu
   document.getElementById('ask-close')!.addEventListener('click', close);
   switchBtn.addEventListener('click', pickExam);
   panel.addEventListener('keydown', (e) => { if (e.key === 'Escape') close(); });
+  // Small screens: step aside while key content marked [data-ask-clear] sits where the button floats.
+  const clear = document.querySelectorAll('[data-ask-clear]');
+  if (clear.length && 'IntersectionObserver' in window) {
+    const small = matchMedia('(max-width: 767px)');
+    const under = new Set<Element>();
+    const sync = () => fab.classList.toggle('is-tucked', small.matches && under.size > 0);
+    const io = new IntersectionObserver((es) => { for (const e of es) e.isIntersecting ? under.add(e.target) : under.delete(e.target); sync(); }, { rootMargin: '-86% 0px 0px 0px' });
+    clear.forEach((el) => io.observe(el));
+    small.addEventListener('change', sync);
+  }
 </script>
 
 <style>
@@ -338,6 +348,9 @@ const here = exams.find((e) => e.slug === Astro.url.pathname.split('/')[1])?.slu
     border-radius: 999px; border: 0; background: #005a9e; color: #fff; font-weight: 600;
     box-shadow: 0 10px 28px -6px rgb(0 60 120 / .45); cursor: pointer;
   }
+  .ask-fab { transition: transform .25s ease, opacity .2s ease, visibility 0s linear 0s; }
+  .ask-fab.is-tucked { transform: translateY(calc(100% + 24px)); opacity: 0; visibility: hidden; transition: transform .25s ease, opacity .2s ease, visibility 0s linear .25s; }
+  @media (prefers-reduced-motion: reduce) { .ask-fab, .ask-fab.is-tucked { transition: none; } }
   .ask-fab:hover { background: #003a66; }
   .ask-fab:focus-visible { outline: 3px solid var(--accent); outline-offset: 3px; }
   /* make room for the install banner and the lesson reader; step aside in the exam room */

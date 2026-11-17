@@ -15,7 +15,7 @@ export interface SyllabusTopic {
 
 export interface SyllabusModule {
   slug: string;
-  /** Exam area number (1..n). AZ-900 has 3, AI-900 has 5. */
+  /** Exam area number (1..n). AZ-900 has 3, AI-901 has 2. */
   domain: number;
   title: string;
   shortTitle: string;

@@ -3,7 +3,7 @@ import Base from '../../../layouts/Base.astro';
 import Datacenter3D from '../../../components/mdx/Datacenter3D.astro';
 import PortalTour from '../../../components/mdx/PortalTour.astro';
 import CurrencySelect from '../../../components/CurrencySelect.astro';
-import { SERVICES, serviceBySlug, type Service } from '../../../data/az-900/services';
+import type { Service } from '../../../data/az-900/services';
 import { getNav, inlineMd } from '../../../lib/learn';
 import { priceHtml } from '../../../lib/prices';
 import { SITE } from '../../../config';
@@ -11,7 +11,7 @@ import { getExam, liveExams } from '../../../data/exams';
 import BrandLine from '../../../components/BrandLine.astro';
 
 export function getStaticPaths() {
-  return liveExams().flatMap((exam) => SERVICES.map((s) => ({ params: { cert: exam.slug, slug: s.slug }, props: { s } })));
+  return liveExams().flatMap((exam) => exam.services.map((s) => ({ params: { cert: exam.slug, slug: s.slug }, props: { s } })));
 }
 const exam = getExam(Astro.params.cert);
 const comparisonBySlug = (s: string) => exam.comparisons.find((c) => c.slug === s);
@@ -19,7 +19,7 @@ const { s } = Astro.props as { s: Service };
 const nav = await getNav(exam.slug);
 const lesson = nav.find((t) => t.slug === s.lesson && t.published);
 const cmp = s.compare ? comparisonBySlug(s.compare) : undefined;
-const similar = s.similar.map(serviceBySlug).filter(Boolean);
+const similar = s.similar.map((slug) => exam.services.find((x) => x.slug === slug)).filter(Boolean);
 const url = new URL(Astro.url.pathname, SITE.url).href;
 const short = s.name.replace(/^Azure |^Microsoft /, '');
 const title = `${s.name} in 60 Seconds: What, When, Cost`;

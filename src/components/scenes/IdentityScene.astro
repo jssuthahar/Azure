@@ -57,8 +57,8 @@ const entra = `<g transform="translate(250 105)"><rect width="140" height="90" r
     {[0, 1, 2, 3, 4].map((k) => <path d={`M140 ${41 + k * 52} C 200 ${41 + k * 52}, 210 150, 250 150`} fill="none" stroke="#8a97a8" stroke-width="2" class="a-dash" />)}
     <g transform="translate(250 100)"><g class="a-pulse"><rect width="140" height="100" rx="18" fill="#0078d4" /><text x="70" y="44" text-anchor="middle" font-size="26">🚦</text><text x="70" y="74" text-anchor="middle" fill="#fff" font-size="12" font-weight="700">Conditional Access</text></g></g>
     {[['✅', 'Allow', '#107c10', 50], ['📱', 'Require MFA', '#c19c00', 130], ['⛔', 'Block', '#e74856', 210]].map(([i, t, c, y], k) => (
-      <g><path d={`M390 150 C 430 150, 440 ${Number(y) + 20}, 470 ${Number(y) + 20}`} fill="none" stroke={c} stroke-width="2.5" class="ca-out" style={`animation-delay:${k * 1.2}s`} />
-      <g transform={`translate(470 ${y})`} class="ca-out" style={`animation-delay:${k * 1.2}s`}><rect width="150" height="40" rx="10" fill={c} /><text x="18" y="26" font-size="16">{i}</text><text x="44" y="26" fill="#fff" font-size="13" font-weight="700">{t}</text></g></g>
+      <g><path d={`M390 150 C 430 150, 440 ${Number(y) + 20}, 470 ${Number(y) + 20}`} fill="none" stroke={String(c)} stroke-width="2.5" class="ca-out" style={`animation-delay:${k * 1.2}s`} />
+      <g transform={`translate(470 ${y})`} class="ca-out" style={`animation-delay:${k * 1.2}s`}><rect width="150" height="40" rx="10" fill={String(c)} /><text x="18" y="26" font-size="16">{i}</text><text x="44" y="26" fill="#fff" font-size="13" font-weight="700">{t}</text></g></g>
     ))}
     <text x="320" y="290" text-anchor="middle" class="sub">If these signals… then this decision.</text>
   </svg>

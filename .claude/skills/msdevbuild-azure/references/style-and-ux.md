@@ -31,7 +31,7 @@ Prefer Tailwind utilities in markup; put shared or stateful styles in `global.cs
 
 - **Three experiences** (owner's request, 13 Nov 2026): Home = discover → `/<exam>/` course details = understand → `/<exam>/learn/` and every page inside the exam = learn.
   - Layouts: `PublicLayout` (home, `/certifications/`, about), `CourseDetailsLayout` (dark banner + sticky summary card with Start learning), `LearningLayout` (exam menus + `LearnShell` sidebar + quiet footer). `Base` picks the chrome from the URL (`chrome` prop): any `/<live exam>/…` page except the course details page, and `/simulator/`, get the learning chrome automatically.
-  - Public top menu: Home · Certifications · About · My Account (`/progress/`; there is no sign-in). Never put lesson menus here.
+  - Public top menu: Home · Certifications · About · My Progress (`/progress/`). Top-level menu icons are line icons from `NavIcon.astro`, not emoji. The header's `AccountButton` is the optional Google sign-in. Never put lesson menus here.
   - Learning top menu (one exam only): ‹ exam chip (back to course details) · Overview · Lessons ▾ · Practice ▾ · Practice Labs · Simulations · 3D Explorer · Mock Exams · Interview Prep · Resources ▾. Add new exam tools to an existing group.
   - Shared parts in `src/components/course/`: `CertCard`, `CertIcon`, `SiteSearch` (home search over `src/lib/search-index.ts`), `Curriculum` (accordion with progress ticks), `CourseFeatures` (`src/data/course-features.ts`), `LearnerCard`. Course copy per exam: `src/data/<exam>/course.ts` (`exam.course`).
   - Planned exams never get an empty course page: their card links to Microsoft Learn until the course is live.

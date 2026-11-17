@@ -10,7 +10,7 @@ const DEVICES = [
   ['iPad mini', 744, 1133], ['iPad Air', 820, 1180], ['iPad Air landscape', 1180, 820],
   ['iPad Pro 13', 1032, 1376], ['iPad Pro landscape', 1376, 1032],
 ];
-const PAGES = ['/', '/certifications/', '/az-900/', '/az-900/learn/', '/az-900/3d-explorer/', '/az-900/cloud-concepts/', '/az-900/cloud-concepts/iaas/', '/az-900/azure-architecture-and-services/storage-accounts/',
+const PAGES = ['/', '/certifications/', '/platform/', '/az-900/', '/az-900/learn/', '/az-900/3d-explorer/', '/az-900/cloud-concepts/', '/az-900/cloud-concepts/iaas/', '/az-900/azure-architecture-and-services/storage-accounts/',
   '/az-900/compare/blob-vs-files-vs-disk/', '/az-900/services/', '/az-900/mock-exam/', '/az-900/labs/', '/az-900/labs/sandbox/', '/simulator/region-goes-down/',
   '/az-900/games/', '/az-900/games/sort/', '/az-900/glossary/', '/az-900/revision/', '/az-900/practice/', '/az-900/study-plan/', '/az-900/cheat-sheet/', '/az-900/exam-day/', '/az-900/interview/', '/progress/', '/certificate/', '/app/', '/sitemap/', '/embed/'];
 
@@ -51,7 +51,14 @@ for (const w of [320, 360, 393]) {
     localStorage.setItem('msdb-install-dismissed', String(Date.now()));
   });
   const p = await ctx.newPage();
+  const fb = [];
+  p.on('request', (q) => { if (/firebase|firestore|googleapis/i.test(q.url())) fb.push(q.url()); });
   await p.goto(BASE + '/az-900/cloud-concepts/iaas/', { waitUntil: 'networkidle' });
+  await p.waitForTimeout(2500); // past the idle callbacks
+  // Signed-out learners don't load Firebase here (sign-in loads Auth; only the live site loads Firestore Lite for counts).
+  if (fb.length) fail.push(`Firebase loaded for a signed-out visitor at ${w}px: ${fb[0]}`);
+  const auth = await p.evaluate(() => ({ state: document.documentElement.dataset.auth, btn: !!document.querySelector('[data-account-signin]') }));
+  if (auth.state !== 'out' || !auth.btn) fail.push(`account UI not ready signed out at ${w}px (data-auth=${auth.state})`);
   const r = await p.evaluate(() => {
     const W = document.documentElement.clientWidth;
     const right = Math.max(...[...document.querySelectorAll('.hdr-row *')].map((e) => e.getBoundingClientRect().right));

@@ -8,7 +8,7 @@ import Mascot from '../components/Mascot.astro';
 import CloudScene from '../components/scenes/CloudScene.astro';
 import TodayBand from '../components/TodayBand.astro';
 import BrandLine from '../components/BrandLine.astro';
-import CertCard from '../components/course/CertCard.astro';
+import CertIcon from '../components/course/CertIcon.astro';
 import SiteSearch from '../components/course/SiteSearch.astro';
 import { CERTIFICATIONS, difficulty } from '../data/certifications';
 import { getNav, getQuestionBank, getTutorial, inlineMd } from '../lib/learn';
@@ -27,6 +27,15 @@ const totalLessons = Object.values(counts).reduce((n, c) => n + c.lessons, 0);
 const totalQuestions = Object.values(counts).reduce((n, c) => n + c.questions, 0);
 
 const featured = CERTIFICATIONS.filter((c) => c.featured);
+const liveCerts = CERTIFICATIONS.filter((c) => c.status === 'active');
+const LEVEL_ORDER = ['Fundamentals', 'Associate', 'Expert', 'Specialty'];
+// Roadmap: the exam being built next first, then the featured planned exams by level.
+const roadmap = CERTIFICATIONS.filter((c) => c.status === 'planned' && (c.featured || c.next))
+  .sort((a, b) => Number(!!b.next) - Number(!!a.next) || LEVEL_ORDER.indexOf(a.level) - LEVEL_ORDER.indexOf(b.level));
+const spotlight = (slug: string) => {
+  const e = liveExams().find((x) => x.slug === slug)!;
+  return { tours: Object.keys(e.tours).length, scenes: Object.keys(e.sims3d).length, domains: e.modules.length, modules: e.modules };
+};
 const sample = published[0] ? await getTutorial(published[0].key) : undefined;
 const sampleQ = bank.find((q) => q.id === 'd2-arch-10') ?? bank[0];
 
@@ -38,11 +47,11 @@ const LEVELS = [
 
 const why = [
   { icon: '🧊', title: 'Feel it, then learn it', text: 'Every lesson has a 3D scene, an Azure portal walkthrough and a practice lab before the theory.' },
-  { icon: '💸', title: 'Free, with no catch', text: 'No paid tier, no sign-in, no credit card. Every lesson, lab and mock exam is open to everyone.' },
+  { icon: '💸', title: 'Free, with no catch', text: 'No paid tier and no credit card. Every lesson, lab and mock exam is open to everyone, signed in or not.' },
   { icon: '🧑‍🏫', title: 'Built by an architect', text: `Lessons come from real project work, not just the docs. Built by ${SITE.author}, ${SITE.authorTitle}.` },
   { icon: '🎯', title: 'Follows the official outline', text: 'Lessons map to Microsoft’s skills outline objective by objective, and we date-stamp every check.' },
   { icon: '📲', title: 'Phone, tablet or laptop', text: 'Install it as an app, study offline on the train, and pick up where you stopped.' },
-  { icon: '🔒', title: 'Your progress stays yours', text: 'XP, streaks, quiz scores and your certificate live in your browser. Nothing is tracked to an account.' },
+  { icon: '🔒', title: 'Your progress, on every device', text: 'Study without an account, or sign in with Google to keep XP, streaks, scores and your certificate in sync on phone and laptop.' },
 ];
 const audiences = [
   { icon: '🎒', title: 'School students', text: 'No cloud knowledge needed. Stories about libraries, games and pizza.' },
@@ -61,7 +70,7 @@ const faq = [
   { q: 'Is MSDEVBUILD Azure free?', a: 'Yes. Every course, lesson, simulation, lab, quiz, mock exam and the practice certificate is free. There is no paid plan and nothing is locked.' },
   { q: 'Which certification should I start with?', a: `Start with ${exam.code} (${exam.name}) if you are new to the cloud. It needs no experience and gives you the vocabulary every Associate exam builds on.` },
   { q: 'Do I need an Azure account to practise?', a: 'No. The Azure portal, Cloud Shell and 3D scenes are simulations that run in your browser, so you can practise without a subscription or a surprise bill.' },
-  { q: 'Do I need to sign in?', a: 'No. Your progress, XP, streak and certificate are saved in this browser. My Account shows everything you have done so far.' },
+  { q: 'Do I need to sign in?', a: 'No. Everything works without an account and your progress is saved in this browser. Sign in with Google only if you want it synced across your devices.' },
   { q: 'Are the practice questions real exam questions?', a: 'No. Every question is original and written to practise the skills in Microsoft’s official outline. We never publish real or leaked exam questions.' },
   { q: 'When will AZ-104, AZ-305 and AZ-500 be ready?', a: 'They are planned. Each course opens once its lessons, questions and mock exam are complete and the exam has been checked on Microsoft Learn.' },
 ];
@@ -88,10 +97,10 @@ const schema = [
           <a href="#certifications" class="h-btn h-btn-y">Explore Certifications</a>
           <a href={`${x}/learn/`} id="hero-start" class="h-btn h-btn-o">Start Learning <span aria-hidden="true">→</span></a>
         </p>
-        <dl class="mt-8 flex flex-wrap justify-center gap-x-10 gap-y-3 lg:justify-start">
-          <div><dt class="text-sm text-[#c9d6e6]">Lessons ready</dt><dd class="text-3xl font-bold">{totalLessons}</dd></div>
-          <div><dt class="text-sm text-[#c9d6e6]">Practice questions</dt><dd class="text-3xl font-bold">{totalQuestions}</dd></div>
-          <div><dt class="text-sm text-[#c9d6e6]">Price</dt><dd class="text-3xl font-bold">Free</dd></div>
+        <dl data-ask-clear class="h-stats mx-auto mt-7 grid max-w-md grid-cols-3 lg:mx-0">
+          <div><dt>Lessons ready</dt><dd>{totalLessons}</dd></div>
+          <div><dt>Practice questions</dt><dd>{totalQuestions}</dd></div>
+          <div><dt>Price</dt><dd>Free</dd></div>
         </dl>
       </div>
       <figure class="scene overflow-hidden rounded-2xl bg-white p-3 shadow-2xl sm:p-5">
@@ -109,16 +118,57 @@ const schema = [
     <div class="mx-auto max-w-6xl px-4 sm:px-6">
       <div class="h-head">
         <div>
-          <p class="eyebrow">Featured certifications</p>
-          <h2 id="certs" class="h-h2">Pick your certification</h2>
-          <p class="h-lead">Open a course to see its syllabus, labs, simulations and exam tips before you start.</p>
+          <p class="eyebrow">Certifications</p>
+          <h2 id="certs" class="h-h2">{liveCerts.length === 1 ? `Start with ${liveCerts[0].code}` : 'Pick your certification'}</h2>
+          <p class="h-lead">A complete course, free from the first lesson to the mock exam. More Azure exams follow on the same platform.</p>
         </div>
         <a href="/certifications/" class="h-more">Browse all certifications <span aria-hidden="true">→</span></a>
       </div>
-      <ul class="mt-8 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
-        {featured.map((c) => <li><CertCard cert={c} lessons={counts[c.slug]?.lessons} questions={counts[c.slug]?.questions} /></li>)}
-      </ul>
-      <p class="mt-5 text-sm text-muted">Looking for AZ-204? Microsoft retired it on 31 July 2026. AI-200 is its replacement.</p>
+      {liveCerts.map((c) => { const sp = spotlight(c.slug); return (
+        <article class="spot mt-8" data-cert={c.slug}>
+          <div class="spot-main">
+            <p class="spot-meta"><span class="spot-live"><span aria-hidden="true">●</span> Available now</span><span class="spot-pill">{difficulty(c)}</span><span class="spot-pill">Free</span></p>
+            <h3 class="spot-title"><span>{c.code}</span> {c.name}</h3>
+            <p class="spot-text">{c.blurb}</p>
+            <dl class="spot-stats">
+              <div><dt>Lessons</dt><dd>{counts[c.slug]?.lessons}</dd></div>
+              <div><dt>Practice questions</dt><dd>{counts[c.slug]?.questions}</dd></div>
+              <div><dt>Portal walkthroughs</dt><dd>{sp.tours}</dd></div>
+              <div><dt>3D scenes</dt><dd>{sp.scenes}</dd></div>
+            </dl>
+            <p class="mt-6 flex flex-wrap gap-3">
+              <a href={`/${c.slug}/learn/`} class="btn btn-accent spot-btn">Start {c.code} free <span aria-hidden="true">→</span></a>
+              <a href={`/${c.slug}/`} class="btn btn-outline spot-btn">Syllabus and course details</a>
+            </p>
+          </div>
+          <div class="spot-side">
+            <p class="spot-side-h">What the exam covers</p>
+            <ol class="spot-doms">
+              {sp.modules.map((m) => <li><a href={`/${c.slug}/${m.slug}/`}><span class="spot-dn">{m.domain}</span><span class="spot-dt">{m.shortTitle}</span><span class="spot-dw">{m.weight}</span></a></li>)}
+            </ol>
+            <p class="spot-side-h mt-5">Every lesson includes</p>
+            <ul class="spot-inc">
+              <li>3D view</li><li>Azure portal walkthrough</li><li>Practice lab</li><li>Exam tip and quiz</li>
+            </ul>
+          </div>
+        </article>
+      ); })}
+      <div class="road mt-10" aria-labelledby="road-h">
+        <div class="road-head">
+          <h3 id="road-h" class="text-lg font-bold">On the roadmap</h3>
+          <p class="text-sm text-muted">Each course opens once its lessons, questions and mock exam are complete.</p>
+        </div>
+        <ul class="road-list">
+          {roadmap.map((c) => (
+            <li class={`road-item${c.next ? ' is-next' : ''}`}>
+              <CertIcon icon={c.icon} size={28} />
+              <span class="min-w-0"><strong>{c.code}</strong><span class="road-name">{c.name}</span></span>
+              <em>{c.next ? 'Up next' : c.level}</em>
+            </li>
+          ))}
+        </ul>
+      </div>
+      <p class="mt-5 text-sm text-muted">Looking for AI-900 or AZ-204? Microsoft retired AI-900 on 30 June 2026 (AI-901 replaces it) and AZ-204 on 31 July 2026 (AI-200 replaces it).</p>
     </div>
   </section>
 
@@ -306,6 +356,48 @@ const schema = [
   .h-btn-y:hover { background: #ffcd2e; }
   .h-btn-o { border: 2px solid rgb(255 255 255 / .7); color: #fff; }
   .h-btn-o:hover { border-color: #ffd75e; color: #ffd75e; }
+  .spot { display: grid; gap: 0; overflow: hidden; border-radius: 20px; border: 1px solid var(--card-line); background: var(--card); box-shadow: 0 24px 48px -28px rgb(0 60 120 / .45); }
+  @media (min-width: 900px) { .spot { grid-template-columns: 1.35fr 1fr; } }
+  .spot-main { padding: clamp(1.25rem, 3vw, 2.25rem); }
+  .spot-meta { display: flex; flex-wrap: wrap; gap: .5rem; font-size: .78rem; font-weight: 700; }
+  .spot-live { color: var(--ok); }
+  .spot-pill { border-radius: 999px; background: var(--pastel-blue); color: var(--accent-deep); padding: 2px 10px; }
+  .spot-title { margin-top: .75rem; font-size: clamp(1.4rem, 3vw, 1.9rem); font-weight: 800; line-height: 1.2; letter-spacing: -.015em; }
+  .spot-title span { color: var(--accent-deep); }
+  .spot-text { margin-top: .6rem; max-width: 46ch; color: var(--text-muted); line-height: 1.6; }
+  .spot-stats { margin-top: 1.4rem; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: .75rem; }
+  @media (min-width: 560px) { .spot-stats { grid-template-columns: repeat(4, minmax(0, 1fr)); } }
+  .spot-stats > div { display: flex; flex-direction: column-reverse; justify-content: flex-end; border-left: 3px solid var(--accent); padding-left: .7rem; }
+  .spot-stats dd { font-size: 1.6rem; font-weight: 800; line-height: 1.1; font-variant-numeric: tabular-nums; }
+  .spot-stats dt { font-size: .78rem; color: var(--text-muted); }
+  .spot-btn { min-height: 44px; }
+  .spot-side { padding: clamp(1.25rem, 3vw, 2.25rem); background: var(--bg-subtle); border-top: 1px solid var(--card-line); }
+  @media (min-width: 900px) { .spot-side { border-top: 0; border-left: 1px solid var(--card-line); } }
+  .spot-side-h { font-size: .72rem; font-weight: 800; letter-spacing: .12em; text-transform: uppercase; color: var(--text-muted); }
+  .spot-doms { margin-top: .6rem; display: grid; gap: .4rem; }
+  .spot-doms a { display: flex; align-items: center; gap: .7rem; min-height: 44px; padding: .45rem .7rem; border-radius: 12px; background: var(--card); border: 1px solid var(--card-line); transition: border-color .15s; }
+  .spot-doms a:hover { border-color: var(--accent); }
+  .spot-dn { flex: none; display: grid; place-items: center; width: 1.7rem; height: 1.7rem; border-radius: 8px; background: var(--accent-deep); color: #fff; font-weight: 800; font-size: .85rem; }
+  .spot-dt { flex: 1; min-width: 0; font-weight: 600; font-size: .92rem; }
+  .spot-dw { flex: none; font-size: .78rem; color: var(--text-muted); font-variant-numeric: tabular-nums; }
+  .spot-inc { margin-top: .6rem; display: flex; flex-wrap: wrap; gap: .4rem; }
+  .spot-inc li { font-size: .8rem; font-weight: 600; padding: .3rem .65rem; border-radius: 999px; background: var(--card); border: 1px solid var(--card-line); }
+  .spot-inc li::before { content: '✓ '; color: var(--ok); font-weight: 800; }
+  .road { border-radius: 18px; border: 1px dashed var(--card-line); padding: 1.1rem; }
+  .road-head { display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: .25rem 1rem; }
+  .road-list { margin-top: .9rem; display: grid; gap: .6rem; grid-template-columns: repeat(auto-fill, minmax(min(100%, 210px), 1fr)); }
+  .road-item { display: flex; align-items: center; gap: .65rem; padding: .65rem .8rem; border-radius: 12px; background: var(--card); border: 1px solid var(--card-line); color: var(--accent-deep); font-size: .88rem; }
+  .road-item strong { display: block; color: var(--text); }
+  .road-name { display: block; color: var(--text-muted); font-size: .8rem; line-height: 1.3; }
+  .road-item em { margin-left: auto; flex: none; font-style: normal; font-size: .7rem; font-weight: 700; color: var(--text-muted); }
+  .road-item.is-next { border-color: var(--accent); }
+  .road-item.is-next em { color: #fff; background: #005a9e; padding: .15rem .5rem; border-radius: 999px; }
+  .h-stats { border-top: 1px solid rgb(255 255 255 / .16); padding-top: 1.1rem; }
+  .h-stats > div { padding: 0 .75rem; text-align: center; }
+  .h-stats > div + div { border-left: 1px solid rgb(255 255 255 / .16); }
+  .h-stats dt { font-size: .75rem; line-height: 1.2; color: #c9d6e6; letter-spacing: .02em; }
+  .h-stats dd { margin-top: .25rem; font-size: 1.75rem; font-weight: 800; line-height: 1; font-variant-numeric: tabular-nums; }
+  @media (min-width: 1024px) { .h-stats > div { text-align: left; } .h-stats > div:first-child { padding-left: 0; } }
   .h-sec { padding-block: 4rem; }
   .h-head { display: flex; flex-wrap: wrap; align-items: flex-end; justify-content: space-between; gap: 1rem; }
   .h-h2 { margin-top: .35rem; font-size: clamp(1.8rem, 3.6vw, 2.6rem); font-weight: 800; letter-spacing: -.02em; line-height: 1.15; }

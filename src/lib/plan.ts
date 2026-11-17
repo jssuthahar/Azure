@@ -55,6 +55,7 @@ export function savePlan(cert: string, plan: PlanSettings | null) {
     const all = JSON.parse(localStorage.getItem(KEY) || '{}');
     if (plan) all[cert] = plan; else delete all[cert];
     localStorage.setItem(KEY, JSON.stringify(all));
+    window.dispatchEvent(new CustomEvent('msdb-data-change'));
   } catch {
     /* storage blocked: the plan shows but won't be remembered */
   }

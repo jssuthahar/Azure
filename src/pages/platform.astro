@@ -1,0 +1,262 @@
+---
+/**
+ * Platform overview: what MSDEVBUILD Azure is as a product, how it's built,
+ * how quality is enforced and how it grows to new exams. Every number is
+ * computed from the exam registry at build time, so it never goes stale.
+ */
+import PublicLayout from '../layouts/PublicLayout.astro';
+import BrandLine from '../components/BrandLine.astro';
+import { SITE } from '../config';
+import { CERTIFICATIONS } from '../data/certifications';
+import { liveExams, getExam } from '../data/exams';
+import { getNav, getQuestionBank } from '../lib/learn';
+import { getGlossary } from '../lib/glossary';
+import { LABS } from '../lib/sim/labs';
+
+const live = liveExams();
+const first = getExam();
+let lessons = 0, questions = 0, items = 0, scenes = 0, tours = 0, compares = 0, whatIfs = 0, terms = 0;
+for (const e of live) {
+  lessons += (await getNav(e.slug)).filter((t) => t.published).length;
+  questions += (await getQuestionBank(e.slug)).length;
+  terms += (await getGlossary(e.slug)).length;
+  items += e.examItems.length;
+  scenes += Object.keys(e.sims3d).length;
+  tours += Object.keys(e.tours).length;
+  compares += e.comparisons.length;
+  whatIfs += e.whatIfs.length;
+}
+const planned = CERTIFICATIONS.filter((c) => c.status === 'planned');
+const levels = ['Fundamentals', 'Associate', 'Expert'] as const;
+
+const stats = [
+  { n: lessons, label: 'Lessons, each with three simulations' },
+  { n: questions + items, label: 'Original practice questions' },
+  { n: tours, label: 'Guided Azure portal walkthroughs' },
+  { n: LABS.length, label: 'Hands-on labs in a simulated portal and shell' },
+  { n: scenes, label: 'Interactive 3D scenes' },
+  { n: terms, label: 'Glossary terms, each linked to a lesson' },
+];
+
+const loop = [
+  { k: 'Feel', t: 'See it before reading about it', d: 'A 3D scene, a click-through of the Azure portal and a lab you can break. No Azure account, no credit card, nothing to clean up.' },
+  { k: 'Learn', t: 'One idea, explained three ways', d: 'A story, a version a 10-year-old follows, then the technical one. The same order in every lesson, so learners always know where they are.' },
+  { k: 'Practise', t: 'Spaced repetition that adapts', d: `Every quiz answer feeds a Leitner deck and a readiness score. A study plan rebuilds itself from the exam date and the minutes a learner has.` },
+  { k: 'Prove', t: 'A mock exam that feels like the real one', d: 'Timer, review screen, drag and drop, drop-downs and Yes/No items, scored 1 to 1000. Pass and you get a shareable practice certificate.' },
+];
+
+const arch = [
+  { t: 'Exam registry', d: 'One typed entry per exam: syllabus, simulations, labs, comparisons, games. Pages read from it and never name an exam in code.' },
+  { t: 'Content as data', d: 'Lessons are MDX, questions are JSON, simulations are typed data. Writers add content without touching components.' },
+  { t: 'Static build', d: `Astro renders all ${lessons}+ lessons ahead of time. Pages load as plain HTML from a CDN, with JavaScript only where something moves.` },
+  { t: 'Local first, synced when signed in', d: 'Progress, XP, the review deck and the certificate live on the device and work offline. Sign in with Google and Firebase merges them across phone and laptop.' },
+  { t: 'Installable app', d: 'A service worker and manifest turn the site into an app on phones, tablets and laptops that keeps working offline.' },
+  { t: 'Search and answers', d: 'Ask Nimbus answers questions from an index built at compile time. It runs in the browser, so nothing a learner types leaves the device.' },
+];
+
+const gates = [
+  ['Lesson flow', 'Every lesson is checked for the fixed order: 30-second answer, the three simulations, explanation, exam tip, quiz.'],
+  ['Accessibility', 'Automated axe scans in light and dark mode, on phone and tablet sizes. Any violation fails the build.'],
+  ['Every screen', 'Pages are rendered at phone, iPad and desktop sizes, portrait and landscape, and checked for overflow and tap-target size.'],
+  ['Search visibility', 'Titles, descriptions, headings, canonical links and structured data are audited on every page before it ships.'],
+  ['Exam room', 'A headless browser sits the mock exam end to end, from agreement to score report, at three screen sizes.'],
+  ['Labs and study tools', 'Each Cloud Shell lab is played through task by task, along with practice, the study plan and the cheat sheet.'],
+  ['Writing', 'A guard flags stock machine phrasing so lessons read like a person wrote them. Exam questions stay formal.'],
+  ['Offline app', 'The manifest, service worker, offline page and install flow are tested on every build.'],
+];
+
+const faq = [
+  { q: 'What is MSDEVBUILD Azure?', a: `A free learning platform for Microsoft Azure certifications. It starts with ${first.code} ${first.name.replace(/^Microsoft /, '')} and teaches each topic with a 3D scene, an Azure portal walkthrough and a hands-on lab before the theory.` },
+  { q: 'How does the platform add a new exam?', a: 'A new exam is a data folder plus one entry in the exam registry. Course pages, the mock exam, search, the chatbot, sitemaps and share images pick it up automatically.' },
+  { q: 'Does it need a server or a database?', a: 'No servers. The site is a static build served from a CDN and works fully without an account. Learners who sign in with Google get their progress synced through Firebase Authentication and Firestore, which scale automatically.' },
+  { q: 'Are the practice questions real exam questions?', a: 'No. Every question is written from scratch against the official skills outline. Real, recalled or leaked exam content is never used.' },
+  { q: 'Is MSDEVBUILD Azure affiliated with Microsoft?', a: 'No. It is an independent learning resource. The portal simulator and labs are for education only.' },
+];
+
+const schema = [
+  { '@type': 'WebPage', '@id': `${SITE.url}/platform/#page`, name: 'The MSDEVBUILD Azure platform', url: `${SITE.url}/platform/`, about: { '@id': `${SITE.url}/#org` }, publisher: { '@id': `${SITE.url}/#org` } },
+  { '@type': 'FAQPage', mainEntity: faq.map((f) => ({ '@type': 'Question', name: f.q, acceptedAnswer: { '@type': 'Answer', text: f.a } })) },
+];
+---
+<PublicLayout title="Platform: how MSDEVBUILD Azure is built" description={`How MSDEVBUILD Azure works: a multi-exam learning engine with ${lessons} simulated lessons, offline app, browser-side progress and quality gates on every build.`} breadcrumbs={[{ name: 'Home', url: '/' }, { name: 'Platform', url: '/platform/' }]} schema={schema}>
+  <section class="pf-hero">
+    <div class="mx-auto max-w-6xl px-4 py-14 sm:px-6 sm:py-20">
+      <BrandLine variant="light" class="mb-4" />
+      <h1 class="pf-title">One learning engine for every Microsoft certification.</h1>
+      <p class="mt-5 max-w-2xl text-lg leading-relaxed text-[#dbe5f1]">MSDEVBUILD Azure teaches the cloud by letting people use it first. Here's what the product does, how it's built, and how it grows from {first.code} to the full Azure path.</p>
+      <p class="mt-7 flex flex-wrap gap-3">
+        <a href={`/${first.slug}/`} class="pf-btn pf-btn-y">See the {first.code} course</a>
+        <a href="#architecture" class="pf-btn pf-btn-o">How it's built <span aria-hidden="true">↓</span></a>
+      </p>
+      <dl data-ask-clear class="pf-stats mt-12">
+        {stats.map((s) => <div><dd>{s.n.toLocaleString('en-US')}</dd><dt>{s.label}</dt></div>)}
+      </dl>
+      <p class="mt-4 text-xs text-[#9fb2c8]">Counted from the content at build time across {live.length} live exam{live.length === 1 ? '' : 's'}.</p>
+      <div id="pf-usage" class="pf-usage mt-8" hidden>
+        <p class="pf-usage-h"><span class="pf-dot" aria-hidden="true"></span>Learning on the platform so far</p>
+        <dl class="pf-usage-grid">
+          <div><dd data-n="learner">0</dd><dt>Learners</dt></div>
+          <div><dd data-n="lesson">0</dd><dt>Lessons completed</dt></div>
+          <div><dd data-n="quiz">0</dd><dt>Quizzes taken</dt></div>
+          <div><dd data-n="mock">0</dd><dt>Mock exams sat</dt></div>
+          <div><dd data-n="lab">0</dd><dt>Labs finished</dt></div>
+        </dl>
+        <p class="mt-2 text-xs text-[#9fb2c8]">Live anonymous counts. No cookies, no personal data.</p>
+      </div>
+    </div>
+  </section>
+
+  <section class="mx-auto max-w-6xl px-4 py-16 sm:px-6" aria-labelledby="loop-h">
+    <p class="eyebrow">The learning loop</p>
+    <h2 id="loop-h" class="pf-h2">Feel it, learn it, practise it, prove it</h2>
+    <p class="mt-3 max-w-2xl text-muted">Most exam prep starts with reading. We start with doing, because people remember the datacenter they switched off far longer than the paragraph about availability zones.</p>
+    <ol class="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+      {loop.map((s, i) => (
+        <li class="pf-card">
+          <p class="pf-step"><span>{String(i + 1).padStart(2, '0')}</span>{s.k}</p>
+          <h3 class="mt-3 text-lg font-bold leading-snug">{s.t}</h3>
+          <p class="mt-2 text-sm leading-relaxed text-muted">{s.d}</p>
+        </li>
+      ))}
+    </ol>
+  </section>
+
+  <section id="architecture" class="pf-band" aria-labelledby="arch-h">
+    <div class="mx-auto max-w-6xl px-4 py-16 sm:px-6">
+      <p class="eyebrow">Architecture</p>
+      <h2 id="arch-h" class="pf-h2">Built to scale without servers to run</h2>
+      <p class="mt-3 max-w-2xl text-muted">There are no servers to run or patch. Ten learners or ten million get the same static files from a CDN. Sign-in and sync use Firebase, which scales on its own, and only for learners who choose to sign in.</p>
+      <div class="pf-flow mt-8" aria-hidden="true">
+        <span>Exam data</span><i>→</i><span>Static build</span><i>→</i><span>CDN</span><i>→</i><span>Browser app</span><i>⇄</i><span>Firebase sync</span>
+      </div>
+      <ul class="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+        {arch.map((a) => <li class="pf-card"><h3 class="font-bold">{a.t}</h3><p class="mt-2 text-sm leading-relaxed text-muted">{a.d}</p></li>)}
+      </ul>
+    </div>
+  </section>
+
+  <section class="mx-auto max-w-6xl px-4 py-16 sm:px-6" aria-labelledby="gates-h">
+    <p class="eyebrow">Quality gates</p>
+    <h2 id="gates-h" class="pf-h2">Nothing ships until it passes</h2>
+    <p class="mt-3 max-w-2xl text-muted">One command builds the site and then tests it in a real browser. If any of these checks fails, the release stops.</p>
+    <ul class="mt-8 grid gap-x-8 gap-y-5 sm:grid-cols-2">
+      {gates.map(([t, d]) => <li class="pf-gate"><span class="pf-tick" aria-hidden="true">✓</span><div><h3 class="font-bold">{t}</h3><p class="mt-1 text-sm leading-relaxed text-muted">{d}</p></div></li>)}
+    </ul>
+  </section>
+
+  <section class="pf-band" aria-labelledby="road-h">
+    <div class="mx-auto max-w-6xl px-4 py-16 sm:px-6">
+      <p class="eyebrow">Roadmap</p>
+      <h2 id="road-h" class="pf-h2">From fundamentals to expert</h2>
+      <p class="mt-3 max-w-2xl text-muted">Adding an exam means writing its content, not rebuilding the product. Course pages, the mock exam, search, Ask Nimbus, sitemaps and share images all follow the registry.</p>
+      <div class="mt-8 grid gap-4 lg:grid-cols-3">
+        {levels.map((lv) => (
+          <div class="pf-card">
+            <h3 class="text-sm font-bold tracking-[0.12em] text-accent uppercase">{lv}</h3>
+            <ul class="mt-3 space-y-2">
+              {live.filter((e) => e.info.level === lv).map((e) => <li class="pf-exam"><a href={`/${e.slug}/`}><strong>{e.code}</strong> <span>{e.name.replace(/^Microsoft /, '')}</span></a><em class="pf-live">Live</em></li>)}
+              {planned.filter((c) => c.level === lv).map((c) => <li class="pf-exam"><span><strong>{c.code}</strong> <span>{c.name}</span></span><em>Planned</em></li>)}
+            </ul>
+          </div>
+        ))}
+      </div>
+    </div>
+  </section>
+
+  <section class="mx-auto max-w-6xl px-4 py-16 sm:px-6" aria-labelledby="trust-h">
+    <div class="grid gap-10 lg:grid-cols-[1fr_1.2fr]">
+      <div>
+        <p class="eyebrow">Trust</p>
+        <h2 id="trust-h" class="pf-h2">Honest by design</h2>
+        <ul class="mt-5 space-y-3 text-[0.95rem] leading-relaxed">
+          <li><strong>Original questions only.</strong> Written against the official skills outline, never copied from real exams.</li>
+          <li><strong>Checked against the source.</strong> Each lesson links to Microsoft Learn and shows the date its syllabus was last verified.</li>
+          <li><strong>Private by default.</strong> Sign-in is optional. Usage is counted anonymously, with no cookies or IDs, and browsers that ask not to be tracked are skipped. Nothing is sold.</li>
+          <li><strong>Clearly labelled.</strong> The portal simulator and labs are for education only. MSDEVBUILD isn't affiliated with Microsoft.</li>
+        </ul>
+      </div>
+      <div>
+        <h2 class="pf-h2">Questions about the platform</h2>
+        <div class="mt-5 space-y-3">
+          {faq.map((f) => <details class="pf-faq"><summary>{f.q}</summary><p>{f.a}</p></details>)}
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="pf-cta">
+    <div class="mx-auto flex max-w-6xl flex-col items-start gap-5 px-4 py-12 sm:px-6 md:flex-row md:items-center md:justify-between">
+      <div>
+        <h2 class="text-2xl font-bold text-white">Try it the way a learner would</h2>
+        <p class="mt-1 text-[#dbe5f1]">Open a lesson, switch off a datacenter, then sit the mock exam.</p>
+      </div>
+      <p class="flex flex-wrap gap-3">
+        <a href={`/${first.slug}/learn/`} class="pf-btn pf-btn-y">Start {first.code}</a>
+        <a href="https://blog.msdevbuild.com/contact/" class="pf-btn pf-btn-o">Talk to us</a>
+      </p>
+    </div>
+  </section>
+</PublicLayout>
+
+<script>
+  import { FIREBASE } from '../config';
+  /** Show live usage once there's enough to be meaningful. Plain REST read: no SDK needed. */
+  const MIN_LEARNERS = 100;
+  const box = document.getElementById('pf-usage');
+  if (box) {
+    const base = `https://firestore.googleapis.com/v1/projects/${FIREBASE.projectId}/databases/(default)/documents/stats/total__`;
+    const evs = ['learner', 'lesson', 'quiz', 'mock', 'lab'];
+    Promise.all(evs.map((e) => fetch(`${base}${e}?key=${FIREBASE.apiKey}`).then((r) => (r.ok ? r.json() : null)).catch(() => null)))
+      .then((docs) => {
+        const n = Object.fromEntries(evs.map((e, i) => [e, Number(docs[i]?.fields?.n?.integerValue ?? 0)]));
+        if (n.learner < MIN_LEARNERS) return;
+        for (const el of box.querySelectorAll<HTMLElement>('[data-n]')) el.textContent = (n[el.dataset.n!] ?? 0).toLocaleString('en-US');
+        box.hidden = false;
+      });
+  }
+</script>
+
+<style>
+  .pf-usage { border: 1px solid rgb(255 255 255 / .14); border-radius: 1rem; padding: 1rem 1.1rem; background: rgb(255 255 255 / .04); }
+  .pf-usage-h { display: flex; align-items: center; gap: .5rem; font-size: .8rem; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; color: #dbe5f1; }
+  .pf-dot { width: .55rem; height: .55rem; border-radius: 999px; background: #6ccb5f; box-shadow: 0 0 0 4px rgb(108 203 95 / .2); }
+  .pf-usage-grid { margin-top: .75rem; display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap: .75rem 1rem; }
+  .pf-usage-grid > div { display: flex; flex-direction: column-reverse; justify-content: flex-end; }
+  .pf-usage-grid dd { font-size: 1.6rem; font-weight: 800; font-variant-numeric: tabular-nums; }
+  .pf-usage-grid dt { font-size: .78rem; color: #b9c8da; }
+  .pf-hero { background: radial-gradient(1200px 500px at 85% -10%, #1d4f86 0%, transparent 60%), linear-gradient(160deg, #0b1a2e 0%, #10243f 55%, #0b1a2e 100%); color: #fff; }
+  .pf-title { font-size: clamp(2.1rem, 5.4vw, 3.6rem); line-height: 1.05; font-weight: 800; letter-spacing: -0.025em; max-width: 18ch; }
+  .pf-btn { display: inline-flex; align-items: center; gap: .4rem; min-height: 44px; padding: .65rem 1.25rem; border-radius: 999px; font-weight: 700; transition: transform .15s ease, background-color .15s ease, border-color .15s ease, color .15s ease; }
+  .pf-btn:hover { transform: translateY(-1px); }
+  .pf-btn-y { background: #ffd75e; color: #0b1020; }
+  .pf-btn-y:hover { background: #ffe38a; }
+  .pf-btn-o { border: 2px solid rgb(255 255 255 / .7); color: #fff; }
+  .pf-btn-o:hover { border-color: #ffd75e; color: #ffd75e; }
+  .pf-stats { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 1px; background: rgb(255 255 255 / .12); border: 1px solid rgb(255 255 255 / .12); border-radius: 1rem; overflow: hidden; }
+  .pf-stats > div { display: flex; flex-direction: column-reverse; justify-content: space-between; gap: .6rem; padding: 1.1rem 1rem; background: #0f2139; }
+  .pf-stats dd { font-size: clamp(1.7rem, 4vw, 2.4rem); font-weight: 800; line-height: 1; font-variant-numeric: tabular-nums; }
+  .pf-stats dt { font-size: .8rem; line-height: 1.35; color: #b9c8da; }
+  @media (min-width: 768px) { .pf-stats { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
+  @media (min-width: 1100px) { .pf-stats { grid-template-columns: repeat(6, minmax(0, 1fr)); } }
+  .pf-h2 { font-size: clamp(1.6rem, 3.4vw, 2.3rem); font-weight: 800; letter-spacing: -0.02em; line-height: 1.15; }
+  .pf-card { border: 1px solid var(--border); background: var(--card); border-radius: 1rem; padding: 1.25rem; }
+  .pf-step { display: flex; align-items: center; gap: .6rem; font-size: .8rem; font-weight: 800; letter-spacing: .12em; text-transform: uppercase; color: var(--accent-deep); }
+  .pf-step span { display: inline-grid; place-items: center; width: 2rem; height: 2rem; border-radius: .6rem; background: var(--accent-soft); font-variant-numeric: tabular-nums; letter-spacing: 0; }
+  .pf-band { background: var(--bg-subtle); border-block: 1px solid var(--border); }
+  .pf-flow { display: flex; flex-wrap: wrap; align-items: center; gap: .5rem; }
+  .pf-flow span { padding: .5rem .9rem; border-radius: .6rem; border: 1px solid var(--border); background: var(--card); font-weight: 700; font-size: .9rem; }
+  .pf-flow i { font-style: normal; color: var(--accent-deep); font-weight: 800; }
+  .pf-gate { display: flex; gap: .85rem; }
+  .pf-tick { flex: none; display: grid; place-items: center; width: 1.75rem; height: 1.75rem; border-radius: 999px; background: #e3f6e8; color: #106b2c; font-weight: 800; font-size: .9rem; }
+  .pf-exam { display: flex; align-items: center; justify-content: space-between; gap: .75rem; font-size: .92rem; }
+  .pf-exam > a, .pf-exam > span { min-width: 0; }
+  .pf-exam > a { color: var(--accent-deep); }
+  .pf-exam > a:hover { text-decoration: underline; }
+  .pf-exam span span { color: var(--text-muted); }
+  .pf-exam em { flex: none; font-style: normal; font-size: .72rem; font-weight: 700; padding: .15rem .55rem; border-radius: 999px; border: 1px solid var(--border); color: var(--text-muted); }
+  .pf-exam em.pf-live { background: #e3f6e8; border-color: #b7e4c4; color: #106b2c; }
+  .pf-faq { border: 1px solid var(--border); background: var(--card); border-radius: .85rem; padding: .85rem 1rem; }
+  .pf-faq summary { cursor: pointer; font-weight: 700; min-height: 28px; }
+  .pf-faq p { margin-top: .5rem; font-size: .92rem; line-height: 1.6; color: var(--text-muted); }
+  .pf-cta { background: linear-gradient(120deg, #0b1a2e, #12355e); }
+</style>

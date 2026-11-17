@@ -36,6 +36,7 @@ export function issueCert(name: string, m: MockResult): Cert {
   const id = `MSDB-AZ900-${fnv(`${name}|${m.at}`).toUpperCase().padStart(7, '0').slice(0, 7)}`;
   const cert: Cert = { name: name.trim().slice(0, 60), id, percent: m.percent, scaled: m.scaled, date };
   try { localStorage.setItem(KEY, JSON.stringify(cert)); } catch {}
+  window.dispatchEvent(new CustomEvent('msdb-data-change'));
   window.dispatchEvent(new CustomEvent('progress-change'));
   return cert;
 }

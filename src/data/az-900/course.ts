@@ -45,7 +45,7 @@ export const COURSE: CourseInfo = {
     { title: 'Exam week: Mock exams and revision', text: 'Take full mock exams until you score 80% or more twice, read the cheat sheet and the exam day guide, then book.' },
   ],
   faq: [
-    { q: 'Is this AZ-900 course really free?', a: 'Yes. Every lesson, simulation, lab, quiz, mock exam and the practice certificate is free. There is no paid tier and no sign-in.' },
+    { q: 'Is this AZ-900 course really free?', a: 'Yes. Every lesson, simulation, lab, quiz, mock exam and the practice certificate is free. There is no paid tier and no sign-in is required.' },
     { q: 'Do I need an Azure account or a credit card?', a: 'No. The 3D scenes, the Azure portal walkthroughs and the Cloud Shell are simulations that run in your browser, so you cannot create a surprise bill.' },
     { q: 'How long does it take to prepare for AZ-900?', a: 'Most beginners need two to four weeks at about 20 minutes a day. If you already work with cloud services, one week of lessons plus mock exams is often enough.' },
     { q: 'Are these real AZ-900 exam questions?', a: 'No. Every question here is original and written to practise the skills in the official outline. We never publish real, recalled or leaked exam questions.' },

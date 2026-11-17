@@ -1,6 +1,6 @@
 # The lesson pattern (use it for every lesson, every exam)
 
-Every lesson on the site is built the same way. Use this checklist for a new lesson, a rewrite, or a lesson in a new exam (AI-900 and later). Field-level rules are in [content.md](content.md) and wording rules are in [voice.md](voice.md).
+Every lesson on the site is built the same way. Use this checklist for a new lesson, a rewrite, or a lesson in a new exam (AI-901 and later). Field-level rules are in [content.md](content.md) and wording rules are in [voice.md](voice.md).
 
 ## Page flow (fixed, checked by `npm run qa -- lessons`)
 
@@ -20,7 +20,7 @@ The learner stays on the page from the answer to the quiz. Don't add same-tab li
 
 If no 3D mode or tour fits a new concept, add a step to the closest mode or write a new tour. Don't skip a tab. `intro` lines are one short, human sentence that tells the learner what to try ("Fail one zone.", "Try both actions.").
 
-For a new exam, create `src/data/<exam>/lesson-sims.ts`, `portal-tours.ts` and `sims3d.ts` by following the az-900 files. AI-900 may need new 3D modes (for example a model training or inference flow). Add them to `Mode3D` and don't hard-code `az-900` in shared code.
+For a new exam, create `src/data/<exam>/lesson-sims.ts`, `portal-tours.ts` and `sims3d.ts` by following the az-900 files. AI-901 may need new 3D modes (for example a model training or inference flow). Add them to `Mode3D` and don't hard-code `az-900` in shared code.
 
 ## Lesson body, in order (exact headings)
 

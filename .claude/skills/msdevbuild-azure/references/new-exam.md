@@ -1,4 +1,6 @@
-# Adding an exam (AI-900 next)
+# Adding an exam (AI-901 next)
+
+**AI-901 facts (checked on Microsoft Learn, 17 Nov 2026).** AI-900 retired on 30 June 2026; AI-901 replaces it and earns the same *Microsoft Certified: Azure AI Fundamentals* certification. Skills measured as of 15 April 2026. Two domains: Identify AI concepts and capabilities (40–45%), Implement AI solutions by using Microsoft Foundry (55–60%). Candidates need basic Python and familiarity with Azure resources, so AI-901 is more hands-on than AI-900: plan Foundry portal walkthroughs and small Python/SDK labs, not just concept scenes. Pass mark 700. Study guide: https://learn.microsoft.com/en-us/credentials/certifications/resources/study-guides/ai-901
 
 The engine is exam-aware: shared pages and components read everything from the registry in `src/data/exams.ts`. Adding an exam means adding data and content, not new pages.
 

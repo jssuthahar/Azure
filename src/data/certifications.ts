@@ -20,6 +20,8 @@ export interface Certification {
   verifyNote?: string;
   /** Shown in the home page's Featured Certifications row. */
   featured?: boolean;
+  /** The planned exam being built next; the home roadmap marks it "Up next". */
+  next?: boolean;
   /** Card artwork (see CertIcon.astro). */
   icon?: 'cloud' | 'ai' | 'data' | 'admin' | 'code' | 'shield' | 'architect' | 'devops';
 }
@@ -40,7 +42,8 @@ export const CERTIFICATIONS: Certification[] = [
     officialUrl: 'https://learn.microsoft.com/en-us/credentials/certifications/azure-fundamentals/',
     studyGuideUrl: 'https://learn.microsoft.com/en-us/credentials/certifications/resources/study-guides/az-900',
   },
-  { code: 'AI-900', slug: 'ai-900', icon: 'ai', name: 'Azure AI Fundamentals', level: 'Fundamentals', status: 'planned', blurb: 'AI workloads, machine learning, computer vision, NLP and generative AI on Azure.', officialUrl: 'https://learn.microsoft.com/en-us/credentials/certifications/azure-ai-fundamentals/' },
+  // AI-901 replaced AI-900 (retired 30 June 2026). Same certification: Microsoft Certified: Azure AI Fundamentals.
+  { code: 'AI-901', slug: 'ai-901', icon: 'ai', name: 'Azure AI Fundamentals', level: 'Fundamentals', status: 'planned', next: true, blurb: 'Responsible AI, generative and agentic AI, text, speech, vision and information extraction, built hands-on with Microsoft Foundry.', officialUrl: 'https://learn.microsoft.com/en-us/credentials/certifications/azure-ai-fundamentals/', studyGuideUrl: 'https://learn.microsoft.com/en-us/credentials/certifications/resources/study-guides/ai-901' },
   { code: 'DP-900', slug: 'dp-900', icon: 'data', name: 'Azure Data Fundamentals', level: 'Fundamentals', status: 'planned', blurb: 'Core data concepts, relational and non-relational data, and analytics on Azure.', officialUrl: 'https://learn.microsoft.com/en-us/credentials/certifications/azure-data-fundamentals/' },
   { code: 'AZ-104', slug: 'az-104', icon: 'admin', featured: true, name: 'Azure Administrator Associate', level: 'Associate', status: 'planned', blurb: 'Identity, governance, storage, compute, networking and monitoring for administrators.', officialUrl: 'https://learn.microsoft.com/en-us/credentials/certifications/azure-administrator/' },
   // AI-200 replaced AZ-204 (Azure Developer Associate), which retired on 31 July 2026.

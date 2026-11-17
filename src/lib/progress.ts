@@ -1,6 +1,6 @@
 /**
- * Learner progress, XP, streaks and badges, kept in this browser only
- * (no account, no backend). Every storage access is wrapped: storage can be
+ * Learner progress, XP, streaks and badges, kept in this browser. Signed-in
+ * learners also get it synced to their account (see cloud/sync.ts). Every storage access is wrapped: storage can be
  * blocked (private mode, policies) and the site must keep working without it.
  */
 const KEY = 'msdb-azure-progress-v1';
@@ -133,11 +133,14 @@ export function addXP(amount: number, reason: string) {
   save(s);
 }
 
+/** Anonymous usage count (see cloud/track.ts). Loaded lazily so it never slows a save. */
+const count = (ev: 'lesson' | 'quiz' | 'mock' | 'lab') => { import('./cloud/track').then((m) => m.track(ev)).catch(() => {}); };
+
 /* ---------------- Learning events ---------------- */
 export function setDone(key: string, done = true) {
   const s = load();
   if (done) {
-    if (!s.done[key]) grant(s, 50, 'Lesson completed');
+    if (!s.done[key]) { grant(s, 50, 'Lesson completed'); count('lesson'); }
     s.done[key] = new Date().toISOString();
   } else delete s.done[key];
   save(s);
@@ -152,8 +155,10 @@ export function saveQuiz(key: string, score: number, total: number) {
   if (score / total >= 0.75 && !s.done[key]) {
     s.done[key] = new Date().toISOString();
     grant(s, 50, 'Lesson completed');
+    count('lesson');
   }
   save(s);
+  count('quiz');
 }
 
 export function saveMock(result: MockResult) {
@@ -161,6 +166,7 @@ export function saveMock(result: MockResult) {
   s.mocks = [result, ...s.mocks].slice(0, 20);
   grant(s, result.score * 3, 'Mock exam');
   save(s);
+  count('mock');
 }
 
 export function countInterview() {
@@ -200,6 +206,7 @@ export function saveLab(id: string) {
   if (first) {
     s.labs[id] = new Date().toISOString();
     grant(s, 60, 'Lab completed');
+    count('lab');
   } else grant(s, 10, 'Lab practised again');
   save(s);
   return first;

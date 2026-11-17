@@ -1,0 +1,90 @@
+---
+/**
+ * Header account control. Signed out: "Sign in" (Google, optional).
+ * Signed in: the learner's avatar, opening a small menu with sync status.
+ * State comes from src/lib/cloud/account.ts via <html data-auth>.
+ */
+---
+<div id="acct" class="acct relative">
+  <button id="acct-signin" type="button" data-account-signin class="acct-in-btn" title="Sign in with Google to sync your progress across devices (optional)">
+    <svg class="size-[18px]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="8" r="4" /><path d="M4 21c0-4 3.6-7 8-7s8 3 8 7" /></svg>
+    <span class="acct-label">Sign in</span>
+  </button>
+  <button id="acct-me" type="button" class="acct-me" aria-expanded="false" aria-controls="acct-menu" aria-label="Your account">
+    <img id="acct-photo" alt="" width="30" height="30" referrerpolicy="no-referrer" hidden />
+    <span id="acct-initial" aria-hidden="true"></span>
+  </button>
+  <div id="acct-menu" class="acct-menu" hidden>
+    <p class="acct-name" id="acct-name"></p>
+    <p class="acct-email" id="acct-email"></p>
+    <p class="acct-sync" id="acct-sync" role="status">Progress syncs across your devices.</p>
+    <a href="/progress/" class="acct-link">My progress</a>
+    <button type="button" data-account-signout class="acct-link acct-out">Sign out</button>
+  </div>
+</div>
+
+<script>
+  import { initAccount, hint } from '../lib/cloud/account';
+  const meBtn = document.getElementById('acct-me') as HTMLButtonElement;
+  const menu = document.getElementById('acct-menu')!;
+  const photo = document.getElementById('acct-photo') as HTMLImageElement;
+  const initial = document.getElementById('acct-initial')!;
+  const sync = document.getElementById('acct-sync')!;
+  const signin = document.getElementById('acct-signin') as HTMLButtonElement;
+
+  const show = (h: ReturnType<typeof hint>) => {
+    if (!h) return;
+    document.getElementById('acct-name')!.textContent = h.name;
+    document.getElementById('acct-email')!.textContent = h.email;
+    meBtn.setAttribute('aria-label', `Your account: ${h.name}`);
+    initial.textContent = (h.name || '?').trim().charAt(0).toUpperCase();
+    if (h.photo) { photo.src = h.photo; photo.hidden = false; initial.hidden = true; } else { photo.hidden = true; initial.hidden = false; }
+  };
+  photo.addEventListener('error', () => { photo.hidden = true; initial.hidden = false; });
+  window.addEventListener('msdb-auth', (e) => show((e as CustomEvent).detail));
+  show(hint());
+
+  const close = () => { menu.hidden = true; meBtn.setAttribute('aria-expanded', 'false'); };
+  meBtn.addEventListener('click', () => { const open = menu.hidden; menu.hidden = !open; meBtn.setAttribute('aria-expanded', String(open)); });
+  document.addEventListener('click', (e) => { if (!(e.target as HTMLElement).closest('#acct')) close(); });
+  document.addEventListener('keydown', (e) => { if (e.key === 'Escape' && !menu.hidden) { close(); meBtn.focus(); } });
+
+  const time = (d: Date) => d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+  window.addEventListener('msdb-sync', (e) => {
+    const d = (e as CustomEvent).detail as { state: string; at?: Date; error?: string };
+    signin.disabled = d.state === 'signing-in';
+    if (d.state === 'syncing') sync.textContent = 'Syncing your progress…';
+    else if (d.state === 'synced' && d.at) sync.textContent = `Synced at ${time(d.at)}.`;
+    else if (d.state === 'merged' && d.at) sync.textContent = `Merged with your other devices at ${time(d.at)}.`;
+    else if (d.state === 'error') sync.textContent = 'Couldn’t sync just now. Your progress is safe on this device and will sync later.';
+  });
+
+  initAccount();
+</script>
+
+<style>
+  .acct-in-btn, .acct-me { display: none; }
+  :global(html[data-auth='out']) .acct-in-btn { display: inline-flex; }
+  :global(html[data-auth='in']) .acct-me { display: inline-grid; }
+  .acct-in-btn { align-items: center; gap: .4rem; min-height: 36px; min-width: 36px; justify-content: center; padding: .35rem .75rem; border-radius: 999px; border: 1px solid var(--border); font-size: .875rem; font-weight: 600; color: var(--text); background: var(--card); }
+  .acct-in-btn:hover { border-color: var(--accent); color: var(--accent-deep); }
+  .acct-in-btn:disabled { opacity: .6; cursor: progress; }
+  .acct-me { place-items: center; width: 36px; height: 36px; border-radius: 999px; overflow: hidden; border: 2px solid var(--accent-soft); background: var(--accent-deep); color: #fff; font-weight: 700; padding: 0; }
+  .acct-me:focus-visible, .acct-in-btn:focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; }
+  .acct-me img { width: 100%; height: 100%; object-fit: cover; }
+  .acct-menu { position: absolute; right: 0; top: calc(100% + 8px); z-index: 80; width: min(280px, calc(100vw - 24px)); padding: .9rem; border-radius: 14px; border: 1px solid var(--border); background: var(--card); box-shadow: 0 18px 40px -12px rgb(0 30 60 / .35); }
+  .acct-name { font-weight: 700; overflow-wrap: anywhere; }
+  .acct-email { font-size: .8rem; color: var(--text-muted); overflow-wrap: anywhere; }
+  .acct-sync { margin: .6rem 0; padding: .5rem .6rem; border-radius: 10px; background: var(--bg-subtle); font-size: .8rem; color: var(--text-muted); }
+  .acct-link { display: flex; align-items: center; width: 100%; min-height: 40px; padding: 0 .5rem; border-radius: 8px; font-size: .9rem; font-weight: 600; text-align: left; }
+  .acct-link:hover { background: var(--bg-subtle); }
+  .acct-out { color: #a4262c; }
+  :global(html[data-theme='dark']) .acct-out { color: #ff9a9e; }
+  /* Under 360px there's no room in the header: sign-in and sync live on My Progress instead. */
+  @media (max-width: 359px) { .acct { display: none; } }
+  /* Small phones: icon only */
+  @media (max-width: 639px) {
+    .acct-label { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); }
+    .acct-in-btn { padding: .4rem; border-color: transparent; background: transparent; }
+  }
+</style>

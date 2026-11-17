@@ -4,6 +4,7 @@ import '../styles/global.css';
 import Header from '../components/Header.astro';
 import Footer from '../components/Footer.astro';
 import AskBot from '../components/AskBot.astro';
+import SignInDialog from '../components/SignInDialog.astro';
 import XpToast from '../components/XpToast.astro';
 import SpeakButtons from '../components/SpeakButtons.astro';
 import Reveal from '../components/Reveal.astro';
@@ -149,6 +150,9 @@ const jsonLd = JSON.stringify({ '@context': 'https://schema.org', '@graph': grap
         try { v = localStorage.getItem('lesson-view'); } catch {}
         document.documentElement.dataset.view = v || 'simple';
         try { if (localStorage.getItem('msdb-nav-rail') === '1') document.documentElement.dataset.nav = 'rail'; } catch {}
+        let u = null;
+        try { u = localStorage.getItem('msdb-user'); } catch {}
+        document.documentElement.dataset.auth = u ? 'in' : 'out';
         document.documentElement.classList.add('js');
       })();
       // keep the install prompt if the browser offers it before our scripts load
@@ -169,5 +173,10 @@ const jsonLd = JSON.stringify({ '@context': 'https://schema.org', '@graph': grap
     <CurrencyPrices />
     <AppInstall />
     <AskBot />
+    <SignInDialog />
+    <script>
+      import { trackVisit } from '../lib/cloud/track';
+      trackVisit();
+    </script>
   </body>
 </html>

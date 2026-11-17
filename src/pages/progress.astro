@@ -26,7 +26,26 @@ const payload = JSON.stringify({ moduleKeys, topics, modules: exam.modules.map((
         <h1 class="mt-2 text-3xl font-bold tracking-tight">My progress</h1>
       </div>
     </div>
-    <p class="mt-3 text-sm text-muted">Saved only in this browser. No account and no tracking. Clearing site data or switching device starts fresh.</p>
+    <section class="sync-card mt-6" aria-labelledby="sync-h">
+      <div class="sync-out">
+        <div>
+          <h2 id="sync-h" class="text-lg font-bold">Keep your progress on every device</h2>
+          <p class="mt-1 text-sm text-muted">Right now it's saved in this browser only. Sign in and it follows you to your phone, tablet and laptop. Optional, and everything works without it.</p>
+        </div>
+        <button type="button" data-account-signin class="btn btn-accent sync-btn"><svg class="size-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="8" r="4" /><path d="M4 21c0-4 3.6-7 8-7s8 3 8 7" /></svg>Sign in to sync</button>
+      </div>
+      <div class="sync-in">
+        <div>
+          <h2 class="text-lg font-bold">Synced to <span data-sync-name>your account</span></h2>
+          <p class="mt-1 text-sm text-muted" data-sync-status>Your progress is saved on this device and in your account.</p>
+        </div>
+        <p class="flex flex-wrap gap-2">
+          <button type="button" data-account-signout class="btn btn-outline sync-btn">Sign out</button>
+          <button type="button" id="sync-delete" class="btn btn-outline sync-btn sync-del">Delete my synced data</button>
+        </p>
+      </div>
+    </section>
+    <p class="mt-3 text-sm text-muted">Signed out, progress is saved only in this browser; clearing site data starts fresh. Usage is counted anonymously, with no cookies or IDs. <a class="text-accent underline" href="/privacy/">Privacy</a></p>
 
     <section class="band-navy mt-8 rounded-2xl p-5 sm:p-6" aria-label="Level">
       <div class="flex flex-wrap items-center justify-between gap-3">
@@ -151,3 +170,35 @@ const payload = JSON.stringify({ moduleKeys, topics, modules: exam.modules.map((
   window.addEventListener('progress-change', paint);
   $('pg-reset').addEventListener('click', () => { if (confirm('Reset all progress, scores and badges in this browser?')) reset(); });
 </script>
+
+<script>
+  import { hint, deleteCloudData } from '../lib/cloud/account';
+  const nameEl = document.querySelector<HTMLElement>('[data-sync-name]');
+  const statusEl = document.querySelector<HTMLElement>('[data-sync-status]');
+  const setName = (h: ReturnType<typeof hint>) => { if (h && nameEl) nameEl.textContent = h.email || h.name; };
+  setName(hint());
+  window.addEventListener('msdb-auth', (e) => setName((e as CustomEvent).detail));
+  window.addEventListener('msdb-sync', (e) => {
+    const d = (e as CustomEvent).detail as { state: string; at?: Date };
+    if (!statusEl) return;
+    if (d.state === 'syncing') statusEl.textContent = 'Syncing…';
+    else if (d.state === 'merged') { statusEl.textContent = 'Merged with your other devices. Refreshing…'; setTimeout(() => location.reload(), 900); }
+    else if (d.state === 'synced' && d.at) statusEl.textContent = `Up to date. Last synced at ${d.at.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}.`;
+    else if (d.state === 'error') statusEl.textContent = 'Couldn’t reach your account just now. Progress is safe on this device and will sync later.';
+  });
+  document.getElementById('sync-delete')?.addEventListener('click', async () => {
+    if (!confirm('Delete the copy of your progress stored in your account? Progress on this device stays. You will be signed out.')) return;
+    try { await deleteCloudData(); if (statusEl) statusEl.textContent = 'Deleted.'; } catch { alert('Could not delete right now. Please try again.'); }
+  });
+</script>
+
+<style>
+  .sync-card { border-radius: 1rem; border: 1px solid var(--border); background: var(--card); padding: 1.1rem 1.2rem; }
+  .sync-out, .sync-in { display: none; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 1rem; }
+  :global(html[data-auth='out']) .sync-out, :global(html[data-auth='in']) .sync-in { display: flex; }
+  .sync-out > div, .sync-in > div { flex: 1 1 280px; min-width: 0; }
+  .sync-btn { min-height: 44px; gap: .5rem; }
+  .sync-del { color: #a4262c; }
+  :global(html[data-theme='dark']) .sync-del { color: #ff9a9e; }
+  [data-sync-name] { overflow-wrap: anywhere; }
+</style>

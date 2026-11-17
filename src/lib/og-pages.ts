@@ -1,7 +1,6 @@
 /** Which pages get their own share card, and what it says. Keyed by page path. */
 import { getCollection } from 'astro:content';
 import { getNav } from './learn';
-import { SERVICES } from '../data/az-900/services';
 import type { Card } from './og';
 import { getExam } from '../data/exams';
 
@@ -19,7 +18,7 @@ export async function ogPages(): Promise<Map<string, Card>> {
     m.set(t.url, { eyebrow: `AZ-900 · ${t.module.shortTitle}`, title: d.title, text: d.answer, badge: '3D + portal simulation' });
   }
   for (const c of exam.comparisons) m.set(`/${exam.slug}/compare/${c.slug}/`, { eyebrow: 'Compare', title: c.title, text: c.answer, accent: '#9fe870', badge: 'Side by side' });
-  for (const s of SERVICES) m.set(`/${exam.slug}/services/${s.slug}/`, { eyebrow: `${s.cat} · in 60 seconds`, title: s.name, text: s.what, accent: '#8fcbf7', badge: `AWS: ${s.aws}`.slice(0, 34) });
+  for (const s of exam.services) m.set(`/${exam.slug}/services/${s.slug}/`, { eyebrow: `${s.cat} · in 60 seconds`, title: s.name, text: s.what, accent: '#8fcbf7', badge: `AWS: ${s.aws}`.slice(0, 34) });
   for (const w of exam.whatIfs) m.set(`/simulator/${w.slug}/`, { eyebrow: 'What happens if…?', title: w.q, text: w.answer, accent: '#ff9f7a', badge: '▶ Simulate it' });
   const hub = (p: string, c: Card) => m.set(p, c);
   hub('/', { eyebrow: 'Free AZ-900 course', title: 'Feel Azure without an Azure account', text: '3D simulations, Azure portal walkthroughs and practice labs in every lesson, plus a real-exam-style mock exam and certificate.' });
@@ -31,6 +30,7 @@ export async function ogPages(): Promise<Map<string, Card>> {
   hub(`/${exam.slug}/services/`, { eyebrow: 'Reference', title: 'Every Azure service in 60 seconds', text: 'What it is, when to use it, price feel in your currency and a simulation.', accent: '#8fcbf7' });
   hub(`/${exam.slug}/glossary/`, { eyebrow: 'Reference', title: 'Azure glossary', text: 'Every AZ-900 term explained in one line, linked to a lesson and a simulation.', accent: '#8fcbf7' });
   hub(`/${exam.slug}/labs/`, { eyebrow: 'Practice labs', title: 'Click through a simulated Azure portal', text: 'Guided tasks in a simulated portal and Cloud Shell. Education only, no Azure account needed.' });
+  hub('/platform/', { eyebrow: 'The platform', title: 'One learning engine for every Microsoft certification', text: 'Simulation-first lessons, an offline app, browser-side progress and quality gates on every build. Static, serverless and ready for new exams.', accent: '#ffd75e' });
   cache = m;
   return m;
 }

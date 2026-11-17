@@ -3,7 +3,7 @@
   "type": "module",
   "version": "1.0.0",
   "private": true,
-  "description": "Azure certification learning platform (azure.msdevbuild.com) — starting with AZ-900.",
+  "description": "Azure certification learning platform (azure.msdevbuild.com) \u2014 starting with AZ-900.",
   "scripts": {
     "dev": "astro dev",
     "build": "astro build",
@@ -18,7 +18,8 @@
     "verify": "npm run check:all && npm run qa:seo && npm run qa",
     "og": "node scripts/make-og.mjs",
     "icons": "node scripts/make-icons.mjs",
-    "indexnow": "node scripts/indexnow.mjs"
+    "indexnow": "node scripts/indexnow.mjs",
+    "stats": "node scripts/stats.mjs"
   },
   "dependencies": {
     "@astrojs/mdx": "4.3.14",
@@ -27,6 +28,7 @@
     "@tailwindcss/typography": "0.5.20",
     "@tailwindcss/vite": "4.3.3",
     "astro": "5.18.2",
+    "firebase": "13.4.0",
     "tailwindcss": "4.3.3",
     "three": "0.185.1"
   },

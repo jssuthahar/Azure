@@ -1,6 +1,5 @@
 import type { APIRoute } from 'astro';
 import { getCollection } from 'astro:content';
-import { SERVICES } from '../data/az-900/services';
 import { getNav } from '../lib/learn';
 import { getGlossary } from '../lib/glossary';
 import { SITE } from '../config';
@@ -51,7 +50,7 @@ export const GET: APIRoute = async () => {
     out.push('', ...c.pick.map(([i, w]) => `- Pick ${i} when ${plain(w)}`), `- Exam tip: ${plain(c.examTip)}`, ...c.faq.map(([q, a]) => `- Q: ${q} A: ${plain(a)}`), '');
   }
   out.push('# Azure services in 60 seconds', '');
-  for (const s of SERVICES) {
+  for (const s of exam.services) {
     out.push(`## ${s.name}`, `URL: ${u(`/${exam.slug}/services/${s.slug}/`)}`, `Category: ${s.cat} · Model: ${s.model} · AWS equivalent: ${s.aws}`, '', plain(s.what), '', `Use it when: ${s.use.join('; ')}.`, `Not the best fit when: ${s.avoid.join('; ')}.`, `Price feel (illustrative): ${plain(s.price)}`, '');
   }
   out.push('# What happens if…? (Azure Simulator)', '');

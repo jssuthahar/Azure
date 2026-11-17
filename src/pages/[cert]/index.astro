@@ -272,7 +272,7 @@ const schema = [
               <div class="card border-dashed p-5">
                 <h4 class="font-semibold">Beyond the exam (real-world extras)</h4>
                 <p class="mt-1 text-sm text-muted">Not listed in the current skills outline, but interviewers and projects expect you to know them.</p>
-                <p class="mt-3 flex flex-wrap gap-1.5 text-sm">{extra.map((t) => (t.published ? <a href={nav.find((n) => n.slug === t.slug)!.url} class="chip">{t.title}</a> : <span class="chip chip-muted">{t.title} · coming next</span>))}</p>
+                <p class="mt-3 flex flex-wrap gap-1.5 text-sm">{extra.map((t) => { const live = nav.find((n) => n.slug === t.slug && n.published); return live ? <a href={live.url} class="chip">{t.title}</a> : <span class="chip chip-muted">{t.title} · coming next</span>; })}</p>
               </div>
             )}
           </div>

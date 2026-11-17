@@ -25,7 +25,7 @@ const RULES = [
   [/\b([Ww])e are(?= [a-z])/g, '$1e\'re'], [/\b([Tt])here is(?= [a-z])/g, '$1here\'s'], [/\b([Tt])hat is(?= [a-z]+ing\b)/g, '$1hat\'s'],
 ];
 // "won't" from "will not" must not hit "will notice": guarded by \b above.  Fix "Won't" capital: W + on't.
-const FIX = (s) => s.replace(/\b([Ww])on't\b/g, (m, w) => (w === 'W' ? "Won't" : "won't"));
+const FIX = (s) => s.replace(/\b([Ww])on't\b/g, (_m, w) => (w === 'W' ? "Won't" : "won't"));
 
 /** Split a line into [text, protected] runs: inline code, quoted strings and JSX braces are protected. */
 function runs(line) {

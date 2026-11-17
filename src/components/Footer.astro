@@ -19,7 +19,7 @@ const year = new Date().getFullYear();
       <li><a class="hover:text-[var(--accent-deep)]" href="/terms/">Terms</a></li>
     </ul>
   </div>
-  <p class="border-t border-default px-4 py-4 text-center text-xs text-muted">© {year} {SITE.org}. Independent learning resource, not affiliated with or endorsed by Microsoft. Practice questions are original, not actual exam questions.</p>
+  <p class="border-t border-default px-4 py-4 text-center text-xs text-muted">{`© ${year} ${SITE.org}.`} Independent learning resource, not affiliated with or endorsed by Microsoft. Practice questions are original, not actual exam questions.</p>
 </footer>
 ) : (
 
@@ -41,7 +41,7 @@ const year = new Date().getFullYear();
       <p class="text-sm font-semibold">Azure Tutorials</p>
       <ul class="mt-3 space-y-2 text-sm text-muted">
         <li><a class="hover:text-[var(--accent-deep)]" href="/certifications/">All certifications</a></li>
-        <li><a class="hover:text-[var(--accent-deep)]" href={`/${exam.slug}/`}>{exam.code} {exam.name.replace(/^Microsoft /, '')}</a></li>
+        <li><a class="hover:text-[var(--accent-deep)]" href={`/${exam.slug}/`}>{`${exam.code} ${exam.name.replace(/^Microsoft /, '')}`}</a></li>
         {exam.modules.map((m) => <li><a class="hover:text-[var(--accent-deep)]" href={`/${exam.slug}/#${m.slug}`}>{m.shortTitle}</a></li>)}
         <li><a class="hover:text-[var(--accent-deep)]" href={`/${exam.slug}/mock-exam/`}>{exam.code} mock exam</a></li>
         <li><a class="hover:text-[var(--accent-deep)]" href={`/${exam.slug}/interview/`}>{exam.code} interview questions</a></li>
@@ -54,6 +54,7 @@ const year = new Date().getFullYear();
       <ul class="mt-3 space-y-2 text-sm text-muted">
         <li><a class="hover:text-[var(--accent-deep)]" href={SITE.blog}>Programming tutorials &amp; blog</a></li>
         <li><a class="hover:text-[var(--accent-deep)]" href="/about/">About</a></li>
+        <li><a class="hover:text-[var(--accent-deep)]" href="/platform/">The platform</a></li>
         <li><a class="hover:text-[var(--accent-deep)]" href={SITE.profile}>About Suthahar</a></li>
         <li><a class="hover:text-[var(--accent-deep)]" href="https://www.youtube.com/@MSDEVBUILD?sub_confirmation=1" target="_blank" rel="noopener">YouTube channel</a></li>
         <li><a class="hover:text-[var(--accent-deep)]" href="https://blog.msdevbuild.com/contact/">Contact</a></li>
@@ -81,6 +82,6 @@ const year = new Date().getFullYear();
       </p>
     </div>
   </div>
-  <div class="border-t border-default py-5 text-center text-xs text-muted">© {year} {SITE.org}. Microsoft, Azure and related marks are trademarks of the Microsoft group of companies.</div>
+  <div class="border-t border-default py-5 text-center text-xs text-muted">{`© ${year} ${SITE.org}.`} Microsoft, Azure and related marks are trademarks of the Microsoft group of companies.</div>
 </footer>
 )}

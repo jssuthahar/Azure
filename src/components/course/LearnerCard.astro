@@ -1,6 +1,6 @@
 ---
 /**
- * Learner profile + course progress, read from this browser (no account).
+ * Learner profile + course progress, read from this browser (synced when signed in).
  * Shows level, XP, streak, lessons done, best mock score and a Continue button
  * that resumes the last lesson or the first one not yet done.
  */
@@ -36,7 +36,7 @@ const json = JSON.stringify(lessons).replace(/</g, '\\u003c');
     <p class="text-sm text-muted" data-lc-next-label>Start here</p>
     <p class="lc-next-t" data-lc-next-title>{lessons[0]?.t}</p>
     <a href={lessons[0]?.u} class="btn btn-accent lc-btn" data-lc-next>Start lesson 1 <span aria-hidden="true">→</span></a>
-    <p class="mt-2 text-xs text-muted">Saved in this browser. No sign-in needed.</p>
+    <p class="mt-2 text-xs text-muted">Saved in this browser. Sign in to sync it across devices.</p>
   </div>
   <script type="application/json" data-lc-data set:html={json} />
 </section>

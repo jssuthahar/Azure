@@ -49,8 +49,7 @@ const { steps, caption } = Astro.props;
     const steps = [...fig.querySelectorAll<HTMLElement>('.flow-step')];
     const reset = () => {
       fig.removeAttribute('data-playing');
-      steps.forEach((s) => s.removeAttribute('data-active') || s.removeAttribute('data-done'));
-      steps.forEach((s) => s.removeAttribute('data-done'));
+      steps.forEach((s) => { s.removeAttribute('data-active'); s.removeAttribute('data-done'); });
       btn.textContent = '▶ Play steps';
     };
     btn.addEventListener('click', async () => {

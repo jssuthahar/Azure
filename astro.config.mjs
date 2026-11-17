@@ -10,6 +10,7 @@ import { join } from 'node:path';
 // Sitemap <lastmod>: each lesson's real `updated:` date from its frontmatter.
 const SITE_URL = 'https://azure.msdevbuild.com';
 const lastmod = new Map();
+/** @param {string} dir */
 const walk = (dir) => readdirSync(dir).forEach((f) => {
   const p = join(dir, f);
   if (statSync(p).isDirectory()) return walk(p);

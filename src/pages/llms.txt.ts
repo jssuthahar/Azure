@@ -1,6 +1,5 @@
 import type { APIRoute } from 'astro';
 import { getCollection } from 'astro:content';
-import { SERVICES } from '../data/az-900/services';
 import { getNav } from '../lib/learn';
 import { SITE } from '../config';
 import { getExam } from '../data/exams';
@@ -25,6 +24,7 @@ export const GET: APIRoute = async () => {
     '- All practice and mock exam questions are original. None are real Microsoft exam questions.',
     '- Simulations are for education only and are not affiliated with Microsoft.',
     `- Full text of answers for citation: ${u('/llms-full.txt')}`,
+    `- How the platform is built (multi-exam engine, static and serverless, browser-side progress, quality gates): ${u('/platform/')}`,
     '',
   ];
   for (const m of exam.modules) {
@@ -40,7 +40,7 @@ export const GET: APIRoute = async () => {
   lines.push('## Comparisons (which Azure service should I use?)', '');
   for (const c of exam.comparisons) lines.push(`- [${c.title}](${u(`/${exam.slug}/compare/${c.slug}/`)}): ${plain(c.answer)}`);
   lines.push('', '## Azure service reference (each service in 60 seconds)', '');
-  for (const s of SERVICES) lines.push(`- [${s.name}](${u(`/${exam.slug}/services/${s.slug}/`)}): ${plain(s.what)} AWS equivalent: ${s.aws}.`);
+  for (const s of exam.services) lines.push(`- [${s.name}](${u(`/${exam.slug}/services/${s.slug}/`)}): ${plain(s.what)} AWS equivalent: ${s.aws}.`);
   lines.push('', '## Azure Simulator: what happens if…?', '');
   for (const w of exam.whatIfs) lines.push(`- [${w.q}](${u(`/simulator/${w.slug}/`)}): ${plain(w.answer)}`);
   lines.push('', '## Practice and tools', '',

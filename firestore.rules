@@ -1,0 +1,39 @@
+rules_version = '2';
+// MSDEVBUILD Azure: Firestore security rules.
+// Deploy: firebase deploy --only firestore:rules --project msdevbuild-azure
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // Signed-in learner's synced progress: only the owner can read or write it.
+    // v holds JSON strings keyed progress | review | plan | cert.
+    match /users/{uid} {
+      allow read, delete: if request.auth != null && request.auth.uid == uid;
+      allow create, update: if request.auth != null && request.auth.uid == uid
+        && request.resource.data.keys().hasOnly(['v', 'updatedAt'])
+        && request.resource.data.v is map
+        && request.resource.data.v.keys().hasOnly(['progress', 'review', 'plan', 'cert'])
+        && (!('progress' in request.resource.data.v) || (request.resource.data.v.progress is string && request.resource.data.v.progress.size() < 400000))
+        && (!('review' in request.resource.data.v) || (request.resource.data.v.review is string && request.resource.data.v.review.size() < 400000))
+        && (!('plan' in request.resource.data.v) || (request.resource.data.v.plan is string && request.resource.data.v.plan.size() < 50000))
+        && (!('cert' in request.resource.data.v) || (request.resource.data.v.cert is string && request.resource.data.v.cert.size() < 5000))
+        && request.resource.data.updatedAt == request.time;
+    }
+
+    // Anonymous usage counters: stats/<YYYY-MM-DD|total>__<event> { n }.
+    // Anyone may read; a write may only add exactly 1.
+    match /stats/{id} {
+      allow read: if true;
+      allow create: if id.matches('^(total|[0-9]{4}-[0-9]{2}-[0-9]{2})__(learner|visit|lesson|quiz|mock|lab|signin)$')
+        && request.resource.data.keys().hasOnly(['n'])
+        && request.resource.data.n == 1;
+      allow update: if request.resource.data.keys().hasOnly(['n'])
+        && request.resource.data.n == resource.data.n + 1;
+      allow delete: if false;
+    }
+
+    // Everything else is closed.
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}

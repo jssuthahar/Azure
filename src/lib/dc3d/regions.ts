@@ -1,4 +1,4 @@
-import { THREE, C, v, mat, latLon, Packets, every, isDark } from './kit';
+import { THREE, C, mat, latLon, Packets, every, isDark } from './kit';
 import type { Ctx, Ctl } from './types';
 
 const R = 20;

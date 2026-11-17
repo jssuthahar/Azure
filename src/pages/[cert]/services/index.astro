@@ -1,13 +1,14 @@
 ---
 import { SITE } from '../../../config';
 import Base from '../../../layouts/Base.astro';
-import { SERVICES, SERVICE_CATS } from '../../../data/az-900/services';
 import { getExam, examStaticPaths } from '../../../data/exams';
 
 export function getStaticPaths() {
   return examStaticPaths();
 }
 const exam = getExam(Astro.params.cert);
+const SERVICES = exam.services;
+const SERVICE_CATS = [...new Set(SERVICES.map((s) => s.cat))];
 const crumbs = [{ name: 'Home', url: '/' }, { name: `${exam.code}`, url: `/${exam.slug}/` }, { name: 'Service reference', url: `/${exam.slug}/services/` }];
 const itemList = [{ '@type': 'ItemList', name: 'Azure services in 60 seconds', numberOfItems: SERVICES.length, itemListElement: SERVICES.map((s, i) => ({ '@type': 'ListItem', position: i + 1, name: s.name, url: `${SITE.url}/${exam.slug}/services/${s.slug}/` })) }];
 ---

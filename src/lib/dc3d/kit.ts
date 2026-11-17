@@ -206,7 +206,7 @@ export class Packets {
   private geo: THREE.SphereGeometry;
   private mats = new Map<number, THREE.Material>();
 
-  constructor(private stage: Stage, size = 0.35, private parent: THREE.Object3D = stage.scene) {
+  constructor(stage: Stage, size = 0.35, private parent: THREE.Object3D = stage.scene) {
     this.geo = new THREE.SphereGeometry(size, 12, 10);
     stage.onTick((_, dt) => this.update(dt));
   }

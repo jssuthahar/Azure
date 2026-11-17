@@ -1,6 +1,6 @@
 ---
 name: lesson-agent
-description: Builds and updates lessons on azure.msdevbuild.com using the fixed lesson pattern - 30-second answer, Simulations (3D View | Azure Portal | Practice Lab), explanation sections, exam tip, quiz, Previous/Next. Use whenever a lesson is created, rewritten, or given simulations, for AZ-900, AI-900 or any later exam. It wires all three simulation tabs (lesson-sims.ts, portal-tours.ts, sims3d.ts, labs.ts), writes the MDX and original quiz questions, and runs npm run verify.
+description: Builds and updates lessons on azure.msdevbuild.com using the fixed lesson pattern - 30-second answer, Simulations (3D View | Azure Portal | Practice Lab), explanation sections, exam tip, quiz, Previous/Next. Use whenever a lesson is created, rewritten, or given simulations, for AZ-900, AI-901 or any later exam. It wires all three simulation tabs (lesson-sims.ts, portal-tours.ts, sims3d.ts, labs.ts), writes the MDX and original quiz questions, and runs npm run verify.
 tools: Read, Write, Edit, Glob, Grep, Bash
 model: opus
 ---

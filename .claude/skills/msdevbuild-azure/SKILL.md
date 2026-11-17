@@ -1,6 +1,6 @@
 ---
 name: msdevbuild-azure
-description: House rules for azure.msdevbuild.com (MSDEVBUILD Azure certification site). Use for ANY change in this repo - writing or editing lessons, questions, comparisons, services, simulations, pages, components, styles, SEO/AEO/GEO, the installable app, or adding a new exam such as AI-900. Covers product decisions, lesson flow, brand line, human-sounding writing, SEO/AEO/GEO, visual style, phone/iPad/PWA support, accessibility and the verification commands that must pass before work is done.
+description: House rules for azure.msdevbuild.com (MSDEVBUILD Azure certification site). Use for ANY change in this repo - writing or editing lessons, questions, comparisons, services, simulations, pages, components, styles, SEO/AEO/GEO, the installable app, or adding a new exam such as AI-901. Covers product decisions, lesson flow, brand line, human-sounding writing, SEO/AEO/GEO, visual style, phone/iPad/PWA support, accessibility and the verification commands that must pass before work is done.
 ---
 
 # MSDEVBUILD Azure: how we build
@@ -18,12 +18,15 @@ Read the reference file for the area you are touching before you start:
 | Any wording a learner or search engine will see | [references/voice.md](references/voice.md) |
 | Titles, descriptions, schema, llms.txt, sitemap, share images | [references/seo-aeo-geo.md](references/seo-aeo-geo.md) |
 | Components, CSS, layout, phone/iPad, installable app, accessibility | [references/style-and-ux.md](references/style-and-ux.md) |
-| Adding or changing an exam (AI-900 next) | [references/new-exam.md](references/new-exam.md) |
+| Adding or changing an exam (AI-901 next) | [references/new-exam.md](references/new-exam.md) |
 
 ## Non-negotiables
 
 **Product decisions (made by the owner; do not change without asking)**
-- Free, no account. Progress, XP, streak, certificate, currency and lab state live **in the browser only** (localStorage). Sign-in sync comes later.
+- Free, and **no account required**. Progress, XP, streak, certificate, currency and lab state live in the browser (localStorage) and everything works signed out.
+- **Optional Google sign-in** (owner's decision, 17 Nov 2026; Firebase project `msdevbuild-azure`, config `FIREBASE` in `src/config.ts`). `src/lib/cloud/`: `firebase.ts` lazy-loads the SDK (Auth + Firestore Lite, only on sign-in or for a returning signed-in learner); `account.ts` handles sign-in, sign-out and delete-my-data and sets `<html data-auth="in|out">`; `sync.ts` merges local ⇄ `users/<uid>` (union lessons, best scores, newer review card, better certificate), then pushes on `progress-change` / `review-change` / `msdb-data-change`. A new localStorage key that should follow the learner goes in `KEYS` in `sync.ts` with a merge rule, and in `firestore.rules`.
+- **Anonymous usage counts** (`src/lib/cloud/track.ts`): `stats/<day|total>__<event>`, +1 only, no cookies or IDs, skipped for Do Not Track / GPC and on any host except the live site. `npm run stats` prints them. Don't add per-person analytics or Google Analytics without asking.
+- `firestore.rules` is the security boundary. Change it only with the emulator test, then `firebase deploy --only firestore:rules --project msdevbuild-azure` (outward-facing: ask first).
 - Currency defaults to **INR** and the learner can change it (every picker stays in sync).
 - The certificate is an MSDEVBUILD **practice** certificate, shareable by link, stored in the browser. Never imply it is a Microsoft credential.
 - **Only original practice questions.** Never real, recalled or leaked Microsoft exam questions, even if asked. Say so on exam pages.

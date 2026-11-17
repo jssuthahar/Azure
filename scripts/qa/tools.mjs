@@ -90,7 +90,7 @@ for (const id of LABS_CLI_ONLY) {
   for (let i = 0; i < total; i++) {
     const btn = p.locator(`.sim-task[data-i="${i}"] .sim-try`);
     if (!(await btn.count())) continue;
-    await btn.evaluate((el) => el.click());
+    await btn.evaluate((el) => /** @type {HTMLElement} */ (el).click());
     await p.press('.sim-in', 'Enter');
     await p.waitForTimeout(50);
     // answer any y/n question from a delete in the chain

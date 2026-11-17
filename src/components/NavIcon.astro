@@ -1,0 +1,21 @@
+---
+/** Line icons for the top menu (24px grid, 1.8 stroke, currentColor). Decorative: always aria-hidden. */
+interface Props { name: string; size?: number; class?: string }
+const { name, size = 17, class: cls = '' } = Astro.props;
+const P: Record<string, string> = {
+  home: 'M3 10.5 12 3l9 7.5M5.5 9v11h13V9M10 20v-6h4v6',
+  cert: 'M12 4 2 9l10 5 10-5-10-5ZM6 11.2V16c0 1.7 2.7 3 6 3s6-1.3 6-3v-4.8M22 9v6',
+  info: 'M12 21a9 9 0 1 0 0-18 9 9 0 0 0 0 18ZM12 11v5M12 7.8v.2',
+  progress: 'M4 20V10M10 20V4M16 20v-7M22 20H2',
+  compass: 'M12 21a9 9 0 1 0 0-18 9 9 0 0 0 0 18ZM15.5 8.5l-2 5-5 2 2-5 5-2Z',
+  book: 'M4 5.5A2.5 2.5 0 0 1 6.5 3H20v15H6.5A2.5 2.5 0 0 0 4 20.5v-15ZM4 20.5A2.5 2.5 0 0 0 6.5 23H20v-5',
+  target: 'M12 21a9 9 0 1 0 0-18 9 9 0 0 0 0 18ZM12 16a4 4 0 1 0 0-8 4 4 0 0 0 0 8ZM12 12h.01',
+  flask: 'M9 3h6M10 3v6L4.5 19A1.5 1.5 0 0 0 5.8 21h12.4a1.5 1.5 0 0 0 1.3-2L14 9V3M7 15h10',
+  bolt: 'M13 2 4 14h7l-1 8 9-12h-7l1-8Z',
+  cube: 'M12 2 21 7v10l-9 5-9-5V7l9-5ZM3 7l9 5 9-5M12 12v10',
+  timer: 'M12 22a8 8 0 1 0 0-16 8 8 0 0 0 0 16ZM12 10v4l2.5 2M9 2h6',
+  briefcase: 'M3 8h18v12H3zM8 8V5a1 1 0 0 1 1-1h6a1 1 0 0 1 1 1v3M3 13h18',
+  library: 'M4 4h4v16H4zM10 4h4v16h-4zM16.5 4.5l3.8 1-3.9 14.5-3.8-1',
+};
+---
+<svg class={cls} width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d={P[name] ?? P.info} /></svg>

@@ -1,17 +1,31 @@
 ---
 import Base from '../layouts/Base.astro';
 ---
-<Base breadcrumbs={[{ name: 'Home', url: '/' }, { name: 'Privacy', url: '/privacy/' }]} title="Privacy Policy | MSDEVBUILD Azure" description="How MSDEVBUILD Azure handles your data: progress and scores stay in your own browser storage, with no account and no server-side tracking." wide={false}>
+<Base breadcrumbs={[{ name: 'Home', url: '/' }, { name: 'Privacy', url: '/privacy/' }]} title="Privacy Policy | MSDEVBUILD Azure" description="How MSDEVBUILD Azure handles your data: progress stays in your browser, Google sign-in is optional for sync, and usage is counted anonymously without cookies." wide={false}>
   <div class="lesson">
     <h1 class="text-4xl font-bold tracking-tight">Privacy Policy</h1>
-    <p><em>Last updated: 11 November 2026</em></p>
-    <h2 id="what">What we store</h2>
-    <p>Your learning progress (completed topics, knowledge-check scores, mock exam results, badges) and your theme choice are stored in your browser's <code>localStorage</code> on your own device. An unfinished mock exam is kept in <code>sessionStorage</code> so a refresh does not lose it. None of this is sent to us.</p>
-    <h2 id="accounts">Accounts</h2>
-    <p>There are no accounts, sign-ups or passwords. We do not collect names or email addresses on this site.</p>
+    <p><em>Last updated: 17 November 2026</em></p>
+    <p>The short version: you can use everything on this site without an account. If you sign in, we keep a copy of your study progress so it follows you between devices. We count how the site is used, but never who uses it.</p>
+
+    <h2 id="what">What stays on your device</h2>
+    <p>Your learning progress (completed lessons, quiz and mock exam scores, XP, streaks, badges, your practice deck, study plan and practice certificate), plus settings like theme and currency, are stored in your browser's <code>localStorage</code>. An unfinished mock exam is kept in <code>sessionStorage</code> so a refresh doesn't lose it. If you don't sign in, none of this is sent to us.</p>
+
+    <h2 id="accounts">Signing in (optional)</h2>
+    <p>You can sign in with Google to sync your progress across devices. Sign-in is handled by Google Firebase Authentication. We receive your name, email address, profile picture and a user ID from Google. We don't receive your password.</p>
+    <p>While you're signed in, the progress listed above is copied to a private record in Google Cloud Firestore that only your account can read or write. We use it only to sync your progress. We don't email you, share it or sell it.</p>
+
+    <h2 id="counts">Anonymous usage counts</h2>
+    <p>To understand how the site is used, we count events: a visit (once per browser per day), a new learner (once per browser), a lesson completed, a quiz taken, a mock exam sat, a lab finished and a new sign-in. Each event only adds 1 to a daily total. There are no cookies, no IDs, and nothing that links a count to you.</p>
+    <p>We don't count anything if your browser sends a Do Not Track or Global Privacy Control signal. We don't use Google Analytics or any advertising tracker.</p>
+
     <h2 id="third-party">Third parties</h2>
-    <p>The site is served as static files. Links to Microsoft Learn and other sites are governed by those sites' own privacy policies.</p>
+    <p>The site is served as static files from GitHub Pages. Sign-in, sync and counts use Google Firebase, which processes data under <a href="https://firebase.google.com/support/privacy" target="_blank" rel="noopener">Google's Firebase privacy terms ↗</a>. Links to Microsoft Learn and other sites are governed by those sites' own privacy policies.</p>
+
     <h2 id="control">Your control</h2>
-    <p>You can erase everything at any time with “Reset my progress” on the <a href="/progress/">My Progress</a> page, or by clearing this site's data in your browser.</p>
+    <ul>
+      <li><strong>On this device:</strong> erase everything with “Reset my progress” on the <a href="/progress/">My Progress</a> page, or by clearing this site's data in your browser.</li>
+      <li><strong>Synced copy:</strong> when signed in, use “Delete my synced data” on the My Progress page. It removes your cloud record straight away. Signing out keeps your progress on the device you're using.</li>
+      <li><strong>Questions:</strong> <a href="https://blog.msdevbuild.com/contact/">contact us</a> and we'll help.</li>
+    </ul>
   </div>
 </Base>

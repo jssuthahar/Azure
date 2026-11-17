@@ -7,7 +7,6 @@ import ProblemSolution from '../../../components/ProblemSolution.astro';
 import { labsForTopic, ALL_LABS } from '../../../lib/sim/labs';
 import LessonSimulations from '../../../components/LessonSimulations.astro';
 import { ogImagePath } from '../../../lib/og-pages';
-import { SERVICES } from '../../../data/az-900/services';
 import { sectionKind, SIMPLE_SECTIONS } from '../../../lib/rehype-sections.mjs';
 import Toc from '../../../components/Toc.astro';
 import ShareButtons from '../../../components/ShareButtons.astro';
@@ -54,7 +53,7 @@ const hasSims = Boolean(exam.lessonSims[topicSlug!]);
 const examTips = d.revision.examTips ?? [];
 // Topic cluster links for the sidebar (comparisons, service reference, what-ifs about this lesson).
 const lessonCompares = exam.comparisons.filter((c) => c.lessons.includes(topicSlug!));
-const lessonServices = SERVICES.filter((s) => s.lesson === topicSlug);
+const lessonServices = exam.services.filter((s) => s.lesson === topicSlug);
 const lessonWhatIfs = exam.whatIfs.filter((w) => w.lessons.includes(topicSlug!));
 
 // Same flow on every lesson: answer → Simulations → Explanation → Exam tip → Quiz → Previous/Next.
@@ -258,13 +257,13 @@ const schema = [
       {lessonServices.length > 0 && (
         <div>
           <p class="mb-2 text-xs font-bold tracking-[0.14em] uppercase text-muted">In 60 seconds</p>
-          <ul class="space-y-1 text-sm">{lessonServices.map((s) => <li><a class="text-accent hover:underline" href={`/${exam.slug}/services/${s.slug}/`}>{s.icon} {s.name}</a></li>)}</ul>
+          <ul class="space-y-1 text-sm">{lessonServices.map((s) => <li><a class="text-accent hover:underline" href={`/${exam.slug}/services/${s.slug}/`}>{`${s.icon} ${s.name}`}</a></li>)}</ul>
         </div>
       )}
       {lessonWhatIfs.length > 0 && (
         <div>
           <p class="mb-2 text-xs font-bold tracking-[0.14em] uppercase text-muted">What happens if…?</p>
-          <ul class="space-y-1 text-sm">{lessonWhatIfs.map((w) => <li><a class="text-accent hover:underline" href={`/simulator/${w.slug}/`}>{w.emoji} {w.q}</a></li>)}</ul>
+          <ul class="space-y-1 text-sm">{lessonWhatIfs.map((w) => <li><a class="text-accent hover:underline" href={`/simulator/${w.slug}/`}>{`${w.emoji} ${w.q}`}</a></li>)}</ul>
         </div>
       )}
     </div>

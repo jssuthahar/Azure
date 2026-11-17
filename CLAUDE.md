@@ -1,6 +1,6 @@
 # azure.msdevbuild.com
 
-Free Azure certification learning site (AZ-900 live, AI-900 next) by **MSDEVBUILD · Multi-Stack Dev Build**. Astro 5 + MDX + Tailwind 4, static, GitHub Pages.
+Free Azure certification learning site (AZ-900 live, AI-901 next) by **MSDEVBUILD · Multi-Stack Dev Build**. Astro 5 + MDX + Tailwind 4, static, GitHub Pages.
 
 **Before any change, use the `msdevbuild-azure` skill** (`.claude/skills/msdevbuild-azure/`). It holds the house rules for content, voice, SEO/AEO/GEO, style, phones/iPad/PWA, accessibility and adding exams.
 
@@ -10,7 +10,7 @@ Always:
 - Brand line on every surface via `SITE.brandLine` / `<BrandLine />`; never retype it.
 - Writing must read as human-written (`npm run check:human`); exam questions stay formal.
 - Original practice questions only, never real exam content. Simulators are labelled education-only.
-- INR default currency (user can change); no sign-in; progress and certificate stay in the browser.
+- INR default currency (user can change). Sign-in is optional (Google via Firebase, owner's decision 17 Nov 2026): everything works signed out from the browser; signing in only syncs progress. Usage counts are anonymous (`src/lib/cloud/track.ts`), never per person.
 - No hard-coded `az-900` in shared code: use `src/data/exams.ts`.
 - Don't run `npm run indexnow`, commit or push unless asked.
 

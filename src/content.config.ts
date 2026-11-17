@@ -63,7 +63,7 @@ const questions = defineCollection({
   loader: glob({ pattern: '**/*.json', base: './src/content/questions' }),
   schema: z.object({
     cert: z.string(),
-    /** Exam area number (1..n): AZ-900 has 3, AI-900 has 5. */
+    /** Exam area number (1..n): AZ-900 has 3, AI-901 has 2. */
     domain: z.number().int().min(1).max(9),
     topic: z.string().optional(),
     questions: z.array(question).min(1),

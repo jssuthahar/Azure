@@ -140,7 +140,7 @@ export function initPresent() {
     const nextUrl = nextLessonUrl();
     nextBtn.disabled = last && !nextUrl;
     nextBtn.querySelector('.present-word')!.textContent = last ? 'Next lesson' : 'Next';
-    root.scrollTop = 0;
+    if (root) root.scrollTop = 0;
     // Canvases (3D View) measure themselves on resize; they were hidden until now.
     window.dispatchEvent(new Event('resize'));
     if (focus) {

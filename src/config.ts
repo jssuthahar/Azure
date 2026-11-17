@@ -40,3 +40,28 @@ export const NAV = [
   { label: 'My Progress', href: '/progress/' },
   { label: 'About', href: '/about/' },
 ] as const;
+
+/**
+ * Firebase web config (project msdevbuild-azure). These values are public by design:
+ * access is controlled by firestore.rules, not by keeping this secret.
+ * Used for optional Google sign-in (progress sync) and anonymous usage counts.
+ */
+export const FIREBASE = {
+  apiKey: 'AIzaSyAUkdCvWJ-1_IaIe_PHa7xqqy3ZBDtGd4Q',
+  authDomain: 'msdevbuild-azure.firebaseapp.com',
+  projectId: 'msdevbuild-azure',
+  storageBucket: 'msdevbuild-azure.firebasestorage.app',
+  messagingSenderId: '716410365766',
+  appId: '1:716410365766:web:2bef18ffc01314eb51a747',
+} as const;
+
+/**
+ * Sign-in options shown in the sign-in dialog. Turn one on only after its provider is
+ * enabled in Firebase Authentication (Microsoft: Azure app registration; LinkedIn: OIDC
+ * provider, needs Identity Platform). Off = shown as "Coming soon".
+ */
+export const AUTH_PROVIDERS = { google: true, microsoft: false, linkedin: false } as const;
+export type AuthProviderId = keyof typeof AUTH_PROVIDERS;
+
+/** Usage counts are only sent from the live site, never from localhost, previews or QA runs. */
+export const COUNT_HOSTS = ['azure.msdevbuild.com'] as const;
