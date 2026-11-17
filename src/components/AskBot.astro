@@ -33,13 +33,13 @@ const here = exams.find((e) => e.slug === Astro.url.pathname.split('/')[1])?.slu
       <input id="ask-q" type="text" enterkeyhint="send" maxlength="200" placeholder="Pick an exam first" disabled />
       <button type="submit" class="ask-send" disabled>Ask</button>
     </form>
-    <p class="ask-note">Answers come from MSDEVBUILD lessons and stay on your device. Education only, not affiliated with Microsoft.</p>
+    <p class="ask-note">Answers show the 3D view and portal simulation first, come from MSDEVBUILD lessons and stay on your device. Education only, not affiliated with Microsoft.</p>
   </section>
 </div>
 
 <script>
   import { makeRanker, ask, type Ranker } from '../lib/ask';
-  import type { AskIndex, AskEntry, TutorEntry } from '../lib/ask-index';
+  import type { AskIndex, AskEntry, TutorEntry, SimCard } from '../lib/ask-index';
 
   type Exam = { slug: string; code: string; name: string };
   const root = document.getElementById('ask')!;
@@ -139,23 +139,82 @@ const here = exams.find((e) => e.slug === Astro.url.pathname.split('/')[1])?.slu
     current = loaded.get(slug)!;
     lockInput(false, `Ask about ${exam.code}…`);
     const lesson = current.idx.tutor?.[location.pathname];
-    if (lesson && slug === here) return tutorHello(lesson);
+    if (lesson && slug === here) return tutorHello(lesson, location.pathname);
     const f = document.createDocumentFragment();
-    f.append(text(`Great, ${exam.code} it is. Ask me anything from the lessons. A few to try:`));
+    f.append(text(`Great, ${exam.code} it is. Ask me anything. I’ll show it to you in 3D first, then walk you through the Azure portal, then explain it. A few to try:`));
     f.append(chips(current.idx.suggest.map((q) => ({ label: q, on: () => question(q) }))));
     say(f);
     input.focus();
   }
 
-  function answer(e: AskEntry, others: AskEntry[]) {
+  /* ---------- simulations first: 3D, then the Azure portal, then the text ---------- */
+  const simsFor = (url?: string): SimCard | undefined => (url ? current?.idx.sims?.[url] : undefined);
+  const hasSims = (c?: SimCard) => !!c && !!(c.d3 || c.portal || c.labs.length);
+  const head = (s: string) => el('p', 'ask-head2', s);
+  /** Opens a simulation tab: in place when the learner is on that lesson, otherwise the lesson at that tab. */
+  function simJump(url: string, hash: string, label: string) {
+    const onLesson = location.pathname === url && !!document.getElementById('simulations');
+    if (!onLesson) return link(label, `${url}${hash}`, 'ask-chip ask-go');
+    const b = el('button', 'ask-chip ask-go', label);
+    b.type = 'button';
+    b.addEventListener('click', () => {
+      // LessonSimulations listens for hashchange; replaceState + a synchronous event keeps the back button clean.
+      history.replaceState(history.state, '', hash);
+      dispatchEvent(new HashChangeEvent('hashchange'));
+      if (matchMedia('(max-width: 640px)').matches) close();
+    });
+    return b;
+  }
+  const row = (...nodes: Node[]) => { const w = el('div', 'ask-chips'); w.append(...nodes); return w; };
+
+  function show3d(url: string, c: SimCard) {
+    if (!c.d3) return;
     const f = document.createDocumentFragment();
+    f.append(head('🧊 1 · See it in 3D'));
+    f.append(el('p', 'ask-strong', c.d3.step));
+    f.append(text(c.d3.intro));
+    f.append(el('p', 'ask-more', short(c.d3.text, 260)));
+    f.append(row(simJump(url, '#sim-3d', '▶ Open the 3D view')));
+    say(f);
+  }
+  function showPortal(url: string, c: SimCard) {
+    if (!c.portal && !c.labs.length) return;
+    const f = document.createDocumentFragment();
+    if (c.portal) {
+      f.append(head(`🖥️ ${c.d3 ? 2 : 1} · Do it in the Azure portal`));
+      f.append(el('p', 'ask-strong', c.portal.title));
+      f.append(text(c.portal.intro));
+      const ol = el('ol', 'ask-list ask-steps');
+      for (const st of c.portal.steps.slice(0, 4)) ol.append(el('li', '', short(st, 160)));
+      f.append(ol);
+      f.append(row(simJump(url, '#sim-portal', '▶ Start the portal walkthrough')));
+    }
+    if (c.labs.length) {
+      f.append(el('p', 'ask-more', '🧪 Then try it yourself, no Azure account needed:'));
+      f.append(row(...c.labs.map((l) => simJump(url, `#sim-lab-${l.id}`, `${l.icon} ${l.title} · ${l.tasks} tasks · ${l.minutes} min`))));
+    }
+    say(f);
+  }
+
+  function answer(e: AskEntry, others: AskEntry[]) {
+    const url = e.l;
+    const card = simsFor(url);
+    const visual = hasSims(card);
+    if (visual) { show3d(url!, card!); showPortal(url!, card!); }
+    const f = document.createDocumentFragment();
+    if (visual) f.append(head(`📖 ${(card!.d3 ? 1 : 0) + (card!.portal ? 1 : 0) + 1} · The explanation`));
     f.append(text(short(e.a)));
     const src = el('p', 'ask-src');
     src.append(`${e.k} · ${e.t} · `, link(e.k === 'Glossary' ? 'See in glossary' : e.k === 'Comparison' ? 'Open comparison' : 'Open lesson', e.u));
     f.append(src);
+    const t = url ? current?.idx.tutor?.[url] : undefined;
+    if (t) {
+      f.append(el('p', 'ask-more', 'Want more on this?'));
+      f.append(tutorChips(t, url!, true));
+    }
     if (others.length) {
       f.append(el('p', 'ask-more', 'Related:'));
-      f.append(chips(others.map((o) => ({ label: o.q, on: () => { say(text(o.q), 'me'); answer(o, []); } }))));
+      f.append(chips(others.map((o) => ({ label: o.q, on: () => { const m = say(text(o.q), 'me'); answer(o, []); requestAnimationFrame(() => requestAnimationFrame(() => (log.scrollTop = m.offsetTop - log.offsetTop - 8))); } }))));
     }
     say(f);
   }
@@ -163,45 +222,54 @@ const here = exams.find((e) => e.slug === Astro.url.pathname.split('/')[1])?.slu
   /* ---------- lesson tutor ---------- */
   let quizAt = 0, deepAt = 0;
   const list = (items: string[]) => { const ul = el('ul', 'ask-list'); for (const i of items) ul.append(el('li', '', i)); return ul; };
-  function tutorChips(t: TutorEntry) {
+  function tutorChips(t: TutorEntry, url: string, compact = false) {
+    const c = simsFor(url);
     const opts = [
-      t.simple && { label: '🧒 Explain it simpler', on: () => tutorSay(t, 'Explain it simpler', [text(short(t.simple, 700))]) },
-      t.example && { label: '🏢 Show me a real example', on: () => tutorSay(t, 'Show me a real example', [text(short(t.example, 700))]) },
-      t.traps.length && { label: '🎯 What are the exam traps?', on: () => tutorSay(t, 'What are the exam traps?', [list(t.traps.slice(0, 5))]) },
-      t.deeper.length && { label: '🔬 Go deeper', on: () => { const d = t.deeper[deepAt++ % t.deeper.length]; tutorSay(t, 'Go deeper', [el('p', 'ask-strong', d.q), text(short(d.a, 700))]); } },
-      t.quiz.length && { label: '❓ Quiz me', on: () => quizMe(t) },
-      t.terms.length && { label: '📖 Key terms', on: () => tutorSay(t, 'Key terms', [list(t.terms.slice(0, 6).map((k) => `${k.term}: ${k.def}`))]) },
-    ].filter(Boolean) as { label: string; on: () => void }[];
+      c?.d3 && { label: '🧊 Show me in 3D', on: () => { say(text('Show me in 3D'), 'me'); show3d(url, c); say(tutorMore(t, url)); } },
+      c?.portal && { label: '🖥️ Walk me through the portal', on: () => { say(text('Walk me through the portal'), 'me'); showPortal(url, { ...c, labs: [] }); say(tutorMore(t, url)); } },
+      c?.labs.length && { label: '🧪 Let me try a lab', on: () => { say(text('Let me try a lab'), 'me'); showPortal(url, { ...c, portal: undefined }); say(tutorMore(t, url)); } },
+      t.simple && { label: '🧒 Explain it simpler', on: () => tutorSay(t, url, 'Explain it simpler', [text(short(t.simple, 700))]) },
+      t.example && !compact && { label: '🏢 Show me a real example', on: () => tutorSay(t, url, 'Show me a real example', [text(short(t.example, 700))]) },
+      t.traps.length && { label: '🎯 What are the exam traps?', on: () => tutorSay(t, url, 'What are the exam traps?', [list(t.traps.slice(0, 5))]) },
+      t.deeper.length && !compact && { label: '🔬 Go deeper', on: () => { const d = t.deeper[deepAt++ % t.deeper.length]; tutorSay(t, url, 'Go deeper', [el('p', 'ask-strong', d.q), text(short(d.a, 700))]); } },
+      t.quiz.length && { label: '❓ Quiz me', on: () => quizMe(t, url) },
+      t.terms.length && !compact && { label: '📖 Key terms', on: () => tutorSay(t, url, 'Key terms', [list(t.terms.slice(0, 6).map((k) => `${k.term}: ${k.def}`))]) },
+    ].filter((o) => o && !(compact && /3D|portal|lab/.test(o.label))) as { label: string; on: () => void }[];
     return chips(opts);
   }
-  function tutorHello(t: TutorEntry) {
+  function tutorMore(t: TutorEntry, url: string) {
     const f = document.createDocumentFragment();
-    f.append(text(`I’m your tutor for “${t.t}”. Didn’t click the first time? Pick another way to see it, or type any question.`));
-    f.append(tutorChips(t));
+    f.append(el('p', 'ask-more', 'Try another way:'));
+    f.append(tutorChips(t, url));
+    return f;
+  }
+  function tutorHello(t: TutorEntry, url: string) {
+    const f = document.createDocumentFragment();
+    f.append(text(`I’m your tutor for “${t.t}”. See it in 3D, click through it in the Azure portal, try a lab, or pick another way to explain it. You can also type any question.`));
+    f.append(tutorChips(t, url));
     say(f);
     input.focus();
   }
-  function tutorSay(t: TutorEntry, ask: string, nodes: Node[]) {
+  function tutorSay(t: TutorEntry, url: string, ask: string, nodes: Node[]) {
     say(text(ask), 'me');
     const f = document.createDocumentFragment();
     f.append(...nodes);
-    f.append(el('p', 'ask-more', 'Try another way:'));
-    f.append(tutorChips(t));
+    f.append(tutorMore(t, url));
     say(f);
   }
-  function quizMe(t: TutorEntry) {
+  function quizMe(t: TutorEntry, url: string) {
     const q = t.quiz[quizAt++ % t.quiz.length];
     say(text('Quiz me'), 'me');
     const f = document.createDocumentFragment();
     f.append(el('p', 'ask-strong', q.q));
     f.append(el('p', 'ask-more', 'Say your answer in your head, then check.'));
-    f.append(chips([{ label: 'Show the answer', on: () => tutorSay(t, 'Show the answer', [text(q.a)]) }, { label: 'Skip, next question', on: () => quizMe(t) }]));
+    f.append(chips([{ label: 'Show the answer', on: () => tutorSay(t, url, 'Show the answer', [text(q.a)]) }, { label: 'Skip, next question', on: () => quizMe(t, url) }]));
     say(f);
   }
 
   function question(q: string) {
     if (!current) return;
-    say(text(q), 'me');
+    const mine = say(text(q), 'me');
     const all = ask(current.r, q, 3);
     const hits = all.filter((h, i) => i === 0 || h.score >= Math.max(MIN_SCORE, all[0].score * 0.45));
     if (!hits.length || hits[0].score < MIN_SCORE) {
@@ -213,7 +281,12 @@ const here = exams.find((e) => e.slug === Astro.url.pathname.split('/')[1])?.slu
       say(f);
       return;
     }
-    answer(hits[0].e, hits.slice(1).map((h) => h.e));
+    const top = hits[0].e;
+    // Its own 3D, portal and lab cards already show above, so don't repeat them as related.
+    const sim = /^(3D View|Azure Portal|Practice Lab)$/;
+    answer(top, hits.slice(1).map((h) => h.e).filter((o) => !(o.l && o.l === top.l && sim.test(o.k))));
+    // Land on the start of the answer (the 3D card), not the bottom of the text.
+    requestAnimationFrame(() => requestAnimationFrame(() => (log.scrollTop = mine.offsetTop - log.offsetTop - 8)));
   }
 
   form.addEventListener('submit', (ev) => {
@@ -250,7 +323,7 @@ const here = exams.find((e) => e.slug === Astro.url.pathname.split('/')[1])?.slu
     open();
     // Already chatting: put the lesson tutor options back at the bottom.
     const lesson = current?.idx.tutor?.[location.pathname];
-    if (wasStarted && lesson) tutorHello(lesson);
+    if (wasStarted && lesson) tutorHello(lesson, location.pathname);
   });
   document.getElementById('ask-close')!.addEventListener('click', close);
   switchBtn.addEventListener('click', pickExam);
@@ -298,6 +371,11 @@ const here = exams.find((e) => e.slug === Astro.url.pathname.split('/')[1])?.slu
   .ask-log :global(.ask-bot) { align-self: flex-start; background: var(--card); border: 1px solid var(--card-line); border-bottom-left-radius: 4px; }
   .ask-log :global(.ask-me) { align-self: flex-end; background: #005a9e; color: #fff; border-bottom-right-radius: 4px; }
   .ask-log :global(.ask-strong) { font-weight: 700; }
+  .ask-log :global(.ask-head2) { font-size: .78rem; font-weight: 700; letter-spacing: .02em; text-transform: uppercase; color: var(--accent-deep); }
+  .ask-log :global(.ask-steps) { list-style: decimal; font-size: .88rem; }
+  .ask-log :global(.ask-chip.ask-go) { background: #005a9e; border-color: #005a9e; color: #fff; font-weight: 600; }
+  .ask-log :global(.ask-chip.ask-go:hover) { background: #003a66; }
+  .ask-log :global(.ask-msg ol + .ask-chips), .ask-log :global(.ask-msg ul + p), .ask-log :global(.ask-msg ol + p) { margin-top: 8px; }
   .ask-log :global(.ask-list) { margin: 0; padding-left: 1.1rem; list-style: disc; }
   .ask-log :global(.ask-list li + li) { margin-top: 4px; }
   .ask-log :global(.ask-src), .ask-log :global(.ask-more) { font-size: .82rem; color: var(--text-muted); }

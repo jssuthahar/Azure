@@ -48,6 +48,22 @@ const log = await p.textContent('#ask-log');
 if (!/empty flat/i.test(log)) fail.push('tutor: "Explain it simpler" did not show the lesson\'s Eli10 text');
 await p.getByRole('button', { name: /Quiz me/ }).last().click();
 await p.getByRole('button', { name: /Show the answer/ }).last().click();
+// Tutor "Walk me through the portal" opens the Azure Portal tab in place.
+await p.getByRole('button', { name: /Walk me through the portal/ }).last().click();
+await p.getByRole('button', { name: /Start the portal walkthrough/ }).last().click();
+if ((await p.getAttribute('#lsim-t-portal', 'aria-selected')) !== 'true') fail.push('tutor: portal button did not open the Azure Portal tab');
+await p.click('#ask-close');
+
+// 3b. Ask Nimbus answers simulation first: 3D, then the Azure portal, then the explanation.
+await p.goto(`${BASE}/az-900/`, { waitUntil: 'networkidle' });
+await p.click('#ask-fab');
+await p.waitForSelector('#ask-q:not([disabled])');
+await p.fill('#ask-q', 'how do I create a storage account');
+await p.press('#ask-q', 'Enter');
+const heads = await p.locator('#ask-log .ask-head2').allTextContents();
+const order = heads.map((h) => (/3D/.test(h) ? '3d' : /portal/i.test(h) ? 'portal' : /explanation/i.test(h) ? 'text' : '?')).join(',');
+if (order !== '3d,portal,text') fail.push(`ask: expected 3D → portal → explanation, got "${order}"`);
+if (!(await p.locator('#ask-log a.ask-go[href*="#sim-3d"]').count())) fail.push('ask: no link to the lesson\'s 3D view');
 await p.click('#ask-close');
 
 // 4. Study plan + .ics.

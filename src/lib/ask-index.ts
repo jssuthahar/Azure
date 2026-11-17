@@ -7,6 +7,7 @@
 import { getNav, getTutorial } from './learn';
 import { getGlossary } from './glossary';
 import { getExam } from '../data/exams';
+import { labsForTopic } from './sim/labs';
 
 export interface AskEntry {
   /** Question or heading the entry answers. */
@@ -16,9 +17,18 @@ export interface AskEntry {
   /** Link to the page (and section) it came from. */
   u: string;
   /** Where it came from, shown as a label. */
-  k: 'Lesson' | 'Interview' | 'Quick revision' | 'Exam tip' | 'Glossary' | 'Comparison';
+  k: 'Lesson' | 'Interview' | 'Quick revision' | 'Exam tip' | 'Glossary' | 'Comparison' | '3D View' | 'Azure Portal' | 'Practice Lab';
   /** Lesson or page title, for context. */
   t: string;
+  /** Lesson URL this entry belongs to, so the bot can open its simulations first. */
+  l?: string;
+}
+
+/** A lesson's three simulations, shown before the text answer: 3D, then the portal, then a lab. */
+export interface SimCard {
+  d3?: { title: string; intro: string; step: string; text: string };
+  portal?: { title: string; intro: string; steps: string[] };
+  labs: { id: string; title: string; icon: string; intro: string; minutes: number; tasks: number }[];
 }
 
 /** Lesson tutor material, keyed by lesson URL: other ways to explain the same lesson. */
@@ -41,6 +51,8 @@ export interface TutorEntry {
 export interface AskIndex {
   exam: { slug: string; code: string; name: string };
   tutor: Record<string, TutorEntry>;
+  /** Simulations per lesson URL. */
+  sims: Record<string, SimCard>;
   suggest: string[];
   links: { label: string; url: string }[];
   entries: AskEntry[];
@@ -76,15 +88,44 @@ export async function buildAskIndex(cert: string): Promise<AskIndex> {
   const nav = (await getNav(cert)).filter((t) => t.published);
   const entries: AskEntry[] = [];
   const tutor: Record<string, TutorEntry> = {};
+  const sims: Record<string, SimCard> = {};
+  const urlByTitle = new Map(nav.map((t) => [t.title, t.url]));
+  const indexed = new Set<string>(); // tours and labs shared by several lessons are searchable once
 
   for (const t of nav) {
     const e = await getTutorial(t.key);
     if (!e) continue;
     const d = e.data;
-    entries.push({ q: d.title, a: plain(d.answer), u: t.url, k: 'Lesson', t: d.title });
-    for (const i of d.interview) entries.push({ q: plain(i.q), a: plain(i.a), u: t.url, k: 'Interview', t: d.title });
-    for (const r of d.revision.quick) entries.push({ q: plain(r.q), a: plain(r.a), u: `${t.url}#quick-revision`, k: 'Quick revision', t: d.title });
-    entries.push({ q: `${d.title}: exam tips`, a: d.revision.examTips.map(plain).join(' '), u: `${t.url}#exam-tip`, k: 'Exam tip', t: d.title });
+    const l = t.url;
+    entries.push({ q: d.title, a: plain(d.answer), u: t.url, k: 'Lesson', t: d.title, l });
+    for (const i of d.interview) entries.push({ q: plain(i.q), a: plain(i.a), u: t.url, k: 'Interview', t: d.title, l });
+    for (const r of d.revision.quick) entries.push({ q: plain(r.q), a: plain(r.a), u: `${t.url}#quick-revision`, k: 'Quick revision', t: d.title, l });
+    entries.push({ q: `${d.title}: exam tips`, a: d.revision.examTips.map(plain).join(' '), u: `${t.url}#exam-tip`, k: 'Exam tip', t: d.title, l });
+
+    // Simulations: what the learner can see (3D), click through (portal) and do (lab).
+    const ls = exam.lessonSims[t.slug];
+    const scene = ls && exam.sims3d[ls.d3.mode];
+    const step = scene?.steps[ls.d3.start] ?? scene?.steps[0];
+    const tour = ls && exam.tours[ls.tour.id];
+    const labs = labsForTopic(t.slug);
+    sims[t.url] = {
+      d3: ls && scene && step ? { title: scene.title, intro: ls.d3.intro, step: step.title, text: plain(step.text) } : undefined,
+      portal: ls && tour ? { title: tour.title, intro: ls.tour.intro, steps: tour.steps.slice(0, 5).map((s) => plain(s.say)) } : undefined,
+      labs: labs.slice(0, 2).map((x) => ({ id: x.id, title: x.title, icon: x.icon, intro: plain(x.intro), minutes: x.minutes, tasks: x.tasks.length })),
+    };
+    if (sims[t.url].d3) {
+      const v = sims[t.url].d3!;
+      entries.push({ q: `${d.title} in 3D: ${v.step}`, a: `${v.intro} ${v.text}`, u: `${t.url}#sim-3d`, k: '3D View', t: d.title, l });
+    }
+    if (tour && !indexed.has(`tour:${ls!.tour.id}`)) {
+      indexed.add(`tour:${ls!.tour.id}`);
+      entries.push({ q: `How do I ${tour.title.replace(/^./, (c) => c.toLowerCase())} in the Azure portal?`, a: `${ls!.tour.intro} ${tour.steps.map((s) => plain(s.say)).join(' ')}`, u: `${t.url}#sim-portal`, k: 'Azure Portal', t: d.title, l });
+    }
+    for (const x of labs) {
+      if (indexed.has(`lab:${x.id}`)) continue;
+      indexed.add(`lab:${x.id}`);
+      entries.push({ q: `Practice lab: ${x.title}`, a: `${plain(x.intro)} ${x.learn.map(plain).join(' ')}`, u: `${t.url}#sim-lab-${x.id}`, k: 'Practice Lab', t: d.title, l });
+    }
     const body = e.body ?? '';
     const sc = section(body, /^## Real-world business scenario/);
     tutor[t.url] = {
@@ -101,7 +142,7 @@ export async function buildAskIndex(cert: string): Promise<AskIndex> {
   }
 
   for (const g of await getGlossary(cert)) {
-    entries.push({ q: `What is ${g.term}?`, a: plain(g.def), u: `/${exam.slug}/glossary/#${g.slug}`, k: 'Glossary', t: g.lesson });
+    entries.push({ q: `What is ${g.term}?`, a: plain(g.def), u: `/${exam.slug}/glossary/#${g.slug}`, k: 'Glossary', t: g.lesson, l: urlByTitle.get(g.lesson) ?? g.url });
   }
 
   for (const c of exam.comparisons) {
@@ -113,6 +154,7 @@ export async function buildAskIndex(cert: string): Promise<AskIndex> {
   return {
     exam: { slug: exam.slug, code: exam.code, name: exam.name },
     tutor,
+    sims,
     suggest: [
       nav[0]?.title ?? '',
       exam.comparisons[0]?.title ?? '',

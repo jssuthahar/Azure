@@ -12,6 +12,8 @@ import { CERTIFICATIONS, type Certification } from './certifications';
 import type { SyllabusModule, ExamFacts, CourseInfo } from './types';
 import { COURSE as az900Course } from './az-900/course';
 import { SIMS3D as az900Sims3d, type Sim3D } from './az-900/sims3d';
+import { TOURS as az900Tours } from './az-900/portal-tours';
+import type { Tour } from '../lib/portal-tour';
 import { EMBED_LESSON_3D as az900Embed3d } from './az-900/embeds';
 import * as az900 from './az-900/syllabus';
 import { LESSON_SIMS as az900Sims, type LessonSims } from './az-900/lesson-sims';
@@ -55,6 +57,8 @@ export interface Exam {
   /** 3D scenes, and the lesson each one links back to (3D Explorer). */
   sims3d: Record<string, Sim3D>;
   lesson3d: Record<string, { title: string; url: string } | undefined>;
+  /** Guided Azure portal walkthroughs, keyed by tour id (lessonSims[].tour.id). */
+  tours: Record<string, Tour>;
 }
 
 const info = (slug: string) => {
@@ -87,6 +91,7 @@ const EXAMS: Record<string, Exam> = {
     course: az900Course,
     sims3d: az900Sims3d,
     lesson3d: az900Embed3d,
+    tours: az900Tours,
   },
 };
 

@@ -130,5 +130,16 @@ const labList = [...labs.filter((l) => l.id !== 'sandbox'), sandbox];
       select(a.dataset.simTab!);
       root.scrollIntoView({ behavior: matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth', block: 'start' });
     });
+
+    // Deep links from Ask Nimbus and elsewhere: #sim-3d, #sim-portal, #sim-lab or #sim-lab-<lab id>.
+    const fromHash = () => {
+      const m = location.hash.match(/^#sim-(3d|portal|lab)(?:-([\w-]+))?$/);
+      if (!m) return;
+      if (m[2]) pickLab(m[2]);
+      select(m[1]);
+      root.scrollIntoView({ block: 'start' });
+    };
+    fromHash();
+    addEventListener('hashchange', fromHash);
   }
 </script>
