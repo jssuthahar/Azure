@@ -1,0 +1,109 @@
+---
+/**
+ * "Pick up where you left off": remembers how far down each lesson the learner
+ * read (as the nearest heading plus an offset, so it survives other screen
+ * sizes and Beginner/Full view) and offers a jump back on the next visit.
+ * Per-browser convenience only (`msdb-lesson-pos-v1`), not synced.
+ */
+---
+<div id="resume-chip" class="resume-chip" role="region" aria-label="Pick up where you left off" hidden>
+  <span class="text-xl" aria-hidden="true">📍</span>
+  <span class="min-w-0 flex-1">
+    <span class="block text-sm font-bold">Pick up where you left off?</span>
+    <span id="resume-where" class="block truncate text-xs text-muted"></span>
+  </span>
+  <button type="button" id="resume-go" class="btn btn-primary btn-sm">Jump back</button>
+  <button type="button" id="resume-x" class="notes-x" aria-label="No thanks">✕</button>
+</div>
+
+<style is:global>
+  .resume-chip {
+    position: fixed;
+    left: 50%;
+    bottom: calc(1rem + env(safe-area-inset-bottom));
+    z-index: 130;
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    width: min(30rem, calc(100vw - 2rem));
+    transform: translateX(-50%);
+    border: 1px solid var(--border);
+    border-radius: 1rem;
+    background: var(--card);
+    padding: 0.55rem 0.6rem 0.55rem 0.9rem;
+    box-shadow: 0 10px 30px rgb(0 0 0 / 0.18);
+  }
+  @media (max-width: 640px) {
+    .resume-chip { bottom: calc(5.25rem + env(safe-area-inset-bottom)); }
+  }
+  .resume-chip[hidden],
+  html.presenting .resume-chip {
+    display: none;
+  }
+  @media print {
+    .resume-chip { display: none !important; }
+  }
+</style>
+
+<script>
+  const KEY = 'msdb-lesson-pos-v1';
+  const KEEP = 40;
+  type Pos = { id: string; dy: number; label: string; at: number };
+  const read = (): Record<string, Pos> => { try { return JSON.parse(localStorage.getItem(KEY) || '{}'); } catch { return {}; } };
+  const write = (m: Record<string, Pos>) => {
+    const recent = Object.entries(m).sort((a, b) => b[1].at - a[1].at).slice(0, KEEP);
+    try { localStorage.setItem(KEY, JSON.stringify(Object.fromEntries(recent))); } catch {}
+  };
+
+  const root = document.querySelector<HTMLElement>('article[data-present-root]')!;
+  const path = location.pathname;
+  const chip = document.getElementById('resume-chip')!;
+  const visible = (el: HTMLElement) => el.offsetParent !== null;
+  const anchors = () => [...root.querySelectorAll<HTMLElement>('h2[id], section[id], aside[id]')].filter(visible);
+  const labelOf = (el: HTMLElement) =>
+    (el.matches('h2') ? el : el.querySelector('h2, h3, p'))?.textContent?.replace(/\s+/g, ' ').trim().slice(0, 80) || el.getAttribute('aria-label') || '';
+  const max = () => document.documentElement.scrollHeight - innerHeight;
+
+  const saved = read()[path];
+  let userScrolled = false;
+
+  function record() {
+    if (!userScrolled || document.documentElement.classList.contains('presenting')) return;
+    const m = read();
+    if (scrollY > max() - 200) delete m[path]; // finished: nothing to resume
+    else if (scrollY > 500) {
+      const past = anchors().filter((a) => a.getBoundingClientRect().top <= 120);
+      const a = past.at(-1);
+      if (!a) return;
+      m[path] = { id: a.id, dy: Math.round(-a.getBoundingClientRect().top), label: labelOf(a), at: Date.now() };
+    } else return;
+    write(m);
+  }
+
+  let t = 0;
+  addEventListener('scroll', () => {
+    userScrolled = true;
+    clearTimeout(t);
+    t = window.setTimeout(record, 600);
+    if (!chip.hidden && scrollY > 600) chip.hidden = true;
+  }, { passive: true });
+  addEventListener('pagehide', record);
+
+  const target = saved && document.getElementById(saved.id);
+  if (saved && target && !location.hash && scrollY < 200) {
+    document.getElementById('resume-where')!.textContent = saved.label;
+    // Wait a beat so the browser's own scroll restoration (Back button) can win first.
+    setTimeout(() => { if (scrollY < 200) chip.hidden = false; }, 400);
+    document.getElementById('resume-go')!.addEventListener('click', () => {
+      chip.hidden = true;
+      if (!visible(target)) document.querySelector<HTMLElement>('[data-view-btn="full"]')?.click();
+      scrollTo({ top: target.getBoundingClientRect().top + scrollY + saved.dy, behavior: 'instant' as ScrollBehavior });
+    });
+    document.getElementById('resume-x')!.addEventListener('click', () => {
+      chip.hidden = true;
+      const m = read();
+      delete m[path];
+      write(m);
+    });
+  }
+</script>

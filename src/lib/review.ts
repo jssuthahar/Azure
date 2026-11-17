@@ -8,6 +8,7 @@
  * their recent mock exam results, weighted like the real exam.
  */
 import { today, type MockResult } from './progress';
+import { flaggedIds } from './notes';
 
 const KEY = 'msdb-azure-review-v1';
 /** Days until the next review for each box. */
@@ -153,13 +154,14 @@ export function topicStats(cert: string, bank: QMeta[]): TopicStat[] {
 
 const shuffle = <T,>(a: T[]) => { const b = [...a]; for (let i = b.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [b[i], b[j]] = [b[j], b[i]]; } return b; };
 
-export type PracticeMode = 'smart' | 'mistakes' | 'new' | `domain-${number}`;
+export type PracticeMode = 'smart' | 'mistakes' | 'new' | 'flagged' | `domain-${number}`;
 
 /**
  * Pick question ids for a session.
  *  smart     due reviews first (lowest box first), then unseen questions from the weakest areas, then anything
  *  mistakes  only questions whose latest answer was wrong
  *  new       only questions never answered
+ *  flagged   only questions the learner flagged for review (lesson quiz or practice)
  *  domain-N  smart order, limited to one exam area
  */
 export function buildSession(cert: string, bank: QMeta[], mode: PracticeMode, size: number, weak: number[] = []): string[] {
@@ -169,6 +171,7 @@ export function buildSession(cert: string, bank: QMeta[], mode: PracticeMode, si
   let pool = bank;
   if (mode.startsWith('domain-')) pool = bank.filter((q) => q.domain === Number(mode.slice(7)));
   if (mode === 'mistakes') return shuffle(pool.filter((q) => card(q) && !card(q)!.ok)).slice(0, size).map((q) => q.id);
+  if (mode === 'flagged') { const f = flaggedIds(cert); return shuffle(pool.filter((q) => f.has(q.id))).slice(0, size).map((q) => q.id); }
   if (mode === 'new') return shuffle(pool.filter((q) => !card(q))).slice(0, size).map((q) => q.id);
 
   const due = shuffle(pool.filter((q) => card(q) && card(q)!.due <= t)).sort((a, b) => card(a)!.box - card(b)!.box);

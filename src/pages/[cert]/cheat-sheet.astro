@@ -41,6 +41,15 @@ const crumbs = [{ name: 'Home', url: '/' }, { name: exam.code, url: `/${exam.slu
       {sheets.map((m) => <a href={`#${m.slug}`} class="btn btn-outline">{m.shortTitle}</a>)}
     </div>
 
+    <section id="my-notes" class="cs-sheet card mt-8 scroll-mt-28 p-5 sm:p-6" aria-labelledby="my-notes-h" data-exam={exam.slug} hidden>
+      <div class="flex flex-wrap items-center justify-between gap-3">
+        <h2 id="my-notes-h" class="text-2xl font-bold">📝 My highlights and notes</h2>
+        <button type="button" id="cs-notes-read" class="cs-noprint btn btn-outline btn-sm">🔊 Read my notes</button>
+      </div>
+      <p class="mt-2 text-muted">What you marked in the lessons, in course order. It prints with the rest of the sheet. Only you see this: it comes from this browser.</p>
+      <div id="cs-notes" class="mt-4 space-y-5"></div>
+    </section>
+
     <section id="last-30" class="cs-sheet card mt-8 scroll-mt-28 p-5 sm:p-6" aria-labelledby="last-30-h" data-cs-say>
       <div class="flex flex-wrap items-center justify-between gap-3">
         <h2 id="last-30-h" class="text-2xl font-bold">⏰ The last 30 minutes before the exam</h2>
@@ -97,6 +106,11 @@ const crumbs = [{ name: 'Home', url: '/' }, { name: exam.code, url: `/${exam.slu
 </Base>
 
 <style is:global>
+  .notes-item { border: 1px solid var(--card-line); border-left-width: 6px; border-radius: .6rem; padding: .6rem .8rem; background: var(--card); }
+  .notes-item.c-yellow { border-left-color: #e0b100; }
+  .notes-item.c-green { border-left-color: #107c10; }
+  .notes-item.c-blue { border-left-color: #0078d4; }
+  .notes-item.c-pink { border-left-color: #c2185b; }
   @media print {
     header, footer, #ask, .cs-noprint, .install-banner { display: none !important; }
     body { background: #fff !important; color: #000 !important; }
@@ -109,6 +123,43 @@ const crumbs = [{ name: 'Home', url: '/' }, { name: exam.code, url: `/${exam.slu
 
 <script>
   import { canSpeak, speak, stopSpeaking } from '../../lib/speech';
+  import { liveNotes } from '../../lib/notes';
+  import { bindReadNotes } from '../../lib/notes-voice';
+
+  /* ---------- My highlights and notes (from the learner's lessons, this browser only) ---------- */
+  {
+    const sec = document.getElementById('my-notes')!;
+    const box = document.getElementById('cs-notes')!;
+    const exam = sec.dataset.exam!;
+    // Course order: the order lessons appear in the sheets below.
+    const order = [...document.querySelectorAll<HTMLAnchorElement>('.cs-sheet a[href]')].map((a) => a.pathname);
+    const rank = (url: string) => { const i = order.indexOf(url); return i < 0 ? 1e6 : i; };
+    const mine = () => liveNotes().filter((n) => n.key.startsWith(`${exam}/`)).sort((a, b) => rank(a.url) - rank(b.url) || a.at - b.at);
+    const el = (tag: string, cls: string, text = '') => { const e = document.createElement(tag); e.className = cls; e.textContent = text; return e; };
+    const draw = () => {
+      const notes = mine();
+      sec.hidden = !notes.length;
+      const groups = new Map<string, typeof notes>();
+      for (const n of notes) groups.set(n.key, [...(groups.get(n.key) ?? []), n]);
+      box.replaceChildren(...[...groups.values()].map((list) => {
+        const card = el('div', 'cs-card');
+        const h = el('a', 'font-semibold text-accent hover:underline', list[0].title) as HTMLAnchorElement;
+        h.href = list[0].url;
+        const ul = el('ul', 'mt-2 space-y-2');
+        for (const n of list) {
+          const li = el('li', `notes-item c-${n.color}`);
+          li.append(el('p', 'text-[0.95rem]', `“${n.quote}”`));
+          if (n.note.trim()) li.append(el('p', 'mt-1 whitespace-pre-wrap text-sm font-semibold', `✎ ${n.note.trim()}`));
+          ul.append(li);
+        }
+        card.append(h, ul);
+        return card;
+      }));
+    };
+    draw();
+    addEventListener('notes-change', draw);
+    bindReadNotes(document.getElementById('cs-notes-read') as HTMLButtonElement, mine);
+  }
   document.getElementById('cs-print')!.addEventListener('click', () => print());
   let playing: HTMLButtonElement | null = null;
   const reset = (b: HTMLButtonElement) => { b.textContent = '🔊 Listen'; b.setAttribute('aria-pressed', 'false'); };

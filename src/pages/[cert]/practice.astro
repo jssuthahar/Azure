@@ -59,6 +59,7 @@ const crumbs = [{ name: 'Home', url: '/' }, { name: exam.code, url: `/${exam.slu
         <button type="button" class="sp-mode card w-full min-w-0 whitespace-normal p-4 text-left hover:ring-2 hover:ring-[var(--accent)]" data-mode="smart"><span class="block font-semibold">🧠 Smart mix</span><span class="block text-sm text-muted">Reviews due today first, then new questions from your weakest areas.</span></button>
         <button type="button" class="sp-mode card w-full min-w-0 whitespace-normal p-4 text-left hover:ring-2 hover:ring-[var(--accent)]" data-mode="mistakes"><span class="block font-semibold">🔁 My mistakes</span><span class="block text-sm text-muted">Only questions you got wrong last time. <span id="sp-wrong-n"></span></span></button>
         <button type="button" class="sp-mode card w-full min-w-0 whitespace-normal p-4 text-left hover:ring-2 hover:ring-[var(--accent)]" data-mode="new"><span class="block font-semibold">✨ Questions I haven't seen</span><span class="block text-sm text-muted">Fresh questions only, from every area.</span></button>
+        <button type="button" class="sp-mode card w-full min-w-0 whitespace-normal p-4 text-left hover:ring-2 hover:ring-[var(--accent)]" data-mode="flagged"><span class="block font-semibold">⚑ Flagged questions</span><span class="block text-sm text-muted">Questions you flagged in a lesson quiz or here. <span id="sp-flag-n"></span></span></button>
         <div class="card min-w-0 p-4">
           <label for="sp-domain" class="block font-semibold">🎯 One exam area</label>
           <div class="mt-2 flex flex-wrap gap-2">
@@ -84,7 +85,10 @@ const crumbs = [{ name: 'Home', url: '/' }, { name: exam.code, url: `/${exam.slu
       </div>
       <div class="bar mt-2"><span id="sp-bar" style="width:0"></span></div>
       <form id="sp-form" class="card mt-4 p-5" novalidate>
-        <p id="sp-meta" class="text-xs font-bold tracking-wider uppercase text-muted"></p>
+        <div class="flex flex-wrap items-center justify-between gap-2">
+          <p id="sp-meta" class="text-xs font-bold tracking-wider uppercase text-muted"></p>
+          <button type="button" id="sp-flag" class="q-flag" data-flag-id="" aria-pressed="false" aria-label="Flag this question for review"><span aria-hidden="true">⚑</span> <span data-flag-label>Flag for review</span></button>
+        </div>
         <p id="sp-scen" class="mt-2 hidden rounded-xl bg-subtle p-3 text-[0.95rem] leading-relaxed"></p>
         <p id="sp-q" class="mt-2 font-semibold leading-relaxed"></p>
         <fieldset class="mt-3 space-y-2"><legend class="sr-only">Options</legend><div id="sp-opts" class="space-y-2"></div></fieldset>
@@ -126,6 +130,8 @@ const crumbs = [{ name: 'Home', url: '/' }, { name: exam.code, url: `/${exam.slu
   import { load, addXP } from '../../lib/progress';
   import { readiness, topicStats, buildSession, recordAnswers, resetDeck, loadDeck, cardKey, type PracticeMode } from '../../lib/review';
   import { confetti } from '../../lib/fun';
+  import { flaggedIds, isFlagged, setFlag } from '../../lib/notes';
+  import { paintFlag } from '../../lib/flags';
 
   type Q = { id: string; domain: number; topic?: string; type: 'single' | 'multi'; scenario?: string; question: string; options: { text: string; why: string }[]; answer: number[]; explanation: string };
   const data = JSON.parse(document.getElementById('sp-data')!.textContent!) as {
@@ -172,7 +178,7 @@ const crumbs = [{ name: 'Home', url: '/' }, { name: exam.code, url: `/${exam.slu
     session = buildSession(data.cert, data.qs, mode, size, weakOrder).map((id) => byId.get(id)!).filter(Boolean);
     const empty = $('sp-empty');
     if (!session.length) {
-      empty.textContent = mode === 'mistakes' ? 'No mistakes to review. Nice work. Try a smart mix instead.' : 'Nothing left in this set. Try a smart mix.';
+      empty.textContent = mode === 'mistakes' ? 'No mistakes to review. Nice work. Try a smart mix instead.' : mode === 'flagged' ? 'No flagged questions yet. Tap ⚑ Flag for review on any quiz question to save it here.' : 'Nothing left in this set. Try a smart mix.';
       empty.classList.remove('hidden');
       return;
     }
@@ -190,6 +196,8 @@ const crumbs = [{ name: 'Home', url: '/' }, { name: exam.code, url: `/${exam.slu
     const topic = q.topic ? data.topics[q.topic] : undefined;
     $('sp-count').textContent = `Question ${at + 1} of ${session.length} · ${right} right so far`;
     ($('sp-bar') as HTMLElement).style.width = `${(at / session.length) * 100}%`;
+    $('sp-flag').dataset.flagId = q.id;
+    paintFlag($('sp-flag'), data.cert);
     $('sp-meta').textContent = `${topic ? topic.title : `Domain ${q.domain}`}${q.type === 'multi' ? ` · Select ${q.answer.length}` : ''}`;
     const scen = $('sp-scen');
     scen.innerHTML = q.scenario ? esc(q.scenario) : '';
@@ -248,5 +256,13 @@ const crumbs = [{ name: 'Home', url: '/' }, { name: exam.code, url: `/${exam.slu
   $('sp-domain-go').addEventListener('click', () => start(`domain-${($('sp-domain') as HTMLSelectElement).value}` as PracticeMode));
   $('sp-reset').addEventListener('click', () => { if (confirm(`Forget every ${data.code} practice answer in this browser? Your XP and badges stay.`)) { resetDeck(data.cert); paint(); } });
   window.addEventListener('review-change', paint);
+  const paintFlags = () => {
+    const n = [...flaggedIds(data.cert)].filter((id) => byId.has(id)).length;
+    $('sp-flag-n').textContent = n ? `${n} flagged.` : 'None yet.';
+    if (session[at]) paintFlag($('sp-flag'), data.cert);
+  };
+  $('sp-flag').addEventListener('click', () => { const id = $('sp-flag').dataset.flagId!; if (id) setFlag(data.cert, id, !isFlagged(data.cert, id)); });
+  window.addEventListener('notes-change', paintFlags);
+  paintFlags();
   paint();
 </script>

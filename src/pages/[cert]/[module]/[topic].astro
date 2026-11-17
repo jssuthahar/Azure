@@ -2,6 +2,7 @@
 import { getCollection, render } from 'astro:content';
 import LearningLayout from '../../../layouts/LearningLayout.astro';
 import LessonTools from '../../../components/LessonTools.astro';
+import LessonResume from '../../../components/LessonResume.astro';
 import LessonHero from '../../../components/LessonHero.astro';
 import ProblemSolution from '../../../components/ProblemSolution.astro';
 import { labsForTopic, ALL_LABS } from '../../../lib/sim/labs';
@@ -152,12 +153,12 @@ const schema = [
         <span class="chip chip-muted lesson-updated">Updated <time datetime={d.updated.toISOString().slice(0, 10)}>{d.updated.toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })}</time></span>
       </div>
 
-      <LessonTools />
+      <LessonTools lessonKey={entry.id} />
 
       <!-- 1 · 30-second answer -->
       <div class="answer-box mt-5" data-speakable data-slide-group="intro">
         <p class="flex items-center gap-3 text-sm font-bold text-accent">30-second answer <button type="button" class="speak-btn" aria-label="Listen to the answer">🔊 Listen</button></p>
-        <p class="mt-1 text-[1.05rem] leading-relaxed" set:html={inlineMd(d.answer)} />
+        <p class="answer-text mt-1" set:html={inlineMd(d.answer)} />
         {hasSims && (
           <a href="#simulations" data-sim-tab="3d" class="simulate-btn mt-3 inline-flex items-center gap-2 rounded-md bg-[#107c10] px-5 py-2.5 text-base font-semibold !text-white !no-underline shadow-sm hover:bg-[#0b5a0b]">
             <span aria-hidden="true">▶</span> Simulate it »
@@ -236,6 +237,7 @@ const schema = [
         <span class="nav-btn shrink-0">Play ❯</span>
       </a>
     </article>
+    <LessonResume />
     <style is:global>
       .lesson-step { font-size: .78rem; font-weight: 800; letter-spacing: .12em; text-transform: uppercase; color: var(--accent); border-top: 1px solid var(--card-line); padding-top: 1.25rem; }
     </style>

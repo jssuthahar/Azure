@@ -5,17 +5,18 @@ service cloud.firestore {
   match /databases/{database}/documents {
 
     // Signed-in learner's synced progress: only the owner can read or write it.
-    // v holds JSON strings keyed progress | review | plan | cert.
+    // v holds JSON strings keyed progress | review | plan | cert | notes.
     match /users/{uid} {
       allow read, delete: if request.auth != null && request.auth.uid == uid;
       allow create, update: if request.auth != null && request.auth.uid == uid
         && request.resource.data.keys().hasOnly(['v', 'updatedAt'])
         && request.resource.data.v is map
-        && request.resource.data.v.keys().hasOnly(['progress', 'review', 'plan', 'cert'])
+        && request.resource.data.v.keys().hasOnly(['progress', 'review', 'plan', 'cert', 'notes'])
         && (!('progress' in request.resource.data.v) || (request.resource.data.v.progress is string && request.resource.data.v.progress.size() < 400000))
         && (!('review' in request.resource.data.v) || (request.resource.data.v.review is string && request.resource.data.v.review.size() < 400000))
         && (!('plan' in request.resource.data.v) || (request.resource.data.v.plan is string && request.resource.data.v.plan.size() < 50000))
         && (!('cert' in request.resource.data.v) || (request.resource.data.v.cert is string && request.resource.data.v.cert.size() < 5000))
+        && (!('notes' in request.resource.data.v) || (request.resource.data.v.notes is string && request.resource.data.v.notes.size() < 400000))
         && request.resource.data.updatedAt == request.time;
     }
 

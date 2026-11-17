@@ -1,0 +1,566 @@
+---
+/**
+ * Bookmarks, highlights and notes for one lesson (src/lib/notes.ts + annotate.ts).
+ * Select any lesson text to highlight it or add a note. Everything stays in this
+ * browser; signed-in learners get it synced. The buttons that open this live in
+ * LessonTools: [data-bookmark-btn] and [data-notes-open].
+ */
+import { HL_COLORS } from '../lib/notes';
+interface Props {
+  lessonKey: string;
+}
+const { lessonKey } = Astro.props;
+---
+<div data-lesson-notes={lessonKey} data-slide-skip hidden></div>
+
+<!-- Floating bar shown under a text selection -->
+<div id="hl-bar" class="hl-float" role="toolbar" aria-label="Highlight the selected text" hidden>
+  {HL_COLORS.map((c) => (
+    <button type="button" class={`hl-swatch hl-${c.id}`} data-hl-color={c.id} aria-label={`Highlight in ${c.label.toLowerCase()}`} title={`Highlight (${c.label.toLowerCase()})`}></button>
+  ))}
+  <span class="hl-sep" aria-hidden="true"></span>
+  <button type="button" class="hl-act" data-hl-note><span aria-hidden="true">📝</span> Add note</button>
+</div>
+
+<!-- Popover for an existing highlight -->
+<div id="hl-pop" class="hl-float hl-pop" role="dialog" aria-label="Highlight" hidden>
+  <p id="hl-pop-note" class="hl-pop-note"></p>
+  <div class="flex flex-wrap items-center gap-1.5">
+    {HL_COLORS.map((c) => (
+      <button type="button" class={`hl-swatch hl-${c.id}`} data-pop-color={c.id} aria-label={`Change to ${c.label.toLowerCase()}`}></button>
+    ))}
+    <span class="hl-sep" aria-hidden="true"></span>
+    <button type="button" class="hl-act" data-pop-edit><span aria-hidden="true">📝</span> <span data-pop-edit-label>Add note</span></button>
+    <button type="button" class="hl-act" data-pop-del><span aria-hidden="true">🗑</span> Remove</button>
+  </div>
+</div>
+
+<!-- Write or edit a note -->
+<dialog id="note-dlg" class="notes-dialog" aria-labelledby="note-dlg-h">
+  <form method="dialog" class="flex flex-col gap-3">
+    <div class="flex items-start justify-between gap-3">
+      <h2 id="note-dlg-h" class="text-lg font-bold">Your note</h2>
+      <button type="submit" value="cancel" class="notes-x" aria-label="Close">✕</button>
+    </div>
+    <blockquote id="note-dlg-quote" class="notes-quote"></blockquote>
+    <label for="note-dlg-text" class="text-sm font-semibold">What do you want to remember?</label>
+    <textarea id="note-dlg-text" rows="5" maxlength="2000" class="notes-input" placeholder="For example: this is the one the exam likes to mix up with…"></textarea>
+    <div class="flex flex-wrap justify-end gap-2">
+      <button type="submit" value="cancel" class="btn btn-outline btn-sm">Cancel</button>
+      <button type="submit" value="save" class="btn btn-primary btn-sm">Save note</button>
+    </div>
+  </form>
+</dialog>
+
+<!-- All notes for this lesson -->
+<dialog id="notes-dlg" class="notes-dialog notes-panel" aria-labelledby="notes-dlg-h">
+  <div class="flex items-start justify-between gap-3">
+    <div>
+      <h2 id="notes-dlg-h" class="text-lg font-bold">My notes for this lesson</h2>
+      <p class="text-sm text-muted">Select any text in the lesson to highlight it or add a note. Saved in this browser.</p>
+    </div>
+    <button type="button" class="notes-x" data-notes-close aria-label="Close">✕</button>
+  </div>
+  <ul id="notes-list" class="mt-4 space-y-3"></ul>
+  <p id="notes-empty" class="mt-4 rounded-lg bg-[var(--pastel-blue)] p-4 text-sm">No highlights yet. Select a sentence in the lesson, then pick a colour or add a note.</p>
+  <div class="mt-5 flex flex-wrap items-center gap-2 border-t border-default pt-4">
+    <button type="button" class="btn btn-outline btn-sm" data-notes-read>🔊 Read my notes</button>
+    <button type="button" class="btn btn-outline btn-sm" data-notes-download>⬇ Download as Markdown</button>
+    <a href="/progress/#notes" class="btn btn-outline btn-sm">All my bookmarks and notes</a>
+  </div>
+</dialog>
+
+<p id="notes-toast" class="notes-toast" role="status" aria-live="polite"></p>
+
+<style is:global>
+  mark.hl {
+    color: inherit;
+    border-radius: 0.2rem;
+    padding: 0.05em 0;
+    cursor: pointer;
+    box-decoration-break: clone;
+    -webkit-box-decoration-break: clone;
+  }
+  mark.hl:focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 2px;
+  }
+  mark.hl-noted {
+    border-bottom: 2px dashed currentColor;
+  }
+  .hl-yellow { background: #fff0a3; }
+  .hl-green { background: #ccefc8; }
+  .hl-blue { background: #cfe5ff; }
+  .hl-pink { background: #ffd6e8; }
+  [data-theme='dark'] .hl-yellow { background: #5a4b00; }
+  [data-theme='dark'] .hl-green { background: #1e4d22; }
+  [data-theme='dark'] .hl-blue { background: #1c3f66; }
+  [data-theme='dark'] .hl-pink { background: #5e2141; }
+  mark.hl-flash {
+    animation: hl-flash 1.2s ease-out 2;
+  }
+  @keyframes hl-flash {
+    50% {
+      box-shadow: 0 0 0 4px var(--accent);
+    }
+  }
+  .hl-float {
+    position: fixed;
+    z-index: 170;
+    display: flex;
+    align-items: center;
+    gap: 0.35rem;
+    border: 1px solid var(--border);
+    border-radius: 0.9rem;
+    background: var(--card);
+    color: var(--text);
+    padding: 0.35rem;
+    box-shadow: 0 10px 30px rgb(0 0 0 / 0.18);
+  }
+  .hl-float[hidden] {
+    display: none;
+  }
+  .hl-pop {
+    flex-direction: column;
+    align-items: stretch;
+    max-width: min(22rem, calc(100vw - 1rem));
+    padding: 0.6rem;
+  }
+  .hl-pop-note {
+    max-height: 9rem;
+    overflow: auto;
+    white-space: pre-wrap;
+    font-size: 0.9rem;
+    margin-bottom: 0.5rem;
+  }
+  .hl-pop-note:empty {
+    display: none;
+  }
+  .hl-swatch {
+    width: 36px;
+    height: 36px;
+    border-radius: 999px;
+    border: 2px solid var(--border);
+  }
+  .hl-swatch[aria-pressed='true'] {
+    border-color: var(--text);
+  }
+  .hl-sep {
+    width: 1px;
+    align-self: stretch;
+    background: var(--card-line);
+    margin: 0 0.15rem;
+  }
+  .hl-act {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.3rem;
+    min-height: 36px;
+    border-radius: 999px;
+    padding: 0 0.75rem;
+    font-size: 0.875rem;
+    font-weight: 700;
+    white-space: nowrap;
+  }
+  .hl-act:hover {
+    background: var(--pastel-grey);
+  }
+  .notes-dialog {
+    width: min(36rem, calc(100vw - 1.5rem));
+    max-height: min(85vh, 46rem);
+    border: 1px solid var(--border);
+    border-radius: 1rem;
+    background: var(--bg);
+    color: var(--text);
+    padding: 1.1rem;
+  }
+  .notes-dialog::backdrop {
+    background: rgb(11 16 32 / 0.55);
+  }
+  .notes-x {
+    min-width: 36px;
+    min-height: 36px;
+    border-radius: 999px;
+    font-size: 1.1rem;
+  }
+  .notes-x:hover {
+    background: var(--pastel-grey);
+  }
+  .notes-quote {
+    border-left: 4px solid var(--accent);
+    background: var(--pastel-grey);
+    border-radius: 0.4rem;
+    padding: 0.6rem 0.8rem;
+    font-size: 0.95rem;
+    max-height: 8rem;
+    overflow: auto;
+  }
+  .notes-input {
+    width: 100%;
+    border: 1px solid var(--border);
+    border-radius: 0.5rem;
+    background: var(--bg);
+    color: var(--text);
+    padding: 0.6rem 0.75rem;
+    font-size: 1rem;
+  }
+  .notes-item {
+    border: 1px solid var(--card-line);
+    border-left-width: 6px;
+    border-radius: 0.6rem;
+    padding: 0.7rem 0.8rem;
+    background: var(--card);
+  }
+  .notes-item.c-yellow { border-left-color: #e0b100; }
+  .notes-item.c-green { border-left-color: #107c10; }
+  .notes-item.c-blue { border-left-color: #0078d4; }
+  .notes-item.c-pink { border-left-color: #c2185b; }
+  .notes-toast {
+    position: fixed;
+    left: 50%;
+    bottom: calc(1rem + env(safe-area-inset-bottom));
+    z-index: 175;
+    transform: translateX(-50%);
+    border-radius: 999px;
+    background: var(--navy-band);
+    color: #fff;
+    padding: 0.55rem 1.1rem;
+    font-size: 0.9rem;
+    font-weight: 600;
+    pointer-events: none;
+    opacity: 0;
+    transition: opacity 0.2s;
+  }
+  .notes-toast.show {
+    opacity: 1;
+  }
+  [data-bookmark-btn][aria-pressed='true'] {
+    border-color: #c19c00;
+    background: var(--pastel-yellow);
+  }
+  .notes-count:empty {
+    display: none;
+  }
+  @media (prefers-reduced-motion: reduce) {
+    mark.hl-flash {
+      animation: none;
+      outline: 3px solid var(--accent);
+    }
+    .notes-toast {
+      transition: none;
+    }
+  }
+  @media print {
+    .hl-float,
+    .notes-toast {
+      display: none !important;
+    }
+  }
+</style>
+
+<script>
+  import { loadNotes, liveNotes, putNote, deleteNote, newId, isBookmarked, setBookmark, notesMarkdown, download, type Note, type HlColor } from '../lib/notes';
+  import { quoteFromSelection, paint, unpaint, selectionBox } from '../lib/annotate';
+  import { bindReadNotes } from '../lib/notes-voice';
+
+  const host = document.querySelector<HTMLElement>('[data-lesson-notes]')!;
+  const root = document.querySelector<HTMLElement>('article[data-present-root]')!;
+  const key = host.dataset.lessonNotes!;
+  const url = location.pathname;
+  const title = root.querySelector('h1')?.textContent?.trim() ?? document.title;
+
+  const bar = document.getElementById('hl-bar')!;
+  const pop = document.getElementById('hl-pop')!;
+  const noteDlg = document.getElementById('note-dlg') as HTMLDialogElement;
+  const noteText = document.getElementById('note-dlg-text') as HTMLTextAreaElement;
+  const panel = document.getElementById('notes-dlg') as HTMLDialogElement;
+  const toastEl = document.getElementById('notes-toast')!;
+
+  let toastT = 0;
+  const toast = (msg: string) => {
+    toastEl.textContent = msg;
+    toastEl.classList.add('show');
+    clearTimeout(toastT);
+    toastT = window.setTimeout(() => toastEl.classList.remove('show'), 2200);
+  };
+
+  /* ---------- paint saved highlights ---------- */
+  let missing = new Set<string>();
+  const repaint = () => {
+    document.querySelectorAll<HTMLElement>('mark[data-hl]').forEach((m) => unpaint(m.dataset.hl!));
+    missing = new Set();
+    for (const n of liveNotes(key)) if (!paint(root, n)) missing.add(n.id);
+    paintButtons();
+  };
+
+  /* ---------- toolbar buttons (in LessonTools) ---------- */
+  const paintButtons = () => {
+    const on = isBookmarked(key);
+    document.querySelectorAll<HTMLElement>('[data-bookmark-btn]').forEach((b) => {
+      b.setAttribute('aria-pressed', String(on));
+      const l = b.querySelector('[data-bookmark-label]');
+      if (l) l.textContent = on ? 'Bookmarked' : 'Bookmark';
+    });
+    const count = liveNotes(key).length;
+    document.querySelectorAll<HTMLElement>('[data-notes-count]').forEach((c) => (c.textContent = count ? String(count) : ''));
+    if (panel.open) renderPanel();
+  };
+  document.querySelectorAll<HTMLElement>('[data-bookmark-btn]').forEach((b) =>
+    b.addEventListener('click', () => {
+      const on = !isBookmarked(key);
+      setBookmark(key, url, title, on);
+      toast(on ? 'Lesson bookmarked. Find it on My Progress.' : 'Bookmark removed');
+    }),
+  );
+
+  /* ---------- selection bar ---------- */
+  let pending: ReturnType<typeof quoteFromSelection> = null;
+  const place = (el: HTMLElement, r: DOMRect) => {
+    el.hidden = false;
+    const w = el.offsetWidth;
+    const h = el.offsetHeight;
+    let top = r.bottom + 10;
+    if (top + h > innerHeight - 8) top = r.top - h - 10;
+    top = Math.min(Math.max(8, top), innerHeight - h - 8);
+    el.style.top = `${top}px`;
+    el.style.left = `${Math.min(Math.max(8, r.left + r.width / 2 - w / 2), innerWidth - w - 8)}px`;
+  };
+  const hideBar = () => {
+    bar.hidden = true;
+    pending = null;
+  };
+  let pointerDown = false;
+  let selT = 0;
+  const checkSelection = () => {
+    if (pointerDown) return;
+    pending = quoteFromSelection(root);
+    const r = pending && selectionBox();
+    if (pending && r) {
+      hidePop();
+      place(bar, r);
+    } else hideBar();
+  };
+  document.addEventListener('pointerdown', (e) => {
+    if (!bar.contains(e.target as Node)) pointerDown = true;
+  });
+  document.addEventListener('pointerup', () => {
+    pointerDown = false;
+    clearTimeout(selT);
+    selT = window.setTimeout(checkSelection, 30);
+  });
+  document.addEventListener('pointercancel', () => (pointerDown = false));
+  document.addEventListener('selectionchange', () => {
+    clearTimeout(selT);
+    selT = window.setTimeout(checkSelection, 350);
+  });
+  // Keep the selection alive while a bar button is pressed.
+  bar.addEventListener('mousedown', (e) => e.preventDefault());
+
+  const create = (color: HlColor): Note | null => {
+    if (!pending) return null;
+    const n: Note = { id: newId(), key, url, title, ...pending, color, note: '', at: Date.now() };
+    getSelection()?.removeAllRanges();
+    hideBar();
+    putNote(n);
+    return n;
+  };
+  bar.querySelectorAll<HTMLElement>('[data-hl-color]').forEach((b) =>
+    b.addEventListener('click', () => {
+      try { localStorage.setItem('msdb-hl-color', b.dataset.hlColor!); } catch {}
+      if (create(b.dataset.hlColor as HlColor)) toast('Highlighted');
+    }),
+  );
+  const lastColor = (): HlColor => {
+    try { return (localStorage.getItem('msdb-hl-color') as HlColor) || 'yellow'; } catch { return 'yellow'; }
+  };
+  bar.querySelector('[data-hl-note]')!.addEventListener('click', () => {
+    const n = create(lastColor());
+    if (n) openNote(n.id);
+  });
+
+  /* ---------- popover on an existing highlight ---------- */
+  let popId = '';
+  let popAnchor: HTMLElement | null = null;
+  const noteById = (id: string) => loadNotes().notes[id];
+  function hidePop() {
+    pop.hidden = true;
+    popId = '';
+    popAnchor = null;
+  }
+  function openPop(id: string, anchor: HTMLElement) {
+    const n = noteById(id);
+    if (!n || n.del) return;
+    popId = id;
+    hideBar();
+    document.getElementById('hl-pop-note')!.textContent = n.note.trim();
+    pop.querySelector('[data-pop-edit-label]')!.textContent = n.note.trim() ? 'Edit note' : 'Add note';
+    pop.querySelectorAll<HTMLElement>('[data-pop-color]').forEach((b) => b.setAttribute('aria-pressed', String(b.dataset.popColor === n.color)));
+    popAnchor = anchor;
+    place(pop, anchor.getBoundingClientRect());
+    pop.querySelector<HTMLElement>('[data-pop-edit]')!.focus({ preventScroll: true });
+  }
+  root.addEventListener('click', (e) => {
+    const m = (e.target as Element).closest<HTMLElement>('mark[data-hl]');
+    if (!m || !getSelection()?.isCollapsed) return;
+    openPop(m.dataset.hl!, m);
+  });
+  root.addEventListener('keydown', (e) => {
+    const m = (e.target as Element).closest<HTMLElement>('mark[data-hl]');
+    if (m && (e.key === 'Enter' || e.key === ' ')) {
+      e.preventDefault();
+      openPop(m.dataset.hl!, m);
+    }
+  });
+  pop.querySelectorAll<HTMLElement>('[data-pop-color]').forEach((b) =>
+    b.addEventListener('click', () => {
+      const n = noteById(popId);
+      if (!n) return;
+      const id = popId;
+      hidePop();
+      putNote({ ...n, color: b.dataset.popColor as HlColor });
+      focusMark(id);
+    }),
+  );
+  pop.querySelector('[data-pop-edit]')!.addEventListener('click', () => {
+    const id = popId;
+    hidePop();
+    openNote(id);
+  });
+  pop.querySelector('[data-pop-del]')!.addEventListener('click', () => {
+    const id = popId;
+    hidePop();
+    deleteNote(id);
+    toast('Highlight removed');
+  });
+  document.addEventListener('pointerdown', (e) => {
+    const t = e.target as Element;
+    if (!pop.hidden && !pop.contains(t) && !t.closest?.('mark[data-hl]')) hidePop();
+  });
+  document.addEventListener('keydown', (e) => {
+    if (e.key !== 'Escape') return;
+    if (!pop.hidden) {
+      const id = popId;
+      hidePop();
+      focusMark(id);
+    }
+    if (!bar.hidden) hideBar();
+  });
+  // Fixed-position bars follow their text while scrolling, and close once it leaves the screen.
+  const offscreen = (r: DOMRect) => r.bottom < 0 || r.top > innerHeight;
+  addEventListener('scroll', () => {
+    if (!pop.hidden) {
+      const r = popAnchor?.isConnected ? popAnchor.getBoundingClientRect() : null;
+      r && !offscreen(r) ? place(pop, r) : hidePop();
+    }
+    if (pending) {
+      const r = selectionBox();
+      if (r && !offscreen(r)) place(bar, r);
+      else bar.hidden = true; // back when the text scrolls into view again
+    }
+  }, { capture: true, passive: true });
+  addEventListener('resize', () => { hidePop(); hideBar(); });
+
+  function focusMark(id: string, flash = false) {
+    const m = document.getElementById(`note-${id}`);
+    if (!m) return;
+    m.focus({ preventScroll: true });
+    if (flash) {
+      m.scrollIntoView({ block: 'center', behavior: matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth' });
+      document.querySelectorAll(`mark[data-hl="${CSS.escape(id)}"]`).forEach((x) => {
+        x.classList.remove('hl-flash');
+        void (x as HTMLElement).offsetWidth;
+        x.classList.add('hl-flash');
+      });
+    }
+  }
+
+  /* ---------- note editor ---------- */
+  let editId = '';
+  let returnTo = '';
+  function openNote(id: string, from = '') {
+    const n = noteById(id);
+    if (!n) return;
+    editId = id;
+    returnTo = from;
+    document.getElementById('note-dlg-quote')!.textContent = n.quote;
+    noteText.value = n.note;
+    noteDlg.showModal();
+    noteText.focus();
+  }
+  // Save on submit (the dialog's close event comes a moment later).
+  noteDlg.querySelector('form')!.addEventListener('submit', (e) => {
+    const n = noteById(editId);
+    if ((e.submitter as HTMLButtonElement | null)?.value === 'save' && n && !n.del) {
+      putNote({ ...n, note: noteText.value.slice(0, 2000) });
+      toast(noteText.value.trim() ? 'Note saved' : 'Note cleared');
+    }
+  });
+  noteDlg.addEventListener('close', () => {
+    noteDlg.returnValue = '';
+    if (returnTo === 'panel') openPanel();
+    else focusMark(editId);
+  });
+
+  /* ---------- notes panel ---------- */
+  const list = document.getElementById('notes-list')!;
+  function renderPanel() {
+    const notes = liveNotes(key);
+    document.getElementById('notes-empty')!.hidden = notes.length > 0;
+    list.replaceChildren(
+      ...notes.map((n) => {
+        const li = document.createElement('li');
+        li.className = `notes-item c-${n.color}`;
+        const q = document.createElement('p');
+        q.className = 'text-[0.95rem] font-medium';
+        q.textContent = `“${n.quote.length > 220 ? n.quote.slice(0, 220) + '…' : n.quote}”`;
+        const meta = document.createElement('p');
+        meta.className = 'mt-1 text-xs text-muted';
+        meta.textContent = [n.section, missing.has(n.id) ? 'This text has changed since you saved it' : ''].filter(Boolean).join(' · ');
+        li.append(q, meta);
+        if (n.note.trim()) {
+          const t = document.createElement('p');
+          t.className = 'mt-2 whitespace-pre-wrap text-sm';
+          t.textContent = n.note;
+          li.append(t);
+        }
+        const row = document.createElement('div');
+        row.className = 'mt-2 flex flex-wrap gap-1';
+        const btn = (label: string, fn: () => void, disabled = false) => {
+          const b = document.createElement('button');
+          b.type = 'button';
+          b.className = 'hl-act border border-default';
+          b.textContent = label;
+          b.disabled = disabled;
+          b.addEventListener('click', fn);
+          row.append(b);
+        };
+        btn('Show in lesson', () => { panel.close(); focusMark(n.id, true); }, missing.has(n.id));
+        btn(n.note.trim() ? 'Edit note' : 'Add note', () => { panel.close(); openNote(n.id, 'panel'); });
+        btn('Delete', () => { deleteNote(n.id); toast('Deleted'); });
+        li.append(row);
+        return li;
+      }),
+    );
+  }
+  function openPanel() {
+    renderPanel();
+    if (!panel.open) panel.showModal();
+  }
+  document.querySelectorAll('[data-notes-open]').forEach((b) => b.addEventListener('click', openPanel));
+  panel.querySelector('[data-notes-close]')!.addEventListener('click', () => panel.close());
+  panel.addEventListener('click', (e) => { if (e.target === panel) panel.close(); });
+  panel.querySelector('[data-notes-download]')!.addEventListener('click', () => {
+    const slug = url.split('/').filter(Boolean).pop() || 'lesson';
+    download(`notes-${slug}.md`, notesMarkdown(liveNotes(key), isBookmarked(key) ? [{ title, url }] : []));
+  });
+
+  const readBtn = panel.querySelector<HTMLButtonElement>('[data-notes-read]')!;
+  bindReadNotes(readBtn, () => liveNotes(key), false);
+  panel.addEventListener('close', () => { if (readBtn.getAttribute('aria-pressed') === 'true') readBtn.click(); });
+
+  /* ---------- start ---------- */
+  addEventListener('notes-change', repaint);
+  repaint();
+  const m = location.hash.match(/^#note-([a-z0-9]+)$/);
+  if (m) setTimeout(() => focusMark(m[1], true), 300);
+</script>

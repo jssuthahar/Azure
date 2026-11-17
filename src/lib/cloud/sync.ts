@@ -11,6 +11,7 @@ import type { User } from 'firebase/auth';
 import type { ProgressState, QuizResult, MockResult } from '../progress';
 import type { Deck } from '../review';
 import type { Cert } from '../certificate';
+import { mergeNotes, type NotesState } from '../notes';
 import { db } from './firebase';
 
 /** What gets synced: name in the cloud doc → localStorage key. */
@@ -19,6 +20,7 @@ const KEYS = {
   review: 'msdb-azure-review-v1',
   plan: 'msdb-azure-plan-v1',
   cert: 'msdb-azure-cert-v1',
+  notes: 'msdb-azure-notes-v1',
 } as const;
 type Name = keyof typeof KEYS;
 
@@ -84,20 +86,28 @@ function merge(k: Name, local: string | null, remote: string | null): string | n
   const a = parse<any>(local), b = parse<any>(remote);
   if (!a) return remote;
   if (!b) return local;
-  const m = k === 'progress' ? mergeProgress(a, b) : k === 'review' ? mergeDeck(a, b) : k === 'plan' ? mergePlan(a, b) : mergeCert(a, b);
+  const m = k === 'progress' ? mergeProgress(a, b) : k === 'review' ? mergeDeck(a, b) : k === 'plan' ? mergePlan(a, b) : k === 'notes' ? mergeNotes(a as NotesState, b as NotesState) : mergeCert(a, b);
   return JSON.stringify(m);
 }
 
 /* ---------------- cloud ---------------- */
+// Set when the deployed security rules don't accept `notes` yet: the rest keeps syncing.
+let skipNotes = false;
 const snapshot = () => {
   const v: Partial<Record<Name, string>> = {};
-  for (const k of Object.keys(KEYS) as Name[]) { const s = readLocal(k); if (s) v[k] = s; }
+  for (const k of Object.keys(KEYS) as Name[]) { if (k === 'notes' && skipNotes) continue; const s = readLocal(k); if (s) v[k] = s; }
   return v;
 };
 
 async function push(uid: string) {
   const [{ doc, setDoc, serverTimestamp }, d] = await Promise.all([import('firebase/firestore/lite'), db()]);
-  await setDoc(doc(d, 'users', uid), { v: snapshot(), updatedAt: serverTimestamp() });
+  try {
+    await setDoc(doc(d, 'users', uid), { v: snapshot(), updatedAt: serverTimestamp() });
+  } catch (err) {
+    if (skipNotes || (err as { code?: string })?.code !== 'permission-denied' || !readLocal('notes')) throw err;
+    skipNotes = true;
+    await setDoc(doc(d, 'users', uid), { v: snapshot(), updatedAt: serverTimestamp() });
+  }
   lastSync = new Date();
   window.dispatchEvent(new CustomEvent('msdb-sync', { detail: { state: 'synced', at: lastSync } }));
 }
@@ -121,7 +131,7 @@ export async function startSync(user: User) {
     }
     await push(user.uid);
     if (changed) {
-      for (const e of ['progress-change', 'review-change', 'plan-change']) window.dispatchEvent(new CustomEvent(e));
+      for (const e of ['progress-change', 'review-change', 'plan-change', 'notes-change']) window.dispatchEvent(new CustomEvent(e));
       window.dispatchEvent(new CustomEvent('msdb-sync', { detail: { state: 'merged', at: lastSync } }));
     }
   } catch (err) {

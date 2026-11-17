@@ -149,6 +149,7 @@ const jsonLd = JSON.stringify({ '@context': 'https://schema.org', '@graph': grap
         let v = null;
         try { v = localStorage.getItem('lesson-view'); } catch {}
         document.documentElement.dataset.view = v || 'simple';
+        try { const r = JSON.parse(localStorage.getItem('msdb-reading-v1') || '{}'); const d = document.documentElement.dataset; if (r.size) d.readSize = r.size; if (r.lh) d.readLh = r.lh; if (r.font) d.readFont = r.font; } catch {}
         try { if (localStorage.getItem('msdb-nav-rail') === '1') document.documentElement.dataset.nav = 'rail'; } catch {}
         let u = null;
         try { u = localStorage.getItem('msdb-user'); } catch {}

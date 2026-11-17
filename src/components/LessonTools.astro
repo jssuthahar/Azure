@@ -4,6 +4,12 @@
  * visible lesson aloud, paragraph by paragraph, highlighting as it goes).
  */
 import Mascot from './Mascot.astro';
+import LessonNotes from './LessonNotes.astro';
+import ReadingSettings from './ReadingSettings.astro';
+interface Props {
+  lessonKey: string;
+}
+const { lessonKey } = Astro.props;
 ---
 <div class="lesson-tools mt-5 flex flex-wrap items-center gap-3" data-slide-skip>
   <div class="view-switch inline-flex rounded-full border border-default bg-[var(--pastel-grey)] p-1 text-sm font-semibold" role="group" aria-label="How much detail">
@@ -15,6 +21,15 @@ import Mascot from './Mascot.astro';
   </button>
   <button type="button" data-tutor-open class="inline-flex items-center gap-2 rounded-full border border-default bg-[var(--card)] px-4 py-2 text-sm font-bold hover:border-[var(--accent)]" aria-label="Lesson tutor: explain this lesson another way">
     <span aria-hidden="true">💬</span> Explain it another way
+  </button>
+  <button type="button" data-bookmark-btn aria-pressed="false" class="inline-flex items-center gap-2 rounded-full border border-default bg-[var(--card)] px-4 py-2 text-sm font-bold hover:border-[var(--accent)]">
+    <span aria-hidden="true">🔖</span> <span data-bookmark-label>Bookmark</span>
+  </button>
+  <button type="button" data-notes-open class="inline-flex items-center gap-2 rounded-full border border-default bg-[var(--card)] px-4 py-2 text-sm font-bold hover:border-[var(--accent)]" aria-haspopup="dialog">
+    <span aria-hidden="true">📝</span> My notes <span data-notes-count class="notes-count rounded-full bg-[#0078d4] px-2 text-xs text-white"></span>
+  </button>
+  <button type="button" data-read-open class="inline-flex items-center gap-2 rounded-full border border-default bg-[var(--card)] px-4 py-2 text-sm font-bold hover:border-[var(--accent)]" aria-haspopup="dialog" aria-label="Reading settings: text size, line spacing and font">
+    <span aria-hidden="true" class="font-serif">Aa</span> Reading
   </button>
   <button type="button" id="listen-btn" class="voice-only inline-flex items-center gap-2 rounded-full bg-[#ffd75e] px-4 py-2 text-sm font-bold text-[#0b1020] hover:bg-[#ffcd2e]">
     <span aria-hidden="true">🔊</span> <span id="listen-label">Listen to this lesson</span>
@@ -37,6 +52,9 @@ import Mascot from './Mascot.astro';
   <button type="button" id="reader-pause" class="rounded-full bg-[#0078d4] px-3 py-1.5 text-sm font-semibold text-white">⏸ Pause</button>
   <button type="button" id="reader-stop" class="rounded-full border border-default px-3 py-1.5 text-sm font-semibold" aria-label="Stop reading">⏹</button>
 </div>
+
+<LessonNotes lessonKey={lessonKey} />
+<ReadingSettings />
 
 <style is:global>
   [data-view='simple'] [data-view-btn='simple'],

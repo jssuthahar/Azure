@@ -54,6 +54,106 @@ await p.getByRole('button', { name: /Start the portal walkthrough/ }).last().cli
 if ((await p.getAttribute('#lsim-t-portal', 'aria-selected')) !== 'true') fail.push('tutor: portal button did not open the Azure Portal tab');
 await p.click('#ask-close');
 
+// 3a. Bookmarks, highlights and notes on a lesson, listed on My Progress.
+{
+  const lesson = `${BASE}/az-900/cloud-concepts/iaas/`;
+  await p.evaluate(() => localStorage.removeItem('msdb-azure-notes-v1'));
+  await p.goto(lesson, { waitUntil: 'networkidle' });
+  await p.click('[data-view-btn="full"]');
+  await p.click('[data-bookmark-btn]');
+  if ((await p.getAttribute('[data-bookmark-btn]', 'aria-pressed')) !== 'true') fail.push('notes: bookmark button did not toggle');
+  const select = () => p.evaluate(() => {
+    const t = document.querySelector('.lesson-section[data-section="technical"] p');
+    const node = [...(t?.childNodes ?? [])].find((n) => n.nodeType === 3 && n.data.trim().length > 20);
+    if (!node) return false;
+    t.scrollIntoView({ block: 'center' });
+    const r = document.createRange();
+    r.setStart(node, 0);
+    r.setEnd(node, Math.min(node.data.length, 30));
+    getSelection().removeAllRanges();
+    getSelection().addRange(r);
+    document.dispatchEvent(new PointerEvent('pointerup'));
+    return true;
+  });
+  if (!(await select())) fail.push('notes: no lesson text to select');
+  await p.waitForSelector('#hl-bar:not([hidden])', { timeout: 3000 }).catch(() => fail.push('notes: selection bar did not appear'));
+  await p.click('#hl-bar [data-hl-color="green"]');
+  if ((await p.locator('mark.hl-green').count()) < 1) fail.push('notes: highlight was not painted');
+  await p.reload({ waitUntil: 'networkidle' });
+  await p.click('[data-view-btn="full"]');
+  if ((await p.locator('mark.hl-green').count()) < 1) fail.push('notes: highlight did not come back after reload');
+  await p.locator('mark.hl[id^="note-"]').first().click();
+  await p.click('#hl-pop [data-pop-edit]');
+  await p.fill('#note-dlg-text', 'Remember: IaaS means I patch the OS.');
+  await p.click('#note-dlg button[value="save"]');
+  if ((await p.locator('mark.hl-noted').count()) < 1) fail.push('notes: note was not saved on the highlight');
+  await p.click('[data-notes-open]');
+  if ((await p.locator('#notes-list li').count()) !== 1) fail.push('notes: panel should list 1 note');
+  await p.click('[data-notes-close]');
+  await p.goto(`${BASE}/progress/#notes`, { waitUntil: 'networkidle' });
+  const txt = await p.textContent('#notes');
+  if (!/IaaS means I patch the OS/.test(txt) || (await p.locator('#pg-bookmarks a').count()) < 1) fail.push('notes: My Progress did not list the bookmark and note');
+  // Cheat sheet shows the note in "My highlights and notes".
+  await p.goto(`${BASE}/az-900/cheat-sheet/`, { waitUntil: 'networkidle' });
+  if (!(await p.isVisible('#my-notes')) || !/IaaS means I patch the OS/.test(await p.textContent('#my-notes'))) fail.push('notes: cheat sheet did not show my highlights');
+  await p.evaluate(() => localStorage.removeItem('msdb-azure-notes-v1'));
+  await p.goto(`${BASE}/az-900/cheat-sheet/`, { waitUntil: 'networkidle' });
+  if (await p.isVisible('#my-notes')) fail.push('notes: empty "My highlights" section should stay hidden');
+}
+
+// 3a2. Flag a lesson quiz question → it appears in Smart practice → Flagged questions.
+{
+  await p.goto(`${BASE}/az-900/cloud-concepts/iaas/`, { waitUntil: 'networkidle' });
+  const qid = await p.getAttribute('.kc .q-flag >> nth=0', 'data-flag-id');
+  await p.click('.kc .q-flag >> nth=0');
+  if ((await p.getAttribute('.kc .q-flag >> nth=0', 'aria-pressed')) !== 'true') fail.push('flags: quiz flag button did not toggle');
+  await p.goto(`${BASE}/az-900/practice/`, { waitUntil: 'networkidle' });
+  if (!/1 flagged/.test(await p.textContent('#sp-flag-n'))) fail.push('flags: practice page did not count the flagged question');
+  await p.click('.sp-mode[data-mode="flagged"]');
+  if ((await p.getAttribute('#sp-flag', 'data-flag-id')) !== qid) fail.push('flags: flagged session did not open the flagged question');
+  if ((await p.getAttribute('#sp-flag', 'aria-pressed')) !== 'true') fail.push('flags: practice flag button should show Flagged');
+  await p.click('#sp-flag');
+  if (!/None yet/.test(await p.textContent('#sp-flag-n'))) fail.push('flags: un-flagging in practice did not update the count');
+  await p.click('#sp-quit');
+  await p.evaluate(() => localStorage.removeItem('msdb-azure-notes-v1'));
+}
+
+// 3a3. Reading settings apply to lesson text and survive a reload.
+{
+  const lesson = `${BASE}/az-900/cloud-concepts/iaas/`;
+  await p.goto(lesson, { waitUntil: 'networkidle' });
+  const size0 = await p.evaluate(() => parseFloat(getComputedStyle(document.querySelector('.lesson')).fontSize));
+  await p.click('[data-read-open]');
+  await p.click('#read-dlg .read-opt:has(input[name="read-size"][value="xl"])');
+  await p.click('#read-dlg .read-easy');
+  await p.click('#read-dlg button.btn-primary[data-read-close]');
+  await p.reload({ waitUntil: 'networkidle' });
+  const after = await p.evaluate(() => ({ size: parseFloat(getComputedStyle(document.querySelector('.lesson')).fontSize), font: getComputedStyle(document.querySelector('.lesson')).fontFamily }));
+  if (!(after.size > size0 * 1.2)) fail.push(`reading: text size did not grow (${size0} → ${after.size})`);
+  if (!/Verdana/.test(after.font)) fail.push('reading: easy-read font not applied');
+  await p.evaluate(() => localStorage.removeItem('msdb-reading-v1'));
+}
+
+// 3a4. Resume reading: scroll down, come back, jump back.
+{
+  const lesson = `${BASE}/az-900/cloud-concepts/iaas/`;
+  await p.evaluate(() => localStorage.removeItem('msdb-lesson-pos-v1'));
+  await p.goto(lesson, { waitUntil: 'networkidle' });
+  await p.click('[data-view-btn="full"]');
+  await p.evaluate(() => document.getElementById('the-technical-explanation').scrollIntoView({ block: 'start', behavior: 'instant' }));
+  await p.mouse.wheel(0, 200);
+  await p.waitForTimeout(1000);
+  await p.goto(`${BASE}/az-900/`, { waitUntil: 'networkidle' });
+  await p.goto(lesson, { waitUntil: 'networkidle' });
+  await p.waitForSelector('#resume-chip:not([hidden])', { timeout: 3000 }).catch(() => fail.push('resume: "Pick up where you left off" did not appear'));
+  if (await p.isVisible('#resume-chip')) {
+    await p.click('#resume-go');
+    const top = await p.evaluate(() => document.getElementById('the-technical-explanation').getBoundingClientRect().top);
+    if (top > 150 || top < -2000) fail.push(`resume: jump landed in the wrong place (${Math.round(top)}px)`);
+  }
+  await p.evaluate(() => localStorage.removeItem('msdb-lesson-pos-v1'));
+}
+
 // 3b. Ask Nimbus answers simulation first: 3D, then the Azure portal, then the explanation.
 await p.goto(`${BASE}/az-900/`, { waitUntil: 'networkidle' });
 await p.click('#ask-fab');

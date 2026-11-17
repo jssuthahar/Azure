@@ -1,0 +1,69 @@
+---
+/**
+ * Reading settings for lesson text: text size, line spacing and an easy-read
+ * font. Saved in this browser (`msdb-reading-v1`) and applied before paint by
+ * the inline script in Base.astro as <html data-read-size|data-read-lh|data-read-font>.
+ * The CSS lives in global.css ("Reading settings").
+ */
+const groups = [
+  { key: 'size', label: 'Text size', options: [['m', 'Normal'], ['l', 'Large'], ['xl', 'Larger'], ['xxl', 'Largest']] },
+  { key: 'lh', label: 'Line spacing', options: [['n', 'Normal'], ['r', 'Relaxed'], ['l', 'Loose']] },
+  { key: 'font', label: 'Font', options: [['std', 'Standard'], ['easy', 'Easy-read']] },
+] as const;
+---
+<dialog id="read-dlg" class="notes-dialog" aria-labelledby="read-dlg-h">
+  <div class="flex items-start justify-between gap-3">
+    <div>
+      <h2 id="read-dlg-h" class="text-lg font-bold">Reading settings</h2>
+      <p class="text-sm text-muted">For every lesson, saved in this browser.</p>
+    </div>
+    <button type="button" class="notes-x" data-read-close aria-label="Close">✕</button>
+  </div>
+  {groups.map((g) => (
+    <fieldset class="mt-4">
+      <legend class="text-sm font-semibold">{g.label}</legend>
+      <div class="read-opts mt-2">
+        {g.options.map(([v, l]) => (
+          <label class={`read-opt ${g.key === 'font' && v === 'easy' ? 'read-easy' : ''}`}>
+            <input type="radio" name={`read-${g.key}`} value={v} data-read-key={g.key} />
+            <span>{l}</span>
+          </label>
+        ))}
+      </div>
+    </fieldset>
+  ))}
+  <p class="read-sample mt-5 rounded-lg bg-[var(--pastel-blue)] p-4">With IaaS you rent the virtual machine. Microsoft looks after the building, power and hardware; you patch the operating system.</p>
+  <div class="mt-4 flex flex-wrap justify-between gap-2">
+    <button type="button" class="btn btn-outline btn-sm" data-read-reset>Reset to default</button>
+    <button type="button" class="btn btn-primary btn-sm" data-read-close>Done</button>
+  </div>
+</dialog>
+
+<script>
+  const KEY = 'msdb-reading-v1';
+  const DEF = { size: 'm', lh: 'n', font: 'std' } as Record<string, string>;
+  const dlg = document.getElementById('read-dlg') as HTMLDialogElement;
+  const load = (): Record<string, string> => {
+    try { return { ...DEF, ...JSON.parse(localStorage.getItem(KEY) || '{}') }; } catch { return { ...DEF }; }
+  };
+  const apply = (s: Record<string, string>) => {
+    const h = document.documentElement.dataset;
+    h.readSize = s.size;
+    h.readLh = s.lh;
+    h.readFont = s.font;
+    dlg.querySelectorAll<HTMLInputElement>('input[data-read-key]').forEach((i) => (i.checked = s[i.dataset.readKey!] === i.value));
+  };
+  const save = (s: Record<string, string>) => {
+    try { localStorage.setItem(KEY, JSON.stringify(s)); } catch {}
+    apply(s);
+  };
+  dlg.addEventListener('change', (e) => {
+    const i = e.target as HTMLInputElement;
+    if (i.dataset.readKey) save({ ...load(), [i.dataset.readKey]: i.value });
+  });
+  dlg.querySelector('[data-read-reset]')!.addEventListener('click', () => save({ ...DEF }));
+  dlg.querySelectorAll('[data-read-close]').forEach((b) => b.addEventListener('click', () => dlg.close()));
+  dlg.addEventListener('click', (e) => { if (e.target === dlg) dlg.close(); });
+  document.querySelectorAll('[data-read-open]').forEach((b) => b.addEventListener('click', () => { apply(load()); dlg.showModal(); }));
+  apply(load());
+</script>

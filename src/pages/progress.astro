@@ -87,6 +87,21 @@ const payload = JSON.stringify({ moduleKeys, topics, modules: exam.modules.map((
       <div id="pg-badges" class="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-4"></div>
     </section>
 
+    <section id="notes" class="mt-10 scroll-mt-28" aria-labelledby="notes-h">
+      <div class="flex flex-wrap items-end justify-between gap-3">
+        <div>
+          <h2 id="notes-h" class="text-xl font-bold">Bookmarks and notes</h2>
+          <p class="mt-1 text-sm text-muted">Bookmark a lesson, or select any sentence in it to highlight it and add a note. They show up here.</p>
+        </div>
+        <div class="flex flex-wrap gap-2">
+          <button type="button" id="pg-notes-read" class="btn btn-outline btn-sm" hidden>🔊 Read my notes</button>
+          <button type="button" id="pg-notes-dl" class="btn btn-outline btn-sm" hidden>⬇ Download all as Markdown</button>
+        </div>
+      </div>
+      <div id="pg-bookmarks" class="mt-4"></div>
+      <div id="pg-notes" class="mt-4 space-y-5"></div>
+    </section>
+
     <section class="mt-10" aria-labelledby="topics-h">
       <h2 id="topics-h" class="text-xl font-bold">Topics</h2>
       <div id="pg-topics" class="mt-4 space-y-6"></div>
@@ -170,6 +185,75 @@ const payload = JSON.stringify({ moduleKeys, topics, modules: exam.modules.map((
   window.addEventListener('progress-change', paint);
   $('pg-reset').addEventListener('click', () => { if (confirm('Reset all progress, scores and badges in this browser?')) reset(); });
 </script>
+
+<script>
+  import { bookmarks, liveNotes, setBookmark, notesMarkdown, download } from '../lib/notes';
+  import { bindReadNotes } from '../lib/notes-voice';
+  const readBtn = document.getElementById('pg-notes-read') as HTMLButtonElement;
+  bindReadNotes(readBtn, () => liveNotes());
+  const bmEl = document.getElementById('pg-bookmarks')!;
+  const notesEl = document.getElementById('pg-notes')!;
+  const dl = document.getElementById('pg-notes-dl')!;
+  const el = (tag: string, cls = '', text = '') => {
+    const e = document.createElement(tag);
+    if (cls) e.className = cls;
+    if (text) e.textContent = text;
+    return e;
+  };
+  const paintNotes = () => {
+    const marks = bookmarks();
+    const notes = liveNotes();
+    dl.hidden = !marks.length && !notes.length;
+    if ('speechSynthesis' in window) readBtn.hidden = !notes.length;
+    if (!marks.length) bmEl.replaceChildren(el('p', 'text-sm text-muted', 'No bookmarked lessons yet. Use 🔖 Bookmark at the top of any lesson.'));
+    else {
+      const ul = el('ul', 'grid gap-2 sm:grid-cols-2');
+      for (const b of marks) {
+        const li = el('li', 'flex items-center gap-2 rounded-xl border border-default bg-[var(--card)] px-3 py-1');
+        const a = el('a', 'min-w-0 flex-1 py-1.5 text-sm font-semibold hover:text-[var(--accent-deep)] hover:underline', `🔖 ${b.title}`) as HTMLAnchorElement;
+        a.href = b.url;
+        const x = el('button', 'min-h-9 min-w-9 rounded-full text-muted hover:bg-[var(--pastel-grey)]', '✕');
+        x.setAttribute('aria-label', `Remove bookmark: ${b.title}`);
+        x.addEventListener('click', () => setBookmark(b.key, b.url, b.title, false));
+        li.append(a, x);
+        ul.append(li);
+      }
+      bmEl.replaceChildren(ul);
+    }
+    const byLesson = new Map<string, typeof notes>();
+    for (const n of notes) byLesson.set(n.key, [...(byLesson.get(n.key) ?? []), n]);
+    notesEl.replaceChildren(
+      ...[...byLesson.values()].map((list) => {
+        const box = el('div');
+        const h = el('a', 'font-semibold text-accent hover:underline', `${list[0].title} (${list.length})`) as HTMLAnchorElement;
+        h.href = list[0].url;
+        const ul = el('ul', 'mt-2 space-y-2');
+        for (const n of list) {
+          const li = el('li', `notes-item c-${n.color}`);
+          const q = el('a', 'block text-sm font-medium hover:underline', `“${n.quote.length > 200 ? n.quote.slice(0, 200) + '…' : n.quote}”`) as HTMLAnchorElement;
+          q.href = `${n.url}#note-${n.id}`;
+          li.append(q);
+          if (n.section) li.append(el('p', 'mt-0.5 text-xs text-muted', n.section));
+          if (n.note.trim()) li.append(el('p', 'mt-1.5 whitespace-pre-wrap text-sm', n.note));
+          ul.append(li);
+        }
+        box.append(h, ul);
+        return box;
+      }),
+    );
+  };
+  dl.addEventListener('click', () => download('my-azure-notes.md', notesMarkdown(liveNotes(), bookmarks())));
+  paintNotes();
+  window.addEventListener('notes-change', paintNotes);
+</script>
+
+<style is:global>
+  .notes-item { border: 1px solid var(--card-line); border-left-width: 6px; border-radius: .6rem; padding: .6rem .8rem; background: var(--card); }
+  .notes-item.c-yellow { border-left-color: #e0b100; }
+  .notes-item.c-green { border-left-color: #107c10; }
+  .notes-item.c-blue { border-left-color: #0078d4; }
+  .notes-item.c-pink { border-left-color: #c2185b; }
+</style>
 
 <script>
   import { hint, deleteCloudData } from '../lib/cloud/account';
