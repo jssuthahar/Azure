@@ -63,5 +63,14 @@ export const FIREBASE = {
 export const AUTH_PROVIDERS = { google: true, microsoft: false, linkedin: false } as const;
 export type AuthProviderId = keyof typeof AUTH_PROVIDERS;
 
+/**
+ * On the live site, sign-in runs on our own domain (self-hosted helper in public/__/auth,
+ * refreshed by `npm run auth-helper`), so Google says "continue to azure.msdevbuild.com".
+ * Everywhere else (localhost, previews) it uses the default firebaseapp.com handler.
+ * Needs https://azure.msdevbuild.com/__/auth/handler as an authorized redirect URI on the
+ * OAuth web client in Google Cloud.
+ */
+export const AUTH_HOST = 'azure.msdevbuild.com';
+
 /** Usage counts are only sent from the live site, never from localhost, previews or QA runs. */
 export const COUNT_HOSTS = ['azure.msdevbuild.com'] as const;

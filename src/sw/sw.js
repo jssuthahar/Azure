@@ -88,6 +88,7 @@ self.addEventListener('fetch', (event) => {
   if (req.method !== 'GET') return;
   const url = new URL(req.url);
   if (url.origin !== self.location.origin) return;
+  if (url.pathname.startsWith('/__/')) return; // Firebase sign-in handler: always live, never cached
   if (req.mode === 'navigate') return event.respondWith(page(event));
   if (url.pathname.startsWith('/_astro/')) return event.respondWith(cacheFirst(event, ASSETS));
   if (/\.(png|jpe?g|webp|avif|gif|svg|ico|woff2?)$/i.test(url.pathname) && !url.pathname.startsWith('/og/')) return event.respondWith(staleWhileRevalidate(event, MEDIA));

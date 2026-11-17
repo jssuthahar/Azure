@@ -8,7 +8,7 @@ import type { APIRoute } from 'astro';
 const AI_BOTS = ['GPTBot', 'OAI-SearchBot', 'ChatGPT-User', 'ClaudeBot', 'Claude-User', 'Claude-SearchBot', 'PerplexityBot', 'Perplexity-User', 'Google-Extended', 'Applebot-Extended', 'Bingbot', 'CCBot'];
 
 export const GET: APIRoute = ({ site }) => {
-  const rules = ['Allow: /', 'Disallow: /progress/', 'Disallow: /embed/3d/', 'Disallow: /embed/portal/', 'Disallow: /embed/lab/'];
+  const rules = ['Allow: /', 'Disallow: /progress/', 'Disallow: /__/', 'Disallow: /embed/3d/', 'Disallow: /embed/portal/', 'Disallow: /embed/lab/'];
   const body = [
     'User-agent: *', ...rules, '',
     '# AI assistants and answer engines are welcome to read and cite this site.',

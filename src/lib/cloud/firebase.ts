@@ -6,14 +6,14 @@
 import type { FirebaseApp } from 'firebase/app';
 import type { Auth } from 'firebase/auth';
 import type { Firestore } from 'firebase/firestore/lite';
-import { FIREBASE } from '../../config';
+import { FIREBASE, AUTH_HOST } from '../../config';
 
 let appP: Promise<FirebaseApp> | null = null;
 let authP: Promise<Auth> | null = null;
 let dbP: Promise<Firestore> | null = null;
 
 export const app = () =>
-  (appP ??= import('firebase/app').then(({ initializeApp, getApps }) => getApps()[0] ?? initializeApp(FIREBASE)));
+  (appP ??= import('firebase/app').then(({ initializeApp, getApps }) => getApps()[0] ?? initializeApp(typeof location !== 'undefined' && location.hostname === AUTH_HOST ? { ...FIREBASE, authDomain: AUTH_HOST } : FIREBASE)));
 
 export const auth = () =>
   (authP ??= Promise.all([import('firebase/auth'), app()]).then(([m, a]) => m.getAuth(a)));

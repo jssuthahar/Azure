@@ -19,7 +19,8 @@
     "og": "node scripts/make-og.mjs",
     "icons": "node scripts/make-icons.mjs",
     "indexnow": "node scripts/indexnow.mjs",
-    "stats": "node scripts/stats.mjs"
+    "stats": "node scripts/stats.mjs",
+    "auth-helper": "node scripts/auth-helper.mjs"
   },
   "dependencies": {
     "@astrojs/mdx": "4.3.14",

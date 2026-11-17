@@ -47,6 +47,7 @@ pages={}
 for root,_,files in os.walk(DIST):
     for f in files:
         if f.endswith('.html'):
+            if os.path.relpath(root,DIST).replace('\\','/').startswith('__'): continue  # Firebase sign-in helper, not site pages
             path=os.path.join(root,f); url='/'+os.path.relpath(path,DIST).replace('index.html','').replace('\\','/')
             p=P(); p.feed(open(path,encoding='utf-8').read()); pages[url]=p
 
