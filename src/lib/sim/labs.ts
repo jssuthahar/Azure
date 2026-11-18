@@ -4,6 +4,7 @@
  */
 import type { Sim } from './engine';
 import { ME, type World } from './world';
+import { AI_LABS } from './labs-ai';
 
 export interface LabTask {
   text: string;
@@ -13,6 +14,8 @@ export interface LabTask {
 }
 export interface Lab {
   id: string;
+  /** Exam the lab belongs to (default 'az-900'). */
+  exam?: string;
   title: string;
   icon: string;
   level: 'Beginner' | 'Intermediate';
@@ -515,6 +518,7 @@ export const LABS: Lab[] = [
     ],
     wrap: 'Azure Migrate finds your servers, sizes them from real usage (a 4-core server idling at 18% doesn’t need 4 cores in Azure) and moves them. When the data is too big for the network, Data Box ships it: you copy, send the device back, and Microsoft uploads and wipes it.',
   },
+  ...AI_LABS,
 ];
 
 export const SANDBOX: Lab = {
@@ -532,4 +536,6 @@ export const SANDBOX: Lab = {
 };
 
 export const ALL_LABS = [...LABS, SANDBOX];
+/** Guided labs for one exam (the sandbox is shared). */
+export const labsForExam = (exam: string) => LABS.filter((l) => (l.exam ?? 'az-900') === exam);
 export const labsForTopic = (slug: string) => LABS.filter((l) => l.topics.includes(slug));

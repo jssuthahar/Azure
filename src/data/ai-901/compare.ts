@@ -1,0 +1,90 @@
+/**
+ * AI-901 "X vs Y" comparison pages: /ai-901/compare/<slug>/.
+ * Prices written as $12.34 are shown in the learner's currency (default INR);
+ * they are illustrative list prices for "price feel" only.
+ */
+import type { Comparison } from '../az-900/compare';
+
+export const COMPARISONS: Comparison[] = [
+  {
+    slug: 'global-standard-vs-provisioned-vs-batch',
+    title: 'Global Standard vs Provisioned vs Batch Deployments',
+    seoTitle: 'Foundry Deployment Types: Standard vs Provisioned vs Batch',
+    description: 'Microsoft Foundry deployment types compared: Global Standard, Data Zone, Provisioned and Batch. Billing, latency, data location and when to pick each.',
+    answer: 'Start with **Global Standard**: pay per token, newest models first. Use **Data Zone** or **Standard** when processing must stay in a region or data zone, **Provisioned** for steady high volume with predictable latency, and **Batch** for big jobs that can wait up to 24 hours at about half the price.',
+    cols: ['Global Standard', 'Data Zone Standard', 'Provisioned', 'Global Batch'],
+    rows: [
+      ['How you pay', 'Per token', 'Per token', 'Reserved capacity (PTUs) per hour', 'Per token, about 50% less'],
+      ['Where prompts are processed', 'Any Azure region', 'Inside the US, EU or APAC data zone', 'Global, data zone or regional options', 'Any Azure region'],
+      ['Latency', 'Low, can vary at high volume', 'Low, can vary at high volume', 'Low and predictable', 'Hours (24-hour target)'],
+      ['Best for', 'Most apps, prototypes, spiky traffic', 'Data-residency rules', 'Large steady production traffic', 'Overnight summaries, bulk classification'],
+      ['New models arrive', 'First', 'Soon after', 'Later', 'Varies'],
+    ],
+    pick: [['Global Standard', 'you are starting out or traffic is unpredictable'], ['Data Zone Standard', 'policy says EU data must be processed in the EU'], ['Provisioned', 'you have high, steady volume and need consistent response times'], ['Global Batch', 'thousands of requests can wait until tomorrow']],
+    examTip: '“Lowest cost for a large job that is not time-sensitive” = **Batch**. “Predictable latency at high volume” = **Provisioned**. “Data must stay in the EU” = **Data Zone (EU)**. Otherwise **Global Standard**.',
+    sim: { mode: 'foundry', start: 2, tour: 'deploy-model', intro: 'Deploy the same model as Global Standard and as Batch.' },
+    lessons: ['model-deployment-and-parameters', 'deploy-and-chat-in-foundry'],
+    faq: [['Is data stored outside my region with Global Standard?', 'No. Data at rest stays in your resource’s geography. Only processing of prompts and responses can happen in any region.'], ['Can I switch deployment type later?', 'You create a new deployment with the other type and point your app at its name.']],
+  },
+  {
+    slug: 'azure-language-vs-llm-prompts',
+    title: 'Azure Language vs Prompting a Generative Model',
+    seoTitle: 'Azure Language vs LLM Prompts for Text Analysis | AI-901',
+    description: 'Azure Language in Foundry Tools vs prompting a generative model for sentiment, key phrases, entities, PII and summaries. Output, cost and when to use each.',
+    answer: 'Use **Azure Language** when you need fixed, predictable JSON for standard tasks (sentiment, entities, PII, key phrases) at scale. Prompt a **generative model** when the task is custom, needs reasoning, or changes often. Many apps use both.',
+    cols: ['Azure Language', 'Generative model + prompt'],
+    rows: [
+      ['Output', 'Fixed JSON schema with confidence scores', 'Whatever you ask for (you design the format)'],
+      ['Setup', 'Call an API, no prompt needed', 'Write and test a prompt'],
+      ['Custom categories', 'Custom NER or classification needs training data', 'Describe them in the prompt'],
+      ['Consistency', 'Very consistent', 'Varies with prompt and temperature'],
+      ['PII redaction', 'Built in, returns redacted text', 'Possible but less reliable'],
+      ['Price feel (illustrative)', '≈ $1 per 1,000 text records', '≈ $0.40 per 1M input tokens (small model)'],
+    ],
+    pick: [['Azure Language', 'you want standard sentiment, entities or PII with stable output'], ['Generative model', 'you need custom labels, explanations or a summary in your own style']],
+    examTip: 'If a question asks for **sentiment, key phrases, named entities or PII** with no custom logic, the expected answer is usually **Azure Language**.',
+    sim: { mode: 'perception', start: 1, tour: 'language-playground', intro: 'Run a review through Azure Language.' },
+    lessons: ['text-analysis', 'text-analysis-app'],
+    faq: [['Is Azure Language being retired?', 'Microsoft has announced that some features (key phrase extraction, sentiment analysis, summarization and others) retire on 31 March 2029 in favour of Foundry models. Language detection, PII detection and NER continue.']],
+  },
+  {
+    slug: 'speech-pipeline-vs-audio-model',
+    title: 'Speech Pipeline vs Audio-Capable Model',
+    seoTitle: 'Speech to Text Pipeline vs Audio Models in Foundry | AI-901',
+    description: 'Answering spoken questions two ways: Azure Speech to text plus a text model plus text to speech, or one audio-capable multimodal model. Trade-offs explained.',
+    answer: 'A **pipeline** (speech to text, then a text model, then text to speech) gives you more control, cheaper transcription and any voice you like. An **audio-capable model** takes the audio directly, with fewer moving parts and better understanding of tone. For live, low-latency conversations use a **realtime** model or Voice Live.',
+    cols: ['Speech pipeline', 'Audio-capable model'],
+    rows: [
+      ['Steps', 'Azure Speech STT → text model → Azure Speech TTS', 'One call with input_audio'],
+      ['Control', 'Swap any part, custom speech models, SSML voices', 'Fewer knobs'],
+      ['Understands tone and emotion', 'Mostly lost in transcription', 'Kept'],
+      ['Transcript for records', 'Yes, by design', 'Optional'],
+      ['Latency', 'Three hops', 'One hop'],
+    ],
+    pick: [['Speech pipeline', 'you need transcripts, custom vocabulary or a specific neural voice'], ['Audio-capable model', 'you want the simplest way to answer a spoken question']],
+    examTip: '“Respond to spoken prompts by using a deployed multimodal model” means sending the **audio itself** to an audio-capable deployment, not transcribing first.',
+    sim: { mode: 'perception', start: 2, tour: 'audio-prompt', intro: 'Speech in, text out, then the other way.' },
+    lessons: ['spoken-prompts-multimodal', 'azure-speech-app', 'speech-recognition-and-synthesis'],
+    faq: [['Which voices can the pipeline use?', 'Any Azure Speech neural voice, including Indian English, Hindi and Tamil voices, tuned with SSML.']],
+  },
+  {
+    slug: 'generative-ai-vs-ai-agents',
+    title: 'Generative AI App vs AI Agent',
+    seoTitle: 'Generative AI vs AI Agents: What Is the Difference? | AI-901',
+    description: 'A generative AI chat app vs an AI agent in Microsoft Foundry: instructions, tools, memory and actions. See when a simple prompt is enough and when to build an agent.',
+    answer: 'A **generative AI app** sends a prompt and shows the answer. An **agent** is a model plus **instructions** plus **tools**: it decides which tool to call (search your files, run code, call your API), looks at the result and keeps going until the task is done.',
+    cols: ['Generative AI chat', 'AI agent'],
+    rows: [
+      ['Core', 'Model + prompt', 'Model + instructions + tools'],
+      ['Can take actions', 'No, it only writes text', 'Yes, through tools and functions'],
+      ['Uses your data', 'Only what you paste into the prompt', 'File search, Azure AI Search, APIs'],
+      ['Conversation memory', 'You manage it in your app', 'Managed by Foundry Agent Service'],
+      ['Built in Foundry with', 'Chat playground, responses.create', 'Agents page, agents.create_version'],
+    ],
+    pick: [['Generative AI chat', 'you need to draft, summarise or answer from text you supply'], ['AI agent', 'the task needs your documents, calculations or actions in other systems']],
+    examTip: 'Look for verbs: **“look up, calculate, book, update”** point to an **agent with tools**. **“Write, summarise, rephrase”** point to plain generative AI.',
+    sim: { mode: 'foundry', start: 5, tour: 'create-agent', intro: 'Ask an agent something that needs two tools.' },
+    lessons: ['generative-and-agentic-ai', 'build-an-agent-in-foundry'],
+    faq: [['Is Microsoft 365 Copilot an agent?', 'Copilot is an assistant built on generative AI that can use agents; you can also publish Foundry agents to Teams and Microsoft 365 Copilot.']],
+  },
+];

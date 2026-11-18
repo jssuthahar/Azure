@@ -1,0 +1,27 @@
+{ "cert": "ai-901", "domain": 2, "topic": "what-is-microsoft-foundry", "questions": [
+  { "id": "ai-wifoundry-1", "type": "single", "scenario": "Two development teams at a company will build separate generative AI apps. The company wants one bill, one set of network and security settings, and a separate workspace for each team's model deployments and agents.", "question": "What should you create?", "options": [
+    { "text": "One Foundry resource that contains two projects", "why": "Correct. The resource holds shared billing and security, and each project is a separate team workspace." },
+    { "text": "Two Foundry resources that each contain one project", "why": "Two resources would duplicate billing and security settings." },
+    { "text": "One project that contains two Foundry resources", "why": "Resources contain projects, not the other way round." },
+    { "text": "Two Azure subscriptions with one model deployment each", "why": "Separate subscriptions do not meet the single bill requirement and are not needed for workspace separation." } ], "answer": [0], "explanation": "A Foundry resource provides shared billing, networking and security. Projects inside the resource give each team its own deployments, agents, files and evaluations.", "objective": "2.1.2" },
+  { "id": "ai-wifoundry-2", "type": "single", "question": "A developer must be able to use model deployments and build agents in a Foundry project. The developer must not be able to manage the Foundry resource or assign roles. Which role should you assign?", "options": [
+    { "text": "Foundry Owner", "why": "Foundry Owner grants full access, which exceeds the requirement." },
+    { "text": "Foundry Account Owner", "why": "This role manages the resource, which the developer must not do." },
+    { "text": "Foundry User", "why": "Correct. Foundry User allows building and using resources in a project without management rights." },
+    { "text": "Reader", "why": "Reader allows viewing only and does not allow building agents or calling deployments." } ], "answer": [2], "explanation": "Foundry User, formerly Azure AI User, is the least-privilege role for developers who build in a project.", "objective": "2.1.2" },
+  { "id": "ai-wifoundry-3", "type": "multi", "question": "Which TWO items are stored at the project level in Microsoft Foundry?", "options": [
+    { "text": "Agents", "why": "Correct. Agents are created and versioned inside a project." },
+    { "text": "Evaluations", "why": "Correct. Evaluation runs belong to a project." },
+    { "text": "The Azure subscription billing relationship", "why": "Billing is associated with the Foundry resource, not individual projects." },
+    { "text": "The network isolation settings for the whole resource", "why": "Networking is configured on the Foundry resource." } ], "answer": [0, 1], "explanation": "Projects are team workspaces that hold deployments in use, agents, files and evaluations. The parent resource holds billing, networking and security.", "objective": "2.1.2" },
+  { "id": "ai-wifoundry-4", "type": "single", "question": "Which name refers to the set of services formerly known as Azure AI services, such as Azure Speech, Azure Language and Azure Vision?", "options": [
+    { "text": "Foundry Models", "why": "Foundry Models refers to the model catalog and deployments." },
+    { "text": "Foundry Tools", "why": "Correct. Azure Speech, Azure Language, Azure Vision and Content Understanding are Foundry Tools." },
+    { "text": "Foundry Agent Service", "why": "The Agent Service hosts agents. It is not the name for the former Azure AI services." },
+    { "text": "Foundry guardrails", "why": "Guardrails are safety controls such as content filters." } ], "answer": [1], "explanation": "The services previously called Azure AI services are now Foundry Tools, for example Azure Speech in Foundry Tools.", "objective": "2.1.2" },
+  { "id": "ai-wifoundry-5", "type": "single", "question": "Which value should a client application use to connect to a specific Foundry project by using the Foundry SDK?", "options": [
+    { "text": "The project endpoint, in the format https://<resource-name>.services.ai.azure.com/api/projects/<project-name>", "why": "Correct. The project endpoint identifies both the resource and the project." },
+    { "text": "The Azure subscription ID", "why": "A subscription ID does not identify a project endpoint." },
+    { "text": "The name of the model in the model catalog", "why": "Catalog names identify models, not the project to connect to." },
+    { "text": "The resource group name", "why": "Resource group names are not used as connection endpoints." } ], "answer": [0], "explanation": "Applications connect to a project through its project endpoint, which is shown on the project overview page in the Foundry portal.", "objective": "2.1.2" }
+] }

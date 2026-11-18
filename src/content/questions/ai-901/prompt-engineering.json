@@ -1,0 +1,27 @@
+{ "cert": "ai-901", "domain": 2, "topic": "prompt-engineering", "questions": [
+  { "id": "ai-prompteng-1", "type": "single", "question": "You are building a customer support chat app. Every response must use a polite tone and be no longer than three sentences, regardless of what the user asks. Where should you specify these requirements?", "options": [
+    { "text": "In the system prompt", "why": "Correct. The system prompt sets persistent rules, tone and format for every turn." },
+    { "text": "In each user prompt", "why": "Users write user prompts, and rules there are not reliably applied to every turn." },
+    { "text": "In the assistant message history", "why": "Assistant messages are previous model replies, not instructions." },
+    { "text": "In the deployment name", "why": "The deployment name only identifies the deployment." } ], "answer": [0], "explanation": "System prompts define the model's role, rules, tone and output format for the whole conversation.", "objective": "2.1.1" },
+  { "id": "ai-prompteng-2", "type": "single", "scenario": "A model generates product descriptions in an inconsistent structure. You need every description to follow the same three-bullet format.", "question": "Which prompt technique is most likely to produce consistent output?", "options": [
+    { "text": "Increase the temperature", "why": "A higher temperature increases variation, which makes the format less consistent." },
+    { "text": "Include two or three examples of correctly formatted descriptions in the prompt", "why": "Correct. Few-shot examples show the model the exact pattern to follow." },
+    { "text": "Remove the system prompt", "why": "Removing instructions makes the output less predictable." },
+    { "text": "Ask the user to rephrase the request", "why": "This places the burden on the user and does not fix the format." } ], "answer": [1], "explanation": "Few-shot prompting provides sample inputs and outputs so that the model reproduces the desired structure.", "objective": "2.1.1" },
+  { "id": "ai-prompteng-3", "type": "multi", "question": "A company's HR assistant sometimes invents leave policy details. Which TWO prompt changes help ensure that answers are based on the company's actual policy?", "options": [
+    { "text": "Include the policy text in the prompt, separated by delimiters", "why": "Correct. Grounding data inside clear delimiters gives the model the facts to use." },
+    { "text": "Instruct the model to answer only from the supplied policy and to state when the answer is not available", "why": "Correct. This instruction limits answers to the grounding data." },
+    { "text": "Ask the model to be more creative", "why": "Encouraging creativity increases the risk of invented details." },
+    { "text": "Remove the instruction about the assistant's role", "why": "Removing the role does not address made-up facts." } ], "answer": [0, 1], "explanation": "Grounding the model with relevant data and instructing it to answer only from that data reduces fabricated answers.", "objective": "2.1.1" },
+  { "id": "ai-prompteng-4", "type": "single", "question": "What is the main purpose of using delimiters, such as triple quotes or XML-style tags, in a prompt?", "options": [
+    { "text": "To reduce the cost of each request", "why": "Delimiters add a few tokens and do not reduce cost." },
+    { "text": "To separate instructions from the content that the model should process", "why": "Correct. Delimiters mark where supplied content begins and ends." },
+    { "text": "To encrypt the prompt before it is sent", "why": "Delimiters are plain text and provide no encryption." },
+    { "text": "To select a different model deployment", "why": "Deployments are selected by name in the request, not by delimiters." } ], "answer": [1], "explanation": "Delimiters help the model distinguish instructions from data, which improves accuracy and reduces confusion.", "objective": "2.1.1" },
+  { "id": "ai-prompteng-5", "type": "single", "question": "You need a generative AI app to decline requests that are unrelated to your product and to refuse harmful requests. Which prompt element should you add, in addition to enabling guardrails?", "options": [
+    { "text": "A safety system message", "why": "Correct. A safety system message defines what the model must refuse and how to stay on topic." },
+    { "text": "A higher max output tokens value", "why": "Longer output does not affect refusals." },
+    { "text": "A stop sequence", "why": "Stop sequences end generation at specific text; they do not define refusal behavior." },
+    { "text": "A user prompt template", "why": "User prompts come from users and cannot be relied on for safety rules." } ], "answer": [0], "explanation": "A safety system message sets refusal and scope rules in the system prompt. It complements content filters and Prompt Shields.", "objective": "2.1.1" }
+] }

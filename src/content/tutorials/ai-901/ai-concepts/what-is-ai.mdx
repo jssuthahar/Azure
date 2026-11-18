@@ -1,0 +1,191 @@
+---
+title: What is AI? Machine Learning, Generative AI and Agents
+seoTitle: What is AI? ML, Generative AI and Agents | AI-901
+description: AI, machine learning, deep learning, generative AI and AI agents explained simply, with the five AI workloads and where AI-901 fits. Free AI-901 lesson.
+answer: >-
+  **Artificial intelligence (AI)** is software that does things we used to think needed a human: understanding language, recognising images, making predictions and creating content. **Machine learning** is the main way we build AI (the software learns patterns from data), **deep learning** is machine learning with many-layered neural networks, **generative AI** uses deep learning models to create new text, images or audio, and an **AI agent** is a generative model that's been given instructions and tools so it can carry out tasks.
+updated: 2026-11-18
+readingMinutes: 8
+keyTerms:
+  - term: Artificial intelligence (AI)
+    definition: Software that imitates human abilities such as understanding language, seeing, predicting and creating content.
+  - term: Machine learning (ML)
+    definition: A way of building AI where a model learns patterns from example data instead of following hand-written rules.
+  - term: Deep learning
+    definition: Machine learning that uses neural networks with many layers; the basis of modern speech, vision and language models.
+  - term: Generative AI
+    definition: AI that creates new content (text, code, images, audio) in response to a prompt.
+  - term: AI agent
+    definition: A generative AI model with instructions and tools that can plan steps, call tools and act to complete a task.
+  - term: Model
+    definition: The trained file of learned patterns that takes an input and produces a prediction or new content.
+interview:
+  - level: beginner
+    q: What's the difference between AI and machine learning?
+    a: >-
+      AI is the goal: software that behaves intelligently. Machine learning is the most common way to get there. Instead of writing every rule by hand, you show the model lots of examples and it learns the pattern. So all machine learning is AI, but a simple rules engine can be called AI without any learning at all.
+    followUps:
+      - q: Where does deep learning fit?
+        a: >-
+          Deep learning is a kind of machine learning that uses neural networks with many layers. It's what made speech recognition, image recognition and large language models work as well as they do today.
+  - level: intermediate
+    q: How is generative AI different from the AI that came before it?
+    a: >-
+      Older AI mostly predicted or classified: is this email spam, what's the price of this house, which object is in this photo. Generative AI produces new content: it writes the email, drafts the code or creates the image. Under the hood it's still a deep learning model, but one trained on huge amounts of data to predict the next piece of content.
+    followUps: []
+  - level: experienced
+    q: When would you call something an agent rather than a chatbot?
+    a: >-
+      A chatbot answers what you type. An agent is given a goal, instructions and tools such as file search, a code interpreter or an API, and it decides which tool to call, looks at the result and keeps going until the task is done. In Microsoft Foundry I'd build it in Foundry Agent Service: model plus instructions plus tools.
+    followUps: []
+  - level: scenario
+    q: A retailer wants to read thousands of handwritten delivery notes and pull out the order number and date. Which AI workload is that?
+    a: >-
+      Information extraction. The input is a document image and the output is structured fields. In Foundry I'd look at Azure Content Understanding in Foundry Tools rather than a plain chat model.
+    followUps: []
+revision:
+  keyPoints:
+    - AI is the big circle. Machine learning sits inside it, deep learning inside that, and generative AI is built on deep learning.
+    - Machine learning learns patterns from data instead of following hand-written rules.
+    - Generative AI creates new content from a prompt; traditional ML predicts or classifies.
+    - An agent is a generative model plus instructions plus tools, so it can take actions.
+    - AI-901 workloads are generative and agentic AI, text analysis, speech, computer vision and information extraction.
+  mistakes:
+    - Treating AI, machine learning and generative AI as three names for the same thing.
+    - Thinking an agent is just a chatbot with a different name. Tools and actions make the difference.
+  examTips:
+    - '"Create", "draft", "write" or "generate" in a scenario points to generative AI.'
+    - '"Take actions", "call a tool" or "complete a multi-step task" points to an AI agent.'
+  quick:
+    - q: Is machine learning a part of AI or the other way round?
+      a: Machine learning is a part of AI.
+    - q: What kind of model is generative AI built on?
+      a: Deep learning models, usually transformer-based language models.
+    - q: What turns a generative model into an agent?
+      a: Instructions plus tools it can call to take actions.
+    - q: Which workload reads fields from an invoice image?
+      a: Information extraction.
+    - q: Which Microsoft platform is AI-901 built around?
+      a: Microsoft Foundry (formerly Azure AI Foundry).
+references:
+  - title: Study guide for Exam AI-901 (Microsoft Learn)
+    url: https://learn.microsoft.com/en-us/credentials/certifications/resources/study-guides/ai-901
+  - title: What is Microsoft Foundry? (Microsoft Learn)
+    url: https://learn.microsoft.com/azure/foundry/what-is-foundry
+related:
+  - ai-workloads
+  - how-generative-ai-works
+  - generative-and-agentic-ai
+  - responsible-ai-principles
+---
+
+## Start with a question
+
+<Story question="Your phone unlocks when it sees your face, your email hides spam, and a chatbot just wrote your leave letter. Is all of that the same AI?">
+
+They all feel like magic, but they're doing different jobs. Face unlock **recognises** something. The spam filter **predicts** whether a message is junk. The chatbot **creates** new text that didn't exist a second ago.
+
+All three are **artificial intelligence**. The words you keep hearing (machine learning, deep learning, generative AI, agents) are layers inside that one big idea. Once you see the layers, the rest of AI-901 gets much easier.
+
+</Story>
+
+## Explain it like I'm 10
+
+<Eli10>
+
+Think of teaching your little brother to spot mangoes at the market.
+
+You don't give him a rulebook. You show him lots of mangoes and lots of other fruit, and soon he just knows. That's **machine learning**: learning from examples.
+
+Now imagine he's seen so many fruits that he can **draw a brand-new fruit** nobody has seen before. That's **generative AI**.
+
+And if you give him a shopping bag, some money and the list, and he goes and buys everything on his own? That's an **agent**: it doesn't only talk, it gets the job done.
+
+</Eli10>
+
+## The technical explanation
+
+**Artificial intelligence** is any software that imitates a human ability: understanding language, seeing, listening, predicting, deciding or creating. The terms you'll meet fit inside each other like nested boxes.
+
+| Layer | What it means | Everyday example |
+| --- | --- | --- |
+| Artificial intelligence | Software that behaves intelligently, by rules or by learning | A spam filter, a chess program |
+| Machine learning | A model learns patterns from example data | Predicting delivery time from past orders |
+| Deep learning | Machine learning with many-layered neural networks | Recognising faces, converting speech to text |
+| Generative AI | Deep learning models that create new content from a prompt | Drafting an email, generating an image |
+| AI agent | A generative model with instructions and tools that acts on a goal | Booking a meeting room after checking calendars |
+
+<Flow
+  caption="Each layer builds on the one before it"
+  steps={[
+    { title: 'AI', text: 'Software that imitates human abilities.' },
+    { title: 'Machine learning', text: 'Learns patterns from data.' },
+    { title: 'Deep learning', text: 'Many-layered neural networks.' },
+    { title: 'Generative AI', text: 'Creates new text, images and audio.' },
+    { title: 'Agents', text: 'Model + instructions + tools, takes actions.' },
+  ]}
+/>
+
+### Predict versus create
+
+Traditional machine learning gives you a **prediction**: a number (the price of a flat), a label (spam or not spam) or a group (customers who behave alike). Generative AI gives you **new content**. A large language model, such as the GPT models or Microsoft Phi, writes text by predicting the next small chunk of text again and again. You'll see how that works in the generative AI lesson.
+
+### What makes an agent different
+
+A chat model answers a question. An **agent** is given a goal, **instructions** and **tools** (search your files, run code, call an API). It decides which tool to use, looks at the result and carries on until the task is done. In Microsoft Foundry you build agents with Foundry Agent Service.
+
+### The five AI workloads in AI-901
+
+| Workload | Input → output | Foundry option |
+| --- | --- | --- |
+| Generative and agentic AI | Prompt → new content or completed task | Foundry Models, Foundry Agent Service |
+| Text analysis | Text → sentiment, key phrases, entities, summary | Azure Language in Foundry Tools, or a language model |
+| Speech | Audio ↔ text | Azure Speech in Foundry Tools, audio-capable models |
+| Computer vision | Image → description, tags, text; prompt → image | Azure Vision in Foundry Tools, multimodal and image-generation models |
+| Information extraction | Documents, images, audio, video → structured fields | Azure Content Understanding in Foundry Tools |
+
+### Where AI-901 fits
+
+AI-901 (Microsoft Azure AI Fundamentals) replaced AI-900, which retired on 30 June 2026. It has two domains: **identify AI concepts and capabilities** (40–45%) and **implement AI solutions by using Microsoft Foundry** (55–60%). The second domain is hands-on, so you'll write a little Python against a Foundry project. Microsoft Foundry is the portal at ai.azure.com where you pick models, deploy them, build agents and use Foundry Tools.
+
+<TryIt labs="ai-foundry-setup" text="Create a Foundry resource and a project, then find the project endpoint you'll use in later lessons." />
+
+<Callout type="exam">
+Read the verb in the scenario. "Predict" or "classify" is machine learning, "generate", "draft" or "summarise in your own words" is generative AI, and "take actions" or "use tools to complete a task" is an agent. If the scenario pulls named fields out of an invoice or a call recording, that's information extraction.
+</Callout>
+
+<DeepDive title="Does every AI solution need generative AI?">
+
+No. A sentiment score for a million reviews, a transcript of a call or the total on a receipt can come from a purpose-built Foundry Tool, which is usually cheaper, faster and more predictable than a chat model. Language models can do many of the same jobs through a prompt, and Microsoft is steering several older Language features toward Foundry models over time. A good answer on the exam, and at work, picks the simplest option that meets the requirement.
+
+</DeepDive>
+
+## Real-world business scenario
+
+<Scenario
+  company="Fabrikam Mart, a grocery chain in Chennai"
+  industry="Retail"
+  problem="Store managers spent hours reading customer feedback, answering the same supplier questions and checking delivery notes by hand."
+  service="Azure Language in Foundry Tools scores feedback sentiment, a Foundry agent answers supplier questions from policy documents, and Content Understanding reads delivery notes into order fields."
+  why="Each job needed a different AI workload. Matching the workload to the tool kept costs down and the results easy to check."
+  outcome="Managers now review a daily dashboard instead of piles of paper, and supplier questions get answered in minutes."
+/>
+
+## When to use it and when not to
+
+<UseWhen
+  use={[
+    'The task needs human-like skills such as reading, listening, seeing or writing, at a volume people can\'t keep up with.',
+    'You have examples or documents the AI can learn from or be grounded in.',
+    'A person can check the output, or the cost of a wrong answer is low.',
+  ]}
+  avoid={[
+    'A simple rule or a database query already gives the exact answer every time.',
+    'The decision has a big impact on someone and nobody will review what the AI says.',
+    'You can\'t explain to users that AI is involved or how it reaches its answers.',
+  ]}
+  alternatives={[
+    '**Plain code or business rules** when the logic is fixed and known.',
+    '**A purpose-built Foundry Tool** (Language, Speech, Vision, Content Understanding) when the task is narrow and well defined.',
+  ]}
+/>

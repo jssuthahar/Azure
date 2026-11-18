@@ -1,0 +1,27 @@
+{ "cert": "ai-901", "domain": 2, "topic": "chat-app-with-foundry-sdk", "questions": [
+  { "id": "ai-sdkchatapp-1", "type": "single", "question": "You are writing a Python chat client by using the Foundry SDK. The client must authenticate to the Foundry project without storing any secrets in code or configuration. Which credential should you pass to AIProjectClient?", "options": [
+    { "text": "DefaultAzureCredential", "why": "Correct. DefaultAzureCredential signs in with Microsoft Entra ID by using the Azure CLI locally or a managed identity in Azure." },
+    { "text": "AzureKeyCredential with the resource key", "why": "AIProjectClient supports Microsoft Entra ID authentication only, and a key is a stored secret." },
+    { "text": "A shared access signature (SAS) token", "why": "SAS tokens are used for Azure Storage, not Foundry projects." },
+    { "text": "A connection string that contains the account password", "why": "This stores a secret and is not supported by AIProjectClient." } ], "answer": [0], "explanation": "AIProjectClient uses Microsoft Entra ID. DefaultAzureCredential obtains a token without secrets in code.", "objective": "2.1.3" },
+  { "id": "ai-sdkchatapp-2", "type": "single", "scenario": "A developer has created an AIProjectClient object named project.", "question": "Which method should the developer call to obtain a client that can send prompts to a deployed model by using responses.create?", "options": [
+    { "text": "project.get_openai_client()", "why": "Correct. This returns an OpenAI-compatible client that is configured for the project." },
+    { "text": "project.deployments.delete()", "why": "This would remove a deployment rather than return a client." },
+    { "text": "project.evaluations.create()", "why": "This starts an evaluation, not a chat client." },
+    { "text": "project.close()", "why": "This closes the client." } ], "answer": [0], "explanation": "get_openai_client() returns a client whose responses.create method sends input to a deployment.", "objective": "2.1.3" },
+  { "id": "ai-sdkchatapp-3", "type": "multi", "question": "A chat application must remember the earlier messages in a conversation when it calls responses.create. Which TWO approaches meet this requirement?", "options": [
+    { "text": "Create a conversation and pass its ID in the conversation parameter on each call", "why": "Correct. The conversation stores the history, which is included in each request." },
+    { "text": "Pass the ID of the previous response in the previous_response_id parameter", "why": "Correct. Chaining responses includes the earlier context." },
+    { "text": "Increase the temperature on each call", "why": "Temperature controls randomness, not memory." },
+    { "text": "Create a new deployment for each message", "why": "Deployments do not store conversation history." } ], "answer": [0, 1], "explanation": "Models are stateless. A conversation object or previous_response_id gives the model the earlier turns.", "objective": "2.1.3" },
+  { "id": "ai-sdkchatapp-4", "type": "single", "question": "In a Foundry SDK chat client, which property of the object returned by responses.create contains the text of the model's reply?", "options": [
+    { "text": "output_text", "why": "Correct. output_text contains the generated text." },
+    { "text": "endpoint", "why": "The endpoint is configured on the client, not returned in the response." },
+    { "text": "credential", "why": "The credential is used for authentication and is not part of the response." },
+    { "text": "deployment_type", "why": "Deployment type is a setting of the deployment, not a response property." } ], "answer": [0], "explanation": "response.output_text holds the reply text returned by the model.", "objective": "2.1.3" },
+  { "id": "ai-sdkchatapp-5", "type": "single", "question": "A chat client runs successfully on one developer's computer but returns an authorization error on another developer's computer. Both use the same code and the same project endpoint. What is the most likely cause?", "options": [
+    { "text": "The second developer's account does not have the Foundry User role on the project", "why": "Correct. DefaultAzureCredential finds the signed-in identity, but that identity needs a role assignment." },
+    { "text": "The model was deployed with Global Standard", "why": "The deployment type does not cause authorization errors for specific users." },
+    { "text": "The temperature value is too high", "why": "Parameter values do not affect authorization." },
+    { "text": "The project endpoint uses HTTPS", "why": "Project endpoints always use HTTPS." } ], "answer": [0], "explanation": "Access to a Foundry project is controlled by Azure RBAC. Each signed-in identity needs an appropriate role such as Foundry User.", "objective": "2.1.3" }
+] }

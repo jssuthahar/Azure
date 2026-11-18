@@ -11,7 +11,7 @@ const exam = getExam(Astro.params.cert);
 const crumbs = [{ name: 'Home', url: '/' }, { name: `${exam.code}`, url: `/${exam.slug}/` }, { name: 'Compare', url: `/${exam.slug}/compare/` }];
 const itemList = [{ '@type': 'ItemList', name: 'Azure service comparisons', numberOfItems: exam.comparisons.length, itemListElement: exam.comparisons.map((c, i) => ({ '@type': 'ListItem', position: i + 1, name: c.title, url: `${SITE.url}/${exam.slug}/compare/${c.slug}/` })) }];
 ---
-<Base schema={itemList} title={`Azure Comparisons: Which Service Should I Use? | ${exam.code}`} description="Side-by-side Azure comparisons: Blob vs Files vs Disk, VM vs App Service vs Functions, LRS vs GRS, Azure vs AWS names and more, each with a live simulation." breadcrumbs={crumbs}>
+<Base schema={itemList} title={`Azure Comparisons: Which Service Should I Use? | ${exam.code}`} description={exam.course.hubs?.compare ?? "Side-by-side Azure comparisons: Blob vs Files vs Disk, VM vs App Service vs Functions, LRS vs GRS, Azure vs AWS names and more, each with a live simulation."} breadcrumbs={crumbs}>
   <div class="mx-auto max-w-[1000px] px-4 py-10 sm:px-6">
     <p class="text-sm font-bold tracking-[0.14em] text-accent uppercase">Compare</p>
     <h1 class="mt-1 text-4xl font-semibold tracking-tight">Which Azure service should I use?</h1>

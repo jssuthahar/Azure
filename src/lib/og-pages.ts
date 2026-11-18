@@ -2,7 +2,7 @@
 import { getCollection } from 'astro:content';
 import { getNav } from './learn';
 import type { Card } from './og';
-import { getExam } from '../data/exams';
+import { getExam, liveExams } from '../data/exams';
 
 const exam = getExam();
 
@@ -11,15 +11,22 @@ let cache: Map<string, Card> | null = null;
 export async function ogPages(): Promise<Map<string, Card>> {
   if (cache) return cache;
   const m = new Map<string, Card>();
-  const nav = (await getNav()).filter((t) => t.published);
   const entries = await getCollection('tutorials');
-  for (const t of nav) {
-    const d = entries.find((e) => e.id === t.key)!.data;
-    m.set(t.url, { eyebrow: `AZ-900 · ${t.module.shortTitle}`, title: d.title, text: d.answer, badge: '3D + portal simulation' });
+  for (const ex of liveExams()) {
+    const nav = (await getNav(ex.slug)).filter((t) => t.published);
+    for (const t of nav) {
+      const d = entries.find((e) => e.id === t.key)!.data;
+      m.set(t.url, { eyebrow: `${ex.code} · ${t.module.shortTitle}`, title: d.title, text: d.answer, badge: ex.slug === exam.slug ? '3D + portal simulation' : '3D + Foundry simulation' });
+    }
+    for (const c of ex.comparisons) m.set(`/${ex.slug}/compare/${c.slug}/`, { eyebrow: 'Compare', title: c.title, text: c.answer, accent: '#9fe870', badge: 'Side by side' });
+    for (const s of ex.services) m.set(`/${ex.slug}/services/${s.slug}/`, { eyebrow: `${s.cat} · in 60 seconds`, title: s.name, text: s.what, accent: '#8fcbf7', badge: `AWS: ${s.aws}`.slice(0, 34) });
+    for (const w of ex.whatIfs) m.set(`/simulator/${w.slug}/`, { eyebrow: 'What happens if…?', title: w.q, text: w.answer, accent: '#ff9f7a', badge: '▶ Simulate it' });
+    if (ex.slug !== exam.slug) {
+      m.set(`/${ex.slug}/`, { eyebrow: ex.name, title: `${ex.code} course and syllabus`, text: ex.modules.map((x) => x.title).join(' · ') });
+      m.set(`/${ex.slug}/mock-exam/`, { eyebrow: 'Real exam experience', title: `${ex.code} mock exam`, text: 'Timer, review screen, drag and drop, build list, drop-down and Yes/No items. Scored 1–1000, 700 to pass.', accent: '#ffd75e' });
+      m.set(`/${ex.slug}/labs/`, { eyebrow: 'Practice labs', title: `${ex.code} practice labs`, text: ex.course.labs?.intro ?? 'Guided tasks in a simulated portal and Cloud Shell. Education only, no account needed.' });
+    }
   }
-  for (const c of exam.comparisons) m.set(`/${exam.slug}/compare/${c.slug}/`, { eyebrow: 'Compare', title: c.title, text: c.answer, accent: '#9fe870', badge: 'Side by side' });
-  for (const s of exam.services) m.set(`/${exam.slug}/services/${s.slug}/`, { eyebrow: `${s.cat} · in 60 seconds`, title: s.name, text: s.what, accent: '#8fcbf7', badge: `AWS: ${s.aws}`.slice(0, 34) });
-  for (const w of exam.whatIfs) m.set(`/simulator/${w.slug}/`, { eyebrow: 'What happens if…?', title: w.q, text: w.answer, accent: '#ff9f7a', badge: '▶ Simulate it' });
   const hub = (p: string, c: Card) => m.set(p, c);
   hub('/', { eyebrow: 'Free AZ-900 course', title: 'Feel Azure without an Azure account', text: '3D simulations, Azure portal walkthroughs and practice labs in every lesson, plus a real-exam-style mock exam and certificate.' });
   hub(`/${exam.slug}/`, { eyebrow: exam.name, title: `${exam.code} course and syllabus`, text: exam.modules.map((x) => x.title).join(' · ') });

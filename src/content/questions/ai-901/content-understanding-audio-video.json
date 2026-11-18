@@ -1,0 +1,22 @@
+{ "cert": "ai-901", "domain": 2, "topic": "content-understanding-audio-video", "questions": [
+  { "id": "ai-cuav-1", "type": "single", "scenario": "A contact center stores recordings of customer support calls. For each recording, managers need a transcript that identifies each speaker and a short summary of the call.", "question": "Which Content Understanding analyzer should you use?", "options": [
+    { "text": "prebuilt-audioSearch", "why": "Correct. prebuilt-audioSearch returns a transcript with speaker labels and a summary." },
+    { "text": "prebuilt-videoSearch", "why": "prebuilt-videoSearch is designed for video files." },
+    { "text": "prebuilt-receipt", "why": "prebuilt-receipt extracts fields from receipt documents." },
+    { "text": "prebuilt-imageSearch", "why": "prebuilt-imageSearch describes images." } ], "answer": [0], "explanation": "The prebuilt-audioSearch analyzer transcribes recordings, labels speakers and produces a summary.", "objective": "2.4.3" },
+  { "id": "ai-cuav-2", "type": "multi", "question": "Which TWO outputs does the prebuilt-videoSearch analyzer provide?", "options": [
+    { "text": "Segments with start and end times", "why": "Correct. Video output is divided into time-based segments." },
+    { "text": "Key frames that represent each segment", "why": "Correct. Key frames are extracted as representative images." },
+    { "text": "Invoice line items", "why": "Line items are returned by prebuilt-invoice for documents." },
+    { "text": "Content credentials for each frame", "why": "Content credentials are attached to generated images, not video analysis results." } ], "answer": [0, 1], "explanation": "prebuilt-videoSearch returns segments, key frames, a transcript and descriptions of the video content.", "objective": "2.4.3" },
+  { "id": "ai-cuav-3", "type": "single", "question": "You need a custom field named CallSentiment that returns Positive, Neutral or Negative for each recorded call. Which configuration should you use?", "options": [
+    { "text": "A custom analyzer based on prebuilt-audio with a classify field", "why": "Correct. A classify field restricts the result to the defined sentiment values." },
+    { "text": "A custom analyzer based on prebuilt-document with an extract field", "why": "prebuilt-document is for documents, and extract applies only to documents." },
+    { "text": "A gpt-image-1 deployment", "why": "gpt-image-1 generates images and does not analyze audio." },
+    { "text": "The prebuilt-layout analyzer", "why": "prebuilt-layout extracts document structure." } ], "answer": [0], "explanation": "Custom audio analyzers use prebuilt-audio as the base analyzer, and a fixed set of values is returned by a classify field.", "objective": "2.4.3" },
+  { "id": "ai-cuav-4", "type": "single", "question": "A company needs live captions displayed while a presenter is speaking during a webinar. Which service is the most appropriate?", "options": [
+    { "text": "Azure Speech in Foundry Tools real-time speech to text", "why": "Correct. Real-time speech to text produces captions as the presenter speaks." },
+    { "text": "Content Understanding prebuilt-videoSearch", "why": "prebuilt-videoSearch analyzes recorded videos asynchronously, not live audio." },
+    { "text": "Content Understanding prebuilt-audioSearch", "why": "prebuilt-audioSearch processes recorded audio files after the fact." },
+    { "text": "Azure Vision image analysis", "why": "Image analysis does not transcribe speech." } ], "answer": [0], "explanation": "Content Understanding is intended for analyzing recorded media. Live captioning requires real-time speech to text in Azure Speech.", "objective": "2.4.3" }
+] }

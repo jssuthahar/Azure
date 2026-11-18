@@ -52,7 +52,7 @@ export const RUNTIMES = ['DOTNETCORE:8.0', 'NODE:20-lts', 'PYTHON:3.12', 'JAVA:2
 const TAKEN = new Set(['storage', 'mystorage', 'test', 'teststorage', 'azure', 'myapp', 'webapp', 'hello', 'demo', 'contoso']);
 
 export type ResType = 'vm' | 'disk' | 'nic' | 'pip' | 'vnet' | 'nsg' | 'storage' | 'plan' | 'webapp' | 'vmss'
-  | 'dnszone' | 'pe' | 'vpngw' | 'functionapp' | 'aci' | 'aks' | 'arc' | 'alert' | 'law';
+  | 'dnszone' | 'pe' | 'vpngw' | 'functionapp' | 'aci' | 'aks' | 'arc' | 'alert' | 'law' | 'foundry';
 export const TYPE_INFO: Record<ResType, { label: string; arm: string; icon: string }> = {
   vm: { label: 'Virtual machine', arm: 'Microsoft.Compute/virtualMachines', icon: '🖥️' },
   disk: { label: 'Disk', arm: 'Microsoft.Compute/disks', icon: '💽' },
@@ -73,6 +73,7 @@ export const TYPE_INFO: Record<ResType, { label: string; arm: string; icon: stri
   arc: { label: 'Machine - Azure Arc', arm: 'Microsoft.HybridCompute/machines', icon: '🛰️' },
   alert: { label: 'Alert rule', arm: 'Microsoft.Insights/metricAlerts', icon: '🔔' },
   law: { label: 'Log Analytics workspace', arm: 'Microsoft.OperationalInsights/workspaces', icon: '📈' },
+  foundry: { label: 'Foundry', arm: 'Microsoft.CognitiveServices/accounts', icon: '✨' },
 };
 
 export interface Lock { name: string; level: 'CanNotDelete' | 'ReadOnly' }
@@ -376,6 +377,8 @@ export class Sim {
       case 'functionapp': return (r.props.executions ?? 0) * 0.0000002 * 730 > 0 ? 0.0001 : 0;
       case 'law': return 0.004;
       case 'pe': return 0.01;
+      // Foundry: pay per token (illustrative) plus reserved provisioned capacity.
+      case 'foundry': return (r.props.deployments ?? []).reduce((a: number, d: { sku: string; capacity: number }) => a + (/Provisioned/.test(d.sku) ? d.capacity : 0), 0) + (r.props.usage ?? 0) * 0.0000004;
       default: return 0;
     }
   }

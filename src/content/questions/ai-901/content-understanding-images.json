@@ -1,0 +1,22 @@
+{ "cert": "ai-901", "domain": 2, "topic": "content-understanding-images", "questions": [
+  { "id": "ai-cuimg-1", "type": "single", "question": "A media company wants a natural-language description of each photo in its archive so that staff can search the archive by description. Which Content Understanding analyzer should the company use?", "options": [
+    { "text": "prebuilt-imageSearch", "why": "Correct. prebuilt-imageSearch produces image descriptions suitable for search." },
+    { "text": "prebuilt-invoice", "why": "prebuilt-invoice extracts invoice fields from documents." },
+    { "text": "prebuilt-audioSearch", "why": "prebuilt-audioSearch processes audio recordings." },
+    { "text": "prebuilt-layout", "why": "prebuilt-layout extracts document text and structure, not photo descriptions." } ], "answer": [0], "explanation": "The prebuilt-imageSearch analyzer generates descriptions of images that can be indexed for search scenarios.", "objective": "2.4.2" },
+  { "id": "ai-cuimg-2", "type": "single", "question": "You are creating a custom Content Understanding analyzer that returns damage information from vehicle photos. Which value should you set as the baseAnalyzerId?", "options": [
+    { "text": "prebuilt-document", "why": "prebuilt-document is the base for document analyzers." },
+    { "text": "prebuilt-image", "why": "Correct. Custom image analyzers are based on prebuilt-image." },
+    { "text": "prebuilt-video", "why": "prebuilt-video is the base for video analyzers." },
+    { "text": "gpt-image-1", "why": "gpt-image-1 is an image-generation model, not a base analyzer." } ], "answer": [1], "explanation": "Custom analyzers for images use prebuilt-image as their base analyzer.", "objective": "2.4.2" },
+  { "id": "ai-cuimg-3", "type": "multi", "question": "Which TWO field extraction methods can you use in a custom Content Understanding analyzer for images?", "options": [
+    { "text": "Classify", "why": "Correct. Classify assigns a value from a defined list and is supported for images." },
+    { "text": "Generate", "why": "Correct. Generate creates a value, such as a description, and is supported for images." },
+    { "text": "Extract", "why": "Extract is supported for documents only." },
+    { "text": "Translate", "why": "Translate is not a Content Understanding field method." } ], "answer": [0, 1], "explanation": "Classify and generate are available for all content types. Extract applies only to documents.", "objective": "2.4.2" },
+  { "id": "ai-cuimg-4", "type": "single", "scenario": "An insurance company receives photos of damaged vehicles. Each photo must be labeled with exactly one damage type from the list Scratch, Dent, Broken glass or None, and photos with uncertain results must be reviewed by an assessor.", "question": "Which solution meets the requirements?", "options": [
+    { "text": "A custom Content Understanding analyzer with a classify field, using confidence scores to route uncertain results", "why": "Correct. Classify returns one value from the defined list, and confidence scores identify results that need review." },
+    { "text": "Azure Vision image analysis tags", "why": "Generic tags do not guarantee one value from the company's own list." },
+    { "text": "gpt-image-1 image editing", "why": "Image editing changes images; it does not label them." },
+    { "text": "The prebuilt-receipt analyzer", "why": "prebuilt-receipt extracts receipt fields from documents." } ], "answer": [0], "explanation": "A classify field restricts the output to defined categories, and each field's confidence score can be used to send uncertain results to a person.", "objective": "2.4.2" }
+] }

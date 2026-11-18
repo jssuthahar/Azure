@@ -1,0 +1,219 @@
+---
+title: Build a Text Analysis App
+seoTitle: Build a Text Analysis App with Azure Language | AI-901
+description: Build a small Python text analysis app with Azure Language in Foundry Tools for sentiment, key phrases, entities, PII redaction and summaries. AI-901.
+answer: >-
+  A lightweight **text analysis app** sends text to **Azure Language in Foundry Tools** through the **azure-ai-textanalytics** Python package. With a **TextAnalyticsClient** (endpoint + key) you call **analyze_sentiment**, **extract_key_phrases**, **recognize_entities**, **recognize_pii_entities** for redaction, and **begin_abstract_summary** for summaries. You can also get the same insights by **prompting a deployed language model**, which is more flexible but less predictable.
+updated: 2026-11-18
+readingMinutes: 9
+keyTerms:
+  - term: Azure Language in Foundry Tools
+    definition: The Foundry Tools service (formerly Azure AI Language) for sentiment, key phrases, entities, PII, summarization and more.
+  - term: TextAnalyticsClient
+    definition: The Python client from azure-ai-textanalytics that calls Azure Language text analysis features.
+  - term: PII redaction
+    definition: Finding personal data such as phone numbers and email addresses and masking it, returned as redacted_text.
+  - term: Confidence score
+    definition: A number from 0 to 1 that says how sure the service is about a sentiment label or an entity.
+  - term: Abstractive summary
+    definition: A summary written in new sentences, as opposed to an extractive summary that picks existing sentences.
+interview:
+  - level: beginner
+    q: Which Azure service would you use to find the sentiment of customer reviews?
+    a: >-
+      Azure Language in Foundry Tools. I'd call analyze_sentiment from the azure-ai-textanalytics package and get back positive, neutral, negative or mixed, with confidence scores for each sentence.
+    followUps:
+      - q: What does the app need to connect?
+        a: >-
+          The resource endpoint and a key (or a Microsoft Entra ID credential). I keep both in environment variables, never in the code.
+  - level: intermediate
+    q: How would you remove phone numbers and emails from support tickets before storing them?
+    a: >-
+      Call recognize_pii_entities. Each result has the entities it found and a redacted_text property with the personal data masked by asterisks, so I'd store redacted_text instead of the original.
+    followUps: []
+  - level: experienced
+    q: Would you use Azure Language or an LLM prompt for sentiment analysis?
+    a: >-
+      Azure Language when I want the same structured output every time, with labels and confidence scores, at high volume. An LLM prompt when I need something the fixed features don't do, like 'list the complaints about delivery only'. Microsoft has also announced that some Language features, including sentiment and key phrases, retire in March 2029 in favour of Foundry models, so new projects should weigh that.
+    followUps: []
+  - level: scenario
+    q: Your app returns 'neutral' for a review written in Tamil. What do you check?
+    a: >-
+      I'd check that I'm passing the right language code, or run detect_language first, and confirm that the feature supports that language. Sending text with the wrong language hint is a common reason for odd results.
+    followUps: []
+revision:
+  keyPoints:
+    - pip install azure-ai-textanalytics; create TextAnalyticsClient(endpoint, AzureKeyCredential(key)).
+    - analyze_sentiment returns a label plus confidence scores per document and sentence.
+    - extract_key_phrases, recognize_entities and recognize_pii_entities each take a list of documents.
+    - recognize_pii_entities gives redacted_text with personal data masked.
+    - Summaries are long-running operations, begin_abstract_summary or begin_extract_summary.
+  mistakes:
+    - Passing a single string instead of a list of documents to the client methods.
+    - Confusing entity recognition (people, places, dates) with key phrases (main talking points).
+  examTips:
+    - '"Mask phone numbers in transcripts" = **PII detection** (redacted_text).'
+    - '"Main talking points of a review" = **key phrase extraction**.'
+    - '"Positive or negative" = **sentiment analysis**.'
+  quick:
+    - q: Which Python package calls Azure Language text analysis?
+      a: azure-ai-textanalytics
+    - q: Which method masks personal data?
+      a: recognize_pii_entities (use redacted_text).
+    - q: What range do confidence scores use?
+      a: 0 to 1.
+    - q: Which sentiment label means both positive and negative sentences?
+      a: Mixed.
+    - q: How else can you get these insights besides Azure Language?
+      a: Prompt a deployed generative model in Foundry.
+references:
+  - title: What is Azure Language?
+    url: https://learn.microsoft.com/azure/ai-services/language-service/overview
+  - title: Study guide for Exam AI-901
+    url: https://learn.microsoft.com/en-us/credentials/certifications/resources/study-guides/ai-901
+related:
+  - text-analysis
+  - chat-app-with-foundry-sdk
+  - azure-speech-app
+---
+
+## Start with a question
+
+<Story question="What if a thousand reviews landed overnight and your boss wants a summary by 10 a.m.?">
+
+A food-delivery app gets reviews like "Biryani was great but the rider called me five times, my number is 98xxxxxx12". Someone has to work out the mood, spot what people talk about, and keep phone numbers out of the report.
+
+Reading them all isn't going to happen. A small Python app that sends each review to **Azure Language** can do it before your tea's ready.
+
+</Story>
+
+## Explain it like I'm 10
+
+<Eli10>
+
+Imagine a super-fast reader with four coloured highlighters.
+
+Green and red for happy and grumpy sentences (that's **sentiment**). Yellow for the main topics (**key phrases**). Blue for names, places and dates (**entities**). And a black marker to cover up phone numbers (**PII redaction**).
+
+Your app hands it a stack of notes, and it hands them back all marked up.
+
+</Eli10>
+
+## The technical explanation
+
+**Azure Language in Foundry Tools** gives you ready-made text analysis behind one endpoint. If you have a Foundry resource you already have it. Copy the endpoint and a key from the resource (or use Microsoft Entra ID), and install the SDK.
+
+```bash
+pip install azure-ai-textanalytics
+export LANGUAGE_ENDPOINT="https://<resource-name>.cognitiveservices.azure.com/"
+export LANGUAGE_KEY="<key>"
+```
+
+| Feature | Method | What you get back |
+| --- | --- | --- |
+| Sentiment analysis | `analyze_sentiment` | positive / neutral / negative / mixed, scores per sentence |
+| Key phrase extraction | `extract_key_phrases` | A list of main talking points |
+| Named entity recognition | `recognize_entities` | Text, category (Person, Location, DateTime...), confidence |
+| PII detection | `recognize_pii_entities` | Personal data found, plus `redacted_text` |
+| Language detection | `detect_language` | Language name and ISO code |
+| Summarization | `begin_abstract_summary` / `begin_extract_summary` | New summary sentences, or the key existing sentences |
+
+### text_app.py
+
+```python
+import os
+from azure.core.credentials import AzureKeyCredential
+from azure.ai.textanalytics import TextAnalyticsClient
+
+client = TextAnalyticsClient(
+    endpoint=os.environ["LANGUAGE_ENDPOINT"],
+    credential=AzureKeyCredential(os.environ["LANGUAGE_KEY"]),
+)
+
+reviews = [
+    "The biryani was excellent but the rider called me five times. "
+    "Call me on 9876543210 if there's a refund. Ordered in Chennai on Friday."
+]
+
+# Every method takes a LIST of documents and returns one result per document
+sentiment = client.analyze_sentiment(reviews)[0]
+print("Sentiment:", sentiment.sentiment, sentiment.confidence_scores)
+
+phrases = client.extract_key_phrases(reviews)[0]
+print("Key phrases:", phrases.key_phrases)
+
+for entity in client.recognize_entities(reviews)[0].entities:
+    print(f"Entity: {entity.text} ({entity.category}, {entity.confidence_score:.2f})")
+
+pii = client.recognize_pii_entities(reviews)[0]
+print("Redacted:", pii.redacted_text)  # the phone number comes back as asterisks
+
+# Summaries run as a long-running operation
+poller = client.begin_abstract_summary(reviews)
+for doc in poller.result():
+    print("Summary:", doc.summaries[0].text)
+```
+
+For that review you'd expect **mixed** sentiment (great food, annoying rider), key phrases like "biryani" and "rider", entities such as Chennai (Location) and Friday (DateTime), and a redacted line with the number masked.
+
+<TryIt labs="ai-text-insights" text="Try each Language feature in the portal, then run text_app.py on your own reviews." />
+
+### The alternative: ask a deployed model
+
+You can get the same insights by prompting a chat model in Foundry, using the Foundry SDK from the chat app lesson:
+
+```python
+response = openai.responses.create(
+    model="gpt-4.1-mini",  # deployment name
+    instructions="Return JSON with sentiment, key_phrases and entities. Replace phone numbers with ***.",
+    input=reviews[0],
+)
+print(response.output_text)
+```
+
+<Compare
+  caption="Azure Language vs prompting a generative model"
+  columns={[
+    { title: 'Azure Language', icon: '🔤', tone: 'accent', items: ['Fixed, well-defined outputs', 'Confidence scores built in', 'Same input gives the same output', 'Simple per-text pricing, built for volume'] },
+    { title: 'Prompting an LLM', icon: '💬', items: ['Any analysis you can describe', 'Output shape depends on your prompt', 'Can vary between runs', 'Pay per token, check results with evaluations'] },
+  ]}
+/>
+
+<Callout type="exam">
+Match the verb to the feature. "Determine whether feedback is positive or negative" is **sentiment analysis**. "Identify the main points" is **key phrase extraction**. "Find people, places, organisations and dates" is **entity recognition**. "Hide personal information" is **PII detection**. "Shorten a long document" is **summarization**. The package is **azure-ai-textanalytics**, and every call takes a list of documents.
+</Callout>
+
+<DeepDive title="Plan for the 2029 retirements">
+
+Microsoft has announced that key phrase extraction, sentiment analysis, summarization, entity linking, conversational language understanding and custom question answering in Azure Language retire on 31 March 2029, with Foundry models as the suggested path. Language detection, PII detection, NER and Text Analytics for health continue. A new project that leans on sentiment or summaries should either plan a move to prompts on a deployed model or start there.
+
+</DeepDive>
+
+## Real-world business scenario
+
+<Scenario
+  company="A Bengaluru food-delivery start-up"
+  industry="Consumer apps"
+  problem="Thousands of app reviews and chat transcripts a day, with customers often pasting phone numbers and addresses into them. The support lead needed daily themes without staff reading personal data."
+  service="A nightly Python job using azure-ai-textanalytics: recognize_pii_entities first, then sentiment and key phrases on the redacted text, with results written to a dashboard."
+  why="Fixed outputs with confidence scores were easy to chart day over day, and redaction kept personal data out of the reporting store."
+  outcome="The team spotted a spike of 'late rider' complaints in one city within a day instead of a week."
+/>
+
+## When to use it and when not to
+
+<UseWhen
+  use={[
+    'You need the same structured result for thousands of texts, like sentiment per review.',
+    'Personal data must be masked before text is stored or shared.',
+    'You want confidence scores so low-certainty results can go to a person.',
+  ]}
+  avoid={[
+    'The question is open-ended, like "what do customers wish we sold?". Prompt a generative model instead.',
+    'You are starting a new long-term project on a feature that retires in 2029 without a plan to move.',
+  ]}
+  alternatives={[
+    'Prompting a deployed model such as gpt-4.1-mini for custom analysis.',
+    'Content Understanding when the text lives inside documents, audio or video.',
+  ]}
+/>

@@ -1,0 +1,204 @@
+---
+title: How Generative AI Models Work
+seoTitle: How Generative AI Works - Tokens to Grounding | AI-901
+description: Tokens, embeddings, transformers and attention, next-token prediction, temperature, context windows, hallucination and grounding explained simply for AI-901.
+answer: >-
+  A generative AI language model splits your prompt into **tokens**, turns each token into an **embedding** (a list of numbers that captures meaning), and runs them through a **transformer** whose **attention** layers work out how the words relate. It then **predicts the next token**, adds it to the text and repeats until the answer is done. Settings like **temperature** control how adventurous each pick is, the **context window** limits how much text it can consider at once, and **grounding** it in your own data reduces **hallucinations** (confident but wrong answers).
+updated: 2026-11-18
+readingMinutes: 9
+keyTerms:
+  - term: Token
+    definition: A small chunk of text (a word, part of a word or punctuation) that a model reads and writes; about four characters of English on average.
+  - term: Embedding
+    definition: A list of numbers (a vector) that represents the meaning of a token or text, so similar meanings sit close together.
+  - term: Transformer
+    definition: The neural network architecture behind modern language models, built around attention.
+  - term: Attention
+    definition: The mechanism that lets a model weigh how much each token in the text relates to every other token.
+  - term: Temperature
+    definition: A setting (0 to 2) that controls randomness; low values give focused, repeatable answers, high values give more varied ones.
+  - term: Context window
+    definition: The maximum number of tokens, prompt plus response, a model can handle in one request.
+  - term: Hallucination
+    definition: A fluent, confident answer that's false or not supported by the source data.
+  - term: Grounding
+    definition: Giving the model trusted data in the prompt, often by retrieval-augmented generation (RAG), so it answers from facts.
+interview:
+  - level: beginner
+    q: In simple words, how does a chatbot like ChatGPT or Copilot write an answer?
+    a: >-
+      It predicts the next word, or more exactly the next token, based on everything before it. Then it adds that token and predicts the next one, over and over. It learned which tokens tend to follow which by training on a huge amount of text.
+    followUps:
+      - q: So does it understand what it's saying?
+        a: >-
+          It captures meaning in a statistical way through embeddings and attention, which is why it's so useful. But it doesn't check facts unless you give it facts, which is why it can hallucinate.
+  - level: intermediate
+    q: What is an embedding and why does it matter?
+    a: >-
+      An embedding is a vector of numbers that represents meaning. Texts about similar things end up with similar vectors, so "refund policy" and "how do I get my money back" land close together. That's what powers semantic search and RAG: you find the closest document chunks and hand them to the model.
+    followUps: []
+  - level: intermediate
+    q: What does temperature do?
+    a: >-
+      It changes how the model picks among likely next tokens. At low temperature it nearly always takes the most likely one, so answers are focused and repeatable, good for facts and code. At higher temperature it takes more chances, good for brainstorming or creative writing. I'd change temperature or top_p, not both.
+    followUps: []
+  - level: scenario
+    q: Your HR chatbot confidently tells staff they get 30 days of leave. The real policy says 24. How do you fix it?
+    a: >-
+      That's a hallucination. I'd ground the bot in the actual HR policy, using retrieval so the relevant section goes into the prompt, tell it in the system message to answer only from the provided documents and say when it doesn't know, lower the temperature, and show citations so staff can check.
+    followUps: []
+  - level: experienced
+    q: What happens when a conversation goes past the model's context window?
+    a: >-
+      The model can't see what doesn't fit. Either the request fails or the app has to drop or summarise older messages, so the model forgets early details. Remember the window covers prompt plus output, so a huge prompt also leaves less room for the answer.
+    followUps: []
+revision:
+  keyPoints:
+    - Text is split into tokens; roughly four characters of English per token.
+    - Embeddings turn tokens into vectors so similar meanings sit close together.
+    - Transformers use attention to work out how every token relates to the others.
+    - The model writes by predicting the next token, again and again.
+    - Low temperature = focused; high temperature = varied. Grounding reduces hallucination.
+  mistakes:
+    - Thinking the model looks answers up in a database. Without grounding it only predicts likely text.
+    - Thinking a higher temperature makes answers more accurate.
+  examTips:
+    - '"Answers must be consistent and factual" = lower temperature and grounding.'
+    - '"Model gives confident but wrong answers" = hallucination; fix with grounding (RAG).'
+    - Context window = prompt + response tokens together.
+  quick:
+    - q: What is a token?
+      a: A small chunk of text the model reads and writes, about four characters of English on average.
+    - q: Which part of a transformer works out how words relate to each other?
+      a: Attention.
+    - q: What does a model actually predict at each step?
+      a: The next token.
+    - q: Which setting would you lower for more predictable answers?
+      a: Temperature.
+    - q: What technique supplies trusted data in the prompt to reduce hallucination?
+      a: Grounding, often with retrieval-augmented generation (RAG).
+references:
+  - title: Study guide for Exam AI-901 (Microsoft Learn)
+    url: https://learn.microsoft.com/en-us/credentials/certifications/resources/study-guides/ai-901
+  - title: Transparency note for Azure OpenAI (Microsoft Learn)
+    url: https://learn.microsoft.com/legal/cognitive-services/openai/transparency-note
+  - title: What is Microsoft Foundry? (Microsoft Learn)
+    url: https://learn.microsoft.com/azure/foundry/what-is-foundry
+related:
+  - what-is-ai
+  - choosing-an-ai-model
+  - model-deployment-and-parameters
+  - generative-and-agentic-ai
+---
+
+## Start with a question
+
+<Story question="When your phone suggests the next word as you type 'Happy birth…', how does it know you mean 'birthday'?">
+
+It's seen that pattern millions of times. "Happy birth" is almost always followed by "day".
+
+A generative AI model does the same thing at a vastly bigger scale. It doesn't just guess one word for a text message. It predicts the next piece of text, then the next, then the next, until it has written a whole email, a poem or a Python function. Understanding that one idea explains most of what these models do well, and the mistakes they make.
+
+</Story>
+
+## Explain it like I'm 10
+
+<Eli10>
+
+Imagine a friend who has read every storybook in the library.
+
+You start a sentence: "Once upon a time, a little dragon…" and your friend says the next word that fits best. Then the next. Word by word, a whole story appears.
+
+Your friend is great at sounding right. But if you ask about something that wasn't in the books, they might make up something that sounds true. That's why you sometimes hand them the **right book** first and say "answer from this".
+
+</Eli10>
+
+## The technical explanation
+
+<Flow
+  caption="One prompt's journey through a language model"
+  steps={[
+    { title: 'Tokens', text: 'The prompt is split into small chunks of text.' },
+    { title: 'Embeddings', text: 'Each token becomes a vector that captures meaning.' },
+    { title: 'Attention', text: 'Transformer layers work out how tokens relate.' },
+    { title: 'Next token', text: 'The model scores every possible next token and picks one.' },
+    { title: 'Repeat', text: 'The new token is added and the loop runs again.' },
+  ]}
+/>
+
+### 1. Tokens
+
+Models don't read words, they read **tokens**. A token can be a whole word ("cat"), part of a word ("un" + "believ" + "able") or punctuation. In English, one token is about **four characters** on average, so 100 tokens is roughly 75 words. Hindi or Tamil text usually needs more tokens for the same meaning. Tokens matter because you **pay per token** (input and output) and because limits are counted in tokens.
+
+### 2. Embeddings
+
+Each token is turned into an **embedding**: a long list of numbers (a vector). The model learns these so that words with related meanings have similar vectors. "King" sits near "queen", and "invoice" sits near "bill". Embedding models in Foundry produce vectors for whole sentences or documents too, which is how semantic search finds "money back" when you searched "refund".
+
+### 3. Transformers and attention
+
+Modern language models use the **transformer** architecture. Its key idea is **attention**: for every token, the model weighs how much each other token matters. In "The bank was closed, so I couldn't deposit the cheque", attention links "bank" with "deposit" and "cheque", so the model treats it as a money bank, not a river bank. Stacking many attention layers lets the model capture grammar, facts and style.
+
+### 4. Next-token prediction
+
+At the end, the model gives a probability to every token it knows. It picks one, adds it to the text and runs again. That loop is the whole "writing" process. It's why answers stream in word by word.
+
+### 5. Temperature and other settings
+
+**Temperature** (0 to 2) controls how the next token is picked. Low temperature nearly always picks the top choice, so answers are focused and repeatable. High temperature takes more chances, so answers vary more. **Top_p** is another way to control randomness; change one or the other, not both. **Max output tokens** caps the answer length. Reasoning models use a reasoning effort setting instead of temperature.
+
+| Task | Temperature |
+| --- | --- |
+| Answering from a policy, writing code, extracting facts | Low (around 0 to 0.3) |
+| Everyday chat and summaries | Middle (around 0.7) |
+| Brainstorming slogans or story ideas | Higher (around 1 or more) |
+
+### 6. Context window
+
+The **context window** is the most tokens the model can handle in one request: your system message, the chat history, any grounding documents **and** the answer. If a conversation grows past it, older messages have to be dropped or summarised, and the model "forgets" them.
+
+### 7. Hallucination and grounding
+
+Because the model predicts likely text, it can produce an answer that sounds right but is false. That's a **hallucination**. The main fix is **grounding**: put trusted information in the prompt so the model answers from it. **Retrieval-augmented generation (RAG)** does this automatically: it uses embeddings to find the most relevant chunks of your documents and adds them to the prompt. Add a system message like "answer only from the provided sources", a low temperature and citations, and hallucinations drop sharply.
+
+<TryIt labs="ai-deploy-chat" text="Deploy a chat model, ask the same question at temperature 0 and 1.5, and compare the answers. Then cut max tokens and watch the reply stop early." />
+
+<Callout type="exam">
+Match the symptom to the fix. **Confident but wrong** answers: hallucination, fixed by **grounding / RAG**. **Answers vary too much** between runs: lower the **temperature**. **Replies cut off**: raise **max output tokens**. **Model forgets the start of a long chat**: the **context window** is full. And remember that a model predicts the **next token**; it isn't searching the internet unless a tool lets it.
+</Callout>
+
+<DeepDive title="Training versus inference">
+
+**Training** is when the model learns from enormous amounts of text, adjusting billions of internal weights so its next-token guesses get better. It costs a lot and happens once (plus later fine-tuning). **Inference** is when you send a prompt and get an answer; that's what you pay for per token in Foundry. Your prompts at inference time don't change the model's weights, and prompts and completions in Foundry aren't used to train the foundation models. If you want the model to know your data, you ground it at inference time, or in some cases fine-tune it.
+
+</DeepDive>
+
+## Real-world business scenario
+
+<Scenario
+  company="Proseware Travel, an online travel agency in Delhi"
+  industry="Travel"
+  problem="Its new booking assistant invented baggage rules and gave different answers to the same question, and long chats lost track of the customer's dates."
+  service="Grounded the assistant with RAG over airline and refund policies using an embedding model, set temperature to 0.2 for policy answers, added citations, and summarised older chat turns to stay inside the context window."
+  why="The model was guessing from training data instead of reading the policies, and high temperature made the guesses vary."
+  outcome="Answers became consistent and checkable, and escalations about wrong baggage information dropped sharply."
+/>
+
+## When to use it and when not to
+
+<UseWhen
+  use={[
+    'Writing, summarising, translating or rewriting text where a person can review the result.',
+    'Answering questions over your own documents, when you ground the model in them.',
+    'Brainstorming and drafting, where variety from a higher temperature helps.',
+  ]}
+  avoid={[
+    'Exact calculations or lookups that a database or code can do perfectly.',
+    'Answering from memory about facts that must be correct, with no grounding.',
+    'Feeding huge documents in one go without checking the context window and token cost.',
+  ]}
+  alternatives={[
+    '**Grounding with RAG** when answers must come from your own data.',
+    '**A purpose-built Foundry Tool** for narrow jobs like PII detection or transcription.',
+    '**A small language model such as Phi** when the task is simple and cost or speed matters.',
+  ]}
+/>

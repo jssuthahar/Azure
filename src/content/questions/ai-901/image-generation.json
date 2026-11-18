@@ -1,0 +1,27 @@
+{ "cert": "ai-901", "domain": 2, "topic": "image-generation", "questions": [
+  { "id": "ai-imggen-1", "type": "single", "scenario": "A retail company wants to create original promotional images from short text descriptions written by its marketing team. The solution must be built in Microsoft Foundry.", "question": "Which type of model should the company deploy?", "options": [
+    { "text": "An image-generation model such as gpt-image-1", "why": "Correct. Image-generation models create new images from text prompts." },
+    { "text": "An embedding model", "why": "Embedding models return vectors that represent meaning. They do not produce images." },
+    { "text": "A speech model", "why": "Speech models convert between audio and text and cannot create images." },
+    { "text": "Azure Vision image analysis", "why": "Image analysis describes and tags existing images. It does not create new ones." } ], "answer": [0], "explanation": "Creating a new visual output from a text description requires an image-generation model, such as gpt-image-1, deployed in Foundry.", "objective": "2.3.2" },
+  { "id": "ai-imggen-2", "type": "single", "question": "You call images.generate by using the OpenAI client obtained from an AIProjectClient. Which value must you pass in the model parameter?", "options": [
+    { "text": "The name of the Foundry resource", "why": "The resource name is part of the endpoint, not the model parameter." },
+    { "text": "The name of the image model deployment", "why": "Correct. The model parameter identifies the deployment that serves the request." },
+    { "text": "The project endpoint URL", "why": "The endpoint is passed when the AIProjectClient is created." },
+    { "text": "The Microsoft Entra tenant ID", "why": "Authentication is handled by the credential object, not the model parameter." } ], "answer": [1], "explanation": "In Foundry SDK calls, the model parameter is the deployment name of the model that should process the request.", "objective": "2.3.2" },
+  { "id": "ai-imggen-3", "type": "multi", "question": "Which TWO settings can you specify when you generate an image with gpt-image-1?", "options": [
+    { "text": "Size", "why": "Correct. Size sets the resolution and aspect ratio, such as 1024x1024 or 1536x1024." },
+    { "text": "Quality", "why": "Correct. Quality, such as low, medium or high, controls detail, generation time and cost." },
+    { "text": "Speaker diarization", "why": "Speaker diarization is a speech-to-text feature." },
+    { "text": "Confidence threshold", "why": "Confidence scores apply to extracted fields in Content Understanding, not to image generation." } ], "answer": [0, 1], "explanation": "Size and quality are the main generation settings for gpt-image-1, together with the prompt and the number of images.", "objective": "2.3.2" },
+  { "id": "ai-imggen-4", "type": "single", "question": "A news organization needs a way to verify whether an image published by a partner was created by an Azure OpenAI image model. Which feature supports this requirement?", "options": [
+    { "text": "Prompt Shields", "why": "Prompt Shields detect jailbreak and prompt injection attacks in inputs." },
+    { "text": "Content credentials", "why": "Correct. Generated images include signed C2PA provenance metadata that identifies them as AI-generated." },
+    { "text": "Groundedness detection", "why": "Groundedness detection checks whether text responses are supported by source data." },
+    { "text": "Optical character recognition", "why": "OCR reads text inside an image and does not establish its origin." } ], "answer": [1], "explanation": "Content credentials attach C2PA provenance information to generated images so their AI origin can be verified.", "objective": "2.3.2" },
+  { "id": "ai-imggen-5", "type": "single", "question": "A designer likes a generated product image but wants only the background replaced with a beach scene. What should the designer do?", "options": [
+    { "text": "Use image editing with gpt-image-1 and describe the change, optionally with a mask", "why": "Correct. Image editing changes part of an existing image based on an instruction." },
+    { "text": "Send the image to a text analysis service", "why": "Text analysis works on text, not images." },
+    { "text": "Increase the temperature of a chat model deployment", "why": "Temperature affects randomness in text generation and does not edit images." },
+    { "text": "Run the image through prebuilt-layout", "why": "prebuilt-layout extracts document structure. It does not change images." } ], "answer": [0], "explanation": "gpt-image-1 supports editing, so an instruction such as replacing the background can be applied to an existing image, with a mask to limit the change.", "objective": "2.3.2" }
+] }

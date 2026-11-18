@@ -1,0 +1,228 @@
+---
+title: Build an Information Extraction App
+seoTitle: Build a Content Understanding App in Python | AI-901
+description: Build a small Python app with azure-ai-contentunderstanding that runs an analyzer, reads fields and confidence, and sends unsure values to review. For AI-901.
+answer: >-
+  A lightweight extraction app uses the **azure-ai-contentunderstanding** Python package. It creates a **ContentUnderstandingClient** with your Foundry endpoint and a credential, calls **`begin_analyze`** with an **analyzer ID** (such as `prebuilt-invoice` or your custom analyzer) and the file, waits on the **poller**, then reads `result.contents[0].fields`. Each field has a **value** and a **confidence**, so the app saves high-confidence values and sends low-confidence ones to **human review**.
+updated: 2026-11-18
+readingMinutes: 9
+keyTerms:
+  - term: azure-ai-contentunderstanding
+    definition: The Python package for calling Azure Content Understanding analyzers.
+  - term: ContentUnderstandingClient
+    definition: The SDK client you create with the Foundry endpoint and a credential to run analyzers.
+  - term: begin_analyze
+    definition: The method that starts an analysis job and returns a poller, because analysis runs asynchronously.
+  - term: Poller
+    definition: An object that waits for a long-running job; poller.result() returns the analysis result when it's done.
+  - term: Confidence threshold
+    definition: The score you choose below which a value goes to a person instead of straight into your system.
+interview:
+  - level: beginner
+    q: What are the main steps in a Python app that uses Content Understanding?
+    a: >-
+      Install azure-ai-contentunderstanding, create a ContentUnderstandingClient with the endpoint and a credential, call begin_analyze with the analyzer ID and the file, call result() on the poller, then read the fields from result.contents[0].fields.
+    followUps:
+      - q: Why does the method start with begin?
+        a: >-
+          Because analysis is a long-running operation. begin_analyze returns a poller straight away, and result() waits until the job finishes.
+  - level: intermediate
+    q: How do you authenticate the ContentUnderstandingClient?
+    a: >-
+      Either with an AzureKeyCredential using the resource key, or with DefaultAzureCredential so it uses Microsoft Entra ID. For anything beyond a quick test I prefer Entra ID, so there's no key to leak.
+    followUps: []
+  - level: experienced
+    q: How would you design the review step?
+    a: >-
+      I loop over the fields, compare each confidence to a threshold set per field, and if any important field is below it I put the whole document in a review queue with the low fields highlighted. I tune thresholds on a test set and log how often reviewers change values, so I can raise or lower them later.
+    followUps: []
+  - level: scenario
+    q: Your extraction app works on invoices, and now the business wants it to handle call recordings too. What changes?
+    a: >-
+      Very little code. I'd switch the analyzer ID to prebuilt-audioSearch or a custom analyzer based on prebuilt-audio and point the input at the recording. The client, begin_analyze, the poller and the field-reading loop stay the same.
+    followUps: []
+revision:
+  keyPoints:
+    - Install azure-ai-contentunderstanding and create a ContentUnderstandingClient with the endpoint and a credential.
+    - begin_analyze takes an analyzer ID and inputs, and returns a poller.
+    - poller.result() returns the result; fields live in result.contents[0].fields.
+    - Each field has a value and a confidence between 0 and 1.
+    - Route values below your confidence threshold to a person.
+  mistakes:
+    - Forgetting to call result() on the poller and trying to read fields from the poller itself.
+    - Hard-coding the key in the script. Use environment variables or DefaultAzureCredential.
+  examTips:
+    - '"Start analysis from Python" = **begin_analyze** on **ContentUnderstandingClient**.'
+    - '"Decide which values need a person" = compare each field''s **confidence** to a threshold.'
+  quick:
+    - q: Which Python package calls Content Understanding?
+      a: azure-ai-contentunderstanding.
+    - q: Which client class do you create?
+      a: ContentUnderstandingClient.
+    - q: Which method starts an analysis?
+      a: begin_analyze.
+    - q: Where are the fields in the result?
+      a: result.contents[0].fields.
+    - q: Which two properties do you read from a field?
+      a: value and confidence.
+references:
+  - title: What is Azure Content Understanding in Foundry Tools?
+    url: https://learn.microsoft.com/azure/ai-services/content-understanding/overview
+  - title: Content Understanding prebuilt analyzers
+    url: https://learn.microsoft.com/azure/ai-services/content-understanding/concepts/prebuilt-analyzers
+  - title: AI-901 study guide
+    url: https://learn.microsoft.com/en-us/credentials/certifications/resources/study-guides/ai-901
+related:
+  - content-understanding-documents
+  - content-understanding-audio-video
+  - chat-app-with-foundry-sdk
+---
+
+## Start with a question
+
+<Story question="How do I get invoice totals into my own app instead of a portal screen?">
+
+Karthik has tested `prebuilt-invoice` in the Foundry portal and it reads his company's invoices well. But the finance team doesn't want to upload files to a portal. They want a script that picks up each new invoice, pulls out the fields and posts them to their system, and only bothers a person when something looks unsure.
+
+That's a small Python app with the **azure-ai-contentunderstanding** package: about 25 lines that call an analyzer and read the results.
+
+</Story>
+
+## Explain it like I'm 10
+
+<Eli10>
+
+Imagine dropping a letter at the post office and getting a token.
+
+You can't get the reply straight away, so you wait. When it's ready, you hand in the token and collect an envelope full of answers.
+
+Each answer has a sticker: green means "sure", yellow means "please check".
+
+Your app drops off the file, waits with its token (the poller), collects the answers, and puts every yellow one on a person's desk.
+
+</Eli10>
+
+## The technical explanation
+
+Every Content Understanding app follows the same four steps, whatever the content type.
+
+<Flow
+  caption="The extraction app loop"
+  steps={[
+    { title: 'Connect', text: 'ContentUnderstandingClient with endpoint and credential.' },
+    { title: 'Analyze', text: 'begin_analyze with an analyzer ID and the file.' },
+    { title: 'Wait', text: 'poller.result() returns when the job is done.' },
+    { title: 'Use', text: 'Read fields, check confidence, save or send to review.' },
+  ]}
+/>
+
+### What you need
+
+- A **Foundry resource** with Content Understanding available and **default model deployments** set (analyzers call them).
+- The resource **endpoint** (it looks like `https://<resource-name>.services.ai.azure.com/`) and either a **key** or Microsoft Entra ID access.
+- An analyzer ID: a prebuilt one such as `prebuilt-invoice`, or a custom analyzer you created in the portal.
+
+### The app
+
+```python
+# extract_app.py
+# pip install azure-ai-contentunderstanding
+import os
+from azure.ai.contentunderstanding import ContentUnderstandingClient
+from azure.ai.contentunderstanding.models import AnalysisInput
+from azure.core.credentials import AzureKeyCredential
+
+client = ContentUnderstandingClient(
+    endpoint=os.environ["CONTENTUNDERSTANDING_ENDPOINT"],
+    credential=AzureKeyCredential(os.environ["CONTENTUNDERSTANDING_KEY"]),
+)
+
+invoice_url = "https://example.com/invoices/inv-1042.pdf"  # your file's URL
+
+# 1. Start the analysis (it runs asynchronously)
+poller = client.begin_analyze(
+    analyzer_id="prebuilt-invoice",
+    inputs=[AnalysisInput(url=invoice_url)],
+)
+
+# 2. Wait for it to finish
+result = poller.result()
+fields = result.contents[0].fields
+
+# 3. Read each field and route by confidence
+THRESHOLD = 0.85
+needs_review = []
+for name, field in fields.items():
+    confidence = field.confidence or 0
+    print(f"{name}: {field.value} (confidence {confidence:.2f})")
+    if confidence < THRESHOLD:
+        needs_review.append(name)
+
+# 4. Save or send to a person
+if needs_review:
+    print("Send to review:", ", ".join(needs_review))
+else:
+    print("All fields confident. Post to the finance system.")
+```
+
+Points worth knowing:
+
+- **`begin_`** means a long-running operation. You get a **poller** back straight away and call `.result()` to wait.
+- `result.contents` is a list. For one file you read `contents[0]`, which also has the **Markdown** of the document if you want the full text.
+- Each field has a **`value`** and a **`confidence`**. Some fields (generated ones, for example) may not carry a confidence, which is why the code treats a missing score as 0.
+- To switch to keyless auth, replace `AzureKeyCredential(...)` with `DefaultAzureCredential()` from `azure.identity` after `az login`.
+
+<TryIt labs="ai-extract-media" text="Run extract_app.py against a sample file, change the analyzer ID, and lower or raise the threshold to see which fields go to review." />
+
+### Same code, different content
+
+Only the analyzer ID and the input change between content types:
+
+| Content | Analyzer ID |
+| --- | --- |
+| Invoice | `prebuilt-invoice` |
+| Receipt | `prebuilt-receipt` |
+| Photo description | `prebuilt-imageSearch` |
+| Call recording | `prebuilt-audioSearch` |
+| Video | `prebuilt-videoSearch` |
+| Your own fields | Your custom analyzer's ID |
+
+<Callout type="exam">
+Know the order: **create the client → begin_analyze → poller.result() → read fields**. If a question asks how the app decides what a person should check, the answer is the field's **confidence score** compared with a threshold. If it asks how to reuse the app for another content type, change the **analyzer ID**, not the code structure.
+</Callout>
+
+<DeepDive title="Making the review step useful">
+
+A review queue only helps if the reviewer can act fast. Store the grounding with each low-confidence field so your review screen can highlight the spot on the page or the timestamp in the recording. Set thresholds per field rather than one global number: a wrong invoice total costs more than a wrong supplier phone number. Track how often reviewers correct each field; if they almost never change a value, you can lower its threshold and send fewer documents to people.
+
+</DeepDive>
+
+## Real-world business scenario
+
+<Scenario
+  company="Contoso Logistics, Mumbai"
+  industry="Logistics"
+  problem="Delivery receipts and supplier invoices arrived by email all day, and two people spent most of their week copying values into the accounts system."
+  service="A small Python job watches the inbox folder, runs prebuilt-invoice or prebuilt-receipt through ContentUnderstandingClient, posts fields above a 0.85 confidence threshold straight to the accounts system and sends the rest to a review page."
+  why="The SDK call is the same for every analyzer, so one script covers both document types, and confidence scores decide what needs a person."
+  outcome="The two staff members now spend about an hour a day on flagged values instead of typing every document."
+/>
+
+## When to use it and when not to
+
+<UseWhen
+  use={[
+    'Batch or event-driven jobs that pull fields from documents, images, audio or video into your own systems.',
+    'Workflows that need automatic routing of low-confidence values to people.',
+    'Reusing one script across content types by switching the analyzer ID.',
+  ]}
+  avoid={[
+    'A one-off look at a single file. Testing in the Foundry portal is quicker.',
+    'Real-time voice or chat experiences. Content Understanding analyzes files asynchronously.',
+    'Posting high-value transactions without any human review of uncertain fields.',
+  ]}
+  alternatives={[
+    '**The Foundry portal** to test analyzers before writing code.',
+    "**The REST API** directly if you're not using Python.",
+  ]}
+/>

@@ -1,0 +1,214 @@
+---
+title: Model Deployment Options and Parameters
+seoTitle: Foundry Deployment Types and Model Parameters | AI-901
+description: Learn AI-901 deployment types (Global Standard, Data Zone, Provisioned, Batch) and parameters like temperature, top_p, max tokens and stop sequences.
+answer: >-
+  A **deployment** makes a model callable from your Foundry resource, and the **deployment type** decides where requests are processed and how you pay. **Global Standard** (pay per token) is the usual starting point, **Data Zone Standard** keeps processing inside the US, EU or APAC, **Provisioned** reserves capacity for steady, low-latency traffic, and **Batch** runs large jobs asynchronously at about half the price. **Parameters** such as **temperature**, **top_p**, **max output tokens** and **stop sequences** then shape each response.
+updated: 2026-11-18
+readingMinutes: 9
+keyTerms:
+  - term: Deployment
+    definition: A named, callable instance of a model in your Foundry resource. Your code sends the deployment name as the model.
+  - term: Global Standard
+    definition: A pay-per-token deployment type where requests can be processed in any Azure region. Usually the first to get new models.
+  - term: Data Zone Standard
+    definition: A pay-per-token deployment type where processing stays inside a Microsoft-defined data zone (US, EU or APAC).
+  - term: Provisioned throughput
+    definition: Reserved model capacity bought in provisioned throughput units (PTUs), giving predictable, low-variance latency.
+  - term: Batch deployment
+    definition: An asynchronous deployment type that processes a file of requests with a 24-hour target, at about 50% lower cost.
+  - term: Temperature
+    definition: A parameter (0 to 2) that controls randomness. Low values give focused, repeatable answers; high values give more varied ones.
+  - term: Top_p
+    definition: A parameter that limits the model to the most likely tokens whose probabilities add up to p. Another way to control randomness.
+  - term: Stop sequence
+    definition: A string that makes the model stop generating when it would produce it.
+interview:
+  - level: beginner
+    q: What does temperature do?
+    a: >-
+      It controls how random the model's word choices are. At a low temperature like 0.2 you get focused, consistent answers, which is what you want for facts or extracting data. At a higher temperature like 1.0 you get more variety, which suits brainstorming or creative writing.
+    followUps:
+      - q: Should I change temperature and top_p together?
+        a: >-
+          Microsoft's advice is to change one or the other, not both. They both control randomness, so changing both makes the effect hard to predict.
+  - level: intermediate
+    q: Which deployment type would you start with, and why?
+    a: >-
+      Global Standard. It's pay per token, needs no capacity planning, gets new models first and has high default quota. I'd only move off it if I had a data residency rule, which points to Data Zone Standard or Standard, or steady high traffic that justifies Provisioned.
+    followUps: []
+  - level: experienced
+    q: A bank needs prompts processed only within the EU. What are your options?
+    a: >-
+      Data Zone Standard or Data Zone Provisioned with an EU resource keeps processing inside the EU data zone. Regional Standard or Regional Provisioned keeps it inside the resource's geography. Global types could process the request in any region, so they don't meet the rule. Data at rest stays in the resource's geography for every type.
+    followUps: []
+  - level: scenario
+    q: Every night a company needs to summarise 200,000 product reviews. Nobody waits for the result. What would you suggest?
+    a: >-
+      A Global Batch or Data Zone Batch deployment. You upload a file of requests, it's processed asynchronously with a 24-hour target, and it costs about half of the standard price. Real-time deployments would be wasted money here.
+    followUps: []
+revision:
+  keyPoints:
+    - Global Standard is the default starting point, pay per token, and may process data in any region.
+    - Data Zone Standard keeps processing in the US, EU or APAC data zone; Standard keeps it in the resource's geography.
+    - Provisioned deployments reserve capacity (PTUs) for steady traffic and predictable latency.
+    - Batch deployments process files asynchronously with a 24-hour target at about 50% less cost.
+    - Temperature and top_p control randomness; max output tokens caps length; stop sequences end output early.
+  mistakes:
+    - Thinking Global Standard stores your data in other regions. Data at rest stays in your resource's geography; only processing can happen elsewhere.
+    - Using Batch for a chatbot. Batch is asynchronous and can take hours.
+    - Changing temperature and top_p at the same time.
+  examTips:
+    - '"Data must be processed only within the EU" = **Data Zone** (or regional) deployment, not Global.'
+    - '"Predictable latency, steady high volume, reserved capacity" = **Provisioned**.'
+    - '"Large volume, not time-sensitive, lowest cost" = **Batch**.'
+    - '"More consistent, less creative answers" = **lower temperature**.'
+  quick:
+    - q: Which deployment type is the usual starting point?
+      a: Global Standard.
+    - q: What unit do you buy for Provisioned deployments?
+      a: Provisioned throughput units (PTUs).
+    - q: What is the target turnaround for a Batch deployment?
+      a: 24 hours.
+    - q: Which parameter limits the length of a response?
+      a: Max output tokens (max tokens).
+    - q: What does a low temperature produce?
+      a: More focused, consistent and predictable answers.
+references:
+  - title: Deployment types for Foundry Models
+    url: https://learn.microsoft.com/azure/foundry/foundry-models/concepts/deployment-types
+  - title: Study guide for Exam AI-901
+    url: https://learn.microsoft.com/en-us/credentials/certifications/resources/study-guides/ai-901
+  - title: 'Quickstart: Get started with code in Microsoft Foundry'
+    url: https://learn.microsoft.com/azure/foundry/quickstarts/get-started-code
+related:
+  - choosing-an-ai-model
+  - deploy-and-chat-in-foundry
+  - how-generative-ai-works
+---
+
+## Start with a question
+
+<Story question="Do you take an auto, a rented car or a booked bus for your trip?">
+
+An auto is great for a quick ride: you pay per trip and go. If you travel the same route every day, a monthly rented car with a driver works out cheaper and you always know it's there. And if a hundred people need to get to a wedding by evening, you book a bus and nobody minds that it leaves later.
+
+Deploying an AI model is the same choice. **Pay per token**, **reserve capacity**, or **send a big batch** and collect the results later. Once you've chosen, you tune how the model drives with **parameters**.
+
+</Story>
+
+## Explain it like I'm 10
+
+<Eli10>
+
+A model is like a talking robot in a big library.
+
+To use it, you put it on a desk with a name tag. That's a **deployment**.
+
+You choose which desk: any desk in the world, a desk in your own country, a desk kept only for you, or a desk that answers letters overnight.
+
+Then you set its dials. The **temperature** dial says "play it safe" or "be creative". The **max tokens** dial says "keep it short".
+
+</Eli10>
+
+## The technical explanation
+
+Before your app can call a model in Microsoft Foundry, you **deploy** it inside your Foundry resource and give the deployment a name. Your code then sends that **deployment name** as the model. One model can have several deployments with different types and settings.
+
+### Deployment types
+
+| Deployment type | Where processing happens | How you pay | Pick it when |
+| --- | --- | --- | --- |
+| **Global Standard** | Any Azure region Microsoft routes to | Pay per token | You're starting out, want the newest models and high default quota |
+| **Data Zone Standard** | Inside one data zone (US, EU or APAC) | Pay per token | A rule says data must be processed within that zone |
+| **Standard** | The resource's own geography | Pay per token | You need processing in one geography and lower volume |
+| **Global / Data Zone / Regional Provisioned** | Same split as above | Reserved capacity in PTUs | Steady, high, predictable traffic that needs low latency variance |
+| **Global Batch / Data Zone Batch** | Global or within a data zone | About 50% cheaper per token | Big, non-urgent jobs sent as a file, 24-hour target |
+| **Developer** | Global | Pay per token, no SLA | Evaluating fine-tuned models before production |
+
+Two more options sit beside these. **Managed compute** runs open models on virtual machines you pay for by the hour. **Instant access** models (preview) can be called by name with no deployment step at all.
+
+Whatever type you pick, **data at rest stays in your resource's geography**. The type only changes where a request is *processed*.
+
+<Flow
+  caption="From model to answer"
+  steps={[
+    { title: 'Pick a model', text: 'From the model catalog.' },
+    { title: 'Choose a deployment type', text: 'Global Standard, Data Zone, Provisioned, Batch…' },
+    { title: 'Name the deployment', text: 'Your code uses this name as the model.' },
+    { title: 'Set parameters', text: 'Temperature, max tokens, stop sequences.' },
+    { title: 'Call it', text: 'Playground, SDK or REST.' },
+  ]}
+/>
+
+### Parameters
+
+| Parameter | What it controls | Typical use |
+| --- | --- | --- |
+| **Temperature** (0 to 2) | Randomness of word choice. Lower = focused and repeatable | 0 to 0.3 for facts and extraction, around 1 for creative ideas |
+| **Top_p** | Only consider the most likely tokens whose probabilities add up to p | Another way to control randomness. Change this *or* temperature, not both |
+| **Max output tokens** | The longest the reply can be | Keep answers short and costs predictable |
+| **Stop sequences** | Text that makes the model stop when it would produce it | End a list after one item, stop at "User:" |
+| **Frequency penalty** | Discourages repeating the same tokens | Fewer repeated phrases |
+| **Presence penalty** | Encourages bringing in new topics | More varied ideas in brainstorming |
+| **Past messages included** (playground) | How much chat history is sent with each turn | More context vs more tokens |
+
+**Reasoning models** work differently: instead of temperature you usually set a **reasoning effort** (how much the model thinks before it answers).
+
+Here's how temperature and a token cap look in code with the Foundry SDK. `model` is your deployment name.
+
+```python
+# Low temperature for a factual answer, and a cap on length
+response = openai.responses.create(
+    model="gpt-4.1-mini",          # the deployment name, not the model family
+    input="List three benefits of solar panels for a small shop.",
+    temperature=0.2,               # focused, repeatable
+    max_output_tokens=150,         # keep it short and cheap
+)
+print(response.output_text)
+```
+
+<TryIt labs="ai-deploy-chat" text="Deploy a model with Global Standard, then ask the same question at temperature 0.2 and 1.5 and compare the answers." />
+
+<Callout type="exam">
+Watch for the residency clue. "Must be processed only within the EU" rules out **Global** types and points to **Data Zone** (or regional) deployments. "Predictable latency for steady traffic" means **Provisioned**. "Large, non-urgent, cheapest" means **Batch**. For parameters, "more deterministic answers" means **lower temperature**, and "limit the response length" means **max tokens**.
+</Callout>
+
+<DeepDive title="Quota, spillover and PTU sizing">
+
+Pay-per-token deployments have a tokens-per-minute quota per model and region. Hit it and you get throttled (HTTP 429). Provisioned deployments are sized in PTUs, and you estimate the PTUs from your expected prompt and completion tokens per minute. Some teams run a Provisioned deployment for the steady base load and send overflow to a Standard deployment, so a traffic spike slows down gracefully instead of failing.
+
+</DeepDive>
+
+## Real-world business scenario
+
+<Scenario
+  company="Northwind Insurance, a European insurer"
+  industry="Insurance"
+  problem="Its claims assistant ran on Global Standard, but the compliance team needed all prompt processing inside the EU. Answers also varied too much between identical questions."
+  service="Moved the assistant to a Data Zone Standard deployment in an EU region, set temperature to 0.2 and capped max output tokens. Nightly report summaries moved to a Data Zone Batch deployment."
+  why="Data Zone keeps processing within the EU. Low temperature gives consistent answers. Batch suits a job that nobody waits for and costs about half as much."
+  outcome="The assistant passed the compliance review, customers got the same answer to the same question, and the nightly job's token cost roughly halved."
+/>
+
+## When to use it and when not to
+
+<UseWhen
+  use={[
+    'Start with **Global Standard** for new apps and prototypes.',
+    'Use **Data Zone** or regional deployments when a policy limits where data is processed.',
+    'Use **Provisioned** for steady, high traffic that needs predictable latency.',
+    'Use **Batch** for large jobs like overnight summaries or bulk classification.',
+    'Lower **temperature** for facts and extraction; raise it for creative work.',
+  ]}
+  avoid={[
+    "Don't use Batch for anything interactive. Results can take up to 24 hours.",
+    "Don't buy Provisioned capacity for spiky, unpredictable or tiny workloads.",
+    "Don't tweak temperature and top_p together.",
+    "Don't use Developer deployments in production. They have no SLA.",
+  ]}
+  alternatives={[
+    '**Managed compute** for open models you want to run on dedicated VMs.',
+    '**Instant access** models (preview) for quick experiments without a deployment.',
+  ]}
+/>

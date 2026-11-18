@@ -1,0 +1,216 @@
+---
+title: Build a Chat App with the Foundry SDK
+seoTitle: Build a Python Chat App with the Foundry SDK | AI-901
+description: Build a small Python chat client with the Foundry SDK for AI-901, using the project endpoint, DefaultAzureCredential, get_openai_client and responses.create.
+answer: >-
+  A lightweight chat client uses the **Foundry SDK** (`azure-ai-projects`) in a few lines of Python. You create an **AIProjectClient** with your **project endpoint** (read from an environment variable) and **DefaultAzureCredential**, call **get_openai_client()**, then send prompts with **responses.create**, passing your **deployment name** as `model`. To keep a multi-turn chat, you create a **conversation** and pass its id each turn, or pass **previous_response_id**.
+updated: 2026-11-18
+readingMinutes: 9
+keyTerms:
+  - term: Foundry SDK
+    definition: The Azure AI Projects client library (azure-ai-projects) used to work with a Foundry project from code.
+  - term: AIProjectClient
+    definition: The SDK class that connects to a Foundry project using its endpoint and a credential.
+  - term: DefaultAzureCredential
+    definition: An azure-identity class that signs in with Microsoft Entra ID, using az login locally or a managed identity in Azure.
+  - term: get_openai_client()
+    definition: An AIProjectClient method that returns an OpenAI-compatible client already pointed at your project.
+  - term: Responses API
+    definition: The API called with responses.create to send input to a model and get output_text back.
+  - term: Conversation
+    definition: A server-side object that stores chat history so each new request remembers earlier turns.
+interview:
+  - level: beginner
+    q: What do you need before your Python app can chat with a Foundry model?
+    a: >-
+      A Foundry project with a deployed model, the project endpoint, the azure-ai-projects and azure-identity packages, and a signed-in identity with the Foundry User role. Locally I run az login so DefaultAzureCredential can pick it up.
+    followUps:
+      - q: Why not just use an API key?
+        a: >-
+          The AIProjectClient only supports Microsoft Entra ID. That's a good thing: no secret sits in my code or config, and access can be removed by changing a role.
+  - level: intermediate
+    q: What does the model parameter in responses.create refer to?
+    a: >-
+      The deployment name I chose in Foundry, not the catalog model name. If I deployed gpt-4.1-mini as "chat-prod", I pass model="chat-prod".
+    followUps: []
+  - level: experienced
+    q: How do you make the chat remember earlier messages?
+    a: >-
+      Models are stateless, so history has to be supplied. With the Responses API I either create a conversation once and pass conversation=conversation.id on every call, or pass previous_response_id=response.id from the last turn. Both let the service send the earlier turns for me, instead of me rebuilding the message list.
+    followUps: []
+  - level: scenario
+    q: The app works on your laptop but fails with an authorisation error on a colleague's machine. What would you check?
+    a: >-
+      That they've run az login with an account that has the Foundry User role on the project, and that FOUNDRY_PROJECT_ENDPOINT is set to the right project. DefaultAzureCredential finds their identity, but the role assignment is what grants access.
+    followUps: []
+revision:
+  keyPoints:
+    - Install azure-ai-projects and azure-identity.
+    - Read the project endpoint from an environment variable such as FOUNDRY_PROJECT_ENDPOINT.
+    - AIProjectClient plus DefaultAzureCredential signs in with Microsoft Entra ID (no keys).
+    - get_openai_client() then responses.create, with model set to the deployment name, returns output_text.
+    - Multi-turn chat uses a conversation id or previous_response_id.
+  mistakes:
+    - Passing the catalog model name instead of the deployment name.
+    - Expecting the model to remember the last message without a conversation or previous_response_id.
+  examTips:
+    - '"Authenticate the Foundry SDK without storing secrets" = **DefaultAzureCredential** (Entra ID).'
+    - '"Read the model''s reply" = **response.output_text**.'
+    - '"Keep context across turns" = **conversation** or **previous_response_id**.'
+  quick:
+    - q: Which package is the Foundry SDK?
+      a: azure-ai-projects.
+    - q: Which credential class does the sample use?
+      a: DefaultAzureCredential.
+    - q: Which method returns an OpenAI-compatible client?
+      a: get_openai_client().
+    - q: Which property holds the reply text?
+      a: output_text.
+    - q: Name two ways to keep a multi-turn chat.
+      a: Pass a conversation id, or pass previous_response_id.
+references:
+  - title: "Quickstart: Get started with code in Microsoft Foundry"
+    url: https://learn.microsoft.com/azure/foundry/quickstarts/get-started-code
+  - title: What is Microsoft Foundry?
+    url: https://learn.microsoft.com/azure/foundry/what-is-foundry
+  - title: Study guide for Exam AI-901
+    url: https://learn.microsoft.com/en-us/credentials/certifications/resources/study-guides/ai-901
+related:
+  - deploy-and-chat-in-foundry
+  - prompt-engineering
+  - agent-client-app
+  - what-is-microsoft-foundry
+---
+
+## Start with a question
+
+<Story question="The model works in the playground. How do you put it inside your own app?">
+
+The playground is great for testing, but your customers won't log in to ai.azure.com. They'll use your website, your WhatsApp bot or your internal tool. Somewhere in that app, a few lines of code have to send the question to your model and show the answer.
+
+That's what the **Foundry SDK** is for. With about fifteen lines of Python you get a working chat client that remembers the conversation.
+
+</Story>
+
+## Explain it like I'm 10
+
+<Eli10>
+
+Think of calling a friend on the phone. First you need their number (the **endpoint**). Then you have to prove who you are so they pick up (the **credential**). Then you talk, and they answer.
+
+If you hang up and call again, a good friend still remembers what you said earlier. In code, a **conversation** is how the model remembers.
+
+</Eli10>
+
+## The technical explanation
+
+You need four things in place before the code runs:
+
+1. A Foundry project with a deployed model (for example a deployment named `gpt-4.1-mini`).
+2. The **project endpoint**, from the project's overview page, saved in an environment variable.
+3. The packages: `pip install "azure-ai-projects>=2.3.0" azure-identity`
+4. A signed-in identity with the **Foundry User** role. Locally that's `az login`; in Azure it's a managed identity.
+
+```bash
+export FOUNDRY_PROJECT_ENDPOINT="https://<resource-name>.services.ai.azure.com/api/projects/<project-name>"
+az login
+```
+
+### A one-shot question
+
+```python
+import os
+from azure.identity import DefaultAzureCredential
+from azure.ai.projects import AIProjectClient
+
+# Connect to the project with Microsoft Entra ID (no API key)
+project = AIProjectClient(
+    endpoint=os.environ["FOUNDRY_PROJECT_ENDPOINT"],
+    credential=DefaultAzureCredential(),
+)
+
+# An OpenAI-compatible client that already points at your project
+openai = project.get_openai_client()
+
+response = openai.responses.create(
+    model="gpt-4.1-mini",  # the DEPLOYMENT name, not the catalog name
+    instructions="You are a friendly travel assistant. Keep answers short.",
+    input="What's a good time of year to visit Munnar?",
+)
+print(response.output_text)
+```
+
+`instructions` is the system prompt. You can also pass `input` as a list of messages with `system` and `user` roles if you prefer.
+
+### Making it multi-turn
+
+On its own, each call forgets the last one. Create a **conversation** once and pass its id on every turn so the service keeps the history for you:
+
+```python
+conversation = openai.conversations.create()
+
+while True:
+    question = input("You: ")
+    if question.lower() in ("quit", "exit"):
+        break
+    response = openai.responses.create(
+        model="gpt-4.1-mini",
+        conversation=conversation.id,  # earlier turns are included automatically
+        instructions="You are a friendly travel assistant. Keep answers short.",
+        input=question,
+    )
+    print("Assistant:", response.output_text)
+```
+
+The other option is to chain responses: store `response.id` and pass it as `previous_response_id=` on the next call.
+
+<Flow
+  caption="What happens on each turn"
+  steps={[
+    { title: 'Sign in', text: 'DefaultAzureCredential gets an Entra ID token.' },
+    { title: 'Call', text: 'responses.create sends the input to your deployment through the project endpoint.' },
+    { title: 'Remember', text: 'The conversation id adds earlier turns.' },
+    { title: 'Reply', text: 'Your app prints response.output_text.' },
+  ]}
+/>
+
+<TryIt labs="ai-sdk-chat" text="Open Cloud Shell, set FOUNDRY_PROJECT_ENDPOINT and run chat_app.py for a two-turn conversation." />
+
+<Callout type="exam">
+Know the pieces by name: **azure-ai-projects** (package), **AIProjectClient** (connects to the project), **DefaultAzureCredential** (Entra ID sign-in, the only auth the project client supports), **get_openai_client()**, **responses.create** with `model` set to the **deployment name**, and **output_text** for the reply. For memory across turns, the answer is a **conversation** or **previous_response_id**.
+</Callout>
+
+<DeepDive title="Why Entra ID instead of keys">
+
+Keys are shared secrets: anyone who copies one has full access until it's rotated. With `DefaultAzureCredential`, the same code signs in as you on your laptop (Azure CLI), as a managed identity in Azure App Service or Container Apps, or as a workload identity in a pipeline, and access is controlled by the Foundry User role. Tokens expire on their own, and removing a role assignment cuts access instantly.
+
+</DeepDive>
+
+## Real-world business scenario
+
+<Scenario
+  company="Tailspin Travel (fictional)"
+  industry="Travel"
+  problem="The team had tested a trip-planning assistant in the playground, but the web app kept forgetting what the traveller said one message earlier."
+  service="A Python backend using AIProjectClient with DefaultAzureCredential and a managed identity, calling responses.create with one conversation per traveller session."
+  why="The conversation keeps history on the service side, and Entra ID removed the API key the developers had been passing around in chat."
+  outcome="Travellers can ask follow-ups like &quot;and what about hotels there?&quot; and get answers that remember the destination."
+/>
+
+## When to use it and when not to
+
+<UseWhen
+  use={[
+    'You\'re building your own app, script or backend that needs to call a Foundry model.',
+    'You want Entra ID sign-in and role-based access instead of keys.',
+    'You need multi-turn chat with history kept by the service.',
+  ]}
+  avoid={[
+    'You only want to test prompts. The playground is quicker.',
+    'You need tools like file search or web search. Build an agent and call it with the same SDK.',
+  ]}
+  alternatives={[
+    '<strong>Foundry agents</strong> when the assistant needs tools and fixed instructions stored in Foundry.',
+    '<strong>Microsoft Agent Framework</strong> for larger code-first agent apps.',
+  ]}
+/>

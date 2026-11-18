@@ -1,0 +1,27 @@
+{ "cert": "ai-901", "domain": 2, "topic": "deploy-and-chat-in-foundry", "questions": [
+  { "id": "ai-deploychat-1", "type": "single", "question": "You select a model in the Microsoft Foundry model catalog. What must you do before you can chat with the model in the chat playground?", "options": [
+    { "text": "Create a deployment of the model", "why": "Correct. The playground and applications call a deployment, not the catalog entry." },
+    { "text": "Fine-tune the model", "why": "Fine-tuning is optional and not required to chat with a model." },
+    { "text": "Create an Azure virtual machine", "why": "Serverless deployments do not require you to create virtual machines." },
+    { "text": "Write a Python application", "why": "The playground lets you chat without writing code." } ], "answer": [0], "explanation": "A model must be deployed to your Foundry resource before the playground or an application can send it requests.", "objective": "2.1.2" },
+  { "id": "ai-deploychat-2", "type": "single", "scenario": "You deploy gpt-4.1-mini and set the deployment name to support-bot. A developer writes code that calls the deployment.", "question": "Which value should the developer pass as the model parameter?", "options": [
+    { "text": "gpt-4.1-mini", "why": "This is the catalog model name. Code must use the deployment name." },
+    { "text": "support-bot", "why": "Correct. Requests reference the deployment name." },
+    { "text": "The Foundry resource name", "why": "The resource name is part of the endpoint, not the model parameter." },
+    { "text": "The project ID", "why": "The project ID does not identify the deployment." } ], "answer": [1], "explanation": "Applications pass the deployment name as the model parameter.", "objective": "2.1.2" },
+  { "id": "ai-deploychat-3", "type": "single", "question": "While testing in the chat playground, you need the model to give more focused and repeatable answers. Which parameter change should you make?", "options": [
+    { "text": "Increase the temperature", "why": "A higher temperature makes answers more varied." },
+    { "text": "Decrease the temperature", "why": "Correct. A lower temperature makes output more deterministic." },
+    { "text": "Increase the presence penalty", "why": "Presence penalty encourages new topics. It does not make answers more repeatable." },
+    { "text": "Reduce the number of past messages included", "why": "This changes how much history is sent, not how random the answer is." } ], "answer": [1], "explanation": "Lower temperature values produce more focused and consistent responses.", "objective": "2.1.2" },
+  { "id": "ai-deploychat-4", "type": "multi", "question": "Which TWO statements about the Global Standard deployment type are true?", "options": [
+    { "text": "It is billed per token", "why": "Correct. Global Standard is a pay-per-token deployment type." },
+    { "text": "Requests can be processed in any Azure region", "why": "Correct. Global deployments route requests across Azure's global infrastructure." },
+    { "text": "It requires you to purchase provisioned throughput units", "why": "Provisioned throughput units apply to provisioned deployment types." },
+    { "text": "It guarantees that processing stays inside the EU data zone", "why": "Data Zone Standard provides data zone processing, not Global Standard." } ], "answer": [0, 1], "explanation": "Global Standard is the default starting point: pay per token, with requests that can be processed in any region. Data at rest stays in the resource's geography.", "objective": "2.1.2" },
+  { "id": "ai-deploychat-5", "type": "single", "question": "You have tuned a system message and parameters in the chat playground. You need sample code that calls the deployment with the same settings. What should you use?", "options": [
+    { "text": "The View code option in the playground", "why": "Correct. View code shows sample code with the endpoint, deployment name and current settings." },
+    { "text": "The model card in the catalog", "why": "Model cards describe the model. They do not contain your playground settings." },
+    { "text": "The Azure Activity log", "why": "The Activity log records management operations, not sample code." },
+    { "text": "The Foundry evaluations page", "why": "Evaluations measure response quality and safety; they do not generate client code." } ], "answer": [0], "explanation": "View code in the playground generates sample code that matches the current deployment, system message and parameters.", "objective": "2.1.2" }
+] }

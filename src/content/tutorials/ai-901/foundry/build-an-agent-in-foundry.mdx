@@ -1,0 +1,188 @@
+---
+title: Create and Test an Agent in the Foundry Portal
+seoTitle: Create and Test an Agent in Microsoft Foundry | AI-901
+description: Build a single agent in the Microsoft Foundry portal with a model, instructions, knowledge and tools, then test it in the agent playground for AI-901.
+answer: >-
+  An **agent** in Microsoft Foundry is a **model + instructions + tools** that can plan, call a tool, look at the result and then answer. In the Foundry portal you go to **Agents**, create an agent, give it a **name**, pick a **model deployment**, write its **instructions**, add **knowledge** (file search) and **tools** such as code interpreter or web search, then chat with it in the **agent playground**. Every save creates a new **version** of the agent.
+updated: 2026-11-18
+readingMinutes: 8
+keyTerms:
+  - term: Agent
+    definition: A model plus instructions plus tools that can decide which tool to call, use the result and answer, across several turns.
+  - term: Agent playground
+    definition: The chat panel in the Foundry portal where you test an agent and see which tools it called.
+  - term: File search
+    definition: A knowledge tool that indexes files you upload so the agent can quote from them instead of guessing.
+  - term: Code interpreter
+    definition: A tool that lets the agent write and run Python in a sandbox, for maths, charts and file processing.
+  - term: Function calling
+    definition: A tool where you describe a function with a JSON schema; the agent asks for it to be called and your code runs it.
+  - term: Agent version
+    definition: An immutable snapshot of an agent's definition. Each create or update makes a new version.
+interview:
+  - level: beginner
+    q: What's the difference between a chat model and an agent?
+    a: >-
+      A chat model takes a prompt and returns text. An agent wraps a model with instructions and tools, so it can decide to search a file, run some Python or call an API before it answers. It also keeps the conversation going across turns.
+    followUps:
+      - q: Does an agent need a deployed model?
+        a: >-
+          Yes. When you create the agent you pick a model deployment from your project, for example a gpt-4.1-mini deployment. The agent runs on that model.
+  - level: intermediate
+    q: When would you add file search versus web search to an agent?
+    a: >-
+      File search when the answers live in your own documents, like an HR policy PDF, because the agent can quote them. Web search when the agent needs fresh public information, like today's exchange rate. I wouldn't use web search for internal policies, the web doesn't have them.
+    followUps: []
+  - level: experienced
+    q: Why do agent versions matter?
+    a: >-
+      Each version is a frozen copy of the model, instructions and tools. That means I can test version 4 while version 3 keeps serving users, and roll back if the new instructions make answers worse. It's the same idea as tagging a release in source control.
+    followUps: []
+  - level: scenario
+    q: Your agent keeps inventing a return policy. What would you check first?
+    a: >-
+      I'd check that the policy document is actually attached through file search, and tighten the instructions to say it must answer only from the attached files and say "I don't know" otherwise. Then I'd retest the same question in the playground and look at whether file search was called.
+    followUps: []
+revision:
+  keyPoints:
+    - An agent = model + instructions + tools. It plans, calls tools, observes results and answers.
+    - Create it in the Foundry portal under Agents, inside a project.
+    - Knowledge comes from file search (your files) or grounding tools like web search and Azure AI Search.
+    - Tools include code interpreter, function calling, OpenAPI and MCP servers.
+    - Test in the agent playground. Every save makes a new, immutable version.
+  mistakes:
+    - Thinking an agent works without a model deployment. It always runs on a deployed model.
+    - Expecting function calling to run your code by itself. The agent only asks; your app runs the function.
+  examTips:
+    - '"Answer from our own PDFs" = **file search** tool.'
+    - '"Do maths or make a chart from a CSV" = **code interpreter** tool.'
+    - '"Test the agent before writing any code" = **agent playground** in the Foundry portal.'
+  quick:
+    - q: What three things make up an agent?
+      a: A model, instructions and tools.
+    - q: Which tool lets an agent answer from documents you upload?
+      a: File search.
+    - q: Which tool lets an agent run Python?
+      a: Code interpreter.
+    - q: Where do you test an agent in the portal?
+      a: The agent playground.
+    - q: What happens each time you save changes to an agent?
+      a: A new version of the agent is created.
+references:
+  - title: 'Quickstart: Create a prompt agent in Microsoft Foundry'
+    url: https://learn.microsoft.com/azure/foundry/agents/quickstarts/prompt-agent
+  - title: What is Microsoft Foundry?
+    url: https://learn.microsoft.com/azure/foundry/what-is-foundry
+  - title: Study guide for Exam AI-901
+    url: https://learn.microsoft.com/en-us/credentials/certifications/resources/study-guides/ai-901
+related:
+  - agent-client-app
+  - generative-and-agentic-ai
+  - deploy-and-chat-in-foundry
+  - prompt-engineering
+---
+
+## Start with a question
+
+<Story question="What if your chatbot could look things up and do sums before it replied?">
+
+Ask a plain chat model "How many leave days do I have left if I've taken 7 out of our policy's allowance?" and it'll guess the policy. It's never seen your HR handbook.
+
+Now picture a new hire on the HR desk. They open the handbook, find the allowance, work out the subtraction and then reply. That's an **agent**: a model that's allowed to open files and use tools before it answers.
+
+</Story>
+
+## Explain it like I'm 10
+
+<Eli10>
+
+Think of a robot helper with a backpack.
+
+The robot's brain is the **model**. The note taped to its arm saying "Be polite, only talk about school rules" is the **instructions**. The backpack holds a rule book, a calculator and a phone. Those are the **tools**.
+
+When you ask it something, the robot decides which thing in the backpack to pull out, uses it, and then tells you the answer.
+
+</Eli10>
+
+## The technical explanation
+
+In Microsoft Foundry an agent is defined by three parts: the **model** it runs on, the **instructions** that shape its behaviour, and the **tools** it may call. Foundry Agent Service runs the loop for you: read the user's message, decide whether a tool is needed, call it, look at the result, and either call another tool or answer. The conversation keeps the history, so the next question can say "and what about next year?" and the agent knows what "next year" refers to.
+
+<Flow
+  caption="What happens when you send the agent one message"
+  steps={[
+    { title: 'You ask', text: 'How many leave days do I have left?' },
+    { title: 'Agent plans', text: 'The model reads its instructions and decides it needs the policy.' },
+    { title: 'Tool call', text: 'File search finds the leave section in the handbook.' },
+    { title: 'Observe', text: 'The model reads the snippet (24 days a year).' },
+    { title: 'Answer', text: 'You have 17 days left, with a note on where that comes from.' },
+  ]}
+/>
+
+### Building one in the portal
+
+You need a Foundry project with a chat model already deployed (for example `gpt-4.1-mini`). Then, in the Foundry portal at ai.azure.com:
+
+1. Open your project and go to **Build → Agents → Create agent**.
+2. Give it a **name** (letters, numbers and hyphens, like `hr-helper`). Your code will use this name later.
+3. Pick the **model** deployment it should run on.
+4. Write the **instructions**. This is the agent's system prompt: who it is, what it may answer, the tone, and what to do when it doesn't know.
+5. Add **knowledge** and **tools** (below).
+6. **Save**, then type a question in the **agent playground** on the right and watch the reply, including which tools it called.
+
+| Tool | What it gives the agent | Typical use |
+| --- | --- | --- |
+| File search | Searches files you upload (PDF, Word, text) | Answer from a policy handbook or product manual |
+| Azure AI Search | Searches an existing search index | Large or shared company knowledge bases |
+| Web search (grounding) | Fresh public web results with citations | News, prices, anything newer than the model |
+| Code interpreter | Writes and runs Python in a sandbox | Maths, charts, cleaning an uploaded CSV |
+| Function calling | Asks your app to run a function you described with a JSON schema | Look up an order in your own database |
+| OpenAPI / MCP | Calls an external API or MCP server | Booking systems, ticketing tools |
+
+Good instructions make or break an agent. Say which tool to prefer ("Use the attached handbook for any policy question"), what's off-topic, and what to say when the answer isn't in the files. Then test the awkward cases in the playground: an off-topic question, a question the handbook doesn't cover, and a follow-up that depends on the last turn.
+
+<TryIt labs="ai-first-agent" text="Create an agent with instructions and a tool, then test it in the agent playground." />
+
+### Versions
+
+Every time you save, Foundry creates a new **version** of the agent. A version is immutable: the model, instructions and tools inside it never change. You can compare versions, and apps can keep using a known good one while you try changes. If version 5 starts answering worse, you go back to version 4.
+
+<Callout type="exam">
+Watch for the tool hidden in the scenario. "Answer questions from the company's uploaded documents" points to **file search**. "Calculate", "analyse a spreadsheet" or "create a chart" points to **code interpreter**. "Current events" points to **web search**. "Check stock in our inventory system" points to **function calling** or an **OpenAPI** tool. And the place to try it all without code is the **agent playground**.
+</Callout>
+
+<DeepDive title="Function calling doesn't run your code">
+
+With function calling you describe a function (name, description, parameters as JSON schema). When the model decides it needs it, the response contains a function call with arguments, not a result. Your client app runs the real function, sends the output back, and the agent carries on. That keeps your database credentials in your app, never in the model. In the playground you can type the function's output by hand to test the flow.
+
+</DeepDive>
+
+## Real-world business scenario
+
+<Scenario
+  company="Contoso Retail India"
+  industry="Retail"
+  problem="Store managers phoned head office dozens of times a day with questions about return rules, festival discount limits and stock transfer forms. The answers were all in three long PDFs nobody read."
+  service="An agent in a Foundry project running on a gpt-4.1-mini deployment, with the three PDFs attached through file search, code interpreter for discount maths, and instructions to answer only from the files and cite the section."
+  why="File search keeps answers tied to the real policy, and the playground let the operations team test tricky questions before a developer wrote any code."
+  outcome="Managers got answers with a section reference in seconds, and head office calls about policy dropped sharply in the first month."
+/>
+
+## When to use it and when not to
+
+<UseWhen
+  use={[
+    'The task needs a model to look something up, calculate or call a system before it answers.',
+    'You want to prototype and test behaviour in the portal before anyone writes code.',
+    'Answers must come from your own documents, with the agent saying when it doesn\'t know.',
+  ]}
+  avoid={[
+    'A single prompt-and-reply is enough. A plain chat deployment is simpler and cheaper.',
+    'The job is a fixed, predictable workflow. Ordinary code or Logic Apps is easier to test.',
+    'You need guaranteed, exact outputs such as tax calculations without a human check.',
+  ]}
+  alternatives={[
+    'A chat completion with a good system prompt for simple Q&A.',
+    'Azure Language or Content Understanding when you only need one specific analysis.',
+  ]}
+/>

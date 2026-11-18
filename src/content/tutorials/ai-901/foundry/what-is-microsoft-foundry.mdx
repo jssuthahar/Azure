@@ -1,0 +1,185 @@
+---
+title: What is Microsoft Foundry?
+seoTitle: What is Microsoft Foundry? Resources and Projects | AI-901
+description: Microsoft Foundry for AI-901, covering the resource vs a project, the portal, model catalog, Foundry Tools, agents, guardrails, endpoints and roles.
+answer: >-
+  **Microsoft Foundry** (formerly Azure AI Foundry) is Azure's platform for building generative AI apps and agents. You create a **Foundry resource**, which holds models, **Foundry Tools**, security and billing, and inside it one or more **projects**, which are team workspaces for deployments, agents, files and evaluations. You work in the portal at **ai.azure.com** or in code through the **project endpoint**, with access controlled by roles such as **Foundry User**.
+updated: 2026-11-18
+readingMinutes: 8
+keyTerms:
+  - term: Microsoft Foundry
+    definition: Azure's platform for building, testing and running generative AI apps and agents, formerly called Azure AI Foundry.
+  - term: Foundry resource
+    definition: The Azure resource (kind AIServices) that holds models, Foundry Tools, networking, security and billing for a team or company.
+  - term: Foundry project
+    definition: A workspace inside a Foundry resource where a team keeps its model deployments, agents, files and evaluations.
+  - term: Foundry Tools
+    definition: The services formerly called Azure AI services, such as Azure Speech, Azure Language, Azure Vision and Azure Content Understanding in Foundry Tools.
+  - term: Model catalog
+    definition: The searchable list of models from Microsoft, OpenAI, Meta, Mistral, DeepSeek and others that you can deploy in Foundry.
+  - term: Project endpoint
+    definition: The URL your code calls, in the form https://<resource>.services.ai.azure.com/api/projects/<project>.
+  - term: Foundry User
+    definition: The built-in role (formerly Azure AI User) that lets someone build and use models and agents in a project.
+interview:
+  - level: beginner
+    q: What is Microsoft Foundry?
+    a: >-
+      It's Azure's one place for generative AI. I can browse and deploy models, test them in a playground, build agents, add guardrails, run evaluations and then call it all from my app, at ai.azure.com or through the SDK.
+    followUps:
+      - q: Is it the same as Azure OpenAI?
+        a: >-
+          Azure OpenAI models are one family you can deploy in Foundry. Foundry also has Microsoft Phi, Meta Llama, Mistral, DeepSeek and many others, plus agents and the Foundry Tools.
+  - level: intermediate
+    q: What's the difference between a Foundry resource and a project?
+    a: >-
+      The resource is the Azure-level container. It holds billing, networking, security settings and the connection to Foundry Tools. Projects live inside it and are where each team actually works, with their own deployments, agents, files and evaluations. One resource can hold several projects.
+    followUps: []
+  - level: experienced
+    q: How would you give a new developer access without making them an owner?
+    a: >-
+      I'd assign the Foundry User role on the project. That's enough to use deployments and build agents there, but not to manage the resource or hand out roles. A Foundry Project Manager or Account Owner can do the role assignment, and the developer signs in with Microsoft Entra ID, so there's no shared key to leak.
+    followUps: []
+  - level: scenario
+    q: Two teams in a bank want separate AI workspaces but one bill and one security setup. How would you set it up?
+    a: >-
+      One Foundry resource for the shared billing, networking and policies, and two projects inside it, one per team. Each team gets Foundry User on its own project only.
+    followUps: []
+revision:
+  keyPoints:
+    - Microsoft Foundry is the new name for Azure AI Foundry; the portal is ai.azure.com.
+    - A Foundry resource holds models, Foundry Tools, security and billing.
+    - Projects inside the resource hold a team's deployments, agents, files and evaluations.
+    - Foundry Tools is the new name for Azure AI services (Speech, Language, Vision, Content Understanding and more).
+    - Foundry User (formerly Azure AI User) is the role developers need to build in a project.
+  mistakes:
+    - Thinking each project needs its own Azure subscription or bill. Projects share the parent resource.
+    - Calling the service Azure AI Studio or Azure AI Foundry on the exam. The current name is Microsoft Foundry.
+  examTips:
+    - '"Team workspace for deployments, agents and evaluations" = **Foundry project**.'
+    - '"Holds billing, networking and Foundry Tools" = **Foundry resource**.'
+    - '"Least-privilege role to build in a project" = **Foundry User**.'
+  quick:
+    - q: What is the Foundry portal's address?
+      a: ai.azure.com.
+    - q: What's inside a Foundry project?
+      a: Model deployments, agents, files and evaluations for one team.
+    - q: What were Foundry Tools called before?
+      a: Azure AI services (Cognitive Services).
+    - q: What does the project endpoint look like?
+      a: https://<resource>.services.ai.azure.com/api/projects/<project>.
+    - q: What was the Foundry User role called before?
+      a: Azure AI User.
+references:
+  - title: What is Microsoft Foundry?
+    url: https://learn.microsoft.com/azure/foundry/what-is-foundry
+  - title: "Quickstart: Get started with code in Microsoft Foundry"
+    url: https://learn.microsoft.com/azure/foundry/quickstarts/get-started-code
+  - title: Study guide for Exam AI-901
+    url: https://learn.microsoft.com/en-us/credentials/certifications/resources/study-guides/ai-901
+related:
+  - deploy-and-chat-in-foundry
+  - chat-app-with-foundry-sdk
+  - build-an-agent-in-foundry
+  - model-deployment-and-parameters
+---
+
+## Start with a question
+
+<Story question="Where do you actually go in Azure to build an AI app?">
+
+Say you're building a chatbot for a hospital in Kochi. You need a model, a place to try prompts, a way to add safety filters, maybe speech so patients can talk to it, and a URL your app can call. Clicking around ten different Azure services would be painful.
+
+**Microsoft Foundry** puts all of that in one place. You open **ai.azure.com**, pick a project, and everything you need for that app lives there.
+
+</Story>
+
+## Explain it like I'm 10
+
+<Eli10>
+
+Think of a big school building. The building has the electricity, the security guard and the fee office. That's the **Foundry resource**.
+
+Inside are classrooms. Each class has its own desks, books and projects on the wall. Those are **Foundry projects**.
+
+The library and the science lab are shared by every class. Those are the **Foundry Tools** and models.
+
+</Eli10>
+
+## The technical explanation
+
+Foundry has two levels. Get these straight and half the exam questions on this topic get easy.
+
+<Compare
+  caption="Foundry resource vs Foundry project"
+  columns={[
+    { title: 'Foundry resource', subtitle: 'Azure resource, kind AIServices', icon: '🏢', items: ['Billing and the Azure subscription link', 'Networking and security settings', 'Access to Foundry Tools (Speech, Language, Vision, Content Understanding)', 'Keys and endpoints for those tools', 'Holds one or more projects'] },
+    { title: 'Foundry project', subtitle: 'A team workspace', icon: '🧑‍💻', tone: 'accent', items: ['Model deployments', 'Agents and their versions', 'Files and data', 'Evaluations and tracing', 'Its own project endpoint for code'] },
+  ]}
+/>
+
+### What you'll find in the portal
+
+| Area | What it's for |
+| --- | --- |
+| **Model catalog** | Browse thousands of models (Microsoft Phi, OpenAI GPT-4.1 and GPT-5 family, Meta Llama, Mistral, DeepSeek, Cohere), read model cards and compare benchmarks for quality, cost and speed. |
+| **Deployments** | Turn a model into an endpoint you can call, with a deployment name you choose. |
+| **Playgrounds** | Chat with a deployed model, change parameters, then use **View code** to copy working code. |
+| **Agents** | Build agents from a model, instructions and tools (file search, web search, code interpreter and more). |
+| **Foundry Tools** | Azure Speech, Azure Language, Azure Vision, Azure Content Understanding, Azure Translator and others, all in Foundry. |
+| **Guardrails** | Content filters for hate, sexual, violence and self-harm, Prompt Shields for jailbreaks, and more. |
+| **Evaluations** | Score answers for quality and safety before you ship. |
+
+### Endpoints, keys and roles
+
+Your app calls the **project endpoint**: `https://<resource-name>.services.ai.azure.com/api/projects/<project-name>`. The Foundry SDK signs in with **Microsoft Entra ID** (for example `DefaultAzureCredential`), so you don't paste keys into code. The resource also shows **keys and endpoints** for Foundry Tools that accept key-based auth.
+
+Access is controlled with Azure RBAC. The Foundry roles were renamed recently:
+
+| Role | What it's for |
+| --- | --- |
+| **Foundry User** (was Azure AI User) | Build and use deployments and agents in a project. The usual role for developers. |
+| **Foundry Project Manager** | Manage a project and give others the Foundry User role on it. |
+| **Foundry Account Owner** | Manage the Foundry resource, create projects and deploy models. It can't build in a project on its own (no data actions). |
+| **Foundry Owner** | Manage the resource and build in projects: control plane and data plane together. |
+
+<TryIt labs="ai-foundry-setup" text="Create a Foundry resource and a project, then find the project endpoint and the keys." />
+
+<Callout type="exam">
+Expect "which should you create?" questions. Shared billing, networking or Foundry Tools access points to the **Foundry resource**. A separate workspace for one team's deployments and agents points to a **project**. The minimum role for a developer to build there is **Foundry User**. Old names (Azure AI Foundry, Azure AI services, Azure AI User) may show up in study material, so know both.
+</Callout>
+
+<DeepDive title="Why the two-level design matters">
+
+Putting projects under one resource means security, network isolation and billing are set once and every team inherits them. Teams still can't see each other's agents or files unless you give them access. In Azure, the resource type is `Microsoft.CognitiveServices/accounts` with kind `AIServices`, the same family the older Azure AI services used, which is why Foundry Tools sit naturally on the same resource.
+
+</DeepDive>
+
+## Real-world business scenario
+
+<Scenario
+  company="Northwind Health (fictional)"
+  industry="Healthcare"
+  problem="Three teams had each created their own AI services, with separate keys in config files and no shared safety settings."
+  service="One Foundry resource with private networking and guardrails, and a project per team: patient chat, clinical notes and billing."
+  why="Security and billing are set once on the resource, while each team keeps its own deployments and agents in its project."
+  outcome="Developers sign in with Entra ID using the Foundry User role, so there are no shared keys to rotate, and the finance team gets one AI bill."
+/>
+
+## When to use it and when not to
+
+<UseWhen
+  use={[
+    'You\'re building a chat app, an agent or anything that calls a generative model on Azure.',
+    'Several teams need their own AI workspace under shared security and billing.',
+    'You want models, Foundry Tools, guardrails and evaluations in one place.',
+  ]}
+  avoid={[
+    'You only need a ready-made assistant for office work. Microsoft 365 Copilot may already cover it.',
+    'You want to train a classic machine learning model from tabular data. Azure Machine Learning is built for that.',
+  ]}
+  alternatives={[
+    '<strong>Copilot Studio</strong> for low-code business agents.',
+    '<strong>Azure Machine Learning</strong> for custom model training pipelines.',
+  ]}
+/>

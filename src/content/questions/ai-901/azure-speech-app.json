@@ -1,0 +1,27 @@
+{ "cert": "ai-901", "domain": 2, "topic": "azure-speech-app", "questions": [
+  { "id": "ai-speechapp-1", "type": "single", "question": "You are building a Python application that transcribes a WAV file by using the Speech SDK. Which class should you use?", "options": [
+    { "text": "SpeechRecognizer", "why": "Correct. SpeechRecognizer converts audio from a file or microphone into text." },
+    { "text": "SpeechSynthesizer", "why": "SpeechSynthesizer converts text into speech." },
+    { "text": "TextAnalyticsClient", "why": "TextAnalyticsClient analyzes written text." },
+    { "text": "AIProjectClient", "why": "AIProjectClient connects to a Foundry project, not to speech recognition." } ], "answer": [0], "explanation": "SpeechRecognizer with an AudioConfig that points to the file performs speech to text.", "objective": "2.2.3" },
+  { "id": "ai-speechapp-2", "type": "single", "scenario": "A railway application reads booking confirmations aloud. Users report that the ten-digit booking reference is spoken too quickly. You must slow down only the reference number.", "question": "What should you use?", "options": [
+    { "text": "SSML with a prosody element that reduces the rate", "why": "Correct. SSML prosody can change the speaking rate for part of the text." },
+    { "text": "A different speech recognition language", "why": "Recognition language affects speech to text, not synthesized speech." },
+    { "text": "Continuous recognition", "why": "Continuous recognition is for transcribing long audio." },
+    { "text": "Speaker diarization", "why": "Diarization labels speakers in transcriptions." } ], "answer": [0], "explanation": "SSML gives fine control over rate, pitch, pauses and style for specific parts of the spoken output.", "objective": "2.2.3" },
+  { "id": "ai-speechapp-3", "type": "single", "question": "An application calls recognize_once_async on a ten-minute recording and returns only the first sentence. What should you use instead?", "options": [
+    { "text": "Continuous recognition or batch transcription", "why": "Correct. These approaches process long audio beyond a single utterance." },
+    { "text": "A neural voice", "why": "Neural voices are used for text to speech." },
+    { "text": "speak_text_async", "why": "speak_text_async synthesizes speech from text." },
+    { "text": "A higher temperature value", "why": "Temperature is a generative model parameter and does not apply to speech recognition." } ], "answer": [0], "explanation": "recognize_once handles a single utterance of up to about 30 seconds. Long audio needs continuous recognition or batch transcription.", "objective": "2.2.3" },
+  { "id": "ai-speechapp-4", "type": "multi", "question": "Which TWO settings can you configure on a SpeechConfig object in the Speech SDK?", "options": [
+    { "text": "speech_synthesis_voice_name", "why": "Correct. This property selects the neural voice for text to speech." },
+    { "text": "speech_recognition_language", "why": "Correct. This property sets the language for speech to text, such as en-IN." },
+    { "text": "temperature", "why": "Temperature belongs to generative model requests." },
+    { "text": "conversation_id", "why": "Conversation IDs are used with Foundry agents and responses." } ], "answer": [0, 1], "explanation": "SpeechConfig holds connection details plus the recognition language and synthesis voice.", "objective": "2.2.3" },
+  { "id": "ai-speechapp-5", "type": "single", "question": "A company wants an application to read product announcements aloud in a natural, human-like voice in Hindi. Which capability should it use?", "options": [
+    { "text": "Text to speech with a neural voice such as hi-IN-SwaraNeural", "why": "Correct. Neural voices produce natural speech in many languages, including Hindi." },
+    { "text": "Speech to text with custom speech", "why": "Speech to text transcribes audio and does not produce spoken output." },
+    { "text": "Key phrase extraction", "why": "Key phrase extraction finds the main points in text." },
+    { "text": "Speech translation only", "why": "Translation converts between languages but is not required to speak Hindi text aloud." } ], "answer": [0], "explanation": "Text to speech with a neural voice converts text into natural-sounding speech.", "objective": "2.2.3" }
+] }

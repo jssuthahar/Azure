@@ -2,7 +2,7 @@ import type { APIRoute } from 'astro';
 import { getCollection } from 'astro:content';
 import { getNav } from '../lib/learn';
 import { SITE } from '../config';
-import { getExam } from '../data/exams';
+import { getExam, liveExams } from '../data/exams';
 
 const exam = getExam();
 
@@ -18,7 +18,7 @@ export const GET: APIRoute = async () => {
     '',
     `${SITE.brandLine}. Publisher: ${SITE.org} (${SITE.orgFull}), ${SITE.main}. Author: ${SITE.author}, ${SITE.authorTitle} (${SITE.profile}).`,
     '',
-    `> Free AZ-900 (Microsoft Azure Fundamentals) learning site where you can feel Azure without an Azure account: every lesson has a 30-second answer, a 3D simulation, a simulated Azure portal walkthrough and a practice lab, followed by an explanation, exam tip and quiz. By ${SITE.author} (${SITE.org}).`,
+    `> Free ${liveExams().map((e) => `${e.code} (Microsoft ${e.name})`).join(' and ')} learning site where you can feel Azure without an Azure account: every lesson has a 30-second answer, a 3D simulation, a simulated Azure portal walkthrough and a practice lab, followed by an explanation, exam tip and quiz. By ${SITE.author} (${SITE.org}).`,
     '',
     `- Content follows Microsoft's official ${exam.code} skills outline (skills measured as of ${exam.skillsMeasuredAsOf}): ${exam.studyGuideUrl}`,
     '- All practice and mock exam questions are original. None are real Microsoft exam questions.',
@@ -57,5 +57,20 @@ export const GET: APIRoute = async () => {
     `- [Azure glossary](${u(`/${exam.slug}/glossary/`)}): AZ-900 terms in one line each.`,
     `- [Interview questions](${u(`/${exam.slug}/interview/`)}), [revision flashcards](${u(`/${exam.slug}/revision/`)}), [embeddable simulations](${u('/embed/')}).`,
     '');
+  for (const ex of liveExams().filter((e) => e.slug !== exam.slug)) {
+    const exNav = await getNav(ex.slug);
+    lines.push(`## ${ex.code}: ${ex.name}`, '', `- [${ex.code} course and syllabus](${u(`/${ex.slug}/`)}): ${plain(ex.course.subtitle)} Follows Microsoft's skills outline (skills measured as of ${ex.skillsMeasuredAsOf}): ${ex.studyGuideUrl}`,
+      `- [${ex.code} practice labs](${u(`/${ex.slug}/labs/`)}): ${plain(ex.course.labs?.intro ?? 'Guided labs in a simulator.')}`, `- [${ex.code} mock exam](${u(`/${ex.slug}/mock-exam/`)}): timed practice exam scored 1–1000, 700 to pass.`, '');
+    for (const m of ex.modules) {
+      const pub = exNav.filter((t) => t.module.slug === m.slug && t.published);
+      if (!pub.length) continue;
+      lines.push(`### ${ex.code} Domain ${m.domain}: ${m.title} (${m.weight})`, '');
+      for (const t of pub) { const e = entries.find((x) => x.id === t.key)!; lines.push(`- [${e.data.title}](${u(t.url)}): ${plain(e.data.answer)}`); }
+      lines.push('');
+    }
+    for (const c of ex.comparisons) lines.push(`- [${c.title}](${u(`/${ex.slug}/compare/${c.slug}/`)}): ${plain(c.answer)}`);
+    for (const sv of ex.services) lines.push(`- [${sv.name}](${u(`/${ex.slug}/services/${sv.slug}/`)}): ${plain(sv.what)}`);
+    lines.push('');
+  }
   return new Response(lines.join('\n'), { headers: { 'Content-Type': 'text/plain; charset=utf-8' } });
 };

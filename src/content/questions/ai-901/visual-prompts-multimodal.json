@@ -1,0 +1,27 @@
+{ "cert": "ai-901", "domain": 2, "topic": "visual-prompts-multimodal", "questions": [
+  { "id": "ai-visualprompt-1", "type": "single", "scenario": "An insurance application lets customers upload a photo of vehicle damage. The application must ask a model deployed in Microsoft Foundry to describe the visible damage.", "question": "Which type of model deployment is required?", "options": [
+    { "text": "A multimodal model that accepts image input, such as GPT-4.1", "why": "Correct. Multimodal models can interpret images included in a prompt." },
+    { "text": "An embedding model", "why": "Embedding models return vectors and do not describe images in natural language." },
+    { "text": "A text-only small language model", "why": "A text-only model cannot interpret images." },
+    { "text": "A speech-to-text model", "why": "Speech-to-text models transcribe audio." } ], "answer": [0], "explanation": "Interpreting visual input in a prompt requires a multimodal model that supports image input.", "objective": "2.3.1" },
+  { "id": "ai-visualprompt-2", "type": "multi", "question": "You send an image to a multimodal model by using an input_image content part in the Responses API. Which TWO formats can you use for the image?", "options": [
+    { "text": "A publicly reachable https URL", "why": "Correct. The service can fetch an image from an https URL." },
+    { "text": "A base64-encoded data URL", "why": "Correct. A data URL such as data:image/jpeg;base64,... embeds the image in the request." },
+    { "text": "A local file path such as C:\\images\\car.jpg", "why": "The service cannot read files on your computer." },
+    { "text": "An SSML document", "why": "SSML controls speech synthesis and is not an image format." } ], "answer": [0, 1], "explanation": "input_image accepts an https URL or a base64 data URL.", "objective": "2.3.1" },
+  { "id": "ai-visualprompt-3", "type": "single", "question": "You want to test whether a multimodal model can read labels in product photos before you write any code. What should you use?", "options": [
+    { "text": "The chat playground in the Microsoft Foundry portal with an attached image", "why": "Correct. The chat playground lets you attach images to prompts without code." },
+    { "text": "The Azure pricing calculator", "why": "The pricing calculator estimates costs." },
+    { "text": "Azure Policy", "why": "Azure Policy enforces resource rules." },
+    { "text": "Speech Studio batch transcription", "why": "Batch transcription processes audio files." } ], "answer": [0], "explanation": "The chat playground supports image attachments for testing multimodal deployments.", "objective": "2.3.1" },
+  { "id": "ai-visualprompt-4", "type": "single", "question": "A multimodal model repeatedly miscounts small items in shelf photos. Which action is most likely to improve the results?", "options": [
+    { "text": "Send a clearer, cropped image and ask a narrower, specific question", "why": "Correct. Clear images and specific prompts reduce misreads." },
+    { "text": "Increase the temperature to 2", "why": "Higher temperature increases randomness and does not improve accuracy." },
+    { "text": "Remove the system message", "why": "A system message helps guide the response. Removing it does not improve counting." },
+    { "text": "Convert the image to an audio file", "why": "Audio input does not help a model interpret an image." } ], "answer": [0], "explanation": "Image quality and prompt specificity strongly affect how accurately a multimodal model interprets visual details. Exact counts should still be verified.", "objective": "2.3.1" },
+  { "id": "ai-visualprompt-5", "type": "single", "question": "Which statement about image inputs to a model deployment in Microsoft Foundry is true?", "options": [
+    { "text": "Content filters configured on the deployment also evaluate image inputs.", "why": "Correct. Guardrails apply to images as well as text." },
+    { "text": "Images do not consume tokens.", "why": "Images are converted to tokens, and larger or higher-detail images use more." },
+    { "text": "A single message can contain only one image.", "why": "A message can contain several images, for example to compare them." },
+    { "text": "Image inputs are used to retrain the foundation model.", "why": "Customer prompts and completions are not used to train the foundation models." } ], "answer": [0], "explanation": "Guardrails evaluate image inputs, images consume tokens, and several images can be sent in one message.", "objective": "2.3.1" }
+] }

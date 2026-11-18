@@ -1,0 +1,27 @@
+{ "cert": "ai-901", "domain": 2, "topic": "content-understanding-documents", "questions": [
+  { "id": "ai-cudoc-1", "type": "single", "scenario": "An accounts payable team receives supplier invoices in hundreds of different layouts. The team needs the vendor name, invoice date and invoice total from each invoice without training a model.", "question": "What should the team use?", "options": [
+    { "text": "The prebuilt-invoice analyzer in Azure Content Understanding", "why": "Correct. prebuilt-invoice returns standard invoice fields across varied layouts with no training." },
+    { "text": "The prebuilt-read analyzer", "why": "prebuilt-read returns text only and does not identify invoice fields." },
+    { "text": "gpt-image-1", "why": "gpt-image-1 generates images and does not extract fields." },
+    { "text": "Azure Speech in Foundry Tools", "why": "Speech services process audio, not documents." } ], "answer": [0], "explanation": "The prebuilt-invoice analyzer is designed to extract standard invoice fields from many layouts without custom training.", "objective": "2.4.1" },
+  { "id": "ai-cudoc-2", "type": "single", "question": "You create a custom Content Understanding analyzer for purchase orders. The PO number is printed on every document. Which field extraction method should you use for the PONumber field?", "options": [
+    { "text": "Extract", "why": "Correct. Extract returns a value that appears in the document." },
+    { "text": "Classify", "why": "Classify selects a value from a predefined list of categories." },
+    { "text": "Generate", "why": "Generate creates new values, such as summaries, and is not intended for copying printed values." },
+    { "text": "Segment", "why": "Segmentation splits content into parts and is not a field method." } ], "answer": [0], "explanation": "The extract method returns values that are present in the document, such as a printed purchase order number.", "objective": "2.4.1" },
+  { "id": "ai-cudoc-3", "type": "multi", "question": "Which TWO pieces of information does Content Understanding return with an extracted field value to support human review?", "options": [
+    { "text": "A confidence score between 0 and 1", "why": "Correct. The confidence score indicates how certain the service is about the value." },
+    { "text": "Grounding that identifies where the value was found in the source", "why": "Correct. Grounding lets a reviewer locate the value in the original document." },
+    { "text": "A temperature setting", "why": "Temperature is a model generation parameter, not part of field results." },
+    { "text": "A content credentials manifest", "why": "Content credentials are attached to generated images, not extracted fields." } ], "answer": [0, 1], "explanation": "Each field includes a confidence score and grounding information, which together help decide and support human review.", "objective": "2.4.1" },
+  { "id": "ai-cudoc-4", "type": "single", "question": "A legal team wants each contract tagged as NDA, Service agreement or Lease. Which field method should the custom analyzer use?", "options": [
+    { "text": "Extract", "why": "The contract type is usually not printed as a single value to copy." },
+    { "text": "Classify", "why": "Correct. Classify assigns one value from a defined list of categories." },
+    { "text": "Generate", "why": "Generate produces free-form values. A fixed list of categories is better handled by classify." },
+    { "text": "Read", "why": "prebuilt-read is an analyzer for OCR, not a field method." } ], "answer": [1], "explanation": "When a field must contain one of a fixed set of values, use the classify method.", "objective": "2.4.1" },
+  { "id": "ai-cudoc-5", "type": "single", "question": "You try to run a prebuilt Content Understanding analyzer on a new Foundry resource and the request fails. What must be configured on the resource before analyzers can run?", "options": [
+    { "text": "A virtual network with a private endpoint", "why": "Private networking is optional and not required to run analyzers." },
+    { "text": "Default model deployments used by Content Understanding", "why": "Correct. Content Understanding uses configured model deployments, such as a completion model and an embedding model." },
+    { "text": "A Speech resource in the same region", "why": "A separate Speech resource is not required for document analysis." },
+    { "text": "An agent with a file search tool", "why": "Agents are not required to use Content Understanding analyzers." } ], "answer": [1], "explanation": "Content Understanding relies on generative model deployments, so default model deployments must be set on the Foundry resource.", "objective": "2.4.1" }
+] }

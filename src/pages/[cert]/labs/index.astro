@@ -2,22 +2,24 @@
 import Base from '../../../layouts/Base.astro';
 import Mascot from '../../../components/Mascot.astro';
 import SectionLabs from '../../../components/SectionLabs.astro';
-import { LABS, SANDBOX } from '../../../lib/sim/labs';
+import { labsForExam, SANDBOX } from '../../../lib/sim/labs';
 import { getExam, examStaticPaths } from '../../../data/exams';
 
 export function getStaticPaths() {
   return examStaticPaths();
 }
 const exam = getExam(Astro.params.cert);
+const LABS = labsForExam(exam.slug);
+const copy = exam.course.labs;
 const bands = ['band-blue', 'band-green', 'band-yellow', 'band-lilac'];
 ---
-<Base title="Azure Practice Labs: Free Simulator, No Account | MSDEVBUILD" description="Free Azure hands-on labs for every exam section: VMs, storage, networks, identity, policy and monitoring in a mock portal and Cloud Shell. No account." breadcrumbs={[{ name: 'Home', url: '/' }, { name: `${exam.code}`, url: `/${exam.slug}/` }, { name: 'Practice labs', url: `/${exam.slug}/labs/` }]}>
+<Base title={copy?.title ?? "Azure Practice Labs: Free Simulator, No Account | MSDEVBUILD"} description={copy?.description ?? "Free Azure hands-on labs for every exam section: VMs, storage, networks, identity, policy and monitoring in a mock portal and Cloud Shell. No account."} breadcrumbs={[{ name: 'Home', url: '/' }, { name: `${exam.code}`, url: `/${exam.slug}/` }, { name: 'Practice labs', url: `/${exam.slug}/labs/` }]}>
   <section class="band-navy px-4 py-12 sm:py-16">
     <div class="mx-auto grid max-w-6xl items-center gap-8 lg:grid-cols-[1.3fr_1fr]">
       <div class="text-center lg:text-left">
         <p class="text-sm font-bold tracking-widest text-[#ffd75e] uppercase">Try it yourself</p>
-        <h1 class="mt-2 text-4xl font-bold tracking-tight sm:text-6xl">Azure Practice Labs</h1>
-        <p class="mt-4 text-lg text-white/90">A safe, simulated Azure portal and Cloud Shell right in your browser. Click through real-looking screens, type real Azure CLI commands, and learn by doing.</p>
+        <h1 class="mt-2 text-4xl font-bold tracking-tight sm:text-6xl">{copy?.h1 ?? 'Azure Practice Labs'}</h1>
+        <p class="mt-4 text-lg text-white/90">{copy?.intro ?? 'A safe, simulated Azure portal and Cloud Shell right in your browser. Click through real-looking screens, type real Azure CLI commands, and learn by doing.'}</p>
         <ul class="mt-5 flex flex-wrap justify-center gap-2 text-sm lg:justify-start">
           {['✅ No Azure account', '✅ No credit card', '✅ Nothing to install', '✅ Zero cost, zero risk'].map((t) => <li class="rounded-full bg-white/10 px-3 py-1">{t}</li>)}
         </ul>
@@ -28,10 +30,12 @@ const bands = ['band-blue', 'band-green', 'band-yellow', 'band-lilac'];
       </div>
       <div class="rounded-2xl bg-[#0b1020] p-4 font-mono text-[0.8rem] leading-relaxed text-[#e6edf3] shadow-2xl">
         <p class="text-[#8fcbf7]">Azure Cloud Shell (practice)</p>
+        {copy ? copy.shell.map(([c, o]) => <><p class="mt-2"><span class="text-[#9fe870]">learner@Azure:~$</span> {c}</p><p class="text-white/80">{o}</p></>) : <Fragment>
         <p class="mt-2"><span class="text-[#9fe870]">learner@Azure:~$</span> az group create -n rg-learn -l westeurope</p>
         <p class="text-white/80">{'{ "name": "rg-learn", "location": "westeurope",'}<br />{'  "properties": { "provisioningState": "Succeeded" } }'}</p>
         <p class="mt-2"><span class="text-[#9fe870]">learner@Azure:~$</span> az vm create -g rg-learn -n web01 --image Ubuntu2204</p>
         <p class="text-white/80">{'{ "powerState": "VM running", "publicIpAddress": "20.61.8.42" }'}</p>
+        </Fragment>}
         <p class="mt-2"><span class="text-[#9fe870]">learner@Azure:~$</span> <span class="animate-pulse">▌</span></p>
       </div>
     </div>

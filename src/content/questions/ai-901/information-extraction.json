@@ -1,0 +1,27 @@
+{ "cert": "ai-901", "domain": 1, "topic": "information-extraction", "questions": [
+  { "id": "ai-infox-1", "type": "single", "question": "A company must process supplier invoices, delivery photos, recorded support calls and training videos, and return structured fields from each by using a single service. Which service should the company use?", "options": [
+    { "text": "Azure Content Understanding in Foundry Tools", "why": "Correct. Content Understanding analyzes documents, images, audio and video and returns structured fields." },
+    { "text": "Azure Translator", "why": "Translator converts text between languages. It does not extract fields." },
+    { "text": "Azure Vision in Foundry Tools", "why": "Vision analyzes images but does not process audio recordings." },
+    { "text": "Azure Speech in Foundry Tools", "why": "Speech handles audio only." } ], "answer": [0], "explanation": "Content Understanding is the unified service for extracting structured information from documents, images, audio and video.", "objective": "1.3.5" },
+  { "id": "ai-infox-2", "type": "single", "question": "You need to identify people, organizations, locations and dates mentioned in customer emails. Which text analysis technique should you use?", "options": [
+    { "text": "Sentiment analysis", "why": "Sentiment analysis identifies opinion, not entities." },
+    { "text": "Named entity recognition", "why": "Correct. Named entity recognition finds and categorizes entities such as people, places and dates." },
+    { "text": "Language detection", "why": "Language detection identifies which language the text is written in." },
+    { "text": "Speech synthesis", "why": "Speech synthesis converts text to audio." } ], "answer": [1], "explanation": "Named entity recognition labels entities such as people, organizations, locations and dates in text.", "objective": "1.3.5" },
+  { "id": "ai-infox-3", "type": "multi", "question": "Which TWO outputs are typical when extracting information from a recorded video?", "options": [
+    { "text": "Segments with key frames", "why": "Correct. Video analysis splits content into segments and selects key frames." },
+    { "text": "A transcript of the spoken audio", "why": "Correct. The audio track is transcribed as part of video analysis." },
+    { "text": "A generated replacement video", "why": "Extraction describes existing content. It does not create new video." },
+    { "text": "A list of model deployment types", "why": "Deployment types relate to hosting models, not to video output." } ], "answer": [0, 1], "explanation": "Video extraction returns segments, key frames, transcripts and descriptions that can be searched and summarized.", "objective": "1.3.5" },
+  { "id": "ai-infox-4", "type": "single", "scenario": "An insurer extracts the claim amount from scanned forms. Values that the service is unsure about must be routed to a human reviewer.", "question": "Which value returned with each extracted field should the insurer use to decide whether to route the field for review?", "options": [
+    { "text": "The temperature setting", "why": "Temperature controls randomness in generative model output. It is not returned per field." },
+    { "text": "The confidence score", "why": "Correct. A confidence score between 0 and 1 indicates how certain the service is about the value." },
+    { "text": "The token count", "why": "Token counts relate to usage and billing, not certainty." },
+    { "text": "The analyzer ID", "why": "The analyzer ID identifies the configuration used, not the reliability of a value." } ], "answer": [1], "explanation": "Confidence scores allow an application to accept high-certainty values automatically and send low-certainty values for human review.", "objective": "1.3.5" },
+  { "id": "ai-infox-5", "type": "single", "question": "A chat support team must find phone numbers and email addresses in conversation logs so that they can be masked before the logs are stored. Which technique should the team use?", "options": [
+    { "text": "Key phrase extraction", "why": "Key phrases identify main topics, not personal data." },
+    { "text": "Object detection", "why": "Object detection locates objects in images." },
+    { "text": "Personally identifiable information (PII) detection", "why": "Correct. PII detection finds personal data and can return a redacted version of the text." },
+    { "text": "Image generation", "why": "Image generation creates images and is unrelated to text masking." } ], "answer": [2], "explanation": "PII detection identifies personal information such as phone numbers and email addresses so that it can be redacted.", "objective": "1.3.5" }
+] }

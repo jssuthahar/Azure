@@ -16,7 +16,7 @@ const topicTitle = Object.fromEntries(nav.filter((t) => t.published).map((t) => 
 const domains = exam.modules.map((m) => ({ domain: m.domain, title: m.title, short: m.shortTitle, count: bank.filter((q) => q.domain === m.domain).length + exam.examItems.filter((x) => x.domain === m.domain).length }));
 const choice = bank.map((q) => ({ kind: q.type, id: q.id, domain: q.domain, topic: q.topic, scenario: q.scenario, question: q.question, options: q.options, answer: q.answer, explanation: q.explanation }));
 const weights = Object.fromEntries(exam.modules.map((m) => [m.domain, m.weightMid]));
-const payload = JSON.stringify({ choice, domains, topicTitle, items: exam.examItems, weights, code: exam.code, name: exam.name }).replace(/</g, '\\u003c');
+const payload = JSON.stringify({ choice, domains, topicTitle, items: exam.examItems, weights, code: exam.code, name: exam.name, slug: exam.slug }).replace(/</g, '\\u003c');
 const total = bank.length + exam.examItems.length;
 
 const title = `${exam.code} Mock Exam: Real Exam Experience, Free`;
@@ -240,13 +240,15 @@ const crumbs = [{ name: 'Home', url: '/' }, { name: `${exam.code}`, url: `/${exa
   import { buildPaper, emptyResponse, answered, score, result, KIND_LABEL, type Item, type ChoiceItem, type Response, type Paper } from '../../lib/exam';
   import { saveMock, type MockResult } from '../../lib/progress';
   import { recordAnswers } from '../../lib/review';
-  import { issueCert, loadCert } from '../../lib/certificate';
+  import { issueCert, loadCert, registerCertExams, mockTag, certPage } from '../../lib/certificate';
   import { confetti } from '../../lib/fun';
 
   const data = JSON.parse(document.getElementById('exam-data')!.textContent!) as {
-    choice: ChoiceItem[]; items: FormatItem[]; weights: Record<number, number>; code: string; name: string; domains: { domain: number; title: string; short: string }[]; topicTitle: Record<string, { title: string; url: string }>;
+    choice: ChoiceItem[]; items: FormatItem[]; weights: Record<number, number>; code: string; name: string; slug: string; domains: { domain: number; title: string; short: string }[]; topicTitle: Record<string, { title: string; url: string }>;
   };
-  const SKEY = 'msdb-azure-exam-v2';
+  registerCertExams([{ slug: data.slug, code: data.code, name: data.name }]);
+  // One saved exam-in-progress per exam (AZ-900 keeps its original key).
+  const SKEY = `msdb-azure-exam-v2${'exam' in mockTag(data.slug) ? `-${data.slug}` : ''}`;
   const $ = <T extends HTMLElement = HTMLElement>(id: string) => document.getElementById(id) as T;
   const esc = (s: string) => String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/"/g, '&quot;').replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>').replace(/`(.+?)`/g, '<code>$1</code>');
   const domainTitle = (d: number) => data.domains.find((x) => x.domain === d)?.title ?? `Domain ${d}`;
@@ -615,7 +617,7 @@ const crumbs = [{ name: 'Home', url: '/' }, { name: `${exam.code}`, url: `/${exa
     const s = st!;
     closeRoom();
     const r = result(s.paper.items, s.responses);
-    const mock: MockResult = { score: r.earned, total: r.possible, percent: r.percent, scaled: r.scaled, mode: s.paper.mode, domains: r.domains, at: new Date().toISOString() };
+    const mock: MockResult = { score: r.earned, total: r.possible, percent: r.percent, scaled: r.scaled, mode: s.paper.mode, domains: r.domains, at: new Date().toISOString(), ...mockTag(data.slug) };
     saveMock(mock);
     // Every answered item feeds spaced repetition; full marks count as right.
     recordAnswers(location.pathname.split('/')[1], s.paper.items.map((q, i) => ({ q, i, sc: score(q, s.responses[i]) })).filter(({ q, i }) => answered(q, s.responses[i]) !== 'none').map(({ q, sc }) => ({ id: q.id, ok: sc.earned === sc.possible })));
@@ -661,7 +663,7 @@ const crumbs = [{ name: 'Home', url: '/' }, { name: `${exam.code}`, url: `/${exa
     s.paper.items.forEach((q, i) => { const sc = score(q, s.responses[i]); const a = answered(q, s.responses[i]); counts[a === 'none' ? 'none' : sc.earned === sc.possible ? 'ok' : sc.earned > 0 ? 'part' : 'bad']++; });
     const full = s.paper.mode === 'full';
     const certOk = full && r.passed;
-    const existing = loadCert();
+    const existing = loadCert(data.slug);
     const date = new Date().toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' });
     out.innerHTML = `
       <div class="card overflow-hidden">
@@ -723,13 +725,13 @@ const crumbs = [{ name: 'Home', url: '/' }, { name: `${exam.code}`, url: `/${exa
       e.preventDefault();
       const name = ($('sr-cert-name') as HTMLInputElement).value.trim();
       if (!name) return;
-      issueCert(name, mock);
-      location.href = '/certificate/';
+      issueCert(name, mock, data.slug);
+      location.href = certPage(data.slug);
     });
   }
 
   /* ---------- setup ---------- */
-  try { ($('cand-name') as HTMLInputElement).value = localStorage.getItem('msdb-exam-name') ?? loadCert()?.name ?? ''; } catch {}
+  try { ($('cand-name') as HTMLInputElement).value = localStorage.getItem('msdb-exam-name') ?? loadCert(data.slug)?.name ?? ''; } catch {}
   $('setup-form').addEventListener('submit', (e) => {
     e.preventDefault();
     const fd = new FormData(e.target as HTMLFormElement);

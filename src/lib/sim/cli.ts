@@ -4,6 +4,7 @@
  */
 import { Sim, SimError, SUB_ID, SUB_NAME, REGIONS, VM_SIZES, IMAGES, TYPE_INFO, type Res } from './engine';
 import { World, BICEP_FILE, POLICY_DEFS, ONPREM_SERVERS, DATABOX_STEPS } from './world';
+import * as F from './foundry';
 
 export interface CliResult {
   out?: string;
@@ -90,6 +91,8 @@ const GROUPS: Record<string, [string, string][]> = {
   lock: [['create', 'Create a management lock.'], ['list', 'List locks.'], ['delete', 'Delete a lock.']],
   resource: [['list', 'List all resources.']],
   account: [['show', 'Show the current subscription.'], ['list-locations', 'List Azure regions.']],
+  'cognitiveservices account': [['create', 'Create a Foundry resource (--kind AIServices).'], ['list', 'List Foundry / AI services resources.'], ['show', 'Show one resource and its endpoint.'], ['keys list', 'Show the access keys.']],
+  'cognitiveservices account deployment': [['create', 'Deploy a model (--model-name, --sku-name GlobalStandard).'], ['list', 'List model deployments.'], ['delete', 'Delete a deployment.']],
 };
 function helpFor(path: string): string {
   if (!path)
@@ -119,6 +122,47 @@ function vmPower(p: Parsed, sim: Sim, action: 'start' | 'stop' | 'deallocate' | 
   return { out: '' };
 }
 const C: Record<string, Handler> = {
+  'login': () => ({ out: 'Cloud Shell is already signed in as learner@msdevbuild.com. DefaultAzureCredential in your Python apps uses this Microsoft Entra ID sign-in.' }),
+  'cognitiveservices account create': (p, sim) => {
+    required(p, [['--name', '-n'], ['--resource-group', '-g'], ['--kind', '']]);
+    const kind = one(p, '--kind')!;
+    if (kind.toLowerCase() !== 'aiservices') throw new SimError(`This simulator creates Foundry resources only. Use --kind AIServices (you passed '${kind}').`, 'InvalidKind');
+    const r = F.createFoundry(W(sim), { rg: one(p, '--resource-group')!, name: one(p, '--name')!, location: one(p, '--location'), tags: tags(p) }, 'cli');
+    return out(p, { id: r.id, kind: 'AIServices', location: r.location, name: r.name, properties: { endpoint: F.resourceEndpoint(r), customSubDomainName: r.name, provisioningState: 'Succeeded' }, sku: { name: 'S0' }, note: 'Create a project in the portal: open the resource ➜ Projects ➜ + New project.' });
+  },
+  'cognitiveservices account list': (p, sim) => {
+    const l = F.foundries(W(sim));
+    return out(p, l.map((r) => ({ name: r.name, kind: 'AIServices', location: r.location, resourceGroup: r.rg, endpoint: F.resourceEndpoint(r) })), l.map((r) => ({ Name: r.name, Kind: 'AIServices', Location: r.location, ResourceGroup: r.rg })), ['Name', 'Kind', 'Location', 'ResourceGroup']);
+  },
+  'cognitiveservices account show': (p, sim) => {
+    required(p, [['--name', '-n'], ['--resource-group', '-g']]);
+    const r = sim.need('foundry', one(p, '--resource-group')!, one(p, '--name')!);
+    return out(p, { name: r.name, kind: 'AIServices', location: r.location, properties: { endpoint: F.resourceEndpoint(r), projects: r.props.projects.map((x: string) => ({ name: x, endpoint: F.projectEndpoint(r, x) })) } });
+  },
+  'cognitiveservices account keys list': (p, sim) => {
+    required(p, [['--name', '-n'], ['--resource-group', '-g']]);
+    sim.need('foundry', one(p, '--resource-group')!, one(p, '--name')!);
+    sim.emit('ai.keys', { name: one(p, '--name'), via: 'cli' });
+    return out(p, { key1: 'SIMULATEDKEY1a2b3c4d5e6f7a8b9c0d1e2f3a4b5c6d', key2: 'SIMULATEDKEY2f6e5d4c3b2a1f0e9d8c7b6a5f4e3d2c', note: 'Prefer Microsoft Entra ID (DefaultAzureCredential) over keys; rotate keys if you use them.' });
+  },
+  'cognitiveservices account deployment create': (p, sim) => {
+    required(p, [['--name', '-n'], ['--resource-group', '-g'], ['--deployment-name', ''], ['--model-name', '']]);
+    const r = sim.need('foundry', one(p, '--resource-group')!, one(p, '--name')!);
+    const d = F.deployModel(W(sim), r, { name: one(p, '--deployment-name'), model: one(p, '--model-name')!, sku: one(p, '--sku-name', '--sku') ?? 'GlobalStandard', capacity: Number(one(p, '--sku-capacity', '--capacity') ?? 10) }, 'cli');
+    return out(p, { name: d.name, properties: { model: { format: d.model.startsWith('gpt') || d.model.startsWith('o') || d.model.startsWith('text-') ? 'OpenAI' : 'Microsoft', name: d.model }, provisioningState: 'Succeeded' }, sku: { name: d.sku, capacity: d.capacity } });
+  },
+  'cognitiveservices account deployment list': (p, sim) => {
+    required(p, [['--name', '-n'], ['--resource-group', '-g']]);
+    const r = sim.need('foundry', one(p, '--resource-group')!, one(p, '--name')!);
+    const l = r.props.deployments as F.Deployment[];
+    return out(p, l.map((d) => ({ name: d.name, properties: { model: { name: d.model } }, sku: { name: d.sku, capacity: d.capacity } })), l.map((d) => ({ Name: d.name, Model: d.model, Sku: d.sku, Capacity: d.capacity })), ['Name', 'Model', 'Sku', 'Capacity']);
+  },
+  'cognitiveservices account deployment delete': (p, sim) => {
+    required(p, [['--name', '-n'], ['--resource-group', '-g'], ['--deployment-name', '']]);
+    const r = sim.need('foundry', one(p, '--resource-group')!, one(p, '--name')!);
+    F.deleteDeployment(W(sim), r, one(p, '--deployment-name')!, 'cli');
+    return { out: '' };
+  },
   'account show': (p) => out(p, { id: SUB_ID, name: SUB_NAME, isDefault: true, state: 'Enabled', tenantId: '11111111-2222-3333-4444-555555555555', user: { name: 'learner@msdevbuild.com', type: 'user' } }),
   'account list-locations': (p) => {
     const rows = Object.entries(REGIONS).map(([name, displayName]) => ({ DisplayName: displayName, Name: name }));
@@ -690,6 +734,8 @@ Object.assign(C, {
 /** Shell commands outside `az` that the practice world understands. */
 function shellExtra(tokens: string[], sim: Sim): CliResult | null {
   if (!(sim instanceof World)) return null;
+  const ai = F.shell(tokens, sim);
+  if (ai) return ai;
   const [cmd, ...rest] = tokens;
   const c = cmd.toLowerCase();
   if (c === 'nslookup') {

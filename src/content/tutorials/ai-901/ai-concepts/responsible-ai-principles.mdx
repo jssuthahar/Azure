@@ -1,0 +1,186 @@
+---
+title: The Six Principles of Responsible AI
+seoTitle: Microsoft's Six Responsible AI Principles | AI-901
+description: Microsoft's six responsible AI principles explained with one real example each, plus the Foundry tools that put them into practice. Free AI-901 lesson.
+answer: >-
+  Microsoft builds AI around six **responsible AI principles**: **fairness** (treat similar people the same way), **reliability and safety** (work as expected and fail safely), **privacy and security** (protect data and resist attacks), **inclusiveness** (work for people of every ability and background), **transparency** (people understand what the AI does and its limits) and **accountability** (people stay answerable for what the AI does). In Microsoft Foundry they show up as guardrails, evaluations, transparency notes and human review.
+updated: 2026-11-18
+readingMinutes: 8
+keyTerms:
+  - term: Responsible AI
+    definition: Designing, building and running AI so it's fair, safe, private, inclusive, understandable and has people answerable for it.
+  - term: Fairness
+    definition: An AI system treats people in similar situations the same way, regardless of gender, ethnicity, age or other traits.
+  - term: Reliability and safety
+    definition: An AI system behaves as intended, handles unexpected input and fails in a safe way.
+  - term: Privacy and security
+    definition: An AI system protects personal data, respects consent and resists misuse and attacks.
+  - term: Inclusiveness
+    definition: An AI system is designed to work for and engage people of all abilities, languages and backgrounds.
+  - term: Transparency
+    definition: People understand that AI is being used, how it reaches results and what its limitations are.
+  - term: Accountability
+    definition: Named people and organisations are answerable for how an AI system is built, used and governed.
+interview:
+  - level: beginner
+    q: Name Microsoft's six responsible AI principles.
+    a: >-
+      Fairness, reliability and safety, privacy and security, inclusiveness, transparency and accountability. I remember them as two groups: four about how the system behaves toward people, and transparency plus accountability about being open and having a human answerable.
+    followUps:
+      - q: Are these laws?
+        a: >-
+          No, they're Microsoft's principles, backed internally by its Responsible AI Standard. Laws like the EU AI Act are separate, though the ideas overlap a lot.
+  - level: intermediate
+    q: How do the principles show up inside Microsoft Foundry?
+    a: >-
+      Guardrails and content filters block harmful prompts and outputs, Prompt Shields catch jailbreak attempts, evaluations measure quality and safety before you ship, tracing shows what an agent did step by step, and transparency notes and model cards explain what a model is good and bad at. Human review is something I design into the app myself.
+    followUps: []
+  - level: scenario
+    q: A bank's loan model approves fewer applications from one postcode with the same income and credit history. Which principle is at risk?
+    a: >-
+      Fairness. Similar applicants are getting different outcomes because of something that stands in for a group. I'd measure outcomes across groups, look at the training data and features, and put a human review step on declines.
+    followUps: []
+  - level: experienced
+    q: Who's accountable when an AI system gets something wrong?
+    a: >-
+      The organisation that built and deployed it, and named people inside it. You can't hand responsibility to the model. That's why you need an owner for each AI system, a review process before launch, logs you can audit and a way for affected people to appeal.
+    followUps: []
+revision:
+  keyPoints:
+    - Six principles - fairness, reliability and safety, privacy and security, inclusiveness, transparency, accountability.
+    - Reliability and safety is one principle; privacy and security is one principle.
+    - Foundry guardrails, Prompt Shields and evaluations turn principles into controls.
+    - Transparency notes and model cards explain what a model can and can't do.
+    - People, not the model, stay accountable for decisions.
+  mistakes:
+    - Listing "security" and "privacy" as two separate principles, or adding ones that aren't on the list such as "efficiency".
+    - Thinking a content filter alone makes a solution responsible.
+  examTips:
+    - Same input, different result for different groups = fairness.
+    - Works for people with disabilities or other languages = inclusiveness.
+    - Explaining how a decision was made = transparency. Who answers for it = accountability.
+  quick:
+    - q: How many responsible AI principles does Microsoft define?
+      a: Six.
+    - q: Which principle covers a system that must keep working during unusual conditions?
+      a: Reliability and safety.
+    - q: Which principle is about protecting personal data?
+      a: Privacy and security.
+    - q: Which principle covers a speech app that understands many accents?
+      a: Inclusiveness.
+    - q: Which principle says humans remain answerable for AI decisions?
+      a: Accountability.
+references:
+  - title: Responsible AI at Microsoft
+    url: https://www.microsoft.com/ai/responsible-ai
+  - title: Transparency note for Azure OpenAI (Microsoft Learn)
+    url: https://learn.microsoft.com/legal/cognitive-services/openai/transparency-note
+  - title: Study guide for Exam AI-901 (Microsoft Learn)
+    url: https://learn.microsoft.com/en-us/credentials/certifications/resources/study-guides/ai-901
+related:
+  - fairness-and-inclusiveness
+  - reliability-safety-privacy-security
+  - transparency-and-accountability
+  - what-is-ai
+---
+
+## Start with a question
+
+<Story question="Would you trust a new doctor who couldn't explain their diagnosis, treated some patients worse than others and shared your records with strangers?">
+
+You wouldn't. A good doctor treats everyone fairly, gets it right or says when they're unsure, keeps your secrets, can talk to you in a way you understand, explains their reasoning and answers to a medical council when things go wrong.
+
+We expect the same from AI. Microsoft writes those expectations down as **six responsible AI principles**, and AI-901 expects you to recognise each one in a scenario.
+
+</Story>
+
+## Explain it like I'm 10
+
+<Eli10>
+
+Imagine a robot referee for your school cricket match. A good robot referee:
+
+- gives **everyone** the same call for the same shot (fair),
+- doesn't crash when it rains (reliable and safe),
+- doesn't tell the other team your batting plan (private and secure),
+- works for kids who can't hear the whistle too (inclusive),
+- tells you **why** you're out (transparent),
+- and if it makes a bad call, a **teacher** fixes it (accountable).
+
+</Eli10>
+
+## The technical explanation
+
+Microsoft's **responsible AI principles** guide how AI is designed, built and run. Microsoft applies them internally through its Responsible AI Standard, and it builds tools into Microsoft Foundry so customers can apply them too.
+
+| Principle | The question it asks | One example |
+| --- | --- | --- |
+| **Fairness** | Does it treat similar people the same way? | A hiring model must not score CVs lower because the name sounds female. |
+| **Reliability and safety** | Does it work as expected and fail safely? | A medicine chatbot refuses to guess a dose and points to a pharmacist. |
+| **Privacy and security** | Is personal data protected, and can attackers misuse it? | A support bot masks phone numbers and Aadhaar numbers before saving chat logs. |
+| **Inclusiveness** | Does it work for people of all abilities and backgrounds? | A banking voice app understands Indian English accents and offers captions. |
+| **Transparency** | Do people know it's AI and understand how it reaches results? | A loan app tells applicants an AI helped and shows the main reasons for the result. |
+| **Accountability** | Who's answerable for what it does? | A named team owns the model, reviews it before launch and handles appeals. |
+
+<Compare
+  caption="Four principles shape how the system behaves; two keep it open and owned"
+  columns={[
+    { title: 'How it treats people', icon: '⚖️', tone: 'neutral', items: ['Fairness', 'Reliability and safety', 'Privacy and security', 'Inclusiveness'] },
+    { title: 'Open and owned', icon: '🔍', tone: 'accent', items: ['Transparency', 'Accountability'] },
+  ]}
+/>
+
+### Where the principles live in Microsoft Foundry
+
+| Foundry feature | Principles it supports |
+| --- | --- |
+| Guardrails and content filters (hate, sexual, violence, self-harm, with severity levels) | Reliability and safety |
+| Prompt Shields (jailbreak and indirect prompt injection attacks) | Reliability and safety, privacy and security |
+| PII detection in Azure Language | Privacy and security |
+| Evaluations (quality, plus risk and safety evaluators) | Fairness, reliability and safety |
+| Groundedness detection, citations, transparency notes, model cards | Transparency |
+| Tracing, role-based access, human review steps | Accountability |
+
+Microsoft also commits that your prompts and completions in Foundry aren't used to train the foundation models. That's a privacy promise you'll see in exam scenarios.
+
+<TryIt labs="ai-guardrails" text="Turn on a guardrail, send a harmful prompt and watch it get blocked. Then run a safety evaluation." />
+
+<Callout type="exam">
+The exam describes a situation and asks which principle applies. Look for the trigger: different outcomes for different groups is **fairness**, people with disabilities or other languages is **inclusiveness**, "explain the decision" is **transparency**, "who is responsible" or "human oversight" is **accountability**. Remember that reliability and safety is one principle, and privacy and security is one principle.
+</Callout>
+
+<DeepDive title="Principles pull against each other">
+
+Real systems trade principles off. Logging every prompt helps accountability but adds privacy risk, so you log with PII masked and limit who can read the logs. Stricter content filters improve safety but can block legitimate medical questions, which hurts inclusiveness for the people who need them. A responsible design writes those trade-offs down, tests them with evaluations and assigns someone to decide.
+
+</DeepDive>
+
+## Real-world business scenario
+
+<Scenario
+  company="Contoso Health, a hospital group in Bengaluru"
+  industry="Healthcare"
+  problem="It wanted an AI assistant to answer patient questions about appointments and reports, but worried about wrong medical advice, leaked records and patients who don't read English."
+  service="A Foundry agent grounded in hospital policies, with guardrails and Prompt Shields on, PII detection on stored chats, Hindi and Kannada support, a clear 'You're chatting with AI' notice and a nurse review queue for anything clinical."
+  why="Each control maps to a principle, so the review board could see exactly how the assistant met all six before approving it."
+  outcome="The assistant went live with sign-off from the clinical and legal teams, and clinical questions still reach a person."
+/>
+
+## When to use it and when not to
+
+<UseWhen
+  use={[
+    'Every AI project, from a small internal chatbot to a customer-facing agent. Scale the effort to the risk.',
+    'Before launch, to decide which guardrails, evaluations and review steps you need.',
+    'Whenever the model, the data or the audience changes, because the risks change too.',
+  ]}
+  avoid={[
+    'Treating the principles as a checkbox at the end of the project instead of a design input.',
+    'Assuming the model provider has handled responsible AI for your specific use case.',
+    'Relying on one control, such as a content filter, to cover all six principles.',
+  ]}
+  alternatives={[
+    '**Microsoft Responsible AI Standard and impact assessment templates** to structure the review.',
+    '**Your local regulations** (for example the EU AI Act or India\'s DPDP Act) alongside the principles.',
+  ]}
+/>

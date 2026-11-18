@@ -1,0 +1,79 @@
+{
+  "cert": "ai-901",
+  "domain": 1,
+  "topic": "how-generative-ai-works",
+  "questions": [
+    {
+      "id": "ai-genaiworks-1",
+      "type": "single",
+      "question": "How does a large language model generate a response to a prompt?",
+      "options": [
+        { "text": "It retrieves a stored answer from a database of previous responses.", "why": "Language models do not look up stored answers. They generate text." },
+        { "text": "It repeatedly predicts the most suitable next token and appends it to the text.", "why": "Correct. Generation is a loop of next-token prediction." },
+        { "text": "It searches the internet for every prompt.", "why": "A model only searches the web if a tool provides that capability." },
+        { "text": "It translates the prompt into a programming language and runs it.", "why": "Language models do not run prompts as code." }
+      ],
+      "answer": [1],
+      "explanation": "A language model generates text one token at a time, predicting the next token based on all the tokens before it.",
+      "objective": "1.2.1"
+    },
+    {
+      "id": "ai-genaiworks-2",
+      "type": "single",
+      "question": "Which component of the transformer architecture enables a model to determine how strongly each token in a sentence relates to the other tokens?",
+      "options": [
+        { "text": "Attention", "why": "Correct. Attention weighs the relationships between tokens." },
+        { "text": "Temperature", "why": "Temperature is an inference setting that controls randomness." },
+        { "text": "Content filter", "why": "Content filters check for harmful content." },
+        { "text": "Context window", "why": "The context window is the maximum number of tokens a model can process." }
+      ],
+      "answer": [0],
+      "explanation": "Attention lets a transformer weigh how much each token matters to every other token, which captures context and meaning.",
+      "objective": "1.2.1"
+    },
+    {
+      "id": "ai-genaiworks-3",
+      "type": "single",
+      "scenario": "An internal HR chatbot gives confident answers about leave entitlement that do not match the company's published policy.",
+      "question": "What should you do to reduce these incorrect answers?",
+      "options": [
+        { "text": "Increase the temperature.", "why": "A higher temperature increases randomness and can make the problem worse." },
+        { "text": "Ground the model by including relevant sections of the HR policy in the prompt.", "why": "Correct. Grounding, for example by using retrieval-augmented generation, gives the model trusted data to answer from." },
+        { "text": "Increase the maximum output tokens.", "why": "Longer answers do not make them more accurate." },
+        { "text": "Remove the system message.", "why": "The system message helps control behaviour; removing it does not reduce hallucinations." }
+      ],
+      "answer": [1],
+      "explanation": "Confident but incorrect answers are hallucinations. Grounding the model in trusted data is the primary mitigation.",
+      "objective": "1.2.1"
+    },
+    {
+      "id": "ai-genaiworks-4",
+      "type": "multi",
+      "question": "Which TWO statements about embeddings are correct?",
+      "options": [
+        { "text": "Embeddings represent text as vectors of numbers.", "why": "Correct. An embedding is a numeric vector." },
+        { "text": "Texts with similar meanings have embeddings that are close together.", "why": "Correct. This property enables semantic search and retrieval." },
+        { "text": "Embeddings are the images that a model generates.", "why": "Embeddings are numeric representations, not generated images." },
+        { "text": "Embeddings control how random a model's output is.", "why": "Randomness is controlled by settings such as temperature and top_p." }
+      ],
+      "answer": [0, 1],
+      "explanation": "Embeddings are vectors that capture meaning, so similar texts produce similar vectors. Retrieval-augmented generation uses them to find relevant content.",
+      "objective": "1.2.1"
+    },
+    {
+      "id": "ai-genaiworks-5",
+      "type": "single",
+      "scenario": "During a long conversation, a chat application stops taking into account details that the user provided at the start of the conversation.",
+      "question": "What is the most likely cause?",
+      "options": [
+        { "text": "The conversation exceeded the model's context window.", "why": "Correct. Tokens that no longer fit in the context window cannot be considered." },
+        { "text": "The content filter blocked the earlier messages.", "why": "A content filter would block harmful content, not quietly drop earlier details." },
+        { "text": "The temperature is set to 0.", "why": "A temperature of 0 makes output more focused but does not remove earlier messages." },
+        { "text": "The model was retrained during the conversation.", "why": "Models are not retrained by conversations at inference time." }
+      ],
+      "answer": [0],
+      "explanation": "The context window limits the total tokens, prompt plus response, that a model can process. Older messages must be dropped or summarised when it is full.",
+      "objective": "1.2.1"
+    }
+  ]
+}

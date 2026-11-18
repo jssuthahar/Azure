@@ -3,7 +3,7 @@
  * Prices written as $12.34 are shown in the learner's currency (default INR).
  * Prices are illustrative pay-as-you-go list prices, for "price feel" only.
  */
-export interface Sim { mode?: 'datacenter' | 'zones' | 'regions' | 'redundancy' | 'scale' | 'network'; start?: number; tour?: string; intro: string }
+export interface Sim { mode?: import('../sims3d').Mode3D; start?: number; tour?: string; intro: string }
 export interface Comparison {
   slug: string;
   title: string;

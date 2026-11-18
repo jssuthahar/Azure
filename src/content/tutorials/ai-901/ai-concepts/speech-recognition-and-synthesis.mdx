@@ -1,0 +1,190 @@
+---
+title: Speech Recognition and Speech Synthesis
+seoTitle: Speech to Text and Text to Speech in Azure | AI-901
+description: Learn AI-901 speech recognition and synthesis with speech to text, neural voices, SSML, speech translation, speaker diarization and custom speech.
+answer: >-
+  **Speech recognition** (speech to text) turns spoken audio into text, and **speech synthesis** (text to speech) turns text into natural-sounding audio using **neural voices**. **Azure Speech in Foundry Tools** adds **speaker diarization** (who spoke when), **speech translation**, **SSML** to control rate, pitch, pauses and speaking style, and **custom speech** to improve accuracy on your own vocabulary and accents. Audio-capable multimodal models can also take speech in and give speech back.
+updated: 2026-11-18
+readingMinutes: 8
+keyTerms:
+  - term: Speech to text (speech recognition)
+    definition: Converts spoken audio into written text, in real time, as fast transcription or as batch transcription of recorded files.
+  - term: Text to speech (speech synthesis)
+    definition: Converts written text into spoken audio using a synthetic voice.
+  - term: Neural voice
+    definition: A synthetic voice built with deep neural networks that sounds close to natural human speech, such as en-IN-NeerjaNeural.
+  - term: SSML
+    definition: Speech Synthesis Markup Language, an XML format that controls how text is spoken, including rate, pitch, pauses, pronunciation and style.
+  - term: Speaker diarization
+    definition: Labels which speaker said each part of a transcript, answering "who spoke when".
+  - term: Speech translation
+    definition: Recognises speech in one language and returns text or speech in another language.
+  - term: Custom speech
+    definition: Trains the speech recognition model with your own audio and text to improve accuracy on specific words, accents or noisy settings.
+interview:
+  - level: beginner
+    q: What's the difference between speech recognition and speech synthesis?
+    a: >-
+      Recognition is listening: audio in, text out. Synthesis is speaking: text in, audio out. A voice assistant uses both. It recognises your question, works out an answer, then synthesises the reply as speech.
+    followUps:
+      - q: What's another name for each?
+        a: >-
+          Speech recognition is also called speech to text. Speech synthesis is also called text to speech.
+  - level: intermediate
+    q: What would you use SSML for?
+    a: >-
+      To control how a neural voice says something. I can slow down the reading of an account number, add a short pause before a key point, change pitch, spell out characters, or pick a speaking style such as cheerful or empathetic on voices that support styles.
+    followUps: []
+  - level: experienced
+    q: Transcripts keep getting your product names and medical terms wrong. What would you do?
+    a: >-
+      First try a phrase list for a quick fix. If accuracy still isn't good enough, use custom speech: upload sample audio with human transcripts or related text so the model learns the vocabulary and accents, then test it against the base model and deploy a custom endpoint.
+    followUps: []
+  - level: scenario
+    q: A call centre wants transcripts that show what the agent said and what the customer said. Which feature is that?
+    a: >-
+      Speaker diarization. It labels each part of the transcript by speaker, so you get "Speaker 1" and "Speaker 2" turns instead of one block of text. Batch transcription of recorded calls supports it, and so does real-time transcription.
+    followUps: []
+revision:
+  keyPoints:
+    - Speech to text turns audio into text; text to speech turns text into audio.
+    - Neural voices sound natural; SSML controls rate, pitch, pauses, pronunciation and style.
+    - Speaker diarization labels who spoke when.
+    - Speech translation turns speech in one language into text or speech in another.
+    - Custom speech improves recognition accuracy on your own vocabulary, accents and audio conditions.
+  mistakes:
+    - Mixing up recognition (listening) and synthesis (speaking).
+    - Thinking SSML is a separate voice. It's markup that controls how an existing voice speaks.
+    - Using custom speech to change how a voice sounds. That's custom voice (limited access).
+  examTips:
+    - '"Convert recorded meetings into text" = **speech to text**.'
+    - '"Read notifications aloud in a natural voice" = **text to speech** with a **neural voice**.'
+    - '"Identify which person said each sentence" = **speaker diarization**.'
+    - '"Improve recognition of industry jargon" = **custom speech**.'
+  quick:
+    - q: Which feature answers "who spoke when"?
+      a: Speaker diarization.
+    - q: What does SSML stand for?
+      a: Speech Synthesis Markup Language.
+    - q: Which Foundry Tool handles speech to text and text to speech?
+      a: Azure Speech in Foundry Tools.
+    - q: Which feature turns Hindi speech into English text?
+      a: Speech translation.
+    - q: What is speech synthesis also called?
+      a: Text to speech.
+references:
+  - title: What is the Speech service?
+    url: https://learn.microsoft.com/azure/ai-services/speech-service/overview
+  - title: Study guide for Exam AI-901
+    url: https://learn.microsoft.com/en-us/credentials/certifications/resources/study-guides/ai-901
+related:
+  - ai-workloads
+  - azure-speech-app
+  - spoken-prompts-multimodal
+---
+
+## Start with a question
+
+<Story question="How does a railway enquiry line understand you and talk back?">
+
+You call and say "PNR status, please". The system has to **listen** and turn your words into text. Then, once it has the answer, it has to **speak** it back in a voice you can follow, slowly enough that you catch the coach and seat number.
+
+The listening part is **speech recognition**. The speaking part is **speech synthesis**. Most voice apps use both.
+
+</Story>
+
+## Explain it like I'm 10
+
+<Eli10>
+
+Think of two helpers.
+
+The first is a super-fast typist who writes down everything you say. That's speech to text.
+
+The second reads anything you write out loud, in a friendly voice. That's text to speech.
+
+You can even tell the reader "slow down here" or "sound happy", and it will.
+
+</Eli10>
+
+## The technical explanation
+
+**Azure Speech in Foundry Tools** covers both directions, plus a few extras the exam likes to ask about.
+
+| Feature | Input → output | Example |
+| --- | --- | --- |
+| **Speech to text** (recognition) | Audio → text | Live captions in a class, transcripts of recorded calls |
+| **Speaker diarization** | Audio → text with speaker labels | "Agent:" and "Customer:" turns in a call transcript |
+| **Speech translation** | Speech in one language → text or speech in another | A Tamil-speaking customer and an English-speaking agent |
+| **Text to speech** (synthesis) | Text → audio | Reading a delivery update aloud in an app |
+| **SSML** | Marked-up text → controlled audio | Slow down for an OTP, pause before the total |
+| **Custom speech** | Your audio and text → a tuned recognition model | Recognising drug names or a regional accent |
+| **Custom or personal voice** (limited access) | Recordings → a unique synthetic voice | A brand voice for a bank's helpline |
+
+Speech to text comes in three flavours. **Real-time** transcribes as someone talks (captions, voice commands). **Fast transcription** returns a recorded file's transcript quickly. **Batch transcription** processes large sets of recordings asynchronously.
+
+For speech synthesis, **neural voices** sound close to a real person. There are hundreds across languages and locales, including Indian voices such as `en-IN-NeerjaNeural` and `hi-IN-SwaraNeural`, and multilingual voices like `en-US-AvaMultilingualNeural`. **SSML** lets you shape how they speak:
+
+```xml
+<speak version="1.0" xml:lang="en-IN">
+  <voice name="en-IN-NeerjaNeural">
+    Your one-time password is
+    <prosody rate="slow">4 7 2 9</prosody>.
+    <break time="500ms"/> It expires in five minutes.
+  </voice>
+</speak>
+```
+
+<Flow
+  caption="A simple voice assistant uses both directions"
+  steps={[
+    { title: 'Speech to text', text: 'Recognise the spoken question.' },
+    { title: 'Understand and answer', text: 'A language model or app logic works out the reply.' },
+    { title: 'Text to speech', text: 'A neural voice speaks the answer.' },
+  ]}
+/>
+
+That pipeline isn't the only way any more. **Audio-capable multimodal models** (such as the gpt-audio family, or gpt-realtime for low-latency conversations) accept speech directly and can reply in speech. The **Voice Live API** combines recognition, a model and synthesis for live voice agents.
+
+<TryIt labs="ai-speech" text="Transcribe a short clip, then make a neural voice read a sentence and change its speed with SSML." />
+
+<Callout type="exam">
+Look at the direction. Audio to text is **speech recognition** (speech to text). Text to audio is **speech synthesis** (text to speech). "Who said what" is **speaker diarization**. "Control pauses, speed or pitch" is **SSML**. "Better accuracy on our product names or accents" is **custom speech**, while a unique branded voice is **custom voice**.
+</Callout>
+
+<DeepDive title="Picking the right recognition mode">
+
+Single-shot recognition in the SDK handles one utterance of up to about 30 seconds, which suits voice commands. For anything longer, use continuous recognition. For a library of recorded calls, batch transcription is cheaper and supports diarization at scale. Phrase lists are the quick fix for a few unusual words; custom speech is the heavier, trained fix when phrase lists aren't enough. Custom and personal voice are limited-access features because synthetic voices can be misused, and they require consent from the voice talent.
+
+</DeepDive>
+
+## Real-world business scenario
+
+<Scenario
+  company="Margie's Travel, a bus booking company in Hyderabad"
+  industry="Travel"
+  problem="Its phone line couldn't keep up at festival time. Callers spoke Telugu, Hindi and English, and agents had no record of what was agreed on calls."
+  service="Used Azure Speech in Foundry Tools: real-time speech to text for a voice booking bot, neural voices to read back seat numbers with SSML pauses, speech translation for agents, and batch transcription with diarization for recorded calls."
+  why="Speech services cover listening, speaking and translation in one place, and diarized transcripts give a clear record of who agreed to what."
+  outcome="Simple bookings were handled by the voice bot, agents handled the tricky calls, and disputes were settled by checking the transcript."
+/>
+
+## When to use it and when not to
+
+<UseWhen
+  use={[
+    'Captions, meeting notes and call transcripts (**speech to text**).',
+    'Reading content aloud for accessibility or voice apps (**text to speech**).',
+    'Calls or meetings where you need to know **who spoke when**.',
+    'Specialist vocabulary or strong accents that hurt accuracy (**custom speech**).',
+  ]}
+  avoid={[
+    "Don't use single-shot recognition for long recordings; use continuous or batch transcription.",
+    "Don't create a synthetic voice of a real person without their consent. Custom and personal voice are limited access for that reason.",
+    "Don't train custom speech before trying a phrase list for a handful of unusual words.",
+  ]}
+  alternatives={[
+    '**Audio-capable multimodal models** to take spoken prompts and reply in speech directly.',
+    '**Azure Content Understanding** to turn call recordings into transcripts, summaries and fields in one analyzer.',
+  ]}
+/>

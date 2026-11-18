@@ -1,0 +1,182 @@
+---
+title: 'Text Analysis: Key Phrases, Entities, Sentiment and Summaries'
+seoTitle: 'Text Analysis: Sentiment, Entities, Key Phrases | AI-901'
+description: Learn AI-901 text analysis with key phrases, NER, entity linking, PII detection, sentiment and opinion mining, summaries and language detection.
+answer: >-
+  **Text analysis** pulls meaning out of text that already exists. The main techniques are **key phrase extraction** (the main talking points), **entity detection** (people, places, organisations, dates, plus **entity linking** and **PII** detection), **sentiment analysis** with **opinion mining** (positive, negative, neutral or mixed, and about what), **summarisation** (extractive or abstractive) and **language detection**. In Azure you can use **Azure Language in Foundry Tools** for fixed, structured output, or prompt a **language model** for more flexible results.
+updated: 2026-11-18
+readingMinutes: 8
+keyTerms:
+  - term: Key phrase extraction
+    definition: Finds the main talking points in a text, such as "delivery time" or "battery life".
+  - term: Named entity recognition (NER)
+    definition: Detects and categorises entities in text, such as people, locations, organisations, dates and quantities.
+  - term: Entity linking
+    definition: Matches an entity to a known reference (such as a Wikipedia entry) to tell apart things with the same name.
+  - term: PII detection
+    definition: Finds personal information such as phone numbers, email addresses and ID numbers so you can redact it.
+  - term: Sentiment analysis
+    definition: Labels text as positive, negative, neutral or mixed, with confidence scores per document and per sentence.
+  - term: Opinion mining
+    definition: Part of sentiment analysis that links each opinion to its target, such as "battery (negative)" and "screen (positive)".
+  - term: Extractive summarisation
+    definition: Picks the most important sentences from the original text.
+  - term: Abstractive summarisation
+    definition: Writes a new, shorter summary in its own words.
+interview:
+  - level: beginner
+    q: What's the difference between sentiment analysis and opinion mining?
+    a: >-
+      Sentiment analysis tells you the overall feeling: "this review is mixed". Opinion mining tells you what each feeling is about: the food was great, the service was slow. So opinion mining is the more detailed, aspect-level view.
+    followUps:
+      - q: What labels does sentiment analysis return?
+        a: >-
+          Positive, negative, neutral or mixed, with confidence scores, for the whole document and for each sentence.
+  - level: intermediate
+    q: How is entity linking different from named entity recognition?
+    a: >-
+      NER finds an entity and gives it a category, like "Amazon" is an organisation. Entity linking goes further and decides which Amazon: the company or the river, by matching it to a known reference. NER says what kind, linking says which one.
+    followUps: []
+  - level: experienced
+    q: When would you use Azure Language instead of prompting a language model?
+    a: >-
+      When I need fixed, predictable output with confidence scores, such as PII redaction or NER feeding a database, or when per-feature pricing works out cheaper at high volume. I'd prompt an LLM when I need flexibility, like custom categories or several tasks combined in one call. Microsoft has also said some Language features retire in March 2029 in favour of Foundry models, so new designs often use models for sentiment and summaries.
+    followUps: []
+  - level: scenario
+    q: A bank must remove account numbers and phone numbers from chat transcripts before analysts read them. What would you use?
+    a: >-
+      PII detection in Azure Language. It finds those values, categorises them and returns a redacted version of the text, so analysts can work with transcripts without seeing personal data.
+    followUps: []
+revision:
+  keyPoints:
+    - Key phrase extraction finds the main talking points.
+    - NER finds and categorises entities; entity linking says which real-world thing is meant; PII detection finds personal data to redact.
+    - Sentiment analysis returns positive, negative, neutral or mixed; opinion mining ties opinions to their targets.
+    - Extractive summaries pick existing sentences; abstractive summaries write new ones.
+    - Azure Language in Foundry Tools gives structured output; language models can do the same tasks with prompts.
+  mistakes:
+    - Mixing up key phrases (talking points) with entities (named, categorised things).
+    - Thinking sentiment analysis only gives one label per document. It also scores each sentence.
+    - Forgetting that abstractive summaries can include words not in the source.
+  examTips:
+    - '"Identify the main talking points" = **key phrase extraction**.'
+    - '"Find people, places, organisations, dates" = **named entity recognition**.'
+    - '"Mask phone numbers and email addresses" = **PII detection**.'
+    - '"Which product feature did customers dislike?" = **opinion mining**.'
+  quick:
+    - q: Which technique tells "Paris the city" apart from "Paris the person"?
+      a: Entity linking.
+    - q: What four labels can sentiment analysis return?
+      a: Positive, negative, neutral and mixed.
+    - q: Which summary type writes new sentences?
+      a: Abstractive summarisation.
+    - q: Which Foundry Tool provides text analysis features?
+      a: Azure Language in Foundry Tools.
+    - q: Which technique finds the language a review is written in?
+      a: Language detection.
+references:
+  - title: What is Azure Language?
+    url: https://learn.microsoft.com/azure/ai-services/language-service/overview
+  - title: Study guide for Exam AI-901
+    url: https://learn.microsoft.com/en-us/credentials/certifications/resources/study-guides/ai-901
+related:
+  - ai-workloads
+  - text-analysis-app
+  - information-extraction
+---
+
+## Start with a question
+
+<Story question="You've got 10,000 customer reviews. How do you find out what people actually think?">
+
+Reading them all would take weeks. You'd want to know quickly: are people happy? What are they talking about most? Which products, which cities? Are they complaining about delivery or about the product itself?
+
+That's **text analysis**: software reading the text for you and pulling out feelings, topics, names and a short summary.
+
+</Story>
+
+## Explain it like I'm 10
+
+<Eli10>
+
+Imagine a very fast reader with coloured highlighters.
+
+Yellow for the important ideas. Blue for names of people and places. Red for anything private, like a phone number.
+
+Then they put a happy or sad face next to each sentence, and write a two-line summary at the bottom.
+
+That's what text analysis does, in seconds.
+
+</Eli10>
+
+## The technical explanation
+
+Text analysis works on text you already have: reviews, emails, chat logs, tickets, transcripts. It doesn't write anything new (except abstractive summaries). Here's what each technique gives you, using one review as the example:
+
+> "Ordered a Contoso phone from the Mumbai store on 3 March. Screen is gorgeous but the battery barely lasts a day. Call me on 98200 12345."
+
+| Technique | What it returns | From the example |
+| --- | --- | --- |
+| **Language detection** | The language and a confidence score | English |
+| **Key phrase extraction** | Main talking points | "Contoso phone", "Mumbai store", "battery", "screen" |
+| **Named entity recognition (NER)** | Entities with categories | Contoso (Organization), Mumbai (Location), 3 March (DateTime) |
+| **Entity linking** | Which real-world thing an entity is, with a reference link | Mumbai linked to the city's Wikipedia entry |
+| **PII detection** | Personal data, with a redacted copy of the text | 98200 12345 (Phone number) replaced with asterisks |
+| **Sentiment analysis** | Positive, negative, neutral or mixed, per document and per sentence | Document: mixed |
+| **Opinion mining** | Each opinion and what it's about | screen: positive ("gorgeous"), battery: negative ("barely lasts") |
+| **Summarisation** | A shorter version: **extractive** (picks sentences) or **abstractive** (rewrites) | "Customer likes the screen but the battery life is poor." |
+
+Azure Language also includes conversational language understanding, custom question answering and Text Analytics for health, but the exam objective focuses on the techniques above.
+
+<Compare
+  caption="Two ways to analyse text in Azure"
+  columns={[
+    { title: 'Azure Language in Foundry Tools', icon: '🏷️', tone: 'accent', items: ['Fixed features: sentiment, NER, PII, key phrases, summaries', 'Structured JSON output with confidence scores', 'Same input gives the same output', 'Priced per text record'] },
+    { title: 'Prompting a language model', icon: '💬', tone: 'neutral', items: ['Any task you can describe in a prompt', 'Custom categories and formats', 'Several tasks in one call', 'Pay per token; output needs checking'] },
+  ]}
+/>
+
+Microsoft has announced that key phrase extraction, sentiment analysis, summarisation, entity linking, CLU and custom question answering in Azure Language retire on **31 March 2029**, with Foundry models as the replacement. Language detection, PII detection, NER and Text Analytics for health continue.
+
+<TryIt labs="ai-text-insights" text="Paste a review into the Language playground and run sentiment, key phrases, entities, PII and a summary on it." />
+
+<Callout type="exam">
+Match the verb to the technique. "Main talking points" is **key phrases**. "Names of people, places, companies, dates" is **NER**. "Which one is meant" is **entity linking**. "Redact personal details" is **PII detection**. "How customers feel" is **sentiment**, and "how they feel about each feature" is **opinion mining**. "Shorter version" is **summarisation**.
+</Callout>
+
+<DeepDive title="Confidence scores and long documents">
+
+Every Language result comes with confidence scores between 0 and 1. Use a threshold before acting automatically: for example, only route a ticket to the angry-customer queue when negative sentiment is above 0.8, and send borderline ones to a person. Requests have size limits per document and per call, so long documents are split into chunks. Summaries of long texts use the asynchronous (long-running) operations.
+
+</DeepDive>
+
+## Real-world business scenario
+
+<Scenario
+  company="Wide World Foods, a restaurant chain across India"
+  industry="Hospitality"
+  problem="Thousands of reviews and feedback forms came in each week in English and Hindi. Managers only read a handful and missed patterns, and some forms contained customers' phone numbers."
+  service="Ran every review through Azure Language: language detection, sentiment with opinion mining, NER for branch names, PII detection to redact phone numbers, and a weekly abstractive summary per branch."
+  why="The output is structured and scored, so it fed straight into a dashboard. PII redaction let regional managers read feedback without seeing personal data."
+  outcome="Managers spotted that one city's branches had slow-service complaints within a week, and fixed staffing before ratings dropped further."
+/>
+
+## When to use it and when not to
+
+<UseWhen
+  use={[
+    'Analysing large volumes of reviews, tickets, emails or transcripts.',
+    'Redacting personal data before people or other systems see the text.',
+    'Feeding structured results (sentiment, entities) into dashboards or databases.',
+    'Prompting a language model when you need custom categories or several tasks at once.',
+  ]}
+  avoid={[
+    "Don't use text analysis to write replies. That's generative AI.",
+    "Don't act automatically on low-confidence results; send them to a person.",
+    "Don't use it to pull specific fields from invoices or forms. Information extraction tools suit that better.",
+  ]}
+  alternatives={[
+    '**A Foundry model with a prompt** for flexible, combined analysis.',
+    '**Azure Content Understanding** to extract defined fields from documents, audio and video.',
+  ]}
+/>

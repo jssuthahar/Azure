@@ -13,7 +13,7 @@ import CourseFeatures from '../../components/course/CourseFeatures.astro';
 import CourseDiscussion from '../../components/CourseDiscussion.astro';
 import { getNav, getQuestionBank, moduleUrl } from '../../lib/learn';
 import { getGlossary } from '../../lib/glossary';
-import { LABS } from '../../lib/sim/labs';
+import { labsForExam } from '../../lib/sim/labs';
 import { SITE } from '../../config';
 import { difficulty } from '../../data/certifications';
 import { getExam, examStaticPaths } from '../../data/exams';
@@ -43,7 +43,7 @@ const includes: [string, string][] = [
   ['✅', `${bank.length} original practice questions`],
   ['🧊', `${scenes} interactive 3D scenes`],
   ['🖥️', `${tours} Azure portal walkthroughs`],
-  ['🧪', `${LABS.length} hands-on labs + Cloud Shell`],
+  ['🧪', `${labsForExam(exam.slug).length} hands-on labs + Cloud Shell`],
   ['⏱️', 'Timed mock exams with a score report'],
   ['💼', `${interviewCount} interview questions with answers`],
   ['📖', `${glossaryCount}-term glossary, cheat sheet, flashcards`],

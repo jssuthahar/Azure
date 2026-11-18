@@ -1,0 +1,220 @@
+---
+title: Build an App with Vision Capabilities
+seoTitle: Build a Python Vision App with Microsoft Foundry | AI-901
+description: Build a small Python app that sends a photo to a multimodal model with the Foundry SDK and reads the answer, plus when to use Azure Vision. For AI-901.
+answer: >-
+  A lightweight **vision app** reads an image file, encodes it as base64 and sends it to a **multimodal model deployment** (such as GPT-4.1) through the **Foundry SDK**, with an `input_image` part next to an `input_text` question in `responses.create`. The model's reply comes back in `response.output_text`. For fixed outputs like **captions, tags and OCR**, **Azure Vision in Foundry Tools** image analysis is the lighter alternative.
+updated: 2026-11-18
+readingMinutes: 8
+keyTerms:
+  - term: Multimodal model
+    definition: A model that accepts more than one kind of input, such as text and images, in the same prompt.
+  - term: input_image
+    definition: The content part in a Responses API message that carries an image as a data URL or an https URL.
+  - term: Data URL
+    definition: A string like data:image/jpeg;base64,... that embeds a file's bytes directly in the request.
+  - term: Azure Vision in Foundry Tools
+    definition: The image analysis service that returns captions, tags, objects, people and OCR text from images.
+  - term: DefaultAzureCredential
+    definition: An Azure Identity class that signs your app in with Microsoft Entra ID, using az login on your own machine.
+interview:
+  - level: beginner
+    q: How does a Python app send a photo to a model in Foundry?
+    a: >-
+      It reads the file, base64-encodes it and builds a data URL. Then it calls responses.create on the OpenAI client from the AIProjectClient, with a user message that has an input_text part for the question and an input_image part for the photo. The answer is in response.output_text.
+    followUps:
+      - q: Can you send an image URL instead?
+        a: >-
+          Yes. If the image is reachable over https, I put that URL in image_url instead of a data URL.
+  - level: intermediate
+    q: When would you use Azure Vision image analysis instead of a multimodal model?
+    a: >-
+      When I need the same structured output every time, like a caption, a tag list or the printed text from OCR, at high volume. Image analysis gives predictable JSON. A multimodal model is better when the question changes, like "Is this shelf fully stocked?" or "Explain this chart".
+    followUps: []
+  - level: experienced
+    q: How do you keep a vision app secure and cheap?
+    a: >-
+      I use DefaultAzureCredential with the Foundry User role instead of keys in code, keep the endpoint in an environment variable, and resize large photos before sending them because big images use more tokens. I also give the model clear instructions and ask for short or JSON answers so the app can parse them.
+    followUps: []
+  - level: scenario
+    q: A warehouse wants staff to photograph damaged boxes and get a short damage report. How would you build it?
+    a: >-
+      A small Python or web app takes the photo, sends it with instructions like "Describe any visible damage in one sentence and rate it minor, moderate or severe" to a multimodal deployment, and saves the reply with the order number. I'd test the prompt in the playground first and use View code to start the app.
+    followUps: []
+revision:
+  keyPoints:
+    - A vision app sends an image plus a question to a multimodal model deployment and reads the text reply.
+    - With the Foundry SDK, get the OpenAI client from AIProjectClient and call responses.create.
+    - The image goes in an input_image part as a base64 data URL or an https URL.
+    - The model parameter is the deployment name, and auth uses Microsoft Entra ID (DefaultAzureCredential).
+    - Azure Vision image analysis is the alternative for fixed captions, tags, objects and OCR.
+  mistakes:
+    - Sending an image to a text-only model. The deployment must be multimodal.
+    - Putting a raw file path in image_url. It needs a data URL or a public https URL.
+  examTips:
+    - '"Ask a question about a photo from a Python app" = **multimodal model** + **input_image** in the Foundry SDK.'
+    - '"Captions, tags or read printed text with no prompt" = **Azure Vision** image analysis.'
+  quick:
+    - q: Which content part carries the photo in the Responses API?
+      a: input_image.
+    - q: Where is the model's answer?
+      a: response.output_text.
+    - q: What does the model parameter hold?
+      a: The deployment name.
+    - q: Which credential does AIProjectClient use?
+      a: Microsoft Entra ID, for example DefaultAzureCredential.
+    - q: Which service gives captions, tags and OCR without a prompt?
+      a: Azure Vision in Foundry Tools (image analysis).
+references:
+  - title: Get started with code in Microsoft Foundry
+    url: https://learn.microsoft.com/azure/foundry/quickstarts/get-started-code
+  - title: What is Azure Vision in Foundry Tools?
+    url: https://learn.microsoft.com/azure/ai-services/computer-vision/overview
+  - title: AI-901 study guide
+    url: https://learn.microsoft.com/en-us/credentials/certifications/resources/study-guides/ai-901
+related:
+  - visual-prompts-multimodal
+  - image-generation
+  - chat-app-with-foundry-sdk
+---
+
+## Start with a question
+
+<Story question="Could my phone tell me if a plant leaf is diseased just from a photo?">
+
+Ravi grows tomatoes on a small farm near Nashik. Some leaves have brown spots and he doesn't know if it's a fungus or just too much sun.
+
+What he wants is simple: snap a photo, ask "What's wrong with this leaf?", get a short answer. Behind that is a tiny app that sends the photo and the question to a **multimodal model** in Microsoft Foundry and prints the reply. You can write that app in about 20 lines of Python.
+
+</Story>
+
+## Explain it like I'm 10
+
+<Eli10>
+
+Think of posting a letter to a very clever pen pal.
+
+You put a photo in the envelope and write a note: "What animal is this?"
+
+The pen pal looks at the photo, reads your note and writes back: "It's a red panda."
+
+Your app is the envelope. It packs the photo and the question together, sends them to the model, and reads the reply out to you.
+
+</Eli10>
+
+## The technical explanation
+
+A lightweight vision app does four things: **load** an image, **encode** it, **send** it with a question to a multimodal deployment, and **read** the answer. You test the prompt first in the chat playground (attach an image, ask a question), then use **View code** to get a starting script.
+
+<Flow
+  caption="The vision app loop"
+  steps={[
+    { title: 'Load', text: 'Read the photo file from disk or a camera.' },
+    { title: 'Encode', text: 'Base64-encode it into a data URL.' },
+    { title: 'Send', text: 'responses.create with input_text and input_image.' },
+    { title: 'Read', text: 'Print response.output_text or save it.' },
+  ]}
+/>
+
+### What you need
+
+- A Foundry project with a **multimodal model** deployed, such as GPT-4.1, GPT-4.1-mini or GPT-4o.
+- The **project endpoint** in an environment variable, `FOUNDRY_PROJECT_ENDPOINT`.
+- Signed in with `az login` and the **Foundry User** role on the project. The AIProjectClient uses Microsoft Entra ID only, so there's no key in the code.
+
+### The app
+
+```python
+# vision_app.py
+# pip install "azure-ai-projects>=2.3.0" azure-identity
+import base64, os
+from azure.identity import DefaultAzureCredential
+from azure.ai.projects import AIProjectClient
+
+project = AIProjectClient(
+    endpoint=os.environ["FOUNDRY_PROJECT_ENDPOINT"],
+    credential=DefaultAzureCredential(),
+)
+openai = project.get_openai_client()
+
+# 1. Load and encode the photo as a data URL
+with open("leaf.jpg", "rb") as f:
+    image_b64 = base64.b64encode(f.read()).decode("utf-8")
+data_url = f"data:image/jpeg;base64,{image_b64}"
+
+# 2. Send the question and the image together
+response = openai.responses.create(
+    model="gpt-4.1-mini",   # your multimodal deployment name
+    instructions="You help farmers. Answer in two short sentences.",
+    input=[{
+        "role": "user",
+        "content": [
+            {"type": "input_text", "text": "What might be wrong with this tomato leaf?"},
+            {"type": "input_image", "image_url": data_url},
+        ],
+    }],
+)
+
+# 3. Read the answer
+print(response.output_text)
+```
+
+A few things to notice:
+
+- `model` is the **deployment name**, not the model family.
+- The image can be a **data URL** (as above) or a public **https URL**.
+- `instructions` works like a system message. Use it to control tone and length, or to ask for JSON your app can parse.
+- You can loop and ask follow-up questions with `previous_response_id` or a conversation, just like a chat app.
+
+<TryIt labs="ai-vision" text="Run vision_app.py against a sample photo, then change the question and the instructions and compare the answers." />
+
+### The alternative: Azure Vision image analysis
+
+Not every vision task needs a prompt. **Azure Vision in Foundry Tools** image analysis returns fixed, structured results: a **caption**, dense captions, **tags**, detected **objects** and people, smart-crop suggestions and printed or handwritten text with **OCR (Read)**. It uses its own SDK (`azure-ai-vision-imageanalysis`) and returns the same JSON shape every time.
+
+| Need | Pick |
+| --- | --- |
+| Ask a different question about each photo, explain a chart, compare two images | Multimodal model via the Foundry SDK |
+| Same caption and tags for millions of catalogue photos | Azure Vision image analysis |
+| Read the text on a sign or a label | Azure Vision OCR (Read), or a multimodal model for a quick one-off |
+| Pull named fields from images into a schema you define | Content Understanding |
+
+<Callout type="exam">
+If the question says the app must **answer questions about an image** or follow instructions about it, the answer is a **multimodal model** with an image in the prompt. If it lists **captions, tags or OCR** as the output with no prompt, it's **Azure Vision** image analysis. And remember the code clue: `input_image` sits next to `input_text` in the same user message.
+</Callout>
+
+<DeepDive title="Image size, tokens and detail">
+
+Images are turned into tokens before the model sees them, and bigger images cost more tokens. Resize phone photos (often 4,000 pixels wide) to something like 1,024 pixels on the long side before sending, unless tiny details matter. Some models accept a `detail` setting (`low`, `high`, `auto`) on the image part; `low` is cheaper and fine for "what's in this photo?" questions. Keep sensitive photos in mind too: guardrails apply to image inputs, and you should tell users what happens to the pictures they upload.
+
+</DeepDive>
+
+## Real-world business scenario
+
+<Scenario
+  company="Contoso Insurance, Pune"
+  industry="Insurance"
+  problem="Claim handlers spent hours reading customer photos of minor home damage before deciding who should visit."
+  service="A small Python service sends each claim photo to a GPT-4.1-mini deployment in Foundry with instructions to describe the damage and rate it minor, moderate or severe in JSON, and stores the result with the claim."
+  why="The question needs judgement about each photo, which a multimodal model handles, and Entra ID authentication keeps keys out of the code."
+  outcome="Handlers now start each claim with a one-line damage summary and spend their time on the severe cases first."
+/>
+
+## When to use it and when not to
+
+<UseWhen
+  use={[
+    'Apps that ask open questions about photos, screenshots, charts or diagrams.',
+    'Quick prototypes: test in the playground, then View code and extend the script.',
+    'Answers that need judgement or explanation, not just a label.',
+  ]}
+  avoid={[
+    'High-volume, fixed outputs like captions, tags or OCR. Azure Vision image analysis is cheaper and more predictable.',
+    'Pulling the same named fields out of thousands of images or forms. Use Content Understanding.',
+    'Decisions with legal or safety impact without a person checking the answer.',
+  ]}
+  alternatives={[
+    '**Azure Vision in Foundry Tools** for captions, tags, objects and OCR.',
+    '**Content Understanding** for structured fields with confidence scores.',
+  ]}
+/>

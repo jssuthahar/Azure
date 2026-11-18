@@ -5,9 +5,11 @@
  */
 import type { Lab } from '../lib/sim/labs';
 import { inlineMd } from '../lib/learn';
+import { examFromPath } from '../data/exams';
 import '../styles/portal.css';
 interface Props { lab: Lab }
 const { lab } = Astro.props;
+const labsHub = `/${lab.exam ?? examFromPath(Astro.url.pathname).slug}/labs/`;
 ---
 <div class="sim-root grid gap-5 lg:grid-cols-[22rem_minmax(0,1fr)]" data-lab={lab.id} data-start={lab.start}>
   <!-- Tasks -->
@@ -55,7 +57,7 @@ const { lab } = Astro.props;
       <p class="text-5xl">🏆</p>
       <p class="mt-2 text-xl font-bold">Lab complete!</p>
       <p class="mt-2 text-sm leading-relaxed">{lab.wrap}</p>
-      <a href="/az-900/labs/" class="nav-btn mt-4">More labs ❯</a>
+      <a href={labsHub} class="nav-btn mt-4">More labs ❯</a>
     </div>
     <p class="sim-disclaimer rounded-lg border border-dashed border-default p-3 text-xs leading-relaxed text-muted">🎓 <strong>For education only.</strong> This is a simulation of the Azure portal and Cloud Shell built for learning. It is not affiliated with or endorsed by Microsoft, needs no Azure account, and nothing touches real Azure or costs money. Prices are illustrative.</p>
   </aside>
@@ -119,7 +121,7 @@ const { lab } = Astro.props;
   import { money } from '../lib/currency';
 
   /** Extra state the practice world keeps beyond resource groups and resources. */
-  const WORLD_KEYS = ['users', 'groups', 'roles', 'current', 'ca', 'mgs', 'subParent', 'policies', 'budgets', 'outage', 'notices', 'migrate', 'databox'] as const;
+  const WORLD_KEYS = ['users', 'groups', 'roles', 'current', 'ca', 'mgs', 'subParent', 'policies', 'budgets', 'outage', 'notices', 'migrate', 'databox', 'env', 'pip'] as const;
 
   document.querySelectorAll<HTMLElement>('.sim-root').forEach((root) => {
     const lab = ALL_LABS.find((l) => l.id === root.dataset.lab)!;

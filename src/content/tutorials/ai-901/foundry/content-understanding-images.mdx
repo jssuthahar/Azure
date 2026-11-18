@@ -1,0 +1,204 @@
+---
+title: Content Understanding for Images
+seoTitle: Content Understanding for Images Explained | AI-901
+description: Describe photos with prebuilt-imageSearch and build a custom image analyzer with classify and generate fields, like damage type from a car photo. For AI-901.
+answer: >-
+  **Azure Content Understanding** extracts information from images with an **analyzer**. The prebuilt **`prebuilt-imageSearch`** analyzer returns a written description of a photo, ready for search. For your own fields, you build a **custom analyzer** on the base analyzer **`prebuilt-image`** and add fields that use **classify** (pick from a list, such as damage type) or **generate** (write a value, such as a short description). Extract isn't available for images, and every field still comes back with a **confidence score**.
+updated: 2026-11-18
+readingMinutes: 8
+keyTerms:
+  - term: prebuilt-imageSearch
+    definition: A prebuilt Content Understanding analyzer that writes a description of an image so it can be searched.
+  - term: prebuilt-image
+    definition: The base analyzer you build custom image analyzers on, by setting it as baseAnalyzerId.
+  - term: Classify field
+    definition: A field whose value is chosen from a list you define, such as Scratch, Dent or Broken glass.
+  - term: Generate field
+    definition: A field whose value the model writes from the image, such as a one-sentence damage summary.
+  - term: Confidence score
+    definition: A value from 0 to 1 showing how sure the analyzer is about a field.
+interview:
+  - level: beginner
+    q: How can Content Understanding help with images?
+    a: >-
+      It looks at an image and returns structured information. prebuilt-imageSearch gives me a description I can index for search, and a custom analyzer can return my own fields, like the type of damage in a car photo or whether a shelf is empty.
+    followUps:
+      - q: Can it extract fields from images the same way it does from invoices?
+        a: >-
+          Not with the extract method, which is for documents only. For images I use classify or generate fields instead.
+  - level: intermediate
+    q: How would you build a custom analyzer that rates damage in car photos?
+    a: >-
+      I'd create an analyzer with baseAnalyzerId prebuilt-image and add fields: DamageType with classify and a list like Scratch, Dent, Broken glass, None; Severity with classify as Minor, Moderate, Severe; and DamageSummary with generate. Then I'd test it on sample photos in the portal and check the confidence scores.
+    followUps: []
+  - level: experienced
+    q: When would you pick Content Understanding over Azure Vision image analysis for images?
+    a: >-
+      Azure Vision gives generic outputs like captions, tags, objects and OCR. Content Understanding is better when the business needs its own schema, such as a damage category or a product condition, returned the same way for every image, with confidence scores for routing to a person.
+    followUps: []
+  - level: scenario
+    q: A retailer wants to search 50,000 product photos by plain-English descriptions like "red kurta with gold border". What would you use?
+    a: >-
+      Run prebuilt-imageSearch over the photos to get a description of each one, store the descriptions in a search index such as Azure AI Search, and let shoppers search those descriptions. No custom fields needed.
+    followUps: []
+revision:
+  keyPoints:
+    - prebuilt-imageSearch describes an image so it can be searched.
+    - Custom image analyzers start from prebuilt-image as the baseAnalyzerId.
+    - Image fields use classify or generate. Extract is for documents only.
+    - Fields return confidence scores so low-confidence results can go to a person.
+    - Use Content Understanding when you need your own schema, Azure Vision for generic captions, tags and OCR.
+  mistakes:
+    - Choosing the extract method for an image field. It only works with documents.
+    - Using prebuilt-document as the base for photos. Use prebuilt-image.
+  examTips:
+    - '"Describe each photo for search" = **prebuilt-imageSearch**.'
+    - '"Custom fields from photos, such as damage type" = custom analyzer on **prebuilt-image** with **classify** or **generate**.'
+  quick:
+    - q: Which prebuilt analyzer describes images for search?
+      a: prebuilt-imageSearch.
+    - q: Which base analyzer do custom image analyzers use?
+      a: prebuilt-image.
+    - q: Which field method picks a value from a list?
+      a: Classify.
+    - q: Which field method isn't available for images?
+      a: Extract (documents only).
+    - q: What helps route uncertain results to a person?
+      a: The confidence score on each field.
+references:
+  - title: What is Azure Content Understanding in Foundry Tools?
+    url: https://learn.microsoft.com/azure/ai-services/content-understanding/overview
+  - title: Content Understanding prebuilt analyzers
+    url: https://learn.microsoft.com/azure/ai-services/content-understanding/concepts/prebuilt-analyzers
+  - title: AI-901 study guide
+    url: https://learn.microsoft.com/en-us/credentials/certifications/resources/study-guides/ai-901
+related:
+  - content-understanding-documents
+  - content-understanding-audio-video
+  - information-extraction
+---
+
+## Start with a question
+
+<Story question="Can a photo of a dented car fill in an insurance form by itself?">
+
+Arjun scrapes his car against a pillar in a mall car park. His insurer's app asks him for three photos. A minute later the claim form already says: **Damage type: Dent and scratch. Severity: Moderate. Area: Rear left door.**
+
+No one at the insurer looked at the photos yet. A **Content Understanding** analyzer did, and it filled in fields the insurer defined, each with a score saying how sure it was.
+
+</Story>
+
+## Explain it like I'm 10
+
+<Eli10>
+
+Imagine a game where your friend looks at a picture and answers questions on a card.
+
+The card says: "What colour is the car? Pick one: red, blue, white." and "Write one sentence about what happened."
+
+Your friend ticks a colour and writes the sentence, then adds how sure they are, like "pretty sure" or "just guessing".
+
+Content Understanding plays that game with photos. You write the card once, and it fills it in for every picture.
+
+</Eli10>
+
+## The technical explanation
+
+Content Understanding handles images with the same building block as documents: an **analyzer**. You either use a prebuilt one or create your own.
+
+### Prebuilt: describe the image
+
+**`prebuilt-imageSearch`** returns a natural-language description of an image. That's handy for search and retrieval-augmented generation (RAG): index the descriptions and people can find photos by typing what they're looking for.
+
+### Custom: your own fields
+
+For business-specific answers you create a **custom analyzer**:
+
+1. Set **`baseAnalyzerId`** to **`prebuilt-image`**.
+2. Add a **field schema**: each field has a name, type, description and method.
+3. Test it on sample images in the Foundry portal and check the confidence scores.
+
+Images support two field methods:
+
+| Method | What it does | Car-photo example |
+| --- | --- | --- |
+| **Classify** | Picks one value from a list you define | `DamageType`: Scratch, Dent, Broken glass, None |
+| **Generate** | Writes a value from what it sees | `DamageSummary`: "Dent and scratch on the rear left door." |
+| Extract | Copies a value printed in a document | Not available for images |
+
+```json
+{
+  "baseAnalyzerId": "prebuilt-image",
+  "fieldSchema": {
+    "fields": {
+      "DamageType":    { "type": "string", "method": "classify", "enum": ["Scratch", "Dent", "Broken glass", "None"] },
+      "Severity":      { "type": "string", "method": "classify", "enum": ["Minor", "Moderate", "Severe"] },
+      "DamageSummary": { "type": "string", "method": "generate", "description": "One sentence describing visible damage and where it is" }
+    }
+  }
+}
+```
+
+This JSON is simplified to show the shape. In the portal you add the same fields through a form, then upload a test photo.
+
+<Flow
+  caption="A custom image analyzer at work"
+  steps={[
+    { title: 'Photo in', text: 'A car photo from the claims app.' },
+    { title: 'Analyzer', text: 'Custom analyzer based on prebuilt-image.' },
+    { title: 'Fields', text: 'DamageType, Severity and DamageSummary filled in.' },
+    { title: 'Confidence', text: 'Each field scored 0 to 1.' },
+    { title: 'Route', text: 'High scores go straight on, low scores go to an assessor.' },
+  ]}
+/>
+
+<TryIt labs="ai-extract-media" text="Run an analyzer on a sample photo, read the generated description, then check the classified fields and their confidence scores." />
+
+### Where it fits next to other vision options
+
+| Need | Pick |
+| --- | --- |
+| Generic caption, tags, objects or OCR | Azure Vision image analysis |
+| An open question about one photo | A multimodal model in the chat playground or your app |
+| The same business fields from thousands of images, with confidence scores | Content Understanding custom analyzer |
+| Descriptions for image search | `prebuilt-imageSearch` |
+
+<Callout type="exam">
+Two traps to watch. First, a question may offer **extract** as the method for an image field: it's wrong, extract is **documents only**. Second, if the scenario needs **custom categories** from photos (damage type, product condition, shelf status) with consistent output, the answer is a **Content Understanding custom analyzer** on **prebuilt-image**, not plain image tagging.
+</Callout>
+
+<DeepDive title="Writing field descriptions that work">
+
+The model fills fields from your descriptions, so the wording matters. Be specific about what counts: "Severe means the panel is torn or glass is broken; Moderate means a visible dent larger than a palm." For classify fields, keep the list short and the options clearly different, and include a "None" or "Unclear" option so the model isn't forced into a wrong choice. Then test on real, messy photos (bad lighting, odd angles) before you set your confidence threshold.
+
+</DeepDive>
+
+## Real-world business scenario
+
+<Scenario
+  company="Contoso Motor Insurance, Chennai"
+  industry="Insurance"
+  problem="Assessors spent the first day of every claim just looking at photos to decide damage type and severity, so simple claims waited as long as complex ones."
+  service="Built a Content Understanding custom analyzer on prebuilt-image with classify fields for DamageType and Severity and a generate field for a short summary. Claims with high confidence and Minor severity go to fast-track approval."
+  why="The insurer needed its own categories returned the same way for every photo, plus confidence scores to decide when a person must look."
+  outcome="Minor claims are triaged within minutes of upload, and assessors start their day with the severe and low-confidence claims."
+/>
+
+## When to use it and when not to
+
+<UseWhen
+  use={[
+    'The same business fields from many images, such as damage type, product condition or meter readings.',
+    'Image descriptions for a search index with prebuilt-imageSearch.',
+    'Workflows that route uncertain results to a person using confidence scores.',
+  ]}
+  avoid={[
+    'Generic captions or tags only. Azure Vision image analysis is simpler.',
+    'One-off questions about a single photo. A multimodal model in the playground is quicker.',
+    'Final decisions with legal or financial impact without a person reviewing low-confidence results.',
+  ]}
+  alternatives={[
+    '**Azure Vision in Foundry Tools** for captions, tags, objects and OCR.',
+    '**A multimodal model** with input_image for open questions.',
+  ]}
+/>

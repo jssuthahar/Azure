@@ -1,0 +1,80 @@
+{
+  "cert": "ai-901",
+  "domain": 1,
+  "topic": "fairness-and-inclusiveness",
+  "questions": [
+    {
+      "id": "ai-fairinc-1",
+      "type": "single",
+      "scenario": "A recruitment company trains a model to screen CVs using ten years of historical hiring decisions. Most of the people hired during that period were men.",
+      "question": "What is the most likely risk of this approach?",
+      "options": [
+        { "text": "The model will reproduce the historical bias and favour male candidates.", "why": "Correct. A model learns the patterns in its training data, including unfair ones." },
+        { "text": "The model will be unable to read CVs in PDF format.", "why": "File format is unrelated to the fairness risk described." },
+        { "text": "The model will expose candidate data publicly.", "why": "Nothing in the scenario indicates a data exposure risk." },
+        { "text": "The model will favour female candidates to balance the data.", "why": "Models do not correct historical imbalance on their own." }
+      ],
+      "answer": [0],
+      "explanation": "Skewed training data is the most common source of unfairness. The model learns and repeats the historical pattern.",
+      "objective": "1.1.1"
+    },
+    {
+      "id": "ai-fairinc-2",
+      "type": "single",
+      "scenario": "A lender removes the gender column from its training data. Testing shows that the model still approves loans for women less often than for men with the same financial profile.",
+      "question": "What is the most likely explanation?",
+      "options": [
+        { "text": "The model is using other features that act as proxies for gender.", "why": "Correct. Fields such as first name or occupation can still carry the same signal." },
+        { "text": "The model has a context window that is too small.", "why": "Context windows apply to language models and do not explain this outcome." },
+        { "text": "The temperature setting is too high.", "why": "Temperature affects generative output randomness, not loan scoring bias." },
+        { "text": "Removing a column always increases bias.", "why": "Removing the column is not the cause. Proxy features are." }
+      ],
+      "answer": [0],
+      "explanation": "Removing a sensitive attribute does not guarantee fairness, because other features can act as proxies. Outcomes must be measured for each group.",
+      "objective": "1.1.1"
+    },
+    {
+      "id": "ai-fairinc-3",
+      "type": "multi",
+      "question": "Which TWO actions help ensure that an AI system meets the inclusiveness principle?",
+      "options": [
+        { "text": "Testing a speech solution with speakers who have a range of regional accents", "why": "Correct. Testing with representative users finds groups the system fails to serve." },
+        { "text": "Encrypting the training data at rest", "why": "Encryption supports privacy and security, not inclusiveness." },
+        { "text": "Providing captions and text input options for users who are deaf or hard of hearing", "why": "Correct. This makes the system usable by people with different abilities." },
+        { "text": "Assigning a named owner to approve each model release", "why": "Assigning an owner supports accountability." }
+      ],
+      "answer": [0, 2],
+      "explanation": "Inclusiveness means designing and testing AI so that people of all abilities, languages and backgrounds can use it.",
+      "objective": "1.1.4"
+    },
+    {
+      "id": "ai-fairinc-4",
+      "type": "single",
+      "question": "A team wants to determine whether its model performs equally well for different age groups. What should the team do?",
+      "options": [
+        { "text": "Measure accuracy and outcomes separately for each age group.", "why": "Correct. Disaggregated evaluation reveals differences that an overall score can hide." },
+        { "text": "Report only the overall accuracy of the model.", "why": "An overall score can hide poor results for a specific group." },
+        { "text": "Increase the size of the model.", "why": "A larger model does not by itself show or fix group differences." },
+        { "text": "Remove all age-related data from the test set.", "why": "Without age information the team cannot compare results by age group." }
+      ],
+      "answer": [0],
+      "explanation": "Evaluating results for each group, known as disaggregated evaluation, is the way to detect unfair performance.",
+      "objective": "1.1.1"
+    },
+    {
+      "id": "ai-fairinc-5",
+      "type": "single",
+      "scenario": "A government service chatbot currently responds only in English. Many citizens prefer to use regional languages.",
+      "question": "Adding support for regional languages primarily addresses which responsible AI principle?",
+      "options": [
+        { "text": "Transparency", "why": "Transparency concerns explaining how the system works." },
+        { "text": "Inclusiveness", "why": "Correct. The change allows more people to use the service." },
+        { "text": "Reliability and safety", "why": "The chatbot is not failing or causing harm; it is excluding people." },
+        { "text": "Accountability", "why": "Accountability concerns responsibility and oversight." }
+      ],
+      "answer": [1],
+      "explanation": "Supporting more languages makes the system usable by more people, which is the goal of inclusiveness.",
+      "objective": "1.1.4"
+    }
+  ]
+}

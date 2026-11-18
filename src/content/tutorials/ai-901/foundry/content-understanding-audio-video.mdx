@@ -1,0 +1,187 @@
+---
+title: Content Understanding for Audio and Video
+seoTitle: Content Understanding for Audio and Video | AI-901
+description: Turn calls and videos into transcripts, summaries, speakers, segments and key frames with Azure Content Understanding, plus custom fields. For AI-901.
+answer: >-
+  **Azure Content Understanding** turns recordings into structured data. **`prebuilt-audioSearch`** returns a **transcript** with **speaker labels** and a **summary** of a call or meeting. **`prebuilt-videoSearch`** splits a video into **segments** with **key frames**, transcript and **descriptions**. For business fields, such as **call sentiment** or whether an agent offered a refund, you build a custom analyzer on **`prebuilt-audio`** or **`prebuilt-video`** with **classify** or **generate** fields.
+updated: 2026-11-18
+readingMinutes: 8
+keyTerms:
+  - term: prebuilt-audioSearch
+    definition: A prebuilt analyzer that returns a transcript with speaker labels and a summary of an audio recording.
+  - term: prebuilt-videoSearch
+    definition: A prebuilt analyzer that splits a video into segments with key frames, transcript and descriptions.
+  - term: Speaker labels (diarization)
+    definition: Marking which speaker said each part of a transcript, such as Speaker 1 and Speaker 2.
+  - term: Segment
+    definition: A section of a video with a start and end time, often matching a scene or chapter.
+  - term: Key frame
+    definition: A representative still image picked from a video segment.
+interview:
+  - level: beginner
+    q: What can Content Understanding do with a recorded customer call?
+    a: >-
+      With prebuilt-audioSearch it gives me a transcript with each speaker labelled and a short summary of the call. With a custom analyzer I can add my own fields, like whether the customer was happy or what product they called about.
+    followUps:
+      - q: Does it need a separate speech-to-text step first?
+        a: >-
+          No. Content Understanding transcribes the audio itself as part of content extraction, then fills the fields.
+  - level: intermediate
+    q: What does prebuilt-videoSearch return?
+    a: >-
+      It breaks the video into segments with start and end times, picks key frames, transcribes any speech, and writes descriptions of what's happening in each segment. That makes a long video searchable by moment, not just by title.
+    followUps: []
+  - level: experienced
+    q: How would you add call sentiment to a contact-centre pipeline?
+    a: >-
+      I'd create a custom analyzer with baseAnalyzerId prebuilt-audio and add a CallSentiment field with classify and the values Positive, Neutral, Negative, plus a generate field for the main complaint. Then I'd run it on every recording, store fields with confidence scores, and flag negative or low-confidence calls for a supervisor.
+    followUps: []
+  - level: scenario
+    q: An online coaching company has 3,000 hours of recorded lessons and students can't find the part they need. What would you do?
+    a: >-
+      Run prebuilt-videoSearch over the library to get segments, key frames, transcripts and descriptions, index them, and let students search by topic and jump straight to the right timestamp.
+    followUps: []
+revision:
+  keyPoints:
+    - prebuilt-audioSearch returns a transcript with speaker labels and a summary.
+    - prebuilt-videoSearch returns segments, key frames, transcript and descriptions.
+    - Custom audio and video analyzers are based on prebuilt-audio and prebuilt-video.
+    - Audio and video fields use classify or generate; extract is documents only.
+    - Results include timestamps, so you can jump to the moment a value came from.
+  mistakes:
+    - Thinking you must run Azure Speech first. Content Understanding transcribes as part of the analysis.
+    - Expecting one summary for a long video. Video output is split into segments with their own descriptions.
+  examTips:
+    - '"Transcript, speakers and summary of a recorded call" = **prebuilt-audioSearch**.'
+    - '"Searchable chapters and key frames from a video" = **prebuilt-videoSearch**.'
+  quick:
+    - q: Which analyzer summarises a recorded call?
+      a: prebuilt-audioSearch.
+    - q: Which analyzer returns video segments and key frames?
+      a: prebuilt-videoSearch.
+    - q: What is the base analyzer for a custom audio analyzer?
+      a: prebuilt-audio.
+    - q: Which method would you use for a call sentiment field?
+      a: Classify, with values such as Positive, Neutral and Negative.
+    - q: What is a key frame?
+      a: A representative still image from a video segment.
+references:
+  - title: What is Azure Content Understanding in Foundry Tools?
+    url: https://learn.microsoft.com/azure/ai-services/content-understanding/overview
+  - title: Content Understanding prebuilt analyzers
+    url: https://learn.microsoft.com/azure/ai-services/content-understanding/concepts/prebuilt-analyzers
+  - title: AI-901 study guide
+    url: https://learn.microsoft.com/en-us/credentials/certifications/resources/study-guides/ai-901
+related:
+  - content-understanding-images
+  - content-understanding-app
+  - speech-recognition-and-synthesis
+---
+
+## Start with a question
+
+<Story question="Who listens to thousands of customer calls every day?">
+
+A broadband company in Hyderabad records about 8,000 support calls a day. Supervisors can only listen to a handful, so most angry customers are spotted only when they cancel.
+
+If each call came back as a short summary, a transcript with "Agent" and "Customer" labels, and a field saying **Sentiment: Negative**, supervisors could call back the right people the same day. That's **Content Understanding** on audio. The same idea works on video, where a two-hour recording becomes chapters you can jump between.
+
+</Story>
+
+## Explain it like I'm 10
+
+<Eli10>
+
+Imagine your class recorded a long school play.
+
+A helper watches it and writes a list: "0 to 5 minutes, the king's speech. 5 to 12 minutes, the dragon scene." For each part they stick in one photo and write what happened.
+
+For a phone call, the helper writes down who said what, then a two-line story of the call, and whether the caller sounded happy or upset.
+
+Content Understanding is that helper for audio and video.
+
+</Eli10>
+
+## The technical explanation
+
+Content Understanding processes audio and video in two stages: **content extraction** (transcribe speech, label speakers, find scenes and key frames) and **field extraction** (fill the fields you defined using generative models). Like every analyzer, it needs default model deployments set on the Foundry resource.
+
+### Audio: prebuilt-audioSearch
+
+| Output | Example |
+| --- | --- |
+| Transcript with timestamps | "00:01:12 Customer: My internet keeps dropping every evening." |
+| Speaker labels | Speaker 1 and Speaker 2, so you can tell agent from customer |
+| Summary | "Customer reports evening drop-outs; agent books an engineer visit for Friday." |
+
+### Video: prebuilt-videoSearch
+
+| Output | What it means |
+| --- | --- |
+| Segments | Sections with start and end times, like chapters |
+| Key frames | Representative still images from each segment |
+| Transcript | Speech in the video, with timestamps |
+| Descriptions | What's happening in each segment, written in plain language |
+
+<Flow
+  caption="From a recording to fields"
+  steps={[
+    { title: 'Recording', text: 'A call (WAV, MP3) or a video (MP4).' },
+    { title: 'Content extraction', text: 'Transcript, speakers, segments and key frames.' },
+    { title: 'Fields', text: 'Summary, descriptions and your custom fields.' },
+    { title: 'Output', text: 'Markdown plus JSON with timestamps and confidence.' },
+  ]}
+/>
+
+### Custom fields for recordings
+
+For questions only your business asks, create a custom analyzer with **`baseAnalyzerId`** set to **`prebuilt-audio`** or **`prebuilt-video`** and add fields. Audio and video use **classify** and **generate** (extract is documents only).
+
+| Field | Method | Example value |
+| --- | --- | --- |
+| `CallSentiment` | Classify: Positive, Neutral, Negative | Negative |
+| `RefundOffered` | Classify: Yes, No | Yes |
+| `MainIssue` | Generate | "Evening Wi-Fi drop-outs since the router change." |
+| `SafetyStepsShown` (training video) | Classify per segment | Yes |
+
+<TryIt labs="ai-extract-media" text="Analyse a sample support call and a short training video, then compare the transcript, summary, segments and custom fields." />
+
+<Callout type="exam">
+Match the output to the analyzer. **Transcript + speakers + summary** of a call is **prebuilt-audioSearch**. **Segments, key frames and descriptions** of a video is **prebuilt-videoSearch**. If the scenario only needs live captions or voice output, that's **Azure Speech**, not Content Understanding. And a custom field like **call sentiment** uses **classify**.
+</Callout>
+
+<DeepDive title="Content Understanding, Azure Speech and Video Indexer">
+
+Azure Speech is the right tool when you need **real-time** speech to text, text to speech or translation inside an app. Content Understanding is for **recorded** files where you want structured fields, summaries and descriptions at the end. Azure AI Video Indexer is an older service that also indexes video; new AI-901 scenarios point to Content Understanding. Long files are processed asynchronously, so your app starts the job and polls until the result is ready.
+
+</DeepDive>
+
+## Real-world business scenario
+
+<Scenario
+  company="Fabrikam Broadband, Hyderabad"
+  industry="Telecommunications"
+  problem="Supervisors could review only a tiny share of 8,000 daily support calls, so unhappy customers were noticed only after they cancelled."
+  service="Ran each recorded call through a custom Content Understanding analyzer based on prebuilt-audio, with a transcript, a summary, a classify field for CallSentiment and a generate field for MainIssue. Negative calls land on a supervisor dashboard by the next morning."
+  why="The analyzer transcribes, labels speakers and fills business fields in one pass, with timestamps so supervisors can jump to the key moment."
+  outcome="Supervisors now call back unhappy customers within a day, and the MainIssue field shows which faults cause the most complaints each week."
+/>
+
+## When to use it and when not to
+
+<UseWhen
+  use={[
+    'Recorded calls and meetings that need a transcript, speakers and a summary.',
+    'Long video libraries that need searchable segments, key frames and descriptions.',
+    'Business fields from recordings, such as sentiment or compliance checks, with confidence scores.',
+  ]}
+  avoid={[
+    'Live captions or voice assistants that must respond in real time. Use Azure Speech or a realtime model.',
+    'Just turning text into speech. That is text to speech in Azure Speech.',
+    'Judging staff performance on a single automated score with no human review.',
+  ]}
+  alternatives={[
+    '**Azure Speech in Foundry Tools** for real-time transcription, translation and neural voices.',
+    '**An audio-capable multimodal model** for answering spoken prompts.',
+  ]}
+/>

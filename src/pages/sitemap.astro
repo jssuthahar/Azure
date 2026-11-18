@@ -2,11 +2,13 @@
 /** Human-readable site map: every page, grouped. Also good for crawlers (internal links). */
 import Base from '../layouts/Base.astro';
 import { getNav } from '../lib/learn';
-import { ALL_LABS } from '../lib/sim/labs';
-import { getExam } from '../data/exams';
+import { labsForExam, SANDBOX } from '../lib/sim/labs';
+import { getExam, liveExams } from '../data/exams';
 const exam = getExam();
 const x = `/${exam.slug}`;
 const SERVICES = exam.services;
+const ALL_LABS = [...labsForExam(exam.slug), SANDBOX];
+const others = await Promise.all(liveExams().filter((e) => e.slug !== exam.slug).map(async (e) => ({ e, nav: await getNav(e.slug), labs: labsForExam(e.slug) })));
 const SERVICE_CATS = [...new Set(SERVICES.map((s) => s.cat))];
 
 const nav = (await getNav()).filter((t) => t.published);
@@ -24,7 +26,7 @@ const machine: [string, string, string][] = [
   ['robots.txt', '/robots.txt', 'Crawler rules'],
 ];
 const crumbs = [{ name: 'Home', url: '/' }, { name: 'Site map', url: '/sitemap/' }];
-const total = nav.length + exam.comparisons.length + SERVICES.length + exam.whatIfs.length + ALL_LABS.length + tools.length;
+const total = others.reduce((n, o) => n + o.nav.length + o.e.comparisons.length + o.e.services.length + o.labs.length, 0) + nav.length + exam.comparisons.length + SERVICES.length + exam.whatIfs.length + ALL_LABS.length + tools.length;
 ---
 <Base title="Site Map: Every Page on MSDEVBUILD Azure" description={`Every page on MSDEVBUILD Azure in one place: ${nav.length} ${exam.code} lessons, comparisons, Azure services in 60 seconds, simulations, labs, mock exam and tools.`} breadcrumbs={crumbs}>
   <div class="mx-auto max-w-6xl px-4 py-10 sm:px-6">
@@ -72,6 +74,24 @@ const total = nav.length + exam.comparisons.length + SERVICES.length + exam.what
         <ul class="sm-list">{machine.map(([n, h, d]) => <li><a href={h}><code>{n}</code></a> <span class="text-sm text-muted">· {d}</span></li>)}</ul>
       </section>
     </div>
+    {others.map(({ e, nav: n, labs }) => (
+      <Fragment>
+        <h2 class="sm-h">🧠 {e.code} lessons · <a class="text-accent hover:underline" href={`/${e.slug}/`}>{e.name}</a></h2>
+        <div class="grid gap-8 md:grid-cols-2">
+          {e.modules.map((m) => (
+            <section>
+              <h3 class="font-semibold"><a class="text-accent hover:underline" href={`/${e.slug}/${m.slug}/`}>Domain {m.domain}: {m.shortTitle}</a></h3>
+              <ol class="sm-list list-decimal pl-5">{n.filter((t) => t.module.slug === m.slug).map((t) => <li><a href={t.url}>{t.title}</a></li>)}</ol>
+            </section>
+          ))}
+        </div>
+        <div class="mt-4 grid gap-8 md:grid-cols-3">
+          <section><h3 class="font-semibold">⚖️ Comparisons</h3><ul class="sm-list">{e.comparisons.map((c) => <li><a href={`/${e.slug}/compare/${c.slug}/`}>{c.title}</a></li>)}</ul></section>
+          <section><h3 class="font-semibold">🧪 Practice labs</h3><ul class="sm-list"><li><a href={`/${e.slug}/labs/`}><strong>All {e.code} labs</strong></a></li>{labs.map((l) => <li><a href={`/${e.slug}/labs/${l.id}/`}>{`${l.icon} ${l.title}`}</a></li>)}</ul></section>
+          <section><h3 class="font-semibold">📚 Services and tools</h3><ul class="sm-list">{e.services.map((sv) => <li><a href={`/${e.slug}/services/${sv.slug}/`}>{sv.name}</a></li>)}<li><a href={`/${e.slug}/mock-exam/`}>{e.code} mock exam</a></li><li><a href={`/${e.slug}/glossary/`}>{e.code} glossary</a></li></ul></section>
+        </div>
+      </Fragment>
+    ))}
   </div>
 </Base>
 <style>

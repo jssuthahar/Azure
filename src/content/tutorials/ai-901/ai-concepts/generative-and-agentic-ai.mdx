@@ -1,0 +1,195 @@
+---
+title: Generative AI and AI Agents
+seoTitle: Generative AI vs AI Agents Explained | AI-901
+description: Generative AI vs AI agents for AI-901, with model plus instructions plus tools, the plan-act-observe loop, single vs multi-agent designs and copilots.
+answer: >-
+  **Generative AI** creates new content (text, code, images, audio) in response to a prompt. An **AI agent** goes further: it's a **model plus instructions plus tools** that works towards a goal by **planning**, **calling tools** (search, code, APIs), **observing** the results and repeating until it can answer or finish the task. A **copilot** is an agent-style assistant built into an app to help a person, and **multi-agent** systems split a big job across several specialist agents.
+updated: 2026-11-18
+readingMinutes: 8
+keyTerms:
+  - term: Generative AI
+    definition: AI that produces new content such as text, code, images or audio from a prompt, usually by predicting the next token.
+  - term: AI agent
+    definition: A model combined with instructions and tools that plans and takes actions to complete a goal.
+  - term: Tool
+    definition: Something an agent can call to get information or act, such as file search, code interpreter, web search, a function or an API.
+  - term: Plan-act-observe loop
+    definition: The cycle an agent repeats. Decide the next step, call a tool, read the result, then decide again.
+  - term: Multi-agent system
+    definition: Several specialised agents that each handle part of a task, coordinated by an orchestrator agent or a workflow.
+  - term: Copilot
+    definition: An AI assistant built into an app that helps a person do their work, such as Microsoft 365 Copilot or GitHub Copilot.
+  - term: Foundry Agent Service
+    definition: The Microsoft Foundry service for building, testing, versioning and running agents.
+interview:
+  - level: beginner
+    q: What's the difference between a chatbot built on generative AI and an AI agent?
+    a: >-
+      A generative chatbot answers from what the model knows and what's in the prompt. An agent can also use tools: search your files, run code, call an API to check an order. It decides which tools to use and in what order to reach a goal. So a chatbot talks, an agent talks and does.
+    followUps:
+      - q: Is an agent always more useful?
+        a: >-
+          No. If all you need is a draft email or a summary, a single model call is cheaper, faster and easier to test. Agents earn their cost when the task needs fresh data or actions.
+  - level: intermediate
+    q: What are the three building blocks of an agent in Microsoft Foundry?
+    a: >-
+      A model deployment to do the reasoning, instructions that set its role, rules and tone, and tools such as file search, code interpreter, web search, function calling, OpenAPI tools, MCP servers or Azure AI Search. Each time I save changes, Foundry creates a new version of the agent.
+    followUps: []
+  - level: experienced
+    q: When would you split one agent into several?
+    a: >-
+      When one agent's instructions get long and contradictory, or it has so many tools that it picks the wrong one. I'd give each agent a narrow job, like billing or shipping, and let an orchestrator agent or a workflow route the request. It's easier to test and to give each agent only the permissions it needs.
+    followUps: []
+  - level: scenario
+    q: A sales manager asks, "Compare last quarter's sales to this quarter and chart it." Would you use plain generative AI or an agent?
+    a: >-
+      An agent. The model alone doesn't know the sales figures and can't reliably do the maths in its head. An agent can retrieve the data with a tool, run the numbers and draw the chart with code interpreter, then explain the result.
+    followUps: []
+revision:
+  keyPoints:
+    - Generative AI creates new content from a prompt by predicting the next token.
+    - An agent = model + instructions + tools, working towards a goal.
+    - Agents loop through plan, act (call a tool), observe, until the task is done.
+    - Multi-agent systems split work across specialist agents with an orchestrator or workflow.
+    - A copilot is an AI assistant built into an app to help a person.
+  mistakes:
+    - Calling any chatbot an agent. Without tools and actions it's generative AI.
+    - Thinking agents remove the need for human review. High-impact actions still need a person in the loop.
+    - Assuming more agents is always better. Each extra agent adds cost, latency and things to test.
+  examTips:
+    - '"Uses tools to complete tasks on the user''s behalf" = **AI agent**.'
+    - '"Creates a new product description from a prompt" = **generative AI**.'
+    - 'The three parts of an agent = **model, instructions, tools**.'
+  quick:
+    - q: What three things make up an AI agent?
+      a: A model, instructions and tools.
+    - q: Name two tools a Foundry agent can use.
+      a: Any two of file search, code interpreter, web search, function calling, OpenAPI, MCP servers, Azure AI Search.
+    - q: What does an agent do after calling a tool?
+      a: It observes the result and decides the next step.
+    - q: What is a copilot?
+      a: An AI assistant built into an app that helps a person with their work.
+    - q: What coordinates the agents in a multi-agent system?
+      a: An orchestrator agent or a workflow.
+references:
+  - title: 'Quickstart: Create a prompt agent'
+    url: https://learn.microsoft.com/azure/foundry/agents/quickstarts/prompt-agent
+  - title: What is Microsoft Foundry?
+    url: https://learn.microsoft.com/azure/foundry/what-is-foundry
+  - title: Study guide for Exam AI-901
+    url: https://learn.microsoft.com/en-us/credentials/certifications/resources/study-guides/ai-901
+related:
+  - how-generative-ai-works
+  - ai-workloads
+  - build-an-agent-in-foundry
+  - agent-client-app
+---
+
+## Start with a question
+
+<Story question="What's the difference between a friend who gives travel tips and a travel agent?">
+
+Ask a well-travelled friend about a Goa trip and you'll get great advice: which beach, which month, what to eat. But you still have to book everything yourself.
+
+A travel agent hears the same question and **does things**. Checks flight prices, finds a hotel with rooms, books both, and sends you the tickets.
+
+Generative AI is the friend: it writes great answers. An **AI agent** is the travel agent: it uses tools to get the job done.
+
+</Story>
+
+## Explain it like I'm 10
+
+<Eli10>
+
+Generative AI is like a storyteller. You ask, it makes up words, pictures or songs.
+
+An agent is a storyteller with a backpack of tools: a phone, a calculator, a map.
+
+When you give it a job, it thinks "what should I do first?", uses a tool, looks at what happened, and tries the next step.
+
+It keeps going until the job is done.
+
+</Eli10>
+
+## The technical explanation
+
+**Generative AI** models (such as GPT-4.1 or Phi) take a prompt and produce new content one token at a time, each token predicted from everything before it. On their own they only know what they learned in training plus what you put in the prompt. They can't check today's stock level or send an email.
+
+An **AI agent** wraps a model with two more things:
+
+| Part | What it does | Example |
+| --- | --- | --- |
+| **Model** | Reads the request, reasons, decides what to do next | A gpt-4.1-mini deployment |
+| **Instructions** | Sets the role, rules, tone and limits | "You're Contoso's support agent. Only discuss Contoso orders. Never promise a refund over the policy limit." |
+| **Tools** | Let it fetch data or act | File search over policy PDFs, code interpreter, web search, function calling, OpenAPI tools, MCP servers, Azure AI Search |
+
+### The agent loop
+
+<Flow
+  caption="An agent repeats this loop until the goal is met"
+  steps={[
+    { title: 'Plan', text: 'Read the goal and decide the next step.' },
+    { title: 'Act', text: 'Call a tool: search, run code, call an API.' },
+    { title: 'Observe', text: 'Read what the tool returned.' },
+    { title: 'Repeat or answer', text: 'Take another step, or reply to the user.' },
+  ]}
+/>
+
+The **conversation** keeps the history, so the agent remembers earlier turns. In Microsoft Foundry you build agents in **Foundry Agent Service**: Build, then Agents, then Create agent, pick a model, write instructions, add tools and test in the agent playground. Every save creates a new, immutable **version**, so you can roll back.
+
+<Compare
+  caption="Same request, two approaches"
+  columns={[
+    { title: 'Generative AI', icon: '✍️', tone: 'neutral', items: ['Prompt in, content out', 'Knows only its training data and the prompt', 'One call, fast and cheap', 'Great for drafting, summarising, rewriting'] },
+    { title: 'AI agent', icon: '🧭', tone: 'accent', items: ['Goal in, actions and an answer out', 'Uses tools for fresh data and actions', 'Several model and tool calls', 'Great for tasks with steps and real systems'] },
+  ]}
+/>
+
+### Single agent, multi-agent and copilots
+
+- **Single agent**: one agent with a focused job and a handful of tools. Start here.
+- **Multi-agent**: several specialist agents (say, billing, shipping and returns), with an **orchestrator** agent or a workflow that routes each request and combines the results. Useful when one agent's instructions or tool list gets too big.
+- **Copilot**: an AI assistant built into an app to help a person, like Microsoft 365 Copilot drafting a document or GitHub Copilot suggesting code. The person stays in charge and approves the result.
+
+<TryIt labs="ai-first-agent" text="Create an agent with instructions and a tool, then ask it something that needs the tool and watch it call it." />
+
+<Callout type="exam">
+The word to watch is **tools**. If the scenario only needs new text or images, it's generative AI. If the AI must look something up, run code or change something in another system to finish a task, it's an **agent**. Remember the three parts: **model, instructions, tools**.
+</Callout>
+
+<DeepDive title="Keeping agents safe">
+
+Give each agent only the tools and permissions it needs, and keep a human approval step for anything costly or hard to undo, like refunds or deleting records. Tool results are untrusted input: a web page or document can contain hidden instructions (indirect prompt injection), which is why Foundry guardrails include Prompt Shields. Use tracing and evaluations to see which tools an agent called and why.
+
+</DeepDive>
+
+## Real-world business scenario
+
+<Scenario
+  company="Tailspin Telecom, a mobile operator in Bengaluru"
+  industry="Telecom"
+  problem="Its generative chatbot could explain plans but couldn't check a customer's usage or change their plan, so most chats still ended with 'please call us'."
+  service="Built a Foundry agent with instructions for tone and limits, a function tool to read usage, an OpenAPI tool to change plans, and file search over the plan brochure. Plan changes above a set value go to a human for approval."
+  why="The task needed live account data and an action, which is exactly what tools give an agent. The approval step keeps high-impact changes under human control."
+  outcome="Most plan-change requests were finished inside the chat, and call-centre staff handled fewer routine calls."
+/>
+
+## When to use it and when not to
+
+<UseWhen
+  use={[
+    'Use **generative AI** for drafting, summarising, rewriting and creative content.',
+    'Use an **agent** when the task needs fresh data, calculations or actions in other systems.',
+    'Use **multi-agent** designs when one agent has too many tools or conflicting instructions.',
+    'Use a **copilot** pattern when a person should stay in charge and approve the output.',
+  ]}
+  avoid={[
+    "Don't build an agent for a job a single prompt can do. It adds cost and latency.",
+    "Don't give an agent tools that can make high-impact changes without a human approval step.",
+    "Don't split into many agents before one agent has proved too limited.",
+  ]}
+  alternatives={[
+    '**Retrieval-augmented generation (RAG)** with a single model when the only need is answers grounded in your documents.',
+    '**A fixed workflow** (for example Azure Logic Apps) when the steps never change and need no judgement.',
+  ]}
+/>

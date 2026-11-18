@@ -16,7 +16,7 @@ const games = [
   { href: `/${exam.slug}/games/who-am-i/`, icon: '🕵️', title: 'Who Am I?', text: `Guess the Azure service from clues. Fewer clues, more points. ${exam.games.riddles.length} riddles.`, band: 'band-yellow', key: 'whoami', tag: 'Riddles' },
 ];
 ---
-<Base title={`${exam.code} Games: Learn Azure by Playing | MSDEVBUILD`} description="Learn Azure fundamentals the fun way: sorting games, memory pairs, a 60-second lightning quiz, Who Am I riddles and a daily challenge, with XP and badges." breadcrumbs={[{ name: 'Home', url: '/' }, { name: `${exam.code}`, url: `/${exam.slug}/` }, { name: 'Play & Learn', url: `/${exam.slug}/games/` }]}>
+<Base title={`${exam.code} Games: Learn Azure by Playing | MSDEVBUILD`} description={exam.course.hubs?.games ?? "Learn Azure fundamentals the fun way: sorting games, memory pairs, a 60-second lightning quiz, Who Am I riddles and a daily challenge, with XP and badges."} breadcrumbs={[{ name: 'Home', url: '/' }, { name: `${exam.code}`, url: `/${exam.slug}/` }, { name: 'Play & Learn', url: `/${exam.slug}/games/` }]}>
   <section class="band-navy px-4 py-12 text-center sm:py-16">
     <Mascot size={96} mood="cheer" class="mx-auto" />
     <h1 class="mt-4 text-4xl font-bold tracking-tight sm:text-6xl">Play &amp; Learn</h1>

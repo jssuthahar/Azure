@@ -1,0 +1,79 @@
+{
+  "cert": "ai-901",
+  "domain": 1,
+  "topic": "what-is-ai",
+  "questions": [
+    {
+      "id": "ai-whatis-1",
+      "type": "single",
+      "question": "Which statement correctly describes the relationship between artificial intelligence and machine learning?",
+      "options": [
+        { "text": "Machine learning is a subset of artificial intelligence in which models learn patterns from data.", "why": "Correct. Machine learning is one approach to building AI systems." },
+        { "text": "Artificial intelligence is a subset of machine learning.", "why": "The relationship is reversed. AI is the broader field." },
+        { "text": "Machine learning and artificial intelligence are unrelated technologies.", "why": "Machine learning is the most common way to build AI." },
+        { "text": "Machine learning is a subset of generative AI.", "why": "Generative AI is built on deep learning, which is a subset of machine learning, not the other way round." }
+      ],
+      "answer": [0],
+      "explanation": "AI is the broad field. Machine learning sits inside it, deep learning sits inside machine learning, and generative AI is built on deep learning models.",
+      "objective": "1.2.1"
+    },
+    {
+      "id": "ai-whatis-2",
+      "type": "single",
+      "scenario": "A marketing team wants a solution that writes first drafts of product descriptions from a short list of product features.",
+      "question": "Which type of AI workload should the team use?",
+      "options": [
+        { "text": "Computer vision", "why": "Computer vision analyses images. The input and output here are text." },
+        { "text": "Generative AI", "why": "Correct. Creating new text from a prompt is a generative AI workload." },
+        { "text": "Speech recognition", "why": "Speech recognition converts spoken audio to text." },
+        { "text": "Information extraction", "why": "Information extraction pulls existing fields out of content. It does not write new content." }
+      ],
+      "answer": [1],
+      "explanation": "Generating new content, such as product descriptions, from a prompt is a generative AI workload.",
+      "objective": "1.3.1"
+    },
+    {
+      "id": "ai-whatis-3",
+      "type": "single",
+      "scenario": "A company wants a solution that receives an employee request, checks room availability in a booking system, reserves a room and sends a confirmation, without a person completing each step.",
+      "question": "Which type of solution best meets this requirement?",
+      "options": [
+        { "text": "A sentiment analysis model", "why": "Sentiment analysis classifies opinion in text. It cannot take actions." },
+        { "text": "An AI agent that has instructions and access to tools", "why": "Correct. An agent can plan steps, call tools such as a booking API and complete a multi-step task." },
+        { "text": "An image classification model", "why": "Image classification labels images and does not interact with systems." },
+        { "text": "A text-to-speech service", "why": "Text to speech converts text to audio. It does not complete tasks." }
+      ],
+      "answer": [1],
+      "explanation": "An AI agent combines a generative model with instructions and tools, which allows it to take actions and complete multi-step tasks.",
+      "objective": "1.3.1"
+    },
+    {
+      "id": "ai-whatis-4",
+      "type": "multi",
+      "question": "Which TWO scenarios are examples of information extraction or text analysis workloads rather than generative AI workloads?",
+      "options": [
+        { "text": "Identifying the invoice number and total amount on scanned invoices", "why": "Correct. This extracts existing fields from documents." },
+        { "text": "Writing a new marketing slogan for a product launch", "why": "Creating a new slogan is a generative AI task." },
+        { "text": "Determining whether customer reviews are positive or negative", "why": "Correct. Sentiment analysis is a text analysis technique." },
+        { "text": "Creating an illustration from a text description", "why": "Generating an image from a prompt is a generative AI task." }
+      ],
+      "answer": [0, 2],
+      "explanation": "Extracting fields from invoices is information extraction and scoring review sentiment is text analysis. Writing slogans and creating images are generative AI tasks.",
+      "objective": "1.3.1"
+    },
+    {
+      "id": "ai-whatis-5",
+      "type": "single",
+      "question": "Which type of machine learning uses neural networks with many layers and underpins modern language, speech and vision models?",
+      "options": [
+        { "text": "Rule-based programming", "why": "Rule-based systems follow hand-written logic and do not learn from data." },
+        { "text": "Deep learning", "why": "Correct. Deep learning uses many-layered neural networks." },
+        { "text": "Clustering", "why": "Clustering groups similar items. It does not define the many-layered network approach." },
+        { "text": "Linear regression", "why": "Linear regression is a simple statistical model for predicting numbers." }
+      ],
+      "answer": [1],
+      "explanation": "Deep learning is a subset of machine learning that uses neural networks with many layers. Generative AI models are deep learning models.",
+      "objective": "1.2.1"
+    }
+  ]
+}

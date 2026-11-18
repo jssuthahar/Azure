@@ -11,6 +11,7 @@ const PAGES = [
   ['/', null], ['/platform/', null], ['/az-900/', null], ['/az-900/cloud-concepts/capex-vs-opex/', null], ['/az-900/compare/blob-vs-files-vs-disk/', null],
   ['/az-900/services/virtual-machines/', null], ['/az-900/mock-exam/', null], ['/az-900/practice/', null], ['/az-900/study-plan/', null], ['/az-900/cheat-sheet/', null], ['/az-900/exam-day/', null], ['/progress/', null], ['/progress/', async (p) => { await p.click('.sync-card [data-account-signin]'); await p.waitForTimeout(300); }], ['/certificate/', null], ['/app/', null], ['/offline/', null],
   ['/az-900/glossary/', async (p) => { await p.click('#install-btn'); await p.waitForTimeout(300); }],
+  ['/ai-901/', null], ['/ai-901/ai-concepts/how-generative-ai-works/', null], ['/ai-901/mock-exam/', null], ['/ai-901/labs/ai-deploy-chat/', null], ['/certificate/?exam=ai-901', null],
 ];
 const b = await launch();
 const fail = [];

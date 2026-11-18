@@ -1,0 +1,27 @@
+{ "cert": "ai-901", "domain": 2, "topic": "agent-client-app", "questions": [
+  { "id": "ai-agentclient-1", "type": "single", "question": "You are writing a Python client application for an agent in a Microsoft Foundry project. Which class should you use to connect to the project?", "options": [
+    { "text": "AIProjectClient", "why": "Correct. AIProjectClient from azure-ai-projects connects to a Foundry project endpoint." },
+    { "text": "TextAnalyticsClient", "why": "TextAnalyticsClient calls Azure Language text analysis features, not agents." },
+    { "text": "SpeechRecognizer", "why": "SpeechRecognizer converts speech to text in the Speech SDK." },
+    { "text": "BlobServiceClient", "why": "BlobServiceClient works with Azure Blob Storage." } ], "answer": [0], "explanation": "The Foundry SDK's AIProjectClient connects to the project and provides access to agents and an OpenAI client.", "objective": "2.1.5" },
+  { "id": "ai-agentclient-2", "type": "single", "scenario": "A client application sends a user's first question to an agent. The user then asks a follow-up question that refers to the first answer, but the agent responds as if it has no context.", "question": "What should you change in the application?", "options": [
+    { "text": "Increase the temperature of the model deployment.", "why": "Temperature affects randomness, not conversation memory." },
+    { "text": "Create one conversation and pass the same conversation ID with each request.", "why": "Correct. The conversation stores the history, so later turns have the earlier context." },
+    { "text": "Create a new agent version before each request.", "why": "New versions do not carry conversation history and would clutter the version list." },
+    { "text": "Switch the deployment type to Global Batch.", "why": "Batch deployments process requests asynchronously and do not provide chat context." } ], "answer": [1], "explanation": "Reusing the same conversation ID across responses.create calls keeps multi-turn context.", "objective": "2.1.5" },
+  { "id": "ai-agentclient-3", "type": "multi", "question": "Which TWO statements about authenticating AIProjectClient are true?", "options": [
+    { "text": "It supports Microsoft Entra ID authentication, such as DefaultAzureCredential.", "why": "Correct. Entra ID is the supported authentication method." },
+    { "text": "On a developer workstation, DefaultAzureCredential can use the identity from az login.", "why": "Correct. DefaultAzureCredential tries several sources, including the Azure CLI sign-in." },
+    { "text": "It requires the resource API key to be embedded in the code.", "why": "AIProjectClient does not use API keys, and keys should never be embedded in code." },
+    { "text": "It requires a shared access signature (SAS) token.", "why": "SAS tokens are used with Azure Storage, not with Foundry projects." } ], "answer": [0, 1], "explanation": "AIProjectClient authenticates with Microsoft Entra ID. DefaultAzureCredential uses az login locally or a managed identity in Azure.", "objective": "2.1.5" },
+  { "id": "ai-agentclient-4", "type": "single", "question": "Which method creates an agent, or a new version of an existing agent, from Python code by using the Foundry SDK?", "options": [
+    { "text": "project.agents.create_version", "why": "Correct. create_version with a PromptAgentDefinition creates an agent version." },
+    { "text": "project.deployments.create", "why": "Deployments relate to models, not to agent definitions." },
+    { "text": "openai.images.generate", "why": "This method generates images." },
+    { "text": "client.analyze_sentiment", "why": "This method belongs to the Azure Language text analytics client." } ], "answer": [0], "explanation": "project.agents.create_version takes an agent name and a PromptAgentDefinition and returns a new immutable version.", "objective": "2.1.5" },
+  { "id": "ai-agentclient-5", "type": "single", "question": "In a PromptAgentDefinition, what value should you provide for the model parameter?", "options": [
+    { "text": "The name of the model deployment in the Foundry project", "why": "Correct. The model parameter refers to your deployment name." },
+    { "text": "The name of the Azure subscription", "why": "The subscription is not referenced in the agent definition." },
+    { "text": "The resource group that contains the Foundry resource", "why": "The resource group is not part of the agent definition." },
+    { "text": "The URL of the model card", "why": "Model cards are documentation and are not used to call a model." } ], "answer": [0], "explanation": "Foundry SDK calls refer to models by the deployment name that you chose when you deployed the model.", "objective": "2.1.5" }
+] }

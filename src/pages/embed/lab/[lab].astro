@@ -9,7 +9,7 @@ export function getStaticPaths() {
 }
 const { lab } = Astro.props as { lab: Lab };
 ---
-<EmbedLayout title={lab.title} canonical={`/az-900/labs/${lab.id}/`} lesson={{ title: `Open “${lab.title}” full page`, url: `/az-900/labs/${lab.id}/` }}>
+<EmbedLayout title={lab.title} canonical={`/${lab.exam ?? 'az-900'}/labs/${lab.id}/`} lesson={{ title: `Open “${lab.title}” full page`, url: `/${lab.exam ?? 'az-900'}/labs/${lab.id}/` }}>
   <p class="lab-embed-intro mb-3 text-sm text-muted"><span aria-hidden="true">{lab.icon}</span> <strong class="text-[var(--text)]">{lab.title}</strong> · {lab.intro}</p>
   <Simulator lab={lab} />
 </EmbedLayout>

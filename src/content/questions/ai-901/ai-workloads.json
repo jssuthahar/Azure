@@ -1,0 +1,27 @@
+{ "cert": "ai-901", "domain": 1, "topic": "ai-workloads", "questions": [
+  { "id": "ai-workloads-1", "type": "single", "question": "A hotel chain wants to determine whether each guest review posted online expresses a positive, negative or neutral opinion. Which AI workload does this scenario describe?", "options": [
+    { "text": "Generative AI", "why": "Generative AI creates new content. The requirement is to classify existing text, not to create new text." },
+    { "text": "Text analysis", "why": "Correct. Determining the sentiment of existing text is a text analysis workload." },
+    { "text": "Computer vision", "why": "Computer vision interprets images and video. The input here is written text." },
+    { "text": "Agentic AI", "why": "Agentic AI plans and takes actions with tools. No actions are required in this scenario." } ], "answer": [1], "explanation": "Sentiment analysis is a text analysis technique that labels existing text as positive, negative, neutral or mixed.", "objective": "1.3.1" },
+  { "id": "ai-workloads-2", "type": "single", "scenario": "A travel company wants a solution that receives a request such as 'Move my flight to Friday and email me the new itinerary.' The solution must check seat availability, change the booking through an API and send an email.", "question": "Which AI workload best describes this solution?", "options": [
+    { "text": "Agentic AI", "why": "Correct. The solution must plan steps and use tools such as booking and email APIs to complete a goal." },
+    { "text": "Speech synthesis", "why": "Speech synthesis converts text to audio. The scenario does not require spoken output." },
+    { "text": "Information extraction", "why": "Information extraction pulls structured fields from content. The scenario requires taking actions." },
+    { "text": "Text analysis", "why": "Text analysis labels or summarizes text. It does not change bookings or send email." } ], "answer": [0], "explanation": "An AI agent combines a model, instructions and tools to plan and take actions toward a goal.", "objective": "1.3.1" },
+  { "id": "ai-workloads-3", "type": "single", "question": "An accounts payable team receives thousands of supplier invoices as PDF files. The team needs the vendor name, invoice total and due date from each invoice stored in a database. Which AI workload should the team use?", "options": [
+    { "text": "Speech recognition", "why": "Speech recognition converts audio to text. The input is PDF documents." },
+    { "text": "Generative AI", "why": "Generative AI creates new content. The requirement is to capture specific values that already exist in the documents." },
+    { "text": "Information extraction", "why": "Correct. Information extraction converts unstructured documents into structured fields, often with confidence scores." },
+    { "text": "Image generation", "why": "Image generation creates new images and does not read documents." } ], "answer": [2], "explanation": "Extracting defined fields from documents such as invoices is an information extraction workload, for example with Azure Content Understanding prebuilt-invoice.", "objective": "1.3.1" },
+  { "id": "ai-workloads-4", "type": "multi", "question": "A contact center wants to transcribe recorded customer calls and then identify calls in which the customer was dissatisfied. Which TWO AI workloads are required?", "options": [
+    { "text": "Speech to text", "why": "Correct. The calls must first be converted from audio to text." },
+    { "text": "Sentiment analysis", "why": "Correct. Sentiment analysis on the transcripts identifies dissatisfied customers." },
+    { "text": "Image generation", "why": "No images need to be created." },
+    { "text": "Object detection", "why": "Object detection locates objects in images. The input is audio." } ], "answer": [0, 1], "explanation": "The solution combines speech recognition to produce transcripts with text analysis to detect sentiment.", "objective": "1.3.1" },
+  { "id": "ai-workloads-5", "type": "single", "question": "A retailer wants to analyze photos of store shelves to identify where products are missing. Which AI workload does this describe?", "options": [
+    { "text": "Computer vision", "why": "Correct. Detecting objects and gaps in images is a computer vision workload." },
+    { "text": "Text analysis", "why": "Text analysis processes written text, not images." },
+    { "text": "Speech synthesis", "why": "Speech synthesis produces spoken audio from text." },
+    { "text": "Generative AI", "why": "Generative AI creates new content. The requirement is to interpret existing photos." } ], "answer": [0], "explanation": "Computer vision interprets the contents of images, including detecting and locating objects.", "objective": "1.3.1" }
+] }

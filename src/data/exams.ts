@@ -26,6 +26,18 @@ import { ACTIVITIES as az900Activities } from './az-900/activities';
 import type { LessonActivities } from './activities';
 import { SERVICES as az900Services, type Service } from './az-900/services';
 import { SORT_SETS as az900Sort, RIDDLES as az900Riddles, type SortSet, type Riddle } from './az-900/games';
+import * as ai901 from './ai-901/syllabus';
+import { COURSE as ai901Course } from './ai-901/course';
+import { SIMS3D_AI as ai901Sims3d } from './ai-901/sims3d';
+import { TOURS_AI as ai901Tours } from './ai-901/portal-tours';
+import { EMBED_LESSON_3D as ai901Embed3d } from './ai-901/embeds';
+import { LESSON_SIMS as ai901Sims } from './ai-901/lesson-sims';
+import { COMPARISONS as ai901Compare } from './ai-901/compare';
+import { EXAM_ITEMS as ai901Items } from './ai-901/exam-items';
+import { PROBLEM_SOLUTION as ai901Problems } from './ai-901/problem-solution';
+import { SERVICES as ai901Services } from './ai-901/services';
+import { SORT_SETS as ai901Sort, RIDDLES as ai901Riddles } from './ai-901/games';
+
 
 export interface Exam {
   /** URL segment and content folder, e.g. 'az-900'. */
@@ -96,6 +108,32 @@ const EXAMS: Record<string, Exam> = {
     lesson3d: az900Embed3d,
     tours: az900Tours,
     services: az900Services,
+  },
+  'ai-901': {
+    slug: 'ai-901',
+    code: 'AI-901',
+    name: info('ai-901').name,
+    info: info('ai-901'),
+    accent: '#8764b8',
+    modules: ai901.MODULES,
+    skillsMeasuredAsOf: ai901.SKILLS_MEASURED_AS_OF,
+    syllabusVerifiedOn: ai901.SYLLABUS_VERIFIED_ON,
+    studyGuideUrl: ai901.STUDY_GUIDE_URL,
+    courseUrl: 'https://learn.microsoft.com/en-us/credentials/certifications/exams/ai-901/',
+    facts: ai901.EXAM_FACTS,
+    lessonSims: ai901Sims,
+    comparisons: ai901Compare,
+    whatIfs: [],
+    examItems: ai901Items,
+    visuals: {},
+    problems: ai901Problems,
+    games: { sortSets: ai901Sort, riddles: ai901Riddles },
+    activities: {},
+    course: ai901Course,
+    sims3d: ai901Sims3d,
+    lesson3d: ai901Embed3d,
+    tours: ai901Tours,
+    services: ai901Services,
   },
 };
 

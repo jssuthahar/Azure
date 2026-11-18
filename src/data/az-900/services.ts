@@ -8,7 +8,7 @@ import type { Sim } from './compare';
 export interface Service {
   slug: string;
   name: string;
-  cat: 'Compute' | 'Containers' | 'Storage' | 'Databases' | 'Networking' | 'Identity & Security' | 'Management & Governance' | 'Migration & Hybrid';
+  cat: 'Compute' | 'Containers' | 'Storage' | 'Databases' | 'Networking' | 'Identity & Security' | 'Management & Governance' | 'Migration & Hybrid' | 'AI platform' | 'AI tools';
   icon: string;
   model: string;
   what: string;

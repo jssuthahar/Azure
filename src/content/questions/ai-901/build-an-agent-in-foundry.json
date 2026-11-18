@@ -1,0 +1,28 @@
+{ "cert": "ai-901", "domain": 2, "topic": "build-an-agent-in-foundry", "questions": [
+  { "id": "ai-buildagent-1", "type": "single", "scenario": "A human resources team wants an agent in Microsoft Foundry that answers employee questions by using the content of three policy documents that the team uploads.", "question": "Which tool should you add to the agent?", "options": [
+    { "text": "File search", "why": "Correct. File search indexes uploaded files so that the agent can answer from their content." },
+    { "text": "Code interpreter", "why": "Code interpreter runs Python for calculations and file processing. It does not ground answers in policy text." },
+    { "text": "Web search", "why": "Web search returns public web results. Internal policy documents are not on the public web." },
+    { "text": "Function calling", "why": "Function calling asks the client app to run a function that you define. It is not needed to search uploaded documents." } ], "answer": [0], "explanation": "File search is the knowledge tool that lets an agent retrieve and cite content from documents that you upload.", "objective": "2.1.4" },
+  { "id": "ai-buildagent-2", "type": "multi", "question": "Which TWO components must you specify when you create a prompt agent in the Microsoft Foundry portal?", "options": [
+    { "text": "A model deployment", "why": "Correct. The agent runs on a model deployment in the project." },
+    { "text": "Instructions that define the agent's behavior", "why": "Correct. Instructions act as the agent's system prompt." },
+    { "text": "A virtual network", "why": "Network isolation is optional and is configured on the resource, not required for each agent." },
+    { "text": "A custom-trained model", "why": "Agents can run on any suitable deployed base model. Custom training is not required." },
+    { "text": "An Azure Logic Apps workflow", "why": "Logic Apps workflows are not part of the agent definition." } ], "answer": [0, 1], "explanation": "A prompt agent is defined by a model deployment, instructions and optional tools.", "objective": "2.1.4" },
+  { "id": "ai-buildagent-3", "type": "single", "question": "You need an agent to calculate totals from a CSV file that a user uploads and to return a chart. Which tool should you add?", "options": [
+    { "text": "Azure AI Search", "why": "Azure AI Search retrieves content from an index. It does not run calculations or draw charts." },
+    { "text": "Code interpreter", "why": "Correct. Code interpreter writes and runs Python in a sandbox, which suits calculations and charts." },
+    { "text": "File search", "why": "File search retrieves text passages. It does not perform calculations on tabular data." },
+    { "text": "Web search", "why": "Web search retrieves public information and does not process uploaded files." } ], "answer": [1], "explanation": "Code interpreter lets an agent run Python code to analyze data and create files such as charts.", "objective": "2.1.4" },
+  { "id": "ai-buildagent-4", "type": "single", "question": "You modify the instructions of an existing agent in the Microsoft Foundry portal and save the change. What happens?", "options": [
+    { "text": "The existing agent definition is overwritten and the previous instructions are lost.", "why": "Previous versions are kept. Each version is immutable." },
+    { "text": "A new version of the agent is created.", "why": "Correct. Each create or update produces a new, immutable agent version." },
+    { "text": "The model deployment is redeployed with the new instructions.", "why": "Instructions belong to the agent, not to the model deployment." },
+    { "text": "A new Foundry project is created for the agent.", "why": "Saving an agent does not create a project." } ], "answer": [1], "explanation": "Agents are versioned. Saving changes creates a new immutable version, so earlier versions remain available.", "objective": "2.1.4" },
+  { "id": "ai-buildagent-5", "type": "single", "question": "You want to test how an agent responds to questions and which tools it calls before any client application code is written. What should you use?", "options": [
+    { "text": "The agent playground in the Microsoft Foundry portal", "why": "Correct. The agent playground lets you chat with the agent and inspect tool calls without code." },
+    { "text": "Azure Monitor metrics", "why": "Metrics show usage and performance, not an interactive test chat." },
+    { "text": "The Azure pricing calculator", "why": "The pricing calculator estimates cost and cannot run an agent." },
+    { "text": "Azure Cloud Shell with the Azure CLI only", "why": "The CLI manages resources but is not the interactive testing surface for agents." } ], "answer": [0], "explanation": "The agent playground is the no-code test surface for agents in the Foundry portal.", "objective": "2.1.4" }
+] }

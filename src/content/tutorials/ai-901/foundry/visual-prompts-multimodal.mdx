@@ -1,0 +1,206 @@
+---
+title: Use Images in Prompts with a Multimodal Model
+seoTitle: Use Images in Prompts with a Multimodal Model | AI-901
+description: Send photos to a multimodal model deployed in Microsoft Foundry, in the chat playground and in Python with input_image, plus limits and tips. For AI-901.
+answer: >-
+  A **multimodal model** such as **GPT-4.1**, **GPT-4o** or the **GPT-5** family can read images as part of a prompt. In the Foundry **chat playground** you attach a photo and ask about it. In code you send a user message with an **input_text** part and an **input_image** part, where the image is an **https URL** or a **base64 data URL**. The model describes, compares, reads text or answers questions about the image, but it can still misread small details, so ask specific questions and check important answers.
+updated: 2026-11-18
+readingMinutes: 8
+keyTerms:
+  - term: Multimodal model
+    definition: A model that accepts more than one kind of input, here text plus images.
+  - term: input_image
+    definition: The Responses API content part that carries an image as an https URL or a base64 data URL.
+  - term: Data URL
+    definition: An image embedded as text, in the form data:image/jpeg;base64,... so the model doesn't need to fetch a link.
+  - term: Image detail
+    definition: An optional setting (low, high or auto) that trades image resolution, and so tokens, against detail.
+  - term: Azure Vision in Foundry Tools
+    definition: The Foundry Tools service for fixed image analysis such as captions, tags, objects and OCR.
+interview:
+  - level: beginner
+    q: How do you ask a model a question about a photo?
+    a: >-
+      Use a deployed multimodal model like gpt-4.1. In the Foundry chat playground I attach the image and type the question. In code I send a user message with a text part and an input_image part holding a URL or base64 image.
+    followUps:
+      - q: Does every model accept images?
+        a: >-
+          No. The model card lists the input types. Text-only models and most small models can't take images.
+  - level: intermediate
+    q: When would you send an image as base64 instead of a URL?
+    a: >-
+      When the image is on the user's device or in private storage the model can't reach, such as an insurance claim photo. A public https URL is fine for images that are already online. Base64 makes the request bigger, so I resize large photos first.
+    followUps: []
+  - level: experienced
+    q: Would you use a multimodal model or Azure Vision to read meter numbers from thousands of photos?
+    a: >-
+      For a fixed job at volume, like reading printed numbers, Azure Vision's OCR or a Content Understanding analyzer gives structured, repeatable output. A multimodal model shines when the question changes, like 'is this meter damaged, and what would you check next?'. I'd often combine them.
+    followUps: []
+  - level: scenario
+    q: Your model keeps miscounting items on a shelf photo. What do you do?
+    a: >-
+      Send a higher-detail or cropped image, ask a narrower question ('count only the red packets on the top shelf'), and tell it to say if it's unsure. If counts must be exact, I'd use a dedicated object detection approach and keep a person checking the results.
+    followUps: []
+revision:
+  keyPoints:
+    - Multimodal models (GPT-4.1, GPT-4o, GPT-5 family) accept images alongside text.
+    - In the chat playground, attach an image to your message and ask about it.
+    - In code, the user content has input_text and input_image parts.
+    - input_image takes an https URL or a base64 data URL (data:image/jpeg;base64,...).
+    - Ask specific questions, keep images clear, and check important answers. Guardrails apply to images too.
+  mistakes:
+    - Sending an image to a text-only deployment and expecting it to see the picture.
+    - Trusting exact counts, tiny text or measurements without checking.
+  examTips:
+    - '"Ask questions about a photo in a prompt" = **multimodal model** with an **input_image** part.'
+    - '"Fixed captions, tags or OCR at scale" = **Azure Vision** or Content Understanding instead.'
+  quick:
+    - q: Which content part carries an image in the Responses API?
+      a: input_image
+    - q: Name two ways to pass the image.
+      a: An https URL or a base64 data URL.
+    - q: Where can you try image prompts without code?
+      a: The chat playground in the Foundry portal.
+    - q: Do content filters apply to image prompts?
+      a: Yes, guardrails check image inputs too.
+    - q: Name one task multimodal models often get wrong.
+      a: Exact counting, small text or precise measurements.
+references:
+  - title: What is Azure Vision?
+    url: https://learn.microsoft.com/azure/ai-services/computer-vision/overview
+  - title: 'Quickstart: Get started with code in Microsoft Foundry'
+    url: https://learn.microsoft.com/azure/foundry/quickstarts/get-started-code
+  - title: Study guide for Exam AI-901
+    url: https://learn.microsoft.com/en-us/credentials/certifications/resources/study-guides/ai-901
+related:
+  - computer-vision-and-image-generation
+  - vision-app
+  - image-generation
+  - spoken-prompts-multimodal
+---
+
+## Start with a question
+
+<Story question="What if you could show the model a photo instead of describing it?">
+
+Try explaining a dented car bumper in words: "it's a small dent, sort of left of the number plate, maybe the size of a cricket ball". Now just take a photo.
+
+Multimodal models can **look**. You send the picture with your question, and the model answers about what it sees. An insurance clerk, a shopkeeper or a student with a confusing diagram can all skip the long description.
+
+</Story>
+
+## Explain it like I'm 10
+
+<Eli10>
+
+Normally you can only send the model a letter.
+
+A multimodal model lets you put a photo in the envelope too. Now you can write "What's wrong with my bike in this picture?" and it looks at the photo before it writes back.
+
+It has good eyes, not perfect ones. If you ask it to count 200 grains of rice, it might get it wrong.
+
+</Eli10>
+
+## The technical explanation
+
+Models such as **GPT-4.1**, **GPT-4o** and the **GPT-5** family accept images in the prompt. The model card in the Foundry model catalog lists the supported inputs, so check it says image input before you deploy.
+
+### In the chat playground
+
+Open your multimodal deployment in the **chat playground**, attach an image to the message, and ask a question. The system message still applies, so you can say "You are an insurance assessor. Describe visible damage only, and don't guess the repair cost." It's the fastest way to see whether the model handles your kind of image.
+
+### In code
+
+With the Foundry SDK, the user message holds a list of **content parts**: `input_text` for the question and `input_image` for the picture.
+
+```python
+import base64, os
+from azure.identity import DefaultAzureCredential
+from azure.ai.projects import AIProjectClient
+
+project = AIProjectClient(endpoint=os.environ["FOUNDRY_PROJECT_ENDPOINT"], credential=DefaultAzureCredential())
+openai = project.get_openai_client()
+
+# A local photo becomes a base64 data URL
+with open("bumper.jpg", "rb") as f:
+    data_url = "data:image/jpeg;base64," + base64.b64encode(f.read()).decode("utf-8")
+
+response = openai.responses.create(
+    model="gpt-4.1",  # a multimodal deployment name
+    instructions="You are an insurance assessor. Describe visible damage only.",
+    input=[{
+        "role": "user",
+        "content": [
+            {"type": "input_text", "text": "Where is the damage on this car, and how large does it look?"},
+            {"type": "input_image", "image_url": data_url},
+            # or an online image: {"type": "input_image", "image_url": "https://example.com/bumper.jpg"}
+        ],
+    }],
+)
+print(response.output_text)
+```
+
+You can put several images in one message, for example "before" and "after" photos, and ask the model to compare them.
+
+<Compare
+  caption="URL or base64?"
+  columns={[
+    { title: 'https URL', icon: '🌐', items: ['Image is already online', 'Small request', 'The service must be able to fetch the link'] },
+    { title: 'Base64 data URL', icon: '📦', tone: 'accent', items: ['Image is on the device or private', 'Works without a public link', 'Bigger request, so resize big photos'] },
+  ]}
+/>
+
+### Getting good answers from images
+
+| Do | Why |
+| --- | --- |
+| Ask a specific question ("What's the expiry date on the label?") | Vague prompts get vague descriptions |
+| Send a clear, well-lit, upright image, cropped to what matters | Blur, rotation and clutter cause misreads |
+| Tell it to say when it's unsure | Cuts down confident guesses |
+| Check counts, small text and measurements | These are common weak spots |
+| Keep a person in the loop for medical, legal or safety decisions | The model can be wrong and isn't accountable |
+
+Images cost tokens like text does, and bigger or higher-detail images use more. Your deployment's **guardrails** (content filters) check image inputs too, and you shouldn't send images of people without a good reason and their awareness.
+
+<TryIt labs="ai-vision" text="Attach a photo to a prompt in the lab and ask the model specific questions about it." />
+
+<Callout type="exam">
+"Ask a question about an image" or "describe a photo in a chat" points to a **multimodal model** with an **input_image** part (URL or base64). If the scenario wants **fixed, repeatable** outputs like tags, bounding boxes or OCR text at scale, **Azure Vision in Foundry Tools** or Content Understanding fits better. And creating a **new** image is a different job: that's an image-generation model such as gpt-image-1.
+</Callout>
+
+<DeepDive title="The image detail setting">
+
+The `input_image` part can take an optional `detail` value: `low`, `high` or `auto`. Low sends a small version of the image and uses far fewer tokens, which is fine for "is this a cat or a dog?". High lets the model look at tiles of the full image, which helps with small print and fine detail but costs more tokens. Auto lets the service choose.
+
+</DeepDive>
+
+## Real-world business scenario
+
+<Scenario
+  company="Fabrikam Insurance"
+  industry="Insurance"
+  problem="Motor claims arrived with phone photos and short, unclear descriptions. Assessors spent the first ten minutes of each claim just working out what was damaged."
+  service="The claims app sends each photo as a base64 input_image to a gpt-4.1 deployment with a system message that asks for visible damage, location and a confidence note, and never a payout amount."
+  why="A multimodal model handles any angle and any car without training a custom model, and the system message keeps it to description, not decisions."
+  outcome="Assessors start each claim with a short damage summary to check, while the payout decision stays with a person."
+/>
+
+## When to use it and when not to
+
+<UseWhen
+  use={[
+    'Users can show the problem faster than they can describe it.',
+    'Questions about images vary, so a fixed analysis feature would be too rigid.',
+    'You want to compare images, explain a diagram or read a label in context.',
+  ]}
+  avoid={[
+    'You need exact counts, measurements or bounding boxes. Use a dedicated vision feature and check results.',
+    'High-stakes decisions such as diagnosis without a qualified person reviewing.',
+    'Identifying people from their faces. Face recognition is limited access and needs a strong reason.',
+  ]}
+  alternatives={[
+    'Azure Vision in Foundry Tools for captions, tags, objects and OCR.',
+    'Content Understanding to pull defined fields out of images.',
+    'gpt-image-1 when you need to create or edit an image.',
+  ]}
+/>

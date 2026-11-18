@@ -1,0 +1,27 @@
+{ "cert": "ai-901", "domain": 1, "topic": "speech-recognition-and-synthesis", "questions": [
+  { "id": "ai-speechrs-1", "type": "single", "question": "A university wants to display live captions while lecturers speak in classrooms. Which capability of Azure Speech in Foundry Tools should the university use?", "options": [
+    { "text": "Text to speech", "why": "Text to speech converts written text into audio. Captions require converting audio into text." },
+    { "text": "Real-time speech to text", "why": "Correct. Real-time speech recognition transcribes speech as it is spoken, which is required for live captions." },
+    { "text": "Custom voice", "why": "Custom voice creates a unique synthetic voice and does not produce captions." },
+    { "text": "Batch transcription", "why": "Batch transcription processes recorded files asynchronously and is not suitable for live captions." } ], "answer": [1], "explanation": "Live captions require real-time speech to text, which converts spoken audio into text as it is received.", "objective": "1.3.3" },
+  { "id": "ai-speechrs-2", "type": "single", "scenario": "A bank records customer support calls. Compliance officers need transcripts that show which statements were made by the support agent and which were made by the customer.", "question": "Which feature should the bank use?", "options": [
+    { "text": "Speaker diarization", "why": "Correct. Speaker diarization labels each segment of the transcript with the speaker who said it." },
+    { "text": "Speech translation", "why": "Speech translation converts speech into another language. It does not identify speakers." },
+    { "text": "SSML", "why": "SSML controls how synthesized speech sounds. It is not used for transcription." },
+    { "text": "Neural text to speech", "why": "Neural text to speech produces audio from text and does not analyze recordings." } ], "answer": [0], "explanation": "Speaker diarization separates a transcript by speaker, answering the question of who spoke when.", "objective": "1.3.3" },
+  { "id": "ai-speechrs-3", "type": "multi", "question": "A developer uses a neural voice to read one-time passwords aloud. Which TWO adjustments can the developer make by using Speech Synthesis Markup Language (SSML)?", "options": [
+    { "text": "Slow the speaking rate when the password digits are read", "why": "Correct. The prosody element in SSML controls speaking rate." },
+    { "text": "Insert a pause before the expiry message", "why": "Correct. The break element in SSML inserts a pause of a specified length." },
+    { "text": "Identify the language of incoming customer audio", "why": "Identifying the language of incoming audio is a speech recognition feature, not an SSML capability." },
+    { "text": "Label which caller spoke each sentence", "why": "Labeling speakers is speaker diarization, a speech-to-text feature." } ], "answer": [0, 1], "explanation": "SSML controls how text is spoken, including rate, pitch, pauses, pronunciation and speaking style.", "objective": "1.3.3" },
+  { "id": "ai-speechrs-4", "type": "single", "question": "A pharmaceutical company finds that speech-to-text transcripts frequently misrecognize drug names used by its staff. A phrase list has not improved accuracy sufficiently. What should the company use?", "options": [
+    { "text": "Custom speech", "why": "Correct. Custom speech trains the recognition model with the company's own audio and text to improve accuracy for specialized vocabulary." },
+    { "text": "Custom voice", "why": "Custom voice changes how synthesized speech sounds. It does not improve recognition accuracy." },
+    { "text": "A higher temperature setting", "why": "Temperature is a generative model parameter and does not affect speech recognition accuracy." },
+    { "text": "Speech translation", "why": "Speech translation converts speech to another language and does not improve recognition of specialized terms." } ], "answer": [0], "explanation": "Custom speech adapts the speech recognition model to specific vocabulary, accents and audio conditions.", "objective": "1.3.3" },
+  { "id": "ai-speechrs-5", "type": "single", "question": "A travel app must listen to a traveler speaking Hindi and display the words in English text. Which capability should the app use?", "options": [
+    { "text": "Text to speech", "why": "Text to speech produces audio from text. The input here is speech." },
+    { "text": "Speech translation", "why": "Correct. Speech translation recognizes speech in one language and returns text or speech in another language." },
+    { "text": "Speaker diarization", "why": "Speaker diarization identifies speakers but does not translate." },
+    { "text": "Key phrase extraction", "why": "Key phrase extraction finds talking points in text and does not process audio or translate." } ], "answer": [1], "explanation": "Speech translation combines recognition and translation so that spoken input in one language becomes output in another.", "objective": "1.3.3" }
+] }

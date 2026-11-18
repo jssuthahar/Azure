@@ -1,0 +1,195 @@
+---
+title: Answer Spoken Prompts with a Multimodal Model
+seoTitle: Answer Spoken Prompts with a Multimodal Model | AI-901
+description: Send a voice question to an audio-capable model deployed in Microsoft Foundry, compare it with a speech-to-text pipeline and realtime voice. For AI-901.
+answer: >-
+  To respond to a **spoken prompt**, deploy an **audio-capable multimodal model** (such as the gpt-audio or gpt-4o-audio-preview family) in Foundry and send the recording as an **input_audio** content part (base64 audio plus its format). The model understands the speech directly and can reply in **text or audio**. The older route is a **pipeline**: speech to text, then a text model, then text to speech. For live, low-latency talk you use a **realtime** model or the **Voice Live API**.
+updated: 2026-11-18
+readingMinutes: 8
+keyTerms:
+  - term: Multimodal model
+    definition: A model that accepts more than one kind of input, such as text plus audio or text plus images.
+  - term: Audio-capable model
+    definition: A model deployment, such as the gpt-audio family, that takes audio input and can return text or spoken audio.
+  - term: input_audio
+    definition: The chat message content part that carries base64-encoded audio and its format, such as wav.
+  - term: Speech pipeline
+    definition: Speech to text, then a text model, then text to speech, chained by your code.
+  - term: Voice Live API
+    definition: An Azure Speech API for low-latency, two-way voice conversations with a generative model.
+interview:
+  - level: beginner
+    q: How can an app answer a question the user speaks out loud?
+    a: >-
+      Either send the recording straight to an audio-capable multimodal model, which understands the speech and replies, or transcribe it with speech to text first and send the text to a normal chat model. The first is fewer moving parts; the second gives me a transcript at every step.
+    followUps:
+      - q: Can the model answer with a voice?
+        a: >-
+          Yes. Audio-capable models can return audio as well as text, if you ask for both in the request.
+  - level: intermediate
+    q: What does the request look like when you send audio to the model?
+    a: >-
+      The user message has a list of content parts. One is a text part with the instruction, and one is an input_audio part with the base64-encoded recording and its format, such as wav. I also set modalities if I want spoken audio back.
+    followUps: []
+  - level: experienced
+    q: When would you still choose the speech-to-text pipeline?
+    a: >-
+      When I need features the Speech service gives me, like custom speech for domain words, diarization, a particular neural voice or SSML control, or when I want to log and filter the transcript before it reaches the model. The pipeline costs more latency, but each step is easy to inspect.
+    followUps: []
+  - level: scenario
+    q: A bank wants a phone assistant that can be interrupted mid-sentence. What do you suggest?
+    a: >-
+      A realtime approach, such as a gpt-realtime deployment or the Voice Live API. Sending one recording at a time feels like walkie-talkie; realtime streams audio both ways, so the caller can interrupt naturally.
+    followUps: []
+revision:
+  keyPoints:
+    - Audio-capable multimodal models accept speech directly and can reply in text or audio.
+    - Audio goes in an input_audio content part as base64 data with a format such as wav.
+    - The classic alternative is speech to text, then a text model, then text to speech.
+    - For live, interruptible conversations use a realtime model or the Voice Live API.
+    - You can test spoken prompts in the Foundry chat playground before writing code.
+  mistakes:
+    - Sending the audio file path instead of base64-encoded audio data.
+    - Expecting a text-only model such as gpt-4.1-mini to accept audio input.
+  examTips:
+    - '"Send speech directly to the model" = **audio-capable multimodal model** with input_audio.'
+    - '"Low-latency live voice conversation" = **realtime** model or **Voice Live API**.'
+  quick:
+    - q: Which content part carries audio in the request?
+      a: input_audio
+    - q: How is the audio encoded in the request?
+      a: As base64 data, with its format (for example wav).
+    - q: Name the three steps of the speech pipeline.
+      a: Speech to text, a text model, text to speech.
+    - q: Can an audio-capable model reply with speech?
+      a: Yes, it can return audio as well as text.
+    - q: What do you use for a live, interruptible voice chat?
+      a: A realtime model or the Voice Live API.
+references:
+  - title: What is the Speech service?
+    url: https://learn.microsoft.com/azure/ai-services/speech-service/overview
+  - title: What is Microsoft Foundry?
+    url: https://learn.microsoft.com/azure/foundry/what-is-foundry
+  - title: Study guide for Exam AI-901
+    url: https://learn.microsoft.com/en-us/credentials/certifications/resources/study-guides/ai-901
+related:
+  - azure-speech-app
+  - speech-recognition-and-synthesis
+  - choosing-an-ai-model
+  - visual-prompts-multimodal
+---
+
+## Start with a question
+
+<Story question="What if your customers would rather talk than type?">
+
+A farmer in Madurai wants to know whether to spray before tomorrow's rain. Typing a long question in English on a small phone is slow. Saying it out loud takes five seconds.
+
+Some models can now **listen**. You send them the recording, and they understand it the same way they understand typed text. That's a **spoken prompt** to a **multimodal model**.
+
+</Story>
+
+## Explain it like I'm 10
+
+<Eli10>
+
+Old way: you whisper to a friend, they write it down, pass the note to the teacher, the teacher writes an answer, and another friend reads it out to you.
+
+New way: you just talk to the teacher, and the teacher talks back.
+
+The note-passing chain still works and you can read every note. Talking straight to the teacher is quicker.
+
+</Eli10>
+
+## The technical explanation
+
+A **multimodal model** takes more than one kind of input. **Audio-capable** models in the Foundry model catalog (for example the gpt-audio and gpt-4o-audio-preview families) take speech as input and can return **text, audio or both**. Check the model card for supported audio formats, languages and regions, and deploy it in your project like any other model.
+
+In the Foundry **chat playground** you can try this first: pick the audio model deployment, record or attach a short clip, and read the reply.
+
+<Compare
+  caption="Three ways to answer a spoken question"
+  columns={[
+    { title: 'Audio-capable model', icon: '🎧', tone: 'accent', items: ['Send the recording as input_audio', 'One model call', 'Reply in text or audio', 'Good for voice questions in an app'] },
+    { title: 'Speech pipeline', icon: '🔗', items: ['Speech to text → text model → text to speech', 'Three calls your code chains', 'Custom speech, SSML, any neural voice', 'Transcript visible at each step'] },
+    { title: 'Realtime / Voice Live', icon: '📞', items: ['Streams audio both ways', 'Lowest latency, can be interrupted', 'Phone bots, live assistants', 'Uses a realtime model or Voice Live API'] },
+  ]}
+/>
+
+### Sending audio from Python
+
+Audio-capable models use the Chat Completions message format. The user message holds a list of **content parts**: a text instruction and an **input_audio** part with the recording as base64.
+
+```python
+import base64, os
+from openai import OpenAI
+from azure.identity import DefaultAzureCredential, get_bearer_token_provider
+
+# Sign in with Microsoft Entra ID (az login locally)
+token = get_bearer_token_provider(DefaultAzureCredential(), "https://cognitiveservices.azure.com/.default")
+client = OpenAI(
+    base_url=os.environ["AZURE_OPENAI_ENDPOINT"] + "openai/v1/",  # https://<resource>.openai.azure.com/
+    api_key=token,
+)
+
+# Read a short WAV recording and encode it as base64
+with open("question.wav", "rb") as f:
+    audio_b64 = base64.b64encode(f.read()).decode("utf-8")
+
+completion = client.chat.completions.create(
+    model="gpt-audio",            # your audio-capable deployment name
+    modalities=["text"],          # use ["text", "audio"] to get speech back too
+    messages=[
+        {"role": "system", "content": "You are a farm advisor. Answer in two short sentences."},
+        {"role": "user", "content": [
+            {"type": "text", "text": "Answer the question in this recording."},
+            {"type": "input_audio", "input_audio": {"data": audio_b64, "format": "wav"}},
+        ]},
+    ],
+)
+print(completion.choices[0].message.content)
+```
+
+If you ask for `["text", "audio"]` you also pass an `audio` option (voice and output format), and the reply's `message.audio` holds base64 audio you can save and play, plus a transcript of what it said.
+
+<TryIt labs="ai-speech" text="Send a spoken question to an audio-capable model in the lab and compare it with the speech-to-text route." />
+
+<Callout type="exam">
+If the scenario says the app must send **speech directly to a model** and get an answer, pick an **audio-capable multimodal model** with an **input_audio** part. If it needs a specific neural voice, SSML or custom vocabulary, the **Azure Speech** pipeline fits better. If the caller must be able to **interrupt** in real time, think **realtime models** or the **Voice Live API**. A text-only model can't take audio.
+</Callout>
+
+<DeepDive title="Guardrails and privacy still apply">
+
+The audio is a prompt like any other, so your deployment's guardrails (content filters) apply to what the model hears and says. Recordings can carry personal data such as names and account numbers, so treat stored audio like any other personal data: keep only what you need, and tell users their voice is being processed by AI. That's the transparency principle in practice.
+
+</DeepDive>
+
+## Real-world business scenario
+
+<Scenario
+  company="An agritech co-operative in Tamil Nadu"
+  industry="Agriculture"
+  problem="Members asked crop questions by phone in mixed Tamil and English. A typed chatbot went unused because many members preferred to speak."
+  service="A small app that records the question, sends it as input_audio to an audio-capable model deployment in Foundry with a farm-advisor system message, and plays back the text reply through text to speech."
+  why="One model call understood mixed-language speech without a separate transcription step, and the system message kept answers short and on topic."
+  outcome="Voice questions became the most used channel within weeks, and agronomists only handled the questions the model flagged as unsure."
+/>
+
+## When to use it and when not to
+
+<UseWhen
+  use={[
+    'Users prefer to ask by voice, for example on a phone or in the field.',
+    'You want the simplest path from a recording to an answer, with one model call.',
+    'The model should pick up tone or hesitation that a plain transcript loses.',
+  ]}
+  avoid={[
+    'You need a particular branded neural voice, SSML control or custom vocabulary. Use Azure Speech.',
+    'You need live, interruptible conversation. Use a realtime model or the Voice Live API.',
+    'Regulations require a stored transcript at each step. The pipeline makes that easier.',
+  ]}
+  alternatives={[
+    'Azure Speech speech to text plus a text model plus text to speech.',
+    'Voice Live API for live voice agents.',
+  ]}
+/>

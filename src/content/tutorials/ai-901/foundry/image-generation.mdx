@@ -1,0 +1,217 @@
+---
+title: Generate Images with Generative Models
+seoTitle: Generate Images with gpt-image-1 in Foundry | AI-901
+description: Create new images with gpt-image-1 in the Foundry images playground and in Python, with prompt tips, editing, guardrails and AI-901 practice questions.
+answer: >-
+  You create new visual output by deploying an **image-generation model** such as **gpt-image-1** in **Microsoft Foundry** and sending it a text prompt, either in the **images playground** or from code with `images.generate`. You choose the **size** and **quality**, the model returns the picture as base64 data, and **guardrails** check the prompt and the image while **content credentials** mark the result as AI-generated.
+updated: 2026-11-18
+readingMinutes: 8
+keyTerms:
+  - term: Image-generation model
+    definition: A generative model that creates a new image from a text prompt, such as gpt-image-1.
+  - term: gpt-image-1
+    definition: An OpenAI image model in Foundry that generates new images and edits existing ones from text instructions.
+  - term: Images playground
+    definition: The Foundry portal page where you type a prompt, pick size and quality, and see generated images without writing code.
+  - term: Image editing (inpainting)
+    definition: Changing part of an existing image from a text instruction, optionally limited to a masked area.
+  - term: Content credentials
+    definition: Signed C2PA provenance metadata added to generated images so anyone can check they were made with AI.
+interview:
+  - level: beginner
+    q: How do you generate an image with Microsoft Foundry?
+    a: >-
+      I deploy an image model like gpt-image-1 in my Foundry project, open the images playground and type a prompt describing the picture. From code I call images.generate on the OpenAI client I get from the project, passing the deployment name, the prompt and a size.
+    followUps:
+      - q: What comes back from the API?
+        a: >-
+          A list of images, each as base64 data in b64_json. I decode it and save it as a PNG file.
+  - level: intermediate
+    q: What makes a good image prompt?
+    a: >-
+      Be specific about the subject, setting, style, lighting and layout, and say what text should appear if any. "A watercolour poster of a Chennai beach at sunrise, wide shot, soft orange light, the words Marina Run 2026 at the top" works far better than "beach poster". If the first result is close, I tweak one detail at a time.
+    followUps: []
+  - level: experienced
+    q: How do responsible AI controls apply to image generation?
+    a: >-
+      Foundry guardrails check the prompt before generation and the image after it, for categories like hate, sexual, violence and self-harm, and the request fails with a content-filter error if something is blocked. Generated images also carry content credentials, so people downstream can see the image was AI-generated. I'd still add human review before anything goes into a public campaign.
+    followUps: []
+  - level: scenario
+    q: A marketing team wants 20 banner variations for a festival sale but keeps getting images with the wrong layout. What do you suggest?
+    a: >-
+      I'd fix the size to the banner shape, like 1536x1024 for landscape, and write a prompt template that spells out layout, colours and text placement, changing only the product and offer per variation. For small fixes on an image they like, I'd use image editing instead of regenerating from scratch.
+    followUps: []
+revision:
+  keyPoints:
+    - Image-generation models create new images from text prompts; gpt-image-1 is the current OpenAI model in Foundry.
+    - Test in the images playground first, then call images.generate from code with the deployment name.
+    - Size and quality are the main settings; higher quality takes longer and costs more.
+    - gpt-image-1 can also edit an existing image from an instruction, optionally with a mask.
+    - Guardrails filter harmful prompts and outputs, and content credentials label images as AI-generated.
+  mistakes:
+    - Sending an image-generation request to a chat model deployment. You need an image model deployment.
+    - Thinking a vision model creates images. Vision models read images; image-generation models make them.
+  examTips:
+    - '"Create a new image from a description" = an **image-generation model** such as gpt-image-1.'
+    - '"Prove an image was AI-generated" = **content credentials** (C2PA provenance).'
+  quick:
+    - q: Which model creates images from text in Foundry?
+      a: gpt-image-1 (DALL-E 3 is the older option).
+    - q: Which method generates an image in Python?
+      a: images.generate on the OpenAI client from the project.
+    - q: How is the generated image returned?
+      a: As base64 data in data[0].b64_json.
+    - q: What checks harmful image prompts?
+      a: Foundry guardrails (content filters).
+    - q: What marks an image as AI-generated?
+      a: Content credentials (C2PA provenance metadata).
+references:
+  - title: How to use image generation models (Azure OpenAI in Foundry)
+    url: https://learn.microsoft.com/azure/ai-foundry/openai/how-to/dall-e
+  - title: Content credentials in Azure OpenAI
+    url: https://learn.microsoft.com/azure/ai-foundry/openai/concepts/content-credentials
+  - title: AI-901 study guide
+    url: https://learn.microsoft.com/en-us/credentials/certifications/resources/study-guides/ai-901
+related:
+  - visual-prompts-multimodal
+  - vision-app
+  - computer-vision-and-image-generation
+---
+
+## Start with a question
+
+<Story question="Can I get a festival poster made in a minute without hiring a designer?">
+
+Priya runs a small sweet shop in Madurai. Diwali is two weeks away and she wants a poster with a plate of laddoos, diyas and the words "Diwali Specials". A designer would take a few days.
+
+She types one sentence describing the poster, and a few seconds later there's a brand-new picture that never existed before. That's an **image-generation model** at work, and in Microsoft Foundry the one you'll use is **gpt-image-1**.
+
+</Story>
+
+## Explain it like I'm 10
+
+<Eli10>
+
+Imagine a friend who's brilliant at drawing but has never seen your room.
+
+You say, "Draw a blue rocket on a green rug next to a sleeping cat." Your friend draws exactly that, from your words alone.
+
+If the cat looks grumpy, you say, "Make the cat smile," and they change just the cat.
+
+An image-generation model is that friend. Your words are the instructions, and the drawing is brand new every time.
+
+</Eli10>
+
+## The technical explanation
+
+An **image-generation model** turns a text prompt into a new image. In Foundry the main choice is **gpt-image-1** from OpenAI (DALL-E 3 is the older model you may still see). It's a different job from vision: a multimodal model *reads* an image you give it, while an image model *creates* one.
+
+### Step 1: try it in the images playground
+
+1. In your Foundry project, open the **model catalog**, find **gpt-image-1** and deploy it. Some image models need an access request before the deploy button works.
+2. Open the **Images playground**, pick your deployment and type a prompt.
+3. Set the **size** and **quality**, then generate. Change one thing at a time and compare.
+4. Use **View code** to see the same request as Python.
+
+| Setting | What it does | Values you'll see |
+| --- | --- | --- |
+| Size | Shape and resolution of the picture | `1024x1024` (square), `1536x1024` (landscape), `1024x1536` (portrait), `auto` |
+| Quality | Detail level, which affects time and cost | `low`, `medium`, `high` (or `auto`) |
+| Number of images | How many variations per request | `n` in code |
+
+<TryIt labs="ai-vision" text="Deploy an image model, generate a poster from a prompt, then change the size and quality and compare the results." />
+
+### Step 2: generate from code
+
+You use the same Foundry SDK as for chat. The `model` value is your **deployment name**.
+
+```python
+# pip install "azure-ai-projects>=2.3.0" azure-identity
+import base64, os
+from azure.identity import DefaultAzureCredential
+from azure.ai.projects import AIProjectClient
+
+project = AIProjectClient(
+    endpoint=os.environ["FOUNDRY_PROJECT_ENDPOINT"],
+    credential=DefaultAzureCredential(),   # uses your az login
+)
+openai = project.get_openai_client()
+
+result = openai.images.generate(
+    model="gpt-image-1",            # your deployment name
+    prompt="A festive poster: a brass plate of laddoos surrounded by glowing diyas, "
+           "warm golden light, the words 'Diwali Specials' in bold at the top",
+    size="1024x1536",               # portrait poster
+    quality="medium",
+)
+
+# gpt-image-1 returns base64 data, so decode it and save a PNG
+with open("poster.png", "wb") as f:
+    f.write(base64.b64decode(result.data[0].b64_json))
+```
+
+### Writing prompts that work
+
+- **Subject first**, then setting, style, lighting and camera angle: "close-up product photo, white background, soft studio light".
+- **Spell out any text** you want on the image and keep it short. Long sentences in images still go wrong sometimes.
+- **Say the layout**: "logo in the top-left corner, empty space on the right for a price".
+- **Iterate**. Keep the prompt that worked and change one detail per try.
+
+### Editing an existing image
+
+gpt-image-1 can also **edit**. You send an image plus an instruction such as "replace the background with a beach at sunset", and you can add a **mask** so only part of the picture changes (often called inpainting). In code that's `images.edit` instead of `images.generate`; in the playground you upload an image and describe the change.
+
+<Flow
+  caption="What happens to one image request"
+  steps={[
+    { title: 'Prompt', text: 'Your text, size and quality go to the deployment.' },
+    { title: 'Prompt check', text: 'Guardrails check the prompt for harmful content.' },
+    { title: 'Generate', text: 'gpt-image-1 creates the image.' },
+    { title: 'Output check', text: 'Guardrails check the image itself.' },
+    { title: 'Credentials', text: 'C2PA content credentials are attached, then the image is returned.' },
+  ]}
+/>
+
+### Guardrails and content credentials
+
+Foundry **guardrails** (content filters) check image prompts and the generated images for hate, sexual, violence and self-harm content. If something's blocked, the request fails with a content-filter error instead of returning an image, and your app should show a friendly message. Every generated image also carries **content credentials**: signed C2PA metadata saying it was made with AI, so a newspaper or a customer can check where it came from.
+
+<Callout type="exam">
+Watch the verb. "Describe what's in this photo" points to a **multimodal or vision** model. "Create a new image from a description" points to an **image-generation** model like gpt-image-1. "Show the image was AI-generated" is **content credentials**, not a watermark you add yourself.
+</Callout>
+
+<DeepDive title="Cost and speed trade-offs">
+
+Image generation is billed per image, and the price depends on size and quality, so `high` quality at a large size costs the most. A sensible pattern is to draft at `low` or `medium` quality, pick the best prompt, then generate the final at `high`. Generation takes a few seconds to tens of seconds, so web apps usually show a spinner or run the request in the background rather than blocking the page.
+
+</DeepDive>
+
+## Real-world business scenario
+
+<Scenario
+  company="Fabrikam Travels, a Bengaluru travel agency"
+  industry="Travel and tourism"
+  problem="The team needed fresh banner images for 40 holiday packages every season, and stock photos looked the same as every competitor's."
+  service="Deployed gpt-image-1 in a Foundry project and built a small script that fills a prompt template with each destination, season and layout, generating drafts at medium quality and finals at high quality."
+  why="A prompt template keeps the brand style consistent, guardrails block unsafe requests, and content credentials keep the agency honest about AI-made images."
+  outcome="Banner drafts that used to take a designer a week now take an afternoon, and the designer spends that time picking and polishing the best ones."
+/>
+
+## When to use it and when not to
+
+<UseWhen
+  use={[
+    'Marketing drafts, posters, social images and concept art where a new picture is needed.',
+    'Product mock-ups and storyboards to show an idea before paying for a photo shoot.',
+    'Quick edits to an existing image, like swapping a background, using image editing.',
+  ]}
+  avoid={[
+    'Understanding or describing an existing photo. Use a multimodal model or Azure Vision instead.',
+    'Images that must be factually exact, like a real person, a real product label or a technical diagram.',
+    'Anything published without human review.',
+  ]}
+  alternatives={[
+    '**A multimodal model** (GPT-4.1, GPT-4o) to read and describe images.',
+    '**Azure Vision in Foundry Tools** for captions, tags and text (OCR) from images.',
+  ]}
+/>

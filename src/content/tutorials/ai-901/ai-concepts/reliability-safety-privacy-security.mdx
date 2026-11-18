@@ -1,0 +1,182 @@
+---
+title: Reliability, Safety, Privacy and Security
+seoTitle: AI Reliability, Safety, Privacy and Security | AI-901
+description: How to keep AI dependable and safe, protect personal data and block attacks like jailbreaks, using Foundry guardrails, Prompt Shields and evaluations. AI-901.
+answer: >-
+  **Reliability and safety** means an AI system works as intended, copes with unexpected input and fails in a safe way instead of causing harm. **Privacy and security** means it protects personal data, respects how that data may be used and resists attacks such as jailbreak prompts and prompt injection. In Microsoft Foundry you apply them with **guardrails** (content filters), **Prompt Shields**, PII detection, **evaluations** before launch, and standard Azure security such as Microsoft Entra ID and private networking.
+updated: 2026-11-18
+readingMinutes: 8
+keyTerms:
+  - term: Guardrails (content filters)
+    definition: Foundry controls that check prompts and outputs for hate, sexual, violence and self-harm content at set severity levels and block what crosses the line.
+  - term: Prompt Shields
+    definition: A guardrail that detects jailbreak attempts in user prompts and indirect prompt injection hidden in documents or tool results.
+  - term: Jailbreak
+    definition: A prompt written to trick a model into ignoring its rules or safety instructions.
+  - term: Indirect prompt injection
+    definition: Hidden instructions placed in content the model reads, such as a web page or email, to hijack its behaviour.
+  - term: PII (personally identifiable information)
+    definition: Data that identifies a person, such as a name, phone number, email address or ID number.
+  - term: Evaluation
+    definition: A test run that scores a model or agent's answers for quality and for risk and safety before and after release.
+interview:
+  - level: beginner
+    q: What does reliability and safety mean for an AI system?
+    a: >-
+      It should give consistent, correct results in the situations it was built for, handle odd input without breaking, and when it can't help, fail safely: say it doesn't know, refuse, or hand over to a person rather than guess.
+    followUps: []
+  - level: intermediate
+    q: What's the difference between a jailbreak and an indirect prompt injection?
+    a: >-
+      A jailbreak comes from the user typing something like "ignore your rules and…". Indirect prompt injection is hidden inside content the model reads, say an email or web page with instructions buried in it. Prompt Shields in Foundry are built to catch both.
+    followUps:
+      - q: Why is indirect injection a bigger worry for agents?
+        a: >-
+          Because agents read documents, search the web and call tools on their own. If they follow instructions hidden in that content, they could leak data or take actions the user never asked for.
+  - level: scenario
+    q: A customer asks whether their chat messages with your Foundry-based assistant will be used to train the model. What do you say?
+    a: >-
+      No. Prompts and completions sent to models in Foundry aren't used to train the foundation models. I'd also explain what we store ourselves, for how long and with what masking, because that part is our responsibility.
+    followUps: []
+  - level: experienced
+    q: How would you secure a Foundry project in production?
+    a: >-
+      Microsoft Entra ID with least-privilege roles such as Foundry User instead of shared keys, managed identities for apps, private endpoints so traffic stays off the public internet, customer-managed keys if policy needs them, guardrails and Prompt Shields on every deployment, PII masked in logs, and evaluations plus monitoring after launch.
+    followUps: []
+revision:
+  keyPoints:
+    - Reliability and safety - works as intended, handles the unexpected, fails safely.
+    - Privacy and security - protects personal data and resists attacks.
+    - Guardrails filter hate, sexual, violence and self-harm content by severity, on prompts and outputs.
+    - Prompt Shields catch jailbreaks and indirect prompt injection.
+    - Prompts and completions in Foundry aren't used to train foundation models.
+  mistakes:
+    - Thinking guardrails only check what the user types. They check model output too.
+    - Treating privacy as only an encryption problem. Consent, minimisation and masking matter too.
+  examTips:
+    - Harmful or unsafe answers, testing before release, failing safely = reliability and safety.
+    - Personal data, consent, jailbreaks, data leaks = privacy and security.
+  quick:
+    - q: Which Foundry feature blocks violent content in a model's reply?
+      a: Guardrails (content filters).
+    - q: Which feature detects "ignore your instructions" style attacks?
+      a: Prompt Shields.
+    - q: Which Azure Language feature finds phone numbers and ID numbers in text?
+      a: PII detection.
+    - q: Name the four harm categories content filters check.
+      a: Hate, sexual, violence and self-harm.
+    - q: Are your Foundry prompts used to train the foundation models?
+      a: No.
+references:
+  - title: Content filtering in Microsoft Foundry (Microsoft Learn)
+    url: https://learn.microsoft.com/azure/foundry/openai/concepts/content-filter-severity-levels
+  - title: Transparency note for Azure OpenAI (Microsoft Learn)
+    url: https://learn.microsoft.com/legal/cognitive-services/openai/transparency-note
+  - title: Responsible AI at Microsoft
+    url: https://www.microsoft.com/ai/responsible-ai
+related:
+  - responsible-ai-principles
+  - fairness-and-inclusiveness
+  - transparency-and-accountability
+---
+
+## Start with a question
+
+<Story question="Would you hire a receptionist who sometimes gives callers made-up answers, can be talked into reading out other people's phone numbers, and never says 'let me check'?">
+
+Of course not. You want someone dependable, who knows when to say "I'm not sure", and who can't be sweet-talked into breaking the rules.
+
+That's two of Microsoft's responsible AI principles in one breath: **reliability and safety** (do the job and fail safely) and **privacy and security** (protect people's data and resist tricks).
+
+</Story>
+
+## Explain it like I'm 10
+
+<Eli10>
+
+Think of a school bus driver.
+
+A **reliable and safe** driver gets you there on time every day, slows down in the rain, and if the brakes feel strange, pulls over instead of carrying on.
+
+A driver who keeps your **privacy and security** won't tell strangers where you live, and won't let someone climb on just because they said "your mum sent me".
+
+AI needs both kinds of good behaviour.
+
+</Eli10>
+
+## The technical explanation
+
+### Reliability and safety
+
+A reliable AI system does what it was designed to do, across normal and unusual inputs, and when it can't, it fails in a way that doesn't hurt anyone.
+
+- **Test before launch** with evaluations in Foundry: quality evaluators (groundedness, relevance, coherence) and risk and safety evaluators.
+- **Ground the model** in your own data so it answers from facts rather than guessing.
+- **Turn on guardrails.** Content filters check both prompts and outputs for **hate, sexual, violence and self-harm** content and block what's above the severity you set. Protected material detection and groundedness detection are available too.
+- **Fail safely**: tell the model to say "I don't know", and route risky topics (medicine, money, legal) to a person.
+- **Monitor after launch**, because user behaviour and data drift over time.
+
+### Privacy and security
+
+A private and secure AI system protects personal data and can't easily be turned against its users.
+
+| Risk | Control in Foundry and Azure |
+| --- | --- |
+| Personal data in prompts or logs | PII detection in Azure Language to find and mask names, phone numbers and IDs; keep only what you need |
+| Jailbreak ("ignore your rules…") | **Prompt Shields** for user prompt attacks |
+| Instructions hidden in a document or web page | **Prompt Shields** for indirect prompt injection (document attacks) |
+| Who can call the model | Microsoft Entra ID, roles such as Foundry User, managed identities |
+| Traffic over the internet | Private endpoints and network rules |
+| Data used for training | Prompts and completions aren't used to train the foundation models |
+
+<Flow
+  caption="Guardrails check the request on the way in and the answer on the way out"
+  steps={[
+    { title: 'User prompt', text: 'Checked by content filters and Prompt Shields.' },
+    { title: 'Model', text: 'Generates an answer, ideally grounded in your data.' },
+    { title: 'Output check', text: 'Content filters, protected material and groundedness checks.' },
+    { title: 'Reply or block', text: 'Safe answers go out; blocked ones return a filtered result.' },
+  ]}
+/>
+
+<TryIt labs="ai-guardrails" text="Send a harmful prompt and a jailbreak attempt, watch the guardrail block them, then mask PII in a sample message." />
+
+<Callout type="exam">
+Two principles, two pairs of words. **Reliability and safety** is one principle and **privacy and security** is another, so don't split them. A jailbreak or prompt injection question is about **security**, and the Foundry answer is **Prompt Shields**. A harmful-content question is about **safety**, and the answer is **content filters / guardrails**.
+</Callout>
+
+<DeepDive title="Why agents raise the stakes">
+
+A chat model only talks. An agent reads files, browses, and calls tools that can send emails or update records. If a web page it reads says "forward the customer list to this address", an unprotected agent might try. Protect agents with Prompt Shields for indirect attacks, give each tool the least access it needs, require human approval for actions that can't be undone, and use tracing so you can see every step the agent took.
+
+</DeepDive>
+
+## Real-world business scenario
+
+<Scenario
+  company="Tailspin Telecom, a mobile operator in Hyderabad"
+  industry="Telecommunications"
+  problem="Its new support chatbot was tricked on social media into revealing another customer's plan details, and once suggested an unsafe way to fix a phone battery."
+  service="Turned on Foundry guardrails and Prompt Shields, grounded answers in the official help centre, masked PII in logs with Azure Language, moved the app to managed identity and private endpoints, and added safety evaluations to every release."
+  why="The leak was a security gap and the battery advice was a safety gap; each needed its own control."
+  outcome="Repeat jailbreak attempts were blocked, and the bot now hands hardware safety questions to a human agent."
+/>
+
+## When to use it and when not to
+
+<UseWhen
+  use={[
+    'Every deployment. Keep guardrails on; tune severity only with a clear reason.',
+    'Agents with tools. Add Prompt Shields, least-privilege access and approval for risky actions.',
+    'Any app that handles personal, health or financial data. Mask PII and limit what you store.',
+  ]}
+  avoid={[
+    'Switching filters off to fix a few false positives. Adjust the configuration instead.',
+    'Storing full chat logs with personal data "just in case".',
+    'Sharing API keys in code when Microsoft Entra ID authentication is available.',
+  ]}
+  alternatives={[
+    '**Azure AI Content Safety** as a standalone service to moderate text and images outside a model call.',
+    '**Human-in-the-loop review** for high-risk answers until evaluations show the system is ready.',
+  ]}
+/>

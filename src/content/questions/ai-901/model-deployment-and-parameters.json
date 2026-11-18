@@ -1,0 +1,27 @@
+{ "cert": "ai-901", "domain": 1, "topic": "model-deployment-and-parameters", "questions": [
+  { "id": "ai-deploy-params-1", "type": "single", "scenario": "A healthcare provider in Germany is deploying a chat model in Microsoft Foundry. Company policy states that prompts and responses must be processed only within the European Union. The provider wants to pay per token.", "question": "Which deployment type should the provider use?", "options": [
+    { "text": "Global Standard", "why": "Global Standard can process requests in any Azure region, so it does not meet the EU processing requirement." },
+    { "text": "Global Batch", "why": "Global Batch can also process requests in any region, and it is asynchronous rather than interactive." },
+    { "text": "Data Zone Standard", "why": "Correct. Data Zone Standard keeps processing within the selected data zone, such as the EU, and is billed per token." },
+    { "text": "Developer", "why": "Developer deployments are for evaluating fine-tuned models, have no SLA and process requests globally." } ], "answer": [2], "explanation": "Data Zone deployments keep processing inside a Microsoft-defined data zone (US, EU or APAC) while still using pay-per-token billing.", "objective": "1.2.3" },
+  { "id": "ai-deploy-params-2", "type": "single", "question": "A company must summarize several hundred thousand documents each week. The results are not time-sensitive, and the company wants to minimize cost. Which deployment type should the company use?", "options": [
+    { "text": "Global Batch", "why": "Correct. Batch deployments process files of requests asynchronously with a 24-hour target at a significantly lower price than standard deployments." },
+    { "text": "Global Provisioned", "why": "Provisioned deployments reserve capacity for steady, low-latency traffic. They are not the lowest-cost option for occasional, non-urgent jobs." },
+    { "text": "Global Standard", "why": "Global Standard works, but it is billed at the standard rate and is designed for real-time requests." },
+    { "text": "Developer", "why": "Developer deployments are intended for evaluating fine-tuned models, not production workloads." } ], "answer": [0], "explanation": "Batch deployments suit large, non-urgent workloads and cost about 50 percent less than standard deployments.", "objective": "1.2.3" },
+  { "id": "ai-deploy-params-3", "type": "single", "question": "A developer notices that a model returns noticeably different answers each time the same factual question is asked. The developer wants more consistent answers. What should the developer do?", "options": [
+    { "text": "Increase the temperature", "why": "A higher temperature increases randomness and makes answers vary more." },
+    { "text": "Decrease the temperature", "why": "Correct. A lower temperature makes the model choose the most likely tokens, which produces more focused and repeatable answers." },
+    { "text": "Increase the presence penalty", "why": "A higher presence penalty encourages the model to introduce new topics, which does not improve consistency." },
+    { "text": "Increase the max output tokens", "why": "Max output tokens limits response length. It does not control randomness." } ], "answer": [1], "explanation": "Temperature controls randomness. Lower values give more deterministic responses.", "objective": "1.2.3" },
+  { "id": "ai-deploy-params-4", "type": "multi", "question": "Which TWO statements about provisioned deployments in Microsoft Foundry are correct?", "options": [
+    { "text": "Capacity is reserved in provisioned throughput units (PTUs)", "why": "Correct. Provisioned deployments are sized and billed by PTUs." },
+    { "text": "They provide predictable latency for steady, high-volume workloads", "why": "Correct. Reserved capacity gives low latency variance." },
+    { "text": "They process requests asynchronously with a 24-hour target", "why": "That describes Batch deployments, not Provisioned deployments." },
+    { "text": "They are billed only per token with no reserved capacity", "why": "Pay-per-token billing without reserved capacity describes Standard deployments." } ], "answer": [0, 1], "explanation": "Provisioned deployments reserve model capacity in PTUs, which suits steady traffic that needs consistent latency.", "objective": "1.2.3" },
+  { "id": "ai-deploy-params-5", "type": "single", "question": "You need to ensure that a model never returns a response longer than approximately 200 tokens. Which parameter should you configure?", "options": [
+    { "text": "Top_p", "why": "Top_p limits the set of candidate tokens to control randomness. It does not cap length." },
+    { "text": "Frequency penalty", "why": "Frequency penalty reduces repetition. It does not cap length." },
+    { "text": "Max output tokens", "why": "Correct. Max output tokens sets the maximum number of tokens the model can generate in a response." },
+    { "text": "Temperature", "why": "Temperature controls randomness, not response length." } ], "answer": [2], "explanation": "The max output tokens (max tokens) parameter sets an upper limit on the length of the generated response.", "objective": "1.2.3" }
+] }

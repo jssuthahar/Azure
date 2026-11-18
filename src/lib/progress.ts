@@ -18,6 +18,8 @@ export interface MockResult {
   mode: string;
   domains: Record<string, { ok: number; total: number }>;
   at: string;
+  /** Exam slug; absent on results saved before AI-901 (they are AZ-900). */
+  exam?: string;
 }
 export interface ProgressState {
   done: Record<string, string>;

@@ -1,0 +1,27 @@
+{ "cert": "ai-901", "domain": 1, "topic": "text-analysis", "questions": [
+  { "id": "ai-textanalysis-1", "type": "single", "question": "A news website wants to automatically identify the main talking points in each article so that it can generate topic tags. Which text analysis technique should the website use?", "options": [
+    { "text": "Language detection", "why": "Language detection identifies the language of the text, not its main topics." },
+    { "text": "Key phrase extraction", "why": "Correct. Key phrase extraction returns the main talking points in a document." },
+    { "text": "PII detection", "why": "PII detection finds personal information such as phone numbers and email addresses." },
+    { "text": "Sentiment analysis", "why": "Sentiment analysis determines whether text is positive, negative, neutral or mixed." } ], "answer": [1], "explanation": "Key phrase extraction identifies the main concepts discussed in a text, which can be used as tags.", "objective": "1.3.2" },
+  { "id": "ai-textanalysis-2", "type": "single", "scenario": "A smartphone manufacturer analyzes product reviews. A typical review states: 'The camera is excellent, but the battery drains quickly.' The manufacturer wants to know which product features customers like and which they dislike.", "question": "Which capability should the manufacturer use?", "options": [
+    { "text": "Opinion mining", "why": "Correct. Opinion mining links each opinion to its target, such as camera (positive) and battery (negative)." },
+    { "text": "Entity linking", "why": "Entity linking identifies which real-world entity a name refers to. It does not assign opinions to features." },
+    { "text": "Extractive summarization", "why": "Extractive summarization selects key sentences. It does not label opinions by feature." },
+    { "text": "Language detection", "why": "Language detection identifies the language only." } ], "answer": [0], "explanation": "Opinion mining is an aspect-level extension of sentiment analysis that associates sentiment with specific targets in the text.", "objective": "1.3.2" },
+  { "id": "ai-textanalysis-3", "type": "single", "question": "A support team must remove phone numbers, email addresses and account numbers from chat transcripts before the transcripts are shared with analysts. Which capability should the team use?", "options": [
+    { "text": "Named entity recognition for locations", "why": "Location entities do not include phone numbers, email addresses or account numbers." },
+    { "text": "Key phrase extraction", "why": "Key phrase extraction finds talking points and does not redact personal data." },
+    { "text": "Personally identifiable information (PII) detection", "why": "Correct. PII detection identifies personal data and can return a redacted version of the text." },
+    { "text": "Abstractive summarization", "why": "A summary may omit some details, but it does not reliably detect and redact personal data." } ], "answer": [2], "explanation": "PII detection in Azure Language identifies and categorizes personal information and returns redacted text.", "objective": "1.3.2" },
+  { "id": "ai-textanalysis-4", "type": "multi", "question": "Which TWO statements about summarization in Azure Language are correct?", "options": [
+    { "text": "Extractive summarization selects the most important sentences from the original text", "why": "Correct. Extractive summaries reuse sentences from the source." },
+    { "text": "Abstractive summarization generates new sentences that capture the main ideas", "why": "Correct. Abstractive summaries are written in new words." },
+    { "text": "Extractive summarization translates the text into another language", "why": "Translation is a separate capability. Extractive summarization keeps the original language and sentences." },
+    { "text": "Abstractive summarization returns only a sentiment label", "why": "Sentiment labels come from sentiment analysis, not summarization." } ], "answer": [0, 1], "explanation": "Extractive summarization picks existing sentences, while abstractive summarization writes a new, shorter summary.", "objective": "1.3.2" },
+  { "id": "ai-textanalysis-5", "type": "single", "question": "A document mentions 'Jordan'. An application must determine whether the text refers to the country or to a person and return a reference link for the correct one. Which capability should the application use?", "options": [
+    { "text": "Entity linking", "why": "Correct. Entity linking disambiguates an entity by matching it to a known reference and returns a link." },
+    { "text": "Sentiment analysis", "why": "Sentiment analysis determines opinion, not the identity of an entity." },
+    { "text": "Key phrase extraction", "why": "Key phrase extraction returns talking points without disambiguating them." },
+    { "text": "Language detection", "why": "Language detection identifies the language of the text." } ], "answer": [0], "explanation": "Entity linking identifies which real-world entity is meant and links it to a knowledge base entry.", "objective": "1.3.2" }
+] }

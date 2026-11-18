@@ -6,7 +6,7 @@
  * The 3D code loads only when the figure scrolls near the screen. Step text is
  * rendered as HTML too, so the tour is readable without WebGL.
  */
-import { SIMS3D, type Mode3D } from '../../data/az-900/sims3d';
+import { SIMS3D, type Mode3D } from '../../data/sims3d';
 import { inlineMd } from '../../lib/learn';
 import CurrencySelect from '../CurrencySelect.astro';
 import EmbedButton from '../EmbedButton.astro';
@@ -125,7 +125,7 @@ const steps = sim.steps.map((s) => ({ ...s, html: inlineMd(s.text), say: s.text.
 
 <script>
   type Step = { title: string; html: string; say: string; actions?: { id: string; label: string; kind?: string }[] };
-  import type { Mode3D } from '../../data/az-900/sims3d';
+  import type { Mode3D } from '../../data/sims3d';
   import { money } from '../../lib/currency';
 
   function init(fig: HTMLElement) {

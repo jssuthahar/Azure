@@ -1,0 +1,178 @@
+---
+title: Fairness and Inclusiveness
+seoTitle: Fairness and Inclusiveness in AI Explained | AI-901
+description: How AI becomes unfair, how to measure and reduce bias, and how to design AI that works for everyone, with Foundry examples and AI-901 practice questions.
+answer: >-
+  **Fairness** means an AI system treats people in similar situations the same way, so its results don't depend on gender, ethnicity, age, location or other personal traits. **Inclusiveness** means the system is designed to work for and engage everyone, including people with disabilities and people who speak different languages or accents. You get both by using representative data, measuring results group by group with evaluations, and testing with the people who'll actually use the system.
+updated: 2026-11-18
+readingMinutes: 7
+keyTerms:
+  - term: Bias
+    definition: A systematic error that makes an AI system favour or disadvantage some groups of people.
+  - term: Representative data
+    definition: Training or test data that reflects the full range of people and situations the system will meet.
+  - term: Proxy feature
+    definition: A data field, such as postcode, that indirectly stands in for a protected trait like ethnicity or religion.
+  - term: Disaggregated evaluation
+    definition: Measuring a model's accuracy and outcomes separately for each group instead of only one overall score.
+  - term: Accessibility
+    definition: Designing technology so people with visual, hearing, motor or cognitive disabilities can use it.
+interview:
+  - level: beginner
+    q: What's the difference between fairness and inclusiveness?
+    a: >-
+      Fairness is about outcomes: two similar people should get the same result. Inclusiveness is about who can use the system at all: a voice app that only understands American accents, or a form a screen reader can't read, leaves people out even if its decisions are fair.
+    followUps: []
+  - level: intermediate
+    q: How does bias get into an AI model if nobody programs it in?
+    a: >-
+      Mostly through data. If past hiring data mostly shows men being hired, a model learns that pattern. It can also come from proxy features like postcode or college name, from labels people wrote with their own bias, or from testing on a group that doesn't match the real users.
+    followUps:
+      - q: Doesn't removing the gender column fix it?
+        a: >-
+          Not on its own. Other fields can still carry the same signal, like first name or hobbies. You have to measure outcomes by group to know whether the model is fair.
+  - level: scenario
+    q: A speech-to-text app works well in testing but customers in Tamil Nadu say it misses half their words. What went wrong and what would you do?
+    a: >-
+      It wasn't tested with representative speakers, so it fails an inclusiveness check. I'd collect test audio from the real user base, measure word error rate by accent, and consider a custom speech model trained on those accents. Until then, I'd offer a typing option.
+    followUps: []
+  - level: experienced
+    q: How would you check fairness for a generative AI app, where there's no single yes or no output?
+    a: >-
+      I'd build test prompts that are identical except for a name, gender or region, run them through evaluations in Foundry and compare tone, quality and refusals across the variants. I'd add risk and safety evaluators for hateful or unfair content and have a diverse group review samples.
+    followUps: []
+revision:
+  keyPoints:
+    - Fairness is about equal treatment and outcomes for similar people.
+    - Inclusiveness is about designing for everyone, including people with disabilities and other languages.
+    - Bias usually comes from data, proxy features and unrepresentative testing.
+    - Removing a sensitive column doesn't remove bias; measure results by group.
+    - Test with real users from every group, not only the build team.
+  mistakes:
+    - Calling an accessibility problem a fairness problem. If people can't use the system, it's inclusiveness.
+    - Trusting a single overall accuracy score that hides poor results for one group.
+  examTips:
+    - Approval rates or accuracy that differ by gender, age or ethnicity = fairness.
+    - Screen readers, captions, sign language, accents, low literacy = inclusiveness.
+  quick:
+    - q: A model approves loans for men more often than for equally qualified women. Which principle?
+      a: Fairness.
+    - q: A chatbot offers voice input for people who can't type. Which principle?
+      a: Inclusiveness.
+    - q: What is a proxy feature?
+      a: A field that indirectly reveals a protected trait, such as postcode standing in for community.
+    - q: What's the most common source of bias?
+      a: Training data that doesn't represent everyone the system serves.
+    - q: How do you find unfair results?
+      a: Measure outcomes and accuracy separately for each group (disaggregated evaluation).
+references:
+  - title: Responsible AI at Microsoft
+    url: https://www.microsoft.com/ai/responsible-ai
+  - title: Transparency note for Azure OpenAI (Microsoft Learn)
+    url: https://learn.microsoft.com/legal/cognitive-services/openai/transparency-note
+  - title: Study guide for Exam AI-901 (Microsoft Learn)
+    url: https://learn.microsoft.com/en-us/credentials/certifications/resources/study-guides/ai-901
+related:
+  - responsible-ai-principles
+  - reliability-safety-privacy-security
+  - transparency-and-accountability
+---
+
+## Start with a question
+
+<Story question="If a company's past hiring was unfair, and you train an AI on that history, what will the AI learn?">
+
+It'll learn to be unfair, very efficiently. The AI doesn't know the history was wrong. It just copies the pattern it sees.
+
+That's why **fairness** is the first of Microsoft's responsible AI principles. Its partner, **inclusiveness**, asks a different question: can everyone use the system at all, whatever their ability, language or accent?
+
+</Story>
+
+## Explain it like I'm 10
+
+<Eli10>
+
+Imagine a teacher who learned what a "good student" looks like only by watching the front row. Now she gives better marks to kids who sit in front, even when the back-row kids write the same answers. That's **unfair**.
+
+Now imagine the class quiz is only read aloud, so a classmate who can't hear well can't take part. That's not **inclusive**.
+
+A fair teacher marks the answers, not the seat. An inclusive teacher gives the quiz on paper too.
+
+</Eli10>
+
+## The technical explanation
+
+### Fairness
+
+An AI system is **fair** when people in similar situations get similar results. Unfairness creeps in through:
+
+| Source of bias | Example |
+| --- | --- |
+| Skewed training data | A CV screener trained on ten years of mostly male hires |
+| Proxy features | Postcode or surname standing in for religion or caste |
+| Biased labels | Past "good customer" tags given unevenly by staff |
+| Unrepresentative testing | A face model tested mostly on lighter skin tones |
+| Generative output | A model that writes "he" for engineers and "she" for nurses |
+
+To reduce it, you collect **representative data**, remove or test proxy features, and run **disaggregated evaluations**: accuracy, approval rate or answer quality measured **for each group**, not only overall. In Microsoft Foundry, evaluations score model answers for quality and include risk and safety evaluators (hateful and unfair content is one). For classic machine learning models, the open-source Fairlearn toolkit and the Responsible AI dashboard in Azure Machine Learning compare results across groups.
+
+### Inclusiveness
+
+An AI system is **inclusive** when it's designed with and for the full range of people who'll use it.
+
+- Speech that understands regional accents, and captions for people who are deaf or hard of hearing.
+- Text to speech and screen-reader-friendly output for people who are blind or have low vision.
+- Answers in Hindi, Tamil or Marathi, not only English.
+- Plain wording for people with low literacy, and voice input for people who can't type.
+
+Microsoft's Seeing AI app is a well-known example: it uses computer vision to describe the world aloud for people with low vision.
+
+<Compare
+  caption="Fairness checks the results; inclusiveness checks who can take part"
+  columns={[
+    { title: 'Fairness', icon: '⚖️', tone: 'neutral', items: ['Same result for similar people', 'Watch for skewed data and proxies', 'Measure outcomes by group', 'Example: equal loan approvals'] },
+    { title: 'Inclusiveness', icon: '🤝', tone: 'accent', items: ['Everyone can use it', 'Design for disabilities and languages', 'Test with real, diverse users', 'Example: captions and many accents'] },
+  ]}
+/>
+
+<TryIt labs="ai-guardrails" text="Run an evaluation, then check whether the guardrail treats similar prompts the same way." />
+
+<Callout type="exam">
+If the scenario mentions a **group getting a worse outcome**, the answer is fairness. If it mentions **people who can't use the system** (disability, language, accent, low literacy), the answer is inclusiveness. Watch for answer options that say "remove the gender column" as the full fix: hidden proxies mean you still have to measure results.
+</Callout>
+
+<DeepDive title="Fair to whom? Choosing a fairness measure">
+
+There's more than one definition of fair. Equal approval rates across groups, equal error rates, and equal accuracy among people who truly qualify can't always all be true at once. Teams pick the measure that matches the harm they're trying to avoid (a missed loan versus a wrongly approved one), write down why, and get sign-off from the people accountable. That's where fairness meets accountability.
+
+</DeepDive>
+
+## Real-world business scenario
+
+<Scenario
+  company="Northwind Lending, a digital lender in Pune"
+  industry="Banking"
+  problem="Its credit model approved far fewer applicants from rural postcodes with the same income and repayment history, and its voice helpline struggled with Marathi-accented English."
+  service="Retrained the model on balanced data, dropped postcode as a feature, added disaggregated evaluations to every release, and added Marathi and Hindi voice options with Azure Speech in Foundry Tools."
+  why="The postcode was a proxy for community, and the helpline had never been tested with its real callers."
+  outcome="Approval rates for similar applicants evened out across regions, and helpline calls dropped to a human far less often."
+/>
+
+## When to use it and when not to
+
+<UseWhen
+  use={[
+    'Any AI that affects people\'s access to jobs, loans, housing, healthcare or education. Check fairness before launch and after every model update.',
+    'Public-facing apps. Design for disabilities, languages and accents from day one.',
+    'Generative AI that writes about people. Test prompts that differ only by name, gender or region.',
+  ]}
+  avoid={[
+    'Assuming a model is fair because it never sees a sensitive column.',
+    'Testing only with the build team, who rarely look like the full user base.',
+    'Adding accessibility as an afterthought just before release.',
+  ]}
+  alternatives={[
+    '**Human review of decisions** for high-impact cases while you improve the model.',
+    '**A non-AI option** (a form, a phone call) for people the AI doesn\'t serve well yet.',
+  ]}
+/>

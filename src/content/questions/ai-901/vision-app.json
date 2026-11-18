@@ -1,0 +1,27 @@
+{ "cert": "ai-901", "domain": 2, "topic": "vision-app", "questions": [
+  { "id": "ai-visapp-1", "type": "single", "question": "You are building a Python app that sends a photo and a question to a deployed GPT-4.1 model by using the Responses API. Which content part type should contain the photo?", "options": [
+    { "text": "input_text", "why": "input_text carries the written question, not the image." },
+    { "text": "input_image", "why": "Correct. The input_image part carries the image as a data URL or an https URL." },
+    { "text": "input_audio", "why": "input_audio carries audio data for audio-capable models." },
+    { "text": "output_text", "why": "output_text is how the model's reply is read, not an input." } ], "answer": [1], "explanation": "In the Responses API, a user message can contain an input_text part for the question and an input_image part for the image.", "objective": "2.3.3" },
+  { "id": "ai-visapp-2", "type": "multi", "question": "Which TWO formats can you use to supply an image in the image_url value of an input_image part?", "options": [
+    { "text": "A base64 data URL, such as data:image/jpeg;base64,...", "why": "Correct. A data URL embeds the image bytes directly in the request." },
+    { "text": "A publicly reachable https URL", "why": "Correct. The service can fetch an image from an https URL." },
+    { "text": "A local file path, such as C:\\photos\\leaf.jpg", "why": "The service cannot read files on your computer. Encode the file as a data URL instead." },
+    { "text": "The name of a model deployment", "why": "The deployment name belongs in the model parameter." } ], "answer": [0, 1], "explanation": "An image can be sent as a base64 data URL or as an https URL that the service can reach.", "objective": "2.3.3" },
+  { "id": "ai-visapp-3", "type": "single", "question": "Your vision app creates an AIProjectClient. Which authentication method does the client support?", "options": [
+    { "text": "An API key passed in an AzureKeyCredential", "why": "AIProjectClient does not support key-based authentication." },
+    { "text": "Microsoft Entra ID, for example by using DefaultAzureCredential", "why": "Correct. AIProjectClient supports Microsoft Entra ID authentication only." },
+    { "text": "A shared access signature token", "why": "SAS tokens are used for Azure Storage, not for the Foundry project client." },
+    { "text": "Anonymous access", "why": "Foundry projects require authenticated access." } ], "answer": [1], "explanation": "The Foundry SDK project client authenticates with Microsoft Entra ID. DefaultAzureCredential uses az login credentials during local development.", "objective": "2.3.3" },
+  { "id": "ai-visapp-4", "type": "single", "scenario": "An online store needs a caption and a list of tags for each of two million catalogue photos. The output format must be identical for every photo, and no user questions are involved.", "question": "Which service is the most appropriate?", "options": [
+    { "text": "Azure Vision in Foundry Tools image analysis", "why": "Correct. Image analysis returns captions and tags in a consistent structured format without a prompt." },
+    { "text": "gpt-image-1", "why": "gpt-image-1 creates and edits images. It does not caption them." },
+    { "text": "Azure Speech in Foundry Tools", "why": "Speech services process audio, not images." },
+    { "text": "Azure Language in Foundry Tools", "why": "Language services analyze text, not images." } ], "answer": [0], "explanation": "When the required output is a fixed set of visual features such as captions and tags, Azure Vision image analysis provides predictable structured results.", "objective": "2.3.3" },
+  { "id": "ai-visapp-5", "type": "single", "question": "After calling responses.create with an image and a question, which property contains the model's text answer?", "options": [
+    { "text": "response.output_text", "why": "Correct. output_text returns the combined text output of the response." },
+    { "text": "response.data[0].b64_json", "why": "b64_json holds image data returned by images.generate." },
+    { "text": "response.fields", "why": "fields belongs to Content Understanding analysis results." },
+    { "text": "response.confidence", "why": "The Responses API does not return a single confidence property." } ], "answer": [0], "explanation": "The Responses API exposes the model's text reply through output_text.", "objective": "2.3.3" }
+] }

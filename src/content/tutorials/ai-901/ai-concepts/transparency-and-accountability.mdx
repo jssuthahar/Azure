@@ -1,0 +1,185 @@
+---
+title: Transparency and Accountability
+seoTitle: Transparency and Accountability in AI | AI-901
+description: What transparency and accountability mean for AI, with transparency notes, model cards, citations, tracing and human oversight in Foundry. Free AI-901 lesson.
+answer: >-
+  **Transparency** means people know when they're dealing with AI, understand roughly how it reaches its results and know its limits. **Accountability** means named people and organisations stay answerable for what an AI system does, with governance, oversight and a way to fix mistakes. In Microsoft Foundry, **transparency notes**, **model cards**, citations and **tracing** support transparency, while role-based access, evaluations, logs and **human-in-the-loop** review support accountability.
+updated: 2026-11-18
+readingMinutes: 7
+keyTerms:
+  - term: Transparency
+    definition: Being open that AI is in use, how it produces results and what it can't do well.
+  - term: Accountability
+    definition: People and organisations remain responsible for an AI system's design, use and outcomes.
+  - term: Transparency note
+    definition: A Microsoft document that explains what an AI service is for, how it works, its limitations and how to use it responsibly.
+  - term: Model card
+    definition: A summary in the Foundry model catalog of what a model does, how it was trained, its benchmarks and known limits.
+  - term: Tracing
+    definition: A step-by-step record of what a generative AI app or agent did, including model calls and tool calls.
+  - term: Human-in-the-loop
+    definition: A design where a person reviews or approves AI output before it takes effect.
+interview:
+  - level: beginner
+    q: Give a simple example of transparency in an AI app.
+    a: >-
+      A chatbot that says "You're chatting with an AI assistant" at the start, shows the documents it used for an answer, and tells you it can make mistakes. You know it's AI, you can check its sources, and you know its limits.
+    followUps: []
+  - level: intermediate
+    q: What's a transparency note and who is it for?
+    a: >-
+      It's a document Microsoft publishes for its AI services, like the Azure OpenAI models, explaining the intended uses, how the system works, its limitations and good practice. It's for the people building with the service, so they can make good design choices and explain the system to their own users.
+    followUps: []
+  - level: scenario
+    q: An insurance company lets an AI decide which claims to reject automatically. Customers complain nobody can explain the rejections. Which principles are failing?
+    a: >-
+      Transparency, because customers can't see why they were rejected, and accountability, because no person is reviewing or owning those decisions. I'd show the main reasons for each decision, put a claims officer in the loop for every rejection, and add an appeal route.
+    followUps:
+      - q: Wouldn't human review slow everything down?
+        a: >-
+          For approvals you can often let the AI move fast. For rejections that affect people's money, a short review is the price of being accountable, and it catches errors before they become complaints.
+  - level: experienced
+    q: How does tracing in Foundry help with accountability for agents?
+    a: >-
+      Tracing records every model call, tool call, input and output an agent made. When something goes wrong, you can see exactly which step caused it, who owns that part, and fix it. Combined with agent versions, you know which configuration was running at the time.
+    followUps: []
+revision:
+  keyPoints:
+    - Transparency - people know it's AI, understand how it works and know its limits.
+    - Accountability - named humans stay answerable for the AI system.
+    - Transparency notes and model cards explain a service's or model's uses and limits.
+    - Citations and tracing make individual answers explainable and auditable.
+    - Human-in-the-loop review keeps people in charge of high-impact decisions.
+  mistakes:
+    - Thinking accountability can be handed to the model provider or the AI itself.
+    - Confusing transparency (explain how it works) with privacy (protect personal data).
+  examTips:
+    - Explain a decision, disclose AI use, document limitations = transparency.
+    - Human oversight, governance, audit, who is responsible = accountability.
+  quick:
+    - q: An app tells users their reply was written by AI. Which principle?
+      a: Transparency.
+    - q: A team must sign off before an AI model goes to production. Which principle?
+      a: Accountability.
+    - q: Which Microsoft document explains an AI service's limitations?
+      a: A transparency note.
+    - q: Which Foundry feature records each step an agent took?
+      a: Tracing.
+    - q: What's human-in-the-loop?
+      a: A person reviews or approves AI output before it takes effect.
+references:
+  - title: Transparency note for Azure OpenAI (Microsoft Learn)
+    url: https://learn.microsoft.com/legal/cognitive-services/openai/transparency-note
+  - title: Responsible AI at Microsoft
+    url: https://www.microsoft.com/ai/responsible-ai
+  - title: What is Microsoft Foundry? (Microsoft Learn)
+    url: https://learn.microsoft.com/azure/foundry/what-is-foundry
+related:
+  - responsible-ai-principles
+  - reliability-safety-privacy-security
+  - fairness-and-inclusiveness
+---
+
+## Start with a question
+
+<Story question="If a self-checkout machine wrongly charges you twice, who do you complain to: the machine, or the shop?">
+
+The shop, obviously. The machine can't apologise or give you a refund. And you'd want the receipt to show exactly what you were charged for.
+
+AI is the same. You need a clear receipt (**transparency**: what it did and why) and a person who owns the outcome (**accountability**: who answers for it). These are the last two of Microsoft's six responsible AI principles.
+
+</Story>
+
+## Explain it like I'm 10
+
+<Eli10>
+
+When you do maths homework, your teacher says "show your working". That's **transparency**: anyone can see how you got the answer and spot a mistake.
+
+And when the homework is handed in, it has **your name** on it. If it's wrong, you fix it, not your pencil. That's **accountability**.
+
+Good AI shows its working, and a real person puts their name on it.
+
+</Eli10>
+
+## The technical explanation
+
+### Transparency
+
+A transparent AI system lets people understand three things:
+
+1. **That AI is involved.** Tell users when they're talking to a bot or reading AI-generated content. Images from gpt-image-1 carry content credentials (C2PA) that record they were AI-generated.
+2. **How it reaches results.** Show the sources behind an answer (citations from grounding), or the main factors behind a prediction.
+3. **What it can't do.** State known limits, like "may be wrong about recent events".
+
+Microsoft publishes **transparency notes** for its AI services, describing intended uses, how the system works and its limitations. In the Foundry model catalog, every model has a **model card** with its purpose, training notes, benchmarks and limits.
+
+### Accountability
+
+An accountable AI system has people who answer for it. That means:
+
+- A named **owner** for each AI system, and a review before it goes live.
+- **Governance**: policies, impact assessments and sign-off for high-risk uses.
+- **Human-in-the-loop** review for decisions that significantly affect people.
+- **Audit trails**: logs, evaluations and **tracing** so you can find out what happened.
+- **Access control** with Microsoft Entra ID roles (for example Foundry Owner and Foundry User), so you know who changed what.
+- A route for people to **challenge** a decision.
+
+| Need | Foundry or Microsoft support |
+| --- | --- |
+| Understand a service's intended uses and limits | Transparency notes |
+| Understand a specific model | Model cards in the model catalog |
+| Show where an answer came from | Grounding with citations, groundedness detection |
+| Know what an agent did, step by step | Tracing, agent versions |
+| Prove the system was tested | Evaluation results kept with each release |
+| Control who can change it | Foundry RBAC roles |
+
+<Compare
+  caption="Transparency explains; accountability owns"
+  columns={[
+    { title: 'Transparency', icon: '🔍', tone: 'neutral', items: ['Disclose AI use', 'Show sources and reasons', 'Document limitations', 'Transparency notes, model cards'] },
+    { title: 'Accountability', icon: '🧑‍⚖️', tone: 'accent', items: ['Named owner', 'Human oversight', 'Audit with logs and tracing', 'Appeals and governance'] },
+  ]}
+/>
+
+<TryIt labs="ai-guardrails" text="Run an evaluation and look at the results you'd keep as evidence that the app was tested." />
+
+<Callout type="exam">
+"Users must understand how the system made a decision" or "inform users that content is AI-generated" points to **transparency**. "A person must review decisions", "define who is responsible" or "establish governance" points to **accountability**. Remember: you can't make the AI itself accountable. People and organisations are.
+</Callout>
+
+<DeepDive title="Explainable enough for whom?">
+
+Large language models can't give you a neat formula for every answer. Transparency there means practical openness: grounding answers in documents and showing citations, disclosing the model and its limits, and keeping traces. For a classic machine learning model that scores loans, you can go further with feature importance (which inputs pushed the score up or down). Pick the level of explanation the affected person actually needs.
+
+</DeepDive>
+
+## Real-world business scenario
+
+<Scenario
+  company="Wide World Insurance, a motor insurer in Mumbai"
+  industry="Insurance"
+  problem="An AI tool flagged claims as suspicious, and claims staff rejected them without knowing why. Complaints and regulator questions piled up."
+  service="The tool now shows the top reasons and source documents for every flag, a claims officer must approve each rejection, every decision is traced and logged, and a named product owner reviews evaluation results each month."
+  why="Customers and regulators needed to see why a claim was flagged and who decided, which the old system couldn't show."
+  outcome="Complaints fell, wrongly flagged claims were caught by the officers, and the insurer could answer the regulator with evidence."
+/>
+
+## When to use it and when not to
+
+<UseWhen
+  use={[
+    'Customer-facing AI. Disclose that it\'s AI and show sources where you can.',
+    'Decisions about money, health, jobs or legal rights. Add human review and an appeal route.',
+    'Agents that take actions. Turn on tracing and keep each version you deploy.',
+  ]}
+  avoid={[
+    'Hiding AI involvement to make an app feel more human.',
+    'Fully automated rejections with no person accountable and no way to appeal.',
+    'Shipping without recording which model, prompt and settings were used.',
+  ]}
+  alternatives={[
+    '**Microsoft\'s Responsible AI impact assessment templates** to document risks and owners.',
+    '**Simpler, more explainable models** when you must explain every individual decision in detail.',
+  ]}
+/>

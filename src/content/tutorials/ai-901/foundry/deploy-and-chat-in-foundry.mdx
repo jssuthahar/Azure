@@ -1,0 +1,194 @@
+---
+title: Deploy a Model and Chat in the Foundry Portal
+seoTitle: Deploy a Model and Chat in the Foundry Portal | AI-901
+description: Deploy a model in the Microsoft Foundry portal, pick a deployment name and type, chat in the playground, tune parameters and use View code. For AI-901.
+answer: >-
+  To use a model in **Microsoft Foundry**, you **deploy** it first: pick it in the **model catalog**, select **Deploy**, give it a **deployment name** and choose a **deployment type** such as **Global Standard**. Then open the **chat playground**, add a system message, ask questions and adjust **parameters** like temperature and max tokens. When it behaves the way you want, **View code** shows ready-to-run code that calls your deployment by name.
+updated: 2026-11-18
+readingMinutes: 8
+keyTerms:
+  - term: Deployment
+    definition: A hosted instance of a model in your Foundry resource that your apps and the playground can call.
+  - term: Deployment name
+    definition: The name you give a deployment. Code passes this name as the model parameter.
+  - term: Global Standard
+    definition: The default deployment type. You pay per token and requests may be processed in any Azure region.
+  - term: Chat playground
+    definition: A page in the Foundry portal where you chat with a deployment, edit the system message and change parameters without writing code.
+  - term: Temperature
+    definition: A parameter from 0 to 2 that controls randomness. Low values give focused, repeatable answers; high values give more varied ones.
+  - term: Max output tokens
+    definition: The upper limit on how many tokens the model can generate in one reply.
+  - term: View code
+    definition: The playground button that shows sample code for the current deployment, system message and parameters.
+interview:
+  - level: beginner
+    q: Why do you have to deploy a model before you can use it?
+    a: >-
+      The catalog is just a list. Deploying creates an endpoint for that model in my Foundry resource with a name, a deployment type and limits, so my project can actually send it requests and I get billed for what I use.
+    followUps:
+      - q: What do you pass as the model name in code?
+        a: >-
+          The deployment name, not the catalog name. If I deployed gpt-4.1-mini as "support-bot", my code uses "support-bot".
+  - level: intermediate
+    q: What would you change in the playground to make answers more consistent?
+    a: >-
+      I'd lower the temperature, say to 0.2, and tighten the system message. If answers are being cut off I'd raise max output tokens. I'd change temperature or top_p, not both at once, so I know which one made the difference.
+    followUps: []
+  - level: experienced
+    q: Which deployment type would you start with, and when would you change it?
+    a: >-
+      Global Standard is the usual start: pay per token, highest default quota and new models first. If data must be processed inside the EU or US, I'd move to Data Zone Standard. For steady, high-volume traffic where latency must be predictable I'd look at provisioned throughput, and for big offline jobs, Global Batch is about half the price.
+    followUps: []
+  - level: scenario
+    q: A tester says the playground gives good answers, but the developer's app doesn't. What would you check first?
+    a: >-
+      That the app uses the same deployment name, the same system message and the same parameters. Using View code from the playground is the quickest way to make them match.
+    followUps: []
+revision:
+  keyPoints:
+    - You must deploy a model before the playground or an app can call it.
+    - The deployment name you choose is what code passes as model.
+    - Global Standard is the default deployment type, billed per token.
+    - The chat playground lets you set a system message and tune temperature, top_p and max tokens.
+    - View code copies working code for the current setup.
+  mistakes:
+    - Using the catalog model name in code when the deployment has a different name.
+    - Changing temperature and top_p together, then not knowing which caused the change.
+  examTips:
+    - '"Test prompts and parameters without writing code" = **chat playground**.'
+    - '"More predictable, less creative answers" = **lower temperature**.'
+    - '"Answers are cut off mid-sentence" = **raise max output tokens**.'
+  quick:
+    - q: What's the default deployment type for most models?
+      a: Global Standard.
+    - q: Which name does your code use to call a model?
+      a: The deployment name.
+    - q: What does a low temperature do?
+      a: Makes answers more focused and repeatable.
+    - q: Where do you get sample code for your playground setup?
+      a: The View code button in the playground.
+    - q: What limits the length of a reply?
+      a: Max output tokens.
+references:
+  - title: Deployment types in Microsoft Foundry Models
+    url: https://learn.microsoft.com/azure/foundry/foundry-models/concepts/deployment-types
+  - title: What is Microsoft Foundry?
+    url: https://learn.microsoft.com/azure/foundry/what-is-foundry
+  - title: Study guide for Exam AI-901
+    url: https://learn.microsoft.com/en-us/credentials/certifications/resources/study-guides/ai-901
+related:
+  - what-is-microsoft-foundry
+  - model-deployment-and-parameters
+  - prompt-engineering
+  - chat-app-with-foundry-sdk
+---
+
+## Start with a question
+
+<Story question="You found the perfect model in the catalog. Why can't you just start chatting with it?">
+
+Picture a car showroom in Hyderabad. You can look at every model on the floor, read the spec sheet and compare mileage, but you can't drive any of them home until one is registered in your name with a number plate.
+
+Deploying a model in Foundry is that registration. The model gets a **deployment name** (your number plate) inside your resource, and from then on the playground and your app can use it.
+
+</Story>
+
+## Explain it like I'm 10
+
+<Eli10>
+
+There's a big menu of robots in a shop. You point at one and say, "I want that one, and I'll call it Buddy." Now Buddy lives in your room.
+
+You can talk to Buddy, tell it rules ("always answer in one sentence") and turn a dial that makes it more serious or more silly. That dial is **temperature**.
+
+</Eli10>
+
+## The technical explanation
+
+<Flow
+  caption="From catalog to working code in the Foundry portal"
+  steps={[
+    { title: 'Pick a model', text: 'Open the model catalog and choose one, for example gpt-4.1-mini.' },
+    { title: 'Deploy', text: 'Set the deployment name and deployment type (Global Standard by default).' },
+    { title: 'Chat', text: 'Open the playground, write a system message and ask questions.' },
+    { title: 'Tune', text: 'Change temperature, max tokens and other parameters.' },
+    { title: 'View code', text: 'Copy sample code that calls your deployment by name.' },
+  ]}
+/>
+
+### The deploy step
+
+When you select **Deploy** on a model, Foundry asks for:
+
+- **Deployment name**: anything you like, such as `gpt-4.1-mini` or `support-bot`. Your code will pass this exact name as `model`.
+- **Deployment type**: where requests are processed and how you pay.
+- **Rate limit** (tokens per minute) from your quota, plus the guardrail (content filter) to apply.
+
+| Deployment type | What it means | Pick it when |
+| --- | --- | --- |
+| **Global Standard** | Pay per token; requests can be processed in any region | You're starting out, or want the newest models |
+| **Data Zone Standard** | Processing stays inside the US, EU or APAC data zone | Data must stay in a zone |
+| **Standard** | Processing in the resource's own geography | Strict regional processing |
+| **Provisioned** (global, data zone or regional) | Reserved capacity in provisioned throughput units | Steady, high volume with predictable latency |
+| **Global Batch** | Upload a file of requests, results within 24 hours, about half the price | Large jobs that aren't urgent |
+
+Data stored at rest stays in your resource's geography for every type.
+
+### The chat playground
+
+The playground has a **system message** box, a chat window and a parameters panel:
+
+| Parameter | What it does |
+| --- | --- |
+| **Temperature** (0 to 2) | Lower is focused and repeatable, higher is more varied and creative |
+| **Top P** | Another way to control variety. Change this or temperature, not both |
+| **Max output tokens** | Caps the length of each reply |
+| **Stop sequences** | Text that makes the model stop generating |
+| **Frequency and presence penalty** | Discourage repeating the same words or topics |
+| **Past messages included** | How much chat history is sent with each new question |
+
+Reasoning models show a **reasoning effort** setting instead of temperature.
+
+When you're happy, select **View code**. It shows sample code (Python and other languages) with your endpoint, deployment name, system message and parameters already filled in, so the app behaves the same as the playground.
+
+<TryIt labs="ai-deploy-chat" text="Deploy a model with Global Standard, chat with it in the playground and change the temperature and max tokens." />
+
+<Callout type="exam">
+Remember the order: **deploy first, then chat**. The **deployment name** is what code calls. **Global Standard** is the default type. For parameter questions: repeatable or factual answers → lower temperature; cut-off replies → raise max output tokens; the same phrases repeating → frequency penalty.
+</Callout>
+
+<DeepDive title="Quota, rate limits and instant access">
+
+Each subscription has a quota of tokens per minute per model and region. When you deploy, you assign part of that quota to the deployment, and requests over the limit get HTTP 429 errors. Some models in preview offer instant access, where you can call them by name without creating a deployment, but for the exam assume the deploy-then-call flow. Open models can also run on managed compute, where you pay per hour for the VMs instead of per token.
+
+</DeepDive>
+
+## Real-world business scenario
+
+<Scenario
+  company="Wide World Importers (fictional)"
+  industry="Retail"
+  problem="Product managers wanted to test AI-written product descriptions before asking developers to build anything."
+  service="A gpt-4.1-mini deployment on Global Standard named product-writer, tested in the chat playground with a system message, temperature 0.7 and a 150-token limit."
+  why="The playground let non-developers tune the tone and length themselves, and View code handed developers the exact settings."
+  outcome="The first app version matched what the product team had approved in the playground, with no back-and-forth on settings."
+/>
+
+## When to use it and when not to
+
+<UseWhen
+  use={[
+    'You want to try a model and prompts before writing an app.',
+    'You need to compare settings like temperature side by side.',
+    'You want sample code that matches a tested setup.',
+  ]}
+  avoid={[
+    'Running production traffic through the playground. It\'s a test tool; call the deployment from your app.',
+    'Picking a provisioned deployment before you know your traffic. Start with Global Standard.',
+  ]}
+  alternatives={[
+    '<strong>The Foundry SDK</strong> to call your deployment from code once you know what works.',
+    '<strong>The agent playground</strong> when you need tools like file search or web search.',
+  ]}
+/>

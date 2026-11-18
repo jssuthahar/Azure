@@ -1,0 +1,181 @@
+---
+title: Extracting Information from Text, Images, Audio and Video
+seoTitle: Information Extraction from Text, Images and Video | AI-901
+description: How AI pulls structured data out of text, documents, images, audio and video, and how Azure Content Understanding does it in one service. For AI-901.
+answer: >-
+  **Information extraction** turns unstructured content into structured data you can store and search. Text uses **entity recognition** and **PII detection**, images and scans use **OCR** and **document field extraction**, audio uses **transcription**, and video uses **segmentation** into scenes with a transcript. **Azure Content Understanding in Foundry Tools** handles all four content types in one service, returning Markdown plus the fields you define, each with a **confidence score**.
+updated: 2026-11-18
+readingMinutes: 8
+keyTerms:
+  - term: Information extraction
+    definition: Pulling specific, structured facts (names, dates, totals, topics) out of unstructured content such as text, scans, recordings and video.
+  - term: Named entity recognition (NER)
+    definition: Finding and labelling people, places, organisations, dates and other entities in text.
+  - term: PII detection
+    definition: Finding personal data such as phone numbers, email addresses and ID numbers in text so it can be masked.
+  - term: Azure Content Understanding in Foundry Tools
+    definition: A Foundry Tool that uses generative AI to turn documents, images, audio and video into structured output you define.
+  - term: Analyzer
+    definition: A Content Understanding configuration that says what to extract, which fields to return and which model deployments to use.
+  - term: Prebuilt analyzer
+    definition: A ready-made analyzer from Microsoft, such as prebuilt-invoice or prebuilt-videoSearch.
+  - term: Confidence score
+    definition: A number from 0 to 1 that says how sure the service is about an extracted value.
+interview:
+  - level: beginner
+    q: What does information extraction mean?
+    a: >-
+      It's taking messy content, like a scanned invoice or a recorded phone call, and pulling out the exact facts I need, like the invoice total or the customer's complaint, in a structured form a program can use.
+    followUps:
+      - q: How is that different from summarising?
+        a: >-
+          A summary is a shorter version for a person to read. Extraction gives named fields, like InvoiceTotal equals 4,500, that a database or workflow can use straight away.
+  - level: intermediate
+    q: What's an analyzer in Content Understanding?
+    a: >-
+      It's the recipe. It says which kind of content goes in, what to extract, the field schema I want back, and which model deployments to use. Microsoft provides prebuilt analyzers like prebuilt-invoice and prebuilt-audioSearch, and I can build a custom one on top of a base analyzer like prebuilt-document.
+    followUps: []
+  - level: experienced
+    q: How would you decide when an extracted value needs human review?
+    a: >-
+      Content Understanding returns a confidence score from 0 to 1 for each field, plus grounding back to where it found the value. I'd set a threshold per field, say auto-approve totals above 0.9, and send anything lower to a reviewer who can see the highlighted source.
+    followUps: []
+  - level: scenario
+    q: A call centre wants a summary, the speakers and the customer's account number from every recorded call. What would you use?
+    a: >-
+      Content Understanding with the prebuilt-audioSearch analyzer gives a transcript with speaker labels and a summary. I'd add a custom field for the account number, generated from the transcript, and check its confidence before writing it to the CRM.
+    followUps: []
+revision:
+  keyPoints:
+    - Text extraction uses named entity recognition, PII detection and key phrases.
+    - Images and scans use OCR plus document field extraction (invoices, receipts, IDs).
+    - Audio uses speech to text, often with speaker labels (diarization) and a summary.
+    - Video is split into segments with key frames, a transcript and descriptions.
+    - Content Understanding covers documents, images, audio and video, with analyzers, field schemas and confidence scores.
+  mistakes:
+    - Thinking OCR alone gives you an invoice total. OCR gives text; field extraction maps it to named fields.
+    - Assuming every extracted value is correct. Check the confidence score.
+  examTips:
+    - '"One service for documents, images, audio and video into structured fields" = **Azure Content Understanding**.'
+    - '"Find phone numbers and emails in chat logs to redact them" = **PII detection**.'
+    - '"A number between 0 and 1 showing how sure the service is" = **confidence score**.'
+  quick:
+    - q: Which text technique finds people, places and organisations?
+      a: Named entity recognition (NER).
+    - q: What does a Content Understanding analyzer define?
+      a: What to extract, the field schema and the model deployments to use.
+    - q: Name a prebuilt analyzer for invoices.
+      a: prebuilt-invoice.
+    - q: What does video extraction usually return?
+      a: Segments, key frames, a transcript and descriptions.
+    - q: What range does a confidence score use?
+      a: 0 to 1.
+references:
+  - title: What is Azure Content Understanding in Foundry Tools?
+    url: https://learn.microsoft.com/azure/ai-services/content-understanding/overview
+  - title: Content Understanding prebuilt analyzers
+    url: https://learn.microsoft.com/azure/ai-services/content-understanding/concepts/prebuilt-analyzers
+  - title: What is Azure Language in Foundry Tools?
+    url: https://learn.microsoft.com/azure/ai-services/language-service/overview
+related:
+  - content-understanding-documents
+  - content-understanding-audio-video
+  - text-analysis
+  - computer-vision-and-image-generation
+---
+
+## Start with a question
+
+<Story question="How does an accounts team process 2,000 supplier invoices a month without typing every one?">
+
+Every invoice looks different. One supplier puts the total at the top, another at the bottom, a third sends a blurry phone photo. Somebody has to find the invoice number, the date and the amount and type them into the accounts system.
+
+That's the work **information extraction** does. AI reads the content, finds the facts you asked for and hands them back as tidy fields. The same idea works for chat messages, recorded calls and training videos.
+
+</Story>
+
+## Explain it like I'm 10
+
+<Eli10>
+
+Think of a treasure hunt in a messy room. You don't want the whole room. You want three things: the red ball, the blue key and the gold coin.
+
+Information extraction is a robot that walks into a messy pile of letters, photos and voice notes and comes back with just the treasures on your list, plus a note saying how sure it is about each one.
+
+</Eli10>
+
+## The technical explanation
+
+The technique changes with the content type, but the goal is always the same: unstructured in, structured out.
+
+| Content | Technique | What comes back | Example |
+| --- | --- | --- | --- |
+| Text | Named entity recognition (NER) | People, places, organisations, dates, amounts | "Ravi", "Pune", "12 March" in an email |
+| Text | PII detection | Personal data to mask | Phone number replaced with `**********` |
+| Images and scans | OCR | Lines and words of text | Text from a photographed receipt |
+| Documents and forms | Field extraction | Named fields with values | InvoiceNumber, InvoiceDate, InvoiceTotal |
+| Audio | Transcription (speech to text) | Transcript, speaker labels, summary | Who said what in a support call |
+| Video | Segmentation | Scenes, key frames, transcript, descriptions | Chapters of a training video |
+
+### Content Understanding: one service for all four
+
+**Azure Content Understanding in Foundry Tools** uses generative AI to do all of the above in one place. You send a document, image, audio file or video to an **analyzer** and get back Markdown of the content plus the fields you defined, in JSON.
+
+<Flow
+  caption="How a Content Understanding request works"
+  steps={[
+    { title: 'Content in', text: 'A PDF, photo, call recording or video file (or URL).' },
+    { title: 'Analyzer', text: 'Prebuilt, like prebuilt-invoice, or your own custom one.' },
+    { title: 'Extract', text: 'Text, layout, transcript or video segments.' },
+    { title: 'Fields', text: 'Your schema filled in, each value with a confidence score.' },
+  ]}
+/>
+
+A few terms the exam likes:
+
+- **Prebuilt analyzers**: `prebuilt-invoice`, `prebuilt-receipt`, ID documents and tax forms for documents; `prebuilt-imageSearch` for images; `prebuilt-audioSearch` for a transcript, summary and speaker labels; `prebuilt-videoSearch` for segments, key frames and descriptions.
+- **Custom analyzers** start from a base analyzer (`prebuilt-document`, `prebuilt-image`, `prebuilt-audio`, `prebuilt-video`) and add your own **field schema**.
+- **Field methods**: *extract* copies a value that's literally there (documents only), *classify* picks from a list you give it, and *generate* writes a value, like a one-line summary.
+- **Confidence scores** run from 0 to 1, and fields come with grounding back to where the value was found, so a person can check it.
+
+<TryIt labs="ai-extract-docs" text="Run the prebuilt invoice analyzer, read the confidence scores and add a custom field of your own." />
+
+<Callout type="exam">
+If a question mentions **several content types** (forms, photos, calls, videos) and **structured output**, the answer is Content Understanding. If it's only text and asks for people, places or dates, think **named entity recognition** in Azure Language. If it's about hiding personal data, think **PII detection**.
+</Callout>
+
+<DeepDive title="Where Document Intelligence and Video Indexer fit">
+
+Before Content Understanding, teams used Azure Document Intelligence for forms and invoices and Azure Video Indexer for video insights. Both still exist, and you'll see them in older solutions. Content Understanding brings documents, images, audio and video under one API with generative field extraction, and it needs default model deployments configured on the Foundry resource because it calls generative models behind the scenes.
+
+</DeepDive>
+
+## Real-world business scenario
+
+<Scenario
+  company="Contoso Logistics (fictional)"
+  industry="Logistics"
+  problem="Drivers sent proof-of-delivery photos, customers emailed scanned invoices and the call centre recorded disputes. Three teams typed details into three systems."
+  service="Content Understanding analyzers: prebuilt-invoice for invoices, a custom image analyzer for delivery photos and prebuilt-audioSearch for dispute calls."
+  why="One service and one output format (Markdown plus JSON fields) for every content type, with confidence scores to decide what needs review."
+  outcome="Most invoices post automatically, and staff only check fields that come back below the confidence threshold."
+/>
+
+## When to use it and when not to
+
+<UseWhen
+  use={[
+    'You get the same kind of content again and again (invoices, claims, calls) and need the same fields from each.',
+    'You need facts out of several content types and want one output format.',
+    'You want each value to come with a confidence score and a pointer to its source.',
+  ]}
+  avoid={[
+    'You only need a short summary for a person to read. A chat model prompt may be enough.',
+    'The content is already structured, like a CSV export. Read it directly.',
+    'Nobody will check low-confidence values on high-stakes data, such as medical or legal records.',
+  ]}
+  alternatives={[
+    '<strong>Azure Language in Foundry Tools</strong> for text-only NER, PII detection and key phrases.',
+    '<strong>Azure Vision in Foundry Tools</strong> for OCR and image tags without a field schema.',
+  ]}
+/>

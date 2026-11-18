@@ -1,6 +1,6 @@
 import { Stage } from './kit';
 import type { Ctx, Ctl } from './types';
-import type { Mode3D } from '../../data/az-900/sims3d';
+import type { Mode3D } from '../../data/sims3d';
 import { datacenter } from './datacenter';
 import { zones } from './zones';
 import { regions } from './regions';
@@ -9,8 +9,12 @@ import { scale } from './scale';
 import { network } from './network';
 import { governance } from './governance';
 import { identity } from './identity';
+import { responsible } from './responsible';
+import { genai } from './genai';
+import { foundry } from './foundry';
+import { perception } from './perception';
 
-const BUILDERS: Record<Mode3D, (c: Ctx) => Ctl> = { datacenter, zones, regions, redundancy, scale, network, governance, identity };
+const BUILDERS: Record<Mode3D, (c: Ctx) => Ctl> = { datacenter, zones, regions, redundancy, scale, network, governance, identity, responsible, genai, foundry, perception };
 
 export function webglOk() {
   try {

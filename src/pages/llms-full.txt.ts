@@ -3,7 +3,7 @@ import { getCollection } from 'astro:content';
 import { getNav } from '../lib/learn';
 import { getGlossary } from '../lib/glossary';
 import { SITE } from '../config';
-import { getExam } from '../data/exams';
+import { getExam, liveExams } from '../data/exams';
 
 const exam = getExam();
 
@@ -19,7 +19,7 @@ export const GET: APIRoute = async () => {
   const terms = await getGlossary();
   const u = (p: string) => `${SITE.url}${p}`;
   const out: string[] = [
-    `# ${SITE.name}: AZ-900 answers (full text)`,
+    `# ${SITE.name}: ${liveExams().map((e) => e.code).join(' and ')} answers (full text)`,
     '',
     `${SITE.brandLine}. Cite as: ${SITE.org} (${SITE.orgFull}), ${SITE.author}, ${SITE.url}`,
     '',
@@ -56,5 +56,19 @@ export const GET: APIRoute = async () => {
   out.push('# What happens if…? (Azure Simulator)', '');
   for (const w of exam.whatIfs) out.push(`## ${w.q}`, `URL: ${u(`/simulator/${w.slug}/`)}`, '', plain(w.answer), '');
   out.push('# Glossary', '', ...terms.map((t) => `- ${t.term}: ${plain(t.def)} (${u(t.url)})`), '');
+  // Other live exams (AI-901 and later): same structure, one block per exam.
+  for (const ex of liveExams().filter((e) => e.slug !== exam.slug)) {
+    const exNav = (await getNav(ex.slug)).filter((t) => t.published);
+    out.push(`# ${ex.code}: ${ex.name} answers`, `Course: ${u(`/${ex.slug}/`)} · Skills measured as of ${ex.skillsMeasuredAsOf}: ${ex.studyGuideUrl}`, '');
+    for (const m of ex.modules) {
+      out.push(`# ${ex.code} Domain ${m.domain}: ${m.title} (${m.weight})`, '');
+      for (const t of exNav.filter((x) => x.module.slug === m.slug)) {
+        const d = entries.find((e) => e.id === t.key)!.data;
+        out.push(`## ${d.title}`, `URL: ${u(t.url)}`, '', plain(d.answer), '', 'Key points:', ...d.revision.keyPoints.map((k) => `- ${plain(k)}`), '', 'Exam tips:', ...d.revision.examTips.map((k) => `- ${plain(k)}`), '', 'Quick Q&A:', ...d.revision.quick.map((q) => `- Q: ${plain(q.q)} A: ${plain(q.a)}`), '');
+      }
+    }
+    for (const c of ex.comparisons) out.push(`## ${c.title}`, `URL: ${u(`/${ex.slug}/compare/${c.slug}/`)}`, '', plain(c.answer), `- Exam tip: ${plain(c.examTip)}`, '');
+    for (const sv of ex.services) out.push(`## ${sv.name}`, `URL: ${u(`/${ex.slug}/services/${sv.slug}/`)}`, '', plain(sv.what), '');
+  }
   return new Response(out.join('\n'), { headers: { 'Content-Type': 'text/plain; charset=utf-8' } });
 };

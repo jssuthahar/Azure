@@ -1,0 +1,28 @@
+{ "cert": "ai-901", "domain": 2, "topic": "text-analysis-app", "questions": [
+  { "id": "ai-textapp-1", "type": "single", "scenario": "A support application stores customer chat transcripts. Before storage, phone numbers and email addresses must be masked. You use the azure-ai-textanalytics package.", "question": "Which method should you call?", "options": [
+    { "text": "recognize_pii_entities", "why": "Correct. PII detection returns the detected entities and a redacted_text value with personal data masked." },
+    { "text": "extract_key_phrases", "why": "Key phrase extraction returns the main talking points and does not mask data." },
+    { "text": "analyze_sentiment", "why": "Sentiment analysis returns opinion labels and scores." },
+    { "text": "detect_language", "why": "Language detection identifies the language of the text." } ], "answer": [0], "explanation": "recognize_pii_entities detects personal information and returns redacted text.", "objective": "2.2.1" },
+  { "id": "ai-textapp-2", "type": "single", "question": "A product review contains both strongly positive and strongly negative sentences. Which overall sentiment label is Azure Language most likely to return?", "options": [
+    { "text": "Neutral", "why": "Neutral indicates no strong opinion, not a combination of opposing opinions." },
+    { "text": "Mixed", "why": "Correct. Mixed indicates that the document contains both positive and negative sentences." },
+    { "text": "Unknown", "why": "Unknown is not a sentiment label." },
+    { "text": "Positive", "why": "The negative sentences prevent a purely positive label." } ], "answer": [1], "explanation": "Sentiment analysis returns positive, neutral, negative or mixed. Mixed reflects both positive and negative content.", "objective": "2.2.1" },
+  { "id": "ai-textapp-3", "type": "multi", "question": "You create a TextAnalyticsClient in a Python application. Which TWO values must you provide?", "options": [
+    { "text": "The resource endpoint", "why": "Correct. The client needs the endpoint of the Language or Foundry resource." },
+    { "text": "A credential, such as AzureKeyCredential with a key", "why": "Correct. The client needs a credential to authenticate." },
+    { "text": "A model deployment name", "why": "Azure Language features do not require you to deploy a model." },
+    { "text": "A neural voice name", "why": "Voice names are used for speech synthesis." },
+    { "text": "A storage account connection string", "why": "Text analysis requests do not require a storage account." } ], "answer": [0, 1], "explanation": "TextAnalyticsClient takes an endpoint and a credential.", "objective": "2.2.1" },
+  { "id": "ai-textapp-4", "type": "single", "question": "You need to identify people, locations and dates mentioned in news articles. Which method should you use?", "options": [
+    { "text": "recognize_entities", "why": "Correct. Named entity recognition categorizes text such as Person, Location and DateTime." },
+    { "text": "extract_key_phrases", "why": "Key phrases are main topics without entity categories." },
+    { "text": "begin_abstract_summary", "why": "Summarization produces a shorter version of the text." },
+    { "text": "analyze_sentiment", "why": "Sentiment analysis evaluates opinion, not entities." } ], "answer": [0], "explanation": "recognize_entities returns entities with a category and a confidence score.", "objective": "2.2.1" },
+  { "id": "ai-textapp-5", "type": "single", "question": "A team needs an analysis that Azure Language does not provide as a fixed feature, such as listing only the complaints about delivery in each review. What should the team use?", "options": [
+    { "text": "A prompt to a generative model deployed in Microsoft Foundry", "why": "Correct. A deployed language model can perform custom analysis described in a prompt." },
+    { "text": "Speech to text in Azure Speech", "why": "Speech to text transcribes audio and does not analyze written reviews." },
+    { "text": "The prebuilt-invoice analyzer in Content Understanding", "why": "This analyzer extracts invoice fields." },
+    { "text": "Azure Vision image analysis", "why": "Image analysis processes images, not text reviews." } ], "answer": [0], "explanation": "Generative models can carry out flexible text analysis tasks that are described in a prompt.", "objective": "2.2.1" }
+] }

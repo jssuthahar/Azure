@@ -3,7 +3,7 @@
  * Every AZ-900 lesson has a 3D scene and an Azure portal walkthrough; the
  * Practice Lab tab uses the lesson's matching lab, or the free sandbox.
  */
-import type { Mode3D } from './sims3d';
+import type { Mode3D } from '../sims3d';
 
 export interface LessonSims { d3: { mode: Mode3D; start: number; intro: string }; tour: { id: string; intro: string } }
 

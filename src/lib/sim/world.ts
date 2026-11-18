@@ -81,6 +81,9 @@ export class World extends Sim {
   notices: Notice[] = [];
   migrate = { discovered: false, assessed: false, migrated: [] as string[] };
   databox: { name: string; tb: number; step: number }[] = [];
+  /** Cloud Shell environment variables (export NAME=value) and pip packages, for the AI-901 Python labs. */
+  env: Record<string, string> = {};
+  pip: string[] = [];
 
   notify(kind: Notice['kind'], title: string, text: string) {
     this.notices.unshift({ kind, title, text, at: Date.now() });

@@ -1,0 +1,22 @@
+{ "cert": "ai-901", "domain": 2, "topic": "spoken-prompts-multimodal", "questions": [
+  { "id": "ai-spokenprompt-1", "type": "single", "scenario": "A mobile application records a user's spoken question. You want to send the recording directly to a model in Microsoft Foundry and receive a text answer in a single model call.", "question": "What should you deploy?", "options": [
+    { "text": "An audio-capable multimodal model", "why": "Correct. Audio-capable models accept audio input and return text or audio." },
+    { "text": "A text-only chat model", "why": "A text-only model cannot accept audio input." },
+    { "text": "An embedding model", "why": "Embedding models produce vectors and do not answer questions." },
+    { "text": "An image-generation model", "why": "Image-generation models create images from prompts." } ], "answer": [0], "explanation": "An audio-capable multimodal model can interpret a spoken prompt directly.", "objective": "2.2.2" },
+  { "id": "ai-spokenprompt-2", "type": "single", "question": "When you send audio to an audio-capable model by using the Chat Completions message format, which content part type carries the recording?", "options": [
+    { "text": "input_audio", "why": "Correct. The input_audio part contains base64-encoded audio data and its format." },
+    { "text": "input_image", "why": "input_image carries images." },
+    { "text": "file_search", "why": "file_search is an agent tool, not a message content part." },
+    { "text": "ssml", "why": "SSML is markup for speech synthesis in Azure Speech." } ], "answer": [0], "explanation": "Audio is sent as an input_audio content part with base64 data and a format such as wav.", "objective": "2.2.2" },
+  { "id": "ai-spokenprompt-3", "type": "multi", "question": "Which TWO statements about responding to spoken prompts are true?", "options": [
+    { "text": "An audio-capable model can return a response as audio as well as text.", "why": "Correct. You can request text and audio output modalities." },
+    { "text": "A pipeline of speech to text, a text model and text to speech is an alternative approach.", "why": "Correct. The pipeline chains three steps and exposes a transcript at each stage." },
+    { "text": "Audio input bypasses the content filters configured on the deployment.", "why": "Guardrails apply to audio prompts and responses as well." },
+    { "text": "Audio must be sent to the model as a local file path.", "why": "The model cannot read local paths. The audio is sent as base64 data." } ], "answer": [0, 1], "explanation": "Audio-capable models can respond with text or audio, and the speech pipeline is a valid alternative.", "objective": "2.2.2" },
+  { "id": "ai-spokenprompt-4", "type": "single", "question": "A company is building a voice assistant for phone calls. Callers must be able to interrupt the assistant while it is speaking, with minimal latency. Which approach should you recommend?", "options": [
+    { "text": "A realtime model or the Voice Live API", "why": "Correct. Realtime approaches stream audio in both directions with low latency and support interruptions." },
+    { "text": "Batch transcription followed by a text model", "why": "Batch transcription is asynchronous and unsuitable for live calls." },
+    { "text": "A Global Batch deployment of a chat model", "why": "Batch deployments have a target turnaround of up to 24 hours." },
+    { "text": "Azure Language sentiment analysis", "why": "Sentiment analysis does not hold a voice conversation." } ], "answer": [0], "explanation": "Live, interruptible voice conversations use realtime models or the Voice Live API.", "objective": "2.2.2" }
+] }

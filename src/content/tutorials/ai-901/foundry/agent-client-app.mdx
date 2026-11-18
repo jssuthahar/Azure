@@ -1,0 +1,222 @@
+---
+title: Build a Client App for an Agent
+seoTitle: Build a Python Client App for a Foundry Agent | AI-901
+description: Write a small Python client for a Microsoft Foundry agent with create_version, conversations and a multi-turn chat loop, then clean up. For AI-901.
+answer: >-
+  A **client app** for a Foundry agent connects to your project with **AIProjectClient** and **DefaultAzureCredential**, creates or reuses an agent with **create_version** and a **PromptAgentDefinition**, then gets an OpenAI client bound to the agent with **get_openai_client(agent_name=...)**. It starts a **conversation**, sends each user message with **responses.create**, prints **output_text**, and loops for more turns. The conversation keeps the history, so follow-up questions just work.
+updated: 2026-11-18
+readingMinutes: 9
+keyTerms:
+  - term: AIProjectClient
+    definition: The Foundry SDK client that connects to a project endpoint and gives you agents, deployments and an OpenAI client.
+  - term: PromptAgentDefinition
+    definition: The SDK object that describes a prompt agent, with its model deployment, instructions and tools.
+  - term: create_version
+    definition: The SDK method that creates an agent, or a new immutable version of an existing agent with the same name.
+  - term: Conversation
+    definition: A server-side thread that stores the messages and responses of one chat, so the agent remembers earlier turns.
+  - term: DefaultAzureCredential
+    definition: An Azure Identity credential that signs in with whatever is available, such as az login locally or a managed identity in Azure.
+interview:
+  - level: beginner
+    q: How does a Python app talk to an agent you built in the Foundry portal?
+    a: >-
+      It connects to the project endpoint with AIProjectClient and DefaultAzureCredential, then calls get_openai_client with the agent's name. From there it's a normal responses.create call, and the agent answers using its own instructions and tools.
+    followUps:
+      - q: Do you need an API key?
+        a: >-
+          No. The project client only supports Microsoft Entra ID. Locally I run az login; in Azure the app uses a managed identity with the Foundry User role.
+  - level: intermediate
+    q: How do you make the agent remember the previous question?
+    a: >-
+      I create a conversation once with conversations.create and pass its id to every responses.create call. The service stores the history, so I don't resend earlier messages myself. Passing previous_response_id is another way to chain turns.
+    followUps: []
+  - level: experienced
+    q: Should your app create the agent every time it starts?
+    a: >-
+      Usually not in production. The agent is a project resource, so I'd create or update it from a deployment script, and the app just references it by name. Creating a version on every start clutters the version history and makes it harder to know which instructions users actually got.
+    followUps: []
+  - level: scenario
+    q: The app works on your laptop but fails with an authorization error in Azure. What's wrong?
+    a: >-
+      Most likely the app's managed identity hasn't been given a role on the Foundry project. I'd assign it the Foundry User role on the project and make sure FOUNDRY_PROJECT_ENDPOINT is set in the app settings.
+    followUps: []
+revision:
+  keyPoints:
+    - Install azure-ai-projects (2.x) and azure-identity, then sign in with az login.
+    - Connect with AIProjectClient(endpoint=..., credential=DefaultAzureCredential()).
+    - Create an agent version with project.agents.create_version and a PromptAgentDefinition.
+    - Get an agent-bound client with project.get_openai_client(agent_name=...).
+    - Create one conversation and pass its id to every responses.create call for multi-turn chat.
+  mistakes:
+    - Starting a new conversation for every message, so the agent forgets the last turn.
+    - Trying to authenticate the project client with an API key. It only supports Microsoft Entra ID.
+  examTips:
+    - '"Keep context across turns" = reuse the same **conversation** id.'
+    - '"Connect to a Foundry project from code" = **AIProjectClient** with the project endpoint.'
+    - '"Each update makes a new snapshot" = agent **versions** from create_version.'
+  quick:
+    - q: Which pip package holds AIProjectClient?
+      a: azure-ai-projects
+    - q: Which credential does the sample use?
+      a: DefaultAzureCredential (Microsoft Entra ID).
+    - q: Which method creates an agent or a new version of it?
+      a: project.agents.create_version
+    - q: What do you pass to keep a multi-turn chat together?
+      a: The same conversation id on each responses.create call.
+    - q: Which property holds the agent's reply text?
+      a: response.output_text
+references:
+  - title: 'Quickstart: Create a prompt agent in Microsoft Foundry'
+    url: https://learn.microsoft.com/azure/foundry/agents/quickstarts/prompt-agent
+  - title: 'Quickstart: Get started with code in Microsoft Foundry'
+    url: https://learn.microsoft.com/azure/foundry/quickstarts/get-started-code
+  - title: Study guide for Exam AI-901
+    url: https://learn.microsoft.com/en-us/credentials/certifications/resources/study-guides/ai-901
+related:
+  - build-an-agent-in-foundry
+  - chat-app-with-foundry-sdk
+  - what-is-microsoft-foundry
+---
+
+## Start with a question
+
+<Story question="Your agent works perfectly in the playground. How do your customers use it?">
+
+Nobody's going to log in to the Foundry portal to chat with your HR agent. Staff want it inside the intranet page, a Teams bot or a little command-line tool.
+
+That's what a **client app** is for. It's a few lines of Python that send the user's message to the agent you built and print the reply, turn after turn.
+
+</Story>
+
+## Explain it like I'm 10
+
+<Eli10>
+
+The agent is like a librarian sitting in a back room.
+
+Your app is the little window in the wall. You pass a note through the window, the librarian reads it, looks things up and passes an answer back.
+
+The **conversation** is a notebook the librarian keeps for you, so when you ask "and the next one?" they flip back a page and know what you mean.
+
+</Eli10>
+
+## The technical explanation
+
+A client app needs four things: the **project endpoint**, a **credential**, the **agent's name**, and a **conversation** to hold the chat history.
+
+### 1. Set up
+
+```bash
+pip install "azure-ai-projects>=2.3.0" azure-identity
+az login
+# Project endpoint from the project's overview page in the Foundry portal
+export FOUNDRY_PROJECT_ENDPOINT="https://<resource-name>.services.ai.azure.com/api/projects/<project-name>"
+```
+
+The project client only signs in with **Microsoft Entra ID**. Locally, `DefaultAzureCredential` picks up your `az login`. In Azure, give the app a managed identity with the **Foundry User** role on the project.
+
+### 2. Create (or update) the agent from code
+
+If you built the agent in the portal you can skip this and just use its name. Doing it in code is handy when you want the definition in source control.
+
+```python
+import os
+from azure.identity import DefaultAzureCredential
+from azure.ai.projects import AIProjectClient
+from azure.ai.projects.models import PromptAgentDefinition
+
+project = AIProjectClient(
+    endpoint=os.environ["FOUNDRY_PROJECT_ENDPOINT"],
+    credential=DefaultAzureCredential(),
+)
+
+# Each call creates a new, immutable version of "hr-helper"
+agent = project.agents.create_version(
+    agent_name="hr-helper",
+    definition=PromptAgentDefinition(
+        model="gpt-4.1-mini",  # your deployment name, not the model family
+        instructions="You are Contoso's HR helper. Answer only HR questions. "
+                     "If you don't know, say so and suggest emailing HR.",
+    ),
+)
+print(f"Agent {agent.name}, version {agent.version}")
+```
+
+### 3. Chat in a loop
+
+```python
+# An OpenAI client that sends every request to the hr-helper agent
+openai = project.get_openai_client(agent_name="hr-helper")
+
+# One conversation = one chat with memory
+conversation = openai.conversations.create()
+
+while True:
+    question = input("You: ").strip()
+    if question.lower() in ("", "quit", "exit"):
+        break
+    response = openai.responses.create(
+        conversation=conversation.id,
+        input=question,
+    )
+    print("Agent:", response.output_text)
+
+# Clean up the conversation when the chat is over
+openai.conversations.delete(conversation_id=conversation.id)
+```
+
+Ask "How many casual leave days do I get?" and then "Can I carry them forward?". The second question only makes sense because the conversation already holds the first one. If you created a fresh conversation inside the loop, the agent would have no idea what "them" means.
+
+<Compare
+  caption="Two ways to keep turns together"
+  columns={[
+    { title: 'Conversation id', icon: '🗂️', tone: 'accent', items: ['Create once with conversations.create()', 'Pass conversation=conversation.id each turn', 'History is stored by the service', 'Best for chat apps'] },
+    { title: 'previous_response_id', icon: '🔗', items: ['Pass the id of the last response', 'Chains turns one after another', 'Handy for short, linear exchanges', 'You track the last id yourself'] },
+  ]}
+/>
+
+### 4. Tidy up
+
+Test code tends to leave things behind. Delete conversations you don't need, and if you created an agent version only for a test, delete it too (`project.agents.delete_version(...)` with the agent name and version). In a real app you'd keep the agent and create it from a deployment script, not every time the app starts.
+
+<TryIt labs="ai-agent-client" text="Run agent_app.py in the lab and hold a two-turn conversation with your agent." />
+
+<Callout type="exam">
+Three ideas get tested here. To connect, you use **AIProjectClient** with the **project endpoint** and a Microsoft Entra ID credential such as **DefaultAzureCredential**, not an API key. To keep context, you reuse **one conversation** across turns. And the `model` you put in the definition is your **deployment name**.
+</Callout>
+
+<DeepDive title="What about Agent Framework?">
+
+For bigger code-first projects Microsoft recommends the Microsoft Agent Framework (`agent-framework` package), which adds orchestration across several agents, middleware and local tools. For AI-901 the Foundry SDK calls above are enough: a project client, an agent version, a conversation and responses.
+
+</DeepDive>
+
+## Real-world business scenario
+
+<Scenario
+  company="Fabrikam Logistics"
+  industry="Logistics"
+  problem="Its shipment-help agent worked well in the Foundry playground, but drivers needed it inside the internal web app they already used on their phones."
+  service="A small Python backend that uses AIProjectClient with a managed identity, calls get_openai_client(agent_name='shipment-help'), and keeps one conversation per driver session."
+  why="No keys to store or rotate, the agent's instructions and tools stay managed in Foundry, and the conversation id gives drivers natural follow-up questions."
+  outcome="Drivers asked follow-ups like 'and the one after that?' without repeating themselves, and the team updated instructions in Foundry without redeploying the app."
+/>
+
+## When to use it and when not to
+
+<UseWhen
+  use={[
+    'You\'ve tested an agent in the portal and need it inside your own app, bot or script.',
+    'You want the agent definition in source control and created by a script.',
+    'Users ask follow-up questions, so the chat needs memory.',
+  ]}
+  avoid={[
+    'You only need one-off answers with no tools. A plain responses call to a model deployment is simpler.',
+    'Creating a new agent version every time the app starts. Reference it by name instead.',
+  ]}
+  alternatives={[
+    'Microsoft Agent Framework for multi-agent, code-first solutions.',
+    'Publishing the agent to Microsoft Teams or Microsoft 365 Copilot when users live there.',
+  ]}
+/>

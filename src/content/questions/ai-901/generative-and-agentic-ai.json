@@ -1,0 +1,28 @@
+{ "cert": "ai-901", "domain": 1, "topic": "generative-and-agentic-ai", "questions": [
+  { "id": "ai-genagent-1", "type": "multi", "question": "You are creating an AI agent in Microsoft Foundry Agent Service. Which THREE components make up the agent definition?", "options": [
+    { "text": "A model deployment", "why": "Correct. The model reads requests, reasons and decides which actions to take." },
+    { "text": "Instructions", "why": "Correct. Instructions define the agent's role, rules and tone." },
+    { "text": "Tools", "why": "Correct. Tools such as file search, code interpreter or function calling let the agent retrieve data and take actions." },
+    { "text": "A virtual network gateway", "why": "A virtual network gateway is a networking resource and is not part of an agent definition." },
+    { "text": "A content delivery network profile", "why": "A content delivery network caches web content and is not part of an agent definition." } ], "answer": [0, 1, 2], "explanation": "An agent combines a model, instructions and tools so that it can plan and act toward a goal.", "objective": "1.3.1" },
+  { "id": "ai-genagent-2", "type": "single", "question": "A marketing team needs an AI solution that writes three alternative product descriptions from a short list of product features. The solution does not need to access any other systems. Which approach is the most appropriate?", "options": [
+    { "text": "A generative AI model called with a prompt", "why": "Correct. Creating new text from a prompt is a generative AI task that does not require tools." },
+    { "text": "A multi-agent system with an orchestrator", "why": "A multi-agent system adds unnecessary cost and complexity for a single content-generation task." },
+    { "text": "A sentiment analysis model", "why": "Sentiment analysis classifies existing text and does not write new descriptions." },
+    { "text": "A speech-to-text model", "why": "Speech to text converts audio to text. The input is a list of features." } ], "answer": [0], "explanation": "When the task is only to create new content and no tools or actions are needed, a single call to a generative model is sufficient.", "objective": "1.3.1" },
+  { "id": "ai-genagent-3", "type": "single", "question": "Which statement describes how an AI agent completes a task that requires information from an external system?", "options": [
+    { "text": "The agent relies only on the data used to train its model", "why": "Training data does not contain current information from external systems." },
+    { "text": "The agent plans a step, calls a tool, observes the result and decides the next step", "why": "Correct. Agents repeat a plan, act and observe loop until they can complete the task." },
+    { "text": "The agent retrains its model each time a user sends a request", "why": "Agents do not retrain the underlying model for each request." },
+    { "text": "The agent forwards every request to a human operator", "why": "Agents can include human approval steps, but they complete tasks by using tools rather than forwarding every request." } ], "answer": [1], "explanation": "An agent uses tools to retrieve information or take actions, observes the results and continues until the goal is met.", "objective": "1.3.1" },
+  { "id": "ai-genagent-4", "type": "single", "scenario": "A company has a single support agent that handles billing, shipping and returns. Its instructions have grown long and it often selects the wrong tool.", "question": "Which design change addresses this problem?", "options": [
+    { "text": "Increase the temperature of the agent's model", "why": "A higher temperature increases randomness and is likely to make tool selection less reliable." },
+    { "text": "Remove all tools from the agent", "why": "Without tools the agent cannot complete billing, shipping or return tasks." },
+    { "text": "Split the work into specialist agents coordinated by an orchestrator", "why": "Correct. A multi-agent design gives each agent a narrow job and a small set of tools, which improves reliability." },
+    { "text": "Replace the agent with a speech synthesis model", "why": "Speech synthesis converts text to audio and cannot handle support tasks." } ], "answer": [2], "explanation": "Multi-agent systems split a large job across specialist agents, each with focused instructions and tools, coordinated by an orchestrator or workflow.", "objective": "1.3.1" },
+  { "id": "ai-genagent-5", "type": "single", "question": "Generative AI language models produce text by repeatedly performing which operation?", "options": [
+    { "text": "Looking up the complete answer in a database of stored responses", "why": "Language models do not retrieve pre-written answers from a database of responses." },
+    { "text": "Predicting the next token based on the preceding tokens", "why": "Correct. Language models generate output one token at a time, each predicted from the context so far." },
+    { "text": "Translating the prompt into a programming language", "why": "Language models do not translate every prompt into code to answer it." },
+    { "text": "Classifying the prompt as positive or negative", "why": "That describes sentiment analysis, not text generation." } ], "answer": [1], "explanation": "Generative language models are trained to predict the next token, and they build a response by repeating that prediction.", "objective": "1.2.1" }
+] }

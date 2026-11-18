@@ -253,3 +253,21 @@
 .pa .pt-menu-s .pa-inline { width: 100%; }
 .pa .pt-res-main { padding-top: 10px; }
 .pa .pt-chat .pt-bub.ai strong { font-weight: 700; }
+/* Foundry pages in the practice simulator (AI-901). */
+.pa-ta { min-height: 74px; resize: vertical; font-family: inherit; line-height: 1.45; }
+.pa-ai-grid { display: grid; gap: 14px; grid-template-columns: minmax(0, 1fr); }
+@container (min-width: 760px) { .pa-ai-grid { grid-template-columns: minmax(0, 300px) minmax(0, 1fr); } }
+.pa-ai-log { display: grid; gap: 8px; min-height: 120px; max-height: 300px; overflow: auto; padding: 10px; border: 1px solid var(--p-line); border-radius: 8px; background: var(--p-card); }
+.pa-ai-log .pt-bub { white-space: pre-wrap; }
+.pa-ai-meta { font-size: 11px; color: var(--p-muted); }
+.pa-ai-checks { display: flex; flex-wrap: wrap; gap: 6px 14px; }
+.pa-ai-img { display: grid; place-items: center; aspect-ratio: 1; max-width: 260px; border-radius: 10px; padding: 14px; text-align: center; color: #fff; font-weight: 600; background: linear-gradient(135deg, #1b4f72, #8764b8 55%, #e3a33b); }
+.pa-ai-stars { color: #c19c00; letter-spacing: 1px; }
+.pa-ai-code { white-space: pre; overflow: auto; font: 12px/1.45 ui-monospace, Menlo, Consolas, monospace; background: #1b1a19; color: #e6e6e6; border-radius: 8px; padding: 10px 12px; }
+/* Foundry portal (ai.azure.com) look for AI-901 tours. */
+.pt-top.pt-top-foundry { background: linear-gradient(90deg, #2b1a4a, #3b2466 60%, #1f3a68); }
+.pt-proj { flex: none; padding: 3px 9px; border-radius: 6px; background: rgb(255 255 255 / .12); color: #fff; font-size: 12px; white-space: nowrap; }
+@container (max-width: 560px) { .pt-proj { display: none; } }
+/* Dark mode: keep white text on brand-blue buttons and chat bubbles at WCAG AA contrast. */
+[data-theme='dark'] .pt-btn.pt-primary, .pa.pa-dark .pt-btn.pt-primary,
+[data-theme='dark'] .pt-bub.me, .pa.pa-dark .pt-bub.me { background: #115ea3 !important; border-color: #115ea3 !important; color: #fff !important; }

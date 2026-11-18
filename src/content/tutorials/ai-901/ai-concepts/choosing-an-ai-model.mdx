@@ -1,0 +1,193 @@
+---
+title: Choosing the Right AI Model
+seoTitle: How to Choose an AI Model in Microsoft Foundry | AI-901
+description: Pick the right AI model for AI-901 with LLM vs SLM, multimodal, reasoning, embedding and image models, model cards, benchmarks and cost trade-offs.
+answer: >-
+  You choose an AI model by matching its **capabilities** to the job, then balancing **quality, cost and latency**. A **large language model (LLM)** handles open-ended text, a **small language model (SLM)** such as Phi is cheaper and faster for narrow tasks, **multimodal** models accept images or audio, **reasoning** models think through multi-step problems, **embedding** models turn text into vectors for search, and **image-generation** models create pictures. In Microsoft Foundry you compare them in the **model catalog** using model cards and benchmarks.
+updated: 2026-11-18
+readingMinutes: 8
+keyTerms:
+  - term: Large language model (LLM)
+    definition: A model with billions of parameters trained on huge amounts of text, good at open-ended language tasks such as chat, writing and summarising.
+  - term: Small language model (SLM)
+    definition: A compact language model, such as Microsoft Phi, that costs less and responds faster, and can run on smaller hardware or devices.
+  - term: Multimodal model
+    definition: A model that accepts more than one kind of input, such as text plus images or audio, for example GPT-4o or GPT-4.1.
+  - term: Reasoning model
+    definition: A model that spends extra compute working through a problem step by step before answering, such as the o-series models.
+  - term: Embedding model
+    definition: A model that turns text into a vector of numbers so similar meanings sit close together, used for search and retrieval.
+  - term: Model card
+    definition: The page in the model catalog that describes a model's purpose, inputs, outputs, limits, license and intended use.
+  - term: Model catalog
+    definition: The Microsoft Foundry library where you browse, filter, compare and deploy models from Microsoft, OpenAI, Meta, Mistral, DeepSeek and others.
+interview:
+  - level: beginner
+    q: What's the difference between a large language model and a small language model?
+    a: >-
+      An LLM is bigger, has more general knowledge and is better at open-ended or complex tasks, but it costs more per token and responds more slowly. An SLM like Phi is smaller, cheaper and faster. For a narrow job such as classifying support tickets, an SLM is often good enough.
+    followUps:
+      - q: Can a small model run on a laptop or phone?
+        a: >-
+          Yes, that's one of the reasons people pick them. Some SLMs are small enough to run on a device without a cloud call, which helps with offline use and privacy.
+  - level: intermediate
+    q: How would you compare two models in Microsoft Foundry before deploying one?
+    a: >-
+      I'd open the model catalog, filter by task and deployment type, then read each model card for inputs, outputs, context window and license. Next I'd look at the benchmarks for quality, cost and throughput. Finally I'd deploy both and test them with my own prompts, because benchmarks don't know my data.
+    followUps: []
+  - level: experienced
+    q: When is a reasoning model the wrong choice?
+    a: >-
+      When the task is simple or needs a fast reply. Reasoning models spend extra tokens thinking, so they're slower and cost more. A chatbot that answers store opening hours doesn't need that. I'd save reasoning models for maths, planning, code and multi-step analysis.
+    followUps: []
+  - level: scenario
+    q: A team wants semantic search over 50,000 policy documents. Which model type do they need?
+    a: >-
+      An embedding model to turn every document chunk and every user question into vectors, so the search can find chunks with similar meaning. Then, if they want a written answer rather than a list of results, they add a chat model that reads the retrieved chunks. That's retrieval-augmented generation.
+    followUps: []
+revision:
+  keyPoints:
+    - Match the model to the capability first, then trade off quality, cost and latency.
+    - SLMs such as Phi are cheaper and faster; LLMs are better at broad, open-ended work.
+    - Multimodal models take images or audio as input; image-generation models create images.
+    - Reasoning models think step by step and suit maths, planning and code, at higher cost and latency.
+    - Embedding models output vectors for semantic search and RAG, not chat answers.
+  mistakes:
+    - Picking the biggest model for every job. A small model is often good enough and much cheaper.
+    - Thinking an embedding model can answer questions. It only produces vectors.
+    - Trusting benchmarks alone. Always test with your own prompts and data.
+  examTips:
+    - '"Lowest cost, fast, narrow task, could run on a device" = **small language model**.'
+    - '"Describe what is in a photo" = **multimodal** model. "Create a new picture" = **image-generation** model.'
+    - '"Convert text to vectors for similarity search" = **embedding** model.'
+  quick:
+    - q: Which model type turns text into vectors?
+      a: An embedding model.
+    - q: Name a Microsoft family of small language models.
+      a: Phi.
+    - q: Where do you read a model's intended use, limits and license?
+      a: On its model card in the model catalog.
+    - q: Which model type suits multi-step maths and planning?
+      a: A reasoning model.
+    - q: What three things do you usually trade off when picking a model?
+      a: Quality, cost and latency.
+references:
+  - title: Study guide for Exam AI-901
+    url: https://learn.microsoft.com/en-us/credentials/certifications/resources/study-guides/ai-901
+  - title: What is Microsoft Foundry?
+    url: https://learn.microsoft.com/azure/foundry/what-is-foundry
+  - title: Deployment types for Foundry Models
+    url: https://learn.microsoft.com/azure/foundry/foundry-models/concepts/deployment-types
+related:
+  - how-generative-ai-works
+  - model-deployment-and-parameters
+  - generative-and-agentic-ai
+---
+
+## Start with a question
+
+<Story question="Would you hire a senior architect to change a light bulb?">
+
+You could. They'd do a fine job. But you'd pay architect rates for a five-minute task, and you'd wait until they had a free slot.
+
+AI models work the same way. The biggest model can do almost anything, but it's slower and costs more per request. Picking a model means finding the **smallest, cheapest one that still does the job well**, and switching to a specialist when the job needs one.
+
+</Story>
+
+## Explain it like I'm 10
+
+<Eli10>
+
+Think of a toolbox. A big multi-tool can do lots of things, but it's heavy.
+
+A small screwdriver is light and quick, perfect for one kind of screw.
+
+A camera sees pictures. A paintbrush makes new pictures. A calculator works through hard sums slowly and carefully.
+
+You pick the tool that fits the job. AI models are those tools.
+
+</Eli10>
+
+## The technical explanation
+
+Microsoft Foundry's **model catalog** holds thousands of models: Microsoft's **Phi** family, OpenAI models (GPT-4.1, GPT-4o, the GPT-5 family, o-series reasoning models, gpt-image-1), Meta Llama, Mistral, DeepSeek, Cohere and more. Some are **Foundry Models sold by Azure** (billed and supported by Microsoft); others come from partners and the community.
+
+Start with what the model has to *do*, because that rules most models out straight away.
+
+| Model type | What it does | Example job | Example models |
+| --- | --- | --- | --- |
+| Large language model (LLM) | Broad, open-ended text: chat, writing, summarising, code | A general helpdesk assistant | GPT-4.1, GPT-5 family, Llama |
+| Small language model (SLM) | Narrower text tasks, cheaper and faster, can run on smaller hardware | Classify support tickets, run on a field device | Phi |
+| Multimodal model | Takes text plus images (and sometimes audio) as input | Read a photo of a damaged parcel and describe the damage | GPT-4o, GPT-4.1 |
+| Reasoning model | Works through a problem step by step before answering | Plan a delivery route, solve a pricing puzzle, debug code | o-series |
+| Embedding model | Turns text into vectors that capture meaning | Semantic search, the retrieval step in RAG | text-embedding models |
+| Image-generation model | Creates or edits images from a text prompt | A festival poster for a shop | gpt-image-1 |
+| Speech or audio model | Takes audio in or produces audio out | A voice assistant | gpt-audio family, gpt-realtime |
+
+<Compare
+  caption="The same request, three different fits"
+  columns={[
+    { title: 'Small language model', icon: '🪛', tone: 'ok', items: ['Lowest cost per token', 'Fastest replies', 'Good for narrow, repeatable tasks', 'Weaker on open-ended or tricky questions'] },
+    { title: 'Large language model', icon: '🧰', tone: 'accent', items: ['Strong general quality', 'Higher cost per token', 'Handles messy, open-ended prompts', 'Usually the safe starting point'] },
+    { title: 'Reasoning model', icon: '🧮', tone: 'warn', items: ['Best at multi-step problems', 'Uses extra thinking tokens', 'Slowest and often the most expensive', 'Overkill for simple chat'] },
+  ]}
+/>
+
+### Reading a model card and benchmarks
+
+Every model in the catalog has a **model card**. It tells you the provider, what the model is meant for, the inputs and outputs it supports (text, image, audio), the **context window** (how many tokens it can read at once), languages, known limits and the **license**. The catalog also lets you filter by task, collection, deployment type and license.
+
+**Benchmarks** (the leaderboards) compare models on **quality**, **cost** and **throughput**. They're a good shortlist tool. They aren't the final answer, because a model that wins a public benchmark can still do badly on your invoices or your Hindi customer emails. Deploy two or three candidates and test them with real prompts.
+
+<TryIt labs="ai-model-picker" text="Filter the catalog, compare two models side by side, then deploy a small model and a multimodal one." />
+
+### The trade-off triangle
+
+Most decisions come down to three things:
+
+- **Quality**: how good and accurate the answers are.
+- **Cost**: you pay per token, and bigger models charge more per token.
+- **Latency**: how long the user waits. Bigger and reasoning models are slower.
+
+You rarely get all three at the top. A common pattern is to send easy requests to a small model and hard ones to a larger or reasoning model.
+
+<Callout type="exam">
+Questions describe the job and expect you to name the model type. "Find documents with similar meaning" is an **embedding** model. "Answer a question about a photo" is **multimodal**. "Create an image" is **image generation**. "Cheapest and fastest for a simple, narrow task" is a **small language model**. "Solve a multi-step problem" is a **reasoning** model.
+</Callout>
+
+<DeepDive title="Routing and fine-tuning">
+
+Teams with high volume often put a router in front: a cheap model handles the bulk and only escalates when the request looks hard. Fine-tuning is another lever. A fine-tuned small model trained on your own examples can match a much larger model on one narrow task at a fraction of the token cost. Check the model card first, because not every model supports fine-tuning, and fine-tuned models have their own deployment options.
+
+</DeepDive>
+
+## Real-world business scenario
+
+<Scenario
+  company="Fabrikam Logistics, a parcel company in Pune"
+  industry="Logistics"
+  problem="It sent every customer message, from 'where is my parcel' to damage claims with photos, to one large model. Token bills were high and replies to simple questions felt slow."
+  service="Used the Foundry model catalog to split the work: a Phi small model for tracking questions, a multimodal GPT model for damage photos, and an embedding model to search its claims policy."
+  why="Most messages were simple and repetitive, so a small model handled them well. Only photo claims needed a multimodal model, and policy search needed vectors, not chat."
+  outcome="Simple replies got faster, the monthly token bill dropped sharply, and damage claims still got careful answers."
+/>
+
+## When to use it and when not to
+
+<UseWhen
+  use={[
+    'Use a **small language model** for narrow, high-volume tasks where speed and cost matter.',
+    'Use a **multimodal** model when the input includes photos, screenshots or audio.',
+    'Use a **reasoning** model for maths, planning, code and multi-step analysis.',
+    'Use an **embedding** model for semantic search and the retrieval step of RAG.',
+  ]}
+  avoid={[
+    "Don't default to the largest model for everything. You'll pay more and wait longer.",
+    "Don't pick on benchmarks alone. Test with your own prompts and data.",
+    "Don't expect an embedding model to write answers. It only returns vectors.",
+  ]}
+  alternatives={[
+    '**Foundry Tools** such as Azure Language or Azure Speech when a prebuilt feature already does the job.',
+    '**Fine-tuning** a smaller model when one narrow task needs better quality.',
+  ]}
+/>

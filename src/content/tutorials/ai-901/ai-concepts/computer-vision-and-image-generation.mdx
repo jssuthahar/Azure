@@ -1,0 +1,185 @@
+---
+title: Computer Vision and Image Generation
+seoTitle: Computer Vision and Image Generation Explained | AI-901
+description: Learn how AI reads images (captions, tags, objects, OCR), how multimodal models answer questions about photos and how image models create new ones for AI-901.
+answer: >-
+  **Computer vision** is AI that understands images: it can caption a photo, tag what's in it, find **objects** with boxes around them and read printed or handwritten text (**OCR**). **Multimodal models** such as GPT-4.1 take an image inside a prompt and answer questions about it, while **image-generation models** such as gpt-image-1 go the other way and create a new image from a text description, with **content credentials** that mark it as AI-made.
+updated: 2026-11-18
+readingMinutes: 8
+keyTerms:
+  - term: Computer vision
+    definition: The area of AI that lets software interpret images and video, such as describing a scene or reading text in a photo.
+  - term: Image analysis
+    definition: Extracting captions, tags, objects, people and text from an image, as Azure Vision in Foundry Tools does.
+  - term: Object detection
+    definition: Finding each object in an image and returning its name, a confidence score and a bounding box.
+  - term: OCR (optical character recognition)
+    definition: Reading printed or handwritten text from an image or scanned document. Azure Vision calls this feature Read.
+  - term: Multimodal model
+    definition: A generative model that accepts more than one kind of input, such as text plus images, in the same prompt.
+  - term: Image-generation model
+    definition: A generative model, such as gpt-image-1, that creates or edits images from a text prompt.
+  - term: Content credentials
+    definition: Provenance metadata (based on the C2PA standard) attached to generated images so anyone can check they were made by AI.
+interview:
+  - level: beginner
+    q: What's the difference between image classification and object detection?
+    a: >-
+      Classification or tagging tells me what's in the picture overall, like "dog, grass, park". Object detection goes further and tells me where each thing is, with a bounding box and a confidence score for every object it finds.
+    followUps:
+      - q: Where does OCR fit?
+        a: >-
+          OCR is a separate feature. It finds text in the image and returns the words and their positions, so I can read a receipt or a road sign.
+  - level: intermediate
+    q: When would you use Azure Vision image analysis instead of a multimodal model like GPT-4.1?
+    a: >-
+      If I need the same fixed outputs every time, like tags, bounding boxes or OCR lines at high volume and low cost, Azure Vision is a good fit. If I need to ask open questions about a photo, like "is this shelf missing any products?" or "explain this chart", a multimodal model is better because it reasons over the image and replies in natural language.
+    followUps: []
+  - level: experienced
+    q: How do you make generated images safe to publish?
+    a: >-
+      Guardrails in Foundry filter harmful prompts and outputs for image models just like they do for text. Generated images carry content credentials so people can see they're AI-made. I'd still keep a human review step for anything public, and write prompts that avoid real people and brand logos we don't own.
+    followUps: []
+  - level: scenario
+    q: A retailer wants product photos turned into alt text and a list of visible defects. What would you suggest?
+    a: >-
+      I'd send each photo to a multimodal model with a system message asking for one line of alt text and a JSON list of defects. If they only need tags and captions at scale, Azure Vision's caption and tag features would be cheaper and more predictable.
+    followUps: []
+revision:
+  keyPoints:
+    - Image analysis returns captions, dense captions, tags, objects, people and text (Read OCR).
+    - Object detection gives a label, a confidence score and a bounding box for each item.
+    - Multimodal models (GPT-4.1, GPT-4o, GPT-5 family) accept images in prompts and answer in text.
+    - Image-generation models such as gpt-image-1 create and edit images from text prompts.
+    - Generated images carry content credentials (C2PA) that show they're AI-made.
+  mistakes:
+    - Thinking a multimodal model that reads images can also generate them. Reading and creating are different model types.
+    - Mixing up tagging (what's in the image) with object detection (where each thing is).
+  examTips:
+    - '"Read the text on a scanned sign or receipt" = **OCR (Read)**.'
+    - '"Create a new image from a description" = **image-generation model** (gpt-image-1).'
+    - '"Ask a question about a photo" = **multimodal model**.'
+  quick:
+    - q: Which vision feature returns bounding boxes?
+      a: Object detection.
+    - q: What does OCR do?
+      a: It reads printed or handwritten text from an image.
+    - q: Name a model that creates images from text.
+      a: gpt-image-1 (DALL-E 3 is the older one).
+    - q: What marks a generated image as AI-made?
+      a: Content credentials based on the C2PA standard.
+    - q: Which kind of model can answer "what's wrong with this machine part?" from a photo?
+      a: A multimodal model such as GPT-4.1.
+references:
+  - title: What is Azure Vision in Foundry Tools?
+    url: https://learn.microsoft.com/azure/ai-services/computer-vision/overview
+  - title: Study guide for Exam AI-901
+    url: https://learn.microsoft.com/en-us/credentials/certifications/resources/study-guides/ai-901
+  - title: What is Microsoft Foundry?
+    url: https://learn.microsoft.com/azure/foundry/what-is-foundry
+related:
+  - visual-prompts-multimodal
+  - image-generation
+  - vision-app
+  - choosing-an-ai-model
+---
+
+## Start with a question
+
+<Story question="Can my phone really tell what's in a photo, and can it draw a new one for me?">
+
+Point your phone's camera at a shop sign in Chennai and it can read the Tamil text and translate it. Upload a photo of a broken tap and an assistant can tell you which part is cracked. Ask for "a poster of a monsoon tea stall, watercolour style" and you'll get a picture that never existed before.
+
+That's two jobs. Reading images is **computer vision**. Making new ones is **image generation**. AI-901 expects you to know both, and to tell them apart.
+
+</Story>
+
+## Explain it like I'm 10
+
+<Eli10>
+
+Imagine a friend who looks at your photo and says, "That's a cat on a red sofa, and the book says *Harry Potter*." That friend is computer vision.
+
+Now imagine another friend who's great at drawing. You say "a cat flying a kite" and they draw it.
+
+The first friend looks. The second friend draws. Some new AI friends can look at a photo and then chat with you about it too.
+
+</Eli10>
+
+## The technical explanation
+
+Vision AI on Azure comes in three flavours. You'll pick between them based on what you want back.
+
+<Compare
+  caption="Three ways to work with images in Microsoft Foundry"
+  columns={[
+    { title: 'Image analysis', subtitle: 'Azure Vision in Foundry Tools', icon: '🔍', items: ['Caption and dense captions', 'Tags (dog, grass, park)', 'Objects with bounding boxes', 'People detection', 'Read (OCR) for printed and handwritten text', 'Smart crop'] },
+    { title: 'Multimodal model', subtitle: 'GPT-4.1, GPT-4o, GPT-5 family', icon: '💬', tone: 'accent', items: ['Image goes into the prompt', 'You ask any question about it', 'Answers in natural language or JSON', 'Good at charts, screenshots and reasoning'] },
+    { title: 'Image generation', subtitle: 'gpt-image-1 (DALL-E 3 legacy)', icon: '🎨', tone: 'ok', items: ['Text prompt in, new image out', 'Can edit or fill part of an image', 'Guardrails check prompts and results', 'Content credentials show it is AI-made'] },
+  ]}
+/>
+
+### Image analysis: fixed, predictable outputs
+
+**Azure Vision in Foundry Tools** (the service that used to be called Computer Vision) runs a trained model over an image and returns structured results:
+
+| Feature | What you get back | Example |
+| --- | --- | --- |
+| Caption | One sentence describing the whole image | "A man riding a bicycle on a city street" |
+| Dense captions | Captions for several regions of the image | "a red helmet", "a yellow taxi" |
+| Tags | Keywords with confidence scores | bicycle 0.99, street 0.95 |
+| Object detection | Each object's name, confidence and bounding box | taxi at x=420, y=180, w=210, h=140 |
+| People | Where people are in the image | Three boxes around three people |
+| Read (OCR) | Lines and words of printed or handwritten text | "Thank you, visit again" printed on a receipt |
+
+Facial recognition exists too, but it's a **limited access** feature that Microsoft only turns on for approved use cases. That's responsible AI in action.
+
+### Multimodal models: ask anything about a picture
+
+A **multimodal model** accepts text and images in the same prompt. You attach a photo of a fridge shelf and ask "Which items are running low?", and the model reasons over the image and answers. It's flexible, but the answer is generated, so it can be wrong. Treat it like a smart colleague's opinion, not a measurement.
+
+### Image generation: text in, picture out
+
+**Image-generation models** such as **gpt-image-1** create new images from a prompt, and can edit an existing image (for example, replace the background). Foundry's **guardrails** check both the prompt and the result for harmful content. Images from Azure OpenAI models also carry **content credentials**, provenance metadata built on the C2PA standard, so anyone can check that the picture was generated by AI. That supports the transparency principle.
+
+<TryIt labs="ai-vision" text="Send a photo to a multimodal model, ask a question about it, then generate a brand-new image from a prompt." />
+
+<Callout type="exam">
+Watch the verb in the question. **Describe, tag, detect or read** an image points to image analysis or a multimodal model. **Create, draw or design** an image points to an image-generation model. "Show that an image was made by AI" points to **content credentials**.
+</Callout>
+
+<DeepDive title="Picking between Azure Vision and a multimodal model">
+
+Azure Vision gives the same answer for the same image every time and returns exact coordinates, which matters if you're drawing boxes on a screen or counting items at scale. A multimodal model costs more per image (you pay per token, and images add tokens) and its wording changes run to run, but it can follow instructions like "return only the damaged items as JSON". Many teams use both: OCR for exact text, then a model to reason over that text.
+
+</DeepDive>
+
+## Real-world business scenario
+
+<Scenario
+  company="Fabrikam Insurance (fictional)"
+  industry="Insurance"
+  problem="Claims staff spent hours looking at car damage photos and retyping registration numbers from them."
+  service="Read (OCR) pulls the number plate text, and a multimodal model describes the visible damage in a fixed JSON format for each photo."
+  why="OCR gives exact text for the plate, while the multimodal model can describe dents and scratches it was never specifically trained to tag."
+  outcome="Assessors now start each claim with a pre-filled summary and spend their time checking it instead of typing."
+/>
+
+## When to use it and when not to
+
+<UseWhen
+  use={[
+    'You need captions, tags, objects or text pulled from lots of images in a consistent format.',
+    'You want to ask open questions about photos, screenshots or charts (use a multimodal model).',
+    'You need marketing drafts, illustrations or concept art and a person will review them (image generation).',
+  ]}
+  avoid={[
+    'You need a guaranteed, measured result, like a safety inspection, with no human check.',
+    'You want to generate images of real people or brands you don\'t have rights to.',
+    'The task is really about pulling fields from forms and invoices. Content Understanding fits better.',
+  ]}
+  alternatives={[
+    '<strong>Azure Content Understanding in Foundry Tools</strong> for structured fields from documents, images, audio and video.',
+    '<strong>Custom-trained models</strong> when you need to recognise your own product range very accurately.',
+  ]}
+/>

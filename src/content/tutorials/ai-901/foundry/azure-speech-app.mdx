@@ -1,0 +1,218 @@
+---
+title: Build an App with Azure Speech in Foundry Tools
+seoTitle: Build a Speech App with Azure Speech in Foundry | AI-901
+description: Build a small Python app with the Azure Speech SDK that transcribes a file or microphone and speaks replies in a neural voice with SSML. For AI-901.
+answer: >-
+  A lightweight speech app uses **Azure Speech in Foundry Tools** through the **Speech SDK** (pip package **azure-cognitiveservices-speech**). You create a **SpeechConfig** with your key and endpoint, then use a **SpeechRecognizer** to turn a WAV file or the microphone into text (**speech to text**), and a **SpeechSynthesizer** with a **neural voice** to turn text into audio (**text to speech**). **SSML** lets you control rate, pitch, pauses and speaking style.
+updated: 2026-11-18
+readingMinutes: 9
+keyTerms:
+  - term: Azure Speech in Foundry Tools
+    definition: The Foundry Tools service (formerly Azure AI Speech) for speech to text, text to speech, translation and voice features.
+  - term: SpeechConfig
+    definition: The Speech SDK object that holds your key, endpoint, recognition language and synthesis voice.
+  - term: SpeechRecognizer
+    definition: The Speech SDK class that converts audio from a file or microphone into text.
+  - term: SpeechSynthesizer
+    definition: The Speech SDK class that converts text or SSML into spoken audio.
+  - term: Neural voice
+    definition: A natural-sounding prebuilt voice such as en-US-AvaMultilingualNeural or en-IN-NeerjaNeural.
+  - term: SSML
+    definition: Speech Synthesis Markup Language, an XML format for controlling voice, rate, pitch, pauses and style.
+interview:
+  - level: beginner
+    q: What are the two main things Azure Speech does?
+    a: >-
+      Speech to text, which turns spoken audio into a transcript, and text to speech, which reads text aloud in a natural neural voice. It also does speech translation and a few more advanced features.
+    followUps:
+      - q: Which Python package do you install?
+        a: >-
+          azure-cognitiveservices-speech, imported as azure.cognitiveservices.speech, usually aliased to speechsdk.
+  - level: intermediate
+    q: Your recognize_once call only captures the first sentence of a five-minute recording. Why?
+    a: >-
+      recognize_once stops at the first pause and handles about 30 seconds at most. For longer audio I'd use continuous recognition with start_continuous_recognition and handle the recognized events, or batch transcription for big files.
+    followUps: []
+  - level: experienced
+    q: When do you use SSML instead of plain text for synthesis?
+    a: >-
+      When the defaults don't sound right: slowing down a long account number, adding a pause before a key instruction, changing pitch, using a speaking style like cheerful or customer service, or switching voices mid-paragraph. Plain text is fine for short, simple replies.
+    followUps: []
+  - level: scenario
+    q: A hospital kiosk must read discharge instructions in English and Hindi. How would you build it?
+    a: >-
+      Use the Speech SDK's SpeechSynthesizer with a neural voice for each language, for example an en-IN voice and hi-IN-SwaraNeural, with SSML to slow the rate for medication names. I'd keep the text reviewed by staff, since the voice reads exactly what it's given.
+    followUps: []
+revision:
+  keyPoints:
+    - pip install azure-cognitiveservices-speech; import azure.cognitiveservices.speech as speechsdk.
+    - SpeechConfig holds the key and endpoint, plus speech_recognition_language and speech_synthesis_voice_name.
+    - SpeechRecognizer + AudioConfig(filename=...) or use_default_microphone=True gives speech to text.
+    - SpeechSynthesizer.speak_text_async(text).get() reads text in the chosen neural voice.
+    - speak_ssml_async takes SSML to control rate, pitch, pauses and style.
+  mistakes:
+    - Using recognize_once for long recordings. It stops after one utterance (about 30 seconds max).
+    - Forgetting to check result.reason, so silent failures look like empty text.
+  examTips:
+    - '"Read text aloud in a natural voice" = **text to speech** with a **neural voice**.'
+    - '"Make the voice pause or slow down" = **SSML**.'
+    - '"Transcribe a recording" = **speech to text** with SpeechRecognizer.'
+  quick:
+    - q: Which class turns audio into text?
+      a: SpeechRecognizer
+    - q: Which class turns text into audio?
+      a: SpeechSynthesizer
+    - q: Which property chooses the voice?
+      a: speech_config.speech_synthesis_voice_name
+    - q: What markup controls pauses and speaking rate?
+      a: SSML (Speech Synthesis Markup Language).
+    - q: What should you use instead of recognize_once for long audio?
+      a: Continuous recognition (or batch transcription).
+references:
+  - title: What is the Speech service?
+    url: https://learn.microsoft.com/azure/ai-services/speech-service/overview
+  - title: Study guide for Exam AI-901
+    url: https://learn.microsoft.com/en-us/credentials/certifications/resources/study-guides/ai-901
+related:
+  - speech-recognition-and-synthesis
+  - spoken-prompts-multimodal
+  - text-analysis-app
+---
+
+## Start with a question
+
+<Story question="How does a railway announcement app know how to say 'platform 4' in a calm, clear voice?">
+
+Station announcements used to be recorded by a person, one clip per train. Change the platform and someone had to record it again.
+
+Today an app can take the text "The 6:40 Chennai Express will arrive on platform 4" and speak it in a natural voice, in English or Hindi, slower for the platform number. And it can do the reverse too, turning a passenger's spoken question into text. That's **Azure Speech**.
+
+</Story>
+
+## Explain it like I'm 10
+
+<Eli10>
+
+Azure Speech is two magic tricks in one box.
+
+Trick one: it listens and writes down what you said, like a super-fast typist (**speech to text**).
+
+Trick two: it reads any sentence out loud in a friendly voice (**text to speech**). You can even tell it "slow down here" or "take a breath there", and it does.
+
+</Eli10>
+
+## The technical explanation
+
+**Azure Speech in Foundry Tools** is available on your Foundry resource (or a standalone Speech resource). Your app needs the key and endpoint, which you'll find on the resource in the Azure portal or Foundry portal.
+
+| Feature | What it does | SDK piece |
+| --- | --- | --- |
+| Speech to text (real time) | Transcribes a file or live microphone | `SpeechRecognizer` |
+| Fast and batch transcription | Transcribes long or many recordings | REST APIs |
+| Text to speech | Speaks text with a neural voice | `SpeechSynthesizer` |
+| SSML | Controls voice, rate, pitch, pauses, style | `speak_ssml_async` |
+| Speech translation | Spoken input to translated text or speech | `TranslationRecognizer` |
+| Speaker diarization | Labels who spoke when | Transcription options |
+
+```bash
+pip install azure-cognitiveservices-speech
+export SPEECH_KEY="<key>"
+export ENDPOINT="https://<resource-name>.cognitiveservices.azure.com/"
+```
+
+### speech_app.py: speech to text
+
+```python
+import os
+import azure.cognitiveservices.speech as speechsdk
+
+speech_config = speechsdk.SpeechConfig(subscription=os.environ["SPEECH_KEY"], endpoint=os.environ["ENDPOINT"])
+speech_config.speech_recognition_language = "en-IN"
+
+# From a file. Use AudioConfig(use_default_microphone=True) for the mic.
+audio_config = speechsdk.audio.AudioConfig(filename="question.wav")
+recognizer = speechsdk.SpeechRecognizer(speech_config=speech_config, audio_config=audio_config)
+
+result = recognizer.recognize_once_async().get()  # one utterance, up to about 30 seconds
+if result.reason == speechsdk.ResultReason.RecognizedSpeech:
+    print("You said:", result.text)
+elif result.reason == speechsdk.ResultReason.NoMatch:
+    print("No speech could be recognised.")
+```
+
+`recognize_once` stops at the first pause. For a long meeting recording, use continuous recognition (`start_continuous_recognition` with a `recognized` event handler) or batch transcription.
+
+### Text to speech with a neural voice
+
+```python
+speech_config.speech_synthesis_voice_name = "en-IN-NeerjaNeural"
+# Save to a file. Leave audio_config out to play on the default speaker.
+file_out = speechsdk.audio.AudioOutputConfig(filename="answer.wav")
+synthesizer = speechsdk.SpeechSynthesizer(speech_config=speech_config, audio_config=file_out)
+
+result = synthesizer.speak_text_async("Your train will arrive on platform 4.").get()
+if result.reason == speechsdk.ResultReason.SynthesizingAudioCompleted:
+    print("Saved answer.wav")
+```
+
+### SSML for control
+
+Plain text uses the voice's defaults. SSML lets you slow a number down, add a pause, or pick a style that the voice supports.
+
+```python
+ssml = """
+<speak version="1.0" xmlns="http://www.w3.org/2001/10/synthesis"
+       xmlns:mstts="https://www.w3.org/2001/mstts" xml:lang="en-US">
+  <voice name="en-US-AriaNeural">
+    <mstts:express-as style="customerservice">
+      Your booking is confirmed.<break time="500ms"/>
+      Your PNR is <prosody rate="-30%">4 5 2 1 9 8 7 6 3 0</prosody>.
+    </mstts:express-as>
+  </voice>
+</speak>"""
+synthesizer.speak_ssml_async(ssml).get()
+```
+
+Not every voice supports every style, so check the voice list in the Speech playground before you rely on one.
+
+<TryIt labs="ai-speech" text="Transcribe a clip, then speak a reply in a neural voice and adjust it with SSML in the lab." />
+
+<Callout type="exam">
+Look for the direction. Audio in, text out is **speech to text** (SpeechRecognizer). Text in, audio out is **text to speech** (SpeechSynthesizer). "Change the speaking rate, add pauses, or use a different speaking style" points to **SSML**. "Natural, human-like voice" means a **neural voice**. And for one short utterance, recognize_once is fine; long audio needs **continuous** or **batch** transcription.
+</Callout>
+
+<DeepDive title="Custom speech and custom voice">
+
+Custom speech trains recognition on your own audio and text so it gets domain words right, like drug names or station names. Custom neural voice and personal voice create a voice that sounds like a specific person; those are **limited access** features with an application and consent requirements, because a cloned voice can be misused. That's responsible AI showing up as product policy.
+
+</DeepDive>
+
+## Real-world business scenario
+
+<Scenario
+  company="Contoso Rail Services"
+  industry="Transport"
+  problem="Platform changes meant re-recording announcements by hand, and the help kiosk couldn't understand spoken questions from travellers."
+  service="A Python service with the Speech SDK: SpeechSynthesizer with en-IN and hi-IN neural voices and SSML to slow down train numbers, plus SpeechRecognizer on the kiosk microphone."
+  why="Neural voices sound natural in both languages, SSML makes numbers clear on noisy platforms, and the same SDK handles listening and speaking."
+  outcome="Announcements update the moment the timetable changes, and kiosk users can simply ask 'Which platform for Madurai?'."
+/>
+
+## When to use it and when not to
+
+<UseWhen
+  use={[
+    'You need transcripts of calls, meetings or voice notes.',
+    'Your app must speak with a natural voice, in a chosen language and style.',
+    'You need fine control of pronunciation, pauses and speed through SSML.',
+  ]}
+  avoid={[
+    'You only want a model to answer a spoken question. An audio-capable multimodal model may be one step simpler.',
+    'Cloning a real person\'s voice without the limited-access approval and their consent.',
+  ]}
+  alternatives={[
+    'An audio-capable multimodal model that takes input_audio directly.',
+    'Content Understanding for transcripts plus summaries of recorded calls.',
+    'Voice Live API for live voice agents.',
+  ]}
+/>

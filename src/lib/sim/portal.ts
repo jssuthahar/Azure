@@ -9,11 +9,13 @@
  */
 import { Sim, SimError, REGIONS, VM_SIZES, IMAGES, STORAGE_SKUS, PLAN_SKUS, RUNTIMES, TYPE_INFO, SUB_NAME, SUB_ID, type Res, type ResType } from './engine';
 import { money as fmtMoney } from '../currency';
+import * as F from './foundry';
+import type { World } from './world';
 
 /* ------------------------------------------------------------------ */
 /* types                                                               */
 /* ------------------------------------------------------------------ */
-type WizKind = 'rg' | 'vm' | 'storage' | 'webapp' | 'vmss';
+type WizKind = 'rg' | 'vm' | 'storage' | 'webapp' | 'vmss' | 'foundry';
 type View =
   | { page: 'home' } | { page: 'services' } | { page: 'create' } | { page: 'dashboard' }
   | { page: 'rgs' } | { page: 'all' } | { page: 'list'; type: ResType }
@@ -60,6 +62,7 @@ const SVC: { k: string; label: string; icon: string; color: string; cat: string;
   { k: 'nic', label: 'Network interfaces', icon: '🔌', color: '#0078d4', cat: 'Networking', view: { page: 'list', type: 'nic' } },
   { k: 'dnszone', label: 'DNS zones', icon: '🔎', color: '#0078d4', cat: 'Networking', view: { page: 'list', type: 'dnszone' } },
   { k: 'vpngw', label: 'Virtual network gateways', icon: '🔐', color: '#0078d4', cat: 'Networking', view: { page: 'list', type: 'vpngw' }, kw: 'vpn' },
+  { k: 'foundry', label: 'Microsoft Foundry', icon: '✨', color: '#8764b8', cat: 'AI + machine learning', view: { page: 'list', type: 'foundry' }, kw: 'ai openai gpt agents models foundry cognitive language speech vision content understanding' },
   { k: 'cost', label: 'Cost Management', icon: '💲', color: '#107c10', cat: 'Management', view: { page: 'cost' }, kw: 'billing budget cost' },
   { k: 'monitor', label: 'Monitor', icon: '📈', color: '#0078d4', cat: 'Management', view: { page: 'monitor' }, kw: 'metrics logs alerts' },
   { k: 'advisor', label: 'Advisor', icon: '💡', color: '#c19c00', cat: 'Management', view: { page: 'advisor' }, kw: 'recommendations' },
@@ -77,12 +80,14 @@ const WIZ: Record<WizKind, { title: string; crumb: View; tabs: string[] }> = {
   storage: { title: 'Create a storage account', crumb: { page: 'list', type: 'storage' }, tabs: ['Basics', 'Advanced', 'Networking', 'Data protection', 'Encryption', 'Tags', 'Review + create'] },
   webapp: { title: 'Create Web App', crumb: { page: 'list', type: 'webapp' }, tabs: ['Basics', 'Database', 'Deployment', 'Networking', 'Monitor + secure', 'Tags', 'Review + create'] },
   vmss: { title: 'Create a virtual machine scale set', crumb: { page: 'list', type: 'vmss' }, tabs: ['Basics', 'Spot', 'Disks', 'Networking', 'Scaling', 'Management', 'Health', 'Advanced', 'Tags', 'Review + create'] },
+  foundry: { title: 'Create a Foundry resource', crumb: { page: 'list', type: 'foundry' }, tabs: ['Basics', 'Network', 'Identity', 'Encryption', 'Tags', 'Review + create'] },
 };
 const MARKET: { n: string; d: string; icon: string; kind?: WizKind; cli?: string }[] = [
   { n: 'Virtual machine', d: 'IaaS: Linux or Windows server, you manage the OS.', icon: '🖥️', kind: 'vm' },
   { n: 'Storage account', d: 'Blobs, files, queues and tables.', icon: '🗄️', kind: 'storage' },
   { n: 'Web App', d: 'PaaS: host websites and APIs, no servers to manage.', icon: '🌐', kind: 'webapp' },
   { n: 'Resource group', d: 'A folder for resources that share a lifecycle.', icon: '📦', kind: 'rg' },
+  { n: 'Microsoft Foundry', d: 'Build generative AI apps and agents: models, agents, guardrails and Foundry Tools.', icon: '✨', kind: 'foundry' },
   { n: 'Virtual machine scale set', d: 'Identical VMs that scale out and in.', icon: '🧮', kind: 'vmss' },
   { n: 'Function App', d: 'Serverless: run code on events, pay per execution.', icon: '⚡', cli: 'az functionapp create -g <rg> -n <name>' },
   { n: 'Kubernetes Service', d: 'Managed Kubernetes clusters.', icon: '☸️', cli: 'az aks create -g <rg> -n <name> --node-count 2' },
@@ -142,6 +147,7 @@ export class Portal {
       storage: { rg: firstRg, region: this.sim.rgs[0]?.location ?? 'westeurope', perf: 'Standard', sku: 'Standard_GRS', tier: 'Hot' },
       webapp: { rg: firstRg, region: this.sim.rgs[0]?.location ?? 'westeurope', runtime: RUNTIMES[0], plansku: 'B1', os: 'Linux', publish: 'Code' },
       vmss: { rg: firstRg, image: 'Ubuntu2204', size: 'Standard_B1s', count: '2' },
+      foundry: { rg: firstRg, region: this.sim.rgs[0]?.location ?? 'eastus', project: 'proj-default' },
     };
     this.wiz = { kind, tab: 0, d: { ...base[kind], ...preset } };
     this.go({ page: 'wizard', kind });
@@ -229,6 +235,9 @@ export class Portal {
         }
         case 'container-del': { const r = this.cur()!; r.props.containers = (r.props.containers ?? []).filter((c: string) => c !== arg); sim.emit('storage.container.delete', { name: arg, via: 'portal' }); return; }
         case 'cp': return this.copilot(arg);
+        case 'ai-clear': { const r = this.cur()!; r.props.chat = []; r.props.last = { ...r.props.last, chat: '', agent: '' }; sim.emit('ai.chat.clear', { resource: r.name }); return; }
+        case 'ai-dep-del': { const r = this.cur()!; F.deleteDeployment(sim as unknown as World, r, arg, 'portal'); this.notify('ok', 'Deployment deleted', `'${arg}' was deleted.`); return; }
+        case 'ai-catalog-deploy': { const r = this.cur()!; r.props.last = { ...r.props.last, pick: arg }; this.view = { ...(this.view as any), tab: 'Models + endpoints' }; sim.emit('view', { ...this.view, model: arg }); return; }
         case 'unsupported': this.notify('info', 'Not in this simulator', `${arg} is not simulated yet. Explore it in the lessons, or try Cloud Shell.`); return;
       }
     } catch (err) {
@@ -295,6 +304,7 @@ export class Portal {
         case 'scale': { const r = this.cur()!; sim.scaleVmss(r.rg, r.name, Math.max(0, Math.min(100, Number(d.count) || 0)), 'portal'); this.notify('ok', 'Scaled scale set', `'${r.name}' now has ${d.count} instance(s).`); return; }
         case 'container': { const r = this.cur()!; const n = d.name.trim().toLowerCase(); if (!/^[a-z0-9](?!.*--)[a-z0-9-]{1,61}[a-z0-9]$/.test(n)) { this.notify('bad', 'Invalid container name', 'Use 3–63 lowercase letters, numbers and hyphens, starting and ending with a letter or number.'); return; } r.props.containers = [...new Set([...(r.props.containers ?? []), n])]; sim.emit('storage.container.create', { name: n, via: 'portal' }); this.notify('ok', 'Container created', `'${n}' created.`); return; }
         case 'cp': return this.copilot(d.q ?? '');
+        default: if (f.dataset.form?.startsWith('ai-')) return this.aiSubmit(f.dataset.form, d, f);
       }
     } catch (err) {
       this.fail(err);
@@ -307,6 +317,7 @@ export class Portal {
     if (!v) return [true, ''];
     if (name === 'name' && this.wiz?.kind === 'storage') { const p = this.sim.storageNameProblem(v); return [!p, p ?? `✓ https://${v}.blob.core.windows.net`]; }
     if (name === 'name' && this.wiz?.kind === 'webapp') { const p = this.sim.webappNameProblem(v); return [!p, p ?? `✓ https://${v.toLowerCase()}.azurewebsites.net`]; }
+    if (name === 'name' && this.wiz?.kind === 'foundry') { const ok = /^[a-zA-Z0-9][a-zA-Z0-9-]{1,62}[a-zA-Z0-9]$/.test(v) && !this.sim.res.some((r) => r.type === 'foundry' && r.name.toLowerCase() === v.toLowerCase()); return [ok, ok ? `✓ https://${v.toLowerCase()}.services.ai.azure.com` : 'Use 3–64 letters, numbers and hyphens (start and end with a letter or number). It must be unique: it becomes your custom subdomain.']; }
     if (name === 'name' && this.wiz?.kind === 'rg') { const exists = this.sim.rg(v); return [!exists && /^[-\w._()]+$/.test(v) && !v.endsWith('.'), exists ? 'A resource group with this name already exists.' : /^[-\w._()]+$/.test(v) && !v.endsWith('.') ? '✓' : 'Only letters, numbers, underscores, periods, hyphens and parentheses; cannot end in a period.'] }
     return [true, ''];
   }
@@ -344,6 +355,7 @@ export class Portal {
         const app = sim.createWebapp({ rg: rgName, plan: plan.name, name: d.name.trim(), runtime: d.runtime }, 'portal');
         Object.assign(app.tags, tags); target = app.id; deployName = `Microsoft.Web-WebApp-Portal-${Date.now().toString().slice(-6)}`;
       }
+      if (w.kind === 'foundry') { const r = F.createFoundry(sim as unknown as World, { rg: rgName, name: d.name.trim(), location: d.region, project: (d.project || 'proj-default').trim(), tags }, 'portal'); target = r.id; deployName = `Microsoft.CognitiveServicesAIFoundry-${Date.now().toString().slice(-8)}`; }
       if (w.kind === 'vmss') { const s = sim.createVmss({ rg: rgName, name: d.name.trim(), image: d.image, count: Number(d.count) || 2, size: d.size }, 'portal'); target = s.id; deployName = `CreateVmss-${Date.now().toString().slice(-8)}`; }
     } catch (err) {
       w.review = { ok: false, errors: [err instanceof SimError ? err.message : String(err)] };
@@ -551,7 +563,7 @@ export class Portal {
     const list = this.sim.res.filter((r) => !type || r.type === type);
     const s = type ? svcFor(type) : SVC.find((x) => x.k === 'all')!;
     const label = s?.label ?? (type ? TYPE_INFO[type].label : 'All resources');
-    const creatable: Partial<Record<ResType, WizKind>> = { vm: 'vm', storage: 'storage', webapp: 'webapp', vmss: 'vmss' };
+    const creatable: Partial<Record<ResType, WizKind>> = { vm: 'vm', storage: 'storage', webapp: 'webapp', vmss: 'vmss', foundry: 'foundry' };
     const mk = type ? MARKET.find((m) => m.n.toLowerCase().startsWith(label.toLowerCase().slice(0, 6))) : undefined;
     const createAct = type && creatable[type] ? A('create', creatable[type]) : mk ? A('market', mk.n) : NAV({ page: 'create' });
     const extra = (r: Res) => r.type === 'vm' ? this.status(r.props.power === 'running' ? 'Running' : r.props.power === 'stopped' ? 'Stopped' : 'Stopped (deallocated)') : r.type === 'webapp' ? this.status(r.props.state ?? 'Running') : r.type === 'vmss' ? `${r.props.capacity} instances` : r.type === 'storage' ? esc(r.props.sku) : '';
@@ -632,6 +644,14 @@ export class Portal {
         if (tab === 'Deployment') return this.g('Continuous deployment', this.f('Continuous deployment', this.radios('cd', [['off', 'Disable'], ['on', 'Enable']], d.cd ?? 'off'), { note: 'Connect GitHub so every push deploys automatically.' }));
         return this.g(tab, `<p class="pt-p">Defaults are fine for this lab.</p>`);
       }
+      case 'foundry': {
+        if (tab === 'Basics') return `<div class="pt-note-bar info">✨ A Foundry resource holds your models, agents, Foundry Tools (Language, Speech, Vision, Content Understanding), security and billing. Projects inside it are workspaces for each app or team.</div>` + this.projGroup(d) +
+          this.g('Instance details', this.f('Name', this.txt('name', d.name, 'e.g. contoso-ai-lab'), { req: true, hint: 'name', note: 'Becomes the custom subdomain https://&lt;name&gt;.services.ai.azure.com, so it must be unique.' }) + this.f('Region', this.regionSel(d), { req: true, note: 'Model and tool availability varies by region.' })) +
+          this.g('Default project', this.f('Default project name', this.txt('project', d.project, 'proj-default'), { req: true, note: 'You can add more projects later.' }));
+        if (tab === 'Network') return this.g('Network access', this.f('Type', this.radios('net', [['all', 'All networks, including the internet, can access this resource'], ['sel', 'Selected networks'], ['off', 'Disabled (private endpoints only)']], d.net ?? 'all')));
+        if (tab === 'Identity') return this.g('Managed identity', this.f('System assigned', '<span class="pt-toggle on"><i></i>On</span>', { note: 'Lets the resource reach storage and search without keys.' }));
+        return this.g(tab, `<p class="pt-p">Microsoft-managed keys encrypt your data at rest. Defaults are fine for this lab.</p>`);
+      }
       case 'vmss': {
         if (tab === 'Basics') return this.projGroup(d) + this.g('Scale set details', this.f('Virtual machine scale set name', this.txt('name', d.name, 'e.g. shop-web'), { req: true }) + this.f('Orchestration mode', this.radios('orch', [['Flexible', 'Flexible'], ['Uniform', 'Uniform']], d.orch ?? 'Flexible'))) + this.g('Instance details', this.f('Image', this.sel('image', Object.entries(IMAGES).map(([k, i]) => [k, i.label]), d.image), { req: true }) + this.f('Size', this.sel('size', Object.entries(VM_SIZES).map(([k, s]) => [k, `${k} (${money(s.hr * 730)}/month each)`]), d.size), { req: true }));
         if (tab === 'Scaling') return this.g('Scaling', this.f('Initial instance count', this.txt('count', d.count), { req: true }) + this.f('Scaling policy', this.radios('policy', [['manual', 'Manual'], ['auto', 'Autoscaling']], d.policy ?? 'manual')));
@@ -647,6 +667,7 @@ export class Portal {
     if (w.kind === 'vm') { rows.push(['Virtual machine name', d.name || '—'], ['Availability', d.avail === 'zone' ? `Zone ${d.zone}` : 'No infrastructure redundancy'], ['Image', IMAGES[d.image].label], ['Size', d.size], ['Inbound ports', d.inbound === 'none' ? 'None' : d.port], ['Auto-shutdown', d.shutdown ? 'On, 19:00' : 'Off']); price = `1 X ${d.size} by Microsoft · <strong>${money(this.vmHourly(d))}/hr</strong> (≈ ${money(this.vmHourly(d) * 730)}/month)`; }
     if (w.kind === 'storage') { rows.push(['Storage account name', d.name || '—'], ['Performance', d.perf], ['Replication', STORAGE_SKUS[d.sku].label], ['Access tier', d.tier]); }
     if (w.kind === 'webapp') { rows.push(['Name', d.name || '—'], ['Runtime stack', d.runtime], ['Operating System', d.os], ['Pricing plan', PLAN_SKUS[d.plansku].label]); price = `${PLAN_SKUS[d.plansku].label} · <strong>${money(PLAN_SKUS[d.plansku].hr * 730)}/month</strong>`; }
+    if (w.kind === 'foundry') { rows.push(['Name', d.name || '—'], ['Default project name', d.project || 'proj-default'], ['Kind', 'AIServices'], ['Pricing tier', 'Standard S0 (pay as you go)']); price = 'No upfront cost. Models are billed per token (or by reserved capacity for provisioned deployments).'; }
     if (w.kind === 'vmss') { rows.push(['Name', d.name || '—'], ['Image', IMAGES[d.image].label], ['Size', d.size], ['Instances', d.count]); price = `${d.count} X ${d.size} · <strong>${money(VM_SIZES[d.size].hr * (Number(d.count) || 0) * 730)}/month</strong>`; }
     if (d.tagKey) rows.push(['Tags', `${d.tagKey} : ${d.tagValue ?? ''}`]);
     return `${r.ok ? '<div class="pt-note-bar ok">✔ Validation passed</div>' : `<div class="pt-note-bar bad"><strong>✖ Validation failed.</strong> Required information is missing or not valid.<ul class="pa-errs">${r.errors.map((e) => `<li>${esc(e)}</li>`).join('')}</ul></div>`}
@@ -732,6 +753,177 @@ export class Portal {
     return `<div class="pt-empty">${ico('🧪', '#0078d4', 'xl')}<p class="pt-empty-h">${esc(tab)}</p><p class="pt-p">This blade isn’t simulated yet. In the real portal it lives right here. Try Overview, Tags, Locks or Activity log.</p></div>`;
   }
 
+  /* ---------------- Microsoft Foundry (AI-901) ---------------- */
+  private aiNote() { return `<div class="pt-note-bar info">✨ In real Azure this page lives in the <strong>Foundry portal</strong> (ai.azure.com). The simulator shows it here so everything stays in one place. Answers come from simple rules, not a real model.</div>`; }
+  private depOptions(r: Res, kinds?: F.ModelKind[]) {
+    return (r.props.deployments as F.Deployment[]).filter((d) => !kinds || kinds.includes(F.MODELS[d.model].kind)).map((d) => [d.name, `${d.name} (${d.model})`] as [string, string]);
+  }
+  private noDeps(r: Res, what = 'a chat model') {
+    return `${this.aiNote()}<div class="pt-empty"><p class="pt-empty-h">No deployment yet</p><p class="pt-p">Deploy ${esc(what)} first: <strong>Models + endpoints ➜ Deploy model</strong>.</p><button class="pt-btn pt-primary" ${A('blade', 'Models + endpoints')}>Go to Models + endpoints</button></div>`;
+  }
+  private last(r: Res, k: string): any { try { return r.props.last?.[k] ? JSON.parse(r.props.last[k]) : null; } catch { return r.props.last?.[k] ?? null; } }
+  private foundryTab(r: Res, tab: string, essBase: [string, string][]): string {
+    const P = r.props;
+    const deps = P.deployments as F.Deployment[];
+    const agents = P.agents as F.Agent[];
+    const chk = (name: string, label: string, on = false) => `<label class="pa-radio"><input type="checkbox" name="${name}" ${on ? 'checked' : ''}> ${esc(label)}</label>`;
+    const ta = (name: string, value: string, ph: string, rows = 3) => `<textarea class="pa-in pa-ta" name="${name}" rows="${rows}" placeholder="${esc(ph)}">${esc(value)}</textarea>`;
+    if (tab === 'Overview') return `${this.cmds([['✨ Go to Foundry portal', A('blade', 'Chat playground')], ['Delete', A('pane', 'del-res')], ['Refresh', NAV(this.view)]])}
+      ${this.ess([...essBase.slice(0, 2), ['Endpoint', `<code>${esc(F.resourceEndpoint(r))}</code>`], ['Kind', 'AIServices (Foundry)'], ['Pricing tier', 'Standard S0'], ['Projects', esc(P.projects.join(', ') || 'none yet')], ['Deployments', String(deps.length)], ['Agents', String(agents.length)]])}
+      <div class="pt-note-bar info">🎓 Education-only simulation of a Microsoft Foundry resource. Project endpoint: <code>${esc(F.projectEndpoint(r))}</code></div>
+      <div class="pt-cards">${[['Models + endpoints', `${deps.length} deployed`], ['Chat playground', 'Try a model'], ['Agents', `${agents.length} agents`], ['Content Understanding', 'Extract fields'], ['Guardrails', P.guard.shields ? 'Prompt Shields on' : 'Prompt Shields off']].map(([t, v]) => `<button class="pt-card pt-kpi" ${A('blade', t)}><p class="pt-card-h">${t}</p><p class="pt-kpi-v" style="font-size:15px">${esc(v)}</p></button>`).join('')}</div>`;
+    if (tab === 'Projects') return `<p class="pt-p">A <strong>project</strong> is a team's workspace inside the Foundry resource: its agents, files, evaluations and settings. Deployments are shared by the resource's projects.</p>
+      ${this.table(['Project', 'Project endpoint'], P.projects.map((x: string) => [esc(x), `<code>${esc(F.projectEndpoint(r, x))}</code>`]))}
+      <form data-form="ai-project" class="pa-tagrow"><input class="pa-in" name="name" placeholder="New project name, e.g. support-bot" required><button class="pt-btn pt-primary">+ New project</button></form>`;
+    if (tab === 'Keys and Endpoint') return `<div class="pt-note-bar warn">🔑 Keys give full access. Prefer <strong>Microsoft Entra ID</strong> (DefaultAzureCredential + the Foundry User role) and rotate keys if you must use them.</div>
+      ${this.f('Endpoint (Foundry Tools: Language, Speech, Content Understanding)', `<code>${esc(F.resourceEndpoint(r))}</code>`)}
+      ${P.projects.map((x: string) => this.f(`Project endpoint (${x}) for the Foundry SDK`, `<code>${esc(F.projectEndpoint(r, x))}</code>`)).join('')}
+      ${this.f('KEY 1', '<code>SIMULATEDKEY1a2b3c4d5e6f7a8b9c0d1e2f3a4b5c6d</code>')}${this.f('KEY 2', '<code>SIMULATEDKEY2f6e5d4c3b2a1f0e9d8c7b6a5f4e3d2c</code>')}${this.f('Location/Region', esc(regionLabel(r.location)))}`;
+    if (tab === 'Model catalog') {
+      const star = (n: number) => `<span class="pa-ai-stars" aria-label="${n} of 5">${'★'.repeat(n)}${'☆'.repeat(5 - n)}</span>`;
+      return `${this.aiNote()}<p class="pt-p">Compare models by what they accept, how good and fast they are, and what they cost (illustrative, per 1M tokens, in your currency). Pick the <strong>smallest model that does the job well</strong>.</p>
+      ${this.table(['Model', 'Provider', 'Type', 'Inputs', 'Context', 'Quality', 'Speed', 'Price in / out', ''], Object.entries(F.MODELS).map(([k, m]) => [esc(m.label), esc(m.by), esc(m.kind === 'slm' ? 'small language model' : m.kind), esc(m.inputs.join(', ')), esc(m.ctx), star(m.quality), star(m.speed), m.kind === 'image' ? `${money(m.price[0])} / image` : `${money(m.price[0])} / ${money(m.price[1])}`, `<button class="pt-link" ${A('ai-catalog-deploy', k)}>Deploy</button>`]))}
+      <div class="pt-note-bar info">${Object.values(F.MODELS).map((m) => `<strong>${esc(m.label)}</strong>: ${esc(m.desc)}`).slice(0, 4).join('<br>')}</div>`;
+    }
+    if (tab === 'Models + endpoints') {
+      const pick = P.last?.pick ?? 'gpt-4.1-mini';
+      return `${this.aiNote()}${deps.length ? this.table(['Deployment name', 'Model', 'Deployment type', 'Capacity', 'State', ''], deps.map((d) => [esc(d.name), esc(d.model), esc(F.DEPLOY_TYPES[d.sku].label), /Provisioned/.test(d.sku) ? `${d.capacity} PTU` : `${d.capacity}K TPM`, this.status('Succeeded'), `<button class="pt-link" ${A('ai-dep-del', d.name)}>Delete</button>`])) : '<p class="pt-p">No models deployed yet. An app can only call a model through a <strong>deployment</strong>, by the deployment\'s name.</p>'}
+      <form data-form="ai-deploy">${this.g('Deploy model', this.f('Model', this.sel('model', Object.keys(F.MODELS).map((k) => [k, `${k} (${F.MODELS[k].by}, ${F.MODELS[k].kind})`]), pick), { req: true }) +
+        this.f('Deployment name', this.txt('name', '', pick), { note: 'Your code uses this name in model="…". Leave empty to use the model name.' }) +
+        this.f('Deployment type', this.sel('sku', Object.entries(F.DEPLOY_TYPES).map(([k, v]) => [k, v.label]), 'GlobalStandard'), { req: true, note: Object.values(F.DEPLOY_TYPES).map((v) => `**${v.label}**: ${v.note}`).join(' ') }) +
+        this.f('Capacity', `<input class="pa-in" type="number" name="capacity" min="1" max="500" value="10">`, { note: 'Tokens per minute in thousands (standard) or PTUs (provisioned).' }))}
+        <div class="pt-savebar"><button class="pt-btn pt-primary">Deploy</button></div></form>`;
+    }
+    if (tab === 'Chat playground') {
+      const chatDeps = this.depOptions(r, ['chat', 'reasoning', 'slm', 'audio']);
+      if (!chatDeps.length) return this.noDeps(r);
+      const st = this.last(r, 'chatSetup') ?? { deployment: chatDeps[0][0], system: 'You are a helpful assistant.', temperature: '0.7', maxTokens: '800', attach: 'none' };
+      const log = (P.chat as { role: string; text: string; meta?: string }[]).map((m) => `<div class="pt-bub ${m.role === 'user' ? 'me' : 'ai'}">${md(m.text)}${m.meta ? `<div class="pa-ai-meta">${esc(m.meta)}</div>` : ''}</div>`).join('') || '<p class="pa-ai-meta">Start chatting: type a message below and select Send.</p>';
+      const attach: [string, string][] = [['none', 'No attachment'], ...Object.entries(F.SAMPLES).filter(([, x]) => x.kind === 'image' || x.kind === 'audio').map(([k, x]) => [k, `${x.kind === 'image' ? '🖼️' : '🎙️'} ${k}`] as [string, string])];
+      return `${this.aiNote()}<form data-form="ai-chat"><div class="pa-ai-grid"><div>
+        ${this.g('Setup', this.f('Deployment', this.sel('deployment', chatDeps, st.deployment)) + this.f('Instructions (system message)', ta('system', st.system, 'You are…  Only answer questions about…  Reply in…', 5), { note: 'Sets the rules for every turn. Try “Only answer questions about Contoso Retail.” or add facts after “Context:”.' }))}
+        ${this.g('Parameters', this.f(`Temperature (${esc(st.temperature)})`, `<input class="pa-in" type="range" name="temperature" min="0" max="2" step="0.1" value="${esc(st.temperature)}">`, { note: 'Low = focused and repeatable. High = more creative and varied.' }) + this.f('Max output tokens', `<input class="pa-in" type="number" name="maxTokens" min="1" max="4000" value="${esc(st.maxTokens)}">`))}
+      </div><div>
+        <div class="pa-ai-log" aria-live="polite">${log}</div>
+        ${this.f('Attach (multimodal)', this.sel('attach', attach, st.attach))}
+        <div class="pa-tagrow"><input class="pa-in" name="user" placeholder="Type a user message…" autocomplete="off"><button class="pt-btn pt-primary">Send</button><button type="button" class="pt-btn" ${A('ai-clear')}>Clear chat</button></div>
+        <details><summary class="pt-link">View code (Python, Foundry SDK)</summary><pre class="pa-ai-code">${esc(`from azure.identity import DefaultAzureCredential\nfrom azure.ai.projects import AIProjectClient\n\nproject = AIProjectClient(endpoint="${F.projectEndpoint(r)}",\n                          credential=DefaultAzureCredential())\nopenai = project.get_openai_client()\nresponse = openai.responses.create(\n    model="${st.deployment}",\n    instructions=${JSON.stringify(st.system)},\n    input="<user message>",\n    temperature=${st.temperature}, max_output_tokens=${st.maxTokens})\nprint(response.output_text)`)}</pre></details>
+      </div></div></form>`;
+    }
+    if (tab === 'Agents') {
+      const chatDeps = this.depOptions(r, ['chat', 'reasoning', 'slm']);
+      if (!chatDeps.length) return this.noDeps(r);
+      const conv = (P.agentChat ?? []) as { role: string; text: string; meta?: string }[];
+      return `${this.aiNote()}${agents.length ? this.table(['Agent', 'Version', 'Model deployment', 'Tools'], agents.map((a) => [esc(a.name), `v${a.version}`, esc(a.deployment), esc(a.tools.map((t) => F.TOOLS[t]).join(', ') || 'none')])) : '<p class="pt-p">An <strong>agent</strong> = a model + instructions + tools. It decides which tool to use, runs it and answers.</p>'}
+      <form data-form="ai-agent">${this.g('Create agent (or a new version)', this.f('Agent name', this.txt('name', agents[0]?.name ?? '', 'support-agent'), { req: true }) + this.f('Deployment', this.sel('deployment', chatDeps, agents[0]?.deployment ?? chatDeps[0][0]), { req: true }) +
+        this.f('Instructions', ta('instructions', agents[0]?.instructions ?? '', 'You are a support agent for Contoso Retail. Use the refund policy to answer. Never promise refunds above the limit.', 4), { req: true }) +
+        this.f('Tools', `<span class="pa-ai-checks">${Object.entries(F.TOOLS).map(([k, l]) => chk(`t_${k}`, l, agents[0]?.tools.includes(k))).join('')}</span>`, { note: 'Knowledge and actions the agent can use.' }))}
+        <div class="pt-savebar"><button class="pt-btn pt-primary">Save agent</button></div></form>
+      ${agents.length ? `<form data-form="ai-agent-run">${this.g('Agent playground', `<div class="pa-ai-log" aria-live="polite">${conv.map((m) => `<div class="pt-bub ${m.role === 'user' ? 'me' : 'ai'}">${md(m.text)}${m.meta ? `<div class="pa-ai-meta">${esc(m.meta)}</div>` : ''}</div>`).join('') || '<p class="pa-ai-meta">Try: “What is the refund limit for a damaged item, and what is 15% of 4200?”</p>'}</div>
+        ${this.f('Agent', this.sel('agent', agents.map((a) => [a.name, `${a.name} (v${a.version})`]), agents[agents.length - 1].name))}
+        <div class="pa-tagrow"><input class="pa-in" name="input" placeholder="Ask the agent…" autocomplete="off"><button class="pt-btn pt-primary">Send</button><button type="button" class="pt-btn" ${A('ai-clear')}>New conversation</button></div>`)}</form>` : ''}`;
+    }
+    if (tab === 'Images playground') {
+      const imgDeps = this.depOptions(r, ['image']);
+      if (!imgDeps.length) return this.noDeps(r, 'gpt-image-1');
+      const last = this.last(r, 'imageOut');
+      return `${this.aiNote()}<form data-form="ai-image">${this.g('Generate an image', this.f('Deployment', this.sel('deployment', imgDeps, imgDeps[0][0])) + this.f('Prompt', ta('prompt', last?.prompt ?? '', 'A watercolour poster of a rainy Chennai street at dusk, auto-rickshaws, warm lights', 3), { req: true, note: 'Say the subject, style, colours, mood and layout.' }) + this.f('Size', this.sel('size', [['1024x1024', 'Square 1024×1024'], ['1536x1024', 'Landscape 1536×1024'], ['1024x1536', 'Portrait 1024×1536']], last?.size ?? '1024x1024')))}
+        <div class="pt-savebar"><button class="pt-btn pt-primary">Generate</button></div></form>
+        ${last ? (last.blocked ? `<div class="pt-note-bar bad">🛡️ Blocked by the guardrail (${esc(last.blocked)}). No image was created.</div>` : `<div class="pa-ai-img" role="img" aria-label="Simulated generated image">🎨 Simulated image (${esc(last.size)})<br><small>${esc(last.prompt)}</small></div><p class="pa-ai-meta">Generated images carry content credentials (C2PA) that show they were made by AI.</p>`) : ''}`;
+    }
+    if (tab === 'Language') {
+      const o = this.last(r, 'text');
+      return `${this.aiNote()}<form data-form="ai-text">${this.g('Azure Language in Foundry Tools', this.f('Text', ta('text', '', 'The room in Chennai was spotless and Priya at the front desk was lovely, but breakfast was cold. Call me on 98765 43210.', 4), { req: true }) +
+        this.f('Features', `<span class="pa-ai-checks">${[['language', 'Language detection'], ['sentiment', 'Sentiment analysis'], ['keyphrases', 'Key phrase extraction'], ['entities', 'Named entity recognition'], ['pii', 'PII detection'], ['summary', 'Summarization']].map(([k, l]) => chk(`f_${k}`, l, true)).join('')}</span>`))}
+        <div class="pt-savebar"><button class="pt-btn pt-primary">Run</button></div></form>${o ? this.table(['Feature', 'Result'], Object.entries(o).map(([k, v]) => [esc(k), esc(v)])) : ''}`;
+    }
+    if (tab === 'Speech') {
+      const o = this.last(r, 'speech');
+      return `${this.aiNote()}<form data-form="ai-stt">${this.g('Speech to text', this.f('Audio file', this.sel('sample', Object.entries(F.SAMPLES).filter(([, x]) => x.kind === 'audio').map(([k, x]) => [k, `${k}: ${x.label}`]), 'question.wav')))}<div class="pt-savebar"><button class="pt-btn pt-primary">Transcribe</button></div></form>
+        <form data-form="ai-tts">${this.g('Text to speech', this.f('Text or SSML', ta('text', '', 'Our Chennai store opens at 10 AM on Sundays.', 3), { req: true }) + this.f('Voice', this.sel('voice', F.VOICES.map((v) => [v, v]), 'en-IN-NeerjaNeural'), { note: 'Neural voices sound natural. SSML controls rate, pitch and pauses: <prosody rate="slow">…</prosody>' }))}<div class="pt-savebar"><button class="pt-btn pt-primary">Play</button></div></form>
+        ${o ? `<div class="pt-note-bar ok">${esc(o)}</div>` : ''}`;
+    }
+    if (tab === 'Content Understanding') {
+      const o = this.last(r, 'cu');
+      const custom = (P.analyzers as { id: string; base: string }[]).map((a) => [a.id, `${a.id} (custom, ${a.base})`] as [string, string]);
+      return `${this.aiNote()}<form data-form="ai-cu">${this.g('Analyze a file', this.f('Analyzer', this.sel('analyzer', [...Object.entries(F.ANALYZERS).map(([k, v]) => [k, `${k}: ${v.label}`] as [string, string]), ...custom], o?.analyzer ?? 'prebuilt-invoice')) + this.f('File', this.sel('file', Object.entries(F.SAMPLES).map(([k, x]) => [k, `${k} (${x.kind})`]), o?.file ?? 'invoice-contoso.pdf')))}<div class="pt-savebar"><button class="pt-btn pt-primary">Analyze</button></div></form>
+        ${o ? `${o.transcript ? `<p class="pt-sec-h">Transcript</p><pre class="pa-ai-code">${esc(o.transcript)}</pre>` : ''}${this.table(['Field', 'Value', 'Confidence'], o.fields.map(([n, v, c]: [string, string, number]) => [esc(n), esc(v), `${c < 0.8 ? '⚠️ ' : ''}${c.toFixed(2)}`]))}${o.fields.some((f: [string, string, number]) => f[2] < 0.8) ? '<div class="pt-note-bar warn">Values under 0.80 confidence should go to a person for review.</div>' : ''}` : ''}
+        <form data-form="ai-analyzer">${this.g('Create a custom analyzer', this.f('Analyzer id', this.txt('id', '', 'car-claims'), { req: true }) + this.f('Base analyzer', this.sel('base', [['prebuilt-document', 'prebuilt-document'], ['prebuilt-image', 'prebuilt-image'], ['prebuilt-audio', 'prebuilt-audio'], ['prebuilt-video', 'prebuilt-video']], 'prebuilt-image')) +
+          this.f('Field 1', `<span class="pa-tagrow"><input class="pa-in" name="f1" placeholder="DamageType"><select class="pa-in" name="m1"><option value="classify">classify</option><option value="generate">generate</option><option value="extract">extract (documents only)</option></select><input class="pa-in" name="d1" placeholder="dent | scratch | broken glass | none"></span>`) +
+          this.f('Field 2 (optional)', `<span class="pa-tagrow"><input class="pa-in" name="f2" placeholder="Summary"><select class="pa-in" name="m2"><option value="generate">generate</option><option value="classify">classify</option><option value="extract">extract (documents only)</option></select><input class="pa-in" name="d2" placeholder="One sentence describing the damage"></span>`), 'Define the fields you want. **Extract** copies values that appear in a document, **classify** picks from your categories, **generate** writes a value (like a summary).')}
+          <div class="pt-savebar"><button class="pt-btn pt-primary">Create analyzer</button></div></form>`;
+    }
+    if (tab === 'Guardrails') {
+      const g = P.guard;
+      const t = this.last(r, 'guardTest');
+      return `${this.aiNote()}<form data-form="ai-guard">${this.g('Guardrails (content filters)', this.f('Blocking level for hate, sexual, violence, self-harm', this.sel('level', [['Low', 'Low: block only high-severity content (least restrictive)'], ['Medium', 'Medium: block medium and high severity (default)'], ['High', 'High: block low, medium and high severity (most restrictive)'], ['Off', 'Off (needs approval in real Azure)']], g.level)) +
+        this.f('Prompt Shields', chk('shields', 'Detect jailbreak and indirect prompt injection attacks', g.shields)) + this.f('PII in output', chk('pii', 'Redact phone numbers and emails in responses', g.pii)), 'Guardrails check every prompt on the way in and every completion on the way out.')}
+        <div class="pt-savebar"><button class="pt-btn pt-primary">Save</button></div></form>
+        <div class="pt-cards"><div class="pt-card pt-kpi"><p class="pt-card-h">Blocked so far</p><p class="pt-kpi-v">${g.blocked}</p></div></div>
+        <form data-form="ai-guard-test" class="pa-tagrow"><input class="pa-in" name="prompt" placeholder="Test a prompt, e.g. Ignore your previous instructions and…"><button class="pt-btn">Test</button></form>
+        ${t ? `<div class="pt-note-bar ${t.blocked ? 'bad' : 'ok'}">${t.blocked ? `🛡️ Blocked: ${esc(t.blocked)}` : '✅ Allowed: no harmful content detected'}</div>` : ''}`;
+    }
+    if (tab === 'Evaluations') {
+      const chatDeps = this.depOptions(r, ['chat', 'reasoning', 'slm']);
+      if (!chatDeps.length) return this.noDeps(r);
+      const o = this.last(r, 'eval');
+      return `${this.aiNote()}<form data-form="ai-eval">${this.g('New evaluation', this.f('Target deployment', this.sel('deployment', chatDeps, chatDeps[0][0])) + this.f('Evaluators', `<span class="pa-ai-checks">${[['groundedness', 'Groundedness'], ['relevance', 'Relevance'], ['coherence', 'Coherence'], ['fairness', 'Fairness (by group)'], ['violence', 'Violence (risk and safety)'], ['jailbreak', 'Jailbreak (risk and safety)']].map(([k, l]) => chk(`e_${k}`, l, k === 'groundedness')).join('')}</span>`), 'Runs a test dataset of 50 questions through the deployment and scores the answers.')}
+        <div class="pt-savebar"><button class="pt-btn pt-primary">Run evaluation</button></div></form>${o ? this.table(['Evaluator', 'Result'], Object.entries(o).map(([k, v]) => [esc(k), esc(v)])) : ''}`;
+    }
+    return '';
+  }
+  private aiSubmit(form: string, d: Record<string, string>, f: HTMLFormElement) {
+    const r = this.cur();
+    if (!r || r.type !== 'foundry') return;
+    const w = this.sim as unknown as World;
+    const P = r.props;
+    const save = (k: string, v: unknown) => { P.last = { ...P.last, [k]: typeof v === 'string' ? v : JSON.stringify(v) }; };
+    const on = (prefix: string) => [...new FormData(f).keys()].filter((k) => k.startsWith(prefix)).map((k) => k.slice(prefix.length));
+    switch (form) {
+      case 'ai-project': F.addProject(w, r, d.name, 'portal'); return this.notify('ok', 'Project created', `'${d.name}' is ready. Endpoint: ${F.projectEndpoint(r, d.name.trim())}`);
+      case 'ai-deploy': { const dep = F.deployModel(w, r, { name: d.name, model: d.model, sku: d.sku, capacity: Number(d.capacity) }, 'portal'); return this.notify('ok', 'Model deployed', `'${dep.name}' (${dep.model}, ${F.DEPLOY_TYPES[dep.sku].label}) is ready. Call it with model="${dep.name}".`); }
+      case 'ai-chat': {
+        save('chatSetup', { deployment: d.deployment, system: d.system ?? '', temperature: d.temperature ?? '0.7', maxTokens: d.maxTokens ?? '800', attach: d.attach ?? 'none' });
+        const user = (d.user ?? '').trim();
+        if (!user && (d.attach ?? 'none') === 'none') { w.emit('view', { ...this.view }); return; }
+        const hist = (P.chat as { role: string; text: string }[]).slice(-10);
+        const out = F.chat(w, r, { deployment: d.deployment, system: d.system, user, temperature: Number(d.temperature), maxTokens: Number(d.maxTokens), attach: d.attach, history: hist }, 'portal');
+        const att = d.attach && d.attach !== 'none' ? ` [${d.attach}]` : '';
+        P.chat = [...P.chat, { role: 'user', text: `${user || '(attachment)'}${att}` }, { role: 'ai', text: out.text, meta: `${d.deployment} · temperature ${d.temperature} · ${out.tokensIn} in / ${out.tokensOut} out tokens · finish: ${out.finish}` }];
+        w.emit('view', { ...this.view });
+        return;
+      }
+      case 'ai-agent': F.createAgent(w, r, { name: d.name, deployment: d.deployment, instructions: d.instructions, tools: on('t_') }, 'portal'); P.agentChat = []; return this.notify('ok', 'Agent saved', `'${d.name}' saved as a new version. Test it in the agent playground below.`);
+      case 'ai-agent-run': {
+        const q = (d.input ?? '').trim();
+        if (!q) return;
+        const turn = ((P.agentChat ?? []).length / 2) + 1;
+        const o = F.runAgent(w, r, { agent: d.agent, input: q, turn }, 'portal');
+        P.agentChat = [...(P.agentChat ?? []), { role: 'user', text: q }, { role: 'ai', text: o.text, meta: o.used.length ? `Tools used: ${o.used.map((t) => F.TOOLS[t]).join(', ')}` : 'No tools used' }];
+        w.emit('view', { ...this.view });
+        return;
+      }
+      case 'ai-image': { const o = F.generateImage(w, r, { deployment: d.deployment, prompt: d.prompt, size: d.size }, 'portal'); save('imageOut', { prompt: d.prompt, size: o.size, blocked: o.blocked }); w.emit('view', { ...this.view }); return; }
+      case 'ai-text': { const o = F.analyzeText(w, r, d.text, on('f_'), 'portal'); save('text', o); w.emit('view', { ...this.view }); return; }
+      case 'ai-stt': { const t = F.stt(w, r, d.sample, 'portal'); save('speech', `📝 Transcript: ${t}`); w.emit('view', { ...this.view }); return; }
+      case 'ai-tts': { const t = F.tts(w, r, d.text, d.voice, /<speak|<prosody/i.test(d.text ?? ''), 'portal'); save('speech', t); w.emit('view', { ...this.view }); return; }
+      case 'ai-cu': F.analyzeContent(w, r, d.analyzer, d.file, 'portal'); w.emit('view', { ...this.view }); return;
+      case 'ai-analyzer': {
+        const fields = ([['f1', 'm1', 'd1'], ['f2', 'm2', 'd2']] as const).filter(([n]) => (d[n] ?? '').trim()).map(([n, m, ds]) => [d[n].trim(), d[m], d[ds] ?? ''] as [string, string, string]);
+        F.createAnalyzer(w, r, { id: d.id, base: d.base, fields }, 'portal');
+        return this.notify('ok', 'Analyzer created', `'${d.id}' is ready. Pick it in “Analyze a file”.`);
+      }
+      case 'ai-guard': F.setGuardrail(w, r, { level: d.level, shields: d.shields === 'on', pii: d.pii === 'on' }, 'portal'); return this.notify('ok', 'Guardrails saved', `Blocking level ${d.level}, Prompt Shields ${d.shields === 'on' ? 'on' : 'off'}, PII redaction ${d.pii === 'on' ? 'on' : 'off'}.`);
+      case 'ai-guard-test': {
+        const blocked = F.screen(r, d.prompt ?? '') ?? '';
+        if (blocked) { P.guard.blocked++; w.emit('ai.blocked', { resource: r.name, category: blocked, where: 'test', via: 'portal' }); }
+        save('guardTest', { blocked });
+        w.emit('ai.guard.test', { resource: r.name, blocked, via: 'portal' });
+        return;
+      }
+      case 'ai-eval': { F.runEvaluation(w, r, d.deployment, on('e_'), 'portal'); w.emit('view', { ...this.view }); return; }
+    }
+  }
   private resBlade(r: Res, tab: string) {
     const crumbs: [string, View | null][] = [[r.rg, { page: 'rg', name: r.rg }], [r.name, null]];
     const s = svcFor(r.type);
@@ -783,6 +975,9 @@ export class Portal {
       if (tab === 'Overview') body = `${this.cmds([['Start', A('unsupported', 'Start all')], ['Restart', A('unsupported', 'Restart all')], ['Stop', A('unsupported', 'Stop all')], ['Delete', A('pane', 'del-res')], ['Refresh', NAV(this.view)]])}${this.ess([...essBase.slice(0, 2), ['Instances', `${r.props.capacity}`], ['Size', esc(r.props.size)], ['Image', esc(IMAGES[r.props.image]?.label)], ['Orchestration mode', 'Flexible'], essBase[4]])}${costNote}`;
       else if (tab === 'Instances') body = this.table(['Name', 'Computer name', 'Status', 'Health state'], Array.from({ length: r.props.capacity }, (_, i) => [`${esc(r.name)}_${i}`, `${esc(r.name.replace(/\W/g, '').slice(0, 9))}00000${i}`, this.status('Running'), this.status('Healthy')])) || '<p class="pt-p">0 instances.</p>';
       else if (tab === 'Scaling') body = `<form data-form="scale">${this.f('Choose how to scale your resource', this.radios('mode', [['manual', 'Manual scale'], ['auto', 'Custom autoscale']], 'manual'))}${this.f('Instance count', `<input class="pa-in" type="number" min="0" max="100" name="count" value="${r.props.capacity}">`, { note: `Each instance ≈ ${money(VM_SIZES[r.props.size].hr * 730)}/month.` })}<div class="pt-savebar"><button class="pt-btn pt-primary">Save</button></div></form>`;
+    } else if (r.type === 'foundry') {
+      menu = [...common, ['Foundry portal (simulated)', ['Models + endpoints', 'Model catalog', 'Chat playground', 'Agents', 'Images playground']], ['Foundry Tools', ['Language', 'Speech', 'Content Understanding']], ['Protect and govern', ['Guardrails', 'Evaluations']], ['Resource Management', ['Keys and Endpoint', 'Projects', 'Properties', 'Locks']]];
+      body = this.foundryTab(r, tab, essBase);
     } else if (r.type === 'nsg') {
       menu = [...common, ['Settings', ['Inbound security rules', 'Outbound security rules', 'Network interfaces', 'Subnets', 'Properties', 'Locks']]];
       const rules = [...(r.props.inbound ?? []).map((p: string, i: number) => [String(300 + i * 10), `Allow-${p}`, esc(p), 'TCP', 'Any', this.status('Allow')]), ['65000', 'AllowVnetInBound', 'Any', 'Any', 'VirtualNetwork', this.status('Allow')], ['65001', 'AllowAzureLoadBalancerInBound', 'Any', 'Any', 'AzureLoadBalancer', this.status('Allow')], ['65500', 'DenyAllInBound', 'Any', 'Any', 'Any', this.status('Deny')]];

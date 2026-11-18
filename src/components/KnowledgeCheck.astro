@@ -1,6 +1,8 @@
 ---
 import type { Question } from '../content.config';
 import { inlineMd } from '../lib/learn';
+import { examFromPath } from '../data/exams';
+const exam = examFromPath(Astro.url.pathname);
 
 interface Props { questions: Question[]; topicKey: string; id?: string }
 const { questions, topicKey, id = 'knowledge-check' } = Astro.props;
@@ -10,7 +12,7 @@ const ids = JSON.stringify(questions.map((q) => q.id));
 <section class="kc" data-topic-key={topicKey} data-answers={answers} data-ids={ids} aria-labelledby={id}>
   <h2 id={id}>Test yourself with exercises</h2>
   <p class="text-muted">
-    {questions.length} original practice questions in the AZ-900 style. Pick your answers, then check them. You will see why each option is right or wrong. Score 75% or more and this topic is marked complete.
+    {questions.length} original practice questions in the {exam.code} style. Pick your answers, then check them. You will see why each option is right or wrong. Score 75% or more and this topic is marked complete.
   </p>
   <form class="exercise-box mt-5 space-y-5" novalidate>
     {questions.map((q, qi) => (

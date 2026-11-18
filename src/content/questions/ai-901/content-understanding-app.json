@@ -1,0 +1,27 @@
+{ "cert": "ai-901", "domain": 2, "topic": "content-understanding-app", "questions": [
+  { "id": "ai-cuapp-1", "type": "single", "question": "You are writing a Python application that extracts fields from receipts by using Azure Content Understanding. Which client class should you create?", "options": [
+    { "text": "ContentUnderstandingClient", "why": "Correct. ContentUnderstandingClient from azure-ai-contentunderstanding runs analyzers." },
+    { "text": "TextAnalyticsClient", "why": "TextAnalyticsClient is used for Azure Language text analysis." },
+    { "text": "SpeechRecognizer", "why": "SpeechRecognizer is part of the Speech SDK for speech to text." },
+    { "text": "ImageAnalysisClient", "why": "ImageAnalysisClient is used for Azure Vision image analysis." } ], "answer": [0], "explanation": "The azure-ai-contentunderstanding package provides ContentUnderstandingClient for running Content Understanding analyzers.", "objective": "2.4.4" },
+  { "id": "ai-cuapp-2", "type": "single", "question": "Your code calls client.begin_analyze(analyzer_id=\"prebuilt-invoice\", inputs=[...]). What must the code do next to obtain the extracted fields?", "options": [
+    { "text": "Call result() on the returned poller", "why": "Correct. begin_analyze returns a poller, and result() waits for the long-running operation to complete." },
+    { "text": "Read the fields property of the poller directly", "why": "The poller represents the operation; the fields are available only in the completed result." },
+    { "text": "Call images.generate with the same input", "why": "images.generate creates images and is unrelated to analysis." },
+    { "text": "Create a new conversation", "why": "Conversations are used for multi-turn model and agent interactions." } ], "answer": [0], "explanation": "Analysis is a long-running operation. The poller returned by begin_analyze provides the analysis result through result().", "objective": "2.4.4" },
+  { "id": "ai-cuapp-3", "type": "multi", "question": "Which TWO properties of an extracted field should an application read to save a value and decide whether it requires human review?", "options": [
+    { "text": "value", "why": "Correct. value contains the extracted data." },
+    { "text": "confidence", "why": "Correct. confidence indicates how certain the service is and can be compared with a threshold." },
+    { "text": "temperature", "why": "temperature is a generation parameter for models, not a field property." },
+    { "text": "b64_json", "why": "b64_json contains image data returned by image generation." } ], "answer": [0, 1], "explanation": "Each field provides its value and a confidence score. Applications commonly route values below a chosen confidence threshold to a reviewer.", "objective": "2.4.4" },
+  { "id": "ai-cuapp-4", "type": "single", "scenario": "An application currently extracts invoice fields by calling begin_analyze with the prebuilt-invoice analyzer. The company now wants the same application to summarize recorded support calls.", "question": "What is the minimum change required?", "options": [
+    { "text": "Change the analyzer ID to prebuilt-audioSearch and supply the call recording as input", "why": "Correct. The client and analysis flow stay the same; only the analyzer and input change." },
+    { "text": "Rewrite the application by using the Speech SDK", "why": "Content Understanding already transcribes and summarizes recorded audio." },
+    { "text": "Deploy gpt-image-1", "why": "Image generation is not needed to summarize calls." },
+    { "text": "Change the field method of InvoiceTotal to generate", "why": "Changing an invoice field does not enable audio analysis." } ], "answer": [0], "explanation": "Content Understanding uses the same client and begin_analyze pattern for every content type. Selecting an audio analyzer and providing the recording is sufficient.", "objective": "2.4.4" },
+  { "id": "ai-cuapp-5", "type": "single", "question": "A developer wants the ContentUnderstandingClient to authenticate without storing a resource key in code or configuration. What should the developer use?", "options": [
+    { "text": "DefaultAzureCredential from azure.identity", "why": "Correct. DefaultAzureCredential authenticates with Microsoft Entra ID, so no key is stored." },
+    { "text": "AzureKeyCredential with the key hard-coded", "why": "This stores a key in code, which the requirement prohibits." },
+    { "text": "A content filter", "why": "Content filters screen harmful content and do not authenticate clients." },
+    { "text": "An embedding model deployment", "why": "Model deployments do not provide client authentication." } ], "answer": [0], "explanation": "ContentUnderstandingClient accepts a Microsoft Entra ID token credential such as DefaultAzureCredential as an alternative to a key.", "objective": "2.4.4" }
+] }

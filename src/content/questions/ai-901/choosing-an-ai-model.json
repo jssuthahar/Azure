@@ -1,0 +1,27 @@
+{ "cert": "ai-901", "domain": 1, "topic": "choosing-an-ai-model", "questions": [
+  { "id": "ai-choose-model-1", "type": "single", "scenario": "A retail company plans to let customers type a question such as 'waterproof hiking shoes for kids' and return the most relevant products, even when the product descriptions use different words.", "question": "Which type of model should the company use to represent the product descriptions and the customer questions?", "options": [
+    { "text": "An image-generation model", "why": "Image-generation models create pictures from prompts. They do not represent text for similarity search." },
+    { "text": "An embedding model", "why": "Correct. Embedding models convert text into vectors so that items with similar meaning can be found even when the wording differs." },
+    { "text": "A reasoning model", "why": "Reasoning models solve multi-step problems. They are not designed to produce vectors for search." },
+    { "text": "A speech model", "why": "Speech models process audio. The input here is typed text." } ], "answer": [1], "explanation": "Semantic search compares the meaning of text by comparing vectors produced by an embedding model.", "objective": "1.2.2" },
+  { "id": "ai-choose-model-2", "type": "single", "question": "A company needs to classify short support tickets into five categories. The solution must minimize cost per request and respond quickly. Which type of model is the most appropriate starting point?", "options": [
+    { "text": "A small language model", "why": "Correct. A small language model, such as a Phi model, is cheaper and faster and is usually sufficient for a narrow, repetitive task." },
+    { "text": "A reasoning model", "why": "Reasoning models use additional tokens to work through problems, which increases cost and latency for a simple task." },
+    { "text": "An image-generation model", "why": "Image-generation models create images and cannot classify text." },
+    { "text": "The largest available multimodal model", "why": "A large multimodal model would work, but it costs more and responds more slowly than necessary for this task." } ], "answer": [0], "explanation": "For narrow, high-volume text tasks where cost and latency matter, a small language model is usually the best fit.", "objective": "1.2.2" },
+  { "id": "ai-choose-model-3", "type": "multi", "question": "Which TWO types of information can you find on a model card in the Microsoft Foundry model catalog?", "options": [
+    { "text": "The supported input and output types for the model", "why": "Correct. Model cards describe what the model accepts and produces, such as text or images." },
+    { "text": "The license and intended use of the model", "why": "Correct. Model cards describe the license, intended use and known limitations." },
+    { "text": "The prompts that other customers have sent to the model", "why": "Customer prompts are private and are not published on model cards." },
+    { "text": "The Azure subscription that owns the model deployment", "why": "Model cards describe the model, not any customer's deployment or subscription." } ], "answer": [0, 1], "explanation": "A model card describes the model itself: purpose, inputs and outputs, context window, limitations and license.", "objective": "1.2.2" },
+  { "id": "ai-choose-model-4", "type": "single", "question": "An insurance company wants an application that accepts a photo of a damaged car and returns a written description of the damage. Which type of model should the application use?", "options": [
+    { "text": "An embedding model", "why": "Embedding models return vectors, not written descriptions, and are not designed to interpret images for this purpose." },
+    { "text": "An image-generation model", "why": "Image-generation models create new images. This scenario requires understanding an existing image." },
+    { "text": "A multimodal model", "why": "Correct. A multimodal model accepts an image together with a text prompt and returns a text response." },
+    { "text": "A text-only small language model", "why": "A text-only model cannot accept an image as input." } ], "answer": [2], "explanation": "Models that accept images as input and answer in text are multimodal models, such as GPT-4o or GPT-4.1.", "objective": "1.2.2" },
+  { "id": "ai-choose-model-5", "type": "multi", "question": "You are comparing models in the Microsoft Foundry model catalog. Which TWO statements about benchmarks are correct?", "options": [
+    { "text": "Benchmarks help you compare models on measures such as quality, cost and throughput", "why": "Correct. Benchmark leaderboards compare models on these measures to help you shortlist candidates." },
+    { "text": "A model with the highest benchmark score is guaranteed to perform best on your data", "why": "Benchmarks use public test sets. A model can still perform poorly on your specific prompts and data." },
+    { "text": "You should test shortlisted models with your own prompts before choosing one", "why": "Correct. Testing with real prompts confirms whether a model works for your scenario." },
+    { "text": "Benchmarks are available only for models created by Microsoft", "why": "The catalog provides comparison data for models from multiple providers." } ], "answer": [0, 2], "explanation": "Benchmarks are useful for shortlisting, but the final choice should be validated with your own data.", "objective": "1.2.2" }
+] }

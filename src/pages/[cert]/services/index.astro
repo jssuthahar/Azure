@@ -12,7 +12,7 @@ const SERVICE_CATS = [...new Set(SERVICES.map((s) => s.cat))];
 const crumbs = [{ name: 'Home', url: '/' }, { name: `${exam.code}`, url: `/${exam.slug}/` }, { name: 'Service reference', url: `/${exam.slug}/services/` }];
 const itemList = [{ '@type': 'ItemList', name: 'Azure services in 60 seconds', numberOfItems: SERVICES.length, itemListElement: SERVICES.map((s, i) => ({ '@type': 'ListItem', position: i + 1, name: s.name, url: `${SITE.url}/${exam.slug}/services/${s.slug}/` })) }];
 ---
-<Base schema={itemList} title="Azure Service Reference: Every Service in 60 Seconds" description="Every Azure service in 60 seconds: VMs, App Service, Functions, Blob, VNet, Entra ID, Policy and more, with price feel in your currency and a simulation." breadcrumbs={crumbs}>
+<Base schema={itemList} title={exam.course.hubs?.servicesTitle ?? "Azure Service Reference: Every Service in 60 Seconds"} description={exam.course.hubs?.services ?? "Every Azure service in 60 seconds: VMs, App Service, Functions, Blob, VNet, Entra ID, Policy and more, with price feel in your currency and a simulation."} breadcrumbs={crumbs}>
   <div class="mx-auto max-w-5xl px-4 py-10 sm:px-6">
     <p class="text-sm font-bold tracking-[0.14em] text-accent uppercase">Reference</p>
     <h1 class="mt-1 text-4xl font-semibold tracking-tight">Azure services in 60 seconds</h1>

@@ -1,0 +1,79 @@
+{
+  "cert": "ai-901",
+  "domain": 1,
+  "topic": "transparency-and-accountability",
+  "questions": [
+    {
+      "id": "ai-transacc-1",
+      "type": "single",
+      "question": "Microsoft publishes a document for an AI service that describes its intended uses, how it works, its limitations and recommended practices. What is this document called?",
+      "options": [
+        { "text": "A service level agreement", "why": "An SLA describes availability commitments, not intended uses and limitations." },
+        { "text": "A transparency note", "why": "Correct. Transparency notes explain an AI service's capabilities, limitations and responsible use." },
+        { "text": "A content filter", "why": "A content filter is a guardrail, not a document." },
+        { "text": "A deployment type", "why": "A deployment type defines how a model is hosted and billed." }
+      ],
+      "answer": [1],
+      "explanation": "Transparency notes support the transparency principle by helping builders understand what a service can and cannot do.",
+      "objective": "1.1.5"
+    },
+    {
+      "id": "ai-transacc-2",
+      "type": "single",
+      "scenario": "An insurer uses AI to flag claims for rejection. Regulations require that a qualified employee reviews and approves every rejection before the customer is notified.",
+      "question": "Which responsible AI principle does this requirement primarily address?",
+      "options": [
+        { "text": "Accountability", "why": "Correct. Human oversight keeps people answerable for decisions that affect customers." },
+        { "text": "Inclusiveness", "why": "Inclusiveness concerns making the system usable by everyone." },
+        { "text": "Privacy and security", "why": "The requirement concerns oversight, not data protection." },
+        { "text": "Fairness", "why": "Review may help detect unfair outcomes, but the requirement itself is about human responsibility." }
+      ],
+      "answer": [0],
+      "explanation": "Human-in-the-loop review is a key way to meet the accountability principle for high-impact decisions.",
+      "objective": "1.1.6"
+    },
+    {
+      "id": "ai-transacc-3",
+      "type": "multi",
+      "question": "Which TWO actions support the transparency principle in a generative AI application?",
+      "options": [
+        { "text": "Displaying citations to the source documents used to produce each answer", "why": "Correct. Citations show users where an answer came from." },
+        { "text": "Telling users that they are interacting with an AI system", "why": "Correct. Disclosure that AI is in use is a core part of transparency." },
+        { "text": "Restricting model access by using Microsoft Entra ID roles", "why": "Role-based access supports security and accountability, not transparency to users." },
+        { "text": "Increasing the maximum output tokens", "why": "Output length does not make the system more transparent." }
+      ],
+      "answer": [0, 1],
+      "explanation": "Transparency means people know when AI is used and can understand how answers are produced.",
+      "objective": "1.1.5"
+    },
+    {
+      "id": "ai-transacc-4",
+      "type": "single",
+      "scenario": "An AI agent sent an incorrect email to a supplier. The development team needs to identify which model call and which tool call produced the error.",
+      "question": "Which Microsoft Foundry capability should the team use?",
+      "options": [
+        { "text": "Tracing", "why": "Correct. Tracing records each step an app or agent performed, including model and tool calls." },
+        { "text": "Content filters", "why": "Content filters block harmful content but do not record each step for investigation." },
+        { "text": "Text to speech", "why": "Text to speech converts text to audio." },
+        { "text": "Embeddings", "why": "Embeddings represent meaning as vectors and do not record execution steps." }
+      ],
+      "answer": [0],
+      "explanation": "Tracing provides an audit trail of an agent's actions, which supports accountability and transparency.",
+      "objective": "1.1.6"
+    },
+    {
+      "id": "ai-transacc-5",
+      "type": "single",
+      "question": "Which statement about accountability for an AI system is correct?",
+      "options": [
+        { "text": "The AI model is responsible for its own decisions.", "why": "An AI model cannot be held accountable. People and organisations are." },
+        { "text": "The organisation that designs and deploys the system remains responsible for its outcomes.", "why": "Correct. Accountability stays with people and organisations." },
+        { "text": "Accountability transfers entirely to the model provider once the model is deployed.", "why": "The deploying organisation remains responsible for how it uses the model." },
+        { "text": "Accountability applies only to systems that use deep learning.", "why": "Accountability applies to every AI system." }
+      ],
+      "answer": [1],
+      "explanation": "The accountability principle states that people who design and deploy AI systems must be answerable for how those systems operate.",
+      "objective": "1.1.6"
+    }
+  ]
+}

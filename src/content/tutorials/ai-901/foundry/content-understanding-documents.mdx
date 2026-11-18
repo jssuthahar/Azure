@@ -1,0 +1,203 @@
+---
+title: Content Understanding for Documents and Forms
+seoTitle: Content Understanding for Documents and Forms | AI-901
+description: Extract fields from invoices, receipts and forms with Azure Content Understanding prebuilt and custom analyzers, confidence scores and grounding. For AI-901.
+answer: >-
+  **Azure Content Understanding in Foundry Tools** turns documents and forms into structured data. You pick an **analyzer**: a **prebuilt** one such as `prebuilt-invoice`, `prebuilt-receipt`, `prebuilt-layout` or `prebuilt-documentSearch`, or a **custom** analyzer built on `prebuilt-document` with your own fields using **extract**, **classify** or **generate**. Each field comes back with a **confidence score** from 0 to 1 and a **grounding** link to where it was found on the page.
+updated: 2026-11-18
+readingMinutes: 9
+keyTerms:
+  - term: Analyzer
+    definition: A Content Understanding configuration that says how to process content and which fields to return.
+  - term: Prebuilt analyzer
+    definition: A ready-made analyzer from Microsoft, such as prebuilt-invoice or prebuilt-receipt, that needs no setup beyond model deployments.
+  - term: Field schema
+    definition: The list of fields you want back from a custom analyzer, each with a name, type, description and method.
+  - term: Extract, classify, generate
+    definition: Field methods. Extract copies a value that appears in the document, classify picks from a list, generate creates a value such as a summary.
+  - term: Confidence score
+    definition: A number from 0 to 1 that says how sure the service is about an extracted value.
+  - term: Grounding
+    definition: The page and location in the source document a value came from, so a person can check it.
+interview:
+  - level: beginner
+    q: What is Azure Content Understanding used for with documents?
+    a: >-
+      It reads documents like invoices, receipts and forms and gives back the fields I care about as JSON, such as vendor name, invoice total and due date, plus a Markdown version of the whole document. I can start with a prebuilt analyzer and no training at all.
+    followUps:
+      - q: Do you need to train a model first?
+        a: >-
+          No. Prebuilt analyzers work straight away, and custom fields are defined by describing them in a schema rather than labelling hundreds of samples.
+  - level: intermediate
+    q: What's the difference between extract, classify and generate?
+    a: >-
+      Extract copies a value that's printed in the document, like the invoice number. Classify picks one value from a list I give, like Utilities, Travel or Office supplies. Generate writes a new value from the content, like a one-line summary of the contract. Extract only works for documents; classify and generate work for every content type.
+    followUps: []
+  - level: experienced
+    q: How do you decide which extracted values need a human to check them?
+    a: >-
+      I use the confidence score on each field. Values above a threshold I've tested, say 0.85, go straight into the system; anything lower goes to a review queue with the grounding so the reviewer sees exactly where on the page the value came from. I tune the threshold on a sample of real documents.
+    followUps: []
+  - level: scenario
+    q: A finance team gets invoices from 300 suppliers in different layouts and also wants each one tagged with a spend category. What would you set up?
+    a: >-
+      Start with prebuilt-invoice for the standard fields since it handles varied layouts. For the category, create a custom analyzer based on prebuilt-invoice or prebuilt-document and add a SpendCategory field with the classify method and a fixed list of categories. Low-confidence values go to a person.
+    followUps: []
+revision:
+  keyPoints:
+    - Content Understanding uses generative AI to turn documents into Markdown plus JSON fields you define.
+    - Prebuilt analyzers include prebuilt-invoice, prebuilt-receipt, prebuilt-layout, prebuilt-read and prebuilt-documentSearch.
+    - Custom document analyzers start from prebuilt-document (set as the base analyzer) and add a field schema.
+    - Field methods are extract (documents only), classify and generate.
+    - Every field has a confidence score (0 to 1) and grounding back to the source.
+  mistakes:
+    - Thinking you must label and train on hundreds of samples. Prebuilt analyzers and described fields work without training.
+    - Using generate when the value is printed on the page. Use extract so the value is copied, not written.
+  examTips:
+    - '"Pull totals and dates from invoices with no training" = **prebuilt-invoice** in Content Understanding.'
+    - '"Decide which values need human review" = **confidence scores**.'
+  quick:
+    - q: Which prebuilt analyzer reads invoices?
+      a: prebuilt-invoice.
+    - q: Which base analyzer do custom document analyzers use?
+      a: prebuilt-document.
+    - q: Which field method copies a value printed in the document?
+      a: Extract.
+    - q: What range does a confidence score use?
+      a: 0 to 1.
+    - q: What does grounding tell you?
+      a: Where in the source document the value was found.
+references:
+  - title: What is Azure Content Understanding in Foundry Tools?
+    url: https://learn.microsoft.com/azure/ai-services/content-understanding/overview
+  - title: Content Understanding prebuilt analyzers
+    url: https://learn.microsoft.com/azure/ai-services/content-understanding/concepts/prebuilt-analyzers
+  - title: AI-901 study guide
+    url: https://learn.microsoft.com/en-us/credentials/certifications/resources/study-guides/ai-901
+related:
+  - information-extraction
+  - content-understanding-images
+  - content-understanding-app
+---
+
+## Start with a question
+
+<Story question="Why does someone still type invoice numbers into a spreadsheet by hand?">
+
+Meena works in accounts at a manufacturing company in Coimbatore. Every month about 2,000 supplier invoices arrive as PDFs and phone photos, all in different layouts. She types the supplier, invoice number, date and total into the ERP system, one by one.
+
+**Azure Content Understanding** reads each invoice and hands back those values as clean fields, with a score saying how sure it is. Meena only looks at the few it isn't sure about.
+
+</Story>
+
+## Explain it like I'm 10
+
+<Eli10>
+
+Imagine a teacher marking 30 worksheets. Each one has a name box and a score box, but every child drew the boxes in a different place.
+
+You give a helper a sticky note: "Find the name and the score on each sheet."
+
+The helper reads every sheet, writes the name and score on a list, and puts a little star next to any it couldn't read clearly.
+
+Content Understanding is that helper. Your sticky note is the field list, and the stars are the confidence scores.
+
+</Eli10>
+
+## The technical explanation
+
+**Azure Content Understanding in Foundry Tools** uses generative AI to turn unstructured content into structured output you define. For documents it returns two things: the content as **Markdown** (text, tables, layout) and the **fields** you asked for as JSON. Everything runs through an **analyzer**.
+
+<Flow
+  caption="How a document becomes fields"
+  steps={[
+    { title: 'Input', text: 'PDF, scanned image, Office file or photo of a form.' },
+    { title: 'Content extraction', text: 'OCR and layout turn the pages into Markdown and tables.' },
+    { title: 'Field extraction', text: 'Generative models fill your fields using extract, classify or generate.' },
+    { title: 'Output', text: 'JSON fields with confidence scores and grounding.' },
+  ]}
+/>
+
+### Prebuilt analyzers for documents
+
+| Analyzer | What you get |
+| --- | --- |
+| `prebuilt-read` | Text (OCR) only |
+| `prebuilt-layout` | Text plus tables, selection marks and structure |
+| `prebuilt-documentSearch` | Markdown and a summary, ready for search and RAG |
+| `prebuilt-invoice` | Vendor, customer, invoice number, dates, line items, totals |
+| `prebuilt-receipt` | Merchant, date, items, tax, total |
+| Others | ID documents, tax forms, contracts and more |
+
+Before any analyzer works, the Foundry resource needs its **default model deployments** set (a completion model such as GPT-4.1 and an embedding model). Content Understanding calls those models for you, and you pay for their tokens as well as for content extraction.
+
+### Custom fields
+
+When the prebuilt fields aren't enough, you create a **custom analyzer**. You set `baseAnalyzerId` to `prebuilt-document` (or start from a prebuilt like `prebuilt-invoice`) and add a **field schema**. Each field has a name, a type, a plain-English description and a **method**:
+
+| Method | Use it when | Example field |
+| --- | --- | --- |
+| **Extract** | The value is printed in the document (documents only) | `PONumber` |
+| **Classify** | The answer is one of a fixed list | `SpendCategory`: Utilities, Travel, Raw materials |
+| **Generate** | The value has to be written from the content | `PaymentTermsSummary` in one sentence |
+
+```json
+{
+  "baseAnalyzerId": "prebuilt-document",
+  "fieldSchema": {
+    "fields": {
+      "PONumber":      { "type": "string", "method": "extract",  "description": "Purchase order number printed on the invoice" },
+      "SpendCategory": { "type": "string", "method": "classify", "enum": ["Utilities", "Travel", "Raw materials"] },
+      "TermsSummary":  { "type": "string", "method": "generate", "description": "One-sentence summary of the payment terms" }
+    }
+  }
+}
+```
+
+The JSON above is simplified to show the idea. In the Foundry portal you do the same thing in a form: add a field, pick its type and method, write a description, then test on a sample file.
+
+<TryIt labs="ai-extract-docs" text="Run prebuilt-invoice on a sample invoice, check the confidence scores, then add a custom field and run it again." />
+
+### Confidence and grounding
+
+Every extracted value carries a **confidence score** between 0 and 1 and **grounding**: the page and region it came from. Your app compares the score to a threshold you choose. High scores flow straight through; low ones go to a person, who can see the highlighted spot on the page instead of hunting for it.
+
+<Callout type="exam">
+Expect scenario questions that name the field type. A value **printed on the form** is **extract**. Picking **one of a list** is **classify**. Writing **a summary or a new value** is **generate**. "Which values should a person check?" points to **confidence scores**, and "show where the value came from" points to **grounding**.
+</Callout>
+
+<DeepDive title="Content Understanding and Document Intelligence">
+
+Azure Document Intelligence (formerly Form Recognizer) is the older service for forms and invoices, built on task-specific models. Content Understanding covers documents, images, audio and video with one analyzer model, and uses generative AI so you can describe fields instead of labelling training data. Existing Document Intelligence apps keep working, but new AI-901 scenarios point to Content Understanding. The GA API version is 2025-11-01.
+
+</DeepDive>
+
+## Real-world business scenario
+
+<Scenario
+  company="Northwind Components, Coimbatore"
+  industry="Manufacturing"
+  problem="Accounts staff typed 2,000 supplier invoices a month into the ERP system by hand, and typos caused late payments and supplier complaints."
+  service="Ran prebuilt-invoice in Content Understanding, then a custom analyzer added a classify field for spend category. Values with confidence above 0.85 post straight to the ERP; the rest go to a review screen that shows the grounding."
+  why="Prebuilt invoice fields handle hundreds of layouts without training, and confidence scores decide what needs a person."
+  outcome="Most invoices now post without anyone touching them, and staff spend their time on the few flagged values and supplier queries."
+/>
+
+## When to use it and when not to
+
+<UseWhen
+  use={[
+    'Invoices, receipts, ID documents and forms where you need the same fields every time.',
+    'Mixed layouts from many senders, where templates would break.',
+    'Workflows that need a confidence score and a link back to the source for review.',
+  ]}
+  avoid={[
+    'Plain text you already have as a string. Azure Language or a chat model is simpler.',
+    'One-off questions about a single document. Asking a chat model with the file attached is quicker.',
+    'Fully automatic posting of high-value payments with no human review of low-confidence values.',
+  ]}
+  alternatives={[
+    '**Azure Document Intelligence** for existing form-processing apps.',
+    '**A multimodal chat model** for ad hoc questions about a document.',
+  ]}
+/>

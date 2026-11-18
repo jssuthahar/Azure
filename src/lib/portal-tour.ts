@@ -26,7 +26,7 @@ export type Screen =
   | { s: 'res'; title: string; type: string; i: string; menu: (string | [string, string[]])[]; active: string; cmds?: string[]; ess?: [string, string][]; body?: Body[]; crumbs?: string[] }
   | { s: 'market'; q?: string; cats: string[]; cat: number; items: { n: string; by: string; d: string; i: string }[] };
 export interface Pane { title: string; sub?: string; groups?: Group[]; body?: Body[]; btns?: string[]; chat?: { q: string; a: string }[] }
-export interface Step { sc: Screen; t?: string; say: string; pane?: Pane; shell?: string[]; toast?: string }
+export interface Step { sc: Screen; t?: string; say: string; pane?: Pane; shell?: string[]; toast?: string; /** 'foundry' draws the Foundry portal (ai.azure.com) top bar instead of the Azure portal's. */ chrome?: 'foundry' }
 export interface Tour { title: string; steps: Step[] }
 
 /* Icons: emoji in a tinted tile (deliberately not Microsoft's artwork). */
@@ -43,6 +43,7 @@ const ICONS: Record<string, [string, string]> = {
   deploy: ['🚀', '#0078d4'], ca: ['🚥', '#0078d4'], mfa: ['📱', '#0078d4'], guest: ['🤝', '#0078d4'], copilot: ['✨', '#8764b8'],
   asr: ['♻️', '#0078d4'], backup: ['🗃️', '#0078d4'], share: ['📁', '#2f8f9d'], container: ['🪣', '#2f8f9d'], plan: ['📄', '#0078d4'],
   ip: ['📍', '#0078d4'], disk: ['💽', '#0078d4'], nic: ['🔌', '#0078d4'], alert: ['🔔', '#c19c00'], log: ['📊', '#0078d4'],
+  foundry: ['✨', '#8764b8'], model: ['🧠', '#8764b8'], agent: ['🤖', '#8764b8'], chat: ['💬', '#0f6cbd'], speech: ['🎙️', '#0f6cbd'], language: ['📝', '#0f6cbd'], vision: ['👁️', '#0f6cbd'], cu: ['🧾', '#008575'], image: ['🎨', '#c239b3'], shield: ['🛡️', '#107c10'], eval: ['📏', '#5c2d91'], trace: ['🧵', '#5c2d91'], key: ['🔑', '#c19c00'],
   marketplace: ['🛍️', '#0078d4'], role: ['🎭', '#0078d4'], status: ['📶', '#107c10'], reserve: ['📅', '#0078d4'], doc: ['📘', '#0078d4'],
 };
 export const esc = (s: unknown) => String(s ?? '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
@@ -52,7 +53,14 @@ const T = (key: string) => `data-t="${esc(key)}"`;
 const strip = (l: string) => l.replace(/\s*\*$/, '');
 
 /* ---------------- chrome ---------------- */
-function topbar() {
+function topbar(chrome?: 'foundry') {
+  if (chrome === 'foundry') return `<div class="pt-top pt-top-foundry">
+    <button class="pt-tb pt-burger" ${T('menu')} aria-label="Foundry menu">☰</button>
+    <span class="pt-brand">Microsoft Foundry</span><span class="pt-sim">SIMULATION</span>
+    <span class="pt-proj" ${T('project')}>📁 contoso-ai · support-bot ⌄</span>
+    <div class="pt-search" ${T('search')}><span aria-hidden="true">🔍</span><span class="pt-search-txt">Search models, agents and docs</span></div>
+    <span class="pt-tbs"><button class="pt-tb" title="Help">？</button><button class="pt-tb" ${T('settings')} title="Settings">⚙️</button><span class="pt-avatar">L</span></span>
+  </div>`;
   return `<div class="pt-top">
     <button class="pt-tb pt-burger" ${T('menu')} aria-label="Portal menu">☰</button>
     <span class="pt-brand">Microsoft Azure</span><span class="pt-sim">SIMULATION</span>
@@ -200,7 +208,7 @@ function res(sc: Extract<Screen, { s: 'res' }>) {
     <div class="pt-title">${ico(sc.i, 'lg')}<div><h3>${esc(title)} <span class="pt-pin">☆ ⋯</span></h3><p class="pt-sub">${esc(sc.type)}</p></div></div>
     <div class="pt-res-grid">
       <aside class="pt-menu"><span class="pt-menu-s">🔍 Search</span>${items}</aside>
-      <div class="pt-res-main">
+      <div class="pt-res-main" tabindex="0">
         ${cmdbar(sc.cmds)}
         ${sc.ess ? `<p class="pt-sec-h pt-ess-h">⌄ Essentials <span class="pt-json">JSON View</span></p><dl class="pt-ess pt-ess2">${sc.ess.map(([k, v]) => `<dt>${esc(k)}</dt><dd>${statusCell(v)}</dd>`).join('')}</dl>` : ''}
         ${(sc.body ?? []).map(body).join('')}
@@ -231,5 +239,5 @@ export function renderStep(st: Step): string {
   const main = sc.s === 'home' ? home() : sc.s === 'search' ? search(sc) : sc.s === 'list' ? list(sc) : sc.s === 'create' ? create(sc) : sc.s === 'deploy' ? deploy(sc) : sc.s === 'market' ? market(sc) : res(sc);
   const shell = st.shell ? `<div class="pt-shell"><div class="pt-shell-h"><span>Bash ⌄</span><span>⏻ ？ ⚙️ ⧉ ✕</span></div><pre>${st.shell.map((l) => (l.startsWith('$ ') ? `<span class="pt-ps">learner@Azure:~$</span> ${esc(l.slice(2))}` : esc(l))).join('\n')}<span class="pt-caret"></span></pre></div>` : '';
   const toast = st.toast ? `<div class="pt-toast">${md(st.toast)}</div>` : '';
-  return `${topbar()}<div class="pt-body">${main}${st.pane ? pane(st.pane) : ''}${toast}</div>${shell}`;
+  return `${topbar(st.chrome)}<div class="pt-body">${main}${st.pane ? pane(st.pane) : ''}${toast}</div>${shell}`;
 }

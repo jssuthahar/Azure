@@ -1,0 +1,185 @@
+---
+title: Writing System and User Prompts
+seoTitle: Prompt Engineering with System and User Prompts | AI-901
+description: Write better prompts for AI-901, with system vs user messages, roles, output format, few-shot examples, grounding, delimiters and a safety system message.
+answer: >-
+  A **system prompt** (system message) sets the model's role, rules, tone and output format for the whole conversation, while a **user prompt** is the actual question or task. Good prompts give **clear instructions**, say what **format** to return, show **few-shot examples**, supply **grounding data** inside **delimiters** and ask for step-by-step work on hard problems. You then test and iterate, and add a **safety system message** that tells the model what it must refuse.
+updated: 2026-11-18
+readingMinutes: 9
+keyTerms:
+  - term: System prompt
+    definition: The instruction, usually hidden from end users, that sets the model's role, rules, tone and format for every turn.
+  - term: User prompt
+    definition: The message from the user that asks the question or describes the task.
+  - term: Few-shot prompting
+    definition: Including a few example inputs and ideal outputs in the prompt so the model copies the pattern.
+  - term: Zero-shot prompting
+    definition: Asking the model to do a task with instructions only and no examples.
+  - term: Grounding data
+    definition: Facts you paste into the prompt (or retrieve automatically) so the model answers from your content instead of memory.
+  - term: Delimiter
+    definition: Markers such as triple quotes, ### or XML-style tags that separate instructions from the content the model should work on.
+  - term: Safety system message
+    definition: Lines in the system prompt that set safety rules, such as refusing harmful requests and staying on topic.
+interview:
+  - level: beginner
+    q: What's the difference between a system prompt and a user prompt?
+    a: >-
+      The system prompt is the standing instruction from the developer, like "You're a polite travel assistant for Contoso Air, answer in under 80 words". The user prompt is what the customer types, like "Can I carry a power bank?". The system prompt shapes every answer; the user prompt changes each turn.
+    followUps:
+      - q: Can a user override the system prompt?
+        a: >-
+          They can try, for example with "ignore your instructions". A clear system message helps, but I'd also turn on Prompt Shields in Foundry's guardrails to catch jailbreak attempts.
+  - level: intermediate
+    q: When would you use few-shot examples?
+    a: >-
+      When the format or style matters and instructions alone don't get it right. If I need every product description as exactly three bullet points, showing two examples gets more consistent output than describing the format in words.
+    followUps: []
+  - level: experienced
+    q: How do you reduce hallucinations through prompting?
+    a: >-
+      I ground the model. I put the relevant facts in the prompt inside clear delimiters and tell it to answer only from that content and say "I don't know" otherwise. For bigger knowledge bases I'd use retrieval so the right passages are added automatically. Then I test with questions the data can't answer and check it refuses.
+    followUps: []
+  - level: scenario
+    q: A bank's chatbot keeps giving long, chatty answers and sometimes talks about cricket. How would you fix it with prompts?
+    a: >-
+      In the system message I'd set the role and scope ("You answer questions about Contoso Bank savings accounts only"), a length and format rule ("Reply in at most three sentences"), and a refusal rule for anything off-topic. Then I'd test off-topic questions in the playground and tighten the wording until it declines politely.
+    followUps: []
+revision:
+  keyPoints:
+    - The system prompt sets role, rules, tone and format; the user prompt asks the question.
+    - Be specific about the task, audience, length and output format (for example JSON or a table).
+    - Few-shot examples show the model the exact pattern you want.
+    - Grounding data in delimiters keeps answers tied to your facts.
+    - Iterate in the playground and add a safety system message for refusals.
+  mistakes:
+    - Putting the rules in the user message and expecting them to hold for the whole chat. Standing rules go in the system prompt.
+    - Thinking a system message alone stops every jailbreak. Use guardrails such as Prompt Shields as well.
+  examTips:
+    - '"Set the assistant''s persona and rules for every turn" = **system prompt**.'
+    - '"Include sample inputs and outputs" = **few-shot**.'
+    - '"Answer only from the supplied policy text" = **grounding**.'
+  quick:
+    - q: Where do you set the assistant's tone and rules?
+      a: In the system prompt.
+    - q: What's few-shot prompting?
+      a: Giving a few example inputs and outputs in the prompt.
+    - q: Why use delimiters?
+      a: To separate instructions from the content the model should process.
+    - q: How does grounding help?
+      a: It makes the model answer from facts you provide, which reduces made-up answers.
+    - q: What does a safety system message do?
+      a: It tells the model what to refuse and how to stay on topic and safe.
+references:
+  - title: Study guide for Exam AI-901
+    url: https://learn.microsoft.com/en-us/credentials/certifications/resources/study-guides/ai-901
+  - title: Transparency note for Azure OpenAI
+    url: https://learn.microsoft.com/legal/cognitive-services/openai/transparency-note
+  - title: Content filtering in Microsoft Foundry
+    url: https://learn.microsoft.com/azure/foundry/openai/concepts/content-filter-severity-levels
+related:
+  - deploy-and-chat-in-foundry
+  - chat-app-with-foundry-sdk
+  - how-generative-ai-works
+  - build-an-agent-in-foundry
+---
+
+## Start with a question
+
+<Story question="Why does the same AI give a great answer to one person and a useless one to another?">
+
+Two people ask a model about trains. One types "trains?". The other types "I'm travelling from Bengaluru to Mysuru on Saturday morning with a toddler. List three train options in a table with departure time and duration."
+
+The second person gets a far better answer, and it's not luck. They told the model who they are, what they want and how to lay it out. That's **prompt engineering**, and in an app you do most of it once, in the **system prompt**, so every user gets the good version.
+
+</Story>
+
+## Explain it like I'm 10
+
+<Eli10>
+
+Imagine a new helper at a sweet shop. On day one the owner says, "You sell sweets only. Be polite. Always tell people the price." Those are the **system** rules.
+
+Then customers walk in and ask things: "Do you have laddoos?" Those are **user** messages.
+
+If the owner also shows the helper two examples of a perfect reply, the helper copies that style. That's **few-shot**.
+
+</Eli10>
+
+## The technical explanation
+
+Every chat request to a model is a list of messages, each with a **role**:
+
+| Role | Who writes it | What goes in it |
+| --- | --- | --- |
+| `system` | You, the developer | Persona, scope, rules, tone, output format, safety rules |
+| `user` | The person using your app | The question or task for this turn |
+| `assistant` | The model | Its earlier replies, sent back so it remembers the conversation |
+
+### Techniques that make prompts work
+
+1. **Be clear and specific.** Say the task, the audience and the length. "Summarise this for a busy store manager in two sentences" beats "summarise this".
+2. **Give it a role.** "You're a customer support agent for Contoso Electronics" sets vocabulary and tone.
+3. **Ask for a format.** A table, a numbered list, or JSON with named keys your code can read.
+4. **Show examples (few-shot).** Two or three input and output pairs teach a pattern faster than a paragraph of rules. With no examples it's **zero-shot**.
+5. **Ground it.** Paste the facts the answer must come from, and say "If the answer isn't in the text, say you don't know."
+6. **Use delimiters.** Wrap pasted content in `"""`, `###` or tags like `<policy>…</policy>` so the model can tell instructions from data.
+7. **Ask for steps on hard problems.** "Work through it step by step, then give the final answer" helps with maths and logic.
+8. **Iterate.** Test in the playground, look at bad answers, change one thing, test again.
+
+Here's a system message that uses most of them:
+
+```text
+You are a support assistant for Contoso Electronics.
+Answer only questions about Contoso products, using the policy text between <policy> tags.
+If the answer is not in the policy, say "I'm not sure, please contact support."
+Reply in at most 3 sentences, in plain English.
+Never give medical, legal or financial advice. Politely decline off-topic requests.
+
+<policy>
+Returns are accepted within 30 days with a receipt. Laptops carry a 1-year warranty.
+</policy>
+```
+
+The last two lines of rules are a small **safety system message**. Microsoft recommends adding one to every app: it sets what the model should refuse and how. It works alongside Foundry's **guardrails** (content filters and Prompt Shields), not instead of them.
+
+<TryIt labs="ai-prompt-craft" text="Write a system message, add a few-shot example and ground the model with a policy, then try an off-topic question." />
+
+<Callout type="exam">
+Questions often describe a symptom and ask for the fix. **Wrong tone or persona** → change the system prompt. **Inconsistent format** → add few-shot examples or specify the format. **Made-up facts** → add grounding data. **Model mixes up instructions and pasted text** → use delimiters. **Harmful or off-topic requests** → safety system message plus guardrails.
+</Callout>
+
+<DeepDive title="Prompting reasoning models and agents">
+
+Reasoning models (such as the o-series and GPT-5 reasoning modes) already think step by step, so "think step by step" adds little. Give them a clear goal and constraints instead, and use the reasoning effort setting. For agents, the system prompt is called **instructions** and also tells the agent when to use each tool. Keep instructions short and testable; long, contradictory instructions are a common reason agents misbehave.
+
+</DeepDive>
+
+## Real-world business scenario
+
+<Scenario
+  company="Contoso Air (fictional)"
+  industry="Travel"
+  problem="The airline's chatbot answered baggage questions from general internet knowledge, gave other airlines' rules and wrote long paragraphs on phones."
+  service="A new system message with a role, a three-sentence limit, the airline's baggage policy as grounding data inside tags, two few-shot examples and a refusal rule for off-topic questions."
+  why="Grounding stops the model inventing rules, few-shot examples fix the format, and the safety lines keep it on topic."
+  outcome="Answers now quote the airline's own allowance, fit on one phone screen and decline unrelated requests politely."
+/>
+
+## When to use it and when not to
+
+<UseWhen
+  use={[
+    'Always. Every generative AI app needs a clear system prompt.',
+    'Few-shot examples when the output must follow an exact pattern.',
+    'Grounding when answers must match your own documents or policies.',
+  ]}
+  avoid={[
+    'Pasting a whole manual into every prompt. Use retrieval or an agent with file search so only the relevant parts are sent.',
+    'Relying on the prompt alone for safety. Keep guardrails turned on.',
+  ]}
+  alternatives={[
+    '<strong>Retrieval-augmented generation (RAG)</strong> to add grounding data automatically.',
+    '<strong>Fine-tuning</strong> when the same style or task is needed at scale and prompting can\'t get it right.',
+  ]}
+/>

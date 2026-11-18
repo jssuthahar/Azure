@@ -44,4 +44,8 @@ export interface CourseInfo {
   requirements: string[];
   roadmap: { title: string; text: string }[];
   faq: { q: string; a: string }[];
+  /** Optional copy for /<exam>/labs/ (defaults are the Azure portal ones). */
+  /** Optional per-exam copy for shared hub pages (defaults are the AZ-900 wording). */
+  hubs?: { compare?: string; games?: string; servicesTitle?: string; services?: string; sandboxTitle?: string; whoAmI?: string };
+  labs?: { title: string; description: string; h1: string; intro: string; shell: [cmd: string, out: string][] };
 }

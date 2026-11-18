@@ -1,16 +1,18 @@
 ---
 import Base from '../../layouts/Base.astro';
 import ShareButtons from '../../components/ShareButtons.astro';
+import { liveExams } from '../../data/exams';
+const exams = liveExams().map((e) => ({ slug: e.slug, code: e.code, name: e.name }));
 const crumbs = [{ name: 'Home', url: '/' }, { name: 'AZ-900 Ready certificate', url: '/certificate/' }];
 ---
 <Base title="AZ-900 Ready Certificate | MSDEVBUILD Azure" description="Earn a free, shareable AZ-900 Ready practice certificate and badge by passing the full MSDEVBUILD AZ-900 mock exam. Share it on LinkedIn, X and WhatsApp." breadcrumbs={crumbs}>
-  <div class="mx-auto max-w-5xl px-4 py-8 sm:px-6">
+  <div class="mx-auto max-w-5xl px-4 py-8 sm:px-6" id="c-root" data-exams={JSON.stringify(exams)}>
     <!-- Earn -->
     <section id="c-none" hidden class="text-center">
       <div class="mx-auto w-48" id="c-badge-preview"></div>
-      <h1 class="mt-4 text-4xl font-semibold tracking-tight">Get your free AZ-900 Ready certificate</h1>
+      <h1 class="mt-4 text-4xl font-semibold tracking-tight">Get your free <span class="c-code">AZ-900</span> Ready certificate</h1>
       <p class="mx-auto mt-3 max-w-2xl text-lg text-muted">Pass the <strong>full mock exam</strong> (40 questions) with a scaled score of <strong>700 or more</strong>. Your certificate and badge appear instantly, ready to share on LinkedIn, X, WhatsApp or anywhere.</p>
-      <a href="/az-900/mock-exam/" class="mt-6 inline-flex rounded-md bg-[#107c10] px-6 py-3 text-lg font-semibold !text-white hover:bg-[#0b5a0b]">Take the full mock exam »</a>
+      <a id="c-take" href="/az-900/mock-exam/" class="mt-6 inline-flex rounded-md bg-[#107c10] px-6 py-3 text-lg font-semibold !text-white hover:bg-[#0b5a0b]">Take the full mock exam »</a>
       <p class="mt-6 text-sm text-muted">Free, no sign-up. Stored only in this browser for now.</p>
     </section>
 
@@ -29,7 +31,7 @@ const crumbs = [{ name: 'Home', url: '/' }, { name: 'AZ-900 Ready certificate', 
     <section id="c-show" hidden>
       <p id="c-warn" hidden class="mb-4 rounded-xl border-l-[5px] border-[var(--bad)] bg-[var(--bad-soft)] p-4">⚠️ This link looks edited: the details don’t match the certificate’s checksum, so it can’t be confirmed.</p>
       <div class="flex flex-wrap items-center justify-between gap-3">
-        <h2 class="text-3xl font-semibold tracking-tight">🏆 AZ-900 Ready</h2>
+        <h2 class="text-3xl font-semibold tracking-tight">🏆 <span class="c-code">AZ-900</span> Ready</h2>
         <span id="c-mine" hidden class="chip">Your certificate</span>
       </div>
       <div id="c-svg" class="mt-4 overflow-hidden rounded-2xl border border-default bg-white shadow-lg [&>svg]:h-auto [&>svg]:w-full"></div>
@@ -40,7 +42,7 @@ const crumbs = [{ name: 'Home', url: '/' }, { name: 'AZ-900 Ready certificate', 
         <button id="c-print" type="button" class="rounded-md border border-default px-4 py-2.5 font-semibold">🖨️ Print / PDF</button>
       </div>
       <ShareButtons class="mt-4" text="I’m AZ-900 Ready! 🏆 I passed the full Azure Fundamentals mock exam on MSDEVBUILD. Try it free:" />
-      <p class="mt-6 text-sm text-muted">This is a self-assessed practice certificate from azure.msdevbuild.com. It is not a Microsoft certification. To get certified, book the official AZ-900 exam with Microsoft.</p>
+      <p class="mt-6 text-sm text-muted">This is a self-assessed practice certificate from azure.msdevbuild.com. It is not a Microsoft certification. To get certified, book the official <span class="c-code">AZ-900</span> exam with Microsoft.</p>
     </section>
   </div>
 </Base>
@@ -54,9 +56,17 @@ const crumbs = [{ name: 'Home', url: '/' }, { name: 'AZ-900 Ready certificate', 
 </style>
 
 <script>
-  import { loadCert, issueCert, certFromUrl, certUrl, certSvg, badgeSvg, linkedInAddUrl, downloadPng, bestFullMock, type Cert } from '../../lib/certificate';
+  import { loadCert, issueCert, certFromUrl, certUrl, certSvg, badgeSvg, linkedInAddUrl, downloadPng, bestFullMock, registerCertExams, certExam, type Cert } from '../../lib/certificate';
   import { load } from '../../lib/progress';
   const $ = (id: string) => document.getElementById(id)!;
+  registerCertExams(JSON.parse($('c-root').dataset.exams ?? '[]'));
+  const qs = new URLSearchParams(location.search);
+  const slug = qs.get('x') ?? qs.get('exam') ?? 'az-900';
+  const ex = certExam(slug);
+  document.querySelectorAll('.c-code').forEach((el) => (el.textContent = ex.code));
+  ($('c-take') as HTMLAnchorElement).href = `/${ex.slug}/mock-exam/`;
+  const shareRow = document.querySelector<HTMLElement>('.share-row');
+  if (shareRow) shareRow.dataset.shareText = `I’m ${ex.code} Ready! 🏆 I passed the full ${ex.name.replace(/^Microsoft /, '')} mock exam on MSDEVBUILD. Try it free:`;
 
   const show = (c: Cert, mine: boolean, valid = true) => {
     $('c-show').hidden = false;
@@ -67,21 +77,22 @@ const crumbs = [{ name: 'Home', url: '/' }, { name: 'AZ-900 Ready certificate', 
     ($('c-li-add') as HTMLElement).hidden = !mine;
     const row = document.querySelector<HTMLElement>('.share-row');
     if (row) row.dataset.shareUrl = certUrl(c);
-    document.title = `${c.name} is AZ-900 Ready | MSDEVBUILD`;
-    $('c-dl').onclick = () => downloadPng(certSvg(c), `AZ-900-Ready-${c.name.replace(/\W+/g, '-')}.png`, 1600, 1130);
-    $('c-dl-badge').onclick = () => downloadPng(badgeSvg(600), 'AZ-900-Ready-badge.png', 600, 600);
+    const code = certExam(c.exam).code;
+    document.title = `${c.name} is ${code} Ready | MSDEVBUILD`;
+    $('c-dl').onclick = () => downloadPng(certSvg(c), `${code}-Ready-${c.name.replace(/\W+/g, '-')}.png`, 1600, 1130);
+    $('c-dl-badge').onclick = () => downloadPng(badgeSvg(600, c.exam), `${code}-Ready-badge.png`, 600, 600);
     $('c-print').onclick = () => print();
   };
 
   const fromUrl = certFromUrl(location.search);
-  const mineCert = loadCert();
+  const mineCert = loadCert(slug);
   if (fromUrl) {
     show(fromUrl.cert, mineCert?.id === fromUrl.cert.id, fromUrl.valid);
   } else if (mineCert) {
     history.replaceState(null, '', certUrl(mineCert).replace(location.origin, ''));
     show(mineCert, true);
   } else {
-    const best = bestFullMock(load().mocks);
+    const best = bestFullMock(load().mocks, slug);
     if (best) {
       $('c-claim').hidden = false;
       $('c-best').textContent = `${best.percent}% (≈ ${best.scaled}/1000) on ${new Date(best.at).toLocaleDateString()}`;
@@ -89,14 +100,14 @@ const crumbs = [{ name: 'Home', url: '/' }, { name: 'AZ-900 Ready certificate', 
         e.preventDefault();
         const name = ($('c-name') as HTMLInputElement).value.trim();
         if (!name) return;
-        const c = issueCert(name, best);
+        const c = issueCert(name, best, slug);
         $('c-claim').hidden = true;
         history.replaceState(null, '', certUrl(c).replace(location.origin, ''));
         show(c, true);
       });
     } else {
       $('c-none').hidden = false;
-      $('c-badge-preview').innerHTML = badgeSvg(192);
+      $('c-badge-preview').innerHTML = badgeSvg(192, slug);
     }
   }
 </script>

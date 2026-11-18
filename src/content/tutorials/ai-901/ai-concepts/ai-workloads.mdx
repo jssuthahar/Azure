@@ -1,0 +1,185 @@
+---
+title: Common AI Workloads
+seoTitle: Common AI Workloads and How to Spot Them | AI-901
+description: Tell AI-901 workloads apart, from generative and agentic AI to text analysis, speech, computer vision and information extraction, with exam clues.
+answer: >-
+  An **AI workload** is the kind of job you ask AI to do. The six you need for AI-901 are **generative AI** (create new text, code or images), **agentic AI** (plan and take actions with tools), **text analysis** (find sentiment, key phrases, entities and summaries in text), **speech** (speech to text and text to speech), **computer vision** (understand or generate images) and **information extraction** (pull structured fields out of documents, images, audio and video). You tell them apart by looking at the **input** and the **output** the scenario asks for.
+updated: 2026-11-18
+readingMinutes: 8
+keyTerms:
+  - term: AI workload
+    definition: A category of task that AI performs, such as generating text, analysing sentiment or recognising speech.
+  - term: Generative AI
+    definition: AI that creates new content, such as text, code, images or audio, in response to a prompt.
+  - term: Agentic AI
+    definition: AI that pursues a goal by planning steps, calling tools and acting on the results, not just replying with text.
+  - term: Text analysis
+    definition: Extracting meaning from existing text, such as sentiment, key phrases, entities, language and summaries.
+  - term: Computer vision
+    definition: AI that interprets images and video, for example captions, object detection and reading printed text (OCR).
+  - term: Information extraction
+    definition: Turning unstructured content (documents, images, audio, video) into structured fields you can store and search.
+  - term: Foundry Tools
+    definition: The prebuilt AI services in Microsoft Foundry, formerly called Azure AI services, such as Azure Language, Azure Speech, Azure Vision and Azure Content Understanding.
+interview:
+  - level: beginner
+    q: How do you tell text analysis apart from generative AI?
+    a: >-
+      Text analysis reads text that already exists and tells you something about it, like "this review is negative" or "these are the product names mentioned". Generative AI writes something new, like a reply to that review. Look at whether the output is a label or fresh content.
+    followUps:
+      - q: Can a generative model do text analysis too?
+        a: >-
+          Yes. You can prompt an LLM to return sentiment or key phrases. The exam still expects you to recognise the workload as text analysis, whichever tool you use.
+  - level: intermediate
+    q: What's the difference between computer vision and information extraction?
+    a: >-
+      Computer vision is about understanding what's in an image: a caption, objects, tags, the text it contains. Information extraction goes a step further and maps content into the specific fields you want, like InvoiceTotal or VendorName, often with confidence scores. It also works on audio and video, not just images.
+    followUps: []
+  - level: experienced
+    q: When does a chatbot become an agentic AI workload?
+    a: >-
+      When it stops only answering and starts acting. If it can look up an order in a database, call a refund API or search files, and decide which of those to do and in what order, it's an agent. The giveaway is tools plus a goal it works towards over several steps.
+    followUps: []
+  - level: scenario
+    q: A call centre wants to transcribe calls, detect angry customers and store the order number mentioned. Which workloads is that?
+    a: >-
+      Three working together. Speech to text for the transcript, text analysis for sentiment on that transcript, and information extraction or entity recognition to pull out the order number. Content Understanding can do the transcript and fields in one analyzer on the audio.
+    followUps: []
+revision:
+  keyPoints:
+    - Generative AI creates new content; text analysis labels or summarises existing text.
+    - Agentic AI plans, calls tools and acts towards a goal.
+    - Speech covers speech to text, text to speech, translation and speaker diarization.
+    - Computer vision understands images; image-generation models create them.
+    - Information extraction turns documents, images, audio and video into structured fields.
+  mistakes:
+    - Calling any chatbot "agentic". Without tools and actions it's generative AI.
+    - Confusing OCR (reading text in an image) with extracting specific fields from a form.
+    - Thinking every workload needs a large language model. Foundry Tools handle many tasks directly.
+  examTips:
+    - '"Determine whether reviews are positive or negative" = **text analysis** (sentiment).'
+    - '"Create a product description" = **generative AI**.'
+    - '"Book a meeting and email the attendees" = **agentic AI**.'
+    - '"Extract the total and due date from invoices" = **information extraction**.'
+  quick:
+    - q: Which workload converts spoken words into text?
+      a: Speech (speech to text, also called speech recognition).
+    - q: Which workload detects objects in a photo?
+      a: Computer vision.
+    - q: What makes an AI solution agentic?
+      a: It plans steps and uses tools to take actions towards a goal.
+    - q: Which workload returns fields like InvoiceTotal with confidence scores?
+      a: Information extraction.
+    - q: What were Foundry Tools previously called?
+      a: Azure AI services (Cognitive Services before that).
+references:
+  - title: Study guide for Exam AI-901
+    url: https://learn.microsoft.com/en-us/credentials/certifications/resources/study-guides/ai-901
+  - title: What is Microsoft Foundry?
+    url: https://learn.microsoft.com/azure/foundry/what-is-foundry
+  - title: What is Azure Content Understanding?
+    url: https://learn.microsoft.com/azure/ai-services/content-understanding/overview
+related:
+  - what-is-ai
+  - generative-and-agentic-ai
+  - text-analysis
+  - information-extraction
+---
+
+## Start with a question
+
+<Story question="If you hired one assistant for your shop, what would you actually ask them to do?">
+
+Reply to customer emails. Read the reviews and tell you who's unhappy. Answer the phone. Check photos of stock for damage. Type the numbers from supplier bills into your accounts. Maybe even reorder stock when it runs low.
+
+Those are very different jobs. AI splits them the same way. Each kind of job is an **AI workload**, and once you can name the workload, picking the right tool gets easy.
+
+</Story>
+
+## Explain it like I'm 10
+
+<Eli10>
+
+Imagine a school with different helpers.
+
+One writes stories. One reads letters and says if the writer is happy or sad. One listens and types what you say, and can read aloud too.
+
+One looks at pictures and says what's in them. One copies the important numbers from forms into a notebook.
+
+And one is the class monitor, who makes a plan and gets things done using the others.
+
+</Eli10>
+
+## The technical explanation
+
+AI-901 expects you to read a short scenario and name the workload. The trick is to ask two questions: **what goes in**, and **what should come out**?
+
+| Workload | Input | Output | Example | Typical Azure option |
+| --- | --- | --- | --- | --- |
+| **Generative AI** | A prompt | New text, code, image or audio | Draft a reply to a complaint | Foundry Models (GPT, Phi, Llama) |
+| **Agentic AI** | A goal | Actions taken plus an answer | Check an order, issue a refund, email the customer | Foundry Agent Service |
+| **Text analysis** | Existing text | Labels, phrases, entities, summary | Find negative reviews and the products they mention | Azure Language in Foundry Tools, or an LLM prompt |
+| **Speech** | Audio or text | Text or synthesised speech | Transcribe a call, read a message aloud | Azure Speech in Foundry Tools, audio-capable models |
+| **Computer vision** | Image or video | Captions, tags, objects, text (OCR), or a new image | Spot missing items on a shelf photo | Azure Vision in Foundry Tools, multimodal models, gpt-image-1 |
+| **Information extraction** | Documents, images, audio, video | Structured fields with confidence scores | Pull vendor, total and due date from invoices | Azure Content Understanding in Foundry Tools |
+
+<Flow
+  caption="Name the workload in three questions"
+  steps={[
+    { title: 'What goes in?', text: 'Text, audio, an image, a document, or a goal.' },
+    { title: 'What comes out?', text: 'New content, a label, a transcript, fields, or actions.' },
+    { title: 'Does it act?', text: 'If it calls tools and does things, it is agentic.' },
+  ]}
+/>
+
+### Clue words to look for
+
+- **Create, write, draft, generate, compose** point to generative AI.
+- **Plan, act, book, update, use tools, complete a task** point to agentic AI.
+- **Sentiment, opinion, key phrases, entities, PII, detect language, summarise** point to text analysis.
+- **Transcribe, caption a call, read aloud, voice, translate speech, who spoke when** point to speech.
+- **Photo, image, object, tag, read text in an image, describe a picture** point to computer vision.
+- **Invoice, receipt, form, fields, schema, extract values, confidence score** point to information extraction.
+
+Real solutions often mix workloads. A support line might use speech to text, then text analysis on the transcript, then a generative model to draft a follow-up email.
+
+<TryIt labs="ai-foundry-setup" text="Create a Foundry resource and project, then look around: the same resource gives you models and Foundry Tools for every workload." />
+
+<Callout type="exam">
+Read the *output* the question wants. "Positive, negative or neutral" is text analysis, even if the input came from a call. "Write a reply" is generative. "Fill in fields from a scanned form" is information extraction, not plain OCR. And a chatbot is only **agentic** if it uses tools to take actions.
+</Callout>
+
+<DeepDive title="Prebuilt tool or a prompt to an LLM?">
+
+Many workloads can now be done either way. A Foundry Tool such as Azure Language gives fixed, well-documented output and per-feature pricing. A prompt to a language model is more flexible and can combine several tasks in one call, but the output format needs care and you pay per token. Microsoft has announced that some Language features (key phrases, sentiment, summarisation, entity linking, CLU and custom question answering) retire on 31 March 2029 in favour of Foundry models, while language detection, PII, NER and Text Analytics for health continue.
+
+</DeepDive>
+
+## Real-world business scenario
+
+<Scenario
+  company="Contoso Mart, an online grocery store in Chennai"
+  industry="Retail"
+  problem="Its small team was buried: thousands of reviews, support calls in Tamil and English, supplier invoices typed in by hand, and slow replies to complaints."
+  service="Mapped each job to a workload: Azure Language for review sentiment, Azure Speech for call transcripts, Content Understanding for invoice fields, and a generative model to draft complaint replies for a human to approve."
+  why="Naming the workload first meant each job got a tool built for it, instead of forcing one chatbot to do everything."
+  outcome="Unhappy customers were spotted the same day, invoice entry dropped from hours to minutes, and staff spent their time on the replies that needed a person."
+/>
+
+## When to use it and when not to
+
+<UseWhen
+  use={[
+    'Name the workload before you pick a model or service.',
+    'Combine workloads when a process has several steps, such as speech then text analysis.',
+    'Use a prebuilt Foundry Tool when it already does exactly what you need.',
+  ]}
+  avoid={[
+    "Don't call a solution agentic unless it uses tools to act.",
+    "Don't use a generative model when you need a fixed label or exact fields with confidence scores; a prebuilt tool may fit better.",
+    "Don't add AI where a simple rule works, like routing emails by a fixed subject line.",
+  ]}
+  alternatives={[
+    '**A single multimodal model** can cover text, images and audio in one call when flexibility matters more than fixed output.',
+  ]}
+/>
