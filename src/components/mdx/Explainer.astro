@@ -1,0 +1,164 @@
+---
+/**
+ * <Explainer id="…" />: an animated explainer video placed inside a lesson's
+ * theory section (Read it → See it → Understand it).
+ *
+ * Built on the MSDEVBUILD short-video kit: locked brand frame + per-topic
+ * stage, synthesised sound effects, spoken narration with subtitles. Plays
+ * 16:9 on the web and 9:16 on phones from the same spec. Nothing plays until
+ * the learner presses play, and the full script sits underneath as text.
+ *
+ * Specs: src/explainers/<exam>/<id>.ts (see src/lib/explainer/types.ts).
+ */
+import '../../lib/explainer/kit.css';
+import { SITE } from '../../config';
+import { getExam } from '../../data/exams';
+import { holdFor, STEP_GAP, type ExplainerSpec } from '../../lib/explainer/types';
+import { I } from '../../lib/explainer/icons';
+
+interface Props { id: string }
+const { id } = Astro.props;
+
+const mods = import.meta.glob<{ default: ExplainerSpec }>('../../explainers/*/*.ts', { eager: true });
+const entry = Object.entries(mods).find(([, m]) => m.default.id === id);
+if (!entry) throw new Error(`<Explainer id="${id}"> has no spec in src/explainers/`);
+const [path, { default: spec }] = entry;
+const examSlug = path.split('/').at(-2)!;
+if (!path.endsWith(`/${id}.ts`)) throw new Error(`Explainer "${id}" must live in a file named ${id}.ts (found ${path})`);
+const exam = getExam(examSlug);
+
+const scope = `.xv[data-xv-id="${id}"]`;
+const css = spec.css
+  .replace(/@L\b/g, `${scope} .xv-land .xv-stage`)
+  .replace(/@P\b/g, `${scope} .xv-port .xv-stage`)
+  .replace(/@S\b/g, `${scope} .xv-stage`);
+
+const secs = Math.round(spec.stages.reduce((t, s) => t + holdFor(s) + STEP_GAP, 0) / 1000);
+const len = secs >= 60 ? `${Math.floor(secs / 60)} min ${secs % 60} sec` : `${secs} sec`;
+const main = spec.title.main.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/&lt;(\/?)em>/g, '<$1em>');
+const plain = spec.title.main.replace(/<\/?em>/g, '');
+const icon = {
+  prev: '<svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M6 5h2.2v14H6zM19 5v14L9.5 12z"/></svg>',
+  next: '<svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M15.8 5H18v14h-2.2zM5 5l9.5 7L5 19z"/></svg>',
+  play: '<svg class="i-play" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M7 4.5v15l13-7.5z"/></svg>',
+  pause: '<svg class="i-pause" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M6.5 4.5h4v15h-4zM13.5 4.5h4v15h-4z"/></svg>',
+  replay: '<svg class="i-replay" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><path d="M4 12a8 8 0 1 0 2.4-5.7M4 4v4.5h4.5"/></svg>',
+  restart: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><path d="M4 12a8 8 0 1 0 2.4-5.7M4 4v4.5h4.5"/></svg>',
+  sfx: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M11 5 6 9H3v6h3l5 4z" fill="currentColor"/><path class="on" d="M15.5 8.5a5 5 0 0 1 0 7M18.5 5.5a9 9 0 0 1 0 13"/><path class="off" d="m16 9 5 6M21 9l-5 6"/></svg>',
+  voice: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5.5 11a6.5 6.5 0 0 0 13 0M12 17.5V21"/><path class="off" d="M4 4l16 16"/></svg>',
+  cc: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><rect x="2.5" y="5" width="19" height="14" rx="3"/><path d="M10.5 10.2a2.4 2.4 0 1 0 0 3.6M17.5 10.2a2.4 2.4 0 1 0 0 3.6" stroke-linecap="round"/></svg>',
+  full: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"/></svg>',
+};
+---
+<figure class="xv not-prose" data-xv-id={id} data-no-annotate aria-labelledby={`xv-cap-${id}`}>
+  <div class="xv-head">
+    <span class="xv-badge">▶ Explainer video</span>
+    <span>See it in motion</span>
+    <span class="xv-len">{spec.stages.length} steps · {len}</span>
+  </div>
+
+  <div class="xv-frame">
+    <div class="xv-canvas xv-land" aria-hidden="true">
+      <div class="xv-top">
+        <div class="xv-logo"></div>
+        <div class="xv-brand"><b>MSDEVBUILD</b><span>{SITE.brandLine}</span></div>
+        <div class="xv-site">azure.msdevbuild.com</div>
+      </div>
+      <div class="xv-track"></div>
+      <div class="xv-caption">
+        <div class="xv-num">STEP 01 / {String(spec.stages.length).padStart(2, '0')}</div>
+        <div class="xv-title">{spec.stages[0].title}</div>
+        <div class="xv-desc">{spec.stages[0].desc}</div>
+      </div>
+      <div class="xv-stage" set:html={spec.html} />
+      <div class="xv-status">
+        <svg viewBox="0 0 24 24" fill="none"><path d="M8 3 2 12l6 9M16 3l6 9-6 9" stroke="#3AA0FF" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        <span class="xv-status-text">{spec.stages[0].status}</span>
+        <span class="xv-thinking"><i></i><i></i><i></i></span>
+      </div>
+      <div class="xv-cc"></div>
+
+      <div class="xv-cover">
+        <div class="xv-logo"></div>
+        <div class="xv-kicker">MSDEVBUILD <span>· {exam.code} explainer</span></div>
+        <div class="xv-main" set:html={main} />
+        <div class="xv-sub">{spec.title.sub}</div>
+        <div class="xv-bigplay" set:html={I.play} />
+        <div class="xv-pill"><i></i>{spec.stages.length} steps · {len} · sound on</div>
+      </div>
+
+      <div class="xv-end">
+        <div class="xv-logo"></div>
+        <div class="xv-check" set:html={I.check.replace('currentColor', '#0E1420')} />
+        <div class="xv-steps3"><span>Read it</span><b>→</b><span>See it</span><b>→</b><span>Understand it</span></div>
+        <div class="xv-main">{spec.end.title}</div>
+        <div class="xv-sub">{spec.end.sub}</div>
+      </div>
+    </div>
+
+    <button type="button" class="xv-start" aria-label={`Play explainer video: ${plain}`}></button>
+    <div class="xv-endbtn">
+      <button type="button" data-xv="replay-end">Watch again</button>
+      <button type="button" class="primary" data-xv="continue">Continue reading ↓</button>
+    </div>
+  </div>
+
+  <div class="xv-bar" role="group" aria-label="Video controls">
+    <button type="button" data-xv="play" data-state="play" aria-label="Play"><Fragment set:html={icon.play + icon.pause + icon.replay} /></button>
+    <button type="button" data-xv="prev" class="xv-needs-start" aria-label="Previous step"><Fragment set:html={icon.prev} /></button>
+    <span class="xv-steplabel xv-needs-start" aria-hidden="true">1 / {spec.stages.length}</span>
+    <button type="button" data-xv="next" class="xv-needs-start" aria-label="Next step"><Fragment set:html={icon.next} /></button>
+    <button type="button" data-xv="replay" class="xv-needs-start" aria-label="Restart from step 1"><Fragment set:html={icon.restart} /></button>
+    <span class="xv-spacer"></span>
+    <button type="button" data-xv="voice" aria-pressed="true" aria-label="Narration voice" title="Narration voice"><Fragment set:html={icon.voice} /></button>
+    <button type="button" data-xv="sfx" aria-pressed="true" aria-label="Sound effects" title="Sound effects"><Fragment set:html={icon.sfx} /></button>
+    <button type="button" data-xv="cc" aria-pressed="true" aria-label="Subtitles" title="Subtitles"><Fragment set:html={icon.cc} /></button>
+    <button type="button" data-xv="full" aria-pressed="false" aria-label="Full screen" title="Full screen"><Fragment set:html={icon.full} /></button>
+  </div>
+  <p class="xv-live sr-only" aria-live="polite"></p>
+
+  <figcaption id={`xv-cap-${id}`} class="sr-only">{spec.summary}</figcaption>
+  <details class="xv-script">
+    <summary>Read the video script</summary>
+    <ol>
+      {spec.stages.map((s) => <li><b>{s.title}</b><span>{s.say}</span></li>)}
+    </ol>
+  </details>
+  <style is:inline set:html={css}></style>
+</figure>
+
+<script>
+  import type { ExplainerSpec } from '../../lib/explainer/types';
+  const loaders = import.meta.glob<{ default: ExplainerSpec }>('../../explainers/*/*.ts');
+  const byId = new Map<string, () => Promise<{ default: ExplainerSpec }>>();
+  // File names are the ids, so the right chunk loads without importing them all.
+  for (const [p, load] of Object.entries(loaders)) byId.set(p.split('/').pop()!.replace(/\.ts$/, ''), load);
+
+  async function boot(root: HTMLElement, startNow = false) {
+    if (startNow) root.dataset.pending = '';
+    if (root.dataset.booting !== undefined) return;
+    root.dataset.booting = '';
+    const load = byId.get(root.dataset.xvId!);
+    if (!load) return;
+    const [{ Player }, mod] = await Promise.all([import('../../lib/explainer/player'), load()]);
+    const player = new Player(root, mod.default);
+    root.querySelector('[data-xv="replay-end"]')?.addEventListener('click', () => player.seek(0));
+    if (root.dataset.pending !== undefined) { delete root.dataset.pending; player.start(); }
+  }
+
+  const io = new IntersectionObserver(
+    (entries) => entries.forEach((e) => { if (e.isIntersecting) { io.unobserve(e.target); boot(e.target as HTMLElement); } }),
+    { rootMargin: '600px 0px' },
+  );
+  document.querySelectorAll<HTMLElement>('.xv[data-xv-id]').forEach((root) => {
+    io.observe(root);
+    // A tap before the player has loaded still starts it.
+    const early = (ev: Event) => {
+      if (root.dataset.ready !== undefined) return;
+      ev.stopImmediatePropagation();
+      boot(root, true);
+    };
+    root.querySelector('.xv-start')?.addEventListener('click', early, { capture: true });
+    root.querySelector('[data-xv="play"]')?.addEventListener('click', early, { capture: true });
+  });
+</script>

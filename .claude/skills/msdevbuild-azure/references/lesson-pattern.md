@@ -30,7 +30,7 @@ For a new exam, create `src/data/<exam>/lesson-sims.ts`, `portal-tours.ts` and `
 4. `## Real-world business scenario` → `<Scenario>`
 5. `## When to use it and when not to` → `<UseWhen>`
 
-Optional: `## Visual: …`, `## Simulate it: …`, and `<Activity id>` placed right after the idea it practises (see "Interactive activities" in content.md, roll out a few lessons at a time).
+Optional: `## Visual: …` (including `## Visual: <topic> in motion` with an `<Explainer id>` video, see content.md), `## Simulate it: …`, and `<Activity id>` placed right after the idea it practises (see "Interactive activities" in content.md, roll out a few lessons at a time).
 
 ## Files a complete lesson touches
 

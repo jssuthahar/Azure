@@ -44,7 +44,18 @@ Use `>-` block scalars for long text so apostrophes are safe.
 <UseWhen use={['…']} avoid={['…']} />
 ```
 
-Optional `## Visual: …` sections are allowed. Components are available without imports: Eli10, Callout (`tip | exam | warning | note`), Story, Scenario, UseWhen, DeepDive, Figure, Compare, Flow, ResponsibilityGrid, DemandChart, SlaCalculator, CostChart, TryIt, Datacenter3D, PortalTour; markdown tables are wrapped automatically.
+Optional `## Visual: …` sections are allowed. Components are available without imports: Eli10, Callout (`tip | exam | warning | note`), Story, Scenario, UseWhen, DeepDive, Figure, Compare, Flow, ResponsibilityGrid, DemandChart, SlaCalculator, CostChart, TryIt, Datacenter3D, PortalTour, Explainer; markdown tables are wrapped automatically.
+
+### Explainer videos (`<Explainer id>`)
+
+Animated explainer videos for concepts that are hard to get from text alone (Read it → See it → Understand it). Built on the MSDEVBUILD short-video kit (`msdevbuild-video`): locked brand frame, synthesised sound effects, spoken narration through the browser voice, subtitles and a readable script under the player. One spec plays **16:9 on the web and 9:16 on phones**. Nothing autoplays.
+
+- Spec: `src/explainers/<exam>/<id>.ts` (file name = `id`), typed by `src/lib/explainer/types.ts`. Engine: `src/lib/explainer/player.ts` (the `m` API mirrors the reel kit's `MSD`: `show`, `cls`, `type`, `count`, `particles`/`stream` with selector endpoints, `focus`, `punch`, `shake`, `sfx.*`). Frame CSS: `src/lib/explainer/kit.css`.
+- Place it in its own `## Visual: <topic> in motion` section right after `## Explain it like I'm 10`, with one lead-in sentence. Visual sections show in Beginner view; the technical section doesn't.
+- 6 to 8 steps, about a minute. Each step: `title` (+ `key` accent), `desc` (caption card), `status`, `say` (spoken line, also subtitle and script; written to be heard, human voice rules apply, scanned by `check:human`) and `run(m)`.
+- `run` must leave the stage in the state the next step expects: seeking replays earlier steps instantly. Prefer classes over inline styles; use `m.port` or selector endpoints for anything that depends on layout.
+- Stage CSS selectors start with `@S` (both), `@L` (landscape) or `@P` (portrait). Don't use class names that are Tailwind utilities (`fixed`, `hidden`, `flex`, `block`…): Tailwind scans these files.
+- Facts follow the lesson and Microsoft Learn. Numbers that are illustrative (token IDs, prices) are labelled as examples.
 
 Do not put same-tab links to other pages inside the lesson body: the learner must stay on the page. Use the `related` field, the comparison/service links the layout adds, or `target="_blank"` for external references.
 

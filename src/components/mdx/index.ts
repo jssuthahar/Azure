@@ -15,6 +15,7 @@ import TableWrap from './TableWrap.astro';
 import TryIt from './TryIt.astro';
 import Datacenter3D from './Datacenter3D.astro';
 import PortalTour from './PortalTour.astro';
+import Explainer from './Explainer.astro';
 import InteractiveLearningActivity from '../InteractiveLearningActivity.astro';
 
 /** Components available in every tutorial MDX file without an import. */
@@ -35,6 +36,8 @@ export const mdxComponents = {
   TryIt,
   Datacenter3D,
   PortalTour,
+  /** <Explainer id="…" /> places an animated explainer video (src/explainers/<exam>/<id>.ts). */
+  Explainer,
   /** <Activity id="…" /> places one of the lesson's interactive activities (src/data/<exam>/activities.ts). */
   Activity: InteractiveLearningActivity,
   InteractiveLearningActivity,

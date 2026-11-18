@@ -38,6 +38,7 @@ const TARGETS = [
   ['src/content/tutorials', /\.mdx$/],
   ['src/content/questions', /\.json$/],
   ['src/data', /\.ts$/],
+  ['src/explainers', /\.ts$/],
   ['src/pages', /\.(astro|ts)$/],
   ['src/components', /\.astro$/],
   ['src/layouts', /\.astro$/],
