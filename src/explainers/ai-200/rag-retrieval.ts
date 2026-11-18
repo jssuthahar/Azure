@@ -121,16 +121,29 @@ const spec: ExplainerSpec = {
   @S .rg-ans > span{ color:var(--x-ok); } @S .rg-ans > span svg{ width:30px; height:30px; }
   @S .rg-ans p{ margin:0; color:#fff; font-size:22px; line-height:1.4; } @S .rg-ans b{ color:var(--x-cyan); }
   @S .rg-flow{ position:absolute; inset:0; pointer-events:none; z-index:8; }
-  @P .rg{ grid-template-columns:1fr; display:flex; flex-direction:column; gap:16px; }
-  @P .rg-a{ gap:14px; height:540px; flex-shrink:0; }
+  @L .rg-tbl{ padding:14px 16px; gap:8px; }
+  @L .rg-rows{ gap:5px; }
+  @L .rg-row{ padding:5px 12px; }
+  @L .rg-note{ min-height:44px; }
+  @L .rg-idx, @L .rg-out{ padding:16px 18px; gap:10px; }
+  @L .rg-bar small{ font-size:17px; }
+  @L .rg-ins{ font-size:17px; line-height:1.4; padding:10px 12px; }
+  @L .rg-ans{ padding:10px 12px; }
+  @L .rg-ans p{ font-size:21px; }
+  @P .rg{ grid-template-columns:1fr; display:flex; flex-direction:column; gap:14px; }
+  @P .rg-a{ gap:12px; height:500px; flex-shrink:0; }
   @P .rg-b{ position:static; }
-  @P .rg-q{ padding:16px; gap:10px; }
+  @P .rg-q{ padding:14px 16px; gap:10px; }
   @P .rg-qh p{ font-size:26px; }
-  @P .rg-vec{ padding:10px 14px; }
-  @P .rg-sql .body{ font-size:24px; line-height:1.5; }
-  @P .rg-slot{ position:absolute; left:0; right:0; top:0; height:540px; z-index:7; }
-  @P .rg-row{ grid-template-columns:62px 118px 1fr 70px; padding:9px 12px; }
+  @P .rg-vec{ padding:10px 14px; gap:6px; }
+  @P .rg-sql .body{ font-size:22px; line-height:1.4; padding:12px 20px; }
+  @P .rg-slot{ position:absolute; left:0; right:0; top:0; height:500px; z-index:7; }
+  @P .rg-tbl{ padding:14px 16px; gap:8px; }
+  @P .rg-rows{ gap:5px; }
+  @P .rg-row{ grid-template-columns:62px 118px 1fr 70px; padding:6px 12px; }
   @P .rg-row p{ font-size:21px; }
+  @P .rg-row.msd-focus{ transform:scale(1.02); }
+  @P .rg-note{ min-height:44px; }
   `,
   stages: [
     {

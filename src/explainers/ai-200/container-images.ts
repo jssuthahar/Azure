@@ -128,8 +128,13 @@ const spec: ExplainerSpec = {
   @P .ci-run{ font-size:17px; padding:3px 8px; }
   @P .ci-tvd .msd-pill{ font-size:17px; }
   @P .ci-note{ min-height:100px; }
-  @P .ci:not(.ci-p2) .ci-acr, @P .ci:not(.ci-p2) .ci-hosts, @P .ci:not(.ci-p2) .ci-note{ display:none; }
-  @P .ci.ci-p2 .ci-df{ display:none; }
+  @S .ci:not(.ci-p2) .ci-acr, @S .ci:not(.ci-p2) .ci-hosts, @S .ci:not(.ci-p2) .ci-note{ display:none; }
+  @S .ci.ci-p2 .ci-df{ display:none; }
+  @S .ci.ci-p2 .ci-build{ grid-template-columns:1fr; }
+  @L .ci.ci-p2 .ci-img{ padding:14px 18px; }
+  @L .ci.ci-p2 .ci-stack{ flex-direction:row; }
+  @L .ci.ci-p2 .ci-layer{ flex:1; min-width:0; white-space:nowrap; }
+  @L .ci.ci-p2 .ci-layer em{ display:none; }
   `,
   stages: [
     {
@@ -168,7 +173,7 @@ const spec: ExplainerSpec = {
       status: 'docker push · myreg.azurecr.io',
       say: 'Now you push the image to Azure Container Registry, your private store for images, with a version tag. Here it is, ragapi, version one point four point oh.',
       run: (m) => {
-        m.cls('.ci', 'ci-p2'); // portrait swaps the Dockerfile out for the registry and hosts
+        m.cls('.ci', 'ci-p2'); // the Dockerfile makes room for the registry and the hosts
         m.show('.ci-acr', 0, true);
         m.particles('.ci-flow', { from: '.ci-name', to: '.ci-row.ci-ra', count: 8, duration: 900 });
         m.after(500, () => m.sfx.whoosh(true));

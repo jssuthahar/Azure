@@ -98,6 +98,8 @@ const spec: ExplainerSpec = {
   @P .sbq-202{ align-self:center; margin-left:auto; }
   @P .sbq-ws{ flex-direction:row; }
   @P .sbq-w{ padding:16px; min-height:230px; }
+  @P .sbq-m.msd-punch{ animation-name:sbq-nudge; } /* a full-width card can't grow 9% without leaving the stage */
+  @keyframes sbq-nudge{ 0%, 100%{ transform:none; } 42%{ transform:scale(1.03); } }
   `,
   stages: [
     {

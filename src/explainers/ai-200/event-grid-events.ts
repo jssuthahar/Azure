@@ -112,15 +112,22 @@ const spec: ExplainerSpec = {
   @S .egv-col p{ margin:0; color:var(--x-text); font-size:23px; line-height:1.4; }
   @S .egv-col .msd-pill{ align-self:flex-start; margin-top:auto; }
   @S .egv-flow{ position:absolute; inset:0; pointer-events:none; z-index:8; }
-  @P .egv{ grid-template-columns:1fr 1fr; grid-template-rows:auto auto auto auto; grid-template-areas:"src topic" "evt evt" "sub fn" "rty dl"; gap:14px; align-content:start; }
+  @P .egv{ grid-template-columns:1fr 1fr; grid-template-rows:auto auto auto auto; grid-template-areas:"src topic" "evt evt" "sub fn" "dl dl"; gap:14px; align-content:start; }
+  @P .egv:not(.egv-r) .egv-rty{ display:none; }
+  @P .egv.egv-r{ grid-template-areas:"src topic" "sub fn" "rty rty" "dl dl"; }
+  @P .egv.egv-r .egv-evt{ display:none; }
   @P .egv-topic{ align-self:center; }
+  @P .egv-src{ padding:14px 16px; gap:10px; }
+  @P .egv-files{ gap:8px; }
+  @P .egv-f{ padding:8px 12px; }
+  @P .egv-evt{ padding:14px 16px; gap:8px; }
   @P .egv-kv{ grid-template-columns:110px 1fr; font-size:19px; }
-  @P .egv-rty{ padding:14px 16px; gap:10px; }
+  @P .egv-sub, @P .egv-fn{ padding:14px 16px; gap:8px; }
+  @P .egv-rty{ padding:14px 18px; gap:10px; }
   @P .egv-rh b{ font-size:22px; }
-  @P .egv-rh{ flex-wrap:wrap; } @P .egv-att{ margin-left:0; font-size:18px; }
-  @P .egv-dots{ flex-wrap:wrap; justify-content:flex-start; gap:10px 12px; }
   @P .egv-dot small{ font-size:15px; }
-  @P .egv-lim .msd-pill{ font-size:16px; padding:6px 10px; }
+  @P .egv-lim .msd-pill{ font-size:17px; padding:6px 12px; }
+  @P .egv-dl{ padding:14px 18px; gap:8px; }
   @P .egv-vs{ inset:20px 0; grid-template-columns:1fr; padding:20px; gap:16px; }
   @P .egv-col{ padding:18px; gap:10px; }
   @P .egv-col p{ font-size:24px; }
@@ -197,6 +204,7 @@ const spec: ExplainerSpec = {
       status: '503 Service Unavailable · retrying',
       say: "The next PDF arrives while the function is returning 503. Event Grid waits and tries again, after ten seconds, thirty, a minute, five, with longer gaps each time.",
       run: (m) => {
+        m.cls('.egv', 'egv-r'); // portrait swaps the event card for the retry panel
         m.cls('.egv-sub', 'egv-drop', false);
         m.show('.f91', 0);
         m.text('.egv-sj', '…/contracts/blobs/contract-91.pdf');

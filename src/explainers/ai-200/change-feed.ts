@@ -67,7 +67,7 @@ const spec: ExplainerSpec = {
   @S code{ background:none; padding:0; border-radius:0; } /* the lesson's light inline-code chip doesn't belong on the dark stage */
   @S .cf{ position:relative; height:100%; display:grid; gap:18px; }
   @L .cf{ grid-template-columns:1fr 1fr; grid-template-rows:104px 268px 1fr; grid-template-areas:"src src" "feed feed" "work lease"; }
-  @P .cf{ grid-template-columns:1fr; grid-template-rows:auto 290px 1fr 1fr; grid-template-areas:"src" "feed" "work" "lease"; }
+  @P .cf{ grid-template-columns:1fr; grid-template-rows:auto 280px 1fr 1fr; grid-template-areas:"src" "feed" "work" "lease"; gap:14px; }
   @S .cf-src{ grid-area:src; display:flex; align-items:center; gap:14px; min-width:0; }
   @P .cf-src{ flex-wrap:wrap; }
   @S .cf-src .msd-node{ padding:14px 18px; font-size:24px; }
@@ -114,6 +114,11 @@ const spec: ExplainerSpec = {
   @S .cf-code .body{ white-space:pre; font-size:21px; line-height:1.6; padding:16px 22px; }
   @P .cf-code .body{ font-size:22px; white-space:pre-wrap; }
   @S .cf-file{ margin-left:12px; color:#bbb; font-family:var(--x-mono); font-size:17px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  @P .cf-src .msd-node{ padding:10px 16px; }
+  @P .cf-feed{ padding:14px 18px; gap:10px; }
+  @P .cf-track{ min-height:78px; padding:8px 10px; }
+  @P .cf-work, @P .cf-lease{ padding:14px 18px; gap:10px; }
+  @P .cf-th, @P .cf-row{ padding:6px 14px; }
   @S .cf-flow{ position:absolute; inset:0; pointer-events:none; z-index:6; }
   `,
   stages: [

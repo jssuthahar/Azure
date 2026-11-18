@@ -69,8 +69,8 @@ const spec: ExplainerSpec = {
   css: `
   @S code{ background:none; padding:0; border-radius:0; } /* the lesson's light inline-code chip doesn't belong on the dark stage */
   @S .cp{ position:relative; height:100%; display:grid; gap:18px; }
-  @L .cp{ grid-template-columns:1fr 1fr; grid-template-rows:92px 290px 1fr; grid-template-areas:"req req" "box box" "idx con"; }
-  @P .cp{ grid-template-columns:1fr; grid-template-rows:auto 400px 1fr; grid-template-areas:"req" "box" "bot"; }
+  @L .cp{ grid-template-columns:1fr 1fr; grid-template-rows:92px 270px 1fr; grid-template-areas:"req req" "box box" "idx con"; }
+  @P .cp{ grid-template-columns:1fr; grid-template-rows:auto 330px 1fr; grid-template-areas:"req" "box" "bot"; gap:16px; }
   @S .cp-req{ grid-area:req; display:flex; align-items:center; gap:18px; padding:16px 22px; min-width:0; }
   @P .cp-req{ flex-wrap:wrap; }
   @S .cp-call{ flex:1; min-width:0; font-family:var(--x-mono); font-size:24px; color:var(--x-cyan); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; min-height:32px; }
@@ -96,7 +96,7 @@ const spec: ExplainerSpec = {
   @S .cp-part.fan{ border-style:solid; border-color:var(--x-warn); }
   @S .cp-idx{ grid-area:idx; padding:16px 20px; display:flex; flex-direction:column; gap:10px; min-height:0; transition:opacity .3s, transform .3s; }
   @P .cp-idx{ grid-area:bot; }
-  @S .cp-ih{ display:flex; flex-direction:column; gap:6px; }
+  @S .cp-ih{ display:flex; align-items:baseline; flex-wrap:wrap; gap:6px 14px; }
   @S .cp-pol{ font-family:var(--x-mono); font-size:19px; color:var(--x-cyan); }
   @S .cp-paths{ display:flex; flex-direction:column; gap:7px; }
   @S .cp-path{ display:flex; align-items:center; gap:10px; padding:6px 12px; border-radius:11px; background:rgb(255 255 255 / .04); border:1.5px solid var(--x-line); transition:opacity .3s, transform .3s, border-color .3s; }
@@ -129,6 +129,17 @@ const spec: ExplainerSpec = {
   @S .cp-con.k0 .cp-read b, @S .cp-con.k1 .cp-read b{ color:var(--x-warn); }
   @S .cp-weak{ display:inline-flex; align-items:center; gap:8px; color:var(--x-a1); font-size:19px; font-weight:700; }
   @S .cp-weak svg{ width:22px; height:22px; }
+  @L .cp-idx{ padding:12px 18px; gap:8px; }
+  @L .cp-paths{ gap:5px; }
+  @L .cp-path{ padding:4px 12px; }
+  @P .cp-req{ padding:12px 18px; gap:10px; }
+  @P .cp-meter{ padding:6px 14px; }
+  @P .cp-ru{ font-size:32px; }
+  @P .cp-box{ padding:14px 16px; gap:10px; }
+  @P .cp-parts{ gap:10px; }
+  @P .cp-part{ padding:10px 12px; gap:8px; }
+  @P .cp-idx{ padding:14px 18px; gap:8px; }
+  @P .cp-paths{ gap:6px; }
   @P .cp-track{ margin:40px 70px 0; }
   @P .cp-stop span{ font-size:20px; left:-75px; width:150px; }
   @P .cp-x{ font-size:20px; }

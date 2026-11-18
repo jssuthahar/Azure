@@ -94,6 +94,7 @@ const spec: ExplainerSpec = {
   @S .ev-sc{ font-family:var(--x-mono); font-size:19px; color:var(--x-ok); padding:2px 8px; border-radius:8px; border:1px solid rgb(63 185 80 / .5); opacity:0; transition:opacity .3s; }
   @S .ev-pin.hit i{ background:var(--x-ok); border-color:var(--x-ok); box-shadow:0 0 18px rgb(63 185 80 / .7); }
   @S .ev-pin.hit .ev-sc{ opacity:1; }
+  @S .ev-pin.lft .ev-sc{ position:absolute; right:-8px; bottom:calc(100% + 6px); } /* above the dot, so a left-hand label can't push it off the map */
   @S .ev-q i{ width:26px; height:26px; background:var(--x-warn); border-color:#fff; box-shadow:0 0 22px rgb(240 166 74 / .8); }
   @S .ev-q{ margin:-13px 0 0 -13px; z-index:3; }
   @S .ev-q span{ color:var(--x-warn); font-weight:800; }
@@ -128,6 +129,9 @@ const spec: ExplainerSpec = {
   @P .ev.rag .ev-rag{ display:grid; }
   @P .ev-rag .msd-label{ grid-column:1 / -1; }
   @P .ev-top{ grid-row:span 2; }
+  @L .ev-vec{ padding:12px 16px; gap:4px; }
+  @L .ev-vec .msd-label{ font-size:17px; letter-spacing:1px; }
+  @L .ev-dims b{ font-size:30px; }
   @S .ev-flow{ position:absolute; inset:0; pointer-events:none; z-index:6; }
   `,
   stages: [

@@ -83,6 +83,19 @@ const spec: ExplainerSpec = {
   @S .fb-inst svg{ width:30px; height:30px; }
   @S .fb-inst.fb-up{ border:1.5px solid var(--x-a1); background:rgb(58 160 255 / .16); color:var(--x-a1); box-shadow:0 0 20px rgb(58 160 255 / .25); }
   @S .fb-flow{ position:absolute; inset:0; pointer-events:none; z-index:6; }
+  @L .fb{ gap:14px; }
+  @L .fb-trigs{ gap:10px; }
+  @L .fb-tlist{ gap:6px; }
+  @L .fb-tr{ padding:8px 12px; }
+  @L .fb-tr .fb-tn{ gap:1px; }
+  @L .fb-scale{ padding:10px 18px; gap:18px; flex-direction:row; align-items:center; }
+  @L .fb-sh{ flex-wrap:wrap; gap:0 14px; width:330px; flex-shrink:0; }
+  @L .fb-sh .msd-label{ width:100%; font-size:19px; }
+  @L .fb-ex{ margin-left:0; }
+  @L .fb-cnt{ font-size:30px; }
+  @L .fb-insts{ min-height:56px; }
+  @L .fb-inst{ width:56px; height:56px; }
+  @L .fb-insts{ gap:10px; }
   @P .fb{ grid-template-columns:1fr 1fr; grid-template-rows:auto 1fr auto; grid-template-areas:"fn fn" "tr out" "sc sc"; gap:16px; }
   @P .fb-fn .body{ font-size:21px; line-height:1.5; }
   @P .fb-tlist{ gap:8px; }
