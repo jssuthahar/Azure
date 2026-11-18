@@ -67,3 +67,21 @@ export const holdFor = (s: Pick<XStage, 'ms' | 'say'>) =>
   Math.max(s.ms ?? 0, 2400, Math.round((s.say.split(/\s+/).length / 2.5) * 1000 + 900));
 /** Pause between steps, after the narration finishes. */
 export const STEP_GAP = 400;
+
+/**
+ * Fingerprint of a narration line (FNV-1a, 32-bit, whitespace-normalised).
+ * A recorded clip is used only while its fingerprint matches the current
+ * `say` text, so editing a line can never leave stale audio playing.
+ * scripts/voice.mjs computes the same hash. Keep the two in step.
+ */
+export function voiceHash(text: string): string {
+  let h = 0x811c9dc5;
+  for (const ch of text.replace(/\s+/g, ' ').trim()) {
+    h ^= ch.codePointAt(0)!;
+    h = Math.imul(h, 0x01000193) >>> 0;
+  }
+  return h.toString(16).padStart(8, '0');
+}
+
+/** src/explainers/voice.json: written by `npm run voice`. id → step number → clip. */
+export type VoiceManifest = Record<string, Record<string, { hash: string; ms: number; file: string }>>;

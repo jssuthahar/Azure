@@ -1,0 +1,246 @@
+---
+/**
+ * Voice studio (dev only): record the explainer narration in your own voice.
+ *
+ *   npm run dev → http://localhost:4321/voice-studio/
+ *   pick the repo's voice-src folder once, read each line, press R
+ *   npm run voice → clips land in public/explainers/voice/ and play in the lessons
+ *
+ * Never built for production: getStaticPaths returns nothing outside `astro dev`.
+ */
+import { voiceHash, type ExplainerSpec, type VoiceManifest } from '../../lib/explainer/types';
+import voiceJson from '../../explainers/voice.json';
+
+export function getStaticPaths() {
+  return import.meta.env.DEV ? [{ params: { slug: undefined } }] : [];
+}
+
+const mods = import.meta.glob<{ default: ExplainerSpec }>('../../explainers/*/*.ts', { eager: true });
+const manifest = voiceJson as VoiceManifest;
+const list = Object.entries(mods)
+  .map(([p, m]) => ({ exam: p.split('/').at(-2)!, spec: m.default }))
+  .sort((a, b) => a.exam.localeCompare(b.exam) || a.spec.id.localeCompare(b.spec.id))
+  .map(({ exam, spec }) => ({
+    exam,
+    id: spec.id,
+    lesson: spec.lesson,
+    title: spec.title.main.replace(/<\/?em>/g, ''),
+    steps: spec.stages.map((s, i) => {
+      const c = manifest[spec.id]?.[String(i + 1)];
+      return { title: s.title, say: s.say, state: !c ? 'none' : c.hash === voiceHash(s.say) ? 'ok' : 'stale', clip: c?.file ?? null };
+    }),
+  }));
+---
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="robots" content="noindex, nofollow" />
+  <title>Voice studio</title>
+  <style is:global>
+    :root { color-scheme: dark; --bg:#0e1420; --panel:#141b2b; --line:#232c40; --text:#e8edf5; --dim:#8b95a7; --a:#3aa0ff; --ok:#3fb950; --warn:#f0a64a; --bad:#f44a6a; }
+    * { box-sizing: border-box; }
+    body { margin:0; background:var(--bg); color:var(--text); font:16px/1.5 'Segoe UI', system-ui, sans-serif; }
+    header { position:sticky; top:0; z-index:5; display:flex; flex-wrap:wrap; gap:.75rem; align-items:center; padding:.8rem 1.2rem; background:#0b111c; border-bottom:1px solid var(--line); }
+    header h1 { font-size:1.05rem; margin:0 auto 0 0; }
+    button, select { font:inherit; color:var(--text); background:var(--panel); border:1px solid var(--line); border-radius:999px; padding:.45rem 1rem; cursor:pointer; min-height:38px; }
+    button:hover { border-color:var(--a); }
+    button.primary { background:var(--a); border-color:var(--a); color:#0e1420; font-weight:700; }
+    .folder.ok { border-color:var(--ok); color:var(--ok); }
+    main { display:grid; grid-template-columns:300px 1fr; min-height:calc(100vh - 62px); }
+    nav { border-right:1px solid var(--line); padding:1rem; overflow:auto; }
+    nav h2 { font-size:.75rem; letter-spacing:.1em; text-transform:uppercase; color:var(--dim); margin:1rem 0 .4rem; }
+    nav a { display:flex; justify-content:space-between; gap:.5rem; padding:.5rem .7rem; border-radius:10px; color:var(--text); text-decoration:none; font-size:.92rem; }
+    nav a[aria-current='true'] { background:var(--panel); outline:1px solid var(--a); }
+    nav a span { color:var(--dim); font-variant-numeric:tabular-nums; }
+    section { padding:1.2rem 1.6rem 4rem; max-width:980px; }
+    .tips { color:var(--dim); font-size:.9rem; margin:0 0 1rem; }
+    .tips b { color:var(--text); }
+    ol { list-style:none; margin:0; padding:0; display:grid; gap:.8rem; }
+    li { border:1px solid var(--line); background:var(--panel); border-radius:16px; padding:1rem 1.2rem; }
+    li.cur { border-color:var(--a); box-shadow:0 0 0 1px var(--a); }
+    li.rec { border-color:var(--bad); box-shadow:0 0 0 2px var(--bad); }
+    .row { display:flex; gap:.6rem; align-items:center; flex-wrap:wrap; }
+    .n { font-family:ui-monospace, monospace; color:var(--a); font-weight:700; }
+    .t { font-weight:700; }
+    .badge { margin-left:auto; font-size:.78rem; font-weight:700; padding:.15rem .6rem; border-radius:999px; border:1px solid var(--line); color:var(--dim); }
+    .badge.ok { color:var(--ok); border-color:var(--ok); } .badge.stale { color:var(--warn); border-color:var(--warn); } .badge.new { color:var(--a); border-color:var(--a); }
+    .say { font-size:1.45rem; line-height:1.55; margin:.6rem 0 .8rem; color:#fff; }
+    .meter { height:6px; border-radius:3px; background:var(--line); overflow:hidden; flex:1; min-width:120px; visibility:hidden; }
+    .meter i { display:block; height:100%; width:0; background:linear-gradient(90deg, var(--ok), var(--warn), var(--bad)); }
+    li.rec .meter { visibility:visible; }
+    .note { color:var(--dim); font-size:.85rem; }
+    @media (max-width: 760px) { main { grid-template-columns:1fr; } nav { border-right:0; border-bottom:1px solid var(--line); } }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>🎙 Voice studio <small class="note">dev only · not published</small></h1>
+    <button type="button" class="folder" id="folder">Choose voice-src folder</button>
+    <span class="note" id="where">Takes download to your browser folder until you choose one.</span>
+  </header>
+  <main>
+    <nav aria-label="Explainers">
+      {['az-900', 'ai-901'].map((ex) => (
+        <>
+          <h2>{ex.toUpperCase()}</h2>
+          {list.filter((e) => e.exam === ex).map((e) => (
+            <a href={`#${e.id}`} data-id={e.id}>{e.id}<span>{e.steps.filter((s) => s.state === 'ok').length}/{e.steps.length}</span></a>
+          ))}
+        </>
+      ))}
+    </nav>
+    <section>
+      <p class="tips">Read each line the way you'd explain it to a learner sitting next to you. <b>R</b> record / stop · <b>Space</b> play take · <b>↑ ↓</b> move · stops on its own after a pause. Then run <b>npm run voice</b>.</p>
+      <h2 id="ttl"></h2>
+      <ol id="steps"></ol>
+    </section>
+  </main>
+
+  <script is:inline type="application/json" id="data" set:html={JSON.stringify(list)}></script>
+  <script>
+    type Step = { title: string; say: string; state: 'ok' | 'stale' | 'none' | 'new'; clip: string | null; take?: Blob };
+    type Item = { exam: string; id: string; lesson: string; title: string; steps: Step[] };
+    const list: Item[] = JSON.parse(document.getElementById('data')!.textContent!);
+    const $ = <T extends HTMLElement>(s: string) => document.querySelector<T>(s)!;
+    let item = list[0];
+    let cur = 0;
+    let dir: FileSystemDirectoryHandle | null = null;
+    let rec: MediaRecorder | null = null;
+    let stream: MediaStream | null = null;
+    const player = new Audio();
+
+    const label = { ok: '✓ recorded', stale: '⟳ line changed, re-record', none: 'not recorded', new: '● new take (run npm run voice)' };
+
+    function render() {
+      document.querySelectorAll('nav a').forEach((a) => a.setAttribute('aria-current', String((a as HTMLElement).dataset.id === item.id)));
+      $('#ttl').textContent = `${item.id} · ${item.title}`;
+      $('#steps').innerHTML = item.steps
+        .map((s, i) => `<li data-i="${i}" class="${i === cur ? 'cur' : ''}">
+          <div class="row"><span class="n">${String(i + 1).padStart(2, '0')}</span><span class="t"></span><span class="badge ${s.state}">${label[s.state]}</span></div>
+          <p class="say"></p>
+          <div class="row"><button type="button" class="primary" data-act="rec">● Record</button><button type="button" data-act="play">▶ Play take</button><div class="meter"><i></i></div></div>
+        </li>`)
+        .join('');
+      $('#steps').querySelectorAll('li').forEach((li, i) => {
+        li.querySelector('.t')!.textContent = item.steps[i].title;
+        li.querySelector('.say')!.textContent = item.steps[i].say;
+      });
+    }
+
+    function select(id: string) {
+      item = list.find((e) => e.id === id) ?? list[0];
+      cur = 0;
+      render();
+    }
+    window.addEventListener('hashchange', () => select(location.hash.slice(1)));
+    select(location.hash.slice(1));
+
+    $('#folder').addEventListener('click', async () => {
+      const pick = (window as unknown as { showDirectoryPicker?: (o?: object) => Promise<FileSystemDirectoryHandle> }).showDirectoryPicker;
+      if (!pick) return alert('This browser cannot write to folders. Takes will download instead: move them into voice-src/<id>/.');
+      try {
+        dir = await pick({ id: 'voice-src', mode: 'readwrite' });
+        $('#folder').classList.add('ok');
+        $('#folder').textContent = `✓ ${dir.name}`;
+        $('#where').textContent = dir.name === 'voice-src' ? 'Takes save straight into the repo.' : 'Tip: choose the repo’s voice-src folder (create it if needed).';
+      } catch {}
+    });
+
+    async function save(i: number, blob: Blob, ext: string) {
+      const n = String(i + 1).padStart(2, '0');
+      const s = item.steps[i];
+      if (dir) {
+        const sub = await dir.getDirectoryHandle(item.id, { create: true });
+        for (const [name, data] of [[`${n}.${ext}`, blob], [`${n}.txt`, new Blob([s.say])]] as const) {
+          const fh = await sub.getFileHandle(name, { create: true });
+          const w = await fh.createWritable();
+          await w.write(data);
+          await w.close();
+        }
+      } else {
+        for (const [name, data] of [[`${item.id}__${n}.${ext}`, blob], [`${item.id}__${n}.txt`, new Blob([s.say])]] as const) {
+          const a = document.createElement('a');
+          a.href = URL.createObjectURL(data);
+          a.download = name;
+          a.click();
+          setTimeout(() => URL.revokeObjectURL(a.href), 4000);
+        }
+      }
+    }
+
+    async function startRec(i: number) {
+      cur = i;
+      render();
+      stream ??= await navigator.mediaDevices.getUserMedia({ audio: { echoCancellation: false, noiseSuppression: true, autoGainControl: false, channelCount: 1 } });
+      const type = ['audio/webm;codecs=opus', 'audio/mp4', 'audio/webm'].find((t) => MediaRecorder.isTypeSupported(t)) ?? '';
+      const ext = type.includes('mp4') ? 'm4a' : 'webm';
+      rec = new MediaRecorder(stream, type ? { mimeType: type, audioBitsPerSecond: 128000 } : undefined);
+      const chunks: Blob[] = [];
+      rec.ondataavailable = (e) => e.data.size && chunks.push(e.data);
+      const li = $('#steps').children[i] as HTMLElement;
+      li.classList.add('rec');
+      (li.querySelector('[data-act="rec"]') as HTMLElement).textContent = '■ Stop';
+
+      // level meter + stop after ~1.6 s of silence once you've started speaking
+      const ctx = new AudioContext();
+      const an = ctx.createAnalyser();
+      ctx.createMediaStreamSource(stream).connect(an);
+      const buf = new Uint8Array(an.fftSize);
+      let spoke = false, quietSince = 0;
+      const bar = li.querySelector('.meter i') as HTMLElement;
+      const tick = () => {
+        if (!rec || rec.state !== 'recording') return ctx.close();
+        an.getByteTimeDomainData(buf);
+        let peak = 0;
+        for (const v of buf) peak = Math.max(peak, Math.abs(v - 128));
+        bar.style.width = `${Math.min(100, (peak / 128) * 160)}%`;
+        const now = performance.now();
+        if (peak > 14) { spoke = true; quietSince = now; }
+        else if (spoke && now - quietSince > 1600) return stopRec();
+        requestAnimationFrame(tick);
+      };
+      rec.onstop = async () => {
+        const blob = new Blob(chunks, { type: rec?.mimeType || type });
+        const s = item.steps[i];
+        s.take = blob;
+        s.state = 'new';
+        await save(i, blob, ext);
+        rec = null;
+        cur = Math.min(item.steps.length - 1, i + 1);
+        render();
+      };
+      setTimeout(() => { rec?.start(); quietSince = performance.now(); requestAnimationFrame(tick); }, 250);
+    }
+    function stopRec() {
+      if (rec && rec.state === 'recording') rec.stop();
+    }
+    function play(i: number) {
+      const s = item.steps[i];
+      const src = s.take ? URL.createObjectURL(s.take) : s.clip;
+      if (!src) return;
+      player.src = src;
+      player.play();
+    }
+
+    $('#steps').addEventListener('click', (e) => {
+      const b = (e.target as HTMLElement).closest('button');
+      const li = (e.target as HTMLElement).closest('li');
+      if (!li) return;
+      const i = Number(li.dataset.i);
+      if (b?.dataset.act === 'rec') return rec ? stopRec() : startRec(i);
+      if (b?.dataset.act === 'play') return play(i);
+      cur = i;
+      render();
+    });
+    document.addEventListener('keydown', (e) => {
+      if ((e.target as HTMLElement).closest('button, select') && e.key === ' ') return;
+      if (e.key === 'r' || e.key === 'R') { e.preventDefault(); rec ? stopRec() : startRec(cur); }
+      else if (e.key === ' ') { e.preventDefault(); play(cur); }
+      else if (e.key === 'ArrowDown') { e.preventDefault(); cur = Math.min(item.steps.length - 1, cur + 1); render(); }
+      else if (e.key === 'ArrowUp') { e.preventDefault(); cur = Math.max(0, cur - 1); render(); }
+    });
+  </script>
+</body>
+</html>

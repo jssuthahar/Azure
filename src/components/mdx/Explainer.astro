@@ -13,7 +13,8 @@
 import '../../lib/explainer/kit.css';
 import { SITE } from '../../config';
 import { getExam } from '../../data/exams';
-import { holdFor, STEP_GAP, type ExplainerSpec } from '../../lib/explainer/types';
+import { holdFor, STEP_GAP, voiceHash, type ExplainerSpec, type VoiceManifest } from '../../lib/explainer/types';
+import voiceJson from '../../explainers/voice.json';
 import { I } from '../../lib/explainer/icons';
 
 interface Props { id: string }
@@ -27,13 +28,23 @@ const examSlug = path.split('/').at(-2)!;
 if (!path.endsWith(`/${id}.ts`)) throw new Error(`Explainer "${id}" must live in a file named ${id}.ts (found ${path})`);
 const exam = getExam(examSlug);
 
+// Recorded narration (npm run voice): a clip is used only while its line is unchanged.
+const recorded = (voiceJson as VoiceManifest)[id] ?? {};
+const clips = spec.stages.map((s, i) => {
+  const c = recorded[String(i + 1)];
+  return c && c.hash === voiceHash(s.say) ? ([c.file, c.ms] as [string, number]) : null;
+});
+const staleClips = spec.stages.map((s, i) => (recorded[String(i + 1)] && !clips[i] ? i + 1 : 0)).filter(Boolean);
+if (staleClips.length) console.warn(`[explainer ${id}] steps ${staleClips.join(', ')} were re-written after recording; using the browser voice until re-recorded`);
+const ownVoice = clips.some(Boolean);
+
 const scope = `.xv[data-xv-id="${id}"]`;
 const css = spec.css
   .replace(/@L\b/g, `${scope} .xv-land .xv-stage`)
   .replace(/@P\b/g, `${scope} .xv-port .xv-stage`)
   .replace(/@S\b/g, `${scope} .xv-stage`);
 
-const secs = Math.round(spec.stages.reduce((t, s) => t + holdFor(s) + STEP_GAP, 0) / 1000);
+const secs = Math.round(spec.stages.reduce((t, s, i) => t + (clips[i] ? Math.max(2600, clips[i]![1] + 350) : holdFor(s)) + STEP_GAP, 0) / 1000);
 const len = secs >= 60 ? `${Math.floor(secs / 60)} min ${secs % 60} sec` : `${secs} sec`;
 const main = spec.title.main.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/&lt;(\/?)em>/g, '<$1em>');
 const plain = spec.title.main.replace(/<\/?em>/g, '');
@@ -50,7 +61,7 @@ const icon = {
   full: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"/></svg>',
 };
 ---
-<figure class="xv not-prose" data-xv-id={id} data-no-annotate aria-labelledby={`xv-cap-${id}`}>
+<figure class="xv not-prose" data-xv-id={id} data-voice={ownVoice ? JSON.stringify(clips) : undefined} data-no-annotate aria-labelledby={`xv-cap-${id}`}>
   <div class="xv-head">
     <span class="xv-badge">▶ Explainer video</span>
     <span>See it in motion</span>

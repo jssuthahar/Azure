@@ -3,3 +3,6 @@ dist/
 .astro/
 .DS_Store
 .env
+
+# Raw narration takes from the voice studio (converted clips live in public/explainers/voice/)
+voice-src/

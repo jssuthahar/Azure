@@ -208,6 +208,10 @@ export class Player {
   private instant = false;
   private prefs = readPrefs();
   private reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
+  /** Recorded narration per step ([url, ms]) from `npm run voice`, else the browser voice. */
+  private clips: ([string, number] | null)[] = [];
+  private audio: HTMLAudioElement | null = null;
+  private unlocked = false;
   private api: XApi;
 
   constructor(root: HTMLElement, spec: ExplainerSpec) {
@@ -218,6 +222,15 @@ export class Player {
     this.stage = root.querySelector('.xv-stage')!;
     this.snapshot = this.stage.innerHTML;
     this.api = this.makeApi();
+    try {
+      this.clips = JSON.parse(root.dataset.voice ?? '[]');
+    } catch {
+      this.clips = [];
+    }
+    if (this.clips.some(Boolean)) {
+      this.audio = new Audio();
+      this.audio.preload = 'auto';
+    }
 
     const track = root.querySelector('.xv-track')!;
     track.innerHTML = '';
@@ -322,12 +335,12 @@ export class Player {
       this.btn(k)?.addEventListener('click', () => {
         this.prefs[k] = !this.prefs[k];
         savePrefs(this.prefs);
-        if (k === 'voice' && !this.prefs.voice) stopSpeaking();
+        if (k === 'voice' && !this.prefs.voice) this.stopVoice();
         if (k === 'sfx' && this.prefs.sfx) ensureAudio();
         this.paintPrefs();
       }),
     );
-    if (!canSpeak()) this.btn('voice')?.setAttribute('hidden', '');
+    if (!canSpeak() && !this.audio) this.btn('voice')?.setAttribute('hidden', '');
     this.root.addEventListener('keydown', (e) => {
       const t = e.target as HTMLElement;
       if (t.closest('summary, details ol')) return;
@@ -456,6 +469,46 @@ export class Player {
     return api;
   }
 
+  /* ------------------------------------------------------------ voice -- */
+  private stopVoice() {
+    stopSpeaking();
+    if (this.audio) this.audio.pause();
+  }
+
+  /** iOS only lets audio start from a tap: prime the element during the click. */
+  private unlockAudio() {
+    if (!this.audio || this.unlocked) return;
+    this.unlocked = true;
+    const a = this.audio;
+    a.muted = true;
+    a.src = this.clips.find(Boolean)![0];
+    // Only pause the priming play if narration hasn't taken the element over since.
+    a.play().then(() => { if (a.muted) { a.pause(); a.muted = false; } }).catch(() => { a.muted = false; });
+  }
+
+  private holdOf(i: number) {
+    const c = this.clips[i];
+    return c ? Math.max(2600, c[1] + 350) : holdFor(this.spec.stages[i]);
+  }
+
+  /** Plays step i's narration: your recording if there is one, else the browser voice. */
+  private narrate(i: number): Promise<void> {
+    const c = this.clips[i];
+    if (c && this.audio) {
+      const a = this.audio;
+      return new Promise((resolve) => {
+        const done = () => { clearTimeout(guard); a.onended = a.onerror = a.onpause = null; resolve(); };
+        const guard = setTimeout(done, c[1] + 3000); // never hang on a stalled clip
+        a.onended = a.onerror = done;
+        a.muted = false;
+        a.src = c[0];
+        a.currentTime = 0;
+        a.play().then(() => { a.onpause = done; }).catch(done);
+      });
+    }
+    return canSpeak() ? speak(this.spec.stages[i].say) : Promise.resolve();
+  }
+
   /* -------------------------------------------------------- sequencer -- */
   private clearTimers() {
     this.timers.forEach((t) => { clearTimeout(t); clearInterval(t); });
@@ -491,7 +544,7 @@ export class Player {
       seg.classList.remove('active');
       seg.classList.toggle('done', k < i);
       if (k === i) {
-        (seg.firstElementChild as HTMLElement).style.setProperty('--seg-dur', `${holdFor(s)}ms`);
+        (seg.firstElementChild as HTMLElement).style.setProperty('--seg-dur', `${this.holdOf(i)}ms`);
         void seg.offsetWidth;
         seg.classList.add('active');
       }
@@ -512,17 +565,18 @@ export class Player {
     if (activePlayer && activePlayer !== this) activePlayer.pause();
     activePlayer = this;
     window.dispatchEvent(new CustomEvent('speech-stop-all'));
-    stopSpeaking();
+    this.stopVoice();
   }
 
   /** Rebuilds the stage up to step i silently, then plays step i. */
   seek(i: number) {
     if (!this.started) { this.started = true; this.root.classList.add('xv-started'); }
     ensureAudio();
+    this.unlockAudio();
     this.claim();
     this.token++;
     this.clearTimers();
-    stopSpeaking();
+    this.stopVoice();
     this.finished = false;
     this.root.classList.remove('xv-finished');
     this.stage.innerHTML = this.snapshot;
@@ -545,7 +599,7 @@ export class Player {
     SFX.whoosh(true);
     if (i === 0) SFX.thud();
     else SFX.blip(i);
-    const hold = holdFor(s);
+    const hold = this.holdOf(i);
     if (i === this.spec.stages.length - 1 && hold > 1400) {
       const r = Math.min(1100, Math.round(hold * 0.45));
       this.api.after(hold - r, () => SFX.riser(r));
@@ -554,8 +608,11 @@ export class Player {
 
     const timer = new Promise<void>((r) => this.timers.push(window.setTimeout(r, hold)));
     // Let the cut's whoosh land before the voice starts.
-    const voice = this.prefs.voice && canSpeak()
-      ? new Promise<void>((r) => this.timers.push(window.setTimeout(() => speak(s.say).then(r), 350)))
+    const voice = this.prefs.voice && (this.clips[i] || canSpeak())
+      ? new Promise<void>((r) => this.timers.push(window.setTimeout(() => {
+          if (tok !== this.token) return r();
+          this.narrate(i).then(r);
+        }, 350)))
       : Promise.resolve();
     Promise.all([timer, voice]).then(() => {
       if (tok !== this.token || !this.playing) return;
@@ -570,7 +627,7 @@ export class Player {
   private finish() {
     this.token++;
     this.clearTimers();
-    stopSpeaking();
+    this.stopVoice();
     this.playing = false;
     this.finished = true;
     this.segs.forEach((seg) => { seg.classList.remove('active'); seg.classList.add('done'); });
@@ -585,7 +642,7 @@ export class Player {
     if (!this.playing) return;
     this.token++;
     this.clearTimers();
-    stopSpeaking();
+    this.stopVoice();
     this.playing = false;
     this.segs[this.cur]?.classList.remove('active');
     this.paintPlay();

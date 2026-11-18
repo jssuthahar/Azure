@@ -56,6 +56,7 @@ Animated explainer videos for concepts that are hard to get from text alone (Rea
 - `run` must leave the stage in the state the next step expects: seeking replays earlier steps instantly. Prefer classes over inline styles; use `m.port` or selector endpoints for anything that depends on layout.
 - Stage CSS selectors start with `@S` (both), `@L` (landscape) or `@P` (portrait). Don't use class names that are Tailwind utilities (`fixed`, `hidden`, `flex`, `block`…): Tailwind scans these files.
 - Facts follow the lesson and Microsoft Learn. Numbers that are illustrative (token IDs, prices) are labelled as examples.
+- **Owner's own voice** (optional, per line): `npm run dev` → `/voice-studio/` (dev only, never built) to record each `say` line into `voice-src/<id>/` (git-ignored), then `npm run voice` to trim, loudness-match and encode `public/explainers/voice/<id>/<nn>.m4a` and update `src/explainers/voice.json`. A clip plays only while the line's fingerprint (`voiceHash`) still matches, so editing a `say` line falls back to the browser voice until it's re-recorded; `npm run voice` lists those. Never commit synthetic test clips as if they were the owner's voice.
 
 Do not put same-tab links to other pages inside the lesson body: the learner must stay on the page. Use the `related` field, the comparison/service links the layout adds, or `target="_blank"` for external references.
 

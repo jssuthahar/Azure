@@ -15,6 +15,7 @@
     "check:all": "npm run check:meta && npm run check:questions && npm run check:human && astro build",
     "qa:seo": "python3 scripts/qa/seo-audit.py",
     "qa": "node scripts/qa/run.mjs",
+    "voice": "node scripts/voice.mjs",
     "verify": "npm run check:all && npm run qa:seo && npm run qa",
     "og": "node scripts/make-og.mjs",
     "icons": "node scripts/make-icons.mjs",

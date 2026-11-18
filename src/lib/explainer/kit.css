@@ -324,8 +324,8 @@ html.xv-lock, html.xv-lock body { overflow: hidden; }
 .xv-stage .msd-particle { position: absolute; width: 12px; height: 12px; border-radius: 50%; background: var(--pc, var(--x-cyan)); box-shadow: 0 0 16px var(--pc, var(--x-cyan)); pointer-events: none; z-index: 8; }
 .xv-stage svg { display: block; }
 .xv-stage .msd-editor { background: #1e1e1e; border-radius: 20px; overflow: hidden; border: 1.5px solid #000; box-shadow: 0 18px 50px rgb(0 0 0 / 0.45); }
-.xv-stage .msd-editor .bar { height: 52px; background: #2b2b2e; display: flex; align-items: center; padding: 0 20px; gap: 9px; }
-.xv-stage .msd-editor .bar i { width: 14px; height: 14px; border-radius: 50%; display: block; }
+.xv-stage .msd-editor .ed-bar { height: 52px; background: #2b2b2e; display: flex; align-items: center; padding: 0 20px; gap: 9px; }
+.xv-stage .msd-editor .ed-bar i { width: 14px; height: 14px; border-radius: 50%; display: block; }
 .xv-stage .msd-editor .body { padding: 22px 26px; font-family: var(--x-mono); font-size: 26px; line-height: 1.65; color: #d4d4d4; }
 .xv-stage .msd-editor .kw { color: #ff7b72; }
 .xv-stage .msd-editor .fn { color: #dcdcaa; }

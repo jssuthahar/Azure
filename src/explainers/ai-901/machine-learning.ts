@@ -15,7 +15,7 @@ const spec: ExplainerSpec = {
   html: `
   <div class="ml">
     <div class="ml-rule msd-editor msd-reveal">
-      <div class="bar"><i style="background:#ff5f57"></i><i style="background:#febc2e"></i><i style="background:#28c840"></i><span>rules.py</span></div>
+      <div class="ed-bar"><i style="background:#ff5f57"></i><i style="background:#febc2e"></i><i style="background:#28c840"></i><span>rules.py</span></div>
       <div class="body"><span class="kw">if</span> colour == <span class="st">"yellow"</span> <span class="kw">and</span> shape == <span class="st">"oval"</span>:<br>&nbsp;&nbsp;&nbsp;&nbsp;<span class="kw">return</span> <span class="st">"mango"</span></div>
       <div class="ml-fail msd-reveal"><span aria-hidden="true">🥭</span><span>Green mango → <b>"not mango"</b> ✕</span></div>
     </div>
@@ -49,7 +49,7 @@ const spec: ExplainerSpec = {
   @S .ml{ position:relative; height:100%; display:flex; flex-direction:column; gap:18px; }
   @S .ml-rule{ position:absolute; inset:0 0 auto 0; z-index:7; transition:opacity .35s, transform .35s; }
   @S .ml-rule.gone{ opacity:0; transform:translateY(-20px); pointer-events:none; }
-  @S .ml-rule .bar span{ margin-left:14px; color:var(--x-dim); font-family:var(--x-mono); font-size:20px; }
+  @S .ml-rule .ed-bar span{ margin-left:14px; color:var(--x-dim); font-family:var(--x-mono); font-size:20px; }
   @S .ml-rule .body{ font-size:30px; }
   @S .ml-fail{ display:flex; gap:14px; align-items:center; padding:18px 24px; font-size:30px; color:var(--x-bad); background:rgb(244 74 106 / .1); }
   @S .ml-main{ flex:1; display:grid; grid-template-columns:1.25fr .8fr 1fr; gap:20px; min-height:0; align-items:stretch; }
