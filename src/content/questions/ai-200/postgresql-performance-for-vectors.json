@@ -1,0 +1,27 @@
+{ "cert": "ai-200", "domain": 2, "topic": "postgresql-performance-for-vectors", "questions": [
+  { "id": "dev-pgperf-1", "type": "single", "question": "Many instances of a containerized API connect to an Azure Database for PostgreSQL flexible server that runs in the General Purpose tier. The server reaches its connection limit during peak hours. You need to reduce the number of server connections with minimal code changes. What should you do?", "options": [
+    { "text": "Enable the built-in PgBouncer and change the application connection port to 6432", "why": "Correct. PgBouncer shares a small pool of server connections among many client connections, and only the port changes." },
+    { "text": "Move the server to the Burstable tier", "why": "Burstable has fewer resources and does not support the built-in PgBouncer." },
+    { "text": "Increase hnsw.ef_search", "why": "This affects vector search recall, not connection counts." },
+    { "text": "Add a GIN index on every jsonb column", "why": "Indexes do not reduce the number of connections." } ], "answer": [0], "explanation": "Set pgbouncer.enabled to true and connect on port 6432 to use server-side connection pooling.", "objective": "2.2.6" },
+  { "id": "dev-pgperf-2", "type": "single", "question": "You plan to create an IVFFlat index on a table that will store 800,000 embeddings. The table is currently empty. When should you create the index?", "options": [
+    { "text": "After the data is loaded, because IVFFlat learns its clusters from the existing rows", "why": "Correct. IVFFlat uses k-means on existing data, so building it on an empty table produces poor clusters." },
+    { "text": "Before any data is loaded, so that every insert is indexed", "why": "IVFFlat requires data to train its lists, and building early produces a poor index." },
+    { "text": "Only after converting the column to jsonb", "why": "IVFFlat indexes vector columns, not jsonb." },
+    { "text": "Never, because IVFFlat cannot be used with cosine distance", "why": "IVFFlat supports vector_cosine_ops." } ], "answer": [0], "explanation": "Load data first, then build vector indexes. This is required for a useful IVFFlat index and faster for HNSW.", "objective": "2.2.4" },
+  { "id": "dev-pgperf-3", "type": "single", "question": "Building an HNSW index on several million vectors takes many hours. The server has unused memory. Which setting should you increase for the session that builds the index?", "options": [
+    { "text": "maintenance_work_mem", "why": "Correct. HNSW builds are much faster when the graph fits in maintenance memory." },
+    { "text": "hnsw.ef_search", "why": "ef_search is a query-time setting and does not affect builds." },
+    { "text": "ivfflat.probes", "why": "This is a query-time setting for IVFFlat indexes." },
+    { "text": "pgbouncer.max_client_conn", "why": "This controls PgBouncer client connections, not index builds." } ], "answer": [0], "explanation": "Raise maintenance_work_mem (and max_parallel_maintenance_workers) for the build session.", "objective": "2.2.4" },
+  { "id": "dev-pgperf-4", "type": "single", "question": "A vector search workload on Azure Database for PostgreSQL is slow. Monitoring shows low CPU usage, and EXPLAIN (ANALYZE, BUFFERS) shows that most index pages are read from disk. The HNSW index is larger than the available memory. Which change is most likely to improve query latency?", "options": [
+    { "text": "Move to a Memory Optimized compute size with enough RAM to hold the index", "why": "Correct. HNSW performs best when the index stays in memory." },
+    { "text": "Move to the Burstable tier", "why": "Burstable offers less memory and CPU credits that deplete under sustained load." },
+    { "text": "Disable the built-in PgBouncer", "why": "Connection pooling does not affect whether index pages are in memory." },
+    { "text": "Decrease maintenance_work_mem", "why": "This affects maintenance operations such as index builds, not query reads." } ], "answer": [0], "explanation": "When the vector index does not fit in memory, adding RAM, for example with Memory Optimized compute, reduces disk reads.", "objective": "2.2.4" },
+  { "id": "dev-pgperf-5", "type": "single", "question": "During a monthly bulk load, an Azure Database for PostgreSQL flexible server is limited by disk IOPS. The storage capacity is sufficient. You need to raise IOPS for the load period without increasing storage size. Which storage option supports this requirement?", "options": [
+    { "text": "Premium SSD v2", "why": "Correct. Premium SSD v2 lets you adjust IOPS and throughput independently of capacity." },
+    { "text": "Standard HDD", "why": "Standard HDD is not offered for flexible server and has lower performance." },
+    { "text": "Azure Files", "why": "Azure Files is not used as flexible server data storage." },
+    { "text": "Azure Blob Storage cool tier", "why": "Blob storage tiers do not provide database disk IOPS." } ], "answer": [0], "explanation": "Premium SSD v2 allows IOPS and throughput to be set separately from disk size on General Purpose and Memory Optimized servers.", "objective": "2.2.4" }
+] }

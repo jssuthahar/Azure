@@ -1,0 +1,239 @@
+---
+title: PostgreSQL Schemas, Data Types and Indexes
+seoTitle: PostgreSQL Schema, Data Types and Indexes for AI | AI-200
+description: Design PostgreSQL tables for AI apps, pick vector, jsonb and timestamptz types, enable pgvector and choose B-tree, GIN and HNSW indexes with EXPLAIN ANALYZE.
+answer: >-
+  A good AI table in **Azure Database for PostgreSQL** keeps each fact in the right type: **uuid** or bigint keys, **text** for chunks, **jsonb** for flexible metadata, **timestamptz** for times and **vector(1536)** (from the **pgvector** extension) for embeddings. You first add `vector` to the **azure.extensions** server parameter, then run **CREATE EXTENSION vector**. Then you index for the way you query: **B-tree** for equality and ranges, **GIN** for jsonb, and **HNSW** or **IVFFlat** for vectors, and you prove it works with **EXPLAIN ANALYZE**.
+updated: 2026-11-18
+readingMinutes: 11
+keyTerms:
+  - term: pgvector
+    definition: The PostgreSQL extension that adds the vector data type, distance operators and vector indexes. Its extension name is vector.
+  - term: azure.extensions
+    definition: The flexible server parameter that lists which extensions are allowed. An extension must be on this allow-list before CREATE EXTENSION works.
+  - term: vector(n)
+    definition: A pgvector column type holding n single-precision numbers, for example vector(1536) for text-embedding-3-small.
+  - term: halfvec
+    definition: A pgvector type that stores each number in half precision, roughly halving storage and index size.
+  - term: jsonb
+    definition: PostgreSQL's binary JSON type. It can be indexed with GIN and queried with operators such as @>.
+  - term: B-tree index
+    definition: The default PostgreSQL index, good for equality, ranges and sorting on normal columns.
+  - term: GIN index
+    definition: A generalised inverted index, used for jsonb containment, arrays and full-text search.
+  - term: EXPLAIN ANALYZE
+    definition: Runs a query and shows the real plan, including whether an index or a sequential scan was used and how long each step took.
+interview:
+  - level: beginner
+    q: What steps do you take to use pgvector on Azure Database for PostgreSQL flexible server?
+    a: >-
+      Two steps. First I add vector to the azure.extensions server parameter, which is the allow-list. Then I connect to the database and run CREATE EXTENSION vector. After that I can create a column like embedding vector(1536).
+    followUps:
+      - q: Why vector and not pgvector?
+        a: >-
+          The project is called pgvector, but the extension's actual name is vector. Both the allow-list and CREATE EXTENSION use vector.
+  - level: intermediate
+    q: Why put metadata in jsonb instead of adding a column for everything?
+    a: >-
+      For fields that change often or differ per document, like source system tags, jsonb saves me schema changes. A GIN index makes queries like metadata @> '{"lang":"en"}' fast. But anything I filter on in almost every query, like tenant_id, gets its own typed column and a B-tree index, because that's faster and clearer.
+    followUps: []
+  - level: experienced
+    q: How would you reduce the compute and storage overhead of embeddings in PostgreSQL?
+    a: >-
+      Use fewer dimensions if the model allows it, since text-embedding-3 models accept a dimensions parameter. Store as halfvec instead of vector when the small precision loss is acceptable, which roughly halves the size. Index only the rows I search, using a partial index if one segment dominates. And check with EXPLAIN ANALYZE that the planner actually uses the index.
+    followUps: []
+  - level: scenario
+    q: A query that filters by tenant and orders by created_at is slow. EXPLAIN ANALYZE shows a Seq Scan. What do you do?
+    a: >-
+      Create a composite B-tree index on (tenant_id, created_at DESC), run ANALYZE so the statistics are fresh, and check the plan again. I'd expect an Index Scan and a big drop in actual time.
+    followUps: []
+revision:
+  keyPoints:
+    - Allow-list vector in azure.extensions, then CREATE EXTENSION vector in each database that needs it.
+    - "Pick types on purpose: uuid or bigint keys, text, jsonb, timestamptz, vector(n) or halfvec(n)."
+    - B-tree for equality, ranges and sorting. GIN for jsonb and full-text. HNSW or IVFFlat for vectors.
+    - A vector index only helps when its operator class matches the query operator, such as vector_cosine_ops with <=>.
+    - EXPLAIN ANALYZE shows Seq Scan versus Index Scan and the real time taken.
+  mistakes:
+    - Running CREATE EXTENSION vector before adding vector to azure.extensions.
+    - Declaring a column as vector with no dimensions, which can't be indexed.
+    - Building a cosine query (<=>) on top of an index created with vector_l2_ops, so the index is ignored.
+  examTips:
+    - '"Extension not allowed" error = add it to **azure.extensions** first.'
+    - '"Fast filter on a jsonb attribute" = **GIN** index.'
+    - '"Confirm the index is used" = **EXPLAIN ANALYZE**.'
+  quick:
+    - q: What's the extension name for pgvector?
+      a: vector
+    - q: Which index type suits jsonb containment queries?
+      a: GIN
+    - q: Which type stores a time with its time zone?
+      a: timestamptz
+    - q: What's the maximum number of dimensions you can index with a vector column using HNSW or IVFFlat?
+      a: 2,000.
+    - q: Which operator class goes with cosine distance?
+      a: vector_cosine_ops
+references:
+  - title: How to enable and use pgvector on Azure Database for PostgreSQL
+    url: https://learn.microsoft.com/azure/postgresql/extensions/how-to-use-pgvector
+  - title: Optimize performance when using pgvector
+    url: https://learn.microsoft.com/azure/postgresql/extensions/how-to-optimize-performance-pgvector
+  - title: How to use PostgreSQL extensions
+    url: https://learn.microsoft.com/azure/postgresql/extensions/how-to-allow-extensions
+related:
+  - postgresql-connect-and-query
+  - pgvector-rag
+  - postgresql-performance-for-vectors
+  - embeddings-and-vector-search
+---
+
+## Start with a question
+
+<Story question="Why does the same query take 3 milliseconds in one database and 3 seconds in another?">
+
+Picture two libraries with the same books. One has a catalogue sorted by author and a shelf map. The other has books piled in the order they arrived. Finding one book in the second library means checking every pile.
+
+Databases work the same way. The **schema** decides what each column holds, and **indexes** are the catalogue. Get them right and your AI app pulls the right 5 chunks out of 2 million rows before the user notices. Get them wrong and every question walks the whole table.
+
+</Story>
+
+## Explain it like I'm 10
+
+<Eli10>
+
+A table is like a class register. Each column has one job: name, roll number, birthday.
+
+If you put birthdays in the "name" column, sorting gets messy. So each column gets the right kind of box.
+
+An index is the alphabetical list at the back of a book. Instead of reading every page to find "volcano", you jump straight to page 87.
+
+For AI, there's a special box that holds a long list of numbers (the meaning of a sentence) and a special index that finds the closest meanings quickly.
+
+</Eli10>
+
+## The technical explanation
+
+### Step 1: allow the extension, then create it
+
+On flexible server, extensions are off until you allow them. The **pgvector** project's extension name is **vector**:
+
+1. In the portal, open **Server parameters**, find **azure.extensions** and tick **VECTOR**. Save. (The CLI equivalent is `az postgres flexible-server parameter set --name azure.extensions --value vector`.)
+2. Connect to your database and run:
+
+```sql
+SHOW azure.extensions;        -- check it's allowed
+CREATE EXTENSION IF NOT EXISTS vector;
+```
+
+`CREATE EXTENSION` works per database, so repeat it in each database that needs vectors. If you skip step 1, you get an error saying the extension isn't allow-listed.
+
+### Step 2: pick the right types
+
+Here's a table for document chunks in a multi-tenant support assistant:
+
+```sql
+CREATE TABLE doc_chunks (
+    id          uuid        PRIMARY KEY DEFAULT gen_random_uuid(),
+    tenant_id   text        NOT NULL,
+    doc_id      uuid        NOT NULL,
+    chunk_no    int         NOT NULL,
+    content     text        NOT NULL,
+    metadata    jsonb       NOT NULL DEFAULT '{}'::jsonb,   -- {"lang":"en","product":"router"}
+    created_at  timestamptz NOT NULL DEFAULT now(),
+    embedding   vector(1536)                                -- text-embedding-3-small
+);
+```
+
+| Type | Use it for | Why |
+| --- | --- | --- |
+| `uuid` / `bigint` | Keys | uuid is safe to generate anywhere; bigint is smaller and sorts well |
+| `text` | Chunks, titles | No length limit worries; use `varchar(n)` only when a limit is a real rule |
+| `jsonb` | Flexible metadata | Indexed with GIN, queried with `@>` and `->>` |
+| `timestamptz` | Times | Stores an exact moment, so time zones don't bite you later |
+| `vector(1536)` | Embeddings | Fixed dimensions are required for indexing |
+| `halfvec(1536)` | Embeddings, smaller | Half precision, about half the storage and index size |
+
+Two limits are worth knowing. A `vector` column without dimensions can't be indexed. And HNSW and IVFFlat indexes on `vector` support up to **2,000 dimensions**. If your model returns 3,072, either ask the model for fewer (the `dimensions` parameter on text-embedding-3 models) or store `halfvec`, which pgvector can index at higher dimensions.
+
+### Step 3: index for the way you query
+
+```sql
+-- B-tree: equality, ranges and sorting
+CREATE INDEX ix_chunks_tenant_created ON doc_chunks (tenant_id, created_at DESC);
+
+-- GIN: jsonb containment, such as metadata @> '{"lang":"en"}'
+CREATE INDEX ix_chunks_metadata ON doc_chunks USING gin (metadata);
+
+-- HNSW: approximate nearest neighbour search with cosine distance
+CREATE INDEX ix_chunks_embedding ON doc_chunks USING hnsw (embedding vector_cosine_ops);
+```
+
+| Index | Good for | Not good for |
+| --- | --- | --- |
+| **B-tree** (default) | `=`, `<`, `BETWEEN`, `ORDER BY` on normal columns | jsonb contents, vectors |
+| **GIN** | jsonb `@>`, arrays, full-text `tsvector` | Range queries |
+| **HNSW** | Vector search, best speed versus recall; can be built on an empty table | Very large builds on small memory |
+| **IVFFlat** | Vector search with faster builds and less memory | Building before data is loaded (it learns clusters from the rows) |
+
+The vector index has to match the operator your query uses. pgvector has three main ones:
+
+| Operator | Distance | Operator class |
+| --- | --- | --- |
+| `<->` | Euclidean (L2) | `vector_l2_ops` |
+| `<=>` | Cosine distance | `vector_cosine_ops` |
+| `<#>` | Negative inner product | `vector_ip_ops` |
+
+An index built with `vector_cosine_ops` speeds up `ORDER BY embedding <=> $1`, and is ignored by `ORDER BY embedding <-> $1`.
+
+### Step 4: prove it with EXPLAIN ANALYZE
+
+```sql
+EXPLAIN (ANALYZE, BUFFERS)
+SELECT id, content
+FROM doc_chunks
+ORDER BY embedding <=> '[0.012, -0.031, ...]'
+LIMIT 5;
+```
+
+Before the HNSW index, the plan shows `Seq Scan on doc_chunks` under a `Sort`, and the real time grows with every row. After it, you should see `Index Scan using ix_chunks_embedding`. If you still see a Seq Scan, check the operator class, check that `LIMIT` is there (the index is used for "top K" queries), and run `ANALYZE doc_chunks` so the planner has fresh statistics. On a huge table where `ANALYZE` itself would take too long, run `EXPLAIN` without `ANALYZE` to see the plan instantly.
+
+<TryIt labs="dev-postgres" text="Allow the vector extension, create the table, add an HNSW index and compare the query plan before and after." />
+
+<Callout type="exam">
+The exam likes the order of operations: **azure.extensions** allow-list first, then **CREATE EXTENSION vector**. It also tests matching: **GIN** for jsonb, **B-tree** for equality and ranges, **HNSW/IVFFlat** for vectors, and the operator class that matches the operator (**vector_cosine_ops** with `<=>`). "How do you confirm the index is used?" is **EXPLAIN ANALYZE**.
+</Callout>
+
+<DeepDive title="Cutting pgvector compute and storage">
+
+Every 1536-dimension `vector` is about 6 KB. Two million chunks is 12 GB before indexes, and an HNSW index adds more. A few levers help. Ask the embedding model for fewer dimensions if your tests show recall holds up. Switch to `halfvec`, which halves the bytes, and you can even keep `vector` in the table and index an expression cast to `halfvec`. Use a **partial index** (`WHERE tenant_id = 'bigcustomer'`) when one slice gets most of the searches, remembering that the query's `WHERE` must match the index's `WHERE` exactly for the planner to use it. And partition very large tables by tenant or date so searches touch fewer rows.
+
+</DeepDive>
+
+## Real-world business scenario
+
+<Scenario
+  company="Northwind Electronics (fictional)"
+  industry="Retail"
+  problem="Their product-help bot stored metadata as a text column of comma-separated tags and had no vector index. Searches across 1.8 million manual chunks took several seconds and often returned chunks from the wrong product line."
+  service="Azure Database for PostgreSQL flexible server with pgvector: jsonb metadata with a GIN index, a B-tree index on (tenant_id, created_at) and an HNSW index with vector_cosine_ops."
+  why="Typed columns let the filters use indexes, and the HNSW index turned the vector search from a full scan into a graph walk. EXPLAIN ANALYZE confirmed each change."
+  outcome="Typical retrieval time fell from seconds to tens of milliseconds, and the product filter stopped mixing up router and modem manuals."
+/>
+
+## When to use it and when not to
+
+<UseWhen
+  use={[
+    'Your app already uses PostgreSQL and you want vectors next to the business data you join with.',
+    'You need SQL filters (tenant, language, date) combined with similarity search.',
+    'You want to check every performance change with EXPLAIN ANALYZE.',
+  ]}
+  avoid={[
+    'Putting everything in one jsonb blob. Filter-heavy fields deserve their own typed, indexed columns.',
+    'Indexing every column "just in case". Each index slows writes and uses storage.',
+  ]}
+  alternatives={[
+    '<strong>Azure Cosmos DB for NoSQL vector search</strong> when the app is document-first and needs global distribution.',
+    '<strong>Azure AI Search</strong> when you want hybrid keyword plus vector ranking and semantic reranking without managing indexes yourself.',
+  ]}
+/>

@@ -1,0 +1,91 @@
+/**
+ * AI-200 "X vs Y" comparison pages: /ai-200/compare/<slug>/.
+ * Prices written as $12.34 are shown in the learner's currency (default INR);
+ * they are illustrative list prices for "price feel" only.
+ */
+import type { Comparison } from '../az-900/compare';
+
+export const COMPARISONS: Comparison[] = [
+  {
+    slug: 'app-service-vs-container-apps-vs-aks',
+    title: 'App Service vs Container Apps vs AKS',
+    seoTitle: 'App Service vs Container Apps vs AKS for Containers | AI-200',
+    description: 'Where should your containerised AI back end run? App Service, Azure Container Apps and AKS compared on control, scaling, revisions, cost and when to pick each.',
+    answer: 'Use **App Service** for one containerised web app or API with steady traffic. Use **Azure Container Apps** for microservices and queue-driven workers that need **revisions**, traffic splitting and **KEDA scale to zero** without running a cluster. Use **AKS** when you need the full **Kubernetes API**, custom node pools or GPUs.',
+    cols: ['App Service', 'Container Apps', 'AKS'],
+    rows: [
+      ['What you manage', 'The app and its settings', 'Apps, revisions and scale rules', 'Node pools, manifests, upgrades'],
+      ['Deploy with', 'Image + app settings', 'Image + template (az containerapp)', 'YAML manifests (kubectl, Helm)'],
+      ['Scaling', 'Autoscale rules on instances', 'KEDA rules (HTTP, queue, custom), down to zero', 'HPA, KEDA add-on, cluster autoscaler'],
+      ['Releases', 'Deployment slots', 'Revisions with traffic split', 'Rolling updates, your own canary tooling'],
+      ['Kubernetes API', 'No', 'No (built on Kubernetes)', 'Yes, full access'],
+      ['Price feel', 'From ≈ $13/month (B1)', 'Per second of use, free monthly grant', 'Pay for node VMs, from ≈ $70/month per node'],
+    ],
+    pick: [['App Service', 'you have one web API and want slots and custom domains with little effort'], ['Container Apps', 'you have several services or workers and want revisions and scale to zero'], ['AKS', 'you need kubectl, operators, GPU node pools or tight control of the cluster']],
+    examTip: '“Scale to zero on Service Bus queue length without managing a cluster” = **Container Apps + KEDA**. “Apply Deployment and Service manifests” = **AKS**. “Supply environment variables from app settings” = **App Service**.',
+    sim: { mode: 'containers', start: 0, tour: 'container-hosting-choice', intro: 'Follow one image to three hosts.' },
+    lessons: ['containers-for-ai-apps', 'app-service-containers', 'azure-container-apps', 'aks-manifests'],
+    faq: [['Can Container Apps run any container image?', 'Yes, any Linux image from a registry such as Azure Container Registry. It needs to listen on the target port if it uses ingress.'], ['Do I pay for the AKS control plane?', 'The Free tier has no control plane charge; the Standard tier adds an uptime SLA for a per-cluster fee. Nodes are billed as VMs.']],
+  },
+  {
+    slug: 'cosmos-db-vs-postgresql-vs-redis-for-vectors',
+    title: 'Cosmos DB vs PostgreSQL vs Redis for Vector Search',
+    seoTitle: 'Cosmos DB vs PostgreSQL vs Redis for Vectors | AI-200',
+    description: 'Where to store embeddings for RAG on Azure: Cosmos DB for NoSQL, PostgreSQL with pgvector or Azure Managed Redis. Indexes, filters, latency and best fit for each.',
+    answer: 'Use **Cosmos DB for NoSQL** when vectors belong next to JSON app data such as chat history, with global scale and the change feed. Use **PostgreSQL with pgvector** when you want SQL, joins and **metadata filters** in the same query. Use **Azure Managed Redis** for in-memory speed, such as a **semantic cache**.',
+    cols: ['Cosmos DB for NoSQL', 'PostgreSQL + pgvector', 'Azure Managed Redis'],
+    rows: [
+      ['Vector index', 'diskANN, quantizedFlat, flat', 'HNSW, IVFFlat', 'HNSW, FLAT (RediSearch)'],
+      ['Query', 'ORDER BY VectorDistance(...)', 'ORDER BY embedding <=> $1', 'FT.SEARCH with KNN'],
+      ['Filters', 'WHERE on any JSON property', 'Any SQL WHERE, joins', 'Tag and numeric filters'],
+      ['Latency', 'Milliseconds', 'Milliseconds', 'Sub-millisecond reads'],
+      ['Best for', 'AI apps with operational JSON data', 'RAG over relational data', 'Semantic caching, hot data'],
+    ],
+    pick: [['Cosmos DB', 'chat history, user profiles and vectors should live together and scale globally'], ['PostgreSQL + pgvector', 'your data is relational and you filter on many columns'], ['Managed Redis', 'you need the fastest lookups or a cache in front of a model']],
+    examTip: '“Add vector search to an existing PostgreSQL app” = **pgvector**. “Detect new items to embed them” = **Cosmos DB change feed**. “Reuse answers to similar questions” = **Redis semantic cache**.',
+    sim: { mode: 'vectordata', start: 3, tour: 'cosmos-vector', intro: 'Run a vector search, then compare it with pgvector and Redis.' },
+    lessons: ['embeddings-and-vector-search', 'cosmos-db-vector-search', 'pgvector-rag', 'redis-vector-search'],
+    faq: [['Do I need Azure AI Search for RAG?', 'Not always. Cosmos DB, PostgreSQL and Redis all do vector search. Azure AI Search adds hybrid ranking and skillsets when you need them.'], ['Which distance function should I use?', 'Cosine is the usual choice for OpenAI embeddings. Use the same function the embedding model was designed for.']],
+  },
+  {
+    slug: 'service-bus-vs-event-grid',
+    title: 'Azure Service Bus vs Event Grid',
+    seoTitle: 'Azure Service Bus vs Event Grid: When to Use Each | AI-200',
+    description: 'Service Bus vs Event Grid for AI back ends: messages vs events, pull vs push, dead-lettering, filters, retries and ordering, with the exam rule of thumb for each.',
+    answer: 'Use **Service Bus** for **messages**: commands or jobs a back end must process reliably, with peek-lock, sessions and **dead-letter queues**. Use **Event Grid** for **events**: small notices that something happened, **pushed** to handlers with **filters** and retries.',
+    cols: ['Service Bus', 'Event Grid'],
+    rows: [
+      ['Carries', 'Messages (the data and the intent)', 'Events (a fact: “blob created”)'],
+      ['Delivery', 'Receivers pull (or a trigger listens)', 'Pushed to the handler'],
+      ['Ordering', 'FIFO with sessions', 'Not guaranteed'],
+      ['Failed processing', 'Abandon, retry, dead-letter queue', 'Retry up to 24 hours, then optional dead-letter'],
+      ['Fan-out', 'Topics and subscriptions', 'Many event subscriptions per topic'],
+      ['Typical AI use', 'Queue summarisation jobs', 'Start indexing when a file is uploaded'],
+    ],
+    pick: [['Service Bus', 'the work must not be lost and may take time, like processing an order or a PDF'], ['Event Grid', 'you want to react quickly to something that happened in Azure or in your app']],
+    examTip: '“Messages that fail repeatedly must be kept for inspection” = **Service Bus dead-letter queue**. “Route only events whose subject ends with .pdf” = **Event Grid subject filter**.',
+    sim: { mode: 'messaging', start: 3, tour: 'service-bus-topic', intro: 'Publish to a topic, then filter events.' },
+    lessons: ['service-bus-queues', 'service-bus-topics-and-dead-letters', 'event-grid'],
+    faq: [['Can they work together?', 'Yes. Event Grid can deliver events into a Service Bus queue, so a worker processes them reliably at its own pace.'], ['What about Event Hubs?', 'Event Hubs is for streaming millions of telemetry events per second. It is not in the AI-200 skills list, but it is a common distractor.']],
+  },
+  {
+    slug: 'key-vault-vs-app-configuration',
+    title: 'Key Vault vs App Configuration',
+    seoTitle: 'Azure Key Vault vs App Configuration Explained | AI-200',
+    description: 'Azure Key Vault vs Azure App Configuration: what goes where, Key Vault references, feature flags, rotation and dynamic refresh, so settings and secrets stay safe.',
+    answer: '**Key Vault** stores **secrets**, keys and certificates, with **versions**, expiry dates and rotation (scheduled for keys, event-driven for secrets). **App Configuration** stores ordinary **settings** and **feature flags** with labels and live refresh. Put the secret in Key Vault and a **Key Vault reference** in App Configuration, so apps read everything from one place.',
+    cols: ['Key Vault', 'App Configuration'],
+    rows: [
+      ['Holds', 'Secrets, keys, certificates', 'Key-values, feature flags, snapshots'],
+      ['Versions', 'Every secret version kept', 'Revision history and snapshots'],
+      ['Environments', 'Usually a vault per environment', 'Labels (dev, test, prod) in one store'],
+      ['Refresh in app', 'Read latest version or cache with expiry', 'Dynamic refresh, sentinel key'],
+      ['Access', 'Managed identity + Key Vault Secrets User', 'Managed identity + App Configuration Data Reader'],
+    ],
+    pick: [['Key Vault', 'the value would hurt if it leaked: passwords, API keys, connection strings'], ['App Configuration', 'the value is a setting, a feature flag or differs per environment']],
+    examTip: '“Change a secret without redeploying” = a new **Key Vault** secret version (apps read the latest). “Turn a feature on without redeploying” = **App Configuration feature flag**.',
+    sim: { mode: 'observe', start: 2, tour: 'app-config', intro: 'Add a setting, a flag and a Key Vault reference.' },
+    lessons: ['key-vault-secrets', 'app-configuration'],
+    faq: [['Should I store secrets directly in App Configuration?', 'No. Store the secret in Key Vault and add a Key Vault reference in App Configuration. The app needs read access to both.'], ['Do apps need a key to reach either service?', 'No. Use a managed identity and Azure RBAC roles, so there is no credential to manage.']],
+  },
+];

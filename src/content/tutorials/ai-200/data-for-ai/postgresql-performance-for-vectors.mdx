@@ -1,0 +1,225 @@
+---
+title: Size and Tune PostgreSQL for Vector Workloads
+seoTitle: Size and Tune PostgreSQL for pgvector Workloads | AI-200
+description: Pick compute tier, memory and Premium SSD v2 storage for pgvector, tune HNSW and IVFFlat builds, and cut latency with psycopg_pool and built-in PgBouncer.
+answer: >-
+  Vector search on **Azure Database for PostgreSQL** is hungry for **memory**: HNSW indexes are fastest when they fit in RAM, so busy vector workloads usually run on **General Purpose** or **Memory Optimized** compute, not **Burstable**. Raise **maintenance_work_mem** for index builds, tune **m** and **ef_construction** (HNSW) or **lists** (IVFFlat, built after loading data), and size **IOPS** with **Premium SSD v2**. For throughput, reuse connections with **psycopg_pool** in the app and the built-in **PgBouncer** on port **6432**.
+updated: 2026-11-18
+readingMinutes: 12
+keyTerms:
+  - term: Compute tiers
+    definition: Burstable (cheap, CPU credits, for dev and test), General Purpose (balanced) and Memory Optimized (more RAM per vCore) for flexible server.
+  - term: maintenance_work_mem
+    definition: The memory PostgreSQL may use for maintenance work such as CREATE INDEX. HNSW builds are much faster when the graph fits in it.
+  - term: m and ef_construction
+    definition: HNSW build options. m is the maximum connections per node (default 16), ef_construction is the candidate list size while building (default 64).
+  - term: lists and probes
+    definition: IVFFlat options. lists is the number of clusters set at build time; ivfflat.probes is how many clusters a query searches.
+  - term: Premium SSD v2
+    definition: Flexible server storage where capacity, IOPS and throughput can be set separately.
+  - term: PgBouncer
+    definition: A lightweight connection pooler built into flexible server, enabled with pgbouncer.enabled and reached on port 6432.
+  - term: psycopg_pool
+    definition: The connection pool package for psycopg 3, which keeps open connections ready for reuse inside your app.
+interview:
+  - level: beginner
+    q: Why isn't Burstable a good choice for a production vector search workload?
+    a: >-
+      Burstable runs on CPU credits. Vector search and index builds keep the CPU busy for long stretches, so credits run out and the server slows right down. It's also short on memory, and HNSW wants its index in RAM. Burstable is fine for a dev box; production goes on General Purpose or Memory Optimized.
+    followUps:
+      - q: Does Burstable support the built-in PgBouncer?
+        a: >-
+          No. PgBouncer is supported on General Purpose and Memory Optimized only.
+  - level: intermediate
+    q: How do you speed up building an HNSW index on 5 million rows?
+    a: >-
+      Load the data first, then build. Raise maintenance_work_mem for the session so the graph fits in memory, and raise max_parallel_maintenance_workers so the build runs in parallel. I watch progress in pg_stat_progress_create_index. If I need it even faster, I can lower ef_construction a bit, accepting slightly lower recall.
+    followUps: []
+  - level: experienced
+    q: Your API opens a new PostgreSQL connection per request and latency is poor at peak. What do you change?
+    a: >-
+      I add psycopg_pool in the app so each worker reuses open connections, with a fresh Entra token for each new one. If there are many app instances, I also point them at PgBouncer on port 6432 with transaction pooling, so thousands of client connections share a small number of server connections. With transaction pooling I either keep PgBouncer's prepared statement tracking on or set prepare_threshold to None in psycopg.
+    followUps: []
+  - level: architecture
+    q: How do you decide between more vCores, more memory and more IOPS?
+    a: >-
+      I look at the metrics. If CPU is pinned during searches, I add vCores. If the HNSW index is bigger than shared buffers and reads hit disk, memory is the fix, so I move to Memory Optimized. If disk queue depth or IOPS are at the limit during loads, I raise IOPS on Premium SSD v2 without changing size. Connection errors point to pooling, not hardware.
+    followUps: []
+revision:
+  keyPoints:
+    - Burstable is for dev and test; vector workloads belong on General Purpose or Memory Optimized.
+    - HNSW is fastest when the index fits in memory. Memory Optimized gives the most RAM per vCore.
+    - Load data first, then build the index, with a higher maintenance_work_mem and parallel workers.
+    - "HNSW: m (16), ef_construction (64), hnsw.ef_search (40). IVFFlat: lists at build, ivfflat.probes at query."
+    - Premium SSD v2 lets you set IOPS and throughput separately from capacity.
+    - Reuse connections with psycopg_pool; share them across instances with PgBouncer on port 6432.
+  mistakes:
+    - Building an IVFFlat index on an empty table, so its clusters are learned from no data.
+    - Running a busy vector workload on Burstable and running out of CPU credits.
+    - Pointing an app at port 5432 and expecting PgBouncer pooling.
+  examTips:
+    - '"Speed up CREATE INDEX for HNSW" = raise **maintenance_work_mem** (and parallel maintenance workers).'
+    - '"Too many connections from many app instances" = built-in **PgBouncer**, port **6432**.'
+    - '"Raise IOPS without buying more storage" = **Premium SSD v2**.'
+  quick:
+    - q: Which port does the built-in PgBouncer use?
+      a: "6432"
+    - q: Which server parameter turns PgBouncer on?
+      a: pgbouncer.enabled
+    - q: When should you build an IVFFlat index?
+      a: After the data is loaded.
+    - q: Which tier gives the most memory per vCore?
+      a: Memory Optimized.
+    - q: What's the default HNSW m value?
+      a: "16"
+references:
+  - title: Optimize performance when using pgvector
+    url: https://learn.microsoft.com/azure/postgresql/extensions/how-to-optimize-performance-pgvector
+  - title: PgBouncer in Azure Database for PostgreSQL
+    url: https://learn.microsoft.com/azure/postgresql/connectivity/concepts-pgbouncer
+  - title: Compute options in Azure Database for PostgreSQL
+    url: https://learn.microsoft.com/azure/postgresql/compute-storage/concepts-compute
+  - title: Premium SSD v2 for Azure Database for PostgreSQL
+    url: https://learn.microsoft.com/azure/postgresql/compute-storage/concepts-storage-premium-ssd-v2
+related:
+  - postgresql-schema-and-indexes
+  - pgvector-rag
+  - postgresql-connect-and-query
+  - redis-caching
+---
+
+## Start with a question
+
+<Story question="The vector search was fast in testing. Why is it slow now that real users have arrived?">
+
+Think of a busy railway ticket counter. In testing there was one clerk and three customers. On launch day there are 500 people in the queue, every one of them wants a new form printed from scratch, and the clerk's desk is too small to keep the timetable open.
+
+That's what happens to an untuned database. Too little **memory** to keep the vector index handy, a **compute tier** that runs out of CPU credits, and an app that opens a brand-new **connection** for every request. Each of these has a specific fix.
+
+</Story>
+
+## Explain it like I'm 10
+
+<Eli10>
+
+Your database is a librarian. The vector index is a big map of where every book is.
+
+If the map fits on the librarian's desk (memory), finding books is quick. If it's in the basement (disk), every search means a trip downstairs.
+
+Building the map takes a big table too, so you give the librarian extra table space while building it.
+
+And instead of every visitor ringing the bell and waiting for the door to open, a doorman (the pool) keeps a few doors open all the time.
+
+</Eli10>
+
+## The technical explanation
+
+### 1. Pick the compute tier
+
+| Tier | What it's for | Vector workloads |
+| --- | --- | --- |
+| **Burstable** | Dev, test, low steady use; runs on CPU credits | Fine for trying pgvector. Long index builds and steady search burn credits. No built-in PgBouncer, no Premium SSD v2 |
+| **General Purpose** | Most production apps, balanced CPU and memory | A good default for moderate vector search |
+| **Memory Optimized** | More RAM per vCore | Large HNSW indexes that must stay in memory |
+
+The rule of thumb: HNSW is fast when the index lives in memory (`shared_buffers` plus the OS cache). Check its size with `SELECT pg_size_pretty(pg_relation_size('ix_chunks_embedding'));`. If it's bigger than the RAM you can spare, searches hit disk and latency jumps. Moving to Memory Optimized or a larger size is often the real fix, and you can scale compute up or down after creation (with a short restart).
+
+### 2. Size storage and IOPS
+
+Loading millions of embeddings and building indexes is heavy on disk. **Premium SSD v2** lets you set capacity, IOPS and throughput separately. A disk under 400 GiB gets a baseline of 3,000 IOPS and 125 MB/s at no extra cost, and you can raise IOPS (up to 80,000 on large enough disks) for a busy load day, then lower it again. The VM size also caps IOPS, so a 2-vCore server can't use all of an 80,000 IOPS disk. Premium SSD v2 works with General Purpose and Memory Optimized, not Burstable.
+
+### 3. Build indexes the smart way
+
+The Microsoft docs put it simply: load your data first, then build the index. It's faster and the result is better laid out.
+
+```sql
+-- in the session that builds the index
+SET maintenance_work_mem = '4GB';            -- let the HNSW graph fit in memory
+SET max_parallel_maintenance_workers = 7;    -- parallel build
+
+CREATE INDEX CONCURRENTLY ix_chunks_embedding
+  ON doc_chunks USING hnsw (embedding vector_cosine_ops)
+  WITH (m = 16, ef_construction = 64);
+
+-- watch progress from another session
+SELECT phase, round(100.0 * blocks_done / nullif(blocks_total, 0), 1) AS pct
+FROM pg_stat_progress_create_index;
+```
+
+`CONCURRENTLY` lets reads and writes continue during the build, at the cost of a slower build. Keep `maintenance_work_mem` within what the server can spare: setting it higher than free memory causes trouble.
+
+| | **HNSW** | **IVFFlat** |
+| --- | --- | --- |
+| How it works | Layered graph of neighbours | k-means clusters ("lists") |
+| Build options | `m` (default 16), `ef_construction` (default 64) | `lists`: start with rows/1000 up to 1M rows, sqrt(rows) above |
+| Query knob | `hnsw.ef_search` (default 40) | `ivfflat.probes` (default 1): start near lists/10 |
+| Build on empty table | Yes | No. Load data first, or clusters are meaningless |
+| Speed vs recall | Better | Lower, but faster to build and smaller |
+| Memory | More | Less |
+
+Higher `m` and `ef_construction` give better recall and a bigger, slower-to-build index. Most apps keep the defaults and tune `hnsw.ef_search` per query instead. If you set `ivfflat.probes` equal to `lists`, you're searching everything and the planner skips the index. Flexible server also offers a **DiskANN** index through the `pg_diskann` extension for very large datasets.
+
+### 4. Cut connection overhead
+
+Every new PostgreSQL connection means a TLS handshake, sign-in and a new server process. Two layers of pooling fix it.
+
+**In the app: psycopg_pool.** Each app instance keeps a few connections open and lends them out:
+
+```python
+from psycopg_pool import ConnectionPool
+
+pool = ConnectionPool(
+    conninfo="host=contoso-pg.postgres.database.azure.com port=6432 dbname=support user=rag-api sslmode=require",
+    connection_class=EntraConnection,   # fetches a fresh Entra token per new connection
+    min_size=2, max_size=10,
+    max_lifetime=3000,                  # recycle connections before tokens and servers get stale
+)
+
+def search(q, tenant):
+    with pool.connection() as conn:
+        return conn.execute(RETRIEVE_SQL, {"q": q, "tenant": tenant}).fetchall()
+```
+
+**On the server: built-in PgBouncer.** When 30 container replicas each hold 10 connections, that's 300 PostgreSQL processes. PgBouncer sits on the server, accepts up to thousands of client connections on **port 6432** and shares a small pool of real connections. Turn it on with the **pgbouncer.enabled** server parameter (no restart needed); then `pgbouncer.pool_mode` (default `transaction`), `pgbouncer.default_pool_size` and `pgbouncer.max_client_conn` appear. Your app only changes its port from 5432 to 6432. In transaction mode, session state such as `SET` (without `LOCAL`) doesn't stick between transactions, so use `SET LOCAL hnsw.ef_search` inside a transaction. If you hit prepared statement errors, set psycopg's `prepare_threshold=None` or keep PgBouncer's `max_prepared_statements` tracking on.
+
+<TryIt labs="dev-postgres" text="Build the HNSW index in the lab and compare the similarity query plan with and without it." />
+
+<Callout type="exam">
+Map the symptom to the fix. **CPU credits run out** = leave **Burstable**. **Index doesn't fit in memory** = **Memory Optimized** or more RAM. **Slow index build** = load first, raise **maintenance_work_mem**. **IOPS bottleneck** = **Premium SSD v2** with higher IOPS. **Too many connections or slow connects** = **psycopg_pool** plus **PgBouncer on 6432**. Recall versus speed at query time = **hnsw.ef_search** or **ivfflat.probes**.
+</Callout>
+
+<DeepDive title="Exact search can be fine, and parallel workers help">
+
+Without an index pgvector does an exact search, with perfect recall. For a table of 50,000 chunks per tenant that might be quick enough, especially if `max_parallel_workers_per_gather` lets PostgreSQL scan in parallel (look for `Workers Launched` in `EXPLAIN ANALYZE`). Approximate indexes earn their cost once tables reach hundreds of thousands of rows or latency targets get tight. Start with `EXPLAIN (ANALYZE, BUFFERS)`: `shared hit` means pages came from memory, `read` means disk. A plan full of reads is your hint that memory, not CPU, is the problem.
+
+</DeepDive>
+
+## Real-world business scenario
+
+<Scenario
+  company="Wide World Learning (fictional)"
+  industry="Education"
+  problem="A study-help app on a 2-vCore Burstable server stalled every evening when students logged in. CPU credits ran out, the 9 GB HNSW index didn't fit in memory, and 40 container replicas each opened their own connections."
+  service="A move to Memory Optimized with Premium SSD v2 (extra IOPS during nightly loads), psycopg_pool in each replica and the built-in PgBouncer on port 6432 in transaction mode."
+  why="The index now stays in memory, IOPS can be raised only during the load window, and PgBouncer turned hundreds of client connections into a few dozen server connections."
+  outcome="Evening search latency became steady, and nightly re-indexing finished within the window instead of running into the morning."
+/>
+
+## When to use it and when not to
+
+<UseWhen
+  use={[
+    'Your vector index is growing past what fits in memory on the current size.',
+    'Many app instances or serverless functions connect to the same server.',
+    'Load days need extra disk performance for a few hours.',
+  ]}
+  avoid={[
+    'Scaling hardware before you\'ve checked the plan. A missing or mismatched index is cheaper to fix.',
+    'Raising maintenance_work_mem server-wide to a huge value. Set it for the build session.',
+    'PgBouncer in transaction mode for code that depends on session state, unless you change that code.',
+  ]}
+  alternatives={[
+    '<strong>Read replicas</strong> to spread search reads away from the primary.',
+    '<strong>Azure Managed Redis</strong> to cache frequent answers so many requests never reach PostgreSQL.',
+  ]}
+/>

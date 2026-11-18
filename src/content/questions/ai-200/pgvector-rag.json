@@ -1,0 +1,27 @@
+{ "cert": "ai-200", "domain": 2, "topic": "pgvector-rag", "questions": [
+  { "id": "dev-pgrag-1", "type": "single", "question": "A table named chunks contains an embedding column of type vector(1536). You need to return the five chunks that are most similar to a query vector by using cosine distance. Which ORDER BY clause should you use?", "options": [
+    { "text": "ORDER BY embedding <=> %s LIMIT 5", "why": "Correct. <=> returns cosine distance, and ascending order returns the closest rows first." },
+    { "text": "ORDER BY embedding <=> %s DESC LIMIT 5", "why": "Descending order returns the least similar rows first because <=> is a distance." },
+    { "text": "ORDER BY embedding <-> %s DESC LIMIT 5", "why": "<-> is Euclidean distance, and descending order returns the furthest rows." },
+    { "text": "ORDER BY embedding = %s LIMIT 5", "why": "Equality does not measure similarity between vectors." } ], "answer": [0], "explanation": "Cosine distance is smaller for more similar vectors, so sort ascending with <=> and LIMIT the result.", "objective": "2.2.5" },
+  { "id": "dev-pgrag-2", "type": "single", "question": "A multi-tenant RAG application stores all tenants' document chunks in one PostgreSQL table. The application must never retrieve chunks that belong to another tenant, and it must return five relevant chunks for each question. What should you do?", "options": [
+    { "text": "Add a WHERE tenant_id = %s condition to the same query that orders by vector distance", "why": "Correct. Filtering in the query guarantees that every returned chunk belongs to the tenant." },
+    { "text": "Retrieve the top five chunks across all tenants and remove other tenants' chunks in application code", "why": "Other tenants' data reaches the application, and fewer than five relevant chunks may remain." },
+    { "text": "Instruct the language model to ignore chunks from other tenants", "why": "Instructions to the model do not prevent the data from being retrieved and exposed." },
+    { "text": "Increase the LIMIT to 50 and send all results to the model", "why": "This still retrieves other tenants' chunks and wastes tokens." } ], "answer": [0], "explanation": "Apply metadata filters such as tenant_id in the SQL WHERE clause alongside the vector ORDER BY.", "objective": "2.2.5" },
+  { "id": "dev-pgrag-3", "type": "single", "question": "A similarity search that uses an HNSW index returns relevant results, but users report that some expected documents are missing. You want to improve recall for the query without rebuilding the index. What should you do?", "options": [
+    { "text": "Increase hnsw.ef_search for the session or transaction", "why": "Correct. A larger candidate list at query time improves recall at the cost of speed." },
+    { "text": "Decrease the m parameter", "why": "m is set when the index is built, and lowering it reduces recall." },
+    { "text": "Set ivfflat.probes to 1", "why": "This setting applies to IVFFlat indexes, and 1 is the lowest recall setting." },
+    { "text": "Change the column type to halfvec", "why": "This requires changing data and indexes, and it does not improve recall." } ], "answer": [0], "explanation": "hnsw.ef_search (default 40) controls the size of the candidate list used during an HNSW search.", "objective": "2.2.3" },
+  { "id": "dev-pgrag-4", "type": "single", "question": "Documents were embedded by using text-embedding-3-small with 1,536 dimensions. A developer embeds user questions by using a different embedding model that also returns 1,536 dimensions. Retrieval results become irrelevant. What is the cause?", "options": [
+    { "text": "Questions and documents must be embedded with the same model for their distances to be meaningful", "why": "Correct. Different models produce incompatible vector spaces even when the dimensions match." },
+    { "text": "The HNSW index must be rebuilt every time a question is asked", "why": "Indexes are not rebuilt per query." },
+    { "text": "The <=> operator only works with 3,072 dimensions", "why": "The operator works with any matching dimension count." },
+    { "text": "The jsonb metadata column is missing a GIN index", "why": "A missing GIN index affects filter speed, not relevance." } ], "answer": [0], "explanation": "Use the same embedding model and dimensions for ingestion and for queries.", "objective": "2.2.5" },
+  { "id": "dev-pgrag-5", "type": "multi", "question": "You are implementing the generation step of a RAG application that retrieves chunks from Azure Database for PostgreSQL. You need to reduce the risk of the model inventing information. Which TWO actions should you take?", "options": [
+    { "text": "Include the retrieved chunks in the prompt and instruct the model to answer only from them", "why": "Correct. Grounding the prompt in retrieved content limits answers to your data." },
+    { "text": "Instruct the model to state that it does not know when the sources do not contain the answer", "why": "Correct. This prevents the model from filling gaps with guesses." },
+    { "text": "Remove the metadata filter so more chunks are available", "why": "This can add irrelevant or unauthorized content." },
+    { "text": "Send the full text of every document in the table", "why": "This exceeds context limits and dilutes the relevant content." } ], "answer": [0, 1], "explanation": "Ground the prompt with retrieved chunks and tell the model how to respond when the answer is not present.", "objective": "2.2.5" }
+] }

@@ -1,0 +1,257 @@
+---
+title: Configure and Deploy Function Apps
+seoTitle: Configure and Deploy Azure Function Apps | AI-200
+description: Pick a Functions hosting plan, set host.json and app settings, use identity-based connections and deploy Python function apps with Core Tools for AI-200.
+answer: >-
+  A **function app** is configured in three places: **host.json** (runtime behaviour for every function, deployed with the code), **app settings** (environment variables in Azure, replacing **local.settings.json**, which never gets deployed) and the **hosting plan**. **Flex Consumption** is the recommended serverless plan: it scales to zero, adds **always-ready instances** if you want no cold starts and supports virtual networks. You create one with `az functionapp create --flexconsumption-location` and deploy with `func azure functionapp publish` or a **zip deploy**. **Identity-based connections** replace connection strings with settings like `ServiceBusConnection__fullyQualifiedNamespace`.
+updated: 2026-11-18
+readingMinutes: 11
+keyTerms:
+  - term: Function app
+    definition: The Azure resource that hosts, scales and deploys a group of functions together.
+  - term: host.json
+    definition: A project file with runtime settings for every function in the app, such as logging, timeouts and trigger tuning.
+  - term: local.settings.json
+    definition: A local-only file holding app settings for Core Tools. It isn't published and shouldn't go into source control.
+  - term: App settings
+    definition: Name-value pairs on the function app in Azure, exposed to your code as environment variables.
+  - term: Flex Consumption plan
+    definition: The recommended serverless hosting plan for Functions, with per-function scaling, scale to zero, always-ready instances and VNet support.
+  - term: Always-ready instances
+    definition: Instances a Flex Consumption app keeps running for chosen trigger groups or functions, to avoid cold starts.
+  - term: Identity-based connection
+    definition: A trigger or binding connection that uses a managed identity, set with a __fullyQualifiedNamespace or similar suffix instead of a connection string.
+interview:
+  - level: beginner
+    q: Your function works locally but fails in Azure with "setting not found". Why?
+    a: >-
+      Because local.settings.json only exists on my laptop. Core Tools reads it, but it's never published. In Azure every setting has to be added as an app setting on the function app, through the portal, az functionapp config appsettings set or infrastructure code.
+    followUps: []
+  - level: intermediate
+    q: How do you connect a Service Bus trigger to the namespace without a connection string?
+    a: >-
+      Turn on a managed identity for the function app, give it Azure Service Bus Data Receiver on the queue (or Data Owner if it also sends), and replace the ServiceBusConnection setting with ServiceBusConnection__fullyQualifiedNamespace set to mynamespace.servicebus.windows.net. The decorator still says connection="ServiceBusConnection"; the runtime sees the suffix and uses the identity.
+    followUps: []
+  - level: experienced
+    q: Which hosting plan would you choose for a queue-driven AI worker that needs a VNet and fast cold starts?
+    a: >-
+      Flex Consumption. It supports virtual network integration, scales per function based on queue length, scales to zero when idle and lets me set one or two always-ready instances for the trigger that matters. I'd pick Premium only if I needed something Flex doesn't offer, like deployment slots or Windows, and Dedicated if I already pay for an App Service plan with spare room.
+    followUps: []
+  - level: scenario
+    q: Users complain the first summary request each morning takes several seconds longer. What would you change?
+    a: >-
+      That's a cold start after scaling to zero overnight. On Flex Consumption I'd set always-ready instances for the http group, for example az functionapp scale config always-ready set with http=1. I pay for that warm instance, so I'd keep the number small and watch the cost.
+    followUps: []
+revision:
+  keyPoints:
+    - host.json = runtime settings for all functions, deployed with the code. local.settings.json = local only, never published.
+    - In Azure, settings are app settings (environment variables). Use Key Vault references for secrets.
+    - Identity-based connections - <name>__fullyQualifiedNamespace plus a data role on the managed identity.
+    - Plans - Flex Consumption (recommended serverless), Premium (always warm, slots), Dedicated (App Service plan), Consumption (legacy).
+    - Deploy with func azure functionapp publish <app>, zip deploy or CI/CD. Python builds remotely on Linux.
+  mistakes:
+    - Expecting local.settings.json to be deployed.
+    - Pasting a connection string into function code instead of an app setting.
+    - Choosing the legacy Consumption plan for a new app that needs a VNet.
+  examTips:
+    - '"Serverless, scale to zero, VNet, avoid cold starts" = **Flex Consumption** with **always-ready instances**.'
+    - '"No secrets for the Service Bus trigger" = managed identity + **__fullyQualifiedNamespace**.'
+    - '"Change a setting for every function in the app" = **host.json**.'
+  quick:
+    - q: Which file is never deployed to Azure?
+      a: local.settings.json.
+    - q: Which file sets runtime behaviour for all functions?
+      a: host.json.
+    - q: Which suffix makes a Service Bus connection identity-based?
+      a: __fullyQualifiedNamespace.
+    - q: Which az functionapp create option makes a Flex Consumption app?
+      a: --flexconsumption-location.
+    - q: Which Core Tools command deploys a project?
+      a: func azure functionapp publish <app-name>.
+references:
+  - title: Azure Functions hosting options
+    url: https://learn.microsoft.com/azure/azure-functions/functions-scale
+  - title: Azure Functions Flex Consumption plan hosting
+    url: https://learn.microsoft.com/azure/azure-functions/flex-consumption-plan
+  - title: host.json reference for Azure Functions
+    url: https://learn.microsoft.com/azure/azure-functions/functions-host-json
+  - title: Work with Azure Functions Core Tools
+    url: https://learn.microsoft.com/azure/azure-functions/functions-run-local
+  - title: Tutorial - Use identity-based connections with triggers and bindings
+    url: https://learn.microsoft.com/azure/azure-functions/functions-identity-based-connections-tutorial-2
+related:
+  - functions-triggers-and-bindings
+  - service-bus-queues
+  - event-grid
+---
+
+## Start with a question
+
+<Story question="It ran fine on my laptop. Why does it break the moment I deploy it?">
+
+Moving into a new flat, you bring your furniture, but the electricity, water and Wi-Fi password come with the building. If you assume your old Wi-Fi password still works, nothing connects.
+
+A function app is the same. Your code moves, but the settings live in Azure. **local.settings.json** stays on your laptop, so in Azure you set **app settings**. You also pick the building: the **hosting plan** decides how the app scales, how fast it wakes up and whether it can reach a private network.
+
+</Story>
+
+## Explain it like I'm 10
+
+<Eli10>
+
+Think of a school canteen.
+
+The **hosting plan** is how many cooks you hire. Flex Consumption calls cooks in when kids queue up and sends them home when it's quiet. You can keep one cook waiting so the first kid doesn't wait.
+
+The **app settings** are the notes on the fridge: where the rice is, which supplier to call.
+
+**Deploying** is carrying the recipe book into the kitchen.
+
+</Eli10>
+
+## The technical explanation
+
+### Three files, three jobs
+
+| File | Where it lives | What goes in it |
+| --- | --- | --- |
+| `function_app.py` | Deployed | Your functions, triggers and bindings |
+| `host.json` | Deployed | Runtime settings for **every** function in the app: `version`, `extensionBundle`, logging, `functionTimeout`, trigger tuning |
+| `local.settings.json` | **Your machine only** | `Values` that become environment variables when you run `func start`. Never published, kept out of git. |
+
+A small `host.json` for a Service Bus worker:
+
+```json
+{
+  "version": "2.0",
+  "extensionBundle": { "id": "Microsoft.Azure.Functions.ExtensionBundle", "version": "[4.*, 5.0.0)" },
+  "logging": { "applicationInsights": { "samplingSettings": { "isEnabled": true } } },
+  "extensions": {
+    "serviceBus": { "maxConcurrentCalls": 8, "autoCompleteMessages": true }
+  }
+}
+```
+
+And the matching `local.settings.json`, using identity locally too:
+
+```json
+{
+  "IsEncrypted": false,
+  "Values": {
+    "FUNCTIONS_WORKER_RUNTIME": "python",
+    "AzureWebJobsStorage": "UseDevelopmentStorage=true",
+    "ServiceBusConnection__fullyQualifiedNamespace": "contoso-ai.servicebus.windows.net"
+  }
+}
+```
+
+### App settings and identity-based connections
+
+In Azure, every value from `Values` becomes an **app setting**, read by your code with `os.environ["NAME"]`. Changing an app setting restarts the app. Secrets belong in Key Vault, referenced from an app setting like `@Microsoft.KeyVault(SecretUri=...)`.
+
+Better still, skip the secret. When a binding has `connection="ServiceBusConnection"`, the runtime looks for settings that **start with** that name:
+
+| Setting | Meaning |
+| --- | --- |
+| `ServiceBusConnection` | A connection string (has a key in it) |
+| `ServiceBusConnection__fullyQualifiedNamespace` = `contoso-ai.servicebus.windows.net` | Use the app's **managed identity** |
+| `AzureWebJobsStorage__accountName` = `stcontosoai` | Host storage over identity instead of a key |
+
+Give the function app's managed identity the right data role: **Azure Service Bus Data Receiver** for a trigger, **Data Sender** for an output binding (or **Data Owner** for both). If you use a user-assigned identity, also add `ServiceBusConnection__credential` = `managedidentity` and `ServiceBusConnection__clientId`.
+
+```bash
+az functionapp config appsettings set -g rg-ai -n func-summarise \
+  --settings ServiceBusConnection__fullyQualifiedNamespace=contoso-ai.servicebus.windows.net
+```
+
+### Hosting plans
+
+| Plan | Scaling | Cold start | Network | Notes |
+| --- | --- | --- | --- | --- |
+| **Flex Consumption** | Event-driven, per function, to zero | Optional **always-ready** instances | VNet integration | Recommended serverless plan. Linux. Pay per execution plus any always-ready instances. Choose instance memory. |
+| **Premium** (Elastic Premium) | Event-driven, never below 1 | Pre-warmed, none | VNet integration | Linux or Windows, deployment slots, longer runs. Billed per core-second while instances run. |
+| **Dedicated** | Manual or autoscale | None (always on) | VNet integration | Runs on an App Service plan you already pay for. |
+| **Consumption** (legacy) | Event-driven, to zero | Yes | No VNet | Older serverless plan. Prefer Flex Consumption for new apps. |
+
+Functions can also run in **Azure Container Apps** if you ship them as a container image.
+
+### Create and deploy
+
+Create a Flex Consumption app (the storage account holds the deployment package and host state):
+
+```bash
+az functionapp create -g rg-ai -n func-summarise \
+  --storage-account stcontosoai \
+  --flexconsumption-location eastus \
+  --runtime python --runtime-version 3.12 \
+  --assign-identity '[system]'
+```
+
+Then deploy from the project folder. Core Tools packages the code and, for Python on Linux, runs a **remote build** that installs `requirements.txt` in Azure:
+
+```bash
+func azure functionapp publish func-summarise
+```
+
+Other options: **zip deploy** (`az functionapp deployment source config-zip -g rg-ai -n func-summarise --src app.zip`), the Azure Functions extension in VS Code, or a GitHub Actions / Azure Pipelines workflow. Whatever you pick, `local.settings.json` isn't sent.
+
+Keep a warm instance for the HTTP functions so the first morning request isn't slow:
+
+```bash
+az functionapp scale config always-ready set -g rg-ai -n func-summarise --settings http=1
+```
+
+<Flow
+  caption="From laptop to running function app"
+  steps={[
+    { title: 'Create', text: 'az functionapp create with --flexconsumption-location and a managed identity.' },
+    { title: 'Configure', text: 'App settings, including ServiceBusConnection__fullyQualifiedNamespace, plus a data role.' },
+    { title: 'Deploy', text: 'func azure functionapp publish packages the code and builds Python remotely.' },
+    { title: 'Scale', text: 'Instances follow the queue length and drop to zero, apart from any always-ready ones.' },
+  ]}
+/>
+
+<TryIt labs="dev-functions" text="Create a Flex Consumption function app, add the Service Bus connection as an app setting and deploy the package." />
+
+<Callout type="exam">
+Sort the clues. "Applies to every function in the app" is **host.json**. "Works locally, missing in Azure" is a value left in **local.settings.json** that needs to be an **app setting**. "No connection string or key" is a **managed identity** plus a `__fullyQualifiedNamespace` (or `__accountName`) setting. "Serverless, scale to zero, private network, no cold start" is **Flex Consumption** with **always-ready instances**. "Always warm, deployment slots" points to **Premium**. "Reuse an existing App Service plan" is **Dedicated**.
+</Callout>
+
+<DeepDive title="Timeouts, concurrency and what Flex doesn't do">
+
+`functionTimeout` in host.json caps how long a run can take. On Flex Consumption and Premium the default is 30 minutes and you can raise it; the legacy Consumption plan stops at 10 minutes. HTTP responses still have the roughly 230-second load balancer limit, so long AI calls go through a queue.
+
+Flex Consumption scales HTTP functions on concurrency (how many requests one instance handles at once) and queue triggers on backlog. You can tune `maxConcurrentCalls` in host.json to stop one instance from opening too many model calls and hitting rate limits. Flex Consumption doesn't support deployment slots, so if you need swap-based releases, use Premium or Dedicated, or deploy a second app and switch traffic in front of it.
+
+</DeepDive>
+
+## Real-world business scenario
+
+<Scenario
+  company="Litware Learning (fictional)"
+  industry="Education technology"
+  problem="An essay-feedback function ran on the legacy Consumption plan with a Service Bus connection string pasted into app settings. Security flagged the key, the function couldn't reach a private model endpoint, and the first essay each morning waited on a cold start."
+  service="The team moved to a Flex Consumption app created with az functionapp create --flexconsumption-location, turned on a system-assigned managed identity with Azure Service Bus Data Owner, replaced the key with ServiceBusConnection__fullyQualifiedNamespace, added VNet integration and set one always-ready instance for the http group. GitHub Actions now runs func azure functionapp publish on every merge."
+  why="No secret is left to leak, the app reaches the private endpoint, and the warm instance removes the morning delay while idle workers still scale to zero."
+  outcome="Security closed the finding, feedback starts within a second at 8 a.m., and the monthly bill stayed close to the old Consumption cost."
+/>
+
+## When to use it and when not to
+
+<UseWhen
+  use={[
+    'Flex Consumption for new serverless function apps, especially ones that need a VNet or fast first responses.',
+    'Identity-based connections whenever the target service supports Microsoft Entra ID.',
+    'host.json for settings that should apply to every function, app settings for values that differ per environment.',
+  ]}
+  avoid={[
+    'Committing local.settings.json or pasting keys into code.',
+    'The legacy Consumption plan for new apps that need private networking.',
+    'Flex Consumption when you depend on deployment slots or Windows-only features. Use Premium or Dedicated.',
+  ]}
+  alternatives={[
+    '<strong>Premium plan</strong> for always-warm apps with deployment slots.',
+    '<strong>Dedicated (App Service) plan</strong> when you already have spare App Service capacity.',
+    '<strong>Azure Container Apps</strong> when you want to ship functions as a container image.',
+  ]}
+/>

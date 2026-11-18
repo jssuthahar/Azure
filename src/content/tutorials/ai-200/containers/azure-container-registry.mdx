@@ -1,0 +1,224 @@
+---
+title: "Azure Container Registry: Store, Tag and Manage Images"
+seoTitle: "Azure Container Registry: Tags, Digests, Import | AI-200"
+description: Store and version container images in Azure Container Registry for AI-200. Push, import, list tags, lock a release, clean up old images and pull securely.
+answer: >-
+  **Azure Container Registry (ACR)** is a private registry at `myreg.azurecr.io` (your registry name plus azurecr.io) that stores images in **repositories**. A **tag** (`ragapi:1.4.0`) is a movable label, while a **digest** (`sha256:…`) identifies the exact image and never changes. You push with `docker push` after `az acr login`, copy public images in with **`az acr import`**, list versions with **`az acr repository show-tags`**, and let hosts pull with a **managed identity** that has the **AcrPull** role.
+updated: 2026-11-18
+readingMinutes: 9
+keyTerms:
+  - term: Login server
+    definition: The registry's address, such as myreg.azurecr.io, used in every image name.
+  - term: Repository
+    definition: A named collection of related images inside a registry, such as ragapi.
+  - term: Tag
+    definition: A human-readable label on an image version; it can be moved to a different image.
+  - term: Digest
+    definition: A sha256 hash of the image manifest that uniquely and permanently identifies one image.
+  - term: AcrPull
+    definition: The built-in Azure role that lets an identity pull images from a registry.
+  - term: az acr import
+    definition: Copies an image from another registry into ACR on the server side, without Docker on your machine.
+interview:
+  - level: beginner
+    q: What's the difference between a tag and a digest?
+    a: >-
+      A tag is a name I choose, like 1.4.0 or latest, and it can be pointed at a new image later. A digest is the sha256 of the manifest, so it always means the exact same bytes. If I need to be certain what runs in production, I deploy by digest or by a tag nobody reuses.
+    followUps:
+      - q: So why not always use latest?
+        a: >-
+          Because latest moves. Two nodes can pull at different times and run different code, and rolling back is guesswork.
+  - level: intermediate
+    q: How do you stop a released image from being overwritten?
+    a: >-
+      I lock it with az acr repository update and --write-enabled false. Pushing the same tag again then fails, and I can also set --delete-enabled false so nobody deletes it by mistake.
+    followUps: []
+  - level: experienced
+    q: How should App Service, Container Apps and AKS authenticate to ACR?
+    a: >-
+      With Microsoft Entra ID, not the admin account. I give the host a managed identity and assign AcrPull on the registry. For AKS that's az aks update --attach-acr, which assigns AcrPull to the kubelet identity.
+    followUps: []
+  - level: scenario
+    q: Your builds depend on python:3.12-slim from Docker Hub and you keep hitting pull rate limits. What do you do?
+    a: >-
+      Import the base image into our own registry with az acr import and point the Dockerfile at myreg.azurecr.io/python:3.12-slim. Builds pull from ACR, and we control when that base image changes.
+    followUps: []
+revision:
+  keyPoints:
+    - Image names are login-server/repository:tag, for example myreg.azurecr.io/ragapi:1.4.0.
+    - Tags move; digests don't. Use unique tags (version, build ID, commit) for deployments.
+    - az acr login signs Docker in with your Entra ID identity; the admin account is off by default.
+    - az acr import copies images between registries without a local Docker engine.
+    - az acr repository show-tags lists versions; --write-enabled false locks an image.
+    - SKUs are Basic, Standard and Premium; Premium adds geo-replication and private endpoints.
+  mistakes:
+    - Deploying :latest to production and losing track of which build is running.
+    - Enabling the admin account and sharing its password with every app.
+  examTips:
+    - '"Copy an image from Docker Hub or another registry without Docker installed" = **az acr import**.'
+    - '"List all versions of an image" = **az acr repository show-tags**.'
+    - '"Replicate the registry to several regions" = **Premium** SKU with **geo-replication**.'
+  quick:
+    - q: What is the login server format for ACR?
+      a: registry-name.azurecr.io, for example myreg.azurecr.io.
+    - q: Which value always identifies the exact same image?
+      a: The digest (sha256).
+    - q: Which command signs Docker in to ACR?
+      a: az acr login --name myreg
+    - q: Which SKU supports geo-replication?
+      a: Premium.
+    - q: Which flag on az acr repository update locks an image against overwrite?
+      a: --write-enabled false
+references:
+  - title: Introduction to Azure Container Registry
+    url: https://learn.microsoft.com/azure/container-registry/container-registry-intro
+  - title: Recommendations for tagging and versioning container images
+    url: https://learn.microsoft.com/azure/container-registry/container-registry-image-tag-version
+  - title: Import container images to a container registry
+    url: https://learn.microsoft.com/azure/container-registry/container-registry-import-images
+  - title: Lock a container image in an Azure container registry
+    url: https://learn.microsoft.com/azure/container-registry/container-registry-image-lock
+  - title: Azure Container Registry service tiers
+    url: https://learn.microsoft.com/azure/container-registry/container-registry-skus
+related:
+  - containers-for-ai-apps
+  - acr-tasks
+  - app-service-containers
+  - aks-manifests
+---
+
+## Start with a question
+
+<Story question="Production broke at 2 a.m. Which version of the app was it actually running?">
+
+The deployment said `ragapi:latest`. But `latest` was pushed three times yesterday, by two different people. Nobody can say for sure which build the servers pulled, so nobody knows what to roll back to.
+
+That's the problem a registry with good **tags** and **digests** solves. **Azure Container Registry** keeps every image version, and if you tag them properly you always know exactly what's running.
+
+</Story>
+
+## Explain it like I'm 10
+
+<Eli10>
+
+Imagine a library for lunchboxes. Each shelf holds one kind of lunch (a **repository**). Every box gets a sticky label like "Tuesday" (a **tag**). Someone can peel that label off and stick it on a different box.
+
+But every box also has a serial number stamped into the plastic (a **digest**). Nobody can change that. If you want to be sure you get the same box, ask for the serial number.
+
+</Eli10>
+
+## The technical explanation
+
+A registry has a **login server** (`myreg.azurecr.io`). Inside it are **repositories** (`ragapi`), and each image in a repository has one or more **tags** and exactly one **digest**.
+
+```bash
+# Create a registry (name: 5-50 letters and numbers, globally unique)
+az acr create --resource-group rg-ai --name myreg --sku Standard
+
+# Sign Docker in with your Microsoft Entra ID account
+az acr login --name myreg
+
+# Tag a local image with the full registry name and push it
+docker tag ragapi:dev myreg.azurecr.io/ragapi:1.4.0
+docker push myreg.azurecr.io/ragapi:1.4.0
+```
+
+### Seeing what's there
+
+```bash
+az acr repository list --name myreg --output table
+az acr repository show-tags --name myreg --repository ragapi --orderby time_desc --output table
+az acr manifest list-metadata --registry myreg --name ragapi   # digests, tags, dates
+```
+
+To run an exact image regardless of tags, reference the digest: `myreg.azurecr.io/ragapi@sha256:…`.
+
+### Bringing images in
+
+`az acr import` copies an image server side, so you don't need Docker on your machine and you stop depending on Docker Hub rate limits:
+
+```bash
+az acr import --name myreg \
+  --source docker.io/library/python:3.12-slim \
+  --image base/python:3.12-slim
+```
+
+It works from another ACR too (`--source otherreg.azurecr.io/ragapi:1.4.0`), including across subscriptions when you have access.
+
+### Tagging so you can trust it
+
+| Tag style | Example | Use it for |
+| --- | --- | --- |
+| Stable tag | `ragapi:1`, `ragapi:latest` | Base images that should pick up patches |
+| Unique tag | `ragapi:1.4.0`, `ragapi:build-482`, `ragapi:3f9c2e1` | Anything you deploy |
+
+Lock a release so nobody overwrites or deletes it:
+
+```bash
+az acr repository update --name myreg --image ragapi:1.4.0 \
+  --write-enabled false --delete-enabled false
+```
+
+Old builds pile up, so clean them: `az acr repository delete --name myreg --image ragapi:1.2.0`, or run `acr purge` on a schedule to remove tags older than a set age and untagged manifests.
+
+<Flow
+  caption="Push to pull"
+  steps={[
+    { title: 'Sign in', text: 'az acr login gets an Entra ID token for Docker.' },
+    { title: 'Push', text: 'docker push uploads only the layers ACR doesn\'t have yet.' },
+    { title: 'Version', text: 'The tag 1.4.0 and its sha256 digest now point at the same manifest.' },
+    { title: 'Pull', text: 'A host with AcrPull pulls by tag or digest.' },
+  ]}
+/>
+
+### Who can pull and push
+
+| Method | When |
+| --- | --- |
+| Your Entra ID account (`az acr login`) | Developers at the command line |
+| Managed identity + **AcrPull** | App Service, Container Apps, AKS pulling at run time |
+| Service principal or workload identity + **AcrPush** | CI/CD pipelines |
+| Admin account | Off by default; single-user testing only |
+
+**SKUs:** Basic, Standard and Premium share the same features for storing and pulling. Premium adds the most storage and throughput, **geo-replication** to other regions and **private endpoints**.
+
+<TryIt labs="dev-acr" text="Create a registry, push ragapi:1.4.0, list its tags and lock the release." />
+
+<Callout type="exam">
+Watch for these: copying an image from Docker Hub or another registry without Docker is **az acr import**. Listing versions is **az acr repository show-tags**. Preventing an overwrite is **--write-enabled false**. Pulling without passwords is a **managed identity** with **AcrPull**. Multi-region replication needs **Premium**. If a question says "the same tag now runs different code", the fix is **unique tags** or deploying by **digest**.
+</Callout>
+
+<DeepDive title="Why digests matter for rollbacks">
+
+When you push, ACR stores the layers and a manifest that lists them. The digest is the hash of that manifest. Kubernetes and Container Apps can resolve a tag to a digest when they start a replica, but if the tag moves between two replica starts, you end up with mixed versions. Deploying by a unique tag, or pinning the digest in the manifest, makes every replica run the same bytes and makes "roll back to the last good build" a one-line change.
+
+</DeepDive>
+
+## Real-world business scenario
+
+<Scenario
+  company="Northwind Health (fictional)"
+  industry="Healthcare"
+  problem="Several teams pushed ragapi:latest from their laptops. Production pods ran two different builds after a node restart, and an auditor asked which code processed patient queries on a given day."
+  service="A Premium Azure Container Registry with private endpoints. Builds push version tags such as 2.3.1 and lock them; AKS and Container Apps pull with managed identities that have AcrPull."
+  why="Locked unique tags and digests give a permanent record of what ran, and managed identities removed the shared admin password."
+  outcome="Every deployment record now names a digest the auditors can check, and rollbacks are a tag change."
+/>
+
+## When to use it and when not to
+
+<UseWhen
+  use={[
+    'You need private images for App Service, Container Apps or AKS.',
+    'You want to stop depending on public registry rate limits by importing base images.',
+    'You need geo-replicated images close to clusters in several regions (Premium).',
+  ]}
+  avoid={[
+    'Using the admin account for apps in production.',
+    'Relying on :latest for anything you deploy.',
+  ]}
+  alternatives={[
+    '<strong>ACR Tasks</strong> to build images inside the registry instead of pushing from laptops.',
+    '<strong>Microsoft Artifact Registry (mcr.microsoft.com)</strong> for public Microsoft base images you only pull.',
+  ]}
+/>

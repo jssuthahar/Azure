@@ -1,0 +1,218 @@
+---
+title: "Troubleshoot AKS and Container Apps: Logs, Events, Connectivity"
+seoTitle: Troubleshoot AKS and Container Apps Logs, Events | AI-200
+description: Fix broken containers on AKS and Azure Container Apps for AI-200 with kubectl logs and events, Container Apps system and console logs, KQL and network checks.
+answer: >-
+  When a container app breaks, check three places. **Logs** show what your app said: `kubectl logs` (add **`--previous`** for a crashed container) on AKS, **`az containerapp logs show --type console`** on Container Apps. **Events** show what the platform did: **`kubectl describe pod`** and **`kubectl get events`** on AKS, **`--type system`** logs on Container Apps. **Connectivity** checks (Service endpoints, ports, DNS, ingress) show whether traffic can reach the app. In Log Analytics, Container Apps logs land in **ContainerAppConsoleLogs_CL** and **ContainerAppSystemLogs_CL**.
+updated: 2026-11-18
+readingMinutes: 10
+keyTerms:
+  - term: CrashLoopBackOff
+    definition: A pod status meaning the container keeps starting and crashing, and Kubernetes is waiting longer between restarts.
+  - term: ImagePullBackOff
+    definition: A pod status meaning the node can't pull the image, usually a wrong name or tag or missing pull permission.
+  - term: Events
+    definition: Kubernetes records of what the platform did to an object, such as scheduling, pulling, probe failures and kills.
+  - term: System logs (Container Apps)
+    definition: Platform messages about revisions, replicas, image pulls and probes, stored in ContainerAppSystemLogs_CL.
+  - term: Console logs (Container Apps)
+    definition: Your container's stdout and stderr, stored in ContainerAppConsoleLogs_CL.
+  - term: Endpoints
+    definition: The list of pod IPs a Kubernetes Service currently forwards to; empty means no ready pods match.
+interview:
+  - level: beginner
+    q: A pod shows CrashLoopBackOff. What's your first command?
+    a: >-
+      kubectl logs on that pod with --previous, because the current container may have only just started and have nothing useful yet. The previous container's output usually shows the stack trace, like a missing environment variable.
+    followUps: []
+  - level: intermediate
+    q: What's the difference between logs and events?
+    a: >-
+      Logs are what my application printed. Events are what Kubernetes did: scheduled the pod, pulled the image, killed it for failing a liveness probe, couldn't find room on a node. If the app never started, there are no logs, so events are where I look.
+    followUps: []
+  - level: experienced
+    q: A Container Apps revision is stuck in a failed provisioning state. How do you find out why?
+    a: >-
+      az containerapp logs show with --type system shows the platform side: image pull errors, probe failures, the container exiting. I'd also check az containerapp revision list for the health state and, for history, query ContainerAppSystemLogs_CL in Log Analytics filtered by RevisionName_s.
+    followUps:
+      - q: And if the system logs look fine?
+        a: >-
+          Then the app itself is failing, so I read --type console, or ContainerAppConsoleLogs_CL, for its own output.
+  - level: scenario
+    q: Pods are Running and Ready but the Service returns nothing. What do you check?
+    a: >-
+      kubectl get endpoints for the Service. If it's empty, the selector doesn't match the pod labels. If it has IPs, I check targetPort against the containerPort, then test from inside the cluster with a temporary pod and curl the Service name.
+    followUps: []
+revision:
+  keyPoints:
+    - Logs (what the app said), events (what the platform did), connectivity (can traffic reach it).
+    - kubectl logs --previous reads the last crashed container; kubectl describe pod shows its events.
+    - ImagePullBackOff = wrong image or no AcrPull; check with az aks check-acr.
+    - Container Apps --type system is platform logs, --type console is your app's output.
+    - Log Analytics tables are ContainerAppConsoleLogs_CL and ContainerAppSystemLogs_CL; AKS container logs go to ContainerLogV2.
+  mistakes:
+    - Running kubectl logs on a CrashLoopBackOff pod without --previous and seeing nothing useful.
+    - Looking for application logs when the container never started; check events or system logs first.
+  examTips:
+    - '"Why can''t the pod start or pull its image?" = **kubectl describe pod** / **kubectl get events**.'
+    - '"See output from the container that just crashed" = **kubectl logs --previous**.'
+    - '"Query Container Apps app output in Log Analytics" = **ContainerAppConsoleLogs_CL**.'
+  quick:
+    - q: Which kubectl flag shows logs from the previous container instance?
+      a: --previous
+    - q: Which command shows a pod's events?
+      a: kubectl describe pod
+    - q: Which Container Apps log type shows platform messages?
+      a: system
+    - q: Which table holds Container Apps console output?
+      a: ContainerAppConsoleLogs_CL
+    - q: What does an empty Service endpoints list usually mean?
+      a: The Service selector doesn't match any ready pod.
+references:
+  - title: Monitor logs in Azure Container Apps with Log Analytics
+    url: https://learn.microsoft.com/azure/container-apps/log-monitoring
+  - title: View log streams in Azure Container Apps
+    url: https://learn.microsoft.com/azure/container-apps/log-streaming
+  - title: Troubleshooting in Azure Container Apps
+    url: https://learn.microsoft.com/azure/container-apps/troubleshooting
+  - title: Basic troubleshooting of Kubernetes clusters in AKS
+    url: https://learn.microsoft.com/troubleshoot/azure/azure-kubernetes/welcome-azure-kubernetes
+  - title: Monitor Kubernetes clusters using Container insights
+    url: https://learn.microsoft.com/azure/azure-monitor/containers/kubernetes-monitoring-enable
+related:
+  - aks-manifests
+  - azure-container-apps
+  - keda-scaling
+  - containers-for-ai-apps
+---
+
+## Start with a question
+
+<Story question="The app says it's deployed. So why does every request time out?">
+
+Maybe the container keeps crashing. Maybe it never started because the image name has a typo. Maybe it's running fine but listening on the wrong port, so nothing reaches it. Each of those looks the same from the outside: no answer.
+
+The trick is to look in the right place. **Logs** tell you what the app said, **events** tell you what the platform did, and **connectivity** checks tell you whether traffic can get there.
+
+</Story>
+
+## Explain it like I'm 10
+
+<Eli10>
+
+Your friend didn't turn up to football. Three questions find out why. Did they say anything (their **logs**)? Did their parents report anything, like "the car broke down" (the **events**)? Or did they turn up at the wrong field (**connectivity**)?
+
+You ask in that order, and you usually find the answer by the second question.
+
+</Eli10>
+
+## The technical explanation
+
+### Read the status first
+
+| What you see | It usually means | Look at |
+| --- | --- | --- |
+| `ImagePullBackOff` / `ErrImagePull` | Wrong image name or tag, or no pull permission | `kubectl describe pod`, `az aks check-acr` |
+| `CrashLoopBackOff` | The app starts and exits (missing env var, bad config, exception) | `kubectl logs <pod> --previous` |
+| `Pending` | No node has room for the pod's requests, or a volume can't attach | Events: `FailedScheduling` |
+| `OOMKilled` | The container went over its memory limit | `kubectl describe pod` (Last State), raise the limit |
+| Running but `0/1 READY` | The readiness probe fails | Events: `Unhealthy`, check probe path and port |
+
+### AKS: logs and events
+
+```bash
+kubectl get pods                                  # status column first
+kubectl describe pod ragapi-7d9f8c6b5-x2k4q       # Events at the bottom
+kubectl get events --sort-by=.metadata.creationTimestamp
+kubectl logs ragapi-7d9f8c6b5-x2k4q               # current container
+kubectl logs ragapi-7d9f8c6b5-x2k4q --previous    # the one that crashed
+kubectl logs deployment/ragapi -f                 # follow one pod of the Deployment
+az aks check-acr -g rg-ai -n aks-rag --acr myreg.azurecr.io   # can nodes pull?
+```
+
+### AKS: connectivity
+
+```bash
+kubectl get endpoints ragapi                      # empty = selector matches no ready pods
+kubectl port-forward deployment/ragapi 8000:8000  # bypass the Service, test the pod
+kubectl run tmp --rm -it --image=busybox -- wget -qO- http://ragapi/healthz   # DNS + Service from inside
+kubectl exec -it deployment/ragapi -- sh          # check env vars and outbound access
+```
+
+With **Container insights** turned on, logs and events also go to Log Analytics (`ContainerLogV2`, `KubeEvents`, `KubePodInventory`), so you can query history after the pod is gone.
+
+### Container Apps: system and console logs
+
+```bash
+az containerapp logs show -g rg-ai -n ragapi --type system --follow   # platform: pulls, probes, revision state
+az containerapp logs show -g rg-ai -n ragapi --type console --follow  # your app's stdout and stderr
+az containerapp revision list -g rg-ai -n ragapi -o table              # health and running state per revision
+az containerapp exec -g rg-ai -n ragapi --command sh                   # shell inside a replica
+```
+
+The same logs are in the environment's Log Analytics workspace:
+
+```kusto
+ContainerAppConsoleLogs_CL
+| where ContainerAppName_s == "ragapi"
+| where Log_s contains "Error"
+| project TimeGenerated, RevisionName_s, Log_s
+| order by TimeGenerated desc
+
+ContainerAppSystemLogs_CL
+| where ContainerAppName_s == "ragapi" and Reason_s != ""
+| project TimeGenerated, RevisionName_s, Reason_s, Log_s
+```
+
+Common Container Apps causes: **target port** doesn't match what the container listens on, ingress is **internal** when callers are outside, the registry identity has no **AcrPull**, a **secret** was changed but the revision wasn't restarted, or a **health probe** points at the wrong path. The portal's **Diagnose and solve problems** page checks many of these for you.
+
+<Flow
+  caption="A three-step check"
+  steps={[
+    { title: 'Status', text: 'kubectl get pods or revision list: what state is it in?' },
+    { title: 'Events', text: 'describe / get events / --type system: what did the platform do?' },
+    { title: 'Logs', text: 'logs --previous / --type console: what did the app say?' },
+    { title: 'Path', text: 'endpoints, ports, DNS, ingress: can traffic get there?' },
+  ]}
+/>
+
+<TryIt labs="dev-aks" text="Find out why three pods are failing: read the status, describe the pod, check logs with --previous and fix the manifest." />
+
+<Callout type="exam">
+Match the symptom to the tool. **Container never started** (image pull, scheduling) = **events**: `kubectl describe pod`, `kubectl get events`, or Container Apps **system** logs. **Container started then crashed** = **logs**, with `kubectl logs --previous`. **Running but unreachable** = **connectivity**: Service endpoints, `targetPort`, ingress settings. For Container Apps history in Log Analytics, use **ContainerAppConsoleLogs_CL** (app output) and **ContainerAppSystemLogs_CL** (platform).
+</Callout>
+
+<DeepDive title="Make the app easy to troubleshoot">
+
+Log to stdout and stderr, not to files inside the container, so both platforms collect it. Add a `/healthz` endpoint that checks only what the app needs to serve (not every downstream dependency, or one slow database fails every probe and the platform restarts healthy pods). Fail fast with a clear message when a required environment variable is missing, so `--previous` shows "SEARCH_KEY is not set" instead of a stack trace three calls deep. And send traces to Application Insights with OpenTelemetry so a timeout can be followed across services.
+
+</DeepDive>
+
+## Real-world business scenario
+
+<Scenario
+  company="Tailwind Traders (fictional)"
+  industry="Retail"
+  problem="After a release, the product-question API on AKS returned 502s. The team spent an hour reading application logs that were empty, because the new pods never got ready."
+  service="A runbook: kubectl get pods, kubectl describe pod for events, kubectl logs --previous, then kubectl get endpoints. Container insights sends ContainerLogV2 and KubeEvents to Log Analytics for history."
+  why="The events showed the readiness probe failing on /health while the new build served /healthz, which no application log would have shown."
+  outcome="The probe path was fixed in the manifest in minutes, and the runbook now starts with events, not logs."
+/>
+
+## When to use it and when not to
+
+<UseWhen
+  use={[
+    'kubectl describe and events when a pod is Pending, pulling or being killed.',
+    'kubectl logs --previous or Container Apps console logs when the app crashes.',
+    'Log Analytics queries when you need history after pods or replicas are gone.',
+  ]}
+  avoid={[
+    'Reading only application logs when the container never started.',
+    'Restarting pods over and over before reading why they failed.',
+  ]}
+  alternatives={[
+    '<strong>Application Insights</strong> with OpenTelemetry for request-level traces across services.',
+    '<strong>Diagnose and solve problems</strong> in the portal for guided checks on Container Apps and AKS.',
+  ]}
+/>

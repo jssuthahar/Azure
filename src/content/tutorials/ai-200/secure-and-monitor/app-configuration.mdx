@@ -1,0 +1,248 @@
+---
+title: "Azure App Configuration: Settings and Feature Flags"
+seoTitle: Azure App Configuration, Feature Flags in Python | AI-200
+description: Store settings, labels, feature flags and Key Vault references in Azure App Configuration, then load and refresh them from Python with the provider.
+answer: >-
+  **Azure App Configuration** is a central store for app settings. Each setting is a **key-value** with an optional **label** (such as `prod`) and a **content type**. **Feature flags** live under the `.appconfig.featureflag/` prefix, and **Key Vault references** point at secrets without storing them. In Python, `load()` from **azure-appconfiguration-provider** reads the keys you select, trims prefixes, resolves Key Vault references with a **keyvault_credential**, and refreshes when a **sentinel key** changes.
+updated: 2026-11-18
+readingMinutes: 10
+keyTerms:
+  - term: Azure App Configuration
+    definition: A managed service that stores application settings and feature flags centrally for many apps and environments.
+  - term: Key-value
+    definition: One setting in App Configuration, made of a key, a value, an optional label and an optional content type.
+  - term: Label
+    definition: An extra attribute on a key-value that lets the same key hold different values, usually one per environment.
+  - term: Feature flag
+    definition: An on or off switch, stored as a key-value with the .appconfig.featureflag/ prefix, that turns code paths on without a redeploy.
+  - term: Key Vault reference
+    definition: A key-value whose value is the URI of a Key Vault secret. The app's provider fetches the secret from Key Vault.
+  - term: Sentinel key
+    definition: One key you update last after a batch of changes. The app watches it and reloads all settings when it changes.
+  - term: Snapshot
+    definition: A named, read-only copy of a set of key-values at one moment, used for safe releases and rollbacks.
+interview:
+  - level: beginner
+    q: Why use App Configuration when App Service already has app settings?
+    a: >-
+      App settings belong to one app. When six services share the same model deployment name and endpoint, I'd rather change it once. App Configuration gives me one store with labels for each environment, feature flags and a change history, and apps can refresh without restarting.
+    followUps: []
+  - level: intermediate
+    q: Should you store an API key in App Configuration?
+    a: >-
+      No. I store the key in Key Vault and add a Key Vault reference in App Configuration. The reference holds only the secret's URI. The app's provider reads the URI and fetches the secret from Key Vault using its own identity, so App Configuration never sees the value.
+    followUps:
+      - q: What permissions does the app need then?
+        a: >-
+          App Configuration Data Reader on the store, and Key Vault Secrets User on the vault, because the app itself reads the secret.
+  - level: experienced
+    q: How do you make a Python app pick up a changed setting without a restart?
+    a: >-
+      I pass refresh_on with a WatchKey for a sentinel key and a refresh_interval to load(), then call config.refresh() regularly, for example once per request or in a background loop. When the interval has passed, the provider checks the sentinel. If it changed, it reloads every selected key.
+    followUps: []
+  - level: scenario
+    q: You want to try a new model with internal users first, then everyone. How?
+    a: >-
+      A feature flag in App Configuration, say use-gpt-5, with a targeting filter for the internal group. The code checks feature_manager.is_enabled("use-gpt-5") and picks the deployment. When I'm happy, I widen the audience or switch the flag on for everyone. No redeploy either way.
+    followUps: []
+  - level: architecture
+    q: How would you make a release's configuration repeatable and easy to roll back?
+    a: >-
+      I'd create a snapshot of the release's key-values, for example release-2026-11, and have production load that snapshot by name. A snapshot can't change, so production sees exactly what was tested. Rolling back means pointing at the previous snapshot.
+    followUps: []
+revision:
+  keyPoints:
+    - Settings are key-values with optional labels and content types.
+    - Feature flags are key-values under .appconfig.featureflag/.
+    - Key Vault references store a secret URI. The app's provider fetches the secret with its own identity.
+    - "load(endpoint, credential, selects, trim_prefixes, refresh_on, refresh_interval, keyvault_credential) builds a dict-like config."
+    - Dynamic refresh needs refresh_on (a sentinel key) plus calling config.refresh().
+    - Apps need App Configuration Data Reader; Data Owner can write.
+  mistakes:
+    - Putting secret values straight into App Configuration instead of Key Vault references.
+    - Setting refresh_on but never calling refresh(), so nothing changes.
+    - Forgetting Key Vault Secrets User for the app, so Key Vault references fail to resolve.
+  examTips:
+    - '"Same key, different value per environment" = **labels**.'
+    - '"Turn a feature on without redeploying" = **feature flag**.'
+    - '"Reload all settings only after a batch of changes" = **sentinel key** with refresh_on.'
+    - '"Immutable set of settings for a release" = **snapshot**.'
+  quick:
+    - q: Which prefix do feature flag keys use?
+      a: .appconfig.featureflag/
+    - q: Which Python package provides load()?
+      a: azure-appconfiguration-provider.
+    - q: Which load() argument strips a prefix from key names?
+      a: trim_prefixes.
+    - q: Which role lets an app read key-values?
+      a: App Configuration Data Reader.
+    - q: Where does the secret value of a Key Vault reference live?
+      a: In Key Vault. App Configuration stores only its URI.
+references:
+  - title: What is Azure App Configuration?
+    url: https://learn.microsoft.com/azure/azure-app-configuration/overview
+  - title: Azure App Configuration Python provider
+    url: https://learn.microsoft.com/azure/azure-app-configuration/reference-python-provider
+  - title: "Tutorial: Use dynamic configuration in Python"
+    url: https://learn.microsoft.com/azure/azure-app-configuration/enable-dynamic-configuration-python
+  - title: Use Key Vault references in an App Configuration store
+    url: https://learn.microsoft.com/azure/azure-app-configuration/use-key-vault-references-python
+  - title: Feature management overview
+    url: https://learn.microsoft.com/azure/azure-app-configuration/feature-management-overview
+related:
+  - key-vault-secrets
+  - app-service-containers
+  - azure-container-apps
+  - opentelemetry-tracing
+---
+
+## Start with a question
+
+<Story question="You want to switch the chatbot to a newer model. Why does that need six redeploys?">
+
+Because the deployment name is typed into six services' config files. Change it, rebuild six images, roll out six releases, and hope nobody missed one. Then, if the new model misbehaves, do it all again backwards.
+
+Settings that many services share shouldn't live inside each service. **Azure App Configuration** keeps them in one store. Change a value once, flip a **feature flag** for the new model, and every app reloads it in the next minute or so, without a restart.
+
+</Story>
+
+## Explain it like I'm 10
+
+<Eli10>
+
+Think of the notice board in the school corridor. It says "Sports day: Friday" and "Library: closed".
+
+Every class reads the same board, so the teacher changes it once and everyone knows. A sticky note says "Year 6 only" (that's a **label**). A light switch on the board turns the new game on or off (that's a **feature flag**).
+
+The board never shows the safe's combination. It just says "ask the office" (that's a **Key Vault reference**).
+
+</Eli10>
+
+## The technical explanation
+
+### What's in a store
+
+Each entry is a **key-value**:
+
+| Part | Example | Notes |
+| --- | --- | --- |
+| **Key** | `ChatApp:Model:Deployment` | Any string. `:` or `/` are common separators for a hierarchy. |
+| **Label** | `prod` | Optional. Same key, different value per label. No label is the "null label". |
+| **Value** | `gpt-4.1` | A string, up to the store's size limit. |
+| **Content type** | `application/json` | Optional. Tells the provider how to read the value. |
+
+Two special kinds of key-value:
+
+- **Feature flags** use keys under `.appconfig.featureflag/` (for example `.appconfig.featureflag/use-gpt-5`) with the content type `application/vnd.microsoft.appconfig.ff+json;charset=utf-8`. The value is JSON with `enabled` and optional **filters** (targeting a group, a percentage of users, a time window).
+- **Key Vault references** have the content type `application/vnd.microsoft.appconfig.keyvaultref+json;charset=utf-8` and a value like `{"uri":"https://kv-tailspin.vault.azure.net/secrets/cosmos-key"}`. App Configuration stores only the URI.
+
+```bash
+az appconfig kv set -n appcs-tailspin --key ChatApp:Model:Deployment --value gpt-4.1 --label prod
+az appconfig kv set-keyvault -n appcs-tailspin --key ChatApp:Cosmos:Key \
+  --secret-identifier https://kv-tailspin.vault.azure.net/secrets/cosmos-key --label prod
+az appconfig feature set -n appcs-tailspin --feature use-gpt-5 --label prod
+```
+
+### Access
+
+Use Microsoft Entra ID, not access keys. The app's managed identity gets **App Configuration Data Reader** on the store (**Data Owner** can also write). If the store has Key Vault references, the same identity needs **Key Vault Secrets User** on the vault, because the provider in your app fetches the secret, not App Configuration.
+
+<TryIt labs="dev-key-vault" text="Add key-values with a prod label, create a feature flag and add a Key Vault reference to an existing secret." />
+
+### Load settings in Python
+
+```bash
+pip install azure-appconfiguration-provider azure-identity featuremanagement
+```
+
+```python
+import os
+from azure.identity import DefaultAzureCredential
+from azure.appconfiguration.provider import load, SettingSelector, WatchKey
+from featuremanagement import FeatureManager
+
+credential = DefaultAzureCredential()
+
+config = load(
+    endpoint=os.environ["APP_CONFIG_ENDPOINT"],          # https://appcs-tailspin.azconfig.io
+    credential=credential,
+    selects=[
+        SettingSelector(key_filter="ChatApp:*"),                     # no-label defaults first
+        SettingSelector(key_filter="ChatApp:*", label_filter="prod") # prod values win
+    ],
+    trim_prefixes=["ChatApp:"],                         # "ChatApp:Model:Deployment" -> "Model:Deployment"
+    keyvault_credential=credential,                     # resolves Key Vault references
+    refresh_on=[WatchKey("ChatApp:Sentinel", label="prod")],
+    refresh_interval=60,                                # seconds between sentinel checks
+    feature_flag_enabled=True,
+)
+
+deployment = config["Model:Deployment"]   # behaves like a read-only dict
+cosmos_key = config["Cosmos:Key"]         # already the secret value from Key Vault
+
+features = FeatureManager(config)
+
+def handle_request(question: str):
+    config.refresh()                      # cheap: checks the sentinel only when the interval has passed
+    model = "gpt-5" if features.is_enabled("use-gpt-5") else config["Model:Deployment"]
+    ...
+```
+
+A few details that catch people:
+
+- **Order of selectors matters.** Later selectors override earlier ones for the same key, so put the null-label defaults first and the environment label after.
+- **`refresh()` is yours to call.** `refresh_on` and `refresh_interval` only say *what* to watch and *how often* to check. If you never call `config.refresh()`, nothing reloads.
+- **The sentinel goes last.** Change the five settings you need, then update `ChatApp:Sentinel`. The app sees the sentinel change and reloads all of them together, so it never runs with half old, half new values.
+
+<Flow
+  caption="Dynamic refresh with a sentinel key"
+  steps={[
+    { title: 'Edit', text: 'You change several key-values in the store.' },
+    { title: 'Sentinel', text: 'You update ChatApp:Sentinel last.' },
+    { title: 'Check', text: 'config.refresh() runs; the interval has passed, so it reads the sentinel.' },
+    { title: 'Reload', text: 'The sentinel changed, so every selected key is loaded again.' },
+  ]}
+/>
+
+### Snapshots
+
+A **snapshot** is a named, read-only set of key-values captured from filters at one moment, for example `release-2026-11`. Load it with `SettingSelector(snapshot_name="release-2026-11")`. Because it can't change, production runs exactly what you tested, and rollback means loading the previous snapshot.
+
+<Callout type="exam">
+Map the requirement to the feature. "Different values for dev and prod with the same key" is **labels**. "Enable a feature for some users without a deployment" is a **feature flag** (with a targeting filter). "Settings must include a secret but the secret must stay in Key Vault" is a **Key Vault reference**, and the app needs **Key Vault Secrets User** too. "Reload only after several values change" is a **sentinel key** in `refresh_on`.
+</Callout>
+
+<DeepDive title="App Configuration or Key Vault?">
+
+They do different jobs and usually work together. Key Vault is for values that would hurt if leaked; it has hardware-backed keys, rotation events and tight per-secret access. App Configuration is for everything else your app reads: deployment names, timeouts, prompt templates, feature flags. It has labels, snapshots, change history and fast refresh. Putting plain settings in Key Vault makes them awkward to change and costs more operations; putting secrets in App Configuration means anyone with Data Reader can read them. The Key Vault reference joins the two: one config source in code, secrets still guarded by Key Vault.
+
+</DeepDive>
+
+## Real-world business scenario
+
+<Scenario
+  company="Contoso Learning (fictional)"
+  industry="Education technology"
+  problem="Six services in Container Apps each had the model deployment name and prompt settings in environment variables. Every model change took a day of redeploys, and dev settings once leaked into production."
+  service="One App Configuration store with dev and prod labels, a use-gpt-5 feature flag with a targeting filter for teachers, Key Vault references for the Cosmos DB key, and the Python provider refreshing on a sentinel key every 60 seconds."
+  why="Settings changed in one place reach every service in about a minute, labels keep environments apart, and the secrets themselves stay in Key Vault."
+  outcome="The team switched teachers to the new model on a Tuesday afternoon, watched the results, and rolled it out to students on Thursday without a single deployment."
+/>
+
+## When to use it and when not to
+
+<UseWhen
+  use={[
+    'Several services share settings such as model deployment names or endpoints.',
+    'You want feature flags to roll out a new model or prompt gradually.',
+    'You need different values per environment, change history or immutable release snapshots.',
+  ]}
+  avoid={[
+    'Storing secret values directly. Keep them in Key Vault and add a reference.',
+    'A single small app with a couple of settings that never change. App settings are enough.',
+  ]}
+  alternatives={[
+    '<strong>Azure Key Vault</strong> for the secrets themselves.',
+    '<strong>App settings in App Service or Container Apps</strong> for values that belong to one app only.',
+  ]}
+/>

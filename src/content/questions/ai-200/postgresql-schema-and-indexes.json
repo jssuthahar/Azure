@@ -1,0 +1,27 @@
+{ "cert": "ai-200", "domain": 2, "topic": "postgresql-schema-and-indexes", "questions": [
+  { "id": "dev-pgschema-1", "type": "single", "question": "A developer runs CREATE EXTENSION vector on an Azure Database for PostgreSQL flexible server and receives an error stating that the extension is not allow-listed. What should the developer do first?", "options": [
+    { "text": "Add vector to the azure.extensions server parameter", "why": "Correct. Extensions must be allow-listed in azure.extensions before CREATE EXTENSION succeeds." },
+    { "text": "Run CREATE EXTENSION pgvector instead", "why": "The extension name is vector. pgvector is the project name and will not resolve the allow-list error." },
+    { "text": "Restart the server in a different region", "why": "The region does not affect the extension allow-list." },
+    { "text": "Change the compute tier to Memory Optimized", "why": "The compute tier does not control which extensions are allowed." } ], "answer": [0], "explanation": "On flexible server, add the extension to azure.extensions, then run CREATE EXTENSION vector in each database.", "objective": "2.2.2" },
+  { "id": "dev-pgschema-2", "type": "single", "question": "A table stores document metadata in a jsonb column named metadata. Queries frequently use the condition metadata @> '{\"lang\": \"en\"}'. Which index type should you create on the metadata column?", "options": [
+    { "text": "GIN", "why": "Correct. GIN indexes support jsonb containment queries that use @>." },
+    { "text": "B-tree", "why": "B-tree indexes support equality and range comparisons on scalar values, not jsonb containment." },
+    { "text": "HNSW", "why": "HNSW indexes are for vector similarity search." },
+    { "text": "IVFFlat", "why": "IVFFlat indexes are for vector similarity search." } ], "answer": [0], "explanation": "Use a GIN index for jsonb containment operators.", "objective": "2.2.3" },
+  { "id": "dev-pgschema-3", "type": "single", "question": "You create an HNSW index by using the vector_l2_ops operator class. Your application query orders results by embedding <=> @query_vector. EXPLAIN ANALYZE shows a sequential scan. What should you do?", "options": [
+    { "text": "Re-create the index by using the vector_cosine_ops operator class", "why": "Correct. The <=> operator is cosine distance, so the index must use vector_cosine_ops to be considered." },
+    { "text": "Increase hnsw.ef_search", "why": "ef_search tunes an index that is already used. It does not make the planner use a mismatched index." },
+    { "text": "Change the column type to jsonb", "why": "jsonb cannot be used for vector similarity search." },
+    { "text": "Remove the LIMIT clause from the query", "why": "Vector indexes are used for top-K queries, so removing LIMIT makes index use less likely." } ], "answer": [0], "explanation": "The operator class of a vector index must match the distance operator in the query.", "objective": "2.2.3" },
+  { "id": "dev-pgschema-4", "type": "multi", "question": "You are designing a PostgreSQL table to store document chunks and their embeddings from a model that returns 1,536 dimensions. Which TWO column definitions are appropriate?", "options": [
+    { "text": "embedding vector(1536)", "why": "Correct. A vector column with fixed dimensions can be stored and indexed." },
+    { "text": "created_at timestamptz", "why": "Correct. timestamptz stores an exact point in time with time zone handling." },
+    { "text": "embedding vector", "why": "A vector column without dimensions cannot be indexed." },
+    { "text": "embedding text", "why": "Storing embeddings as text prevents the use of vector operators and indexes." } ], "answer": [0, 1], "explanation": "Use vector(n) with the model's dimensions and timestamptz for timestamps.", "objective": "2.2.2" },
+  { "id": "dev-pgschema-5", "type": "single", "question": "A developer adds an index to a slow query and wants to confirm that PostgreSQL now uses the index and to see the actual execution time. Which command should the developer run?", "options": [
+    { "text": "EXPLAIN ANALYZE followed by the query", "why": "Correct. EXPLAIN ANALYZE runs the query and reports the actual plan and timings." },
+    { "text": "SHOW azure.extensions", "why": "This lists allow-listed extensions, not query plans." },
+    { "text": "VACUUM FULL on the table", "why": "VACUUM FULL rewrites the table and does not show query plans." },
+    { "text": "SELECT version()", "why": "This returns the server version only." } ], "answer": [0], "explanation": "EXPLAIN ANALYZE shows whether an Index Scan or Seq Scan was used and the real time taken.", "objective": "2.2.3" }
+] }

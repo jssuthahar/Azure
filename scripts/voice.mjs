@@ -16,6 +16,7 @@
 import { execFileSync } from 'node:child_process';
 import { existsSync, mkdirSync, readdirSync, readFileSync, renameSync, statSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
+import { currentLines, voiceHash } from './lib/explainer-lines.mjs';
 
 const ROOT = process.cwd();
 const SRC = join(ROOT, 'voice-src');
@@ -23,38 +24,11 @@ const OUT = join(ROOT, 'public/explainers/voice');
 const MANIFEST = join(ROOT, 'src/explainers/voice.json');
 const FORCE = process.argv.includes('--force');
 
-/** Same as voiceHash() in src/lib/explainer/types.ts. */
-function voiceHash(text) {
-  let h = 0x811c9dc5;
-  for (const ch of text.replace(/\s+/g, ' ').trim()) {
-    h ^= ch.codePointAt(0);
-    h = Math.imul(h, 0x01000193) >>> 0;
-  }
-  return h.toString(16).padStart(8, '0');
-}
-
 try {
   execFileSync('ffmpeg', ['-version'], { stdio: 'ignore' });
 } catch {
   console.error('ffmpeg is needed: brew install ffmpeg');
   process.exit(1);
-}
-
-/** The current `say` lines, read from the spec sources (no TS build needed). */
-function currentLines() {
-  const lines = {};
-  const base = join(ROOT, 'src/explainers');
-  for (const exam of readdirSync(base)) {
-    const dir = join(base, exam);
-    if (!statSync(dir).isDirectory()) continue;
-    for (const f of readdirSync(dir).filter((x) => x.endsWith('.ts'))) {
-      const src = readFileSync(join(dir, f), 'utf8');
-      const id = src.match(/\bid:\s*'([^']+)'/)?.[1];
-      if (!id) continue;
-      lines[id] = [...src.matchAll(/\bsay:\s*(['"`])((?:\\.|(?!\1).)*)\1/gs)].map((m) => m[2].replace(/\\(['"`\\])/g, '$1'));
-    }
-  }
-  return lines;
 }
 
 const manifest = existsSync(MANIFEST) ? JSON.parse(readFileSync(MANIFEST, 'utf8')) : {};
@@ -101,7 +75,7 @@ if (existsSync(SRC)) {
       ].join(',');
       execFileSync('ffmpeg', ['-y', '-loglevel', 'error', '-i', input, '-af', af, '-ac', '1', '-ar', '44100', '-c:a', 'aac', '-b:a', '96k', '-movflags', '+faststart', out]);
       const secs = Number(execFileSync('ffprobe', ['-v', 'error', '-show_entries', 'format=duration', '-of', 'csv=p=0', out]).toString().trim());
-      (manifest[id] ??= {})[step] = { hash: voiceHash(read), ms: Math.round(secs * 1000), file: `/explainers/voice/${id}/${file}` };
+      (manifest[id] ??= {})[step] = { hash: voiceHash(read), ms: Math.round(secs * 1000), file: `/explainers/voice/${id}/${file}`, ...(existsSync(join(dir, '.ai')) ? { ai: true } : {}) };
       made++;
     }
   }

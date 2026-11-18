@@ -1,0 +1,148 @@
+{
+  "cert": "ai-200",
+  "domain": 1,
+  "topic": "troubleshoot-containers",
+  "questions": [
+    {
+      "id": "dev-trouble-1",
+      "type": "single",
+      "question": "A pod in AKS has the status CrashLoopBackOff. You need to view the output of the container instance that crashed. Which command should you run?",
+      "options": [
+        {
+          "text": "kubectl logs ragapi-7d9f8c6b5-x2k4q --previous",
+          "why": "Correct. --previous returns the logs of the last terminated container instance."
+        },
+        {
+          "text": "kubectl get nodes",
+          "why": "This lists nodes and does not show container output."
+        },
+        {
+          "text": "kubectl apply -f deployment.yaml",
+          "why": "This applies a manifest and does not show logs."
+        },
+        {
+          "text": "az aks get-credentials",
+          "why": "This configures kubectl access and does not show logs."
+        }
+      ],
+      "answer": [
+        0
+      ],
+      "explanation": "kubectl logs --previous shows the output from the container that crashed.",
+      "objective": "1.2.4"
+    },
+    {
+      "id": "dev-trouble-2",
+      "type": "multi",
+      "question": "A pod in AKS has the status ImagePullBackOff. Which TWO commands help you determine the cause?",
+      "options": [
+        {
+          "text": "kubectl describe pod ragapi-7d9f8c6b5-x2k4q",
+          "why": "Correct. The Events section shows the pull error, such as not found or unauthorized."
+        },
+        {
+          "text": "az aks check-acr --name aks-rag --resource-group rg-ai --acr contosoacr.azurecr.io",
+          "why": "Correct. This verifies that the cluster can authenticate to and pull from the registry."
+        },
+        {
+          "text": "kubectl logs ragapi-7d9f8c6b5-x2k4q --previous",
+          "why": "The container never started, so there are no application logs."
+        },
+        {
+          "text": "kubectl rollout undo deployment/ragapi",
+          "why": "This changes the Deployment instead of diagnosing the cause."
+        }
+      ],
+      "answer": [
+        0,
+        1
+      ],
+      "explanation": "Image pull failures are recorded as events, and az aks check-acr validates registry access from the cluster.",
+      "objective": "1.2.4"
+    },
+    {
+      "id": "dev-trouble-3",
+      "type": "single",
+      "question": "A container app revision fails to start. You need to view platform messages about image pulls, probe failures, and revision provisioning for the app. Which command should you run?",
+      "options": [
+        {
+          "text": "az containerapp logs show --name ragapi --resource-group rg-ai --type system",
+          "why": "Correct. System logs contain platform events for the app and its revisions."
+        },
+        {
+          "text": "az containerapp logs show --name ragapi --resource-group rg-ai --type console",
+          "why": "Console logs contain the container's stdout and stderr, not platform messages."
+        },
+        {
+          "text": "az containerapp revision set-mode --mode single",
+          "why": "This changes the revision mode and does not show logs."
+        },
+        {
+          "text": "az acr task logs --registry contosoacr",
+          "why": "This shows ACR task build logs, not container app logs."
+        }
+      ],
+      "answer": [
+        0
+      ],
+      "explanation": "Container Apps system logs show what the platform did, and console logs show what the app wrote.",
+      "objective": "1.2.4"
+    },
+    {
+      "id": "dev-trouble-4",
+      "type": "single",
+      "question": "You need to write a Log Analytics query that returns the standard output written by a container app named ragapi. Which table should you query?",
+      "options": [
+        {
+          "text": "ContainerAppConsoleLogs_CL",
+          "why": "Correct. Console logs from Container Apps are stored in ContainerAppConsoleLogs_CL."
+        },
+        {
+          "text": "ContainerAppSystemLogs_CL",
+          "why": "This table stores platform system logs, not application output."
+        },
+        {
+          "text": "AzureActivity",
+          "why": "This table stores control-plane operations on Azure resources."
+        },
+        {
+          "text": "Heartbeat",
+          "why": "This table stores agent heartbeat records."
+        }
+      ],
+      "answer": [
+        0
+      ],
+      "explanation": "Container Apps application output goes to ContainerAppConsoleLogs_CL when the environment logs to Log Analytics.",
+      "objective": "1.2.4"
+    },
+    {
+      "id": "dev-trouble-5",
+      "type": "single",
+      "question": "Pods for a Deployment in AKS are running, but their READY column shows 0/1 and the Service receives no traffic. What should you check first?",
+      "options": [
+        {
+          "text": "The readiness probe configuration and the Unhealthy events for the pods",
+          "why": "Correct. A failing readiness probe keeps pods out of the Service endpoints."
+        },
+        {
+          "text": "The registry SKU",
+          "why": "The image was pulled successfully, so the registry is not the cause."
+        },
+        {
+          "text": "The number of nodes in the cluster",
+          "why": "The pods are already scheduled and running."
+        },
+        {
+          "text": "The cluster's Kubernetes version",
+          "why": "The version does not explain a pod that is running but not ready."
+        }
+      ],
+      "answer": [
+        0
+      ],
+      "explanation": "Pods that are running but not ready usually fail their readiness probe, which kubectl describe pod shows as Unhealthy events.",
+      "objective": "1.2.4"
+    }
+  ]
+}

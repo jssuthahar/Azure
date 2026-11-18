@@ -1,0 +1,148 @@
+{
+  "cert": "ai-200",
+  "domain": 1,
+  "topic": "containers-for-ai-apps",
+  "questions": [
+    {
+      "id": "dev-hosting-1",
+      "type": "single",
+      "question": "You are deploying a containerized Python worker that processes messages from an Azure Service Bus queue. The worker receives no messages for most of the day and must incur no compute cost while idle. You must minimize cluster management. Which service should you use?",
+      "options": [
+        {
+          "text": "Azure Container Apps",
+          "why": "Correct. Container Apps supports KEDA scale rules on Service Bus queues and can scale to zero replicas without a cluster to manage."
+        },
+        {
+          "text": "Azure App Service on a Premium v3 plan",
+          "why": "An App Service plan keeps at least one instance running and does not scale to zero on queue length."
+        },
+        {
+          "text": "Azure Kubernetes Service with a fixed node pool",
+          "why": "AKS requires you to manage node pools, and a fixed pool incurs cost while idle."
+        },
+        {
+          "text": "Azure Virtual Machines with a container runtime",
+          "why": "Virtual machines require you to manage the operating system and run continuously."
+        }
+      ],
+      "answer": [
+        0
+      ],
+      "explanation": "Container Apps provides event-driven scaling with KEDA, including scale to zero, without cluster management.",
+      "objective": "1.2.1"
+    },
+    {
+      "id": "dev-hosting-2",
+      "type": "single",
+      "question": "Your team must deploy a set of AI microservices that rely on a custom Kubernetes operator and custom resource definitions (CRDs). Which hosting option should you choose?",
+      "options": [
+        {
+          "text": "Azure Kubernetes Service (AKS)",
+          "why": "Correct. AKS provides full access to the Kubernetes API, which is required for custom operators and CRDs."
+        },
+        {
+          "text": "Azure Container Apps",
+          "why": "Container Apps is built on Kubernetes but does not expose the Kubernetes API for custom operators or CRDs."
+        },
+        {
+          "text": "Azure App Service",
+          "why": "App Service runs individual containers as web apps and has no Kubernetes API."
+        },
+        {
+          "text": "Azure Container Instances",
+          "why": "Container Instances runs isolated container groups and does not provide the Kubernetes API."
+        }
+      ],
+      "answer": [
+        0
+      ],
+      "explanation": "Direct Kubernetes API access, including operators and CRDs, requires AKS.",
+      "objective": "1.2.3"
+    },
+    {
+      "id": "dev-hosting-3",
+      "type": "single",
+      "question": "A company runs a single containerized web API with steady traffic. The team wants deployment slots for staging and swapping, and the least amount of platform management. Which service should they use?",
+      "options": [
+        {
+          "text": "Azure App Service",
+          "why": "Correct. App Service runs custom containers with deployment slots, TLS and autoscale, with minimal management."
+        },
+        {
+          "text": "Azure Kubernetes Service",
+          "why": "AKS adds cluster management and does not provide deployment slots."
+        },
+        {
+          "text": "Azure Container Apps",
+          "why": "Container Apps uses revisions for releases rather than deployment slots."
+        },
+        {
+          "text": "Azure Batch",
+          "why": "Azure Batch runs large-scale parallel jobs, not web APIs."
+        }
+      ],
+      "answer": [
+        0
+      ],
+      "explanation": "App Service is the simplest host for a single containerized web app and provides deployment slots.",
+      "objective": "1.1.3"
+    },
+    {
+      "id": "dev-hosting-4",
+      "type": "multi",
+      "question": "You plan to run the same container image on Azure App Service, Azure Container Apps, and Azure Kubernetes Service (AKS). The image must be pulled from Azure Container Registry without storing registry passwords. Which TWO actions should you perform?",
+      "options": [
+        {
+          "text": "Configure each host to use a managed identity for image pulls",
+          "why": "Correct. App Service, Container Apps and AKS can each pull images by using a managed identity."
+        },
+        {
+          "text": "Assign the AcrPull role on the registry to each managed identity",
+          "why": "Correct. AcrPull grants permission to pull images from the registry."
+        },
+        {
+          "text": "Enable the registry admin account and copy its password to each host",
+          "why": "The admin account uses a shared password, which the requirement prohibits."
+        },
+        {
+          "text": "Assign the Owner role on the subscription to each host",
+          "why": "Owner grants far more access than needed and does not follow least privilege."
+        }
+      ],
+      "answer": [
+        0,
+        1
+      ],
+      "explanation": "Managed identities with the AcrPull role let each host pull images without stored credentials.",
+      "objective": "1.1.3"
+    },
+    {
+      "id": "dev-hosting-5",
+      "type": "single",
+      "question": "A development team must release a new version of a containerized API to 10 percent of users before releasing it to all users. The team does not want to manage Kubernetes. Which service and feature should they use?",
+      "options": [
+        {
+          "text": "Azure Container Apps with traffic splitting between revisions",
+          "why": "Correct. In multiple revision mode, Container Apps can split ingress traffic between revisions by percentage."
+        },
+        {
+          "text": "Azure Container Registry with geo-replication",
+          "why": "Geo-replication copies images to other regions. It does not route user traffic."
+        },
+        {
+          "text": "Azure Kubernetes Service with a ClusterIP Service",
+          "why": "AKS requires Kubernetes management, and a ClusterIP Service does not split traffic by percentage."
+        },
+        {
+          "text": "Azure Container Registry Tasks with a base image trigger",
+          "why": "ACR Tasks build images and do not route user traffic."
+        }
+      ],
+      "answer": [
+        0
+      ],
+      "explanation": "Container Apps revisions with traffic weights support percentage-based releases without managing Kubernetes.",
+      "objective": "1.2.1"
+    }
+  ]
+}

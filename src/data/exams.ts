@@ -37,6 +37,17 @@ import { EXAM_ITEMS as ai901Items } from './ai-901/exam-items';
 import { PROBLEM_SOLUTION as ai901Problems } from './ai-901/problem-solution';
 import { SERVICES as ai901Services } from './ai-901/services';
 import { SORT_SETS as ai901Sort, RIDDLES as ai901Riddles } from './ai-901/games';
+import * as ai200 from './ai-200/syllabus';
+import { COURSE as ai200Course } from './ai-200/course';
+import { SIMS3D_DEV as ai200Sims3d } from './ai-200/sims3d';
+import { TOURS_DEV as ai200Tours } from './ai-200/portal-tours';
+import { EMBED_LESSON_3D as ai200Embed3d } from './ai-200/embeds';
+import { LESSON_SIMS as ai200Sims } from './ai-200/lesson-sims';
+import { COMPARISONS as ai200Compare } from './ai-200/compare';
+import { EXAM_ITEMS as ai200Items } from './ai-200/exam-items';
+import { PROBLEM_SOLUTION as ai200Problems } from './ai-200/problem-solution';
+import { SERVICES as ai200Services } from './ai-200/services';
+import { SORT_SETS as ai200Sort, RIDDLES as ai200Riddles } from './ai-200/games';
 
 
 export interface Exam {
@@ -134,6 +145,32 @@ const EXAMS: Record<string, Exam> = {
     lesson3d: ai901Embed3d,
     tours: ai901Tours,
     services: ai901Services,
+  },
+  'ai-200': {
+    slug: 'ai-200',
+    code: 'AI-200',
+    name: info('ai-200').name,
+    info: info('ai-200'),
+    accent: '#008575',
+    modules: ai200.MODULES,
+    skillsMeasuredAsOf: ai200.SKILLS_MEASURED_AS_OF,
+    syllabusVerifiedOn: ai200.SYLLABUS_VERIFIED_ON,
+    studyGuideUrl: ai200.STUDY_GUIDE_URL,
+    courseUrl: 'https://learn.microsoft.com/en-us/credentials/certifications/exams/ai-200/',
+    facts: ai200.EXAM_FACTS,
+    lessonSims: ai200Sims,
+    comparisons: ai200Compare,
+    whatIfs: [],
+    examItems: ai200Items,
+    visuals: {},
+    problems: ai200Problems,
+    games: { sortSets: ai200Sort, riddles: ai200Riddles },
+    activities: {},
+    course: ai200Course,
+    sims3d: ai200Sims3d,
+    lesson3d: ai200Embed3d,
+    tours: ai200Tours,
+    services: ai200Services,
   },
 };
 

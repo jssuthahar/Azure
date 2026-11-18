@@ -1,0 +1,195 @@
+---
+title: Event-Driven Scaling with KEDA in Container Apps
+seoTitle: KEDA Scale Rules in Azure Container Apps | AI-200
+description: Scale Azure Container Apps on events with KEDA for AI-200. Add a Service Bus scale rule, set min and max replicas, scale to zero and authenticate the scaler.
+answer: >-
+  Azure Container Apps scales with **KEDA (Kubernetes Event-driven Autoscaling)**. You add a **scale rule**: **HTTP** (concurrent requests), **TCP**, or a **custom** KEDA scaler such as **azure-servicebus** with metadata like `queueName` and `messageCount`. Replicas grow as the queue fills, up to **--max-replicas**, and shrink after the queue empties, down to **--min-replicas**, which can be **0**. The scaler authenticates with a **secret** (`--scale-rule-auth`) or a **managed identity**.
+updated: 2026-11-18
+readingMinutes: 9
+keyTerms:
+  - term: KEDA
+    definition: Kubernetes Event-driven Autoscaling, the open-source scaler that Container Apps uses under the hood.
+  - term: Scale rule
+    definition: A rule on a container app that tells KEDA what to watch (HTTP, TCP or a custom event source) and when to add replicas.
+  - term: messageCount
+    definition: The azure-servicebus scaler setting for how many messages one replica should handle; KEDA adds replicas as the queue passes it.
+  - term: Min and max replicas
+    definition: The lower and upper bounds for the number of replicas; a minimum of 0 allows scale to zero.
+  - term: Cooldown period
+    definition: How long Container Apps waits after the last event before scaling down to zero (300 seconds by default).
+interview:
+  - level: beginner
+    q: What does KEDA add that CPU-based autoscaling doesn't?
+    a: >-
+      It scales on the work waiting, not on how busy the current replicas look. A Service Bus rule sees 500 messages queued and adds replicas before CPU even rises. And because it watches the queue, it can scale all the way to zero and wake up when a message arrives.
+    followUps: []
+  - level: intermediate
+    q: How do you scale a container app on a Service Bus queue?
+    a: >-
+      I add a custom scale rule with --scale-rule-type azure-servicebus, metadata queueName, namespace and messageCount, and auth for the scaler, either a connection-string secret through --scale-rule-auth or a managed identity. Then I set min replicas to 0 and a sensible max.
+    followUps:
+      - q: If messageCount is 5 and 100 messages arrive, how many replicas?
+        a: >-
+          KEDA targets about 100 divided by 5, so 20, capped by max replicas. If max is 10, I get 10.
+  - level: experienced
+    q: Why might a CPU scale rule be wrong for a queue worker that should scale to zero?
+    a: >-
+      CPU and memory rules can't scale to zero, because there has to be a replica running to measure. For an idle-most-of-the-day worker I want an event source like the queue length, which KEDA can check with no replicas running.
+    followUps: []
+  - level: scenario
+    q: Your worker scaled to zero, but the first message each morning takes a while to process. What can you do?
+    a: >-
+      That's the cold start of the first replica. If it matters, set min replicas to 1 so one replica stays warm. It costs a little more but removes the wait.
+    followUps: []
+revision:
+  keyPoints:
+    - Container Apps scale rules are HTTP, TCP or custom (any KEDA scaler, such as azure-servicebus or azure-queue).
+    - Replicas stay between --min-replicas and --max-replicas; min 0 allows scale to zero.
+    - Service Bus rules use metadata queueName (or topicName and subscriptionName), namespace and messageCount.
+    - Scalers authenticate with a secret via --scale-rule-auth or with a managed identity.
+    - CPU and memory rules can't scale to zero.
+  mistakes:
+    - Setting max replicas too low, so a big backlog drains slowly.
+    - Using a CPU rule for a worker that's meant to scale to zero.
+  examTips:
+    - '"Scale based on the number of messages in a queue" = custom **KEDA** rule (**azure-servicebus** or **azure-queue**).'
+    - '"No cost when idle" = **--min-replicas 0**.'
+    - '"Avoid cold starts" = **min replicas 1 or more**.'
+  quick:
+    - q: Which autoscaler does Container Apps use?
+      a: KEDA.
+    - q: Which scale rule type watches a Service Bus queue?
+      a: azure-servicebus (a custom rule).
+    - q: Which setting allows scale to zero?
+      a: --min-replicas 0
+    - q: Which parameter passes a secret to the scaler?
+      a: --scale-rule-auth
+    - q: Can a CPU rule scale to zero?
+      a: No.
+references:
+  - title: Set scaling rules in Azure Container Apps
+    url: https://learn.microsoft.com/azure/container-apps/scale-app
+  - title: KEDA Azure Service Bus scaler
+    url: https://keda.sh/docs/latest/scalers/azure-service-bus/
+  - title: "Tutorial: Deploy an event-driven job with Azure Container Apps"
+    url: https://learn.microsoft.com/azure/container-apps/tutorial-event-driven-jobs
+related:
+  - azure-container-apps
+  - troubleshoot-containers
+  - containers-for-ai-apps
+  - aks-manifests
+---
+
+## Start with a question
+
+<Story question="Why pay for ten servers at 3 a.m. when nobody's uploading documents?">
+
+Your summarisation worker reads jobs from a Service Bus queue. In the morning, 500 PDFs arrive in ten minutes. At night, nothing. If you size for the morning, you pay for idle servers all night. If you size for the night, the morning queue backs up for an hour.
+
+**KEDA** scale rules in Azure Container Apps watch the queue itself. More messages, more replicas. Empty queue, back to zero.
+
+</Story>
+
+## Explain it like I'm 10
+
+<Eli10>
+
+A bakery opens one counter. When the line gets long, the manager opens another counter for every five people waiting. When everyone's served and the shop's been quiet for a few minutes, the counters close, even the last one.
+
+The manager counting people in the line is **KEDA**. Five people per counter is **messageCount**. The most counters the shop has is **max replicas**.
+
+</Eli10>
+
+## The technical explanation
+
+### Scale rule types
+
+| Type | Scales on | Scale to zero? |
+| --- | --- | --- |
+| HTTP | Concurrent HTTP requests per replica | Yes |
+| TCP | Concurrent TCP connections | Yes |
+| Custom (KEDA scaler) | An event source: `azure-servicebus`, `azure-queue`, `kafka`, `redis`, `cron` and more | Yes |
+| CPU / memory | Resource use of running replicas | No |
+
+If an app has ingress and no rule, Container Apps adds a default HTTP rule. The replica count always stays between **min** and **max** (defaults 0 and 10).
+
+### A Service Bus rule with the CLI
+
+```bash
+az containerapp create --resource-group rg-ai --name summariser \
+  --environment env-rag \
+  --image myreg.azurecr.io/summariser:2.1.0 \
+  --secrets sb-conn="<service-bus-connection-string>" \
+  --min-replicas 0 --max-replicas 20 \
+  --scale-rule-name summarise-queue \
+  --scale-rule-type azure-servicebus \
+  --scale-rule-metadata queueName=summarise namespace=sb-rag messageCount=5 \
+  --scale-rule-auth connection=sb-conn
+```
+
+`--scale-rule-auth connection=sb-conn` maps the scaler's `connection` parameter to the app secret `sb-conn`. To avoid a connection string, give the app a managed identity with the **Azure Service Bus Data Owner** role and pass `--scale-rule-identity system` instead of the auth line. For a topic, use `topicName` and `subscriptionName` instead of `queueName`.
+
+Change rules on an existing app with `az containerapp update ... --scale-rule-name ... --min-replicas ... --max-replicas ...`. Scale rules are part of the template, so this creates a new **revision**.
+
+### How the numbers work
+
+KEDA checks the queue every **30 seconds**. It aims for roughly `queue length ÷ messageCount` replicas, never above max:
+
+| Messages waiting | messageCount | max | Replicas |
+| --- | --- | --- | --- |
+| 0 (for 5 minutes) | 5 | 20 | 0 |
+| 12 | 5 | 20 | 3 |
+| 500 | 5 | 20 | 20 |
+
+After the queue is empty, the **cooldown period** (300 seconds) passes before the last replica goes away. Your code should complete messages only after the work is done, so a replica being removed mid-job doesn't lose anything.
+
+<Flow
+  caption="A morning burst"
+  steps={[
+    { title: 'Idle', text: '0 replicas, KEDA polls the queue.' },
+    { title: 'Burst', text: '500 jobs arrive; KEDA asks for up to 20 replicas.' },
+    { title: 'Drain', text: 'Replicas complete messages and the queue shrinks.' },
+    { title: 'Cool down', text: 'Queue empty for 300 s, back to 0.' },
+  ]}
+/>
+
+<TryIt labs="dev-keda" text="Add an azure-servicebus scale rule with min 0 and max 20, flood the queue and watch the replica count." />
+
+<Callout type="exam">
+"Scale on queue length" or "scale on events" in Container Apps is a **custom KEDA rule** (`azure-servicebus`, `azure-queue`). "Scale to zero" needs **min replicas 0** and a rule that isn't CPU or memory. "Never more than N replicas" is **max replicas**. Credentials for the scaler come from a **secret** with `--scale-rule-auth` or from a **managed identity**. Know that the rule's metadata names the queue and the per-replica target (`messageCount`).
+</Callout>
+
+<DeepDive title="Container Apps jobs for run-to-completion work">
+
+A worker app keeps replicas running and pulls messages in a loop. If each message is a self-contained job (summarise one PDF and exit), a **Container Apps job** with `--trigger-type Event` can fit better: the same KEDA scaler starts one job execution per batch of messages, each runs to completion, and you get execution history per job. Use `--replica-completion-count`, `--parallelism` and `--polling-interval` to tune it.
+
+</DeepDive>
+
+## Real-world business scenario
+
+<Scenario
+  company="Adatum Insurance (fictional)"
+  industry="Insurance"
+  problem="Claims documents arrived in bursts after storms. A fixed pool of four workers left claims waiting for hours, then sat idle for days."
+  service="A summarisation worker in Azure Container Apps with an azure-servicebus scale rule, messageCount 5, min replicas 0 and max replicas 30, authenticating with a managed identity."
+  why="KEDA reacts to the queue length directly and scales to zero between storms, so the team only pays while claims are processed."
+  outcome="Storm backlogs clear in minutes instead of hours, and the quiet weeks cost close to nothing."
+/>
+
+## When to use it and when not to
+
+<UseWhen
+  use={[
+    'Queue or stream workers with bursty, unpredictable load.',
+    'Back ends that should cost nothing when idle (min replicas 0).',
+    'Scaling on business signals such as queue depth rather than CPU.',
+  ]}
+  avoid={[
+    'Latency-sensitive APIs that can\'t tolerate a cold start; keep min replicas at 1 or more.',
+    'Workloads with steady, predictable load where fixed replicas are simpler.',
+  ]}
+  alternatives={[
+    '<strong>Container Apps jobs</strong> with an event trigger for run-to-completion tasks.',
+    '<strong>Azure Functions</strong> Flex Consumption for small queue handlers written as functions.',
+  ]}
+/>

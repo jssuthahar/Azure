@@ -10,6 +10,7 @@
 import { Sim, SimError, REGIONS, VM_SIZES, IMAGES, STORAGE_SKUS, PLAN_SKUS, RUNTIMES, TYPE_INFO, SUB_NAME, SUB_ID, type Res, type ResType } from './engine';
 import { money as fmtMoney } from '../currency';
 import * as F from './foundry';
+import * as D from './devsvc';
 import type { World } from './world';
 
 /* ------------------------------------------------------------------ */
@@ -63,6 +64,17 @@ const SVC: { k: string; label: string; icon: string; color: string; cat: string;
   { k: 'dnszone', label: 'DNS zones', icon: '🔎', color: '#0078d4', cat: 'Networking', view: { page: 'list', type: 'dnszone' } },
   { k: 'vpngw', label: 'Virtual network gateways', icon: '🔐', color: '#0078d4', cat: 'Networking', view: { page: 'list', type: 'vpngw' }, kw: 'vpn' },
   { k: 'foundry', label: 'Microsoft Foundry', icon: '✨', color: '#8764b8', cat: 'AI + machine learning', view: { page: 'list', type: 'foundry' }, kw: 'ai openai gpt agents models foundry cognitive language speech vision content understanding' },
+  { k: 'acr', label: 'Container registries', icon: '🗃️', color: '#0078d4', cat: 'Containers', view: { page: 'list', type: 'acr' }, kw: 'acr docker images registry acr tasks' },
+  { k: 'containerapp', label: 'Container Apps', icon: '🚢', color: '#5c2d91', cat: 'Containers', view: { page: 'list', type: 'containerapp' }, kw: 'aca container apps revisions keda serverless containers' },
+  { k: 'acaenv', label: 'Container Apps Environments', icon: '🏘️', color: '#5c2d91', cat: 'Containers', view: { page: 'list', type: 'acaenv' }, kw: 'aca environment' },
+  { k: 'cosmos', label: 'Azure Cosmos DB', icon: '🪐', color: '#0078d4', cat: 'Databases', view: { page: 'list', type: 'cosmos' }, kw: 'cosmos nosql vector database documentdb' },
+  { k: 'pg', label: 'Azure Database for PostgreSQL flexible servers', icon: '🐘', color: '#336791', cat: 'Databases', view: { page: 'list', type: 'pg' }, kw: 'postgres postgresql pgvector sql' },
+  { k: 'redis', label: 'Azure Managed Redis', icon: '🧱', color: '#d83b01', cat: 'Databases', view: { page: 'list', type: 'redis' }, kw: 'redis cache redisearch' },
+  { k: 'sbns', label: 'Service Bus', icon: '🚌', color: '#0078d4', cat: 'Integration', view: { page: 'list', type: 'sbns' }, kw: 'service bus queue topic messaging' },
+  { k: 'egtopic', label: 'Event Grid Topics', icon: '📣', color: '#0078d4', cat: 'Integration', view: { page: 'list', type: 'egtopic' }, kw: 'event grid events webhook' },
+  { k: 'kv', label: 'Key vaults', icon: '🔑', color: '#c19c00', cat: 'Security', view: { page: 'list', type: 'kv' }, kw: 'key vault secrets keys certificates' },
+  { k: 'appconfig', label: 'App Configuration', icon: '🎚️', color: '#0078d4', cat: 'Developer tools', view: { page: 'list', type: 'appconfig' }, kw: 'app configuration feature flags settings' },
+  { k: 'appi', label: 'Application Insights', icon: '🔭', color: '#5c2d91', cat: 'Management', view: { page: 'list', type: 'appi' }, kw: 'application insights apm opentelemetry telemetry kql' },
   { k: 'cost', label: 'Cost Management', icon: '💲', color: '#107c10', cat: 'Management', view: { page: 'cost' }, kw: 'billing budget cost' },
   { k: 'monitor', label: 'Monitor', icon: '📈', color: '#0078d4', cat: 'Management', view: { page: 'monitor' }, kw: 'metrics logs alerts' },
   { k: 'advisor', label: 'Advisor', icon: '💡', color: '#c19c00', cat: 'Management', view: { page: 'advisor' }, kw: 'recommendations' },
@@ -92,6 +104,16 @@ const MARKET: { n: string; d: string; icon: string; kind?: WizKind; cli?: string
   { n: 'Function App', d: 'Serverless: run code on events, pay per execution.', icon: '⚡', cli: 'az functionapp create -g <rg> -n <name>' },
   { n: 'Kubernetes Service', d: 'Managed Kubernetes clusters.', icon: '☸️', cli: 'az aks create -g <rg> -n <name> --node-count 2' },
   { n: 'Container Instances', d: 'Run a container in seconds.', icon: '📦', cli: 'az container create -g <rg> -n <name> --image mcr.microsoft.com/azuredocs/aci-helloworld' },
+  { n: 'Container Registry', d: 'Store and build container images (ACR Tasks).', icon: '🗃️', cli: 'az acr create -g <rg> -n <registryname> --sku Standard' },
+  { n: 'Container App', d: 'Serverless containers with revisions, traffic splitting and KEDA scaling.', icon: '🚢', cli: 'az containerapp env create -g <rg> -n <env> -l eastus\naz containerapp create -g <rg> -n <app> --environment <env> --image mcr.microsoft.com/k8se/quickstart:latest --ingress external --target-port 80' },
+  { n: 'Azure Cosmos DB', d: 'Globally distributed NoSQL database with vector search.', icon: '🪐', cli: 'az cosmosdb create -g <rg> -n <account>' },
+  { n: 'Azure Database for PostgreSQL', d: 'Managed PostgreSQL with pgvector.', icon: '🐘', cli: 'az postgres flexible-server create -g <rg> -n <server> --tier Burstable --sku-name Standard_B1ms --public-access 0.0.0.0' },
+  { n: 'Azure Managed Redis', d: 'In-memory cache and vector store (RediSearch).', icon: '🧱', cli: 'az redisenterprise create --cluster-name <name> -g <rg> --sku Balanced_B0 --modules name=RediSearch --clustering-policy EnterpriseCluster' },
+  { n: 'Service Bus', d: 'Reliable queues and topics for messages between apps.', icon: '🚌', cli: 'az servicebus namespace create -g <rg> -n <namespace> --sku Standard' },
+  { n: 'Event Grid Topic', d: 'Push events to many subscribers with filters and retries.', icon: '📣', cli: 'az eventgrid topic create -g <rg> -n <topic> -l eastus' },
+  { n: 'Key Vault', d: 'Keep secrets, keys and certificates out of your code.', icon: '🔑', cli: 'az keyvault create -g <rg> -n <vault> --enable-rbac-authorization true' },
+  { n: 'App Configuration', d: 'Central settings and feature flags for your apps.', icon: '🎚️', cli: 'az appconfig create -g <rg> -n <store> -l eastus --sku Standard' },
+  { n: 'Application Insights', d: 'Traces, requests and failures from your app (OpenTelemetry).', icon: '🔭', cli: 'az monitor app-insights component create --app <name> -g <rg> -l eastus --workspace <workspace>' },
   { n: 'DNS zone', d: 'Host DNS records for your domain.', icon: '🔎', cli: 'az network dns zone create -g <rg> -n contoso.com' },
   { n: 'Virtual network gateway', d: 'Site-to-site VPN to your office.', icon: '🔐', cli: 'az network vnet-gateway create …' },
 ];
@@ -978,6 +1000,11 @@ export class Portal {
     } else if (r.type === 'foundry') {
       menu = [...common, ['Foundry portal (simulated)', ['Models + endpoints', 'Model catalog', 'Chat playground', 'Agents', 'Images playground']], ['Foundry Tools', ['Language', 'Speech', 'Content Understanding']], ['Protect and govern', ['Guardrails', 'Evaluations']], ['Resource Management', ['Keys and Endpoint', 'Projects', 'Properties', 'Locks']]];
       body = this.foundryTab(r, tab, essBase);
+    } else if (D.DEV_TABS[r.type] || r.type === 'logalert') {
+      const [grp, tabs] = D.DEV_TABS[r.type] ?? ['Settings', []];
+      menu = [...common, [grp, tabs], ['Settings', ['Properties', 'Locks']]];
+      const v = D.devView(this.sim as unknown as World, r, tab);
+      if (v) body = this.devBody(v, essBase, cost ? costNote : '', tab === 'Overview');
     } else if (r.type === 'nsg') {
       menu = [...common, ['Settings', ['Inbound security rules', 'Outbound security rules', 'Network interfaces', 'Subnets', 'Properties', 'Locks']]];
       const rules = [...(r.props.inbound ?? []).map((p: string, i: number) => [String(300 + i * 10), `Allow-${p}`, esc(p), 'TCP', 'Any', this.status('Allow')]), ['65000', 'AllowVnetInBound', 'Any', 'Any', 'VirtualNetwork', this.status('Allow')], ['65001', 'AllowAzureLoadBalancerInBound', 'Any', 'Any', 'AzureLoadBalancer', this.status('Allow')], ['65500', 'DenyAllInBound', 'Any', 'Any', 'Any', this.status('Deny')]];
@@ -993,6 +1020,12 @@ export class Portal {
       else body = this.notInSim(tab);
     }
     return this.blade(s?.icon ?? TYPE_INFO[r.type].icon, s?.color ?? '#0078d4', crumbs, r.name, TYPE_INFO[r.type].label, menu, tab, body);
+  }
+  /** AI-200 developer services: essentials + tables built from devsvc.devView. */
+  private devBody(v: D.DevView, base: [string, string][], costNote: string, overview: boolean) {
+    const ess: [string, string][] = [...(overview ? base.slice(0, 4) : []), ...v.ess.map(([k, x]) => [esc(k), esc(x)] as [string, string])];
+    const blocks = v.blocks.map((b) => `<p class="pt-sec-h">${esc(b.h)}</p>${b.rows.length ? this.table(b.cols, b.rows.map((row) => row.map((c) => esc(c)))) : '<p class="pt-p">Nothing here yet. Create it from Cloud Shell.</p>'}`).join('');
+    return `${overview ? this.cmds([['Delete', A('pane', 'del-res')], ['Refresh', NAV(this.view)], ['Cloud Shell', A('shell')]]) : ''}${ess.length ? this.ess(ess) : ''}${overview ? costNote : ''}${blocks}${v.note ? `<div class="pt-note-bar info">${esc(v.note)}</div>` : ''}`;
   }
   private planSkus(plan?: Res) {
     if (!plan) return '<p class="pt-p">Plan not found.</p>';

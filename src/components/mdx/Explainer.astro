@@ -37,6 +37,8 @@ const clips = spec.stages.map((s, i) => {
 const staleClips = spec.stages.map((s, i) => (recorded[String(i + 1)] && !clips[i] ? i + 1 : 0)).filter(Boolean);
 if (staleClips.length) console.warn(`[explainer ${id}] steps ${staleClips.join(', ')} were re-written after recording; using the browser voice until re-recorded`);
 const ownVoice = clips.some(Boolean);
+// Be open about AI narration: a cloned voice is labelled as such on the player.
+const aiVoice = spec.stages.some((_, i) => clips[i] && recorded[String(i + 1)]?.ai);
 
 const scope = `.xv[data-xv-id="${id}"]`;
 const css = spec.css
@@ -65,6 +67,7 @@ const icon = {
   <div class="xv-head">
     <span class="xv-badge">▶ Explainer video</span>
     <span>See it in motion</span>
+    {aiVoice && <span class="xv-ai" title="Narrated with an AI copy of the author's own voice">AI voice</span>}
     <span class="xv-len">{spec.stages.length} steps · {len}</span>
   </div>
 

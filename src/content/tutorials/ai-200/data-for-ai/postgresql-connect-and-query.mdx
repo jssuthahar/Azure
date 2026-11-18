@@ -1,0 +1,258 @@
+---
+title: Connect to and Query Azure Database for PostgreSQL
+seoTitle: Connect to Azure PostgreSQL from Python with Entra | AI-200
+description: Connect a Python app to Azure Database for PostgreSQL flexible server with psycopg 3, a Microsoft Entra token, sslmode=require and safe parameterised queries.
+answer: >-
+  You connect to **Azure Database for PostgreSQL flexible server** from Python with **psycopg** (version 3). Instead of a stored password, you get a **Microsoft Entra token** from **DefaultAzureCredential** for the scope `https://ossrdbms-aad.database.windows.net/.default` and pass it as the password, with your Entra user or managed identity name as the user and **sslmode=require**. Then you run SQL with **parameterised queries** (`%s` placeholders), never by pasting user input into the SQL string.
+updated: 2026-11-18
+readingMinutes: 10
+keyTerms:
+  - term: Azure Database for PostgreSQL flexible server
+    definition: The managed PostgreSQL service on Azure, where Microsoft runs patching, backups and high availability while you choose compute and storage.
+  - term: psycopg
+    definition: The most used PostgreSQL driver for Python. Version 3 is imported as psycopg and adds a separate psycopg_pool package for pooling.
+  - term: Microsoft Entra authentication
+    definition: Signing in to PostgreSQL with an Entra access token as the password instead of a database password.
+  - term: ossrdbms-aad scope
+    definition: The token scope `https://ossrdbms-aad.database.windows.net/.default` used to request tokens for Azure Database for PostgreSQL.
+  - term: sslmode=require
+    definition: A connection setting that makes the client refuse to connect without TLS encryption.
+  - term: Parameterised query
+    definition: SQL with placeholders such as %s, where the driver sends the values separately so user input can't change the query.
+interview:
+  - level: beginner
+    q: What do you need to connect a Python app to Azure Database for PostgreSQL?
+    a: >-
+      The server host name (something like myserver.postgres.database.azure.com), the database name, a user, a password or token, port 5432 and TLS. In Python I use psycopg 3. For the password I prefer a Microsoft Entra token from DefaultAzureCredential, so there's no secret in my config.
+    followUps:
+      - q: What is the user name when you sign in with a managed identity?
+        a: >-
+          It's the name of the Entra principal that was mapped to a database role, for example the managed identity's name. An Entra admin creates that role first.
+  - level: intermediate
+    q: Why do you pass values with %s instead of building the SQL string with an f-string?
+    a: >-
+      Because an f-string mixes data into the SQL text. If a user types something like a quote and a DROP TABLE, it becomes part of the query. With %s, psycopg sends the values separately from the SQL, so input is always treated as data. It's the fix for SQL injection.
+    followUps: []
+  - level: experienced
+    q: Entra tokens expire. How do you stop a long-running app from failing an hour after it starts?
+    a: >-
+      The token only matters when a connection is opened, so I fetch a fresh token every time a new connection is made. With psycopg_pool I give the pool a small connection class whose connect method asks DefaultAzureCredential for a token, and I keep max_lifetime under the token lifetime. Open connections stay valid; new ones get new tokens.
+    followUps: []
+  - level: scenario
+    q: Your app connects fine from your laptop but times out from a new App Service. What would you check first?
+    a: >-
+      Networking. With public access I'd check the server firewall rules allow the App Service outbound IPs or Azure services. With private access I'd check the App Service has VNet integration into a subnet that can reach the server and that private DNS resolves the host name. A timeout usually means network, while a wrong token gives an authentication error.
+    followUps: []
+revision:
+  keyPoints:
+    - Use psycopg 3 (import psycopg) with host, dbname, user, password, port 5432 and sslmode=require.
+    - For passwordless sign-in, DefaultAzureCredential gets a token for `https://ossrdbms-aad.database.windows.net/.default` and you pass it as the password.
+    - An Entra admin on the server must create a database role for each Entra user, group or managed identity.
+    - Always use %s placeholders and pass values as a tuple or dict. Never format user input into SQL.
+    - Use with blocks so connections commit or roll back and close cleanly.
+  mistakes:
+    - Building SQL with f-strings or + from user input, which opens the door to SQL injection.
+    - Fetching one token at start-up and reusing it for every new connection after it has expired.
+    - Leaving sslmode out and assuming the client will always pick TLS.
+  examTips:
+    - '"Connect without storing a password" = **Microsoft Entra token** from **DefaultAzureCredential** used as the password.'
+    - '"Token scope for PostgreSQL" = **`https://ossrdbms-aad.database.windows.net/.default`**.'
+    - '"Prevent SQL injection" = **parameterised queries** (%s placeholders), not string formatting.'
+  quick:
+    - q: Which Python driver is used in the samples for PostgreSQL?
+      a: psycopg (version 3).
+    - q: What scope do you request a token for?
+      a: '`https://ossrdbms-aad.database.windows.net/.default`'
+    - q: Where does the token go in the connection?
+      a: In the password field.
+    - q: Which setting forces TLS?
+      a: sslmode=require.
+    - q: What's the default PostgreSQL port?
+      a: 5432 (PgBouncer uses 6432).
+references:
+  - title: Use Microsoft Entra ID for authentication with Azure Database for PostgreSQL
+    url: https://learn.microsoft.com/azure/postgresql/security/security-entra-configure
+  - title: What is Azure Database for PostgreSQL?
+    url: https://learn.microsoft.com/azure/postgresql/overview
+  - title: Psycopg 3 documentation
+    url: https://www.psycopg.org/psycopg3/docs/
+related:
+  - postgresql-schema-and-indexes
+  - pgvector-rag
+  - postgresql-performance-for-vectors
+  - cosmos-db-sdk-and-queries
+---
+
+## Start with a question
+
+<Story question="Your app needs to read from a database. Do you really have to paste the database password into a config file?">
+
+Think about a staff canteen. Some offices hand out a paper coupon that anyone can copy. Others let you tap your ID card, and the card only works while you still work there.
+
+A database password in `config.py` is the paper coupon. It gets committed to git, pasted into Teams and left on old laptops. **Microsoft Entra authentication** is the ID card: your app proves who it is, gets a short-lived token, and uses that as the password. Nobody has a secret to leak.
+
+This lesson shows how a Python app connects to **Azure Database for PostgreSQL** that way and then runs queries safely.
+
+</Story>
+
+## Explain it like I'm 10
+
+<Eli10>
+
+Your app wants to talk to a big filing cabinet called PostgreSQL.
+
+First it needs the cabinet's address. Then it shows a visitor pass that the school office (Microsoft Entra ID) printed a few minutes ago. The pass runs out soon, so nobody can reuse an old one.
+
+When it asks for a file, it fills in a form with blanks. The cabinet reads the blanks as plain answers, so nobody can sneak in a trick instruction.
+
+</Eli10>
+
+## The technical explanation
+
+**Azure Database for PostgreSQL flexible server** is managed PostgreSQL. Microsoft patches it, backs it up and can run a standby for high availability. You still write normal SQL and use normal PostgreSQL drivers. For Python that's **psycopg** version 3:
+
+```bash
+pip install "psycopg[binary]" psycopg_pool azure-identity
+```
+
+### What a connection needs
+
+| Setting | Example | Notes |
+| --- | --- | --- |
+| `host` | `contoso-pg.postgres.database.azure.com` | From the server's Overview page |
+| `port` | `5432` | `6432` if you go through the built-in PgBouncer |
+| `dbname` | `support` | A database on the server |
+| `user` | `rag-api` (an Entra identity) or `pgadmin` | The role name in PostgreSQL |
+| `password` | an Entra token, or a database password | Token preferred |
+| `sslmode` | `require` | Refuses to connect without TLS |
+
+### Passwordless sign-in with Microsoft Entra ID
+
+Two things have to be set up on the server first. The server's authentication must allow Microsoft Entra (the portal option is "Microsoft Entra authentication only" or "PostgreSQL and Microsoft Entra authentication"). And an **Entra admin** must create a database role for your user, group or managed identity.
+
+Then your code asks for a token and uses it as the password:
+
+```python
+import os
+import psycopg
+from azure.identity import DefaultAzureCredential
+
+credential = DefaultAzureCredential()
+
+def get_token() -> str:
+    # Token for Azure Database for PostgreSQL
+    return credential.get_token("https://ossrdbms-aad.database.windows.net/.default").token
+
+conn = psycopg.connect(
+    host=os.environ["PGHOST"],          # contoso-pg.postgres.database.azure.com
+    dbname=os.environ["PGDATABASE"],    # support
+    user=os.environ["PGUSER"],          # rag-api (the managed identity's role name)
+    password=get_token(),
+    port=5432,
+    sslmode="require",
+)
+```
+
+`DefaultAzureCredential` uses your `az login` session on your laptop and the app's **managed identity** in App Service, Container Apps or Functions. Same code, no secret.
+
+The token is checked only when a connection opens. An open connection keeps working after the token expires, but any new connection needs a fresh token. That matters once you add a pool, which you'll see below and in the performance lesson.
+
+### Running queries safely
+
+```python
+tenant = "contoso"
+search = "refund"
+
+with conn:                                   # commits on success, rolls back on error
+    with conn.cursor() as cur:
+        cur.execute(
+            "SELECT id, title FROM docs WHERE tenant_id = %s AND title ILIKE %s LIMIT 10",
+            (tenant, f"%{search}%"),         # values travel separately from the SQL
+        )
+        for row in cur.fetchall():
+            print(row)
+
+        cur.execute(
+            "INSERT INTO docs (tenant_id, title, body) VALUES (%(t)s, %(title)s, %(body)s) RETURNING id",
+            {"t": tenant, "title": "Refund policy", "body": "Refunds within 30 days..."},
+        )
+        new_id = cur.fetchone()[0]
+```
+
+The `%s` and `%(name)s` placeholders are the whole point. psycopg sends the SQL text and the values separately, so a value like `'; DROP TABLE docs; --` is just a strange title, not a command. This is called a **parameterised query**, and it's the answer to SQL injection.
+
+For many rows at once, `cur.executemany(sql, rows)` reuses the same statement, and `cur.copy()` with `COPY ... FROM STDIN` is the fastest way to bulk-load, which you'll want when loading thousands of embeddings.
+
+### Reusing connections
+
+Opening a PostgreSQL connection costs a TLS handshake, sign-in and a new server process. A web API that opens one per request spends more time connecting than querying. Use a pool, and give it a connection class that gets a fresh token every time it opens a connection:
+
+```python
+from psycopg_pool import ConnectionPool
+
+class EntraConnection(psycopg.Connection):
+    @classmethod
+    def connect(cls, conninfo="", **kwargs):
+        kwargs["password"] = get_token()     # fresh token for every new connection
+        return super().connect(conninfo, **kwargs)
+
+pool = ConnectionPool(
+    conninfo=f"host={os.environ['PGHOST']} dbname=support user=rag-api sslmode=require",
+    connection_class=EntraConnection,
+    min_size=2, max_size=10,
+)
+
+with pool.connection() as conn:
+    print(conn.execute("SELECT version()").fetchone())
+```
+
+<Flow
+  caption="From your code to a row of data"
+  steps={[
+    { title: 'Get a token', text: 'DefaultAzureCredential asks Entra ID for the ossrdbms-aad scope.' },
+    { title: 'Connect', text: 'psycopg opens a TLS connection with the token as the password.' },
+    { title: 'Map the role', text: 'PostgreSQL matches the Entra identity to a database role.' },
+    { title: 'Query', text: 'Parameterised SQL runs, and rows come back.' },
+  ]}
+/>
+
+<TryIt labs="dev-postgres" text="Create a flexible server in the lab, then run a query against it from the console." />
+
+<Callout type="exam">
+Watch for three things. **Passwordless** or "no secrets in code" means a **Microsoft Entra token** from **DefaultAzureCredential** used as the PostgreSQL password, with the scope **`https://ossrdbms-aad.database.windows.net/.default`**. "Prevent SQL injection" means **parameterised queries**. And "the app fails after about an hour" points to a token fetched once and reused for new connections.
+</Callout>
+
+<DeepDive title="Network access decides whether you can connect at all">
+
+Flexible server has two networking models, chosen at creation. **Public access** gives the server a public endpoint protected by firewall rules (and you can add private endpoints). **Private access (VNet integration)** puts the server inside a delegated subnet with no public endpoint, and your app must reach that VNet. If the connection times out, it's almost always networking. If it's refused with "password authentication failed", it's the token, the user name or a missing role. Knowing which error means what saves a lot of time.
+
+</DeepDive>
+
+## Real-world business scenario
+
+<Scenario
+  company="Fabrikam Insurance (fictional)"
+  industry="Insurance"
+  problem="A claims assistant built in Python read policy documents from PostgreSQL using a shared admin password stored in an app setting. A contractor copied it into a test script that later ended up in a public repository."
+  service="Azure Database for PostgreSQL flexible server with Microsoft Entra authentication, a managed identity for the API, psycopg 3 with parameterised queries and a pool that fetches a fresh token per connection."
+  why="There's no password to copy any more, and access is removed by deleting the database role or the identity. Parameterised queries close the injection hole the security review flagged."
+  outcome="The shared password was retired, and the security team can see exactly which identity ran each session in the server logs."
+/>
+
+## When to use it and when not to
+
+<UseWhen
+  use={[
+    'Your app runs in Azure (App Service, Container Apps, Functions, AKS) and can use a managed identity.',
+    'You want access controlled by Entra users and groups instead of database passwords.',
+    'You run any query that includes user input. Parameterise it every time.',
+  ]}
+  avoid={[
+    'An old tool that only accepts a short password field and can\'t take a token. Use a database password stored in Key Vault for that one tool.',
+    'Opening a new connection for every request in a busy API. Use a pool or PgBouncer.',
+  ]}
+  alternatives={[
+    '<strong>PostgreSQL password authentication</strong> with the secret in Azure Key Vault, when Entra isn\'t possible.',
+    '<strong>Azure Cosmos DB for NoSQL</strong> when your data is JSON documents and you want global scale without SQL joins.',
+  ]}
+/>

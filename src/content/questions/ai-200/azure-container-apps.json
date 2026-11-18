@@ -1,0 +1,148 @@
+{
+  "cert": "ai-200",
+  "domain": 1,
+  "topic": "azure-container-apps",
+  "questions": [
+    {
+      "id": "dev-aca-1",
+      "type": "single",
+      "question": "A container app named ragapi uses single revision mode. You need to send 20 percent of traffic to a new revision and 80 percent to the current revision. What should you do first?",
+      "options": [
+        {
+          "text": "Run az containerapp revision set-mode with --mode multiple",
+          "why": "Correct. Traffic splitting between revisions requires multiple revision mode."
+        },
+        {
+          "text": "Run az containerapp ingress disable",
+          "why": "Disabling ingress stops all external traffic."
+        },
+        {
+          "text": "Create a second Container Apps environment",
+          "why": "Traffic splitting is configured within one app. A second environment is not needed."
+        },
+        {
+          "text": "Delete the current revision",
+          "why": "Deleting the current revision leaves nothing to split traffic with."
+        }
+      ],
+      "answer": [
+        0
+      ],
+      "explanation": "In single revision mode only one revision is active. Switch to multiple mode before you set traffic weights.",
+      "objective": "1.2.1"
+    },
+    {
+      "id": "dev-aca-2",
+      "type": "multi",
+      "question": "Which TWO changes to a container app create a new revision?",
+      "options": [
+        {
+          "text": "Updating the container image tag",
+          "why": "Correct. The image is part of the revision-scope template."
+        },
+        {
+          "text": "Adding a scale rule",
+          "why": "Correct. Scale rules are revision-scope settings."
+        },
+        {
+          "text": "Changing the ingress traffic weights",
+          "why": "Traffic weights are application-scope settings and do not create a revision."
+        },
+        {
+          "text": "Adding a secret to the app",
+          "why": "Secrets are application-scope settings and do not create a revision."
+        }
+      ],
+      "answer": [
+        0,
+        1
+      ],
+      "explanation": "Changes under properties.template, such as the image and scale rules, create a new revision. Application-scope changes, such as ingress and secrets, do not.",
+      "objective": "1.2.1"
+    },
+    {
+      "id": "dev-aca-3",
+      "type": "single",
+      "question": "You deploy two container apps, api and worker, to the same Container Apps environment. The worker must be reachable from the api app but must not be reachable from the internet. How should you configure ingress for the worker?",
+      "options": [
+        {
+          "text": "Enable ingress and set it to internal",
+          "why": "Correct. Internal ingress accepts traffic only from within the Container Apps environment."
+        },
+        {
+          "text": "Enable ingress and set it to external",
+          "why": "External ingress exposes the app to the internet."
+        },
+        {
+          "text": "Disable ingress",
+          "why": "With ingress disabled, the api app cannot call the worker over HTTP."
+        },
+        {
+          "text": "Set the revision mode to multiple",
+          "why": "Revision mode controls active revisions, not network exposure."
+        }
+      ],
+      "answer": [
+        0
+      ],
+      "explanation": "Internal ingress limits access to other apps in the same environment.",
+      "objective": "1.2.1"
+    },
+    {
+      "id": "dev-aca-4",
+      "type": "single",
+      "question": "A container app must expose the value of an app secret named search-key to the container as an environment variable named SEARCH_KEY. Which value should you use in the --env-vars parameter?",
+      "options": [
+        {
+          "text": "SEARCH_KEY=secretref:search-key",
+          "why": "Correct. secretref references a secret defined on the container app."
+        },
+        {
+          "text": "SEARCH_KEY=@Microsoft.KeyVault(SecretName=search-key)",
+          "why": "This is the App Service Key Vault reference syntax, not the Container Apps syntax."
+        },
+        {
+          "text": "SEARCH_KEY=$(search-key)",
+          "why": "This syntax is not recognized by Container Apps."
+        },
+        {
+          "text": "SEARCH_KEY=keyvault:search-key",
+          "why": "This syntax is not recognized for environment variables."
+        }
+      ],
+      "answer": [
+        0
+      ],
+      "explanation": "Container Apps environment variables reference secrets by using secretref: followed by the secret name.",
+      "objective": "1.2.1"
+    },
+    {
+      "id": "dev-aca-5",
+      "type": "single",
+      "question": "A container app runs in multiple revision mode with revisions ragapi--v1 and ragapi--v2. You need to send 90 percent of traffic to ragapi--v1 and 10 percent to ragapi--v2. Which command should you run?",
+      "options": [
+        {
+          "text": "az containerapp ingress traffic set --name ragapi --resource-group rg-ai --revision-weight ragapi--v1=90 ragapi--v2=10",
+          "why": "Correct. ingress traffic set assigns traffic weights to revisions."
+        },
+        {
+          "text": "az containerapp revision copy --name ragapi --resource-group rg-ai",
+          "why": "This creates a new revision from an existing one. It does not set weights."
+        },
+        {
+          "text": "az containerapp update --name ragapi --resource-group rg-ai --max-replicas 10",
+          "why": "This changes the scale settings, not traffic distribution."
+        },
+        {
+          "text": "az containerapp revision deactivate --revision ragapi--v2 --resource-group rg-ai",
+          "why": "Deactivating ragapi--v2 sends it no traffic."
+        }
+      ],
+      "answer": [
+        0
+      ],
+      "explanation": "Traffic weights between revisions are set with az containerapp ingress traffic set.",
+      "objective": "1.2.1"
+    }
+  ]
+}

@@ -1,0 +1,246 @@
+---
+title: pgvector Similarity Search and RAG with Metadata Filters
+seoTitle: pgvector Similarity Search and RAG with Filters | AI-200
+description: Store embeddings in PostgreSQL with pgvector, run cosine similarity search, add tenant and language filters, and build a grounded RAG answer in Python.
+answer: >-
+  With **pgvector** you store each chunk's **embedding** in a `vector(1536)` column, embed the user's question with the same model, and run `ORDER BY embedding <=> %s LIMIT 5` to get the closest chunks by **cosine distance**. For **retrieval-augmented generation (RAG)** you add a **metadata filter** in the `WHERE` clause (such as `tenant_id` or `lang`), send those chunks to the model as context, and tell it to answer only from them. An **HNSW** index keeps the search fast, and **hnsw.ef_search** trades speed for recall.
+updated: 2026-11-18
+readingMinutes: 12
+keyTerms:
+  - term: Retrieval-augmented generation (RAG)
+    definition: A pattern where the app retrieves relevant passages from your data and gives them to a language model as context, so the answer is grounded in your content.
+  - term: Cosine distance (<=>)
+    definition: The pgvector operator that returns 1 minus cosine similarity. Smaller means more similar.
+  - term: Metadata filter
+    definition: A normal SQL condition (tenant, language, product, date) applied alongside the vector search so only allowed, relevant rows come back.
+  - term: Top-K
+    definition: The number of nearest chunks you retrieve, set with LIMIT.
+  - term: hnsw.ef_search
+    definition: A query-time setting for HNSW indexes (default 40) that controls how many candidates are examined. Higher gives better recall but slower queries.
+  - term: Iterative index scan
+    definition: A pgvector 0.8 feature (hnsw.iterative_scan) that keeps scanning the index when a filter removes too many candidates, so you still get enough rows.
+interview:
+  - level: beginner
+    q: Walk me through a RAG request that uses PostgreSQL.
+    a: >-
+      The user asks a question. I turn it into an embedding with the same model I used for the documents. I run a SQL query that filters by tenant and orders by embedding <=> the question vector, limit 5. I put those 5 chunks into the prompt as context and ask the model to answer only from them, citing the chunk ids. Then I return the answer.
+    followUps:
+      - q: Why must the question use the same embedding model as the documents?
+        a: >-
+          Different models put meaning in different places. A vector from one model compared with vectors from another gives nonsense distances, even if the dimensions match.
+  - level: intermediate
+    q: Why do you put the tenant filter in SQL instead of filtering the results in Python?
+    a: >-
+      Two reasons. Security: if I fetch the top 5 across all tenants and filter afterwards, another customer's text is already in my app's memory and could leak through a bug. And quality: if 4 of the 5 nearest chunks belong to other tenants, I'm left with one useful chunk. Filtering in SQL means all 5 are from the right tenant.
+    followUps: []
+  - level: experienced
+    q: With an HNSW index and a selective filter, your query sometimes returns 2 rows instead of 5. Why, and how do you fix it?
+    a: >-
+      HNSW finds ef_search candidates first and the filter is applied afterwards. If the filter is selective, most candidates get thrown away. I can raise hnsw.ef_search, use a partial index or partitions per tenant, add a B-tree index on the filter column so the planner can choose it for very selective filters, or on pgvector 0.8 and later turn on hnsw.iterative_scan so the index keeps scanning until it finds enough matches.
+    followUps: []
+  - level: architecture
+    q: When would you choose pgvector for RAG over a dedicated search service?
+    a: >-
+      When the source data already lives in PostgreSQL and I want joins, transactions and filters on business columns in the same query, with one less service to run. If I need hybrid keyword plus vector ranking, semantic reranking and built-in document cracking, Azure AI Search is usually the better fit.
+    followUps: []
+revision:
+  keyPoints:
+    - Embed documents and questions with the same model and dimensions.
+    - "Nearest chunks: ORDER BY embedding <=> query_vector LIMIT k (smaller distance = closer)."
+    - Put metadata filters (tenant_id, lang, product) in the WHERE clause of the same query.
+    - Send only the retrieved chunks to the model, with an instruction to answer from them and cite sources.
+    - hnsw.ef_search raises recall at the cost of speed. Filtered searches may need a higher value or iterative scans.
+  mistakes:
+    - Treating <=> as similarity and sorting DESC, which returns the least similar chunks first.
+    - Filtering by tenant in application code after the vector search.
+    - Sending whole documents instead of the top chunks, which wastes tokens and dilutes the answer.
+  examTips:
+    - '"Return the 5 most similar items" = **ORDER BY embedding <=> @q LIMIT 5**.'
+    - '"Only return documents for the signed-in customer" = **metadata filter** in the WHERE clause.'
+    - '"Improve recall of an HNSW search" = increase **hnsw.ef_search**.'
+  quick:
+    - q: Which operator returns cosine distance?
+      a: "<=>"
+    - q: Does a smaller cosine distance mean more or less similar?
+      a: More similar.
+    - q: Where should a tenant filter go?
+      a: In the SQL WHERE clause, alongside the vector ORDER BY.
+    - q: What's the default hnsw.ef_search?
+      a: "40"
+    - q: What does the R in RAG stand for?
+      a: Retrieval.
+references:
+  - title: How to enable and use pgvector on Azure Database for PostgreSQL
+    url: https://learn.microsoft.com/azure/postgresql/extensions/how-to-use-pgvector
+  - title: Optimize performance when using pgvector
+    url: https://learn.microsoft.com/azure/postgresql/extensions/how-to-optimize-performance-pgvector
+  - title: Retrieval-augmented generation in Azure AI Search
+    url: https://learn.microsoft.com/azure/search/retrieval-augmented-generation-overview
+  - title: pgvector README
+    url: https://github.com/pgvector/pgvector
+related:
+  - embeddings-and-vector-search
+  - postgresql-schema-and-indexes
+  - postgresql-performance-for-vectors
+  - cosmos-db-vector-search
+  - redis-vector-search
+---
+
+## Start with a question
+
+<Story question="How does a chatbot answer from your company's own documents instead of making things up?">
+
+Imagine a new support agent on their first day. They don't know your refund policy, so before answering a customer they open the policy binder, find the right page and read it out. They don't guess.
+
+**Retrieval-augmented generation (RAG)** makes a language model do the same. Your app finds the most relevant passages in your own data, hands them to the model, and asks it to answer only from those. With **pgvector**, the "find the right page" part is a SQL query in the PostgreSQL database you already run.
+
+</Story>
+
+## Explain it like I'm 10
+
+<Eli10>
+
+Every paragraph in your binder gets a secret number code that describes what it's about. Paragraphs about refunds get codes that are close to each other.
+
+When someone asks "can I get my money back?", you make a code for the question too, then grab the paragraphs with the closest codes.
+
+But you only look in your own binder, not your neighbour's. That's the filter.
+
+Then the robot reads those few paragraphs and answers.
+
+</Eli10>
+
+## The technical explanation
+
+RAG has two halves. **Ingestion** happens ahead of time. **Retrieval and generation** happen on every question.
+
+<Flow
+  caption="RAG with PostgreSQL and pgvector"
+  steps={[
+    { title: 'Chunk and embed', text: 'Split documents into chunks and store each chunk with its embedding and metadata.' },
+    { title: 'Embed the question', text: 'Use the same embedding model and dimensions.' },
+    { title: 'Retrieve with a filter', text: 'WHERE tenant_id = ... ORDER BY embedding <=> question LIMIT 5.' },
+    { title: 'Generate', text: 'Send the chunks as context and ask the model to answer only from them.' },
+  ]}
+/>
+
+### Ingestion: store chunks with embeddings
+
+This uses the `doc_chunks` table from the schema lesson (`tenant_id`, `content`, `metadata jsonb`, `embedding vector(1536)`) and the `pgvector` Python package, which teaches psycopg how to send and receive vectors.
+
+```python
+# pip install pgvector numpy openai
+import numpy as np
+from pgvector.psycopg import register_vector
+
+register_vector(conn)            # lets psycopg pass numpy arrays as vector values
+
+def embed(text: str) -> np.ndarray:
+    resp = openai_client.embeddings.create(model="text-embedding-3-small", input=text)
+    return np.array(resp.data[0].embedding, dtype=np.float32)
+
+with conn.cursor() as cur:
+    for i, chunk in enumerate(chunks):
+        cur.execute(
+            """INSERT INTO doc_chunks (tenant_id, doc_id, chunk_no, content, metadata, embedding)
+               VALUES (%s, %s, %s, %s, %s, %s)""",
+            ("contoso", doc_id, i, chunk, Jsonb({"lang": "en", "product": "router"}), embed(chunk)),
+        )
+conn.commit()
+```
+
+`Jsonb` comes from `psycopg.types.json`. In a real loader you'd embed in batches (the embeddings API takes a list) and bulk-load with `COPY`.
+
+### Retrieval: similarity search plus metadata filter
+
+```sql
+SELECT id, content, embedding <=> %(q)s AS distance
+FROM doc_chunks
+WHERE tenant_id = %(tenant)s
+  AND metadata @> '{"lang": "en"}'
+ORDER BY embedding <=> %(q)s
+LIMIT 5;
+```
+
+Three details matter here:
+
+- `<=>` is **cosine distance**, which is 1 minus cosine similarity. Smaller is closer, so you sort **ascending**. If you want a similarity score for display, use `1 - (embedding <=> q)`.
+- The filters live in the **same query**. That's how a customer only ever sees their own documents, and it means all 5 rows are useful.
+- The HNSW index must be built with `vector_cosine_ops` to match `<=>`. OpenAI embeddings are normalised to length 1, so inner product (`<#>`, `vector_ip_ops`) gives the same order and is slightly cheaper.
+
+### Generation: ground the answer
+
+```python
+q = embed(question)
+with conn.cursor() as cur:
+    cur.execute(RETRIEVE_SQL, {"q": q, "tenant": tenant_id})
+    rows = cur.fetchall()
+
+context = "\n\n".join(f"[{r[0]}] {r[1]}" for r in rows)
+response = openai_client.responses.create(
+    model="gpt-4.1-mini",   # your deployment name
+    instructions=(
+        "Answer only from the sources below. Cite source ids in square brackets. "
+        "If the sources don't contain the answer, say you don't know."
+    ),
+    input=f"Sources:\n{context}\n\nQuestion: {question}",
+)
+print(response.output_text)
+```
+
+The instruction "say you don't know" is what stops the model from filling gaps with guesses.
+
+### Tuning recall at query time
+
+HNSW is approximate. It examines a candidate list of size **hnsw.ef_search** (default **40**) and returns the best of those. Raise it for better recall, lower it for speed:
+
+```sql
+BEGIN;
+SET LOCAL hnsw.ef_search = 100;   -- only for this transaction
+SELECT ... ORDER BY embedding <=> %s LIMIT 5;
+COMMIT;
+```
+
+With IVFFlat, the matching knob is **ivfflat.probes** (default 1): how many clusters to search.
+
+<TryIt labs="dev-postgres" text="Run a similarity query with a tenant filter in the lab and see which chunks come back." />
+
+<Callout type="exam">
+Expect a query to complete or fix. **Smallest distance first** (`ORDER BY ... <=> ... LIMIT k`, ascending) returns the most similar rows. "Only this customer's documents" is a **WHERE filter in the same query**, not post-filtering. "Better recall" is a higher **hnsw.ef_search** (or **ivfflat.probes**). And the question must be embedded with the **same model** as the documents.
+</Callout>
+
+<DeepDive title="When filters and HNSW don't get along">
+
+HNSW walks its graph to find `ef_search` candidates, and only then applies your `WHERE`. If the filter matches 1% of rows, most of those 40 candidates get thrown away and you might get 2 rows back instead of 5. Fixes, roughly from simplest: raise `hnsw.ef_search`; add a B-tree index on the filter column so the planner can choose an exact search over the few matching rows when the filter is very selective; build a **partial index** per big tenant or **partition** by tenant; or, on pgvector 0.8.0 and later, `SET hnsw.iterative_scan = relaxed_order` so the index keeps scanning until enough rows pass the filter (`hnsw.max_scan_tuples` caps the work). Check your version with `SELECT extversion FROM pg_extension WHERE extname = 'vector';`.
+
+</DeepDive>
+
+## Real-world business scenario
+
+<Scenario
+  company="Contoso Telecom (fictional)"
+  industry="Telecommunications"
+  problem="A support assistant served three brands from one database. Retrieval fetched the top 5 chunks across all brands and filtered in Python, so answers sometimes quoted the wrong brand's plan prices, and once showed a partner's internal note."
+  service="pgvector on Azure Database for PostgreSQL with the brand and language filters moved into the SQL WHERE clause, an HNSW index with vector_cosine_ops, and a prompt that answers only from cited chunks."
+  why="Filtering in the same query guarantees every retrieved chunk is allowed and relevant, and the grounding instruction stops the model inventing details when nothing matches."
+  outcome="Wrong-brand answers stopped, and the team can trace every answer back to the chunk ids it cited."
+/>
+
+## When to use it and when not to
+
+<UseWhen
+  use={[
+    'Your documents or product data already live in PostgreSQL and you want RAG without another data store.',
+    'You need strict per-tenant or per-user filtering in the same query as the similarity search.',
+    'You want to join retrieved chunks with business tables (orders, entitlements) in SQL.',
+  ]}
+  avoid={[
+    'You need hybrid keyword plus vector ranking with semantic reranking out of the box.',
+    'The question is about exact values, such as an order number. A normal WHERE lookup is faster and exact.',
+  ]}
+  alternatives={[
+    '<strong>Azure AI Search</strong> for hybrid search, semantic ranking and indexers that pull from many sources.',
+    '<strong>Azure Cosmos DB for NoSQL vector search</strong> for document-first apps.',
+    '<strong>Azure Managed Redis</strong> vector search for very low-latency lookups such as a semantic cache.',
+  ]}
+/>

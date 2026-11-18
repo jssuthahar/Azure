@@ -13,8 +13,12 @@ import { responsible } from './responsible';
 import { genai } from './genai';
 import { foundry } from './foundry';
 import { perception } from './perception';
+import { containers } from './containers';
+import { vectordata } from './vectordata';
+import { messaging } from './messaging';
+import { observe } from './observe';
 
-const BUILDERS: Record<Mode3D, (c: Ctx) => Ctl> = { datacenter, zones, regions, redundancy, scale, network, governance, identity, responsible, genai, foundry, perception };
+const BUILDERS: Record<Mode3D, (c: Ctx) => Ctl> = { datacenter, zones, regions, redundancy, scale, network, governance, identity, responsible, genai, foundry, perception, containers, vectordata, messaging, observe };
 
 export function webglOk() {
   try {

@@ -1,0 +1,27 @@
+{ "cert": "ai-200", "domain": 3, "topic": "functions-triggers-and-bindings", "questions": [
+  { "id": "dev-fnb-1", "type": "single", "question": "You are developing an Azure Function in Python by using the v2 programming model. The function must run each time a message arrives in an Azure Service Bus queue named jobs. Which decorator should you use?", "options": [
+    { "text": "@app.service_bus_queue_trigger(arg_name=\"msg\", queue_name=\"jobs\", connection=\"ServiceBusConnection\")", "why": "Correct. This trigger starts the function for each message in the jobs queue." },
+    { "text": "@app.service_bus_queue_output(arg_name=\"msg\", queue_name=\"jobs\", connection=\"ServiceBusConnection\")", "why": "This is an output binding. It writes messages to the queue rather than starting the function." },
+    { "text": "@app.timer_trigger(schedule=\"0 */1 * * * *\", arg_name=\"timer\")", "why": "A timer trigger runs on a schedule and does not react to queue messages." },
+    { "text": "@app.route(route=\"jobs\")", "why": "This defines an HTTP trigger, not a Service Bus trigger." } ], "answer": [0], "explanation": "In the Python v2 model, triggers and bindings are declared with decorators on a FunctionApp object in function_app.py.", "objective": "3.2.1" },
+  { "id": "dev-fnb-2", "type": "single", "scenario": "An HTTP-triggered Python function has the decorator @app.service_bus_queue_output(arg_name=\"job\", queue_name=\"jobs\", connection=\"ServiceBusConnection\") and a parameter named job of type func.Out[str].", "question": "How should the function send a message to the queue?", "options": [
+    { "text": "Call job.set() with the message body", "why": "Correct. Setting the value of the output parameter causes the Functions host to send the message." },
+    { "text": "Return the message body as the HTTP response", "why": "The HTTP response is returned to the caller. It is not written to the queue binding." },
+    { "text": "Create a ServiceBusClient inside the function and call send_messages", "why": "This works but bypasses the output binding that is already declared, which is the purpose of the requirement." },
+    { "text": "Call job.get() with the message body", "why": "func.Out exposes set() for output values. get() is not used to send output." } ], "answer": [0], "explanation": "Output bindings in Python use func.Out[T]. The value passed to set() is written to the target service when the function completes.", "objective": "3.2.1" },
+  { "id": "dev-fnb-3", "type": "single", "question": "A Python function is triggered by an Azure Service Bus queue and uses the default trigger settings. The function raises an unhandled exception for a message. What happens to the message?", "options": [
+    { "text": "The message is abandoned and delivered again until the maximum delivery count is reached, after which it is moved to the dead-letter queue", "why": "Correct. The trigger completes messages on success and abandons them on failure." },
+    { "text": "The message is deleted permanently", "why": "The trigger uses peek-lock, so a failure does not delete the message." },
+    { "text": "The message is deferred and can be retrieved only by sequence number", "why": "The trigger does not defer messages automatically." },
+    { "text": "The message is retried indefinitely every second", "why": "Retries are limited by the maximum delivery count of the queue." } ], "answer": [0], "explanation": "Service Bus retries the message through redelivery. Design the function to be idempotent because a message can be processed more than once.", "objective": "3.2.1" },
+  { "id": "dev-fnb-4", "type": "single", "question": "An HTTP-triggered function must be callable only by clients that supply a key specific to that function. The function must not require the host master key. Which authorization level should you set?", "options": [
+    { "text": "FUNCTION", "why": "Correct. Callers must supply a function key or host key in the x-functions-key header or code query string." },
+    { "text": "ANONYMOUS", "why": "Anonymous functions require no key, so any caller can invoke them." },
+    { "text": "ADMIN", "why": "Admin level requires the master key, which the requirement excludes." },
+    { "text": "SYSTEM", "why": "SYSTEM is not an HTTP authorization level for function code." } ], "answer": [0], "explanation": "The authorization levels for HTTP triggers are ANONYMOUS, FUNCTION, and ADMIN. FUNCTION is the default.", "objective": "3.2.1" },
+  { "id": "dev-fnb-5", "type": "single", "question": "A function must rebuild a search index at 02:00 every day. Which trigger configuration should you use?", "options": [
+    { "text": "@app.timer_trigger(schedule=\"0 0 2 * * *\", arg_name=\"timer\")", "why": "Correct. The six-field NCRONTAB expression runs at second 0, minute 0, hour 2 every day." },
+    { "text": "@app.timer_trigger(schedule=\"0 2 * * *\", arg_name=\"timer\")", "why": "This is a five-field cron expression. The timer trigger expects six fields that start with seconds." },
+    { "text": "@app.event_grid_trigger(arg_name=\"event\")", "why": "An Event Grid trigger reacts to events, not to a schedule." },
+    { "text": "@app.route(route=\"reindex\", methods=[\"POST\"])", "why": "An HTTP trigger needs an external caller and does not run on a schedule by itself." } ], "answer": [0], "explanation": "The timer trigger uses NCRONTAB expressions in the format {second} {minute} {hour} {day} {month} {day-of-week}.", "objective": "3.2.1" }
+] }

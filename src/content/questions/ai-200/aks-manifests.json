@@ -1,0 +1,148 @@
+{
+  "cert": "ai-200",
+  "domain": 1,
+  "topic": "aks-manifests",
+  "questions": [
+    {
+      "id": "dev-aks-1",
+      "type": "single",
+      "question": "You need to make a Deployment in AKS reachable from the internet through a public IP address. Which Service type should you define in the manifest?",
+      "options": [
+        {
+          "text": "LoadBalancer",
+          "why": "Correct. A LoadBalancer Service gets a public IP address from the Azure load balancer."
+        },
+        {
+          "text": "ClusterIP",
+          "why": "ClusterIP is reachable only from inside the cluster."
+        },
+        {
+          "text": "Headless (clusterIP: None)",
+          "why": "A headless Service returns pod IPs for in-cluster discovery and has no public IP."
+        },
+        {
+          "text": "ExternalName",
+          "why": "ExternalName maps a Service to an external DNS name and does not expose pods."
+        }
+      ],
+      "answer": [
+        0
+      ],
+      "explanation": "Use type LoadBalancer for a public IP address on AKS.",
+      "objective": "1.2.3"
+    },
+    {
+      "id": "dev-aks-2",
+      "type": "single",
+      "question": "After you apply a Deployment and a Service, the Service has no endpoints. The pods are running and ready. What is the most likely cause?",
+      "options": [
+        {
+          "text": "The Service selector does not match the labels on the pods",
+          "why": "Correct. A Service routes only to pods whose labels match its selector."
+        },
+        {
+          "text": "The Deployment has more than one replica",
+          "why": "Multiple replicas are supported and would add endpoints."
+        },
+        {
+          "text": "The Service type is ClusterIP",
+          "why": "ClusterIP Services still have endpoints for matching pods."
+        },
+        {
+          "text": "The image was pulled from Azure Container Registry",
+          "why": "The image source does not affect Service endpoints."
+        }
+      ],
+      "answer": [
+        0
+      ],
+      "explanation": "Endpoints are populated from ready pods that match the Service selector.",
+      "objective": "1.2.3"
+    },
+    {
+      "id": "dev-aks-3",
+      "type": "single",
+      "question": "Pods in an AKS cluster must pull images from the registry contosoacr without image pull secrets. Which command should you run?",
+      "options": [
+        {
+          "text": "az aks update --name aks-rag --resource-group rg-ai --attach-acr contosoacr",
+          "why": "Correct. --attach-acr assigns the AcrPull role to the cluster's kubelet identity."
+        },
+        {
+          "text": "az acr update --name contosoacr --admin-enabled true",
+          "why": "This enables a shared admin password, which would still require a secret."
+        },
+        {
+          "text": "kubectl create secret docker-registry acr-secret",
+          "why": "This creates an image pull secret, which the requirement prohibits."
+        },
+        {
+          "text": "az aks get-credentials --name aks-rag --resource-group rg-ai",
+          "why": "This configures kubectl access and does not grant registry access."
+        }
+      ],
+      "answer": [
+        0
+      ],
+      "explanation": "Attaching the registry grants AcrPull to the kubelet identity.",
+      "objective": "1.2.3"
+    },
+    {
+      "id": "dev-aks-4",
+      "type": "single",
+      "question": "You update the image tag in a Deployment manifest and run kubectl apply. The new version causes errors. Which command should you run to return to the previous version?",
+      "options": [
+        {
+          "text": "kubectl rollout undo deployment/ragapi",
+          "why": "Correct. rollout undo reverts the Deployment to its previous revision."
+        },
+        {
+          "text": "kubectl delete deployment ragapi",
+          "why": "This removes the Deployment and all its pods."
+        },
+        {
+          "text": "kubectl scale deployment/ragapi --replicas=0",
+          "why": "This stops all pods and does not restore the previous version."
+        },
+        {
+          "text": "kubectl get events",
+          "why": "This lists events and does not change the Deployment."
+        }
+      ],
+      "answer": [
+        0
+      ],
+      "explanation": "Deployments keep a rollout history, and rollout undo returns to the previous ReplicaSet.",
+      "objective": "1.2.3"
+    },
+    {
+      "id": "dev-aks-5",
+      "type": "multi",
+      "question": "A Deployment manifest must provide an API key to a container as an environment variable. The key must not appear in the manifest. Which TWO approaches meet the requirement?",
+      "options": [
+        {
+          "text": "Reference a Kubernetes Secret by using valueFrom.secretKeyRef",
+          "why": "Correct. The manifest refers to the Secret by name, not by value."
+        },
+        {
+          "text": "Mount the key from Azure Key Vault by using the Secrets Store CSI Driver and sync it to a Secret",
+          "why": "Correct. The value stays in Key Vault and is exposed through the driver."
+        },
+        {
+          "text": "Set the env value field to the key",
+          "why": "This places the key in the manifest."
+        },
+        {
+          "text": "Add the key to the image as an ENV instruction",
+          "why": "This places the key in the image."
+        }
+      ],
+      "answer": [
+        0,
+        1
+      ],
+      "explanation": "Use secretKeyRef or the Key Vault CSI driver so the secret does not appear in the manifest or image.",
+      "objective": "1.2.3"
+    }
+  ]
+}

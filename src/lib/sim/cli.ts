@@ -5,6 +5,7 @@
 import { Sim, SimError, SUB_ID, SUB_NAME, REGIONS, VM_SIZES, IMAGES, TYPE_INFO, type Res } from './engine';
 import { World, BICEP_FILE, POLICY_DEFS, ONPREM_SERVERS, DATABOX_STEPS } from './world';
 import * as F from './foundry';
+import * as D from './devsvc';
 
 export interface CliResult {
   out?: string;
@@ -108,6 +109,7 @@ function helpFor(path: string): string {
       '    az group list -o table',
       '',
       'Add --help to any group, e.g. `az vm --help`. Type `clear` to clear the screen.',
+      D.SHELL_HELP + '.',
     ].join('\n');
   const cmds = GROUPS[path];
   if (!cmds) return `No help found for '${path}'. Try 'az --help'.`;
@@ -734,6 +736,8 @@ Object.assign(C, {
 /** Shell commands outside `az` that the practice world understands. */
 function shellExtra(tokens: string[], sim: Sim): CliResult | null {
   if (!(sim instanceof World)) return null;
+  const dv = D.shell(tokens, sim);
+  if (dv) return dv;
   const ai = F.shell(tokens, sim);
   if (ai) return ai;
   const [cmd, ...rest] = tokens;
@@ -762,7 +766,9 @@ function shellExtra(tokens: string[], sim: Sim): CliResult | null {
   return null;
 }
 
-const KNOWN = Object.keys(C);
+// AI-200 developer services: add their help groups (merging into groups that already exist, such as aks).
+for (const [k, list] of Object.entries(D.DEV_GROUPS)) GROUPS[k] = [...(GROUPS[k] ?? []), ...list.filter(([c]) => !(GROUPS[k] ?? []).some(([x]) => x === c))];
+const KNOWN = [...Object.keys(C), ...D.DEV_COMMANDS];
 function lev(a: string, b: string): number {
   const d = Array.from({ length: a.length + 1 }, (_, i) => [i, ...Array(b.length).fill(0)]);
   for (let j = 1; j <= b.length; j++) d[0][j] = j;
@@ -799,7 +805,25 @@ export function runCli(line: string, sim: Sim): CliResult {
   return { out: outs.join('\n') };
 }
 
+/** Bash-style command substitution: `$(az … --query id -o tsv)` runs first and its output replaces it. */
+function substitute(line: string, sim: Sim): { line: string; error?: string } {
+  let err: string | undefined;
+  const next = line.replace(/\$\(([^()]*)\)/g, (_m, inner: string) => {
+    if (err) return '';
+    const r = runOne(inner, sim);
+    if (r.error) { err = r.error; return ''; }
+    const v = (r.out ?? '').trim();
+    return /\s/.test(v) ? `"${v}"` : v;
+  });
+  return { line: next, error: err };
+}
+
 function runOne(line: string, sim: Sim): CliResult {
+  if (line.includes('$(')) {
+    const s = substitute(line, sim);
+    if (s.error) return { error: s.error };
+    line = s.line;
+  }
   const tokens = tokenize(line.trim());
   if (!tokens.length) return { out: '' };
   const first = tokens[0].toLowerCase();
@@ -810,6 +834,10 @@ function runOne(line: string, sim: Sim): CliResult {
     if (extra) return extra;
     if (/^(ls|pwd|cd|echo|whoami|dir)$/.test(first)) return { out: first === 'whoami' ? 'learner' : first === 'pwd' ? '/home/learner' : '' };
     return { error: `bash: ${tokens[0]}: command not found. This practice shell understands Azure CLI commands that start with 'az'. Type 'help'.` };
+  }
+  if (sim instanceof World) {
+    const dv = D.az(tokens.slice(1), sim);
+    if (dv) return dv;
   }
   const p = parse(tokens.slice(1));
   if (!p.words.length || (p.words[0] === 'help')) return { out: helpFor('') };
@@ -840,4 +868,4 @@ function runOne(line: string, sim: Sim): CliResult {
 }
 
 /** Known command prefixes for Tab completion. */
-export const COMPLETIONS = KNOWN.map((k) => `az ${k}`);
+export const COMPLETIONS = [...KNOWN.map((k) => `az ${k}`), ...D.SHELL_COMPLETIONS];

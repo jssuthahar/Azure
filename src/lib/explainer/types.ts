@@ -84,4 +84,4 @@ export function voiceHash(text: string): string {
 }
 
 /** src/explainers/voice.json: written by `npm run voice`. id → step number → clip. */
-export type VoiceManifest = Record<string, Record<string, { hash: string; ms: number; file: string }>>;
+export type VoiceManifest = Record<string, Record<string, { hash: string; ms: number; file: string; /** Made with a voice clone (npm run voice:clone). */ ai?: boolean }>>;

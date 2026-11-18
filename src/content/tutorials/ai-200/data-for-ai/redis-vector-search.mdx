@@ -1,0 +1,261 @@
+---
+title: Vector Search with Azure Managed Redis
+seoTitle: Vector Search and Semantic Caching with Redis | AI-200
+description: Create a RediSearch vector index in Azure Managed Redis with FT.CREATE, run KNN queries with FT.SEARCH and DIALECT 2, and build a semantic cache in Python.
+answer: >-
+  **Azure Managed Redis** does vector search through the **RediSearch** module, which you must select when you create the cache (with Redis 7.4) along with the **Enterprise** or **Non-clustered** clustering policy. You store embeddings as **FLOAT32** bytes in hashes, create an index with **FT.CREATE ... SCHEMA ... VECTOR HNSW** (or **FLAT**) **TYPE FLOAT32 DIM 1536 DISTANCE_METRIC COSINE**, and query with **FT.SEARCH** using `=>[KNN 3 @embedding $vec]` and **DIALECT 2**. A common use is a **semantic cache** that returns a saved answer when a new question means the same thing.
+updated: 2026-11-18
+readingMinutes: 11
+keyTerms:
+  - term: RediSearch
+    definition: The Redis module that adds secondary indexes, full-text search and vector similarity search. In Azure Managed Redis on Redis 7.4 it's chosen at creation.
+  - term: FT.CREATE
+    definition: The RediSearch command that defines an index over keys with a prefix, listing fields such as TEXT, TAG, NUMERIC and VECTOR.
+  - term: FT.SEARCH
+    definition: The RediSearch command that queries an index. Vector queries use KNN syntax and need DIALECT 2.
+  - term: HNSW vs FLAT
+    definition: Vector index algorithms in Redis. FLAT compares against every vector (exact); HNSW uses a graph for fast approximate search.
+  - term: KNN
+    definition: K-nearest neighbours. KNN 3 returns the 3 vectors closest to the query vector.
+  - term: Semantic cache
+    definition: A cache keyed by meaning. It stores prompts, their embeddings and responses, and reuses a response when a new prompt is close enough.
+interview:
+  - level: beginner
+    q: What do you need to do vector search in Azure Managed Redis?
+    a: >-
+      A cache with the RediSearch module, which on Redis 7.4 you pick on the Advanced tab when creating it, and the Enterprise or Non-clustered clustering policy. Then I store each document's embedding as bytes in a hash, create an index with FT.CREATE that declares a VECTOR field, and query with FT.SEARCH using KNN.
+    followUps:
+      - q: Can you add RediSearch to an existing cache later?
+        a: >-
+          Not with Redis 7.4. Modules are chosen at creation and can't be added afterwards, so you'd create a new cache. Redis 8.2 (preview) includes the modules on the in-memory tiers.
+  - level: intermediate
+    q: Why does your KNN query fail with a syntax error even though the index exists?
+    a: >-
+      Usually because DIALECT 2 is missing. Vector KNN syntax with $parameters needs query dialect 2. The other common one is sending the vector as a JSON string instead of raw FLOAT32 bytes.
+    followUps: []
+  - level: experienced
+    q: How does a semantic cache decide whether to reuse an answer?
+    a: >-
+      It embeds the new prompt, runs a KNN 1 search over cached prompts, and compares the returned cosine distance with a threshold, say 0.1. Below the threshold it returns the stored response; above it, it calls the model and stores the new prompt, embedding and response with a TTL. I also filter by tenant, model and prompt version so one customer never gets another's answer and old prompts don't leak into a new release.
+    followUps: []
+  - level: architecture
+    q: When would you use Redis for vectors rather than PostgreSQL with pgvector?
+    a: >-
+      Redis when I need very low latency and the data is a working set that fits in memory, like a semantic cache or a session-level memory for an agent. pgvector when the vectors belong with relational business data, need joins and transactions, or are too big to keep in RAM affordably.
+    followUps: []
+revision:
+  keyPoints:
+    - RediSearch must be selected at cache creation (Redis 7.4) and needs Enterprise or Non-clustered clustering, not OSS.
+    - Store vectors as raw FLOAT32 bytes, for example numpy.astype(np.float32).tobytes().
+    - "FT.CREATE idx ON HASH PREFIX 1 doc: SCHEMA ... embedding VECTOR HNSW 6 TYPE FLOAT32 DIM 1536 DISTANCE_METRIC COSINE"
+    - "FT.SEARCH idx \"*=>[KNN 3 @embedding $vec AS score]\" PARAMS 2 vec <bytes> SORTBY score DIALECT 2"
+    - FLAT is exact and fine for small sets; HNSW is approximate and fast for large ones.
+    - A semantic cache reuses a response when the cosine distance is under a threshold.
+  mistakes:
+    - Creating the cache without RediSearch, or with the OSS clustering policy, then trying to run FT.CREATE.
+    - Leaving out DIALECT 2 on a KNN query.
+    - Declaring DIM 1536 but sending vectors from a model with different dimensions.
+  examTips:
+    - '"Vector index in Azure Managed Redis" = **RediSearch** module, chosen **at creation**.'
+    - '"Exact search over a small set" = **FLAT**; "fast approximate search at scale" = **HNSW**.'
+    - '"Return the 5 nearest vectors" = **FT.SEARCH** with **KNN 5** and **DIALECT 2**.'
+  quick:
+    - q: Which command creates a vector index?
+      a: FT.CREATE
+    - q: Which data type do vectors use in the index definition here?
+      a: FLOAT32
+    - q: Which clustering policy can't be used with RediSearch?
+      a: OSS
+    - q: In COSINE distance results, is a lower score closer or further?
+      a: Closer.
+    - q: Which query dialect does KNN need?
+      a: DIALECT 2
+references:
+  - title: Use Redis modules with Azure Managed Redis
+    url: https://learn.microsoft.com/azure/redis/redis-modules
+  - title: "Tutorial: Use Azure Managed Redis as a semantic cache"
+    url: https://learn.microsoft.com/azure/redis/tutorial-semantic-cache
+  - title: Azure Managed Redis architecture
+    url: https://learn.microsoft.com/azure/redis/architecture
+  - title: Redis vector search documentation
+    url: https://redis.io/docs/latest/develop/interact/search-and-query/advanced-concepts/vectors/
+related:
+  - redis-caching
+  - embeddings-and-vector-search
+  - pgvector-rag
+  - cosmos-db-vector-search
+---
+
+## Start with a question
+
+<Story question="Two customers ask 'How do I reset my password?' and 'I forgot my password, what now?'. Should your app pay the model twice?">
+
+A normal cache only helps if the question is typed exactly the same way. People don't do that. A good receptionist hears both questions and knows they mean the same thing, so she hands over the same printed sheet.
+
+**Vector search in Azure Managed Redis** gives your app that skill. Each question becomes an **embedding**, Redis finds the stored question with the closest meaning in about a millisecond, and if it's close enough you reuse the saved answer. That's a **semantic cache**, and the same index can power fast retrieval for RAG too.
+
+</Story>
+
+## Explain it like I'm 10
+
+<Eli10>
+
+Every question gets turned into a dot on a giant map. Questions that mean the same thing land near each other.
+
+When a new question comes in, you put its dot on the map and look for the nearest dot you've already answered.
+
+If it's really close, you give the same answer. If it's far away, you ask the teacher and save the new answer for next time.
+
+</Eli10>
+
+## The technical explanation
+
+### Step 1: create the cache with RediSearch
+
+Vector search lives in the **RediSearch** module. On the **Advanced** tab when you create the cache:
+
+- With **Redis 7.4** (the default version), tick **RediSearch** under modules. You can't add or change modules after creation. With Redis 8.2 (preview) on the in-memory tiers, all modules are already included.
+- Choose the **Enterprise** or **Non-clustered** clustering policy. RediSearch doesn't support the **OSS** clustering policy, and you can't switch from OSS or Enterprise later.
+
+Get this wrong and the only fix is a new cache, so it's a favourite exam trap.
+
+### Step 2: store embeddings as bytes
+
+Each document or cached prompt is a **hash** with normal fields plus the embedding as raw **FLOAT32** bytes:
+
+```python
+import numpy as np
+
+def to_bytes(vec) -> bytes:
+    return np.asarray(vec, dtype=np.float32).tobytes()   # 1536 x 4 bytes
+
+r.hset("doc:1001", mapping={
+    "content": "To reset your password, open Settings > Security...",
+    "tenant": "contoso",
+    "embedding": to_bytes(embed("To reset your password, open Settings > Security...")),
+})
+```
+
+For this, create the Redis client with `decode_responses=False`, because the embedding is binary.
+
+### Step 3: create the vector index
+
+```text
+FT.CREATE idx:docs ON HASH PREFIX 1 doc:
+  SCHEMA
+    content   TEXT
+    tenant    TAG
+    embedding VECTOR HNSW 6 TYPE FLOAT32 DIM 1536 DISTANCE_METRIC COSINE
+```
+
+- `ON HASH PREFIX 1 doc:` indexes every hash whose key starts with `doc:`, including ones you add later.
+- `HNSW 6` means six attribute arguments follow (three name-value pairs).
+- `DIM` must match your embedding model exactly. `DISTANCE_METRIC` can be `COSINE`, `L2` or `IP`.
+- `TAG` fields such as `tenant` give you exact-match filters.
+
+| Algorithm | How it searches | Use it when |
+| --- | --- | --- |
+| **FLAT** | Compares against every vector (exact) | Small sets, up to tens of thousands, or when you need perfect recall |
+| **HNSW** | Walks a graph (approximate), tuned with `M`, `EF_CONSTRUCTION`, `EF_RUNTIME` | Larger sets where speed matters more than the last bit of recall |
+
+### Step 4: query with KNN
+
+```text
+FT.SEARCH idx:docs "(@tenant:{contoso})=>[KNN 3 @embedding $vec AS score]"
+  PARAMS 2 vec <1536 float32 bytes>
+  SORTBY score
+  RETURN 2 content score
+  DIALECT 2
+```
+
+In Python:
+
+```python
+from redis.commands.search.query import Query
+
+q = (
+    Query("(@tenant:{contoso})=>[KNN 3 @embedding $vec AS score]")
+    .sort_by("score")
+    .return_fields("content", "score")
+    .dialect(2)
+)
+results = r.ft("idx:docs").search(q, query_params={"vec": to_bytes(embed(question))})
+for doc in results.docs:
+    print(doc.score, doc.content)
+```
+
+The part before `=>` is a **pre-filter** (here, only this tenant's docs; `*` means all). `score` is the **cosine distance**, so lower means closer. **DIALECT 2** is required for this KNN-with-parameters syntax.
+
+<Flow
+  caption="Semantic cache with Azure Managed Redis"
+  steps={[
+    { title: 'Embed', text: 'Turn the new prompt into a 1536-number vector.' },
+    { title: 'KNN 1', text: 'FT.SEARCH finds the closest cached prompt for this tenant and model.' },
+    { title: 'Compare', text: 'If the distance is under the threshold (say 0.1), return the saved answer.' },
+    { title: 'Miss', text: 'Otherwise call the model, then HSET the prompt, vector and answer with a TTL.' },
+  ]}
+/>
+
+### A semantic cache in a few lines
+
+```python
+THRESHOLD = 0.10   # cosine distance; tune it on real questions
+
+def answer(question: str, tenant: str) -> str:
+    vec = to_bytes(embed(question))
+    q = (Query(f"(@tenant:{{{tenant}}})=>[KNN 1 @embedding $vec AS score]")
+         .return_fields("response", "score").dialect(2))
+    hits = r.ft("idx:cache").search(q, query_params={"vec": vec}).docs
+    if hits and float(hits[0].score) < THRESHOLD:
+        return hits[0].response                          # semantic hit
+    text = call_model(question)                          # miss
+    key = f"cache:{tenant}:{uuid4()}"
+    r.hset(key, mapping={"prompt": question, "response": text, "tenant": tenant, "embedding": vec})
+    r.expire(key, 86400)                                 # cached answers age out after a day
+    return text
+```
+
+Microsoft's tutorial shows the same idea with **RedisVL**'s `SemanticCache` class, and Azure API Management can do it at the gateway with the `llm-semantic-cache-lookup` and `llm-semantic-cache-store` policies backed by Azure Managed Redis. Semantic caching is a pattern you build, not a switch on the cache.
+
+<TryIt labs="dev-redis" text="Create a vector index with FT.CREATE, then run an FT.SEARCH KNN query in the lab console." />
+
+<Callout type="exam">
+Look for these clues. "Add vector search to Azure Managed Redis" means **RediSearch**, selected **when the cache is created**, with **Enterprise** (or Non-clustered) clustering, never **OSS**. The index definition is **FT.CREATE ... VECTOR HNSW|FLAT ... TYPE FLOAT32 DIM n DISTANCE_METRIC COSINE**. The query is **FT.SEARCH** with **KNN k** and **DIALECT 2**. "Reuse answers for questions with the same meaning" is a **semantic cache**.
+</Callout>
+
+<DeepDive title="Tuning a semantic cache so it doesn't hand out wrong answers">
+
+The threshold is the hard part. Too loose, and "cancel my order" gets the cached answer for "cancel my subscription". Too strict, and you never hit. Start strict, log every hit with its distance, and loosen slowly. Partition the cache with TAG filters by tenant, user (for personal data), model deployment and prompt version, so a new system prompt doesn't serve answers written under the old one. Give entries a TTL so facts like prices don't live forever, and skip caching for prompts that include personal details or time-sensitive data.
+
+</DeepDive>
+
+## Real-world business scenario
+
+<Scenario
+  company="Litware Bank (fictional)"
+  industry="Banking"
+  problem="The bank's help assistant answered about 40,000 questions a day, and around a third were rewordings of the same 200 FAQs. Each one was a full model call, which pushed up token costs and made busy-hour replies slow."
+  service="Azure Managed Redis (Balanced tier, RediSearch, Enterprise clustering) holding a semantic cache: prompt embeddings in an HNSW index with tenant and prompt-version TAG filters, a strict distance threshold and a 24-hour TTL."
+  why="Reworded questions now match a cached answer in a few milliseconds, while new or personal questions still go to the model. Version tags stop old answers surviving a prompt change."
+  outcome="A large share of FAQ traffic is served from the cache, and replies to common questions became near-instant."
+/>
+
+## When to use it and when not to
+
+<UseWhen
+  use={[
+    'You want a semantic cache in front of a language model to save tokens and time.',
+    'You need millisecond vector lookups over a working set that fits in memory.',
+    'You already use Azure Managed Redis for caching and want vectors in the same place.',
+  ]}
+  avoid={[
+    'Very large document collections that would be costly to keep in RAM. pgvector or Azure AI Search fit better.',
+    'Answers that depend on personal or fast-changing data. Don\'t serve them from a shared semantic cache.',
+    'A cache already created with the OSS clustering policy or without RediSearch. You\'ll need a new cache.',
+  ]}
+  alternatives={[
+    '<strong>pgvector on Azure Database for PostgreSQL</strong> when vectors belong with relational data and filters.',
+    '<strong>Azure Cosmos DB for NoSQL vector search</strong> for document apps at global scale.',
+    '<strong>Azure API Management semantic caching</strong> to add caching at the gateway without app changes.',
+  ]}
+/>

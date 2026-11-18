@@ -1,0 +1,148 @@
+{
+  "cert": "ai-200",
+  "domain": 1,
+  "topic": "acr-tasks",
+  "questions": [
+    {
+      "id": "dev-acrtasks-1",
+      "type": "single",
+      "question": "A developer works on a computer that does not have Docker installed. The developer needs to build the Dockerfile in the current folder and push the image to the registry contosoacr as ragapi:v1. Which command should the developer run?",
+      "options": [
+        {
+          "text": "az acr build --registry contosoacr --image ragapi:v1 .",
+          "why": "Correct. az acr build runs a quick task that builds in Azure and pushes the image to the registry."
+        },
+        {
+          "text": "docker build -t contosoacr.azurecr.io/ragapi:v1 .",
+          "why": "This requires Docker on the local computer."
+        },
+        {
+          "text": "az acr import --name contosoacr --image ragapi:v1",
+          "why": "az acr import copies existing images. It does not build from a Dockerfile."
+        },
+        {
+          "text": "az acr repository update --name contosoacr --image ragapi:v1",
+          "why": "This changes image attributes. It does not build an image."
+        }
+      ],
+      "answer": [
+        0
+      ],
+      "explanation": "Quick tasks run the build in Azure, so no local Docker engine is required.",
+      "objective": "1.1.2"
+    },
+    {
+      "id": "dev-acrtasks-2",
+      "type": "single",
+      "question": "You must configure Azure Container Registry to rebuild an application image automatically when its base image, python:3.12-slim, receives a security update. What should you configure?",
+      "options": [
+        {
+          "text": "An ACR task with a base image update trigger",
+          "why": "Correct. The base image update trigger reruns the task when the image in the FROM instruction is updated."
+        },
+        {
+          "text": "A webhook that fires on image push to your registry",
+          "why": "A webhook on your own registry does not detect updates to an upstream base image or run a build."
+        },
+        {
+          "text": "Geo-replication for the registry",
+          "why": "Geo-replication replicates images across regions and does not rebuild images."
+        },
+        {
+          "text": "A retention policy for untagged manifests",
+          "why": "A retention policy deletes old manifests and does not rebuild images."
+        }
+      ],
+      "answer": [
+        0
+      ],
+      "explanation": "ACR Tasks can trigger on base image updates to keep application images patched.",
+      "objective": "1.1.2"
+    },
+    {
+      "id": "dev-acrtasks-3",
+      "type": "multi",
+      "question": "You run the following command to create an ACR task: az acr task create --registry contosoacr --name build-api --image api:{{.Run.ID}} --context https://github.com/contoso/api.git#main --file Dockerfile --git-access-token $GITHUB_PAT. Which TWO events will start the task by default?",
+      "options": [
+        {
+          "text": "A commit is pushed to the main branch of the repository",
+          "why": "Correct. The source code commit trigger is enabled by default for tasks with a Git context."
+        },
+        {
+          "text": "The base image referenced in the Dockerfile is updated",
+          "why": "Correct. The base image update trigger is enabled by default."
+        },
+        {
+          "text": "A user pulls the api image from the registry",
+          "why": "Image pulls do not trigger tasks."
+        },
+        {
+          "text": "The registry SKU is changed",
+          "why": "Changing the SKU does not trigger tasks."
+        }
+      ],
+      "answer": [
+        0,
+        1
+      ],
+      "explanation": "By default, a task with a Git context runs on source code commits and on base image updates. A schedule must be added explicitly.",
+      "objective": "1.1.2"
+    },
+    {
+      "id": "dev-acrtasks-4",
+      "type": "single",
+      "question": "You need a single ACR task definition that builds an image, runs unit tests inside the built container, and pushes the image only if the tests succeed. What should you create?",
+      "options": [
+        {
+          "text": "A multi-step task defined in a YAML file with build, cmd, and push steps",
+          "why": "Correct. Multi-step tasks run steps in order, so a failing cmd step stops the run before the push step."
+        },
+        {
+          "text": "A quick task started with az acr build",
+          "why": "A quick task builds and pushes, but it does not run a separate test step."
+        },
+        {
+          "text": "A scheduled task with a timer trigger",
+          "why": "A timer controls when a task runs, not which steps it runs."
+        },
+        {
+          "text": "A repository-scoped token",
+          "why": "Tokens control registry access and do not define build steps."
+        }
+      ],
+      "answer": [
+        0
+      ],
+      "explanation": "Multi-step tasks defined in YAML support build, test and push workflows.",
+      "objective": "1.1.2"
+    },
+    {
+      "id": "dev-acrtasks-5",
+      "type": "single",
+      "question": "In the az acr task create command, what is the purpose of the --context parameter?",
+      "options": [
+        {
+          "text": "It specifies the location of the source code, such as a Git repository URL and branch",
+          "why": "Correct. The context is the source location that the task builds from."
+        },
+        {
+          "text": "It specifies the name of the image to push",
+          "why": "The image name is specified by the --image parameter."
+        },
+        {
+          "text": "It specifies the Azure region in which the task runs",
+          "why": "Tasks run in the region of the registry. --context does not set a region."
+        },
+        {
+          "text": "It specifies the subscription that is billed for the task",
+          "why": "Billing follows the registry's subscription."
+        }
+      ],
+      "answer": [
+        0
+      ],
+      "explanation": "--context points to the source, and --file names the Dockerfile or YAML file within it.",
+      "objective": "1.1.2"
+    }
+  ]
+}

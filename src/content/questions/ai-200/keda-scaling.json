@@ -1,0 +1,148 @@
+{
+  "cert": "ai-200",
+  "domain": 1,
+  "topic": "keda-scaling",
+  "questions": [
+    {
+      "id": "dev-keda-1",
+      "type": "single",
+      "question": "A container app processes messages from an Azure Service Bus queue named jobs. The app must add replicas as messages accumulate and scale to zero when the queue is empty. Which scale rule type should you configure?",
+      "options": [
+        {
+          "text": "A custom scale rule of type azure-servicebus",
+          "why": "Correct. The azure-servicebus KEDA scaler scales on queue length and supports scale to zero."
+        },
+        {
+          "text": "A CPU scale rule",
+          "why": "CPU rules cannot scale to zero because they need running replicas to measure."
+        },
+        {
+          "text": "An HTTP scale rule",
+          "why": "HTTP rules scale on concurrent requests, not queue messages."
+        },
+        {
+          "text": "A memory scale rule",
+          "why": "Memory rules cannot scale to zero and do not reflect queue length."
+        }
+      ],
+      "answer": [
+        0
+      ],
+      "explanation": "KEDA custom scale rules such as azure-servicebus scale on event source metrics.",
+      "objective": "1.2.2"
+    },
+    {
+      "id": "dev-keda-2",
+      "type": "single",
+      "question": "A container app has a Service Bus scale rule with messageCount set to 10, --min-replicas set to 0, and --max-replicas set to 5. The queue contains 200 messages. How many replicas will run?",
+      "options": [
+        {
+          "text": "5",
+          "why": "Correct. The rule targets 20 replicas, but the count cannot exceed the maximum of 5."
+        },
+        {
+          "text": "20",
+          "why": "The target of 200 divided by 10 is limited by max replicas."
+        },
+        {
+          "text": "10",
+          "why": "messageCount is a per-replica target, not a replica count."
+        },
+        {
+          "text": "0",
+          "why": "Replicas scale to zero only when there are no messages."
+        }
+      ],
+      "answer": [
+        0
+      ],
+      "explanation": "KEDA calculates the desired replica count from the metric and caps it at max replicas.",
+      "objective": "1.2.2"
+    },
+    {
+      "id": "dev-keda-3",
+      "type": "single",
+      "question": "You configure a Service Bus scale rule for a container app. The scaler must authenticate to Service Bus by using a connection string. The connection string is stored as an app secret named sb-conn. Which parameter should you use?",
+      "options": [
+        {
+          "text": "--scale-rule-auth connection=sb-conn",
+          "why": "Correct. --scale-rule-auth maps the scaler's connection parameter to the app secret."
+        },
+        {
+          "text": "--env-vars connection=secretref:sb-conn",
+          "why": "Environment variables are passed to the container, not to the scaler."
+        },
+        {
+          "text": "--registry-password sb-conn",
+          "why": "This parameter is used for container registry credentials."
+        },
+        {
+          "text": "--scale-rule-metadata password=sb-conn",
+          "why": "Metadata holds non-secret settings such as queueName and messageCount."
+        }
+      ],
+      "answer": [
+        0
+      ],
+      "explanation": "Scale rule authentication references app secrets through --scale-rule-auth.",
+      "objective": "1.2.2"
+    },
+    {
+      "id": "dev-keda-4",
+      "type": "single",
+      "question": "A container app scales to zero overnight. Users report a delay on the first request each morning. You must remove the delay while keeping event-driven scaling. What should you do?",
+      "options": [
+        {
+          "text": "Set --min-replicas to 1",
+          "why": "Correct. One replica stays running, which removes the cold start."
+        },
+        {
+          "text": "Set --max-replicas to 1",
+          "why": "This limits scale out and does not keep a replica running when idle."
+        },
+        {
+          "text": "Remove all scale rules",
+          "why": "Without a suitable rule, the app does not scale on events."
+        },
+        {
+          "text": "Switch to single revision mode",
+          "why": "Revision mode does not affect replica counts."
+        }
+      ],
+      "answer": [
+        0
+      ],
+      "explanation": "A minimum of one replica avoids cold starts at the cost of always running one replica.",
+      "objective": "1.2.2"
+    },
+    {
+      "id": "dev-keda-5",
+      "type": "multi",
+      "question": "Which TWO statements about scaling in Azure Container Apps are true?",
+      "options": [
+        {
+          "text": "Container Apps uses KEDA to evaluate custom scale rules",
+          "why": "Correct. KEDA powers event-driven scaling in Container Apps."
+        },
+        {
+          "text": "Setting --min-replicas to 0 allows an app to scale to zero when using an event-driven rule",
+          "why": "Correct. A minimum of zero, combined with a rule such as HTTP or a queue scaler, allows scale to zero."
+        },
+        {
+          "text": "CPU-based scale rules can scale an app to zero replicas",
+          "why": "CPU and memory rules cannot scale to zero."
+        },
+        {
+          "text": "Changing a scale rule updates the existing revision without creating a new one",
+          "why": "Scale rules are revision-scope settings, so changing them creates a new revision."
+        }
+      ],
+      "answer": [
+        0,
+        1
+      ],
+      "explanation": "Container Apps scaling is based on KEDA, and scale to zero requires min replicas of 0 with an event-driven rule.",
+      "objective": "1.2.2"
+    }
+  ]
+}

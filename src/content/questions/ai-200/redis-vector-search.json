@@ -1,0 +1,27 @@
+{ "cert": "ai-200", "domain": 2, "topic": "redis-vector-search", "questions": [
+  { "id": "dev-rvector-1", "type": "single", "question": "You plan to create an Azure Managed Redis instance that runs Redis 7.4 and will be used for vector similarity search. Which configuration must you select when you create the instance?", "options": [
+    { "text": "The RediSearch module with the Enterprise clustering policy", "why": "Correct. RediSearch provides vector indexes, must be selected at creation on Redis 7.4, and supports the Enterprise policy." },
+    { "text": "The RediSearch module with the OSS clustering policy", "why": "RediSearch does not support the OSS clustering policy." },
+    { "text": "No module, because RediSearch can be added after creation", "why": "On Redis 7.4, modules cannot be added or changed after the instance is created." },
+    { "text": "The Flash Optimized tier with geo-replication", "why": "Neither option enables vector search, and Flash Optimized does not support geo-replication." } ], "answer": [0], "explanation": "Select RediSearch at creation and use the Enterprise or Non-clustered clustering policy.", "objective": "2.3.2" },
+  { "id": "dev-rvector-2", "type": "single", "question": "You need to create a RediSearch index over hashes whose keys start with doc: and that contain a 1,536-dimension embedding field. The index must use approximate nearest neighbor search with cosine distance. Which schema definition should you use for the embedding field?", "options": [
+    { "text": "embedding VECTOR HNSW 6 TYPE FLOAT32 DIM 1536 DISTANCE_METRIC COSINE", "why": "Correct. HNSW is the approximate algorithm, and the attributes declare the type, dimensions and metric." },
+    { "text": "embedding VECTOR FLAT 6 TYPE FLOAT32 DIM 1536 DISTANCE_METRIC COSINE", "why": "FLAT performs exact search by comparing every vector, not approximate search." },
+    { "text": "embedding TAG SEPARATOR ,", "why": "TAG fields are for exact-match filters, not vectors." },
+    { "text": "embedding NUMERIC SORTABLE", "why": "NUMERIC fields index single numbers, not vectors." } ], "answer": [0], "explanation": "Declare a VECTOR field with HNSW for approximate search, FLOAT32 type, matching DIM and the COSINE metric.", "objective": "2.3.2" },
+  { "id": "dev-rvector-3", "type": "single", "question": "A developer runs FT.SEARCH idx:docs \"*=>[KNN 3 @embedding $vec AS score]\" PARAMS 2 vec <bytes> SORTBY score. The command returns a syntax error. The index exists and the vector is valid. What should the developer add to the command?", "options": [
+    { "text": "DIALECT 2", "why": "Correct. KNN queries that use parameters require query dialect 2." },
+    { "text": "EX 300", "why": "EX sets a TTL on SET and is not an FT.SEARCH option." },
+    { "text": "NOCONTENT", "why": "NOCONTENT returns only document IDs and does not fix the syntax error." },
+    { "text": "LIMIT 0 0", "why": "This returns no documents and does not enable KNN syntax." } ], "answer": [0], "explanation": "Vector KNN queries in FT.SEARCH must specify DIALECT 2.", "objective": "2.3.2" },
+  { "id": "dev-rvector-4", "type": "single", "question": "A chatbot uses Azure Managed Redis as a semantic cache. For each new prompt, the application runs a KNN 1 search over cached prompts by using the COSINE metric. When should the application return the cached response?", "options": [
+    { "text": "When the returned distance score is below a configured threshold", "why": "Correct. A low cosine distance means the prompts have a similar meaning." },
+    { "text": "When the returned distance score is above a configured threshold", "why": "A higher cosine distance means the prompts are less similar." },
+    { "text": "Only when the new prompt text is identical to the cached prompt text", "why": "That describes an exact-match cache, not a semantic cache." },
+    { "text": "Whenever any result is returned, regardless of score", "why": "KNN always returns the nearest entry, even if it is unrelated." } ], "answer": [0], "explanation": "A semantic cache reuses a response only when the nearest cached prompt is within a distance threshold.", "objective": "2.3.2" },
+  { "id": "dev-rvector-5", "type": "multi", "question": "You are storing documents and embeddings in Azure Managed Redis for vector search by using redis-py. Each tenant must search only its own documents. Which TWO actions should you take?", "options": [
+    { "text": "Store the embedding in each hash as raw FLOAT32 bytes", "why": "Correct. RediSearch vector fields expect binary FLOAT32 values that match the declared type." },
+    { "text": "Declare a TAG field for the tenant and add a pre-filter such as (@tenant:{contoso}) before the KNN clause", "why": "Correct. The pre-filter limits the KNN search to the tenant's documents." },
+    { "text": "Store the embedding as a JSON string in a TEXT field", "why": "TEXT fields are for full-text search and cannot be used for vector similarity." },
+    { "text": "Use the OSS clustering policy for higher throughput", "why": "RediSearch does not support the OSS clustering policy." } ], "answer": [0, 1], "explanation": "Store vectors as FLOAT32 bytes and use a TAG field pre-filter in the KNN query to restrict results.", "objective": "2.3.2" }
+] }

@@ -1,0 +1,233 @@
+---
+title: Embeddings and Vector Search for Developers
+seoTitle: Embeddings and Vector Search for Developers | AI-200
+description: Learn what embeddings are, how to create them with text-embedding-3-small, and how vector search finds similar items in Cosmos DB, PostgreSQL and Redis.
+answer: >-
+  An **embedding** is a list of numbers (a **vector**) that an embedding model such as **text-embedding-3-small** (1,536 dimensions) produces from text, so that texts with similar meaning get vectors that sit close together. **Vector search** embeds the user's question with the **same model**, then asks the database for the stored vectors with the smallest **distance** (usually **cosine**), and an **index** such as DiskANN or HNSW makes that fast. On Azure you can store and search vectors in **Cosmos DB for NoSQL**, **PostgreSQL with pgvector** and **Azure Managed Redis**.
+updated: 2026-11-18
+readingMinutes: 10
+keyTerms:
+  - term: Embedding
+    definition: A fixed-length list of numbers that represents the meaning of a piece of text, an image or other data.
+  - term: Dimensions
+    definition: The length of an embedding vector, for example 1,536 for text-embedding-3-small.
+  - term: Cosine similarity
+    definition: A measure of how closely two vectors point in the same direction, from -1 (opposite) to 1 (same meaning).
+  - term: k-nearest neighbours (kNN)
+    definition: An exact search that compares the query vector with every stored vector and returns the k closest.
+  - term: Approximate nearest neighbour (ANN)
+    definition: A search that uses an index such as DiskANN or HNSW to find most of the closest vectors much faster, trading a little recall.
+  - term: Recall
+    definition: The share of the true closest items that a search actually returns.
+  - term: Chunking
+    definition: Splitting long documents into smaller passages before embedding, so each vector represents one focused idea.
+interview:
+  - level: beginner
+    q: What is an embedding, in plain words?
+    a: >-
+      It's a list of numbers that captures what a piece of text means. An embedding model reads "How do I get my money back?" and returns, say, 1,536 numbers. A sentence about refunds gets numbers close to it, even if it shares no words, so I can search by meaning instead of by keyword.
+    followUps:
+      - q: Why can't you just use keyword search?
+        a: >-
+          Keyword search misses synonyms. A customer types "money back" and the policy says "refund". Vector search finds it because the meanings are close.
+  - level: intermediate
+    q: You embedded your documents with text-embedding-3-small. Which model do you use for the user's question?
+    a: >-
+      The same one, with the same dimensions. Vectors from different models live in different spaces, so comparing them gives meaningless distances. If I change the model, I re-embed every document.
+    followUps: []
+  - level: experienced
+    q: What's the difference between exact and approximate vector search, and when would you pick each?
+    a: >-
+      Exact kNN compares the query with every vector, so recall is 100% but cost grows with the data. Approximate search uses an index like DiskANN or HNSW and checks only a small part of the graph, so it's far faster and cheaper with a small loss in recall. For a few thousand vectors, or when a filter narrows the set a lot, exact is fine. For hundreds of thousands or millions, I use an ANN index and tune it for the recall I need.
+    followUps: []
+  - level: scenario
+    q: Search results got noticeably worse after a teammate re-ran the ingestion pipeline. What would you check first?
+    a: >-
+      Whether the pipeline used a different embedding model or a different dimensions setting from the one the query code uses. Then whether the chunking changed, for example whole PDFs embedded as one vector instead of paragraphs. Mixed models or giant chunks both blur the results.
+    followUps: []
+  - level: architecture
+    q: How do you decide between Cosmos DB, PostgreSQL and Redis for vectors?
+    a: >-
+      I keep vectors next to the data that already lives somewhere. Product catalogue in Cosmos DB, I use its built-in vector index. Relational data with joins and SQL filters, PostgreSQL with pgvector. If I need sub-millisecond lookups or a semantic cache of answers, Azure Managed Redis. Avoiding a second copy of the data usually matters more than small speed differences.
+    followUps: []
+revision:
+  keyPoints:
+    - An embedding model turns text into a vector; similar meaning gives close vectors.
+    - text-embedding-3-small returns 1,536 dimensions by default; text-embedding-3-large returns 3,072.
+    - Embed documents and questions with the same model and the same dimensions.
+    - Cosine is the usual distance function; dot product and Euclidean are the others.
+    - Exact kNN gives full recall; ANN indexes (DiskANN, HNSW, IVFFlat) trade a little recall for speed.
+    - Chunk long documents so each vector holds one focused idea.
+  mistakes:
+    - Embedding the query with a different model, or different dimensions, from the stored documents.
+    - Embedding whole long documents as one vector, which blurs the meaning.
+    - Forgetting to set the vector dimensions in the database to match the model.
+  examTips:
+    - '"Find items with similar meaning, not matching words" = **vector search** over **embeddings**.'
+    - '"Vectors from model A, queries from model B" is always wrong; re-embed with one model.'
+    - '"Lower latency on millions of vectors, small recall loss acceptable" = an **ANN index** (DiskANN or HNSW).'
+  quick:
+    - q: How many dimensions does text-embedding-3-small return by default?
+      a: 1,536.
+    - q: Which distance function is the usual default for text embeddings?
+      a: Cosine.
+    - q: What do you call search that checks every vector?
+      a: Exact k-nearest neighbours (kNN), or brute force.
+    - q: Name two ANN index algorithms.
+      a: DiskANN and HNSW (IVFFlat is another).
+    - q: Why split documents into chunks before embedding?
+      a: So each vector represents one focused passage, which makes retrieval more precise.
+references:
+  - title: Understand embeddings in Azure OpenAI
+    url: https://learn.microsoft.com/azure/ai-services/openai/concepts/understand-embeddings
+  - title: Vector search in Azure Cosmos DB for NoSQL
+    url: https://learn.microsoft.com/azure/cosmos-db/vector-search
+  - title: Enable and use pgvector in Azure Database for PostgreSQL
+    url: https://learn.microsoft.com/azure/postgresql/flexible-server/how-to-use-pgvector
+  - title: What is a vector database?
+    url: https://learn.microsoft.com/azure/cosmos-db/vector-database
+related:
+  - cosmos-db-vector-search
+  - pgvector-rag
+  - redis-vector-search
+  - cosmos-db-sdk-and-queries
+  - cosmos-db-change-feed
+---
+
+## Start with a question
+
+<Story question="A customer types &quot;How do I get my money back?&quot; but your help page only ever says &quot;refund&quot;. How does search still find it?">
+
+A keyword search looks for the words "money" and "back". Your refund policy doesn't contain either, so it comes back empty, and the customer opens a support ticket.
+
+A good shop assistant wouldn't miss this. They hear the question, understand it's about refunds, and walk you to the right shelf. **Embeddings** give your app the same trick: they turn text into numbers that capture meaning, and **vector search** finds the stored text whose numbers sit closest to the question.
+
+</Story>
+
+## Explain it like I'm 10
+
+<Eli10>
+
+Imagine a giant map where every sentence gets a pin. Sentences about pets go in one corner, sentences about football in another.
+
+"My dog won't eat" and "my puppy is off his food" get pins right next to each other, even though the words are different.
+
+When you ask a question, you drop a new pin on the map and look at the pins nearest to it. That's vector search. The pin's address is the embedding.
+
+</Eli10>
+
+## The technical explanation
+
+An **embedding model** reads text and returns a fixed-length array of floating-point numbers. With **text-embedding-3-small** you get **1,536** numbers by default; **text-embedding-3-large** gives **3,072**. Both let you ask for fewer dimensions with the `dimensions` parameter, which saves storage at a small cost in quality. Whatever you choose, every vector in one index must have the same length.
+
+### Create an embedding in Python
+
+You call the embedding deployment in your Foundry project the same way you'd call a chat model, just with `embeddings.create`:
+
+```python
+import os
+from azure.identity import DefaultAzureCredential
+from azure.ai.projects import AIProjectClient
+
+project = AIProjectClient(
+    endpoint=os.environ["FOUNDRY_PROJECT_ENDPOINT"],
+    credential=DefaultAzureCredential(),
+)
+openai = project.get_openai_client()
+
+def embed(text: str) -> list[float]:
+    result = openai.embeddings.create(
+        model="text-embedding-3-small",  # your DEPLOYMENT name
+        input=text,
+    )
+    return result.data[0].embedding     # a list of 1,536 floats
+
+vector = embed("How do I get my money back?")
+print(len(vector))  # 1536
+```
+
+`input` can also be a list of strings, which embeds a batch in one call. That's much cheaper on round trips when you're loading thousands of documents.
+
+### How "close" is measured
+
+The database compares the query vector with stored vectors using a **distance function**:
+
+| Function | Range | Closest means | Notes |
+| --- | --- | --- | --- |
+| **Cosine** | -1 to 1 | Highest value | The usual default for text. Looks at direction, not length. |
+| **Dot product** | -inf to +inf | Highest value | Same ranking as cosine when vectors are normalised (OpenAI embeddings are). |
+| **Euclidean** | 0 to +inf | Lowest value | Straight-line distance. |
+
+Pick the function your embedding model was trained for. For OpenAI text embeddings, cosine is the safe choice.
+
+### Exact versus approximate search
+
+With no index, the database compares the question with **every** stored vector. That's exact **k-nearest neighbours (kNN)**: 100% recall, but the cost grows with every row you add. With a million vectors of 1,536 dimensions, that's a lot of maths per question.
+
+An **approximate nearest neighbour (ANN)** index builds a structure, usually a graph, that lets the search jump towards the right neighbourhood and check only a small slice of the data. You lose a little **recall** (you might miss one of the true top 10) and gain a big drop in latency and cost.
+
+| Store on Azure | Exact option | ANN index options |
+| --- | --- | --- |
+| Cosmos DB for NoSQL | `flat` (up to 505 dimensions), `quantizedFlat` (compressed) | `diskANN` |
+| PostgreSQL + pgvector | No index (sequential scan) | `hnsw`, `ivfflat`, and DiskANN through the `pg_diskann` extension |
+| Azure Managed Redis | `FLAT` | `HNSW` |
+
+<Flow
+  caption="One vector search, end to end"
+  steps={[
+    { title: 'Ingest', text: 'Split documents into chunks and embed each chunk once.' },
+    { title: 'Store', text: 'Save the text, its metadata and its vector together.' },
+    { title: 'Embed the question', text: 'Use the same model and dimensions as the documents.' },
+    { title: 'Search', text: 'Ask the database for the k closest vectors, with any filters.' },
+    { title: 'Use the results', text: 'Show them, or pass them to a chat model as grounding (RAG).' },
+  ]}
+/>
+
+### Chunking matters more than people expect
+
+If you embed a 40-page manual as one vector, the numbers become an average of everything in it, and nothing matches well. Split it into passages of a few hundred tokens, often with a small overlap so sentences aren't cut in half, and store each chunk with metadata such as `docId`, `page` and `tenantId`. Then a search returns the exact paragraph, and filters keep one customer's data away from another's.
+
+<TryIt labs="dev-cosmos-vector" text="Create a container with a vector policy, then run a VectorDistance query and see which FAQ items come back closest." />
+
+<Callout type="exam">
+Watch for these traps. **Same model, same dimensions** for documents and questions, every time. The vector length in the database's policy or column type (`dimensions: 1536`, `vector(1536)`) must match the model. **Cosine** is the normal choice for text. If a question says "millions of vectors, low latency, a small loss of accuracy is acceptable", the answer is an **ANN index** (DiskANN, HNSW). If it says "must always return the exact closest items", it's a **flat / exact** search.
+</Callout>
+
+<DeepDive title="Where RAG fits">
+
+Retrieval-augmented generation is vector search plus a chat model. You embed the user's question, fetch the top few chunks (with filters such as tenant or language), and put those chunks in the prompt as context. The model answers from your data instead of guessing. The quality of a RAG app depends mostly on the retrieval step: good chunks, the right filters and a sensible `k`. A bigger chat model won't fix chunks that are wrong.
+
+Many apps also add **hybrid search**, which combines a vector score with a keyword (full-text) score. That helps with exact terms the embedding model may blur, like product codes or error numbers.
+
+</DeepDive>
+
+## Real-world business scenario
+
+<Scenario
+  company="Northwind Appliances (fictional)"
+  industry="Retail and support"
+  problem="The help centre search matched keywords only. Customers who typed &quot;washer smells&quot; never found the article titled &quot;Cleaning the drum seal&quot;, and support tickets kept growing."
+  service="Help articles split into chunks, embedded with text-embedding-3-small and stored with their vectors in Azure Cosmos DB for NoSQL, which already held the article catalogue. Questions are embedded with the same deployment and searched with a diskANN vector index."
+  why="The vectors sit in the same items as the articles, so there was no second database to keep in sync, and meaning-based search finds articles that share no words with the question."
+  outcome="Customers find the right article from everyday wording, and the same retrieval step later fed a chat assistant that answers from those articles."
+/>
+
+## When to use it and when not to
+
+<UseWhen
+  use={[
+    "Users describe things in their own words and you need results by meaning, not exact keywords.",
+    "You're building RAG, recommendations (similar products) or duplicate detection.",
+    "You need to search across languages or across text and images with a multimodal model.",
+  ]}
+  avoid={[
+    "You need exact matches, such as an order number or an email address. A normal index or filter is cheaper and exact.",
+    "Your data is tiny and fixed. A simple list or keyword search may be all you need.",
+    "You can't keep the embedding model stable. Every model change means re-embedding everything.",
+  ]}
+  alternatives={[
+    "<strong>Full-text search</strong> for keywords, phrases and exact terms.",
+    "<strong>Hybrid search</strong> to combine keyword and vector scores in one ranking.",
+    "<strong>Azure AI Search</strong> when you want a dedicated search service with indexers, skills and semantic ranking.",
+  ]}
+/>

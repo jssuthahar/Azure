@@ -1,0 +1,277 @@
+---
+title: KQL Queries for Logs and Metrics
+seoTitle: KQL Queries for Logs, Metrics and Alerts | AI-200
+description: Write KQL to filter, summarise and chart Application Insights and container logs, join requests to exceptions, and turn a query into a log search alert.
+answer: >-
+  **Kusto Query Language (KQL)** asks questions of the logs in Application Insights and Log Analytics. A query starts with a **table** and pipes rows through operators: `where` filters, `project` picks columns, `extend` adds columns, `summarize` aggregates (`count()`, `avg()`, `percentile()`) usually `by bin(timestamp, 5m)`, and `render timechart` draws it. A **log search alert** runs a KQL query on a schedule; a **metric alert** watches a numeric metric in near real time.
+updated: 2026-11-18
+readingMinutes: 11
+keyTerms:
+  - term: KQL
+    definition: Kusto Query Language, the read-only, pipe-based query language used by Azure Monitor Logs, Application Insights and Azure Data Explorer.
+  - term: Log Analytics workspace
+    definition: The Azure Monitor store that holds log tables you query with KQL.
+  - term: summarize
+    definition: The KQL operator that groups rows and calculates aggregates such as count(), avg() and percentile().
+  - term: bin()
+    definition: A KQL function that rounds values (usually time) down into fixed-size buckets, such as 5-minute intervals.
+  - term: Workspace-based Application Insights
+    definition: Application Insights that stores data in a Log Analytics workspace, in tables such as AppRequests and AppDependencies.
+  - term: Log search alert
+    definition: An Azure Monitor alert rule that runs a KQL query on a schedule and fires when the result meets a condition.
+  - term: Metric alert
+    definition: An Azure Monitor alert rule that evaluates a numeric metric, such as CPU or request count, every minute or so.
+interview:
+  - level: beginner
+    q: How do you read a KQL query?
+    a: >-
+      Top to bottom. It starts with a table, and each pipe passes the rows to the next operator. So requests | where success == false | count means "take requests, keep the failed ones, count them".
+    followUps: []
+  - level: intermediate
+    q: How would you find the slowest operations in the last hour?
+    a: >-
+      requests | where timestamp > ago(1h) | summarize p95 = percentile(duration, 95), calls = count() by name | top 10 by p95 desc. I use the 95th percentile rather than the average because a few very slow calls hide inside an average.
+    followUps: []
+  - level: experienced
+    q: Why does the same query fail when you run it in the Log Analytics workspace instead of Application Insights?
+    a: >-
+      Workspace-based Application Insights stores data in tables with different names and columns. In Application Insights Logs I can use requests with timestamp, success and duration. In the workspace the table is AppRequests with TimeGenerated, Success and DurationMs. Same data, different schema.
+    followUps: []
+  - level: scenario
+    q: A container app is crash-looping. Where do you look with KQL?
+    a: >-
+      ContainerAppConsoleLogs_CL for what the app wrote to stdout and stderr, filtered by ContainerAppName_s and sorted by time, and ContainerAppSystemLogs_CL for platform events like failed probes. For AKS I'd query ContainerLogV2 by PodName and ContainerName.
+    followUps: []
+  - level: architecture
+    q: When would you pick a log search alert over a metric alert?
+    a: >-
+      A metric alert when there's a metric that already says it, like CPU, request count or Service Bus queue length. It's evaluated about every minute and is cheaper. A log search alert when the condition needs a query, like "more than 5% of /ask calls failed for tenant X" or "this exception text appeared". It runs on a schedule, so it's a bit slower to fire.
+    followUps: []
+revision:
+  keyPoints:
+    - A query starts with a table; each | passes rows to the next operator.
+    - where filters, project picks columns, extend adds computed columns.
+    - summarize aggregates with count(), avg(), percentile(), dcount() by one or more columns.
+    - bin(timestamp, 5m) buckets time; render timechart draws a chart.
+    - top, sort by (order by), take limit rows; join combines tables, often on operation_Id.
+    - "Classic names: requests, dependencies, exceptions, traces, customMetrics. Workspace names: AppRequests, AppDependencies, AppExceptions, AppTraces, AppMetrics."
+    - Log search alerts run KQL on a schedule; metric alerts watch metrics in near real time.
+  mistakes:
+    - Using timestamp and success in a workspace query, where the columns are TimeGenerated and Success.
+    - Forgetting a time filter such as ago(1h), which scans more data and runs slower.
+    - Averaging durations when the question asks for the experience of most users. Use percentiles.
+  examTips:
+    - '"Count failures in 5-minute intervals" = **summarize count() by bin(timestamp, 5m)**.'
+    - '"Show a trend as a line chart" = **render timechart**.'
+    - '"Combine a request with its exceptions" = **join** on **operation_Id**.'
+    - '"Alert on a pattern in log data" = **log search alert**.'
+  quick:
+    - q: Which operator adds a calculated column?
+      a: extend.
+    - q: Which function returns the time 24 hours ago?
+      a: ago(24h).
+    - q: Which table holds outgoing calls in classic Application Insights?
+      a: dependencies.
+    - q: Which table holds Container Apps console output?
+      a: ContainerAppConsoleLogs_CL.
+    - q: Which operator keeps only some columns?
+      a: project.
+references:
+  - title: Kusto Query Language overview
+    url: https://learn.microsoft.com/kusto/query/
+  - title: "Tutorial: Use Kusto queries"
+    url: https://learn.microsoft.com/kusto/query/tutorials/learn-common-operators
+  - title: Log queries in Azure Monitor
+    url: https://learn.microsoft.com/azure/azure-monitor/logs/log-query-overview
+  - title: Application Insights telemetry data model
+    url: https://learn.microsoft.com/azure/azure-monitor/app/data-model-complete
+  - title: Types of Azure Monitor alerts
+    url: https://learn.microsoft.com/azure/azure-monitor/alerts/alerts-types
+related:
+  - opentelemetry-tracing
+  - troubleshoot-containers
+  - azure-container-apps
+  - aks-manifests
+---
+
+## Start with a question
+
+<Story question="The logs have everything. So why does finding one error take an hour?">
+
+Because you're scrolling. Two million log lines a day, and you're paging through them looking for the one that says "timeout". By the time you find it, users have already told you the app is broken.
+
+The logs aren't the problem. Reading them by hand is. **KQL** lets you ask the logs a question, like "how many requests failed in each 5-minute window today?", and get a chart back in a second. Then you save that question as an **alert**, so next time you hear about it before your users do.
+
+</Story>
+
+## Explain it like I'm 10
+
+<Eli10>
+
+Imagine a huge box of every receipt from a shop.
+
+You could read them one by one. Or you could say: "Only the ones from today. Only the refunds. Put them in piles by hour. Count each pile."
+
+That's a KQL query. Each step is a sieve, and what falls through goes to the next sieve. At the end you've got a small answer instead of a huge box.
+
+</Eli10>
+
+## The technical explanation
+
+### Where the data lives
+
+Telemetry from Application Insights and other Azure resources lands in **tables**. The same data has two sets of names, depending on where you query it:
+
+| Data | Application Insights (classic names) | Log Analytics workspace |
+| --- | --- | --- |
+| Incoming requests | `requests` (`timestamp`, `name`, `success`, `duration`, `resultCode`) | `AppRequests` (`TimeGenerated`, `Name`, `Success`, `DurationMs`, `ResultCode`) |
+| Outgoing calls | `dependencies` | `AppDependencies` |
+| Exceptions | `exceptions` | `AppExceptions` |
+| Log messages | `traces` | `AppTraces` |
+| Custom metrics | `customMetrics` | `AppMetrics` |
+| Container Apps stdout/stderr | — | `ContainerAppConsoleLogs_CL` (`ContainerAppName_s`, `Log_s`) |
+| AKS container logs | — | `ContainerLogV2` (`PodName`, `ContainerName`, `LogMessage`) |
+
+Every Application Insights row carries `operation_Id` (the OpenTelemetry trace ID) and `cloud_RoleName` (the service name). In the workspace those are `OperationId` and `AppRoleName`.
+
+### The operators you'll use every day
+
+A query reads top to bottom. Each `|` hands the rows to the next step.
+
+| Operator | Does | Example |
+| --- | --- | --- |
+| `where` | Keeps matching rows | `where timestamp > ago(1h) and success == false` |
+| `project` | Picks (and renames) columns | `project timestamp, name, duration` |
+| `extend` | Adds a calculated column | `extend seconds = duration / 1000` |
+| `summarize` | Groups and aggregates | `summarize count(), avg(duration) by name` |
+| `bin()` | Buckets numbers or time | `by bin(timestamp, 5m)` |
+| `top` / `sort by` / `take` | Orders and limits | `top 10 by duration desc` |
+| `join` | Combines two tables | `join kind=inner (exceptions) on operation_Id` |
+| `render` | Draws a chart | `render timechart` |
+
+Useful aggregates: `count()`, `countif()`, `dcount()` (distinct count), `avg()`, `sum()`, `max()`, `percentile(duration, 95)` and `percentiles(duration, 50, 95, 99)`.
+
+<TryIt labs="dev-observe" text="Open Logs, run a KQL query that charts failed requests per 5 minutes, then create an alert from it." />
+
+### Queries worth knowing
+
+**Failed requests over time:**
+
+```kusto
+requests
+| where timestamp > ago(24h)
+| summarize failed = countif(success == false), total = count() by bin(timestamp, 5m)
+| extend failRate = round(100.0 * failed / total, 1)
+| render timechart
+```
+
+**Slowest operations by 95th percentile:**
+
+```kusto
+requests
+| where timestamp > ago(1h)
+| summarize p95 = percentile(duration, 95), calls = count() by name
+| top 10 by p95 desc
+```
+
+**Which dependency is slow for the /ask endpoint:**
+
+```kusto
+dependencies
+| where timestamp > ago(1h) and operation_Name == "POST /ask"
+| summarize avgMs = avg(duration), p95 = percentile(duration, 95) by target, type
+| sort by p95 desc
+```
+
+**Failed requests with their exception message (a join on the trace ID):**
+
+```kusto
+requests
+| where timestamp > ago(1h) and success == false
+| project operation_Id, name, resultCode, timestamp
+| join kind=inner (
+    exceptions | project operation_Id, type, outerMessage
+  ) on operation_Id
+| take 50
+```
+
+**Errors from one container app:**
+
+```kusto
+ContainerAppConsoleLogs_CL
+| where TimeGenerated > ago(30m)
+| where ContainerAppName_s == "summary-worker" and Log_s has "error"
+| project TimeGenerated, RevisionName_s, Log_s
+| sort by TimeGenerated desc
+```
+
+**A custom metric your code sends (for example tokens used):**
+
+```kusto
+customMetrics
+| where timestamp > ago(1d) and name == "gen_ai.tokens"
+| summarize tokens = sum(valueSum) by bin(timestamp, 1h), cloud_RoleName
+| render timechart
+```
+
+<Flow
+  caption="How one query narrows the data"
+  steps={[
+    { title: 'Table', text: 'requests: every incoming call.' },
+    { title: 'where', text: 'Last 24 hours, failed only.' },
+    { title: 'summarize', text: 'Count per 5-minute bin.' },
+    { title: 'render', text: 'A timechart you can pin or alert on.' },
+  ]}
+/>
+
+### Logs vs metrics, and the two alert types
+
+**Metrics** are numbers sampled at regular intervals (CPU, request count, queue length), stored in a time-series database and fast to chart in Metrics explorer. **Logs** are rows with lots of detail, queried with KQL.
+
+| | Metric alert | Log search alert |
+| --- | --- | --- |
+| Watches | A platform or custom metric | The result of a KQL query |
+| Evaluated | About every minute | On a schedule you set (for example every 5 minutes over the last 15) |
+| Good for | CPU over 80%, queue length over 1,000 | Failure rate per endpoint, a specific exception text, a pattern across tables |
+| Cost | Lower | Higher, and grows with how often it runs |
+
+Both send notifications through an **action group** (email, SMS, webhook, Logic App, Azure Function). In the portal you can go straight from a query in **Logs** to **New alert rule**, and the query is carried over.
+
+<Callout type="exam">
+Exam items often give you a nearly complete query and ask for the missing operator. "Count per time interval" is **summarize ... by bin()**. "Add a column" is **extend**, "keep only some columns" is **project**, "line chart over time" is **render timechart**, and "combine requests with exceptions" is **join on operation_Id**. If the scenario says the query runs against the **workspace**, expect `AppRequests` and `TimeGenerated`.
+</Callout>
+
+<DeepDive title="Writing queries that stay fast and cheap">
+
+Filter on time first, then on other columns, because tables are partitioned by time and the engine can skip whole chunks. Prefer `has` over `contains` for whole words: `has` uses the term index, `contains` scans every string. Project away big columns (like `customDimensions`) before a `join`, and put the smaller table on the left. For dashboards over long periods, summarise into bins instead of returning raw rows. And for alerts, keep the look-back window short: a log search alert that scans 24 hours every 5 minutes is slow and costs more than one that scans 15 minutes.
+
+</DeepDive>
+
+## Real-world business scenario
+
+<Scenario
+  company="Northwind Retail (fictional)"
+  industry="Online retail"
+  problem="A product Q&A assistant on Container Apps failed now and then, but the team only found out from customer complaints and spent an hour each time searching raw logs."
+  service="A KQL query on requests that calculates the failure rate per 5 minutes, a join to exceptions on operation_Id to show the error message, a ContainerAppConsoleLogs_CL query for the worker, and a log search alert at 5% failures over 10 minutes."
+  why="The query answers the real question (how often, where, and why) in seconds, and the alert runs the same query on a schedule."
+  outcome="The next incident, a model quota limit, paged the on-call engineer within ten minutes, with the exception text already in the alert."
+/>
+
+## When to use it and when not to
+
+<UseWhen
+  use={[
+    'You need to find, count or chart events across millions of log rows.',
+    'You want to correlate requests, dependencies and exceptions by operation_Id.',
+    'An alert depends on a condition only a query can express.',
+  ]}
+  avoid={[
+    'A simple threshold on a number Azure already tracks as a metric. A metric alert is faster and cheaper.',
+    'Changing data. KQL is read-only for querying.',
+  ]}
+  alternatives={[
+    '<strong>Metrics explorer and metric alerts</strong> for CPU, request counts and queue lengths.',
+    '<strong>Application Insights views</strong> (application map, failures, performance) for a quick look before writing a query.',
+  ]}
+/>

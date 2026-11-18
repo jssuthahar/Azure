@@ -1,0 +1,276 @@
+---
+title: Vector Search in Cosmos DB for NoSQL
+seoTitle: Vector Search in Azure Cosmos DB for NoSQL | AI-200
+description: Store embeddings in Cosmos DB for NoSQL with a vector embedding policy, pick flat, quantizedFlat or diskANN indexes, and run VectorDistance queries in Python.
+answer: >-
+  To search vectors in **Azure Cosmos DB for NoSQL**, you create the container with a **vector embedding policy** (the vector **path**, **dataType** such as `float32`, **dimensions** such as 1536, and **distanceFunction** such as `cosine`) and add a **vector index** (`flat`, `quantizedFlat` or `diskANN`) to its indexing policy, excluding the vector path from the range index. You store each embedding inside the item, then run `SELECT TOP k ... ORDER BY VectorDistance(c.embedding, @q)` to get the most similar items first.
+updated: 2026-11-18
+readingMinutes: 12
+keyTerms:
+  - term: Vector embedding policy
+    definition: The container setting that lists each vector path with its data type, dimensions and distance function.
+  - term: VectorDistance
+    definition: The Cosmos DB query function that returns the similarity score between a stored vector and a query vector.
+  - term: flat index
+    definition: An exact (brute-force) vector index with 100% recall, limited to 505 dimensions.
+  - term: quantizedFlat index
+    definition: A brute-force index over compressed vectors, up to 4,096 dimensions, a good fit for about 50,000 vectors or fewer in the search scope.
+  - term: diskANN index
+    definition: An approximate nearest neighbour index from Microsoft Research for fast, low-RU search over large vector sets, up to 4,096 dimensions.
+  - term: TOP N
+    definition: The clause that limits how many results a vector query returns. Always include it in vector searches.
+interview:
+  - level: beginner
+    q: What two things must you set on a Cosmos DB container before vector search works well?
+    a: >-
+      A vector embedding policy, which tells Cosmos DB where the vector is, how many dimensions it has, its data type and the distance function. And a vector index in the indexing policy, so searches don't have to compare against every item.
+    followUps: []
+  - level: intermediate
+    q: Your embeddings have 1,536 dimensions. Can you use a flat index?
+    a: >-
+      No. The flat index is capped at 505 dimensions. For 1,536 I'd use quantizedFlat if the search scope is small, say under about 50,000 vectors after filters, or diskANN for anything larger.
+    followUps: []
+  - level: experienced
+    q: Why does Microsoft recommend putting the vector path in excludedPaths?
+    a: >-
+      Without it, the normal range index also indexes every element of the array, which makes inserts cost more RUs and take longer. The vector index is a separate index, so excluding the path from the range index loses nothing for vector search.
+    followUps:
+      - q: And why always use TOP N?
+        a: >-
+          Without TOP the query tries to return many more results than you need, so it costs more RUs and takes longer.
+  - level: scenario
+    q: Your vector query returns slightly different results each run on an unchanged container. Is something broken?
+    a: >-
+      Not necessarily. diskANN is approximate, and each replica builds its own index, so small differences in the order or the tail of the results are expected. If I need exact results I'd use a flat index where the dimensions allow, or raise searchListSizeMultiplier to trade RUs for recall.
+    followUps: []
+  - level: architecture
+    q: How do you keep a multi-tenant RAG app from returning another customer's documents?
+    a: >-
+      I add a WHERE filter on tenantId to every vector query, and ideally make tenantId the partition key so the search stays in that tenant's partition. Vector search combines with normal filters, so the filter and the ORDER BY VectorDistance live in the same query.
+    followUps: []
+revision:
+  keyPoints:
+    - "Vector embedding policy: path, dataType (float32, float16, int8, uint8), dimensions (default 1536), distanceFunction (cosine default, dotproduct, euclidean)."
+    - "Vector index types: flat (exact, max 505 dims), quantizedFlat (max 4,096), diskANN (approximate, max 4,096)."
+    - quantizedFlat and diskANN need at least 1,000 vectors before the index is used; below that it's a full scan.
+    - Put the vector path in excludedPaths and in vectorIndexes.
+    - Query with SELECT TOP k ... ORDER BY VectorDistance(c.embedding, @q); most similar comes first.
+    - Vector search can't be turned off on a container once enabled, and isn't supported in shared-throughput databases.
+  mistakes:
+    - Using a flat index for 1,536-dimension vectors.
+    - Leaving out TOP N, which raises RU cost and latency.
+    - Embedding the query with a different model or dimension count from the stored vectors.
+  examTips:
+    - '"Exact results, small vectors (≤ 505 dimensions)" = **flat**.'
+    - '"Millions of vectors, lowest latency and RU cost" = **diskANN**.'
+    - '"Rank items by similarity" = **ORDER BY VectorDistance(...)** with **TOP N**.'
+  quick:
+    - q: What's the maximum dimension count for a flat vector index?
+      a: '505.'
+    - q: Which function ranks items by similarity in a Cosmos DB query?
+      a: VectorDistance.
+    - q: What's the default distance function in the vector policy?
+      a: Cosine.
+    - q: Which index type is approximate?
+      a: diskANN.
+    - q: Where does the vector path go in the indexing policy besides vectorIndexes?
+      a: excludedPaths.
+references:
+  - title: Vector search in Azure Cosmos DB for NoSQL
+    url: https://learn.microsoft.com/azure/cosmos-db/vector-search
+  - title: Index and query vectors in Azure Cosmos DB for NoSQL in Python
+    url: https://learn.microsoft.com/azure/cosmos-db/nosql/how-to-python-vector-index-query
+  - title: VectorDistance (NoSQL query)
+    url: https://learn.microsoft.com/cosmos-db/query/vectordistance
+  - title: Indexing policies in Azure Cosmos DB
+    url: https://learn.microsoft.com/azure/cosmos-db/index-policy
+related:
+  - embeddings-and-vector-search
+  - cosmos-db-rus-indexing-consistency
+  - cosmos-db-change-feed
+  - pgvector-rag
+  - redis-vector-search
+---
+
+## Start with a question
+
+<Story question="Your product catalogue already lives in Cosmos DB. Do you need a separate vector database for semantic search?">
+
+Imagine a shop that keeps its stock in one storeroom and its "items customers liked together" list in a different building across town. Every time stock changes, someone has to drive over and update the list. Sooner or later they get out of sync.
+
+**Azure Cosmos DB for NoSQL** lets you keep the vector in the same item as the product. You tell the container where the vector is with a **vector embedding policy**, give it a **vector index**, and ask for the closest items with **VectorDistance**. No second database, no sync job.
+
+</Story>
+
+## Explain it like I'm 10
+
+<Eli10>
+
+Every toy in your toy box gets a secret code made of numbers. Toys that are alike get codes that are alike.
+
+You write the code on a sticker and put it right on the toy.
+
+When your friend asks for "something like my red racing car", you make a code for that wish and find the toys whose stickers are closest. The vector index is a cheat sheet that helps you find them without checking every toy.
+
+</Eli10>
+
+## The technical explanation
+
+You don't need to enable a feature on the account. You define two things **when you create the container**: a vector embedding policy and the vector indexes.
+
+### 1. The vector embedding policy
+
+```python
+vector_embedding_policy = {
+    "vectorEmbeddings": [
+        {
+            "path": "/embedding",
+            "dataType": "float32",
+            "dimensions": 1536,          # text-embedding-3-small
+            "distanceFunction": "cosine",
+        }
+    ]
+}
+```
+
+| Setting | Allowed values |
+| --- | --- |
+| `path` | The property that holds the vector. No wildcards, and not nested inside an array. |
+| `dataType` | `float32` (default), `float16`, `int8`, `uint8`. `float16` halves storage with a small accuracy cost. |
+| `dimensions` | Length of every vector at that path. Default 1536. |
+| `distanceFunction` | `cosine` (default, -1 to 1, higher is closer), `dotproduct`, `euclidean` (lower is closer). |
+
+You can have several vector paths, for example one for text and one for images, each with its own entry.
+
+### 2. The vector index
+
+```python
+indexing_policy = {
+    "indexingMode": "consistent",
+    "includedPaths": [{"path": "/*"}],
+    "excludedPaths": [
+        {"path": "/\"_etag\"/?"},
+        {"path": "/embedding/*"},      # keep the range index off the vector
+    ],
+    "vectorIndexes": [
+        {"path": "/embedding", "type": "diskANN"}
+    ],
+}
+```
+
+| Index type | How it searches | Max dimensions | Good for |
+| --- | --- | --- | --- |
+| `flat` | Exact, brute force, 100% recall | 505 | Small vectors where exact results matter |
+| `quantizedFlat` | Brute force over compressed vectors | 4,096 | Up to about 50,000 vectors in scope, or searches narrowed by filters |
+| `diskANN` | Approximate nearest neighbour graph | 4,096 | Large sets, lowest latency and RU cost |
+
+`quantizedFlat` and `diskANN` need at least **1,000 vectors** before they're used. With fewer, Cosmos DB does a full scan, which works but costs more RUs.
+
+### 3. Create the container and store items
+
+```python
+from azure.cosmos import PartitionKey
+
+container = database.create_container_if_not_exists(
+    id="faq",
+    partition_key=PartitionKey(path="/tenantId"),
+    indexing_policy=indexing_policy,
+    vector_embedding_policy=vector_embedding_policy,
+)
+
+question = "How do I get my money back?"
+container.upsert_item({
+    "id": "faq-17",
+    "tenantId": "contoso",
+    "question": question,
+    "answer": "Refunds go back to the original card within 5 to 7 working days.",
+    "embedding": embed(question),    # 1,536 floats from text-embedding-3-small
+})
+```
+
+`embed()` is the helper that calls your embedding deployment (see the embeddings lesson). Use the same model and dimensions for stored items and for questions.
+
+### 4. Search with VectorDistance
+
+```python
+query_vector = embed("I want a refund")
+
+results = container.query_items(
+    query="""
+      SELECT TOP 3 c.id, c.question, c.answer,
+             VectorDistance(c.embedding, @q) AS score
+      FROM c
+      WHERE c.tenantId = @tenant
+      ORDER BY VectorDistance(c.embedding, @q)
+    """,
+    parameters=[
+        {"name": "@q", "value": query_vector},
+        {"name": "@tenant", "value": "contoso"},
+    ],
+    partition_key="contoso",
+)
+for r in results:
+    print(round(r["score"], 3), r["question"])
+```
+
+`ORDER BY VectorDistance(...)` already sorts the most similar items first, whatever the distance function, so you don't add `DESC`. Always include **TOP N**: without it the query tries to return far more results than you need and costs more RUs.
+
+`VectorDistance` also takes optional arguments: a third, boolean argument forces a brute-force search, and a fourth, JSON options argument can override the `distanceFunction` or `dataType` and set `searchListSizeMultiplier`, which raises diskANN's recall for more RUs.
+
+<Flow
+  caption="A vector query in Cosmos DB"
+  steps={[
+    { title: 'Embed', text: 'Turn the question into 1,536 floats with the same model.' },
+    { title: 'Filter', text: 'WHERE c.tenantId = @tenant narrows the search to one partition.' },
+    { title: 'Rank', text: 'The diskANN index finds the nearest vectors.' },
+    { title: 'Return', text: 'TOP 3 items with their similarity score.' },
+  ]}
+/>
+
+<TryIt labs="dev-cosmos-vector" text="Add a vector policy and a diskANN index to a new container, store a few FAQ items, then run a TOP 3 VectorDistance query." />
+
+<Callout type="exam">
+Learn the three index types and their limits: **flat** is exact and stops at **505** dimensions, **quantizedFlat** and **diskANN** go to **4,096**, and diskANN is the approximate one for big data sets. The vector policy fields are **path, dataType, dimensions, distanceFunction**. The query shape is `SELECT TOP n ... ORDER BY VectorDistance(c.path, @vector)`. If a question puts the vector path in `excludedPaths` as well as `vectorIndexes`, that's correct, not a mistake.
+</Callout>
+
+<DeepDive title="Limits and design choices worth knowing">
+
+- **Plan the policy up front.** You can add or remove vector paths, but you can't change an existing path's dimensions or distance function in place. You'd drop the vector index and policy and add them back. Changing embedding models usually means re-embedding into a new path or container.
+- **No turning back.** Once vector indexing and search are on for a container, you can't disable them.
+- **Shared throughput databases** don't support vector indexing and search; give the container its own throughput.
+- **Approximate means approximate.** diskANN results can vary slightly between runs, because each replica builds its own index. Use `flat` (where dimensions allow) when you need exact results.
+- **Hybrid search.** With a full-text policy and index you can rank by both meaning and keywords: `ORDER BY RANK RRF(VectorDistance(c.embedding, @q), FullTextScore(c.answer, "refund"))`. Reciprocal rank fusion merges the two rankings.
+- **Keep vectors fresh.** When an item's text changes, its vector is stale. A change feed consumer can re-embed changed items automatically (next lesson).
+
+</DeepDive>
+
+## Real-world business scenario
+
+<Scenario
+  company="Wide World Importers (fictional)"
+  industry="B2B wholesale"
+  problem="Buyers searched 800,000 product listings with keywords and missed items described in other words. The team had planned a separate vector database plus a nightly sync job."
+  service="They added a vector embedding policy (/embedding, float32, 1536, cosine) and a diskANN index to a new products container in the Cosmos DB account they already used, partitioned by /supplierRegion, and query with TOP 10 ORDER BY VectorDistance plus filters on region and stock."
+  why="Vectors live in the same items as price and stock, so search results are never out of date, and diskANN keeps latency and RUs low at this size."
+  outcome="Buyers get relevant products from plain-language searches, and there's no second database or sync job to run."
+/>
+
+## When to use it and when not to
+
+<UseWhen
+  use={[
+    "Your operational data already lives in Cosmos DB and you want semantic search on it.",
+    "You need vector search combined with normal filters, such as tenant, region or stock.",
+    "You want vectors and data updated together, with no sync job.",
+  ]}
+  avoid={[
+    "Your container sits in a shared-throughput database. Vector search isn't supported there.",
+    "You need joins across tables before ranking. PostgreSQL with pgvector suits relational data better.",
+    "You need a dedicated search service with indexers, enrichment skills and semantic ranking over many sources. That's Azure AI Search.",
+  ]}
+  alternatives={[
+    "<strong>PostgreSQL with pgvector</strong> for relational data and SQL filters.",
+    "<strong>Azure Managed Redis</strong> for in-memory vector search and semantic caching.",
+    "<strong>Azure AI Search</strong> for search across many data sources.",
+  ]}
+/>

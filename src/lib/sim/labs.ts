@@ -5,6 +5,7 @@
 import type { Sim } from './engine';
 import { ME, type World } from './world';
 import { AI_LABS } from './labs-ai';
+import { DEV_LABS } from './labs-dev';
 
 export interface LabTask {
   text: string;
@@ -519,6 +520,7 @@ export const LABS: Lab[] = [
     wrap: 'Azure Migrate finds your servers, sizes them from real usage (a 4-core server idling at 18% doesn’t need 4 cores in Azure) and moves them. When the data is too big for the network, Data Box ships it: you copy, send the device back, and Microsoft uploads and wipes it.',
   },
   ...AI_LABS,
+  ...DEV_LABS,
 ];
 
 export const SANDBOX: Lab = {

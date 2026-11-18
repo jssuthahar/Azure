@@ -1,0 +1,205 @@
+---
+title: Build and Run Images with ACR Tasks
+seoTitle: "ACR Tasks: az acr build, Triggers, Multi-step | AI-200"
+description: Build container images in the cloud with ACR Tasks for AI-200. Run quick builds, create tasks that trigger on commits, base image updates and schedules.
+answer: >-
+  **ACR Tasks** build, test and patch container images inside Azure Container Registry, so you don't need Docker on your machine. A **quick task** (`az acr build`) sends your folder to Azure and pushes the result. An **automated task** (`az acr task create` with `--context` and `--file`) runs on a **source code commit**, a **base image update** or a **schedule**. A **multi-step task** uses a YAML file to build, run and push several images in one go.
+updated: 2026-11-18
+readingMinutes: 9
+keyTerms:
+  - term: Quick task
+    definition: A one-off cloud build started with az acr build, the cloud version of docker build plus docker push.
+  - term: Automated task
+    definition: A saved task created with az acr task create that runs when a trigger fires.
+  - term: Base image update trigger
+    definition: Reruns a task when the image in the Dockerfile FROM line is updated in its registry.
+  - term: Multi-step task
+    definition: A task defined in a YAML file with build, cmd and push steps that run in order.
+  - term: Run ID
+    definition: A unique ID ACR gives every task run, available as {{.Run.ID}} for tagging images.
+interview:
+  - level: beginner
+    q: What does az acr build do that docker build doesn't?
+    a: >-
+      It runs the build in Azure instead of on my machine. The CLI uploads my build context, ACR builds it on its own compute and pushes the image straight into the registry. I don't even need Docker installed, which helps on locked-down laptops and in Cloud Shell.
+    followUps: []
+  - level: intermediate
+    q: How do you rebuild an image automatically when someone pushes to main?
+    a: >-
+      I create a task with az acr task create, pass the GitHub repo as --context with #main, the Dockerfile as --file and a personal access token with --git-access-token. The commit trigger is on by default, so ACR adds a webhook and builds on every push to that branch.
+    followUps:
+      - q: And tagging?
+        a: >-
+          I use {{.Run.ID}} in the image name so every build gets a unique tag, and sometimes push latest as well for dev.
+  - level: experienced
+    q: Why does the base image update trigger matter for security?
+    a: >-
+      Because most CVEs in our images live in the base OS layers, not our code. When python:3.12-slim gets patched upstream, the trigger rebuilds our app image on top of it without anyone remembering to do it. Paired with importing the base into our own ACR, we also control when that happens.
+    followUps: []
+  - level: scenario
+    q: You need to build an API image, run its unit tests in a container and push only if the tests pass. How?
+    a: >-
+      A multi-step task. In acr-task.yaml I build the image, add a cmd step that runs pytest inside it, then a push step. Steps run in order, so a failing test stops the run before anything is pushed.
+    followUps: []
+revision:
+  keyPoints:
+    - az acr build is a quick task that builds in the cloud and pushes to the registry.
+    - az acr task create saves a task; --context is the git repo or folder and --file is the Dockerfile or YAML.
+    - Triggers are source code commit, base image update and schedule (cron, UTC).
+    - Multi-step tasks use a YAML file with build, cmd and push steps; run them with az acr run -f.
+    - '{{.Run.ID}} gives every build a unique tag.'
+  mistakes:
+    - Forgetting the trailing dot (the build context) in az acr build.
+    - Expecting a schedule in local time; ACR task timers use UTC cron expressions.
+  examTips:
+    - '"Build without Docker installed" = **az acr build**.'
+    - '"Rebuild when the OS or runtime base image is patched" = **base image update trigger**.'
+    - '"Build, test and push in one definition" = **multi-step task** (YAML).'
+  quick:
+    - q: Which command runs a quick task?
+      a: az acr build
+    - q: Which parameter of az acr task create points at the git repository?
+      a: --context
+    - q: Name the three task trigger types.
+      a: Source code commit, base image update and schedule.
+    - q: How do you run a multi-step YAML task once?
+      a: az acr run -f acr-task.yaml
+    - q: Which placeholder gives every build a unique tag?
+      a: '{{.Run.ID}}'
+references:
+  - title: Automate container image builds and maintenance with ACR Tasks
+    url: https://learn.microsoft.com/azure/container-registry/container-registry-tasks-overview
+  - title: "Quickstart: Build and run a container image using ACR Tasks"
+    url: https://learn.microsoft.com/azure/container-registry/container-registry-quickstart-task-cli
+  - title: Automate container image builds when a base image is updated
+    url: https://learn.microsoft.com/azure/container-registry/container-registry-tasks-base-images
+  - title: Run multi-step build, test and patch tasks in ACR Tasks
+    url: https://learn.microsoft.com/azure/container-registry/container-registry-tasks-multi-step
+related:
+  - azure-container-registry
+  - containers-for-ai-apps
+  - app-service-containers
+  - azure-container-apps
+---
+
+## Start with a question
+
+<Story question="Who rebuilds your app when Python gets a security patch?">
+
+Your image is built on `python:3.12-slim`. Next Tuesday a security fix lands in that base image. Your code didn't change, so nobody rebuilds, and production keeps running the old, vulnerable layers for months.
+
+**ACR Tasks** can watch for that. They build images inside Azure Container Registry when you push code, when the base image changes or on a timer, so patched images appear without anyone remembering to do it.
+
+</Story>
+
+## Explain it like I'm 10
+
+<Eli10>
+
+Instead of baking a cake at home and carrying it to the shop, you send the recipe to the shop's kitchen. They bake it there and put it straight on the shelf. That's `az acr build`.
+
+Better still, you can tell the kitchen: "Whenever I change the recipe, or whenever the flour supplier sends better flour, bake a fresh one." That's a task with **triggers**.
+
+</Eli10>
+
+## The technical explanation
+
+### Quick task: build in the cloud
+
+Run it from the folder that holds your `Dockerfile`. The final `.` is the **build context** the CLI uploads.
+
+```bash
+az acr build --registry myreg --image ragapi:1.4.0 .
+
+# Unique tag per run, and a Dockerfile that isn't at the root
+az acr build --registry myreg --image 'ragapi:{{.Run.ID}}' --file docker/Dockerfile .
+```
+
+The logs stream to your terminal and the image lands in the registry. There's also `az acr run --registry myreg --cmd 'myreg.azurecr.io/ragapi:1.4.0' /dev/null` to run a container in the task environment, which is handy for a smoke test.
+
+### Automated task: build on a trigger
+
+```bash
+az acr task create \
+  --registry myreg \
+  --name build-ragapi \
+  --image 'ragapi:{{.Run.ID}}' \
+  --context https://github.com/contoso/ragapi.git#main \
+  --file Dockerfile \
+  --git-access-token $GITHUB_PAT
+```
+
+That one task now has three ways to start:
+
+| Trigger | What starts it | Flag |
+| --- | --- | --- |
+| Source code commit | A push to the branch in `--context` | `--commit-trigger-enabled` (on by default) |
+| Base image update | The `FROM` image is updated in its registry (ACR, Docker Hub, MCR) | `--base-image-trigger-enabled` (on by default) |
+| Schedule | A cron expression, in UTC | `--schedule "0 2 * * *"` or `az acr task timer add` |
+
+Pull request builds can be turned on with `--pull-request-trigger-enabled true`. Run a task by hand with `az acr task run --registry myreg --name build-ragapi`, and see history with `az acr task list-runs` and `az acr task logs`.
+
+<Flow
+  caption="A base image patch, end to end"
+  steps={[
+    { title: 'Upstream patch', text: 'python:3.12-slim gets a new digest.' },
+    { title: 'Trigger', text: 'ACR notices the base image update for build-ragapi.' },
+    { title: 'Rebuild', text: 'The task rebuilds your Dockerfile on the patched base.' },
+    { title: 'Push', text: 'A new ragapi tag is pushed, ready to deploy.' },
+  ]}
+/>
+
+### Multi-step task: build, test, push
+
+```yaml
+# acr-task.yaml
+version: v1.1.0
+steps:
+  - build: -t $Registry/ragapi:{{.Run.ID}} .
+  - cmd: $Registry/ragapi:{{.Run.ID}} python -m pytest -q
+  - push:
+      - $Registry/ragapi:{{.Run.ID}}
+```
+
+Run it once with `az acr run --registry myreg -f acr-task.yaml .`, or save it as a task: `az acr task create --registry myreg --name ci-ragapi --context https://github.com/contoso/ragapi.git#main --file acr-task.yaml --git-access-token $GITHUB_PAT`. If the `cmd` step fails, the push never happens.
+
+<TryIt labs="dev-acr" text="Run az acr build for ragapi, then create a task with a commit trigger and check its run list." />
+
+<Callout type="exam">
+Map the words: **"without Docker"** or **"in Cloud Shell"** = `az acr build`. **"Rebuild when the base image is patched"** = base image update trigger. **"Every push to main"** = commit trigger with `--context` pointing at the repo branch. **"Nightly build"** = `--schedule` with a UTC cron. **"Build, test, then push"** or **"several images in one run"** = a multi-step YAML task. `--context` is *where the source is*; `--file` is *which Dockerfile or YAML to use*.
+</Callout>
+
+<DeepDive title="Keeping base image triggers under your control">
+
+Pointing `FROM` straight at Docker Hub means any upstream change rebuilds your app, and rate limits can fail builds. A common pattern is two tasks: one imports or builds your own base (`myreg.azurecr.io/base/python:3.12-slim`) and runs its tests, and the app task's `FROM` points at that internal base. The app's base image trigger then fires only after your base passed its checks. Task runs authenticate to the registry automatically; to reach another registry or Key Vault from a task, give the task a managed identity with `--assign-identity`.
+
+</DeepDive>
+
+## Real-world business scenario
+
+<Scenario
+  company="Contoso Retail (fictional)"
+  industry="Retail"
+  problem="Developers built the product-search API on their laptops, some on ARM Macs and some on Windows, and pushed by hand. A security scan found base image CVEs that were months old."
+  service="An ACR task with --context on the GitHub main branch and the base image trigger on, plus a multi-step YAML that runs pytest before pushing a {{.Run.ID}} tag."
+  why="Builds now happen in one place on linux/amd64, tests gate every push, and base image patches rebuild the app automatically."
+  outcome="No more laptop builds in production, and base image fixes reach the registry within hours of release."
+/>
+
+## When to use it and when not to
+
+<UseWhen
+  use={[
+    'You want cloud builds without Docker on developer machines or build agents.',
+    'Images should rebuild when the base OS or runtime is patched.',
+    'A simple build, test and push flow is enough and you want it next to the registry.',
+  ]}
+  avoid={[
+    'Complex release pipelines with approvals and multi-stage deployments across environments.',
+    'Builds that need large custom tooling the task environment doesn\'t have.',
+  ]}
+  alternatives={[
+    '<strong>GitHub Actions</strong> or <strong>Azure Pipelines</strong> for full CI/CD with approvals, which can still call az acr build.',
+    '<strong>az containerapp up --source</strong> to build and deploy a container app in one step.',
+  ]}
+/>

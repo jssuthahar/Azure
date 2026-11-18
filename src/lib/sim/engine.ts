@@ -52,7 +52,8 @@ export const RUNTIMES = ['DOTNETCORE:8.0', 'NODE:20-lts', 'PYTHON:3.12', 'JAVA:2
 const TAKEN = new Set(['storage', 'mystorage', 'test', 'teststorage', 'azure', 'myapp', 'webapp', 'hello', 'demo', 'contoso']);
 
 export type ResType = 'vm' | 'disk' | 'nic' | 'pip' | 'vnet' | 'nsg' | 'storage' | 'plan' | 'webapp' | 'vmss'
-  | 'dnszone' | 'pe' | 'vpngw' | 'functionapp' | 'aci' | 'aks' | 'arc' | 'alert' | 'law' | 'foundry';
+  | 'dnszone' | 'pe' | 'vpngw' | 'functionapp' | 'aci' | 'aks' | 'arc' | 'alert' | 'law' | 'foundry'
+  | 'acr' | 'acaenv' | 'containerapp' | 'cosmos' | 'pg' | 'redis' | 'sbns' | 'egtopic' | 'kv' | 'appconfig' | 'appi' | 'logalert';
 export const TYPE_INFO: Record<ResType, { label: string; arm: string; icon: string }> = {
   vm: { label: 'Virtual machine', arm: 'Microsoft.Compute/virtualMachines', icon: '🖥️' },
   disk: { label: 'Disk', arm: 'Microsoft.Compute/disks', icon: '💽' },
@@ -74,6 +75,18 @@ export const TYPE_INFO: Record<ResType, { label: string; arm: string; icon: stri
   alert: { label: 'Alert rule', arm: 'Microsoft.Insights/metricAlerts', icon: '🔔' },
   law: { label: 'Log Analytics workspace', arm: 'Microsoft.OperationalInsights/workspaces', icon: '📈' },
   foundry: { label: 'Foundry', arm: 'Microsoft.CognitiveServices/accounts', icon: '✨' },
+  acr: { label: 'Container registry', arm: 'Microsoft.ContainerRegistry/registries', icon: '🗃️' },
+  acaenv: { label: 'Container Apps environment', arm: 'Microsoft.App/managedEnvironments', icon: '🏘️' },
+  containerapp: { label: 'Container App', arm: 'Microsoft.App/containerApps', icon: '🚢' },
+  cosmos: { label: 'Azure Cosmos DB account', arm: 'Microsoft.DocumentDB/databaseAccounts', icon: '🪐' },
+  pg: { label: 'Azure Database for PostgreSQL flexible server', arm: 'Microsoft.DBforPostgreSQL/flexibleServers', icon: '🐘' },
+  redis: { label: 'Azure Managed Redis', arm: 'Microsoft.Cache/redisEnterprise', icon: '🧱' },
+  sbns: { label: 'Service Bus namespace', arm: 'Microsoft.ServiceBus/namespaces', icon: '🚌' },
+  egtopic: { label: 'Event Grid topic', arm: 'Microsoft.EventGrid/topics', icon: '📣' },
+  kv: { label: 'Key vault', arm: 'Microsoft.KeyVault/vaults', icon: '🔑' },
+  appconfig: { label: 'App Configuration', arm: 'Microsoft.AppConfiguration/configurationStores', icon: '🎚️' },
+  appi: { label: 'Application Insights', arm: 'Microsoft.Insights/components', icon: '🔭' },
+  logalert: { label: 'Log search alert rule', arm: 'Microsoft.Insights/scheduledQueryRules', icon: '🔔' },
 };
 
 export interface Lock { name: string; level: 'CanNotDelete' | 'ReadOnly' }
@@ -377,6 +390,14 @@ export class Sim {
       case 'functionapp': return (r.props.executions ?? 0) * 0.0000002 * 730 > 0 ? 0.0001 : 0;
       case 'law': return 0.004;
       case 'pe': return 0.01;
+      // AI-200 developer services (illustrative only)
+      case 'acr': return r.props.sku === 'Premium' ? 0.07 : r.props.sku === 'Standard' ? 0.028 : 0.007;
+      case 'containerapp': return (r.props.replicas ?? 0) * 0.02;
+      case 'cosmos': return 0.032;
+      case 'pg': return 0.017;
+      case 'redis': return 0.05;
+      case 'sbns': return r.props.sku === 'Premium' ? 0.93 : r.props.sku === 'Standard' ? 0.0135 : 0.0001;
+      case 'appconfig': return r.props.sku === 'Free' ? 0 : 0.05;
       // Foundry: pay per token (illustrative) plus reserved provisioned capacity.
       case 'foundry': return (r.props.deployments ?? []).reduce((a: number, d: { sku: string; capacity: number }) => a + (/Provisioned/.test(d.sku) ? d.capacity : 0), 0) + (r.props.usage ?? 0) * 0.0000004;
       default: return 0;

@@ -1,0 +1,265 @@
+---
+title: Cosmos DB Change Feed Processor
+seoTitle: Cosmos DB Change Feed Processor Explained | AI-200
+description: React to new and updated Cosmos DB items with the change feed processor, a lease container and a delegate, or a Functions trigger, to keep embeddings fresh.
+answer: >-
+  The **change feed** is a persistent, ordered record of the inserts and updates in a Cosmos DB container. The **change feed processor** reads it for you: it watches the **monitored container**, hands each batch of changes to your **delegate**, and stores its progress in a **lease container**, so several instances can share the work and resume after a crash with **at-least-once** delivery. The default **latest version** mode doesn't capture **deletes**; **all versions and deletes** mode does. An **Azure Functions Cosmos DB trigger** gives you the same pattern without hosting the processor yourself.
+updated: 2026-11-18
+readingMinutes: 12
+keyTerms:
+  - term: Change feed
+    definition: A persistent, ordered record of changes to items in a Cosmos DB container, read per partition key range.
+  - term: Change feed processor
+    definition: A library in the .NET and Java SDKs that reads the change feed, distributes the work across instances and checkpoints progress.
+  - term: Monitored container
+    definition: The container whose changes the processor reads.
+  - term: Lease container
+    definition: A container that stores one lease per partition key range, recording how far the processor has read and which instance owns it.
+  - term: Delegate
+    definition: Your code that receives each batch of changes and does the work, such as generating an embedding.
+  - term: Latest version mode
+    definition: The default change feed mode. It records creates and updates, shows only the latest version of an item, and doesn't record deletes.
+  - term: All versions and deletes mode
+    definition: A mode that records every create, update and delete within the continuous backup retention period. It needs continuous backup on the account.
+interview:
+  - level: beginner
+    q: What is the Cosmos DB change feed used for?
+    a: >-
+      Reacting to data as it changes. Each time an item is created or updated it appears in the change feed, so another process can do follow-up work: generate an embedding, update a search index, send a notification or copy the data somewhere else.
+    followUps: []
+  - level: intermediate
+    q: What does the lease container do?
+    a: >-
+      It's the processor's memory. It holds one lease per partition key range, recording the last point that was processed and which instance owns that range. If an instance crashes, another picks up its leases and carries on from the last checkpoint.
+    followUps:
+      - q: How do you run several instances of the same processor?
+        a: >-
+          Same processor name, same lease container, different instance name on each. The processor spreads the leases across them.
+  - level: experienced
+    q: Your processor never sees deleted products. Why, and how would you fix it?
+    a: >-
+      The default latest version mode doesn't record deletes. I can switch to all versions and deletes mode, which needs continuous backup on the account, or use a soft delete: set a deleted flag, which shows up as an update, and give the item a TTL so it's removed later.
+    followUps: []
+  - level: scenario
+    q: Your delegate writes the new embedding back into the same item, and now the function runs forever. What's going on?
+    a: >-
+      Writing the embedding is itself an update, so it lands in the change feed and triggers the delegate again. I'd store a hash of the source text with the embedding and skip items where the hash hasn't changed, or write the vectors to a separate container.
+    followUps: []
+  - level: architecture
+    q: When would you host the change feed processor yourself instead of using an Azure Functions trigger?
+    a: >-
+      If I need full control over hosting, lifecycle notifications, all versions and deletes mode in .NET, or the work already runs in a long-lived service such as a container app. For most event-style work, like embedding new items, the Functions trigger is less to run and scales with the load.
+    followUps: []
+revision:
+  keyPoints:
+    - "Four parts: monitored container, lease container, compute instance, delegate."
+    - The processor gives at-least-once delivery; make the delegate idempotent.
+    - By default it starts from now; WithStartTime reads from a time or from the beginning (latest version mode only).
+    - Latest version mode records creates and updates, not deletes.
+    - All versions and deletes mode records deletes too and needs continuous backup.
+    - The processor library is in .NET and Java; Python uses the Functions trigger or the pull model.
+  mistakes:
+    - Expecting deletes to appear in latest version mode.
+    - Writing back to the monitored container from the delegate without a guard, causing an endless loop.
+    - Giving two instances the same instance name, or different lease containers, and expecting them to share work.
+  examTips:
+    - '"Track progress and share work across instances" = the **lease container**.'
+    - '"Process changes without managing hosts" = **Azure Functions Cosmos DB trigger**.'
+    - '"Must capture deleted items" = **all versions and deletes** mode (or a soft-delete flag plus TTL).'
+  quick:
+    - q: What stores the processor's checkpoints?
+      a: The lease container.
+    - q: What is the code that handles each batch called?
+      a: The delegate.
+    - q: Does latest version mode record deletes?
+      a: No.
+    - q: What delivery guarantee does the change feed processor give?
+      a: At least once.
+    - q: Which builder method sets where a new processor starts reading?
+      a: WithStartTime.
+references:
+  - title: Change feed processor in Azure Cosmos DB
+    url: https://learn.microsoft.com/azure/cosmos-db/nosql/change-feed-processor
+  - title: Change feed modes in Azure Cosmos DB
+    url: https://learn.microsoft.com/azure/cosmos-db/nosql/change-feed-modes
+  - title: Azure Cosmos DB trigger for Azure Functions
+    url: https://learn.microsoft.com/azure/azure-functions/functions-bindings-cosmosdb-v2-trigger
+  - title: Change feed pull model in Azure Cosmos DB
+    url: https://learn.microsoft.com/azure/cosmos-db/nosql/change-feed-pull-model
+related:
+  - cosmos-db-vector-search
+  - cosmos-db-sdk-and-queries
+  - cosmos-db-rus-indexing-consistency
+  - embeddings-and-vector-search
+  - redis-caching
+---
+
+## Start with a question
+
+<Story question="A seller adds a new product. How does your AI search know about it a few seconds later, without a nightly batch job?">
+
+Think of a restaurant kitchen. The waiter pins each new order on a rail. The cook takes the next ticket, cooks it, and moves a clip along the rail to show how far they've got. If the cook goes on a break, the next cook looks at the clip and carries on from there. Nothing is cooked twice by accident and nothing is missed.
+
+Cosmos DB has that rail: the **change feed**. The cook is the **change feed processor**, the clip is a **lease**, and cooking is your code, the **delegate**. A new product lands, the processor sees it, and your code embeds it straight away.
+
+</Story>
+
+## Explain it like I'm 10
+
+<Eli10>
+
+Your class has a "new stuff" notebook. Every time someone brings something new to the classroom, they write it down.
+
+The class helper reads the notebook and puts a bookmark where they stopped. Tomorrow, they start from the bookmark.
+
+If two helpers share the job, each one takes different pages and has their own bookmark. The bookmarks are the lease container.
+
+</Eli10>
+
+## The technical explanation
+
+The change feed is on by default for every Cosmos DB for NoSQL container. It's ordered per **partition key range**, and it's persistent, so a reader can start now, at a point in time, or from the beginning (in latest version mode).
+
+### The four parts of the processor
+
+| Part | What it is |
+| --- | --- |
+| **Monitored container** | The container with your data, such as `products`. Its changes are what you read. |
+| **Lease container** | Stores one **lease** per partition key range: the checkpoint and which instance owns it. Its partition key must be `/id`. |
+| **Compute instance** | Wherever the processor runs: an App Service, a container app, a VM. Each has a unique **instance name**. |
+| **Delegate** | Your handler. It receives a batch of changed items and does the work. |
+
+The life cycle loops: read the feed, sleep if there's nothing new (the poll interval), otherwise call the delegate, and **only after the delegate finishes successfully** update the lease. If the delegate throws, the same batch comes back again. That's why delivery is **at least once**, and why your delegate should be **idempotent** (safe to run twice on the same item).
+
+### The processor in C#
+
+The processor library ships in the **.NET** and **Java** SDKs:
+
+```csharp
+Container monitored = client.GetContainer("shop", "products");
+Container leases    = client.GetContainer("shop", "leases");
+
+ChangeFeedProcessor processor = monitored
+    .GetChangeFeedProcessorBuilder<Product>(
+        processorName: "embedProducts",
+        onChangesDelegate: HandleChangesAsync)
+    .WithInstanceName(Environment.MachineName)   // unique per instance
+    .WithLeaseContainer(leases)
+    .WithStartTime(DateTime.UtcNow.AddHours(-1)) // optional; default is "from now"
+    .Build();
+
+await processor.StartAsync();
+
+static async Task HandleChangesAsync(
+    ChangeFeedProcessorContext context,
+    IReadOnlyCollection<Product> changes,
+    CancellationToken token)
+{
+    foreach (Product p in changes)
+    {
+        // embed p.Description and save the vector (idempotently)
+    }
+}
+```
+
+- To **scale out**, run more instances with the same `processorName` and lease container and different instance names. Leases are shared out between them, and one lease is owned by one instance at a time, so more instances than leases won't help.
+- A new processor starts **from now** by default. `WithStartTime` sets a point in time; `DateTime.MinValue.ToUniversalTime()` reads from the beginning. These only matter the first time; once leases exist, the processor resumes from them.
+- Register `WithErrorNotification` so you hear about failures, and send items that keep failing to an error store so the processor doesn't get stuck retrying them.
+
+### In Python: an Azure Functions trigger
+
+The Python SDK doesn't include the processor. The usual Python answer is the **Azure Functions Cosmos DB trigger**, which runs the processor for you, leases and all:
+
+```python
+import azure.functions as func
+
+app = func.FunctionApp()
+
+@app.cosmos_db_trigger(
+    arg_name="items",
+    connection="CosmosDbConnection",          # app setting (or identity-based settings)
+    database_name="shop",
+    container_name="products",                # the monitored container
+    lease_container_name="leases",
+    create_lease_container_if_not_exists="true",
+)
+def embed_new_products(items: func.DocumentList):
+    for doc in items:
+        if doc.get("textHash") == hash_of(doc["description"]):
+            continue                          # vector is already current: skip
+        vector = embed(doc["description"])
+        save_vector(doc["id"], doc["category"], vector)
+```
+
+That `textHash` check matters. If your function writes the embedding back into the **same** item, that write is an update, which appears in the change feed and fires the function again. Without a guard you get an endless loop and a big RU bill. Either compare a hash of the source text, or write vectors to a separate container.
+
+If you'd rather run your own loop in Python, the **change feed pull model** (`container.query_items_change_feed(...)`) reads changes directly, but you store and resume the continuation token yourself.
+
+### Change feed modes
+
+| | Latest version (default) | All versions and deletes |
+| --- | --- | --- |
+| Creates and updates | Yes, latest version of each item only | Yes, every intermediate version |
+| **Deletes** | **No** | Yes, including TTL expiries |
+| Start from the beginning or a time | Yes | No: from now or a saved checkpoint within the retention period |
+| Requirements | None | **Continuous backup** on the account, NoSQL API only |
+
+In latest version mode, if an item is created and then updated before you read the feed, you only see the updated version. To react to deletes without switching modes, use a **soft delete**: set `"deleted": true` (which is an update the feed records) and a TTL so the item is removed later.
+
+<Flow
+  caption="Keeping embeddings fresh with the change feed"
+  steps={[
+    { title: 'Save', text: 'The app upserts a product into the monitored container.' },
+    { title: 'Feed', text: 'The change appears in the change feed for its partition key range.' },
+    { title: 'Deliver', text: 'The processor (or Functions trigger) passes the batch to your delegate.' },
+    { title: 'Embed', text: 'The delegate creates the vector and stores it, skipping unchanged text.' },
+    { title: 'Checkpoint', text: 'Only after success, the lease records the new position.' },
+  ]}
+/>
+
+<TryIt labs="dev-cosmos-vector" text="Save a new product and watch the change feed pick it up, then delete one and see which mode records it." />
+
+<Callout type="exam">
+Know the vocabulary: **monitored container**, **lease container**, **delegate**, **instance name**, **processor name**. Several instances share work when they use the **same processor name and lease container** with **different instance names**. The processor starts **from now** unless you set a **start time**. **Latest version** mode doesn't capture **deletes**; **all versions and deletes** does and needs **continuous backup**. If the scenario says "serverless" or "without managing the processor host", choose the **Azure Functions Cosmos DB trigger**.
+</Callout>
+
+<DeepDive title="Watching lag and cost">
+
+The change feed processor costs RUs on both containers: reading the monitored container's feed and reading and writing leases. Give the lease container enough throughput, especially with many partition key ranges.
+
+To see whether the processor keeps up, use the **change feed estimator** in .NET, which reports how many changes are still waiting per lease. With Functions, watch the trigger's execution count and duration in Application Insights. If lag grows, add instances (up to the number of leases) or make the delegate faster, for example by embedding a batch of items in one call instead of one call per item.
+
+Use the account's **global endpoint** when you create the client for the processor. Leases are scoped to the endpoint you use, so switching to a regional endpoint later creates a fresh set of leases.
+
+</DeepDive>
+
+## Real-world business scenario
+
+<Scenario
+  company="Litware Marketplace (fictional)"
+  industry="Online marketplace"
+  problem="Sellers added about 20,000 listings a day, but embeddings were generated by a nightly batch job. New listings were invisible to AI search until the next morning, and the batch often ran into business hours."
+  service="An Azure Functions app with a Cosmos DB trigger on the listings container and a leases container. The function embeds new or edited descriptions with text-embedding-3-small, skips items whose text hash hasn't changed, and writes the vector back. Removed listings are soft-deleted with a flag and a TTL so the change feed sees them."
+  why="The change feed delivers every create and update in order with checkpoints in the lease container, so nothing is missed after a restart, and Functions scales the work with the number of changes."
+  outcome="New listings show up in semantic search within seconds of being saved, and the nightly batch job was retired."
+/>
+
+## When to use it and when not to
+
+<UseWhen
+  use={[
+    "You need to react to new or updated items: generate embeddings, refresh a cache, update a search index or send an event.",
+    "You want to copy or move data to another container or store as it changes.",
+    "You need work shared across several workers with automatic checkpoints.",
+  ]}
+  avoid={[
+    "You need every delete with no setup. Latest version mode won't show them; plan for all versions and deletes mode or soft deletes.",
+    "You need a guaranteed exactly-once action with no duplicates. Delivery is at least once, so make the handler idempotent.",
+    "You only need a one-off export. A query or a copy job is simpler.",
+  ]}
+  alternatives={[
+    "<strong>Azure Functions Cosmos DB trigger</strong> for the same pattern without hosting the processor.",
+    "<strong>Change feed pull model</strong> when you want to control the reading loop and checkpoints yourself.",
+    "<strong>Azure Event Grid or Service Bus</strong> when the app itself should publish an event or message alongside the write.",
+  ]}
+/>

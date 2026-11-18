@@ -8,7 +8,9 @@ import { launch, BASE, watch, finish } from './lib.mjs';
 /** Guided labs whose every task can be completed with its own "Try it in Cloud Shell" command. */
 const LABS_CLI_ONLY = ['tags-chargeback', 'vm-power-states', 'cli-storage', 'readonly-lock', 'scale-sets',
   'service-models', 'serverless-function', 'hybrid-arc', 'containers', 'build-network', 'vpn-gateway', 'dns-private-endpoint',
-  'identity-access', 'conditional-access', 'policy-guardrails', 'bicep-deploy', 'monitor-alerts', 'migrate-databox'];
+  'identity-access', 'conditional-access', 'policy-guardrails', 'bicep-deploy', 'monitor-alerts', 'migrate-databox'].map((id) => `az-900/labs/${id}`)
+  .concat(['dev-acr', 'dev-app-service-container', 'dev-container-apps', 'dev-keda', 'dev-aks', 'dev-cosmos', 'dev-cosmos-vector',
+    'dev-postgres', 'dev-redis', 'dev-service-bus', 'dev-event-grid', 'dev-functions', 'dev-key-vault', 'dev-observe'].map((id) => `ai-200/labs/${id}`));
 
 const b = await launch();
 const fail = [];
@@ -215,7 +217,7 @@ for (const u of ['/az-900/exam-day/', '/az-900/cheat-sheet/']) {
 
 // 6. Labs that can be finished entirely from Cloud Shell.
 for (const id of LABS_CLI_ONLY) {
-  await p.goto(`${BASE}/az-900/labs/${id}/`, { waitUntil: 'networkidle' });
+  await p.goto(`${BASE}/${id}/`, { waitUntil: 'networkidle' });
   const total = await p.locator('.sim-task').count();
   for (let i = 0; i < total; i++) {
     const btn = p.locator(`.sim-task[data-i="${i}"] .sim-try`);

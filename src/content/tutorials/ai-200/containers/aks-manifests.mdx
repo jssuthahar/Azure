@@ -1,0 +1,245 @@
+---
+title: Deploy to AKS with Manifest Files
+seoTitle: Deploy to AKS with YAML Manifests and kubectl | AI-200
+description: Deploy an AI API to Azure Kubernetes Service for AI-200 with Deployment and Service YAML, attach ACR, pass secrets and roll out updates with kubectl.
+answer: >-
+  On **Azure Kubernetes Service (AKS)** you describe your app in **YAML manifest files** and send them with **`kubectl apply -f`**. A **Deployment** says which image to run, how many **replicas**, which **resources**, **probes** and environment variables. A **Service** gives the pods a stable address (**ClusterIP** inside the cluster, **LoadBalancer** for a public IP). Kubernetes keeps the real state equal to what you declared, so a dead pod is replaced and a new image tag rolls out pod by pod.
+updated: 2026-11-18
+readingMinutes: 10
+keyTerms:
+  - term: Manifest
+    definition: A YAML file that declares a Kubernetes object, such as a Deployment or Service, and its desired state.
+  - term: Deployment
+    definition: A Kubernetes object that keeps a set number of identical pods running and rolls out new versions.
+  - term: Pod
+    definition: The smallest unit Kubernetes runs; one or more containers that share a network address.
+  - term: Service
+    definition: A stable name and IP in front of a set of pods, selected by labels.
+  - term: kubectl apply
+    definition: The command that creates or updates objects so they match the manifest.
+  - term: Readiness probe
+    definition: A check that decides whether a pod receives traffic from its Service.
+interview:
+  - level: beginner
+    q: What's the difference between a Deployment and a Service?
+    a: >-
+      The Deployment runs the pods: image, replica count, resources. The Service is the front door: one stable address that forwards to whichever pods match its label selector. Pods come and go, the Service address stays.
+    followUps: []
+  - level: intermediate
+    q: How does AKS get permission to pull images from your ACR?
+    a: >-
+      I run az aks create or az aks update with --attach-acr myreg. That assigns AcrPull on the registry to the cluster's kubelet managed identity, so no imagePullSecrets are needed.
+    followUps: []
+  - level: experienced
+    q: How do you roll out a new image and roll back if it's bad?
+    a: >-
+      I change the image tag in the manifest and kubectl apply it, or use kubectl set image. The Deployment does a rolling update, replacing pods gradually and only counting new pods once their readiness probe passes. kubectl rollout status shows progress and kubectl rollout undo goes back to the previous ReplicaSet.
+    followUps:
+      - q: Why do probes matter there?
+        a: >-
+          Without a readiness probe, Kubernetes sends traffic to a pod as soon as the container starts, even if the model client isn't ready, and a broken version can roll out completely.
+  - level: scenario
+    q: The model endpoint key must reach the pods. Where do you put it?
+    a: >-
+      Not in the manifest or the image. A Kubernetes Secret at minimum, referenced with secretKeyRef. Better, the Secrets Store CSI Driver with the Azure Key Vault provider and workload identity, so the value stays in Key Vault.
+    followUps: []
+revision:
+  keyPoints:
+    - az aks get-credentials writes kubeconfig so kubectl can talk to the cluster.
+    - --attach-acr gives the kubelet identity AcrPull on the registry.
+    - A Deployment declares image, replicas, resources, probes and env; its selector must match the pod template labels.
+    - A Service selects pods by label; ClusterIP is internal, LoadBalancer gets an Azure public IP.
+    - kubectl apply -f creates or updates; rollout status and rollout undo manage releases.
+  mistakes:
+    - A Service selector that doesn't match the pod labels, so the Service has no endpoints.
+    - Putting secrets as plain env values in the manifest and committing it.
+  examTips:
+    - '"Expose the app with a public IP" = Service **type: LoadBalancer**.'
+    - '"Reachable only inside the cluster" = **ClusterIP** (the default).'
+    - '"Pull from ACR without image pull secrets" = **az aks update --attach-acr**.'
+  quick:
+    - q: Which command sends a manifest to the cluster?
+      a: kubectl apply -f ragapi.yaml
+    - q: Which object keeps N copies of a pod running?
+      a: A Deployment.
+    - q: What is the default Service type?
+      a: ClusterIP.
+    - q: How do you roll back a Deployment?
+      a: kubectl rollout undo deployment/ragapi
+    - q: Which command gets AKS credentials for kubectl?
+      a: az aks get-credentials
+references:
+  - title: "Quickstart: Deploy an AKS cluster using Azure CLI"
+    url: https://learn.microsoft.com/azure/aks/learn/quick-kubernetes-deploy-cli
+  - title: Authenticate with ACR from AKS
+    url: https://learn.microsoft.com/azure/aks/cluster-container-registry-integration
+  - title: Kubernetes core concepts for AKS
+    url: https://learn.microsoft.com/azure/aks/concepts-clusters-workloads
+  - title: Use the Azure Key Vault provider for Secrets Store CSI Driver in AKS
+    url: https://learn.microsoft.com/azure/aks/csi-secrets-store-driver
+related:
+  - troubleshoot-containers
+  - containers-for-ai-apps
+  - azure-container-registry
+  - azure-container-apps
+---
+
+## Start with a question
+
+<Story question="How do you tell 30 servers to run three copies of your API, and keep it that way?">
+
+You could log in to each machine, start containers and restart them when they die. That's fine for one server and miserable for thirty.
+
+On **AKS**, you write down what you want in a **manifest**: "three copies of `ragapi:1.4.0`, 0.5 CPU each, reachable on port 80". You hand it to Kubernetes with `kubectl apply`, and Kubernetes keeps making it true.
+
+</Story>
+
+## Explain it like I'm 10
+
+<Eli10>
+
+You give the teacher a note: "Our team always has three players on the field." If a player gets tired and leaves, the teacher sends a new one on without being asked. That note is a **Deployment**.
+
+The team also has one phone number that always rings whoever is on the field. That number is a **Service**.
+
+</Eli10>
+
+## The technical explanation
+
+### Cluster and access
+
+```bash
+az aks create --resource-group rg-ai --name aks-rag \
+  --node-count 2 --attach-acr myreg --generate-ssh-keys
+
+az aks get-credentials --resource-group rg-ai --name aks-rag
+kubectl get nodes
+```
+
+`--attach-acr` assigns **AcrPull** to the cluster's kubelet identity, so pods pull from `myreg.azurecr.io` without secrets. For an existing cluster: `az aks update -n aks-rag -g rg-ai --attach-acr myreg`.
+
+### The manifest
+
+```yaml
+# ragapi.yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: ragapi
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: ragapi
+  template:
+    metadata:
+      labels:
+        app: ragapi            # must match the selector above
+    spec:
+      containers:
+        - name: ragapi
+          image: myreg.azurecr.io/ragapi:1.4.0
+          ports:
+            - containerPort: 8000
+          env:
+            - name: MODEL_DEPLOYMENT
+              value: gpt-4.1-mini
+            - name: SEARCH_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: rag-secrets
+                  key: search-key
+          resources:
+            requests: { cpu: 250m, memory: 512Mi }
+            limits: { cpu: 500m, memory: 1Gi }
+          readinessProbe:
+            httpGet: { path: /healthz, port: 8000 }
+          livenessProbe:
+            httpGet: { path: /healthz, port: 8000 }
+            initialDelaySeconds: 15
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: ragapi
+spec:
+  type: LoadBalancer
+  selector:
+    app: ragapi
+  ports:
+    - port: 80
+      targetPort: 8000
+```
+
+The Service's **selector** finds pods labelled `app: ragapi`. `port` is what callers use, `targetPort` is the container's port. **ClusterIP** (the default) is reachable only inside the cluster; **LoadBalancer** asks Azure for a public IP on the cluster's load balancer.
+
+### Apply and check
+
+```bash
+kubectl create secret generic rag-secrets --from-literal=search-key="$SEARCH_KEY"
+kubectl apply -f ragapi.yaml
+kubectl get deployments,pods,services
+kubectl get service ragapi --watch     # wait for EXTERNAL-IP
+```
+
+### Roll out a new version
+
+```bash
+kubectl set image deployment/ragapi ragapi=myreg.azurecr.io/ragapi:1.5.0
+kubectl rollout status deployment/ragapi
+kubectl rollout undo deployment/ragapi     # if 1.5.0 misbehaves
+kubectl scale deployment/ragapi --replicas=5
+```
+
+In a real pipeline you'd change the tag in the YAML and `kubectl apply` again, so the file in git always matches the cluster.
+
+<Flow
+  caption="What kubectl apply sets in motion"
+  steps={[
+    { title: 'Declare', text: 'kubectl apply sends the Deployment and Service to the API server.' },
+    { title: 'Schedule', text: 'The scheduler places 3 pods on nodes with room for their requests.' },
+    { title: 'Pull and start', text: 'Each node pulls the image from ACR and starts the container.' },
+    { title: 'Ready', text: 'Pods passing the readiness probe join the Service.' },
+  ]}
+/>
+
+<TryIt labs="dev-aks" text="Apply the ragapi Deployment and Service, check the pods with kubectl get, then delete a pod and watch it come back." />
+
+<Callout type="exam">
+Expect to read YAML. Check that **selector.matchLabels** matches **template.metadata.labels**, that the Service **selector** matches those labels, and that **targetPort** matches **containerPort**. **LoadBalancer** = public IP, **ClusterIP** = internal only. **kubectl apply -f** creates or updates; **rollout undo** rolls back. Pulling from ACR without secrets is **--attach-acr**. Secrets go in a **Secret** (secretKeyRef) or the **Key Vault CSI driver**, never as plain values.
+</Callout>
+
+<DeepDive title="Keeping secrets in Key Vault on AKS">
+
+A Kubernetes Secret is only base64-encoded and sits in the cluster's store. The **Azure Key Vault provider for Secrets Store CSI Driver** (`az aks enable-addons --addons azure-keyvault-secrets-provider`) mounts Key Vault secrets as files, and can sync them to a Kubernetes Secret if you need env vars. With **Microsoft Entra Workload ID**, the pod's service account is federated with a managed identity that has access to the vault, so there's no credential in the cluster at all. The same identity can call Azure OpenAI or Cosmos DB with `DefaultAzureCredential`.
+
+</DeepDive>
+
+## Real-world business scenario
+
+<Scenario
+  company="Proseware Media (fictional)"
+  industry="Media"
+  problem="A recommendation API and three model-serving services ran on VMs with hand-written start scripts. A crashed process stayed down until someone noticed."
+  service="AKS with --attach-acr, a Deployment and Service manifest per service in git, readiness and liveness probes, and the Key Vault CSI driver for model keys."
+  why="Kubernetes replaces failed pods on its own, probes stop broken versions taking traffic, and the YAML in git is the record of what runs."
+  outcome="Crashed pods restart in seconds, and releases are a reviewed change to a manifest."
+/>
+
+## When to use it and when not to
+
+<UseWhen
+  use={[
+    'You need the Kubernetes API: custom controllers, operators, Helm charts or service meshes.',
+    'You need GPU node pools or fine control over nodes for model serving.',
+    'Many teams share one platform with namespaces and policies.',
+  ]}
+  avoid={[
+    'One or two APIs with no special Kubernetes needs; Container Apps is less to run.',
+    'Teams without time to own cluster upgrades, node patching and security.',
+  ]}
+  alternatives={[
+    '<strong>Azure Container Apps</strong> for Kubernetes-style containers without managing a cluster.',
+    '<strong>AKS Automatic</strong> for a cluster with node management and best-practice settings handled for you.',
+  ]}
+/>

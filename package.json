@@ -16,6 +16,7 @@
     "qa:seo": "python3 scripts/qa/seo-audit.py",
     "qa": "node scripts/qa/run.mjs",
     "voice": "node scripts/voice.mjs",
+    "voice:clone": "node scripts/voice-clone.mjs",
     "verify": "npm run check:all && npm run qa:seo && npm run qa",
     "og": "node scripts/make-og.mjs",
     "icons": "node scripts/make-icons.mjs",

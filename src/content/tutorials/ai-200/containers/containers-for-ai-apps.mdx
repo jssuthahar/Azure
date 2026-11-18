@@ -1,0 +1,183 @@
+---
+title: "Containers for AI Apps: App Service, Container Apps or AKS?"
+seoTitle: App Service vs Container Apps vs AKS for AI Apps | AI-200
+description: Package a Python AI back end as a container image and pick where it runs on Azure, App Service, Container Apps or AKS, the way AI-200 asks you to.
+answer: >-
+  A **container image** packs your AI app and everything it needs (Python, packages, code) into one versioned unit that you store in **Azure Container Registry**. You then pick a host: **App Service** for a single web API with the least work, **Azure Container Apps** for serverless microservices with **revisions** and **KEDA** scaling to zero, or **Azure Kubernetes Service (AKS)** when you need full Kubernetes control through **manifest files**.
+updated: 2026-11-18
+readingMinutes: 8
+keyTerms:
+  - term: Container image
+    definition: A read-only package of an app and its dependencies, built from a Dockerfile and run as a container.
+  - term: Azure Container Registry (ACR)
+    definition: A private, managed registry in Azure that stores container images and other OCI artifacts.
+  - term: App Service (custom container)
+    definition: Platform as a service that runs one container image as a web app with TLS, slots and autoscale.
+  - term: Azure Container Apps
+    definition: Serverless container hosting built on Kubernetes and KEDA, without a cluster to manage.
+  - term: Azure Kubernetes Service (AKS)
+    definition: Managed Kubernetes where Azure runs the control plane and you deploy workloads with YAML manifests.
+interview:
+  - level: beginner
+    q: Why put an AI back end in a container at all?
+    a: >-
+      Because the same image runs the same way on my laptop, in test and in production. Python version, packages and system libraries are all inside it, so "works on my machine" stops being an excuse. It also lets me move between App Service, Container Apps and AKS without rebuilding the app.
+    followUps:
+      - q: Where do you keep the images?
+        a: >-
+          In a private Azure Container Registry, tagged with a version, so every host pulls exactly the build I tested.
+  - level: intermediate
+    q: When would you choose Container Apps over App Service for a containerised API?
+    a: >-
+      When I have several services or background workers, want scale to zero, need event-driven scaling from a queue, or want to split traffic between revisions for a canary release. For one steady web API, App Service is simpler and has deployment slots.
+    followUps: []
+  - level: architecture
+    q: A team wants AKS for a single Python API. How would you advise them?
+    a: >-
+      I'd ask what they need from Kubernetes directly. If the answer is nothing specific, Container Apps gives them the same container model with revisions and KEDA, minus node pools, upgrades and cluster security to own. AKS makes sense once they need custom operators, GPU node pools, service meshes or direct access to the Kubernetes API.
+    followUps: []
+  - level: scenario
+    q: Your summarisation worker sits idle most of the night and gets hundreds of jobs every morning. Which host fits?
+    a: >-
+      Azure Container Apps with a KEDA Service Bus scale rule and min replicas set to zero. It costs almost nothing overnight and scales out as the queue fills.
+    followUps: []
+revision:
+  keyPoints:
+    - A container image bundles code, runtime and dependencies; a registry such as ACR stores and versions it.
+    - App Service runs one container as a web app; app settings become environment variables.
+    - Container Apps runs serverless containers in an environment, with revisions, traffic splitting and KEDA scaling (including to zero).
+    - AKS gives full Kubernetes; you describe workloads in YAML manifests and apply them with kubectl.
+    - All three can pull from ACR with a managed identity that has the AcrPull role.
+  mistakes:
+    - Picking AKS for a single API when nobody needs direct Kubernetes access.
+    - Expecting App Service to scale to zero or scale on queue length the way Container Apps does.
+  examTips:
+    - '"Scale to zero on queue messages" or "split traffic between versions" = **Azure Container Apps**.'
+    - '"Full control of the Kubernetes API" or "apply Deployment and Service manifests" = **AKS**.'
+    - '"Run one containerised web app with deployment slots and minimal management" = **App Service**.'
+  quick:
+    - q: Which Azure service stores private container images?
+      a: Azure Container Registry.
+    - q: Which host scales to zero with KEDA rules?
+      a: Azure Container Apps.
+    - q: Which host uses YAML manifests and kubectl?
+      a: Azure Kubernetes Service (AKS).
+    - q: How does App Service pass settings to a container?
+      a: App settings are injected as environment variables.
+    - q: Which role lets a managed identity pull from ACR?
+      a: AcrPull.
+references:
+  - title: Comparing Container Apps with other Azure container options
+    url: https://learn.microsoft.com/azure/container-apps/compare-options
+  - title: Introduction to Azure Container Registry
+    url: https://learn.microsoft.com/azure/container-registry/container-registry-intro
+  - title: Configure a custom container for Azure App Service
+    url: https://learn.microsoft.com/azure/app-service/configure-custom-container
+  - title: Study guide for Exam AI-200
+    url: https://learn.microsoft.com/en-us/credentials/certifications/resources/study-guides/ai-200
+related:
+  - azure-container-registry
+  - app-service-containers
+  - azure-container-apps
+  - aks-manifests
+---
+
+## Start with a question
+
+<Story question="Your RAG API works on your laptop. Why does it break on the server?">
+
+The server has Python 3.10, you used 3.12. It's missing a system library that one of your packages needs. Someone installed a different version of the OpenAI SDK last month. Every machine is a little different, and AI apps pull in a lot of packages.
+
+A **container image** fixes that. You pack the code, the Python runtime and every package into one image, push it to a registry, and every host runs exactly the same thing. The question then becomes where to run it on Azure.
+
+</Story>
+
+## Explain it like I'm 10
+
+<Eli10>
+
+Think of a lunchbox. Mum packs everything you need inside it, so it doesn't matter which table you sit at. That lunchbox is the **container image**.
+
+The school has three places to eat. A quiet table where you sit alone (**App Service**). A canteen that adds tables when a crowd turns up and stacks them away when it's empty (**Container Apps**). And a whole kitchen you run yourself, with your own rules (**AKS**).
+
+</Eli10>
+
+## The technical explanation
+
+You build an image from a `Dockerfile`. For a small FastAPI back end it looks like this:
+
+```dockerfile
+FROM python:3.12-slim
+WORKDIR /app
+COPY requirements.txt .
+RUN pip install --no-cache-dir -r requirements.txt
+COPY . .
+EXPOSE 8000
+CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000"]
+```
+
+The image goes into **Azure Container Registry (ACR)** with a version tag such as `ragapi:1.4.0`. From there, any of the three hosts can pull it. Secrets like your model key don't go in the image. They're supplied at run time as environment variables or, better, fetched with a **managed identity**.
+
+<Flow
+  caption="One image, three hosts"
+  steps={[
+    { title: 'Build', text: 'Dockerfile becomes an image (locally or with ACR Tasks).' },
+    { title: 'Store', text: 'Push ragapi:1.4.0 to Azure Container Registry.' },
+    { title: 'Pull', text: 'The host pulls with a managed identity that has AcrPull.' },
+    { title: 'Run', text: 'App Service, Container Apps or AKS starts the container with settings and secrets.' },
+  ]}
+/>
+
+### Picking a host
+
+| | App Service | Azure Container Apps | AKS |
+| --- | --- | --- | --- |
+| What you manage | The app and its settings | The app, revisions and scale rules | Node pools, upgrades, manifests, add-ons |
+| Best for | One web API or site | Microservices, APIs, queue workers | Large platforms, GPU nodes, custom Kubernetes |
+| Scale | Autoscale rules on the plan, no scale to zero | KEDA rules (HTTP, queues, custom), can scale to zero | Horizontal Pod Autoscaler, cluster autoscaler, KEDA add-on |
+| Releases | Deployment slots and swap | Revisions with traffic splitting | Rolling updates in the Deployment |
+| Config | App settings, Key Vault references | Env vars, secrets, Key Vault references | ConfigMaps, Secrets, Secrets Store CSI driver |
+| Kubernetes API | No | No | Yes |
+
+A quick way to decide: start from App Service if it's one web app, move to Container Apps when you need several services, event-driven workers or scale to zero, and go to AKS only when you need something Kubernetes itself gives you.
+
+<TryIt labs="dev-container-apps" text="Deploy the same ragapi image as a container app and look at its revision and replica count." />
+
+<Callout type="exam">
+Read the requirement words. **"Scale to zero"**, **"scale on Service Bus messages"**, **"split traffic between versions"** point to **Container Apps**. **"Kubernetes API"**, **"manifest files"**, **"custom controllers"** point to **AKS**. **"Single web app"**, **"deployment slots"**, **"least management"** point to **App Service**. Every option pulls from **ACR**, and the pull is best done with a **managed identity** with **AcrPull**.
+</Callout>
+
+<DeepDive title="Why images and secrets stay apart">
+
+An image is shared: it's in the registry, it's cached on nodes, and anyone with pull rights can unpack it. A key baked into a layer stays there even if a later layer deletes the file. So images carry code, and each host injects configuration when the container starts: App Service app settings, Container Apps secrets referenced with `secretref:`, or Kubernetes Secrets. Pointing those at **Azure Key Vault** means rotating a secret doesn't mean rebuilding an image.
+
+</DeepDive>
+
+## Real-world business scenario
+
+<Scenario
+  company="Fabrikam Legal (fictional)"
+  industry="Legal services"
+  problem="A contract Q&A API ran on a hand-built VM. Upgrades broke packages, and an overnight batch of document summaries ran on servers sized for the morning peak."
+  service="One container image in Azure Container Registry. The chat API runs on App Service with Key Vault references; the summarisation worker runs on Azure Container Apps with a Service Bus scale rule and min replicas of zero."
+  why="The API needed deployment slots and steady traffic; the worker needed to sit at zero most of the day and burst when jobs arrived."
+  outcome="Releases became a tag change, and the worker only runs while there's work in the queue."
+/>
+
+## When to use it and when not to
+
+<UseWhen
+  use={[
+    'Your AI back end has native dependencies or pinned package versions that must match everywhere.',
+    'You want the same artifact in dev, test and production.',
+    'You may move between App Service, Container Apps and AKS later.',
+  ]}
+  avoid={[
+    'A small event handler where Azure Functions code deployment is enough.',
+    'Putting secrets inside the image to save a configuration step.',
+  ]}
+  alternatives={[
+    '<strong>Azure Functions</strong> for short, trigger-driven code with no container to maintain.',
+    '<strong>Container Apps jobs</strong> for run-to-completion batch work.',
+  ]}
+/>

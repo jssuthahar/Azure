@@ -121,7 +121,7 @@ const labsHub = `/${lab.exam ?? examFromPath(Astro.url.pathname).slug}/labs/`;
   import { money } from '../lib/currency';
 
   /** Extra state the practice world keeps beyond resource groups and resources. */
-  const WORLD_KEYS = ['users', 'groups', 'roles', 'current', 'ca', 'mgs', 'subParent', 'policies', 'budgets', 'outage', 'notices', 'migrate', 'databox', 'env', 'pip'] as const;
+  const WORLD_KEYS = ['users', 'groups', 'roles', 'current', 'ca', 'mgs', 'subParent', 'policies', 'budgets', 'outage', 'notices', 'migrate', 'databox', 'env', 'pip', 'dev'] as const;
 
   document.querySelectorAll<HTMLElement>('.sim-root').forEach((root) => {
     const lab = ALL_LABS.find((l) => l.id === root.dataset.lab)!;

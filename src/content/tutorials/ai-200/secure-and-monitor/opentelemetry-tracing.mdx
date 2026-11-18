@@ -1,0 +1,262 @@
+---
+title: Distributed Tracing with OpenTelemetry
+seoTitle: OpenTelemetry Tracing in Python with Azure Monitor | AI-200
+description: Trace one request across Python services with the Azure Monitor OpenTelemetry Distro, custom spans, attributes, sampling and Application Insights views.
+answer: >-
+  **Distributed tracing** follows one request across every service it touches. **OpenTelemetry** records each step as a **span**, and every span in the request shares one **trace ID**, passed between services in the W3C **traceparent** header. In Python, install **azure-monitor-opentelemetry** and call `configure_azure_monitor()` with your **Application Insights connection string**. Requests, Flask, FastAPI, Django, psycopg2 and Azure SDK calls are traced automatically, and `tracer.start_as_current_span()` adds your own spans.
+updated: 2026-11-18
+readingMinutes: 11
+keyTerms:
+  - term: OpenTelemetry
+    definition: An open, vendor-neutral standard and set of SDKs for collecting traces, metrics and logs from applications.
+  - term: Trace
+    definition: The full record of one request as it moves through every service, made of spans that share a trace ID.
+  - term: Span
+    definition: One timed operation inside a trace, such as an HTTP request, a database query or a model call, with a span ID and a parent.
+  - term: traceparent
+    definition: The W3C Trace Context HTTP header that carries the trace ID and parent span ID from one service to the next.
+  - term: Azure Monitor OpenTelemetry Distro
+    definition: Microsoft's packaged OpenTelemetry setup (azure-monitor-opentelemetry for Python) that sends telemetry to Application Insights.
+  - term: Cloud role name
+    definition: The service name Application Insights shows on the application map, taken from the service.name resource attribute.
+  - term: Sampling
+    definition: Keeping only a share of traces to cut cost and volume, while keeping each kept trace complete.
+interview:
+  - level: beginner
+    q: What's the difference between a trace and a span?
+    a: >-
+      A span is one step, like "call Cosmos DB" or "POST /ask", with a start time and a duration. A trace is the whole request: all the spans that share one trace ID, arranged as a tree of parents and children.
+    followUps: []
+  - level: intermediate
+    q: How does the trace ID get from the web API to the worker?
+    a: >-
+      Through context propagation. For HTTP, OpenTelemetry adds the W3C traceparent header to the outgoing call, and the instrumentation on the receiving side reads it and continues the same trace. For messaging, the Azure SDK instrumentation puts the context in the message properties.
+    followUps:
+      - q: What's in the traceparent header?
+        a: >-
+          A version, the 32-character trace ID, the 16-character parent span ID and trace flags, such as 00-4bf92f35...-00f067aa...-01. The last part says whether the trace was sampled.
+  - level: experienced
+    q: What does configure_azure_monitor() give you out of the box in Python?
+    a: >-
+      It wires up the OpenTelemetry SDK with the Azure Monitor exporter for traces, metrics and logs, and turns on the bundled instrumentations: Django, FastAPI, Flask, requests, urllib and urllib3, psycopg2 and Azure SDK tracing. I add custom spans only for the business steps I care about, like retrieval and the model call.
+    followUps: []
+  - level: scenario
+    q: Every service appears as the same node on the application map. Why?
+    a: >-
+      They're not setting a service name, so the cloud role name is a default for all of them. I'd set OTEL_SERVICE_NAME, or service.name in OTEL_RESOURCE_ATTRIBUTES, to a different value per service, like chat-api and summary-worker.
+    followUps: []
+  - level: architecture
+    q: Tracing costs are climbing. What would you change?
+    a: >-
+      Turn on sampling, for example sampling_ratio=0.2 in configure_azure_monitor, so about one trace in five is kept but each kept trace stays whole across services. I'd also drop noisy spans and big attributes, and keep alerts on metrics, which aren't affected by trace sampling in the same way.
+    followUps: []
+revision:
+  keyPoints:
+    - A trace is one request; spans are its steps; all spans share a trace ID.
+    - W3C traceparent carries the trace ID and parent span ID between services.
+    - pip install azure-monitor-opentelemetry, then configure_azure_monitor() at startup.
+    - The connection string comes from APPLICATIONINSIGHTS_CONNECTION_STRING or the connection_string argument.
+    - Automatic instrumentation covers Flask, FastAPI, Django, requests, urllib, psycopg2 and Azure SDK calls.
+    - Custom spans use trace.get_tracer(__name__) and start_as_current_span, with set_attribute and record_exception.
+    - service.name sets the cloud role name on the application map.
+  mistakes:
+    - Calling configure_azure_monitor() after the web framework is already imported and serving, so early requests aren't traced.
+    - Putting user prompts or secrets in span attributes.
+    - Leaving every service with the default service name, so the application map is useless.
+  examTips:
+    - '"Send OpenTelemetry data from Python to Application Insights with least code" = **azure-monitor-opentelemetry** + **configure_azure_monitor()**.'
+    - '"Correlate a request across services" = shared **trace ID** via **traceparent**.'
+    - '"Add business detail to a span" = **set_attribute**.'
+    - '"Name each service on the application map" = **service.name** resource attribute.'
+  quick:
+    - q: Which environment variable holds the Application Insights connection string?
+      a: APPLICATIONINSIGHTS_CONNECTION_STRING.
+    - q: Which method starts a custom span and makes it current?
+      a: tracer.start_as_current_span().
+    - q: Which header carries trace context over HTTP?
+      a: traceparent (W3C Trace Context).
+    - q: Which Application Insights view shows every service and the calls between them?
+      a: The application map.
+    - q: Which span method attaches an exception to the span?
+      a: record_exception().
+references:
+  - title: Enable Azure Monitor OpenTelemetry for Python applications
+    url: https://learn.microsoft.com/azure/azure-monitor/app/opentelemetry-enable?tabs=python
+  - title: Add and modify Azure Monitor OpenTelemetry for Python
+    url: https://learn.microsoft.com/azure/azure-monitor/app/opentelemetry-add-modify?tabs=python
+  - title: Configure Azure Monitor OpenTelemetry
+    url: https://learn.microsoft.com/azure/azure-monitor/app/opentelemetry-configuration?tabs=python
+  - title: Application map in Application Insights
+    url: https://learn.microsoft.com/azure/azure-monitor/app/app-map
+  - title: W3C Trace Context
+    url: https://www.w3.org/TR/trace-context/
+related:
+  - kql-logs-and-metrics
+  - service-bus-queues
+  - troubleshoot-containers
+  - app-configuration
+---
+
+## Start with a question
+
+<Story question="The chatbot takes nine seconds to answer. Five services are involved. Which one is slow?">
+
+The web team says the API is fine. The data team says Cosmos DB is fine. The AI team says the model replies in two seconds. Everyone shows you their own logs, and none of them line up.
+
+What you need is one view of **one request**: when it hit the API, when it went on the queue, how long the worker spent in Cosmos DB, how long the model took. That's **distributed tracing**, and **OpenTelemetry** is the standard way to collect it. In Azure, the data lands in **Application Insights**, where you can see the whole journey on one screen.
+
+</Story>
+
+## Explain it like I'm 10
+
+<Eli10>
+
+Imagine sending a parcel. At every stop, someone scans the same tracking number and writes down the time.
+
+The tracking number is the **trace ID**. Each scan with its time is a **span**. When the parcel is late, you look at the list and see it sat at one depot for three days.
+
+Without the tracking number, every depot just says "we were quick".
+
+</Eli10>
+
+## The technical explanation
+
+### The words you need
+
+| Term | Meaning | Example |
+| --- | --- | --- |
+| **Trace** | One request end to end | A user's question, from browser to answer |
+| **Span** | One timed step, with a **span ID** and a **parent** | `POST /ask`, `cosmos query`, `chat completion` |
+| **Trace ID** | 32 hex characters shared by every span in the trace | `4bf92f3577b34da6a3ce929d0e0e4736` |
+| **Span kind** | Server, client, producer, consumer or internal | Incoming HTTP is server; outgoing call is client |
+| **Attributes** | Key-value detail on a span | `tenant.id = "contoso"`, `http.route = "/ask"` |
+| **Resource** | Who produced the telemetry | `service.name = "chat-api"` |
+
+**Context propagation** is what links services. When `chat-api` calls `retriever` over HTTP, OpenTelemetry adds a W3C **traceparent** header:
+
+```text
+traceparent: 00-4bf92f3577b34da6a3ce929d0e0e4736-00f067aa0ba902b7-01
+             ver  trace ID (32 hex)                parent span (16)  flags (01 = sampled)
+```
+
+The receiving service reads it and starts its span as a child of `00f067aa0ba902b7`, in the same trace. Azure SDK instrumentation does the same for Service Bus and Event Hubs messages, so a trace survives a queue.
+
+### Turn it on with the Azure Monitor OpenTelemetry Distro
+
+```bash
+pip install azure-monitor-opentelemetry
+export APPLICATIONINSIGHTS_CONNECTION_STRING="InstrumentationKey=...;IngestionEndpoint=https://...;ApplicationId=..."
+export OTEL_SERVICE_NAME="chat-api"      # becomes the cloud role name on the application map
+```
+
+```python
+# app.py: configure BEFORE importing and creating the web app
+from azure.monitor.opentelemetry import configure_azure_monitor
+
+configure_azure_monitor(
+    # connection_string=... is optional when the environment variable is set
+    logger_name="chat",        # send logs from this logger to Application Insights too
+    sampling_ratio=1.0,        # keep every trace in dev; lower it in production
+)
+
+from flask import Flask
+import requests
+app = Flask(__name__)
+```
+
+<Callout type="note">
+Microsoft Learn now also offers a newer **Microsoft OpenTelemetry Distro** (`pip install microsoft-opentelemetry`) for brand-new Python apps. Apps already on `azure-monitor-opentelemetry` need no change, and the ideas here (spans, trace IDs, sampling, cloud role name) are the same in both. Don't initialise both distros in one app.
+</Callout>
+
+That one call sets up traces, metrics and logs and switches on the bundled **automatic instrumentation**:
+
+| Library | What you get for free |
+| --- | --- |
+| Flask, FastAPI, Django | A server span per incoming request |
+| requests, urllib, urllib3 | A client span per outgoing HTTP call, plus the traceparent header |
+| psycopg2 | A span per PostgreSQL query |
+| Azure SDK (azure-core) | Spans for Cosmos DB, Service Bus, Storage, Key Vault and other Azure client calls |
+
+### Add your own spans
+
+Automatic spans show *where* time went. Custom spans and attributes say *what* the app was doing.
+
+```python
+from opentelemetry import trace
+from opentelemetry.trace import Status, StatusCode
+
+tracer = trace.get_tracer(__name__)
+
+@app.post("/ask")
+def ask():
+    with tracer.start_as_current_span("retrieve-context") as span:
+        span.set_attribute("tenant.id", tenant_id)
+        span.set_attribute("retrieval.top_k", 5)
+        chunks = search(question)                 # Cosmos DB call: an automatic child span
+
+    with tracer.start_as_current_span("generate-answer") as span:
+        span.set_attribute("gen_ai.request.model", deployment)
+        try:
+            answer = call_model(chunks, question)
+        except Exception as ex:
+            span.record_exception(ex)
+            span.set_status(Status(StatusCode.ERROR))
+            raise
+    return {"answer": answer}
+```
+
+`start_as_current_span` makes the new span the **current** one, so anything called inside it (including automatic spans) becomes its child. Keep prompts, personal data and secrets out of attributes: they're stored and searchable.
+
+<TryIt labs="dev-observe" text="Connect an app to Application Insights, send a request through two services and open its end-to-end transaction." />
+
+### Where you read it in Application Insights
+
+- **Application map**: one node per cloud role name, with call counts, failure rates and average durations on the arrows.
+- **Transaction search** and the **end-to-end transaction details** view: every span of one trace as a timeline, so the 2.4-second Cosmos DB query stands out.
+- **Failures** and **Performance**: grouped by operation, with drill-down into sample traces.
+
+Server spans become rows in the `requests` table, client and internal spans in `dependencies`, recorded exceptions in `exceptions`, and logs in `traces`. They're joined by `operation_Id`, which is the trace ID.
+
+### Sampling and naming
+
+- **Sampling** keeps a share of traces. `sampling_ratio=0.1` keeps about 10%. The decision travels in the trace flags, so a kept trace is kept by every service and stays complete. If you don't set anything, current versions of the distro use a **rate-limited sampler** of about 5 traces per second, and the `OTEL_TRACES_SAMPLER` / `OTEL_TRACES_SAMPLER_ARG` environment variables win over code options.
+- **Resource attributes** identify the service. Set `OTEL_SERVICE_NAME`, or `OTEL_RESOURCE_ATTRIBUTES="service.name=chat-api,service.namespace=tailspin,service.instance.id=pod-7"`. Application Insights uses them for the **cloud role name** and **role instance**.
+
+<Callout type="exam">
+Expect the setup order: install **azure-monitor-opentelemetry**, call **configure_azure_monitor()** with the **connection string** (or set **APPLICATIONINSIGHTS_CONNECTION_STRING**) at startup, then add custom spans with **start_as_current_span**. Questions about "correlating calls across services" are about the **trace ID** and **traceparent**. "Each service shows separately on the application map" is the **service.name** (cloud role name).
+</Callout>
+
+<DeepDive title="Why the distro and not the raw OpenTelemetry SDK?">
+
+You could install the OpenTelemetry SDK, the Azure Monitor exporter and each instrumentation library yourself, then wire up tracer, meter and logger providers. The distro does that in one call with sensible defaults, adds live metrics and Microsoft Entra ID authentication for ingestion, and stays on supported versions. Because it's still OpenTelemetry underneath, your custom spans use the standard `opentelemetry` API, so moving to another backend later means changing the exporter, not your code. If you need an instrumentation the distro doesn't bundle (say, Redis), install the community package and it plugs into the same pipeline.
+
+</DeepDive>
+
+## Real-world business scenario
+
+<Scenario
+  company="Fabrikam Insurance (fictional)"
+  industry="Insurance"
+  problem="A claims assistant took up to 12 seconds to answer. The API, retrieval worker and model gateway each had separate logs, and every team believed its part was fast."
+  service="The Azure Monitor OpenTelemetry Distro in all three Python services, a distinct OTEL_SERVICE_NAME per service, custom spans for retrieval and generation with tenant.id attributes, and 25% sampling in production."
+  why="One trace ID joined the spans across the HTTP call and the Service Bus queue, and the end-to-end transaction view showed the timeline in one place."
+  outcome="The trace showed a Cosmos DB query with no partition key taking 7 seconds. Fixing the query brought answers under 3 seconds, and the team now watches the application map instead of arguing in chat."
+/>
+
+## When to use it and when not to
+
+<UseWhen
+  use={[
+    'A request crosses more than one service, queue or database.',
+    'You need to find which step is slow or failing, not just that something is.',
+    'You want vendor-neutral instrumentation that sends to Application Insights today and could send elsewhere later.',
+  ]}
+  avoid={[
+    'Logging every user prompt and answer in spans. Use a proper, governed store for that.',
+    'Keeping 100% of traces for a busy production service. Turn on sampling.',
+  ]}
+  alternatives={[
+    '<strong>KQL in Log Analytics</strong> to query the same telemetry and build alerts.',
+    '<strong>Azure Monitor metrics</strong> for cheap, always-on numbers like request rate and CPU.',
+  ]}
+/>

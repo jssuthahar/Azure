@@ -1,0 +1,250 @@
+---
+title: "Azure Managed Redis: Caching, Expiration and Invalidation"
+seoTitle: Azure Managed Redis Caching, TTL and Invalidation | AI-200
+description: Use Azure Managed Redis from Python with Entra ID on port 10000 to cache-aside AI results, set TTLs, invalidate on write and pick an eviction policy.
+answer: >-
+  **Azure Managed Redis** is an in-memory store based on **Redis Enterprise**. With **cache-aside**, your app checks Redis first; on a **miss** it reads the database (or calls the model), then saves the result with a **TTL** using `SET key value EX 300`. When the source data changes, you **invalidate** by deleting the key so the next read loads fresh data. In Python you connect with **redis-py** on port **10000** over **TLS**, using **Microsoft Entra ID** through **redis-entraid** (or an access key if enabled), and an **eviction policy** decides what goes when memory fills.
+updated: 2026-11-18
+readingMinutes: 11
+keyTerms:
+  - term: Azure Managed Redis
+    definition: Microsoft's managed Redis service built on Redis Enterprise, with Memory Optimized, Balanced, Compute Optimized and Flash Optimized tiers.
+  - term: Cache-aside
+    definition: A pattern where the app reads from the cache, loads from the data store on a miss and writes the result into the cache.
+  - term: TTL (time to live)
+    definition: How long a key lives before Redis removes it. Set with SET ... EX seconds or EXPIRE, and read with TTL.
+  - term: Invalidation
+    definition: Removing or updating a cached value when the source data changes, so readers don't get stale data.
+  - term: Eviction policy
+    definition: The rule Redis uses to remove keys when memory is full, such as volatile-lru, allkeys-lru or noeviction.
+  - term: redis-entraid
+    definition: The Python package that plugs Microsoft Entra ID tokens into redis-py and refreshes them automatically.
+interview:
+  - level: beginner
+    q: What is cache-aside?
+    a: >-
+      The app asks Redis first. If the key is there, that's a hit and we return it straight away. If not, that's a miss, so we read from the database, store the result in Redis with a TTL, and return it. The cache only fills with what people actually ask for.
+    followUps:
+      - q: Why always set a TTL?
+        a: >-
+          So nothing stays stale forever if an invalidation is missed, and so memory gets freed for keys nobody reads any more.
+  - level: intermediate
+    q: How do you connect redis-py to Azure Managed Redis without an access key?
+    a: >-
+      I install redis-entraid, create a credential provider with create_from_default_azure_credential for the scope https://redis.azure.com/.default, and pass it to redis.Redis with the host, port 10000 and ssl=True. The identity has to be added as a Redis user on the cache first. The provider refreshes the token before it expires.
+    followUps: []
+  - level: experienced
+    q: A product price changed in the database but customers still see the old one for five minutes. How do you fix it?
+    a: >-
+      That's the TTL doing its job without invalidation. In the code path that writes the new price, I commit the database change and then delete the cache key for that product. The next read is a miss and loads the new price. I keep the TTL as a safety net. If several services write prices, I'd publish an event on each change and have one subscriber do the deletes.
+    followUps: []
+  - level: scenario
+    q: Your cache is full and new SET commands fail with an out of memory error. What happened?
+    a: >-
+      The eviction policy is probably noeviction, or it's a volatile policy and most keys have no TTL, so Redis has nothing it's allowed to remove. I'd set TTLs on cached keys and pick a policy like volatile-lru or allkeys-lru, or scale the cache up if the data really needs that memory.
+    followUps: []
+revision:
+  keyPoints:
+    - Azure Managed Redis is based on Redis Enterprise; tiers are Memory Optimized, Balanced, Compute Optimized and Flash Optimized.
+    - Connect on port 10000 with TLS. Entra ID via redis-entraid is preferred; access keys are disabled by default on new caches.
+    - "Cache-aside: GET, on a miss load from the source, then SET with EX seconds."
+    - "TTL commands: SET ... EX, EXPIRE, TTL (-1 means no expiry, -2 means gone)."
+    - Invalidate on write by deleting the key after the database commit.
+    - The eviction policy decides what Redis removes when memory is full.
+  mistakes:
+    - Caching without a TTL, so stale data and memory use grow forever.
+    - Updating the database but not deleting the cached key.
+    - Using port 6380 (Azure Cache for Redis) instead of 10000 for Azure Managed Redis.
+  examTips:
+    - '"Load into the cache only when requested" = **cache-aside**.'
+    - '"Expire a cached value after 5 minutes" = **SET key value EX 300** (or EXPIRE key 300).'
+    - '"Users see stale data after an update" = **invalidate** (DEL) on write.'
+  quick:
+    - q: Which port does Azure Managed Redis use?
+      a: "10000"
+    - q: What scope does the Entra token use?
+      a: https://redis.azure.com/.default
+    - q: What does TTL return for a key with no expiry?
+      a: "-1"
+    - q: Which command removes a key?
+      a: DEL
+    - q: Which Azure Managed Redis tier moves cold data to NVMe storage?
+      a: Flash Optimized.
+references:
+  - title: What is Azure Managed Redis?
+    url: https://learn.microsoft.com/azure/redis/overview
+  - title: Use Microsoft Entra ID for cache authentication
+    url: https://learn.microsoft.com/azure/redis/entra-for-authentication
+  - title: "Quickstart: Use Azure Managed Redis in Python"
+    url: https://learn.microsoft.com/azure/redis/python-get-started
+  - title: Cache-aside pattern
+    url: https://learn.microsoft.com/azure/architecture/patterns/cache-aside
+related:
+  - redis-vector-search
+  - postgresql-performance-for-vectors
+  - cosmos-db-sdk-and-queries
+  - pgvector-rag
+---
+
+## Start with a question
+
+<Story question="If 2,000 people ask the same question in an hour, should your app look up the answer 2,000 times?">
+
+Think of a busy chai stall near an office. The owner doesn't brew each cup from scratch. He keeps a big pot ready, pours from it for the next twenty customers, and makes a fresh pot every half hour or as soon as the milk runs out.
+
+**Azure Managed Redis** is that pot. Your app keeps hot results in memory, serves repeats in under a millisecond, and throws the pot out on a timer (**TTL**) or the moment the recipe changes (**invalidation**). The database, or the expensive model call, only gets the first request.
+
+</Story>
+
+## Explain it like I'm 10
+
+<Eli10>
+
+You keep the answers you look up most on a sticky note on your desk.
+
+When someone asks, you check the sticky note first. If the answer's there, you read it out. If not, you walk to the big cupboard, find it, and write it on a sticky note.
+
+Each note has a "throw away at 4 pm" time on it.
+
+If the answer in the cupboard changes, you tear up that sticky note straight away.
+
+</Eli10>
+
+## The technical explanation
+
+### What Azure Managed Redis is
+
+Azure Managed Redis is built on **Redis Enterprise** and runs your data in memory. Four tiers:
+
+| Tier | Memory to vCPU | Good for |
+| --- | --- | --- |
+| **Memory Optimized** | 8:1 | Lots of data, lower throughput, dev and test |
+| **Balanced** | 4:1 | Most workloads |
+| **Compute Optimized** | 2:1 | The highest throughput |
+| **Flash Optimized** | RAM plus NVMe | Very large datasets where cold keys can live on disk |
+
+Clients connect on **port 10000** over **TLS** (the older Azure Cache for Redis used 6380). New caches have **access keys disabled** by default, and Microsoft recommends **Microsoft Entra ID** with a managed identity.
+
+### Connecting from Python
+
+```python
+# pip install redis redis-entraid azure-identity
+import redis
+from redis_entraid.cred_provider import create_from_default_azure_credential
+
+credential_provider = create_from_default_azure_credential(
+    ("https://redis.azure.com/.default",),
+)
+
+r = redis.Redis(
+    host="contoso-cache.westeurope.redis.azure.net",
+    port=10000,
+    ssl=True,
+    decode_responses=True,
+    credential_provider=credential_provider,   # refreshes the Entra token for you
+)
+r.ping()
+```
+
+Before this works, add your user or the app's managed identity as a Redis user on the cache (the **Authentication** page in the portal). With Entra ID, the Redis user name is the identity's object ID and the token is the password; redis-entraid handles both and re-authenticates before the token expires. If you've enabled access keys instead, pass `password=<key>` and keep that key in Key Vault.
+
+### The core commands
+
+```text
+SET product:42 "{...json...}" EX 300    # store for 300 seconds
+GET product:42                          # read it (nil after it expires)
+TTL product:42                          # seconds left; -1 = no expiry, -2 = key doesn't exist
+EXPIRE product:42 60                    # change the TTL on an existing key
+DEL product:42                          # remove it now (invalidation)
+```
+
+### Cache-aside in code
+
+```python
+import json
+
+def get_product(product_id: int) -> dict:
+    key = f"product:{product_id}"
+    cached = r.get(key)
+    if cached:                                   # hit
+        return json.loads(cached)
+    row = db_get_product(product_id)             # miss: go to PostgreSQL or Cosmos DB
+    r.set(key, json.dumps(row), ex=300)          # cache it for 5 minutes
+    return row
+
+def update_price(product_id: int, price: float) -> None:
+    db_update_price(product_id, price)           # 1. write the source of truth
+    r.delete(f"product:{product_id}")            # 2. invalidate, so the next read is fresh
+```
+
+<Flow
+  caption="Cache-aside: miss, hit, invalidate"
+  steps={[
+    { title: 'Miss', text: 'GET returns nothing, so the app reads the database and SETs the value with EX 300.' },
+    { title: 'Hit', text: 'The next GET returns from memory in about a millisecond.' },
+    { title: 'Write', text: 'The price changes in the database.' },
+    { title: 'Invalidate', text: 'DEL removes the key, so the next read loads the new price.' },
+  ]}
+/>
+
+The same pattern works for AI calls: cache an embedding by a hash of its input text, or a model answer by a hash of the exact prompt. That saves tokens and latency on repeats. When "repeat" should mean "same meaning" rather than "same text", you need a semantic cache, covered in the Redis vector search lesson.
+
+### Choosing TTLs and handling invalidation
+
+- Delete the key **after** the database commit. Deleting first leaves a gap where another request can reload the old value.
+- Prefer **delete** over writing the new value into the cache on update. The next read rebuilds it, and you avoid two writers racing.
+- Add a little random jitter to TTLs (300 ± 30 seconds) so thousands of keys don't expire in the same second and hit the database together.
+- Short TTLs for prices and stock, longer ones for product descriptions and embeddings, which rarely change.
+
+### When memory fills up: eviction policies
+
+| Policy | What Redis removes when memory is full |
+| --- | --- |
+| `volatile-lru` | Least recently used keys **that have a TTL** |
+| `allkeys-lru` | Least recently used keys, TTL or not |
+| `volatile-lfu` / `allkeys-lfu` | Least frequently used keys |
+| `volatile-ttl` | Keys with the shortest time left |
+| `noeviction` | Nothing. Writes fail with an out-of-memory error |
+
+For a pure cache, `allkeys-lru` or `volatile-lru` (with TTLs on everything) are the usual choices. `noeviction` suits data you can't afford to lose silently. Watch the **used memory** and **evicted keys** metrics in Azure Monitor.
+
+<TryIt labs="dev-redis" text="Run SET with EX, then GET, TTL and DEL in the Redis console and watch the key appear and disappear." />
+
+<Callout type="exam">
+The exam wraps these in stories. "Load data into the cache only when it's requested" is **cache-aside**. "The value must expire after 10 minutes" is **SET ... EX 600** or **EXPIRE**. "Users see the old price after an update" is missing **invalidation**: DEL after the write. "Authenticate without keys" is **Microsoft Entra ID** (redis-entraid in Python). Remember **port 10000** for Azure Managed Redis.
+</Callout>
+
+<DeepDive title="Clustering policy and multi-key commands">
+
+Every Azure Managed Redis instance is sharded internally. The **clustering policy** decides how clients see that. **OSS** exposes the Redis Cluster API for the best throughput, and your client must support cluster mode. **Enterprise** gives one endpoint that proxies to the right shard, so any client works. **Non-clustered** is for caches up to 25 GB. You pick the policy when you create the cache, and OSS or Enterprise can't be changed afterwards. Multi-key commands across shards can raise `CROSSSLOT` errors; with Enterprise, `DEL`, `MGET`, `MSET`, `EXISTS`, `UNLINK` and `TOUCH` work across slots, and with OSS all keys must share a hash slot (use hash tags like `{product:42}:price`).
+
+</DeepDive>
+
+## Real-world business scenario
+
+<Scenario
+  company="Adventure Works Cycles (fictional)"
+  industry="E-commerce"
+  problem="Their product assistant called PostgreSQL and the embedding API on every chat turn. During a sale, database CPU hit 100% and customers saw prices that were 10 minutes out of date because a cache had been added with long TTLs and no invalidation."
+  service="Azure Managed Redis (Balanced tier) with cache-aside for product rows and embeddings, Entra ID through redis-entraid, a 5-minute TTL with jitter, and DEL on every price update."
+  why="Repeat reads now come from memory, and deleting the key on write means price changes show up on the next request instead of after the TTL."
+  outcome="Database load during the next sale stayed under half of the previous peak, and price complaints stopped."
+/>
+
+## When to use it and when not to
+
+<UseWhen
+  use={[
+    'The same data or model result is read far more often than it changes.',
+    'You need sub-millisecond reads for sessions, rate limits or hot product data.',
+    'You want to cut repeated embedding or model calls for identical inputs.',
+  ]}
+  avoid={[
+    'As the only copy of data you can\'t lose. Treat the cache as disposable unless you configure persistence and plan for it.',
+    'Data that must be exactly current on every read, such as an account balance during a payment.',
+  ]}
+  alternatives={[
+    '<strong>Azure Cosmos DB integrated cache</strong> when the data already lives in Cosmos DB and you want caching without new code.',
+    '<strong>Azure API Management semantic caching</strong> to cache LLM responses at the gateway.',
+  ]}
+/>

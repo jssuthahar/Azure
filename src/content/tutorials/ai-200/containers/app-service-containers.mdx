@@ -1,0 +1,209 @@
+---
+title: Run a Container on App Service with Settings and Secrets
+seoTitle: "App Service Containers: Settings and Secrets | AI-200"
+description: Deploy a container from ACR to Azure App Service for AI-200, pull it with a managed identity and pass settings and Key Vault secrets as environment variables.
+answer: >-
+  **App Service** can run a custom container image from **Azure Container Registry**, pulled with a **managed identity** that has **AcrPull**. Every **app setting** you add (`az webapp config appsettings set`) reaches the container as an **environment variable**, and `WEBSITES_PORT` tells App Service which port your app listens on. For secrets, make the setting a **Key Vault reference**, `@Microsoft.KeyVault(SecretUri=...)`, so the value is read from Key Vault at run time and never stored in the image or the setting.
+updated: 2026-11-18
+readingMinutes: 9
+keyTerms:
+  - term: App setting
+    definition: A name-value pair on a web app that App Service injects into the container as an environment variable.
+  - term: WEBSITES_PORT
+    definition: The app setting that tells App Service which port the custom container listens on.
+  - term: Key Vault reference
+    definition: An app setting value in the form @Microsoft.KeyVault(...) that App Service resolves from Azure Key Vault.
+  - term: Managed identity
+    definition: An identity in Microsoft Entra ID that Azure gives the app, used to pull images and read secrets without passwords.
+  - term: Deployment slot setting
+    definition: An app setting marked to stay with its slot instead of moving during a swap.
+interview:
+  - level: beginner
+    q: How does your Python code inside the container read an App Service app setting?
+    a: >-
+      As a normal environment variable. If I add MODEL_DEPLOYMENT in the portal or with az webapp config appsettings set, my code reads os.environ["MODEL_DEPLOYMENT"]. App Service injects it when it starts the container.
+    followUps: []
+  - level: intermediate
+    q: Your container listens on 8000 and App Service keeps reporting that it didn't respond to pings. What's wrong?
+    a: >-
+      App Service doesn't know the port. I'd set the WEBSITES_PORT app setting to 8000. The container also has to bind to 0.0.0.0, not localhost.
+    followUps: []
+  - level: experienced
+    q: How do you get a Key Vault secret into the container without putting it in the app setting?
+    a: >-
+      I turn on the web app's managed identity, give it the Key Vault Secrets User role on the vault, and set the app setting value to @Microsoft.KeyVault(SecretUri=https://kv-rag.vault.azure.net/secrets/search-key/). The container still sees a normal environment variable with the real value, but the setting only holds the reference.
+    followUps:
+      - q: What happens when you rotate the secret?
+        a: >-
+          If the reference has no version, App Service picks up the new version within 24 hours, or straight away if I change any app setting, which restarts the app.
+  - level: scenario
+    q: The web app can't pull its image from ACR after someone disabled the admin account. How do you fix it properly?
+    a: >-
+      Switch the pull to the managed identity. Assign AcrPull on the registry to the app's identity and set acrUseManagedIdentityCreds to true in the site config. No registry password is stored anywhere after that.
+    followUps: []
+revision:
+  keyPoints:
+    - App Service runs one custom container image per app from ACR or another registry.
+    - App settings become environment variables inside the container; changing them restarts the app.
+    - Set WEBSITES_PORT when the container listens on a port other than the one App Service detects.
+    - Key Vault references use @Microsoft.KeyVault(SecretUri=...) or @Microsoft.KeyVault(VaultName=...;SecretName=...).
+    - The app's managed identity needs AcrPull on the registry and secret read access on the vault.
+  mistakes:
+    - Baking API keys into the image or committing them in a .env file.
+    - Forgetting to give the managed identity access to Key Vault, so the reference fails to resolve.
+  examTips:
+    - '"Supply configuration to the container without rebuilding" = **app settings** (environment variables).'
+    - '"Store the secret in Key Vault and expose it as an environment variable" = **Key Vault reference** plus **managed identity**.'
+    - '"Container listens on a non-default port" = **WEBSITES_PORT**.'
+  quick:
+    - q: How do app settings reach a container on App Service?
+      a: As environment variables.
+    - q: Which command adds app settings from the CLI?
+      a: az webapp config appsettings set
+    - q: What is the format of a Key Vault reference?
+      a: '@Microsoft.KeyVault(SecretUri=https://kv-rag.vault.azure.net/secrets/search-key/)'
+    - q: Which role lets the web app pull from ACR?
+      a: AcrPull.
+    - q: Which app setting sets the container port?
+      a: WEBSITES_PORT
+references:
+  - title: Configure a custom container for Azure App Service
+    url: https://learn.microsoft.com/azure/app-service/configure-custom-container
+  - title: Use Key Vault references as app settings in App Service
+    url: https://learn.microsoft.com/azure/app-service/app-service-key-vault-references
+  - title: Configure an App Service app
+    url: https://learn.microsoft.com/azure/app-service/configure-common
+  - title: "Tutorial: Deploy a custom container to App Service"
+    url: https://learn.microsoft.com/azure/app-service/tutorial-custom-container
+related:
+  - containers-for-ai-apps
+  - azure-container-registry
+  - acr-tasks
+  - azure-container-apps
+---
+
+## Start with a question
+
+<Story question="Your AI search key is in the image. What happens when you need to change it?">
+
+You rebuild the image, push it, redeploy, and hope nobody pulled the old one and kept it. Worse, anyone who can pull the image can read the key.
+
+On **App Service**, configuration lives outside the image. You add **app settings**, they show up in your container as environment variables, and the secret ones can point at **Azure Key Vault**. Change a setting and the app restarts with the new value. No rebuild.
+
+</Story>
+
+## Explain it like I'm 10
+
+<Eli10>
+
+Your lunchbox (the image) is packed. But each day the teacher pins a note to it: "Today's room is 4B". That note is an **app setting**. You don't repack the box to change the room.
+
+Some notes are secret, like a locker code. Instead of writing the code on the note, the teacher writes "ask the office for locker 12". The office is **Key Vault**, and only you are allowed to ask.
+
+</Eli10>
+
+## The technical explanation
+
+### Create the web app from an ACR image
+
+```bash
+az appservice plan create --resource-group rg-ai --name plan-rag --is-linux --sku P0v3
+
+az webapp create --resource-group rg-ai --plan plan-rag --name ragapi-web \
+  --container-image-name myreg.azurecr.io/ragapi:1.4.0 \
+  --assign-identity '[system]'
+```
+
+Let the app pull with its **managed identity** instead of a registry password:
+
+```bash
+PRINCIPAL=$(az webapp identity show -g rg-ai -n ragapi-web --query principalId -o tsv)
+ACR_ID=$(az acr show -n myreg --query id -o tsv)
+az role assignment create --assignee $PRINCIPAL --role AcrPull --scope $ACR_ID
+az webapp config set -g rg-ai -n ragapi-web --generic-configurations '{"acrUseManagedIdentityCreds": true}'
+```
+
+To move to a new version later, run `az webapp config container set -g rg-ai -n ragapi-web --container-image-name myreg.azurecr.io/ragapi:1.5.0`.
+
+### Settings become environment variables
+
+```bash
+az webapp config appsettings set -g rg-ai -n ragapi-web --settings \
+  WEBSITES_PORT=8000 \
+  MODEL_DEPLOYMENT=gpt-4.1-mini \
+  SEARCH_ENDPOINT=https://srch-rag.search.windows.net
+```
+
+```python
+import os
+deployment = os.environ["MODEL_DEPLOYMENT"]      # set as an app setting
+search_key = os.environ["SEARCH_KEY"]            # a Key Vault reference, resolved for you
+```
+
+App Service tries to detect the port, but if your container listens on 8000, set **WEBSITES_PORT=8000**. Saving settings restarts the app. **Connection strings** also become environment variables, with a prefix such as `SQLAZURECONNSTR_` or `CUSTOMCONNSTR_`.
+
+### Secrets: Key Vault references
+
+1. Turn on the app's managed identity (done above with `--assign-identity`).
+2. Give it read access to secrets: the **Key Vault Secrets User** role (or a Get access policy).
+3. Set the app setting value to a reference:
+
+```bash
+az webapp config appsettings set -g rg-ai -n ragapi-web --settings \
+  SEARCH_KEY="@Microsoft.KeyVault(SecretUri=https://kv-rag.vault.azure.net/secrets/search-key/)"
+# the other accepted form:
+#   @Microsoft.KeyVault(VaultName=kv-rag;SecretName=search-key)
+```
+
+Leave the version off the URI and App Service uses the latest version, refreshing it within 24 hours (or immediately when the app's config changes). Put a version on it and the value stays pinned.
+
+<Flow
+  caption="What happens when the container starts"
+  steps={[
+    { title: 'Pull', text: 'App Service pulls ragapi:1.4.0 from ACR with its managed identity.' },
+    { title: 'Resolve', text: 'Key Vault references are resolved with the same identity.' },
+    { title: 'Inject', text: 'All app settings are set as environment variables.' },
+    { title: 'Ping', text: 'App Service checks the container answers on WEBSITES_PORT.' },
+  ]}
+/>
+
+<TryIt labs="dev-app-service-container" text="Create a web app from an ACR image, add WEBSITES_PORT and a Key Vault reference, then check the setting resolves." />
+
+<Callout type="exam">
+If a question wants configuration **without rebuilding the image**, the answer is **app settings**. If it wants the secret **stored in Key Vault** but read by the app **as an environment variable**, it's a **Key Vault reference** and a **managed identity** with access to the vault. A container that "doesn't respond to HTTP pings" on a custom port needs **WEBSITES_PORT**. Pulling from ACR without credentials is the **managed identity** with **AcrPull**. In slots, tick **deployment slot setting** for values that must not swap.
+</Callout>
+
+<DeepDive title="Troubleshooting a reference that won't resolve">
+
+In the portal, the Environment variables page shows a status next to each Key Vault reference. A red status usually means the identity has no access, the vault's firewall blocks App Service (allow trusted services, or use VNet integration and a private endpoint), or the secret name is wrong. If the app uses a user-assigned identity, set `keyVaultReferenceIdentity` on the site so App Service knows which identity to use. For container logs, turn on logging with `az webapp log config --docker-container-logging filesystem` and stream them with `az webapp log tail`.
+
+</DeepDive>
+
+## Real-world business scenario
+
+<Scenario
+  company="Woodgrove Bank (fictional)"
+  industry="Banking"
+  problem="A customer-support chat API ran in a container with the Azure AI Search key in a .env file baked into the image. A security review failed it."
+  service="App Service for Linux pulling from ACR with a system-assigned managed identity. Non-secret values are app settings; the search key is a Key Vault reference to a secret the identity can read."
+  why="The image holds no secrets, rotation happens in Key Vault, and the same image moves from staging to production slots with slot-specific settings."
+  outcome="The review passed, and the team rotates keys without a rebuild."
+/>
+
+## When to use it and when not to
+
+<UseWhen
+  use={[
+    'One containerised web app or API with steady traffic.',
+    'You want deployment slots, custom domains and TLS with little setup.',
+    'Secrets should live in Key Vault but reach the app as environment variables.',
+  ]}
+  avoid={[
+    'Event-driven workers that should scale to zero on queue length.',
+    'Many cooperating microservices that need service-to-service discovery.',
+  ]}
+  alternatives={[
+    '<strong>Azure Container Apps</strong> for scale to zero, KEDA rules and traffic splitting.',
+    '<strong>Azure App Configuration</strong> when many apps share the same settings and feature flags.',
+  ]}
+/>

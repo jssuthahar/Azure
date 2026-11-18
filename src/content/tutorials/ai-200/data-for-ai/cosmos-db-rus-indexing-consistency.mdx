@@ -1,0 +1,257 @@
+---
+title: "Cosmos DB: RUs, Indexing Policies and Consistency Levels"
+seoTitle: "Cosmos DB RUs, Indexing and Consistency | AI-200"
+description: Cut Cosmos DB RU costs with indexing policies that skip paths and add composite indexes, then pick the right consistency level, from Strong to Eventual.
+answer: >-
+  Every Cosmos DB operation costs **Request Units (RUs)**: about **1 RU** for a 1 KB point read, more for writes and queries. By default the **indexing policy** indexes **every property**, which makes filters cheap but writes expensive, so you **exclude paths** you never filter on (such as a big `/embedding/*` array) and add **composite indexes** for multi-property `ORDER BY`. **Consistency levels** trade freshness for cost and latency: **Strong**, **Bounded staleness**, **Session** (the default), **Consistent prefix** and **Eventual**. Strong and Bounded staleness reads cost about twice the RUs of the weaker levels.
+updated: 2026-11-18
+readingMinutes: 12
+keyTerms:
+  - term: Request Unit (RU)
+    definition: A normalised measure of CPU, memory and IOPS. Throughput is provisioned or billed in RUs per second.
+  - term: Indexing policy
+    definition: A container setting that decides which property paths are indexed, which are excluded, and which composite, spatial or vector indexes exist.
+  - term: Composite index
+    definition: An index over two or more properties, needed for ORDER BY on several properties and useful for filters plus sorting.
+  - term: Consistency level
+    definition: The guarantee about how fresh and how ordered the data you read is, set on the account and weakened per client or request.
+  - term: Session consistency
+    definition: The default level. Within one session a client reads its own writes, in order.
+  - term: Bounded staleness
+    definition: Reads may lag writes by at most K versions or T time, and are otherwise in order.
+  - term: 429 Too Many Requests
+    definition: The response when requests need more RUs per second than the container or database has. The SDK retries after the suggested wait.
+interview:
+  - level: beginner
+    q: What is a Request Unit?
+    a: >-
+      It's Cosmos DB's single currency for work. Instead of sizing CPU and disks, I pay for RUs per second. A point read of a 1 KB item is about 1 RU, a write is several, and a query depends on how much it has to scan. If I go over my RU/s, I get 429 responses.
+    followUps:
+      - q: What does the SDK do with a 429?
+        a: >-
+          It waits for the retry-after time the service sends and retries a few times automatically. If 429s keep coming, I need more throughput, autoscale, or cheaper operations.
+  - level: intermediate
+    q: Your container stores a 1,536-number embedding in every item. Writes are expensive. What do you change?
+    a: >-
+      I exclude the embedding path from the range index by adding /embedding/* to excludedPaths, and give it a vector index instead if I search it. Indexing 1,536 numbers per item for range queries I'll never run just burns RUs on every write.
+    followUps: []
+  - level: experienced
+    q: Which consistency level would you pick for a chat app's conversation history, and why?
+    a: >-
+      Session, which is the default. The user who just sent a message must see it on the next read, and Session guarantees read-your-own-writes inside that client's session. Other users don't need to see it instantly. Strong would double the read RU cost and add latency for no benefit here.
+    followUps:
+      - q: Can a client ask for a stronger level than the account default?
+        a: >-
+          No. A client or request can only relax the level, for example from Session to Eventual. To go stronger you change the account default.
+  - level: scenario
+    q: A query with ORDER BY c.category, c.price fails. What's missing?
+    a: >-
+      A composite index on (/category ascending, /price ascending). ORDER BY on more than one property needs a matching composite index in the indexing policy.
+    followUps: []
+  - level: architecture
+    q: How would you lower the RU bill of a read-heavy AI catalogue without hurting correctness?
+    a: >-
+      Point reads instead of queries wherever I know the id and partition key, a lean indexing policy that excludes large unfiltered paths, Session consistency rather than Strong, and a Redis cache in front for the hottest items. Then autoscale so I'm not paying for peak RU/s all night.
+    followUps: []
+revision:
+  keyPoints:
+    - A point read of 1 KB costs about 1 RU; writes and queries cost more.
+    - The default indexing policy indexes every path (/*) and excludes /_etag.
+    - Exclude large paths you never filter on (like /embedding/*) to cut write RUs.
+    - ORDER BY on several properties needs a composite index.
+    - "Five consistency levels: Strong, Bounded staleness, Session (default), Consistent prefix, Eventual."
+    - Strong and Bounded staleness reads cost about twice the RUs; clients can only weaken the default.
+  mistakes:
+    - Leaving a 1,536-number embedding array in the range index.
+    - Choosing Strong consistency "to be safe" for data that only one user writes and reads.
+    - Trying to set a stronger consistency on the client than the account default.
+  examTips:
+    - '"Reduce RU cost of writes" = **exclude paths** in the indexing policy.'
+    - '"ORDER BY two properties returns an error" = add a **composite index**.'
+    - '"User must always see their own updates, lowest cost" = **Session**.'
+    - '"Reads must never return stale data, any region" = **Strong**.'
+  quick:
+    - q: What's the default consistency level?
+      a: Session.
+    - q: Which property paths does the default indexing policy include?
+      a: All of them (/*), except the system /_etag path.
+    - q: What index does ORDER BY on two properties need?
+      a: A composite index.
+    - q: Which two consistency levels make reads cost about twice as many RUs?
+      a: Strong and Bounded staleness.
+    - q: What HTTP status means you ran out of RU/s?
+      a: 429 Too Many Requests.
+references:
+  - title: Request Units in Azure Cosmos DB
+    url: https://learn.microsoft.com/azure/cosmos-db/request-units
+  - title: Indexing policies in Azure Cosmos DB
+    url: https://learn.microsoft.com/azure/cosmos-db/index-policy
+  - title: Consistency levels in Azure Cosmos DB
+    url: https://learn.microsoft.com/azure/cosmos-db/consistency-levels
+  - title: Manage consistency levels in Azure Cosmos DB
+    url: https://learn.microsoft.com/azure/cosmos-db/how-to-manage-consistency
+related:
+  - cosmos-db-sdk-and-queries
+  - cosmos-db-vector-search
+  - cosmos-db-change-feed
+  - redis-caching
+  - postgresql-schema-and-indexes
+---
+
+## Start with a question
+
+<Story question="Your Cosmos DB bill doubled after you started storing embeddings, but you only added one field. What happened?">
+
+Picture a library that writes an index card for every word in every book. Finding a book is quick. But each new book means hundreds of new cards, and the librarian spends all day writing them.
+
+That's Cosmos DB's default. It indexes **every property**, including your new 1,536-number `embedding` array. Each write now pays for indexing all of those numbers, in **Request Units**. You fix it with the **indexing policy**: tell it which paths to skip. Then you look at the other dial that changes cost, the **consistency level**.
+
+</Story>
+
+## Explain it like I'm 10
+
+<Eli10>
+
+RUs are like tokens at a games arcade. Easy games cost 1 token. Big games cost more.
+
+An index is a list at the front of a book that tells you which page has "dinosaurs". Making that list takes work every time you add a page.
+
+Consistency is about news. Strong means everyone hears it at the same moment. Eventual means everyone hears it soon, but not at the same time. Waiting until everyone knows costs more tokens.
+
+</Eli10>
+
+## The technical explanation
+
+### Request Units
+
+An **RU** bundles CPU, memory and IO into one number. Rough costs to keep in your head:
+
+| Operation | Typical cost |
+| --- | --- |
+| Point read, 1 KB item | about 1 RU |
+| Write (create, replace, upsert), 1 KB item, default indexing | about 5 RUs or more, and more with every indexed property |
+| Query | depends on items scanned, index use, result size and partitions touched |
+
+You buy throughput in one of three ways: **provisioned manual** (fixed RU/s), **provisioned autoscale** (you set a maximum and it scales between 10% and that maximum), or **serverless** (pay per RU used, for spiky or small workloads). Go over the RU/s you have and the service returns **429 Too Many Requests**. The SDK retries for you, but steady 429s mean you need more throughput or cheaper operations.
+
+Always measure. The response header `x-ms-request-charge` tells you the exact charge:
+
+```python
+container.query_items(query="SELECT * FROM c WHERE c.category = @c",
+                      parameters=[{"name": "@c", "value": "kettles"}],
+                      partition_key="kettles")
+print(container.client_connection.last_response_headers["x-ms-request-charge"])
+```
+
+### Indexing policy
+
+The default policy indexes everything with **range indexes**, uses `consistent` indexing mode (the index updates with every write), and excludes only the system `_etag` path. That's great for ad hoc filters and expensive for writes when items are big.
+
+Here's a lean policy for a product container that stores embeddings:
+
+```json
+{
+  "indexingMode": "consistent",
+  "automatic": true,
+  "includedPaths": [
+    { "path": "/*" }
+  ],
+  "excludedPaths": [
+    { "path": "/\"_etag\"/?" },
+    { "path": "/embedding/*" },
+    { "path": "/description/?" }
+  ],
+  "compositeIndexes": [
+    [
+      { "path": "/category", "order": "ascending" },
+      { "path": "/price", "order": "ascending" }
+    ]
+  ]
+}
+```
+
+How to read the paths:
+
+- `/*` means every path under the root.
+- `/description/?` means the scalar value at `description`.
+- `/embedding/*` means everything under `embedding`, including every element of the array.
+- You can flip it round: include only the paths you filter on (`/category/?`, `/price/?`) and exclude `/*`. That's the leanest option for write-heavy containers.
+
+**Composite indexes** are needed for `ORDER BY` on more than one property, and they help queries that filter on one property and sort on another. The order (ascending or descending) has to match the query, or be its exact reverse.
+
+Changing the policy on an existing container is allowed. Cosmos DB rebuilds the index in the background using spare RUs, and queries keep working while it does.
+
+<Callout type="tip">
+Don't exclude a path that a query filters on. The query still runs, but it has to scan, and the RU charge jumps. Check `x-ms-request-charge` before and after.
+</Callout>
+
+### Consistency levels
+
+Consistency is set as the **account default** and applies to reads. A client or a single request can choose a **weaker** level than the default, never a stronger one.
+
+| Level | What a reader is promised | Read cost |
+| --- | --- | --- |
+| **Strong** | Always the latest committed write, in every region. | About 2x |
+| **Bounded staleness** | At most K versions or T time behind, in order. | About 2x |
+| **Session** (default) | Within one session: read your own writes, in order. Others may lag. | 1x |
+| **Consistent prefix** | Never out of order, but may be behind. | 1x |
+| **Eventual** | Will catch up eventually; order isn't guaranteed. | 1x |
+
+Strong and Bounded staleness read from two replicas to keep their promise, which is why their reads cost about twice as much. Strong in a multi-region account also adds write latency, because a write waits for every region.
+
+Weakening the level for one client in Python:
+
+```python
+client = CosmosClient(
+    url=os.environ["COSMOS_ENDPOINT"],
+    credential=DefaultAzureCredential(),
+    consistency_level="Eventual",  # weaker than the account's Session default
+)
+```
+
+**Session** is the right answer for most apps, AI chat history included: the user sees their own messages straight away, and you don't pay for global agreement.
+
+<TryIt labs="dev-cosmos" text="Run the same query before and after excluding /embedding/* from the index, and compare the RU charge on writes." />
+
+<Callout type="exam">
+Expect cost questions. "Reduce the RU charge of inserts" points to **excluding paths** from the indexing policy. "ORDER BY on two properties fails" points to a **composite index**. For consistency, learn the order (Strong, Bounded staleness, Session, Consistent prefix, Eventual), that **Session** is the default, that clients can only **weaken** it, and that **Strong** and **Bounded staleness** reads cost about **twice** the RUs.
+</Callout>
+
+<DeepDive title="Indexing mode none, and the vector index">
+
+`indexingMode: "none"` turns indexing off. It suits a container used only as a key-value store with point reads, or a bulk load where you'll turn indexing back on afterwards. Queries without an index scan everything, so don't use it for anything you search.
+
+If you search embeddings, the vector path goes in `excludedPaths` (so the range index skips it) **and** in `vectorIndexes` (so the vector index covers it). Those are two different indexes. Excluding the path from the range index is what Microsoft recommends to keep insert RUs and latency down.
+
+</DeepDive>
+
+## Real-world business scenario
+
+<Scenario
+  company="Contoso Learning (fictional)"
+  industry="EdTech"
+  problem="A tutoring app stored lesson chunks with 1,536-number embeddings in Cosmos DB. Ingesting a new course cost so many RUs that imports took hours and student traffic was throttled. The account also used Strong consistency, chosen &quot;to be safe&quot; when the project started."
+  service="The team excluded /embedding/* and the long text field from the range index, added a vector index on the embedding, added a composite index for the course list sorted by course and lesson number, and moved the account default to Session."
+  why="Writes stopped paying to range-index thousands of numbers, and Session still lets each student see their own progress immediately."
+  outcome="Course imports finished well inside the throughput budget, the 429 errors went away during class hours, and read costs fell because reads no longer needed two replicas."
+/>
+
+## When to use it and when not to
+
+<UseWhen
+  use={[
+    "Writes are expensive and items carry big fields you never filter on.",
+    "A query sorts on two or more properties, or filters on one and sorts on another.",
+    "You want each user to see their own changes without paying for Strong consistency.",
+  ]}
+  avoid={[
+    "Excluding a path a query filters on. The query falls back to a scan.",
+    "Choosing Strong or Bounded staleness for data where a short lag doesn't matter. You pay double for reads.",
+    "Setting indexingMode to none on a container you query.",
+  ]}
+  alternatives={[
+    "<strong>Autoscale throughput</strong> when traffic swings through the day.",
+    "<strong>Serverless</strong> for small or spiky workloads billed per RU.",
+    "<strong>Azure Managed Redis</strong> in front of Cosmos DB for hot, repeated reads.",
+  ]}
+/>

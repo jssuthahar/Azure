@@ -44,6 +44,7 @@ const ICONS: Record<string, [string, string]> = {
   asr: ['♻️', '#0078d4'], backup: ['🗃️', '#0078d4'], share: ['📁', '#2f8f9d'], container: ['🪣', '#2f8f9d'], plan: ['📄', '#0078d4'],
   ip: ['📍', '#0078d4'], disk: ['💽', '#0078d4'], nic: ['🔌', '#0078d4'], alert: ['🔔', '#c19c00'], log: ['📊', '#0078d4'],
   foundry: ['✨', '#8764b8'], model: ['🧠', '#8764b8'], agent: ['🤖', '#8764b8'], chat: ['💬', '#0f6cbd'], speech: ['🎙️', '#0f6cbd'], language: ['📝', '#0f6cbd'], vision: ['👁️', '#0f6cbd'], cu: ['🧾', '#008575'], image: ['🎨', '#c239b3'], shield: ['🛡️', '#107c10'], eval: ['📏', '#5c2d91'], trace: ['🧵', '#5c2d91'], key: ['🔑', '#c19c00'],
+  acr: ['🐳', '#0078d4'], capps: ['🧊', '#5c2d91'], pg: ['🐘', '#336791'], redis: ['🧠', '#c50f1f'], bus: ['🚌', '#0078d4'], evgrid: ['📣', '#0078d4'], appcfg: ['🎛️', '#5c2d91'], appi: ['🔭', '#8764b8'],
   marketplace: ['🛍️', '#0078d4'], role: ['🎭', '#0078d4'], status: ['📶', '#107c10'], reserve: ['📅', '#0078d4'], doc: ['📘', '#0078d4'],
 };
 export const esc = (s: unknown) => String(s ?? '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');

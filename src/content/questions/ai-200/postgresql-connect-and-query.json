@@ -1,0 +1,28 @@
+{ "cert": "ai-200", "domain": 2, "topic": "postgresql-connect-and-query", "questions": [
+  { "id": "dev-pgconn-1", "type": "single", "question": "A Python application that runs in Azure Container Apps must connect to an Azure Database for PostgreSQL flexible server without storing a password. The application uses a managed identity. What should the application pass as the password when it opens the connection?", "options": [
+    { "text": "A Microsoft Entra access token obtained by DefaultAzureCredential for the https://ossrdbms-aad.database.windows.net/.default scope", "why": "Correct. Flexible server accepts a Microsoft Entra token in the password field, and DefaultAzureCredential obtains it by using the managed identity." },
+    { "text": "The client ID of the managed identity", "why": "A client ID identifies the identity but is not a credential and cannot be used as a password." },
+    { "text": "A token obtained for the https://management.azure.com/.default scope", "why": "That scope is for Azure Resource Manager, not for signing in to the database." },
+    { "text": "The server administrator password retrieved from an app setting", "why": "This stores a password, which the requirement prohibits." } ], "answer": [0], "explanation": "Microsoft Entra authentication uses an access token for the ossrdbms-aad scope as the PostgreSQL password, with the Entra principal's role name as the user.", "objective": "2.2.1" },
+  { "id": "dev-pgconn-2", "type": "single", "question": "A developer writes the following code: cur.execute(f\"SELECT * FROM docs WHERE title = '{user_input}'\"). A security review flags the line. Which change resolves the issue?", "options": [
+    { "text": "cur.execute(\"SELECT * FROM docs WHERE title = %s\", (user_input,))", "why": "Correct. A parameterised query sends the value separately from the SQL text, so input cannot change the statement." },
+    { "text": "Wrap user_input in str() before formatting the string", "why": "Converting to a string does not prevent SQL injection." },
+    { "text": "Replace the f-string with string concatenation by using +", "why": "Concatenation still places user input inside the SQL text." },
+    { "text": "Set sslmode=require on the connection", "why": "TLS encrypts traffic but does not protect against SQL injection." } ], "answer": [0], "explanation": "Parameterised queries with %s placeholders are the standard defence against SQL injection in psycopg.", "objective": "2.2.1" },
+  { "id": "dev-pgconn-3", "type": "single", "question": "A web API uses psycopg_pool and Microsoft Entra authentication to connect to Azure Database for PostgreSQL. The API works after deployment, but after about an hour new connections fail with an authentication error while existing connections continue to work. What is the most likely cause?", "options": [
+    { "text": "The application obtained one token at startup and reuses it for every new connection after it expires", "why": "Correct. The token is validated only when a connection opens, so new connections need a fresh token." },
+    { "text": "The server firewall blocks connections after one hour", "why": "Firewall rules do not change over time and would also cause timeouts rather than authentication errors." },
+    { "text": "The vector extension was not created in the database", "why": "A missing extension causes query errors, not authentication failures." },
+    { "text": "The pool max_size value is too large", "why": "Pool size affects concurrency, not authentication." } ], "answer": [0], "explanation": "Fetch a new token whenever a connection is created, for example in a custom connection class used by the pool.", "objective": "2.2.1" },
+  { "id": "dev-pgconn-4", "type": "multi", "question": "You plan to connect a Python application to Azure Database for PostgreSQL flexible server by using Microsoft Entra authentication. Which TWO actions are required before the application can sign in?", "options": [
+    { "text": "Enable Microsoft Entra authentication on the server", "why": "Correct. The server must allow Microsoft Entra authentication." },
+    { "text": "Have a Microsoft Entra administrator create a database role for the application's identity", "why": "Correct. The Entra principal must be mapped to a PostgreSQL role." },
+    { "text": "Add vector to the azure.extensions server parameter", "why": "This is needed for pgvector, not for authentication." },
+    { "text": "Enable the built-in PgBouncer", "why": "PgBouncer is optional connection pooling and is not required for authentication." },
+    { "text": "Create a Shared Access Signature for the server", "why": "Shared Access Signatures are used with Azure Storage, not PostgreSQL." } ], "answer": [0, 1], "explanation": "The server must allow Microsoft Entra authentication, and an Entra administrator must create a role for each Entra user, group or managed identity.", "objective": "2.2.1" },
+  { "id": "dev-pgconn-5", "type": "single", "question": "A developer must ensure that a psycopg connection to Azure Database for PostgreSQL is never established without encryption. Which connection setting should the developer specify?", "options": [
+    { "text": "sslmode=require", "why": "Correct. The client refuses to connect unless the connection uses TLS." },
+    { "text": "sslmode=disable", "why": "This turns encryption off." },
+    { "text": "port=6432", "why": "Port 6432 routes the connection through PgBouncer but does not enforce encryption." },
+    { "text": "connect_timeout=30", "why": "This controls how long the client waits, not encryption." } ], "answer": [0], "explanation": "sslmode=require makes the client insist on a TLS connection.", "objective": "2.2.1" }
+] }

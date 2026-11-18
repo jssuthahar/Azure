@@ -1,0 +1,205 @@
+---
+title: "Azure Container Apps: Environments and Revisions"
+seoTitle: "Container Apps: Environments, Revisions, Traffic | AI-200"
+description: Deploy to Azure Container Apps for AI-200. Set up an environment, ingress, secrets and env vars, then use revisions and traffic splitting for safe releases.
+answer: >-
+  **Azure Container Apps** runs containers without a cluster to manage. Apps live in an **environment**, a secure boundary with its own network and Log Analytics workspace. Any change to the app's **template** (image, environment variables, scale rules) creates a new **revision**, an immutable snapshot. In **multiple revision mode** you split traffic between revisions with **`az containerapp ingress traffic set`**, for example 80% to the old one and 20% to the new one, then roll forward or back.
+updated: 2026-11-18
+readingMinutes: 10
+keyTerms:
+  - term: Container Apps environment
+    definition: The boundary that container apps share, with one virtual network and one logging destination.
+  - term: Revision
+    definition: An immutable snapshot of a container app's template, created whenever a revision-scope setting changes.
+  - term: Revision mode
+    definition: Single (one active revision, the default) or multiple (several active revisions with traffic splitting).
+  - term: Ingress
+    definition: The setting that exposes an app over HTTP or TCP, externally to the internet or internally within the environment.
+  - term: secretref
+    definition: The way an environment variable points at a container app secret instead of holding the value.
+interview:
+  - level: beginner
+    q: What's a revision in Container Apps?
+    a: >-
+      A read-only snapshot of the app's template: image, environment variables, resources and scale rules. Every time I change one of those, Container Apps makes a new revision. I can't edit an old revision, only activate, deactivate or send traffic to it.
+    followUps: []
+  - level: intermediate
+    q: Which changes create a new revision and which don't?
+    a: >-
+      Revision-scope changes do: anything under properties.template, like a new image, env vars, CPU and memory, or scale rules. Application-scope changes don't: ingress, secrets, registry credentials, revision mode and Dapr settings apply to all revisions.
+    followUps:
+      - q: So if you change a secret, does the app see it?
+        a: >-
+          Not automatically. Existing revisions keep the old value until I restart them or create a new revision.
+  - level: experienced
+    q: How would you do a canary release of a new model version?
+    a: >-
+      Set the revision mode to multiple, deploy the new image with a revision suffix so I know its name, then run az containerapp ingress traffic set with 90 on the old revision and 10 on the new one. I watch errors and latency, raise the weight, and when I'm happy send 100 to the new revision and deactivate the old one.
+    followUps: []
+  - level: scenario
+    q: A worker app must be reachable by the API app but never from the internet. How do you configure it?
+    a: >-
+      Put both in the same environment and give the worker internal ingress. The API calls it by app name, like http://worker, and nothing outside the environment can reach it.
+    followUps: []
+revision:
+  keyPoints:
+    - An environment groups container apps with a shared network and Log Analytics workspace.
+    - az containerapp create or up deploys an image; --env-vars, --secrets and secretref connect configuration.
+    - Revision-scope changes (template) create a revision; application-scope changes (ingress, secrets) don't.
+    - Single revision mode is the default; set multiple with az containerapp revision set-mode.
+    - Split traffic with az containerapp ingress traffic set --revision-weight.
+  mistakes:
+    - Expecting a secret change to reach running revisions without a restart or new revision.
+    - Trying to split traffic while the app is still in single revision mode.
+  examTips:
+    - '"Gradually move users to a new version" = **multiple revision mode** + **traffic splitting**.'
+    - '"Only other apps in the environment can call it" = **internal ingress**.'
+    - '"Roll back instantly" = send **100% of traffic** to the previous revision.'
+  quick:
+    - q: What creates a new revision?
+      a: A change to the template, such as image, env vars or scale rules.
+    - q: What is the default revision mode?
+      a: Single.
+    - q: Which command switches to multiple revision mode?
+      a: az containerapp revision set-mode --mode multiple
+    - q: Which command splits traffic between revisions?
+      a: az containerapp ingress traffic set
+    - q: How does an env var read a container app secret?
+      a: With secretref, for example SEARCH_KEY=secretref:search-key.
+references:
+  - title: Azure Container Apps overview
+    url: https://learn.microsoft.com/azure/container-apps/overview
+  - title: Update and deploy changes in Azure Container Apps (revisions)
+    url: https://learn.microsoft.com/azure/container-apps/revisions
+  - title: Traffic splitting in Azure Container Apps
+    url: https://learn.microsoft.com/azure/container-apps/traffic-splitting
+  - title: Manage secrets in Azure Container Apps
+    url: https://learn.microsoft.com/azure/container-apps/manage-secrets
+  - title: Ingress in Azure Container Apps
+    url: https://learn.microsoft.com/azure/container-apps/ingress-overview
+related:
+  - keda-scaling
+  - troubleshoot-containers
+  - containers-for-ai-apps
+  - azure-container-registry
+---
+
+## Start with a question
+
+<Story question="You've got a new model prompt. How do you test it on 10% of users first?">
+
+If you swap the image for everyone and the new prompt gives worse answers, every user sees it before you notice. You'd rather send a small slice of traffic to the new version, watch it, then move everyone across, or back.
+
+**Azure Container Apps** does this with **revisions**. Every deploy creates a new snapshot of the app, and you choose how much traffic each one gets.
+
+</Story>
+
+## Explain it like I'm 10
+
+<Eli10>
+
+Think of a school play with two casts. Cast A has done the show for weeks. Cast B is new. On Friday, most of the audience watches cast A and a few watch cast B.
+
+If people love cast B, everyone watches them next week. If not, cast A carries on. Each cast is a **revision**, and the usher deciding who goes where is **traffic splitting**.
+
+</Eli10>
+
+## The technical explanation
+
+### Environment first, then the app
+
+```bash
+az containerapp env create --resource-group rg-ai --name env-rag --location eastus
+
+az containerapp create --resource-group rg-ai --name ragapi \
+  --environment env-rag \
+  --image myreg.azurecr.io/ragapi:1.4.0 \
+  --registry-server myreg.azurecr.io --registry-identity system \
+  --ingress external --target-port 8000 \
+  --secrets search-key=keyvaultref:https://kv-rag.vault.azure.net/secrets/search-key,identityref:system \
+  --env-vars MODEL_DEPLOYMENT=gpt-4.1-mini SEARCH_KEY=secretref:search-key \
+  --min-replicas 1 --max-replicas 5
+```
+
+A few things to notice. `--registry-identity system` pulls from ACR with the app's managed identity. Secrets are stored on the app (or referenced from Key Vault with `keyvaultref:`), and env vars point at them with `secretref:`. `--target-port` is the port your container listens on.
+
+`az containerapp up --name ragapi --source .` is the shortcut: it builds the image (with ACR), creates the resource group, environment and registry if needed, and deploys, all in one command.
+
+The **environment** is the shared boundary: apps in it share a virtual network and send logs to the same **Log Analytics** workspace. **Ingress** is either **external** (internet) or **internal** (only apps in the same environment, which call each other by app name).
+
+### Revisions
+
+| Change | Scope | New revision? |
+| --- | --- | --- |
+| Image, env vars, CPU/memory, probes, scale rules | Revision (`properties.template`) | Yes |
+| Ingress, traffic weights, secrets, registries, revision mode, Dapr | Application (`properties.configuration`) | No |
+
+```bash
+# Deploy 1.5.0 as a new revision with a readable name: ragapi--v15
+az containerapp update -g rg-ai -n ragapi \
+  --image myreg.azurecr.io/ragapi:1.5.0 --revision-suffix v15
+
+az containerapp revision list -g rg-ai -n ragapi -o table
+```
+
+In **single revision mode** (the default), the new revision takes all traffic once it's healthy and the old one is deactivated. To keep both running and split traffic, switch to **multiple**:
+
+```bash
+az containerapp revision set-mode -g rg-ai -n ragapi --mode multiple
+
+az containerapp ingress traffic set -g rg-ai -n ragapi \
+  --revision-weight ragapi--v14=80 ragapi--v15=20
+```
+
+Roll forward by moving weights to 100 on `ragapi--v15`; roll back by moving them to the old revision. You can also add a **label** (`az containerapp revision label add --label blue --revision ragapi--v15`) to get a stable URL for testing a revision directly.
+
+<Flow
+  caption="A canary release with revisions"
+  steps={[
+    { title: 'Multiple mode', text: 'revision set-mode --mode multiple.' },
+    { title: 'New revision', text: 'update --image 1.5.0 creates ragapi--v15.' },
+    { title: 'Split', text: 'ingress traffic set sends 80/20.' },
+    { title: 'Decide', text: '100% to v15, or 100% back to v14.' },
+  ]}
+/>
+
+<TryIt labs="dev-container-apps" text="Deploy ragapi 1.5.0 as a new revision, switch to multiple mode and split traffic 80/20." />
+
+<Callout type="exam">
+Know which changes are **revision-scope** (template: image, env vars, scale rules) and which are **application-scope** (ingress, secrets, revision mode). Traffic splitting needs **multiple revision mode**. **Internal ingress** keeps an app private to the environment. Env vars read secrets with **secretref:**, and Key Vault secrets use **keyvaultref:** plus a managed identity. If a question says "deploy and build from source in one command", that's **az containerapp up**.
+</Callout>
+
+<DeepDive title="Workload profiles and what you pay for">
+
+New environments use the **workload profiles** model. The **Consumption** profile bills per vCPU-second and GiB-second while replicas run, with a monthly free grant, and scales to zero. **Dedicated** profiles give you reserved node types (including GPU options) for steady or heavy workloads, billed per node. Apps in the same environment can mix profiles. An environment can be created in your own virtual network so apps reach private endpoints for Cosmos DB, Key Vault or Azure OpenAI.
+
+</DeepDive>
+
+## Real-world business scenario
+
+<Scenario
+  company="Litware Learning (fictional)"
+  industry="Education technology"
+  problem="Each new prompt template for their tutoring assistant went live to every student at once. One release gave long, off-topic answers for half a day before anyone rolled it back."
+  service="Azure Container Apps in multiple revision mode. Each release gets a revision suffix, starts at 10% traffic, and moves up only if Application Insights shows good feedback scores and no extra errors."
+  why="Revisions are immutable, so rolling back is just moving traffic weights, with no rebuild or redeploy."
+  outcome="Bad releases now reach a small slice of students and get rolled back in minutes."
+/>
+
+## When to use it and when not to
+
+<UseWhen
+  use={[
+    'APIs and microservices for an AI app that you want to run without managing Kubernetes.',
+    'Canary or blue-green releases with traffic splitting between revisions.',
+    'Private service-to-service calls within an environment using internal ingress.',
+  ]}
+  avoid={[
+    'Workloads that need the Kubernetes API, custom operators or CRDs.',
+    'A single web app that needs deployment slots and nothing else.',
+  ]}
+  alternatives={[
+    '<strong>AKS</strong> for full Kubernetes control.',
+    '<strong>App Service</strong> for one container with slots and the least to learn.',
+  ]}
+/>

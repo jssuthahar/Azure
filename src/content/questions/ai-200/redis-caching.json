@@ -1,0 +1,27 @@
+{ "cert": "ai-200", "domain": 2, "topic": "redis-caching", "questions": [
+  { "id": "dev-rcache-1", "type": "single", "question": "An application reads product details from Azure Database for PostgreSQL. You need to add Azure Managed Redis so that data is loaded into the cache only when it is first requested. Which pattern should you implement?", "options": [
+    { "text": "Cache-aside", "why": "Correct. The application checks the cache, loads from the database on a miss and stores the result in the cache." },
+    { "text": "Competing consumers", "why": "This pattern distributes messages among workers and is not a caching pattern." },
+    { "text": "Change feed", "why": "Change feed reports changes in Azure Cosmos DB and does not describe on-demand caching." },
+    { "text": "Strangler fig", "why": "This pattern replaces a legacy system gradually and is unrelated to caching." } ], "answer": [0], "explanation": "Cache-aside loads data into the cache on demand after a cache miss.", "objective": "2.3.1" },
+  { "id": "dev-rcache-2", "type": "single", "question": "A cached exchange rate must be removed automatically 300 seconds after it is written to Azure Managed Redis. Which command should the application use to write the value?", "options": [
+    { "text": "SET rate:usd-inr 83.2 EX 300", "why": "Correct. EX sets the key's time to live in seconds when the value is written." },
+    { "text": "SET rate:usd-inr 83.2", "why": "Without an expiration the key remains until it is deleted or evicted." },
+    { "text": "TTL rate:usd-inr 300", "why": "TTL reads the remaining time to live and does not set it." },
+    { "text": "DEL rate:usd-inr 300", "why": "DEL removes keys immediately and does not set an expiration." } ], "answer": [0], "explanation": "SET with EX stores the value and its time to live in one command. EXPIRE can set a TTL on an existing key.", "objective": "2.3.1" },
+  { "id": "dev-rcache-3", "type": "single", "question": "An application caches product prices in Azure Managed Redis with a 10-minute TTL. After a price is updated in the database, customers continue to see the previous price for several minutes. You need customers to see the new price on the next request. What should you do?", "options": [
+    { "text": "Delete the product's cache key immediately after the database update is committed", "why": "Correct. Invalidating the key forces the next read to load the current price from the database." },
+    { "text": "Increase the TTL to 60 minutes", "why": "A longer TTL keeps stale data for longer." },
+    { "text": "Change the eviction policy to noeviction", "why": "The eviction policy controls behavior when memory is full and does not remove stale values." },
+    { "text": "Delete the cache key before the database update starts", "why": "Another request could reload the old value between the delete and the update." } ], "answer": [0], "explanation": "Invalidate cached data on write by deleting the key after the source of truth has been updated.", "objective": "2.3.1" },
+  { "id": "dev-rcache-4", "type": "multi", "question": "A Python application must connect to Azure Managed Redis by using its managed identity instead of an access key. Which TWO actions are required?", "options": [
+    { "text": "Use redis-py with a credential provider from the redis-entraid package and connect over TLS on port 10000", "why": "Correct. redis-entraid supplies and refreshes Microsoft Entra tokens for redis-py." },
+    { "text": "Add the managed identity as a Redis user on the cache", "why": "Correct. The identity must be granted access to the cache before it can authenticate." },
+    { "text": "Connect on port 6380 without TLS", "why": "Azure Managed Redis uses port 10000 with TLS. Port 6380 is used by Azure Cache for Redis." },
+    { "text": "Request a token for the https://ossrdbms-aad.database.windows.net/.default scope", "why": "That scope is for Azure Database for PostgreSQL and MySQL. Redis uses https://redis.azure.com/.default." } ], "answer": [0, 1], "explanation": "Grant the identity access on the cache, then use redis-entraid with redis-py to authenticate with Microsoft Entra tokens over TLS on port 10000.", "objective": "2.3.1" },
+  { "id": "dev-rcache-5", "type": "single", "question": "An Azure Managed Redis cache is used only as a cache. When memory is full, write commands fail with out-of-memory errors. Most keys do not have a TTL. You need Redis to remove the least recently used keys so that writes succeed. Which eviction policy should you configure?", "options": [
+    { "text": "allkeys-lru", "why": "Correct. Redis evicts the least recently used keys regardless of whether they have a TTL." },
+    { "text": "noeviction", "why": "This policy causes writes to fail when memory is full." },
+    { "text": "volatile-lru", "why": "This policy evicts only keys that have a TTL, and most keys do not have one." },
+    { "text": "volatile-ttl", "why": "This policy evicts only keys that have a TTL, choosing those closest to expiry." } ], "answer": [0], "explanation": "allkeys-lru lets Redis evict any key based on recent use, which suits a pure cache.", "objective": "2.3.1" }
+] }

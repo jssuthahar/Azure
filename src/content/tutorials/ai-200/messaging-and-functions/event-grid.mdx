@@ -1,0 +1,247 @@
+---
+title: "Azure Event Grid: Custom Events, Filters and Retries"
+seoTitle: Azure Event Grid Custom Events, Filters, Retries | AI-200
+description: Publish custom events to Azure Event Grid in Python, filter event subscriptions by type and subject, and set retries and dead-lettering for AI-200.
+answer: >-
+  **Azure Event Grid** pushes small **events** ("a blob was created", "a summary is ready") to handlers such as Azure Functions, webhooks and Service Bus. You publish your own events to a **custom topic** with **EventGridPublisherClient**, using the **CloudEvents 1.0** or **Event Grid** schema. An **event subscription** picks the handler and uses **filters** (event types, **subject begins with / ends with**, advanced filters on data). If delivery fails, Event Grid **retries** with backoff, by default up to **30 attempts** within **1,440 minutes** (24 hours), then drops the event unless **dead-lettering** to a storage container is set.
+updated: 2026-11-18
+readingMinutes: 11
+keyTerms:
+  - term: Event
+    definition: A small record that says something happened, with a type, subject, time and a little data. It's a fact, not a command.
+  - term: Custom topic
+    definition: An Event Grid endpoint your own app publishes events to.
+  - term: System topic
+    definition: A topic that represents events from an Azure service, such as Blob Storage or Key Vault.
+  - term: Event subscription
+    definition: The rule that says which events from a topic go to which handler, with filters, retry policy and dead-letter settings.
+  - term: CloudEvents 1.0
+    definition: An open, vendor-neutral event schema from the CNCF that Event Grid supports alongside its own Event Grid schema.
+  - term: Subject filter
+    definition: An event subscription filter on the start or end of the event subject, such as ends with .pdf.
+  - term: Dead-lettering
+    definition: Saving events that couldn't be delivered to an Azure Storage blob container instead of dropping them.
+  - term: Validation handshake
+    definition: The check Event Grid runs when you subscribe a webhook, to prove the endpoint agrees to receive events.
+interview:
+  - level: beginner
+    q: What's the difference between an event and a message?
+    a: >-
+      An event is a notification that something happened, like "invoice-42.pdf was uploaded". The publisher doesn't care who reacts or what they do. A message is usually a command or a piece of work, like "summarise invoice-42", and the sender expects someone to process it. Event Grid is built for events, Service Bus for messages.
+    followUps: []
+  - level: intermediate
+    q: How would you make sure only PDF uploads in the contracts folder trigger your function?
+    a: >-
+      On the event subscription I'd filter the event type to Microsoft.Storage.BlobCreated, set subject begins with /blobServices/default/containers/contracts/ and subject ends with .pdf. Then the function never even sees a .tmp file or an upload to another container.
+    followUps: []
+  - level: experienced
+    q: What does Event Grid do when your handler is down?
+    a: >-
+      It retries with exponential backoff. By default it tries up to 30 times within 24 hours, and you can lower either value on the subscription. Some errors, like 400 Bad Request or 413, aren't retried. When it gives up, the event is dropped unless I've set a dead-letter destination, which is a blob container in a storage account.
+    followUps: []
+  - level: scenario
+    q: You created a webhook subscription and it's stuck failing with a validation error. What would you check?
+    a: >-
+      The webhook has to answer Event Grid's validation handshake. With the Event Grid schema it must echo the validationCode back as validationResponse, or someone has to open the validationUrl. With CloudEvents it must reply to the OPTIONS request with the WebHook-Allowed-Origin header. If I point the subscription at an Azure Function with the Event Grid trigger instead, the handshake is handled for me.
+    followUps: []
+revision:
+  keyPoints:
+    - Event Grid pushes events to handlers. Topics receive events, event subscriptions route them.
+    - Custom topics take your own events. Use CloudEvents 1.0 (recommended) or the Event Grid schema.
+    - Publish in Python with EventGridPublisherClient and DefaultAzureCredential (EventGrid Data Sender role) or the topic key.
+    - Filters - event types, subject begins with / ends with, advanced filters on data fields.
+    - Retry defaults - 30 attempts, 1,440-minute TTL, exponential backoff. Dead-letter to a blob container.
+  mistakes:
+    - Thinking Event Grid stores events for you to pull later. Standard topics push, and drop what can't be delivered unless dead-lettering is on.
+    - Building a plain webhook and forgetting the validation handshake.
+  examTips:
+    - '"React when a .jpg lands in a container" = Event Grid with a **subject ends with** filter.'
+    - '"Don''t lose events the handler couldn''t accept" = **dead-letter** to a **storage blob container**.'
+    - '"Stop retrying sooner" = lower **max delivery attempts** or **event time to live** on the subscription.'
+  quick:
+    - q: What is the default maximum number of delivery attempts?
+      a: '30.'
+    - q: What is the default event time to live for retries?
+      a: 1,440 minutes (24 hours).
+    - q: Where are dead-lettered events stored?
+      a: In an Azure Storage blob container.
+    - q: Which Python class publishes events to a custom topic?
+      a: EventGridPublisherClient.
+    - q: Which two schemas can a custom topic accept (besides a custom input schema)?
+      a: Event Grid schema and CloudEvents 1.0.
+references:
+  - title: What is Azure Event Grid?
+    url: https://learn.microsoft.com/azure/event-grid/overview
+  - title: Event Grid message delivery and retry
+    url: https://learn.microsoft.com/azure/event-grid/delivery-and-retry
+  - title: Understand event filtering for Event Grid subscriptions
+    url: https://learn.microsoft.com/azure/event-grid/event-filtering
+  - title: Webhook event delivery and endpoint validation
+    url: https://learn.microsoft.com/azure/event-grid/end-point-validation-cloud-events-schema
+  - title: Azure Event Grid client library for Python
+    url: https://learn.microsoft.com/python/api/overview/azure/eventgrid-readme
+related:
+  - service-bus-queues
+  - service-bus-topics-and-dead-letters
+  - functions-triggers-and-bindings
+---
+
+## Start with a question
+
+<Story question="How does your app know a new file arrived without checking every few seconds?">
+
+You could stand at the front door and open it every minute to see if the courier is there. Or you could fit a doorbell. The courier rings, you answer, and the rest of the day you get on with your work.
+
+Polling Blob Storage for new files is standing at the door. **Azure Event Grid** is the doorbell. When something happens, like a PDF being uploaded or your own app finishing a summary, Event Grid pushes a small **event** to whoever subscribed, and **filters** make sure only the right doorbells ring.
+
+</Story>
+
+## Explain it like I'm 10
+
+<Eli10>
+
+Think of a school notice board that can text you.
+
+You tell it "only text me about football matches". That's a **filter**, so you don't get messages about the chess club.
+
+If your phone is off, it keeps trying to text you for a while. If it still can't reach you, it can write the message in a notebook so you can read it later. Trying again is the **retry**, and the notebook is the **dead-letter** store.
+
+</Eli10>
+
+## The technical explanation
+
+Event Grid has three moving parts:
+
+- **Sources** publish events to a **topic**. Azure services publish to **system topics** (Blob Storage, Key Vault, Resource groups and more). Your apps publish to **custom topics**.
+- **Event subscriptions** connect a topic to a **handler** and hold the filters, retry policy and dead-letter settings.
+- **Handlers** receive the push: Azure Functions, webhooks (any HTTPS endpoint), Service Bus queues and topics, Storage queues, Event Hubs and Relay hybrid connections.
+
+Delivery is **push** and **at-least-once**, so a handler might see the same event twice. Use the event `id` to ignore repeats. Event Grid also has **namespace topics** that support pull delivery and MQTT, but the classic push model below is what most event-driven Azure apps use.
+
+### Two schemas
+
+| | CloudEvents 1.0 | Event Grid schema |
+| --- | --- | --- |
+| Who defines it | CNCF open standard | Microsoft |
+| Key fields | `id`, `source`, `type`, `subject`, `time`, `data`, `specversion` | `id`, `topic`, `subject`, `eventType`, `eventTime`, `data`, `dataVersion` |
+| Good for | New apps, portable across clouds and tools | Older integrations that already expect it |
+
+You choose the **input schema** when you create a custom topic, and you publish in that schema. Microsoft recommends CloudEvents for new work.
+
+### Publish a custom event in Python
+
+Install `azure-eventgrid` and `azure-identity`. Give your app the **EventGrid Data Sender** role on the topic, or use the topic's access key with `AzureKeyCredential` if you must.
+
+```python
+import os
+from azure.identity import DefaultAzureCredential
+from azure.core.messaging import CloudEvent
+from azure.eventgrid import EventGridPublisherClient
+
+client = EventGridPublisherClient(
+    os.environ["EVENTGRID_TOPIC_ENDPOINT"],   # https://<topic>.<region>-1.eventgrid.azure.net/api/events
+    DefaultAzureCredential(),
+)
+
+client.send([
+    CloudEvent(
+        source="/contoso/summariser",
+        type="Contoso.Docs.SummaryReady",
+        subject="contracts/contract-88.pdf",
+        data={"docId": "contract-88", "summaryUrl": "summaries/contract-88.json"},
+    )
+])
+```
+
+For a topic that uses the Event Grid schema, send `EventGridEvent(subject=..., event_type=..., data=..., data_version="1.0")` from `azure.eventgrid` instead.
+
+### Filters on the event subscription
+
+| Filter | Example | Use it to |
+| --- | --- | --- |
+| **Event types** | `Microsoft.Storage.BlobCreated` only | Ignore deletes and other events |
+| **Subject begins with** | `/blobServices/default/containers/contracts/` | Limit to one container or folder |
+| **Subject ends with** | `.pdf` | Limit to one file type |
+| **Advanced filters** | `data.pages` NumberGreaterThan `20`, `data.tier` StringIn `premium` | Match on fields inside the event data |
+
+Subject matching is case-insensitive unless you turn on case-sensitive subject matching. Advanced filters have operators for numbers, strings, booleans and null checks, and an event must pass every filter on the subscription.
+
+```bash
+az eventgrid event-subscription create \
+  --name contracts-to-func \
+  --source-resource-id $STORAGE_ID \
+  --endpoint-type azurefunction --endpoint $FUNCTION_ID \
+  --included-event-types Microsoft.Storage.BlobCreated \
+  --subject-begins-with /blobServices/default/containers/contracts/ \
+  --subject-ends-with .pdf \
+  --max-delivery-attempts 10 --event-ttl 120 \
+  --deadletter-endpoint $STORAGE_ID/blobServices/default/containers/eg-deadletter
+```
+
+### Retries and dead-lettering
+
+If the handler doesn't return success, Event Grid waits and tries again with **exponential backoff**. The **retry policy** on each subscription has two limits, and whichever is hit first ends the retries:
+
+- **Max delivery attempts**: 1 to 30, default **30**.
+- **Event time to live**: 1 to 1,440 minutes, default **1,440** (24 hours).
+
+Some failures aren't retried at all, such as 400 Bad Request and 413 Request Entity Too Large, because trying again won't help. When retries end, the event is **dropped** unless you set a **dead-letter destination**: a blob container in a storage account, where Event Grid writes the undelivered event as JSON with the reason.
+
+<Flow
+  caption="A .pdf upload on its way to a function"
+  steps={[
+    { title: 'Happen', text: 'contract-88.pdf is created in the contracts container.' },
+    { title: 'Filter', text: 'Type is BlobCreated, subject ends with .pdf: it matches. A .tmp file wouldn\'t.' },
+    { title: 'Push', text: 'Event Grid calls the function. If it returns 503, Event Grid backs off and retries.' },
+    { title: 'Land', text: 'Success, or after the retry limits, the event goes to the dead-letter container.' },
+  ]}
+/>
+
+<TryIt labs="dev-event-grid" text="Create a custom topic, add an event subscription with a subject filter, set the retry policy and turn on dead-lettering." />
+
+### Webhook validation
+
+Event Grid won't send events to a random URL until the endpoint proves it wants them. With the Event Grid schema, it first posts a `Microsoft.EventGrid.SubscriptionValidationEvent` containing a `validationCode`; your endpoint returns `{"validationResponse": "<code>"}`, or someone opens the `validationUrl` in the event within a few minutes. With CloudEvents, Event Grid sends an HTTP **OPTIONS** request with `WebHook-Request-Origin`, and your endpoint replies with `WebHook-Allowed-Origin`. Azure Functions with the Event Grid trigger, Logic Apps and Service Bus handlers don't need you to code any of this.
+
+<Callout type="exam">
+Look for these clues. "Only react to new .png files in one container" is **event type + subject begins/ends with**. "Filter on a value inside the payload" is an **advanced filter**. "Keep events the handler couldn't take" is **dead-lettering to a storage blob container**, not a Service Bus DLQ. Retry defaults are **30 attempts** and **1,440 minutes**. "Interoperable, open event format" is **CloudEvents 1.0**. And a webhook that never receives events probably failed the **validation handshake**.
+</Callout>
+
+<DeepDive title="Event Grid or Service Bus?">
+
+Use Event Grid when the publisher just announces facts and doesn't care who listens: it's cheap, push-based and fans out to many handlers with filters. Use Service Bus when the payload is work that must be processed, when the receiver needs to control the pace (pull, peek-lock), or when you need ordering, sessions or transactions.
+
+They combine well. A common pattern is Event Grid delivering `BlobCreated` events into a **Service Bus queue**: Event Grid handles the filtering and the push, and the queue gives your workers peek-lock, a dead-letter queue and a buffer for bursts.
+
+</DeepDive>
+
+## Real-world business scenario
+
+<Scenario
+  company="Contoso Insurance (fictional)"
+  industry="Insurance"
+  problem="A claims app checked Blob Storage every 30 seconds for new photos, paying for thousands of list calls a day and still making customers wait for damage assessments."
+  service="An Event Grid system topic on the storage account, with an event subscription filtered to BlobCreated and subject ends with .jpg, pushing to an Azure Function that calls a vision model. The function then publishes a custom Contoso.Claims.Assessed CloudEvent to a custom topic that the notifications team subscribes to. Dead-lettering goes to an eg-deadletter container."
+  why="Events arrive within seconds with no polling, filters keep thumbnails and temp files out, and dead-lettering means no claim photo is silently skipped during an outage."
+  outcome="Assessments start as soon as a photo lands, the polling cost is gone, and the operations team reviews the dead-letter container after any incident."
+/>
+
+## When to use it and when not to
+
+<UseWhen
+  use={[
+    'You want to react to changes in Azure resources (blobs, Key Vault secrets, resource groups) without polling.',
+    'Your app needs to announce its own events to several handlers that may change over time.',
+    'Each handler wants only some events, selected by type, subject or data fields.',
+  ]}
+  avoid={[
+    'The receiver must pull at its own pace with locks and settlement. Use Service Bus.',
+    'You need strict ordering or transactions across messages.',
+    'You stream large volumes of telemetry for analytics and replay. Use Event Hubs.',
+  ]}
+  alternatives={[
+    '<strong>Azure Service Bus</strong> for commands and work items that must be processed.',
+    '<strong>Azure Event Hubs</strong> for high-throughput event streaming.',
+    '<strong>Event Grid into a Service Bus queue</strong> when you want both push filtering and a buffer.',
+  ]}
+/>

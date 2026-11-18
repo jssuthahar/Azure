@@ -16,7 +16,7 @@ const ids = JSON.stringify(questions.map((q) => q.id));
   </p>
   <form class="exercise-box mt-5 space-y-5" novalidate>
     {questions.map((q, qi) => (
-      <fieldset class="card p-5" data-q={qi}>
+      <fieldset class="card p-5 min-w-0 [overflow-wrap:anywhere]" data-q={qi}>
         <legend class="sr-only">Question {qi + 1}</legend>
         <div class="flex flex-wrap items-center justify-between gap-2">
           <p class="text-xs font-bold tracking-wider uppercase text-muted">

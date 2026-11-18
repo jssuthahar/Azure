@@ -1,0 +1,264 @@
+---
+title: "Cosmos DB for NoSQL: Connect with the SDK and Query"
+seoTitle: Cosmos DB for NoSQL Python SDK and Queries | AI-200
+description: Connect to Azure Cosmos DB for NoSQL from Python with DefaultAzureCredential, then upsert items, run point reads and parameterised queries, and read RU charges.
+answer: >-
+  You connect with the **azure-cosmos** Python SDK by creating a **CosmosClient** from the account endpoint and **DefaultAzureCredential**, then getting a **database** and a **container**. Write items with **upsert_item**, fetch one item cheaply with a **point read** (`read_item` with its **id** and **partition key**, about 1 RU for a 1 KB item), and use **query_items** with **parameters** for everything else. Pass `partition_key` to keep a query inside one logical partition; a query without it fans out across partitions and costs more **Request Units**.
+updated: 2026-11-18
+readingMinutes: 11
+keyTerms:
+  - term: Azure Cosmos DB for NoSQL
+    definition: A globally distributed database that stores schema-free JSON items and is queried with a SQL-like language.
+  - term: Container
+    definition: The unit that holds items, has a partition key, an indexing policy and throughput.
+  - term: Partition key
+    definition: An item property (such as /category) whose value decides which logical partition an item lives in. It can't be changed after the container is created.
+  - term: Point read
+    definition: Reading a single item by its id and partition key value, the cheapest operation in Cosmos DB.
+  - term: Request Unit (RU)
+    definition: The currency for Cosmos DB throughput; every read, write and query is charged in RUs.
+  - term: Upsert
+    definition: Insert the item if it doesn't exist, or replace it if an item with the same id and partition key does.
+  - term: Cross-partition query
+    definition: A query that can't be routed to one logical partition and so runs against every physical partition.
+interview:
+  - level: beginner
+    q: What's the cheapest way to read one item from Cosmos DB?
+    a: >-
+      A point read. I call read_item with the item's id and its partition key value. For a 1 KB item that's about 1 RU, which is cheaper and faster than running a SELECT that returns the same item.
+    followUps:
+      - q: Why does it need the partition key as well as the id?
+        a: >-
+          The id is only unique inside a logical partition, and the partition key tells Cosmos DB exactly which partition to go to. Without it, the service would have to look everywhere.
+  - level: intermediate
+    q: Why should queries use parameters instead of building the SQL string yourself?
+    a: >-
+      Parameters stop injection, because user input is never treated as query text. They also keep the query text the same each time, which makes it easier to read and to reuse. In Python I pass a list like [{"name": "@cat", "value": category}].
+    followUps: []
+  - level: experienced
+    q: How do you find out how many RUs an operation cost from the Python SDK?
+    a: >-
+      Every response carries an x-ms-request-charge header. After the call I read container.client_connection.last_response_headers["x-ms-request-charge"]. I log it during development so an expensive query shows up before it reaches production.
+    followUps: []
+  - level: scenario
+    q: Your app connects with DefaultAzureCredential but every data call fails with 403 Forbidden, even though you're an Owner on the account. Why?
+    a: >-
+      Cosmos DB data access with Microsoft Entra ID uses its own data plane role assignments, not Azure IAM roles like Owner. I'd assign the Cosmos DB Built-in Data Contributor role (or Reader) to my identity on the account with az cosmosdb sql role assignment create.
+    followUps: []
+  - level: architecture
+    q: How do you pick a partition key for a product catalogue that an AI assistant queries?
+    a: >-
+      I look at the queries first. If most lookups filter by category, /category spreads writes well and keeps those queries in one partition. It needs plenty of distinct values and no single value that grows past the 20 GB logical partition limit. If one tenant or category could get huge, I'd look at a hierarchical partition key such as tenantId then category.
+    followUps: []
+revision:
+  keyPoints:
+    - CosmosClient(url, credential=DefaultAzureCredential()) signs in with Microsoft Entra ID.
+    - Entra ID data access needs a Cosmos DB data plane role such as Cosmos DB Built-in Data Contributor.
+    - A container's partition key is set at creation and can't be changed.
+    - upsert_item inserts or replaces; read_item is a point read by id and partition key.
+    - query_items takes parameters; partition_key keeps it in one partition.
+    - The RU charge is in the x-ms-request-charge response header.
+  mistakes:
+    - Running SELECT * FROM c WHERE c.id = @id instead of a point read.
+    - Concatenating user input into query text instead of using parameters.
+    - Expecting the Owner or Contributor Azure role to grant data access through Entra ID.
+  examTips:
+    - '"Retrieve one item with the lowest RU cost" = **read_item** with **id** and **partition key**.'
+    - '"Query must not scan every partition" = filter on the partition key or pass **partition_key**.'
+    - '"Check the RU cost of an operation" = the **x-ms-request-charge** header.'
+  quick:
+    - q: Which Python package is the Cosmos DB SDK?
+      a: azure-cosmos.
+    - q: Which method inserts an item or replaces it if it already exists?
+      a: upsert_item.
+    - q: What two values does a point read need?
+      a: The item id and its partition key value.
+    - q: Roughly how many RUs does a point read of a 1 KB item cost?
+      a: About 1 RU.
+    - q: Which header holds the RU charge?
+      a: x-ms-request-charge.
+references:
+  - title: "Quickstart: Azure Cosmos DB for NoSQL client library for Python"
+    url: https://learn.microsoft.com/azure/cosmos-db/nosql/quickstart-python
+  - title: Partitioning and horizontal scaling in Azure Cosmos DB
+    url: https://learn.microsoft.com/azure/cosmos-db/partitioning-overview
+  - title: Request Units in Azure Cosmos DB
+    url: https://learn.microsoft.com/azure/cosmos-db/request-units
+  - title: Connect to Azure Cosmos DB with role-based access control and Microsoft Entra ID
+    url: https://learn.microsoft.com/azure/cosmos-db/nosql/security/how-to-grant-data-plane-role-based-access
+related:
+  - cosmos-db-rus-indexing-consistency
+  - cosmos-db-vector-search
+  - cosmos-db-change-feed
+  - embeddings-and-vector-search
+  - postgresql-connect-and-query
+---
+
+## Start with a question
+
+<Story question="Your AI shopping assistant needs a product's price and stock in under 10 milliseconds, thousands of times a minute. Where does that data live, and how does your code ask for it?">
+
+Think of a huge warehouse with labelled aisles. If you know the aisle and the shelf number, a picker walks straight there and grabs the box. If all you've got is "something blue, about this big", they have to walk every aisle.
+
+**Azure Cosmos DB for NoSQL** works the same way. The **partition key** is the aisle and the **id** is the shelf. Give both and you get a cheap, fast **point read**. Give a vague query and it walks the whole warehouse, and you pay for every step in **Request Units**.
+
+</Story>
+
+## Explain it like I'm 10
+
+<Eli10>
+
+Your school keeps everyone's homework in boxes, one box per class.
+
+If the teacher says "get Priya's homework from class 5B", you go to box 5B and pull it out. Quick.
+
+If the teacher says "find every homework about volcanoes", you have to open every box. Slow.
+
+Cosmos DB is the cupboard of boxes. The class name is the partition key.
+
+</Eli10>
+
+## The technical explanation
+
+The hierarchy is simple: an **account** holds **databases**, a database holds **containers**, and a container holds JSON **items**. Each container has a **partition key** path, for example `/category`. Items with the same `category` value share a **logical partition** (up to 20 GB), and Cosmos DB spreads logical partitions across physical ones as you grow. An item's `id` must be unique within its logical partition, and an item can be up to 2 MB.
+
+### Connect with Microsoft Entra ID
+
+```bash
+pip install azure-cosmos azure-identity
+export COSMOS_ENDPOINT="https://<account-name>.documents.azure.com:443/"
+az login
+```
+
+```python
+import os
+from azure.cosmos import CosmosClient, PartitionKey
+from azure.identity import DefaultAzureCredential
+
+client = CosmosClient(
+    url=os.environ["COSMOS_ENDPOINT"],
+    credential=DefaultAzureCredential(),  # no account key in code
+)
+
+# Usually created by Bicep, the CLI or the portal (see the note below)
+database = client.create_database_if_not_exists(id="shop")
+container = database.create_container_if_not_exists(
+    id="products",
+    partition_key=PartitionKey(path="/category"),
+)
+```
+
+Create the `CosmosClient` **once** and reuse it for the life of the app. It holds connections and caches routing information, so making a new client per request is slow and wastes resources.
+
+### Write, read and query
+
+```python
+# Insert, or replace if this id + partition key already exists
+container.upsert_item({
+    "id": "p-1001",
+    "category": "kettles",
+    "name": "Steel Kettle 1.7 L",
+    "price": 2499,
+    "stock": 42,
+})
+
+# Point read: id + partition key value. About 1 RU for a 1 KB item.
+item = container.read_item(item="p-1001", partition_key="kettles")
+print(item["name"])
+
+charge = container.client_connection.last_response_headers["x-ms-request-charge"]
+print("RU charge:", charge)
+
+# Parameterised query inside ONE logical partition
+cheap = container.query_items(
+    query="SELECT c.id, c.name, c.price FROM c WHERE c.category = @cat AND c.price < @max",
+    parameters=[
+        {"name": "@cat", "value": "kettles"},
+        {"name": "@max", "value": 3000},
+    ],
+    partition_key="kettles",
+)
+for row in cheap:
+    print(row)
+
+# A query that must look across partitions
+low_stock = container.query_items(
+    query="SELECT TOP 20 c.id, c.category, c.stock FROM c WHERE c.stock < @n",
+    parameters=[{"name": "@n", "value": 5}],
+    enable_cross_partition_query=True,
+)
+```
+
+A few things to notice:
+
+- **upsert_item** inserts or replaces. Use `create_item` if you want an error when the id already exists, and `replace_item` or `patch_item` for updates.
+- **read_item** isn't a query, it's a direct lookup, and it's always cheaper than `SELECT * FROM c WHERE c.id = @id`.
+- **query_items** returns a lazy iterator. Results come back in pages as you loop, and each page has its own RU charge. For paging in an API, use `max_item_count` and `by_page()` and hand the continuation token back to the caller.
+
+### The query language in one table
+
+| You want | Write |
+| --- | --- |
+| Pick fields | `SELECT c.id, c.name FROM c` |
+| Filter | `WHERE c.category = @cat AND c.price < @max` |
+| Limit results | `SELECT TOP 10 ...` or `OFFSET 0 LIMIT 10` |
+| Sort | `ORDER BY c.price DESC` (multi-property sorts need a composite index) |
+| Search inside an array | `WHERE ARRAY_CONTAINS(c.tags, @tag)` |
+| Flatten an array in the item | `SELECT t FROM c JOIN t IN c.tags` |
+| Count | `SELECT VALUE COUNT(1) FROM c WHERE c.category = @cat` |
+
+`JOIN` in Cosmos DB works **inside one item** (across its arrays), never between items or containers. Model your data so a request needs one item or one partition.
+
+<Flow
+  caption="What happens to a query"
+  steps={[
+    { title: 'Partition key in the filter?', text: 'Yes: the SDK routes the query to one partition.' },
+    { title: 'No partition key', text: 'The query fans out to every physical partition.' },
+    { title: 'Index lookup', text: 'Filters use the indexing policy, so no full scan of items.' },
+    { title: 'Results and charge', text: 'Each page returns items plus x-ms-request-charge.' },
+  ]}
+/>
+
+<TryIt labs="dev-cosmos" text="Create an account, a database and a container with /category as the partition key, add items, then compare the RU charge of a point read with a cross-partition query." />
+
+<Callout type="exam">
+Three things the exam likes to test. A **point read** needs the **id** and the **partition key** value, and it's the cheapest way to fetch one item. Queries should use **parameters** (`@name`), not string concatenation. A query that doesn't filter on the partition key is a **cross-partition** query and costs more RUs. When you see "Microsoft Entra ID" plus "403 Forbidden" on data calls, the fix is a **Cosmos DB data plane role** (Cosmos DB Built-in Data Contributor or Reader), not an Azure IAM role.
+</Callout>
+
+<DeepDive title="Entra ID data access, and why create_* can fail">
+
+Cosmos DB has two kinds of access. **Control plane** (Azure Resource Manager) is for creating accounts, databases and containers, and uses normal Azure roles. **Data plane** is for reading and writing items, and with Entra ID it uses Cosmos DB's own role definitions, assigned with `az cosmosdb sql role assignment create`. The built-in ones are **Cosmos DB Built-in Data Reader** and **Cosmos DB Built-in Data Contributor**.
+
+Data plane roles don't include management operations, so `create_database_if_not_exists` and `create_container_if_not_exists` can fail when you sign in with Entra ID. In production, create the database and container with Bicep, the CLI or the portal, then use `client.get_database_client("shop")` and `database.get_container_client("products")` in the app. Many teams also set `disableLocalAuth` on the account so account keys stop working altogether.
+
+</DeepDive>
+
+## Real-world business scenario
+
+<Scenario
+  company="Fabrikam Grocers (fictional)"
+  industry="Online grocery"
+  problem="The chat assistant looked up product details with SELECT * FROM c WHERE c.id = @id across a 40 GB container. Each lookup cost many RUs, and at lunchtime peaks requests were throttled with 429 errors."
+  service="The team switched lookups to read_item with the product id and its /category partition key, kept one CosmosClient for the whole app, signed in with a managed identity and the Cosmos DB Built-in Data Contributor role, and moved the remaining searches to parameterised single-partition queries."
+  why="Point reads go straight to one partition and cost about 1 RU for small items, and Entra ID removed the account key from the app settings."
+  outcome="The same provisioned throughput now handles peak traffic without throttling, and every query logs its x-ms-request-charge so expensive ones are spotted early."
+/>
+
+## When to use it and when not to
+
+<UseWhen
+  use={[
+    "You need single-digit millisecond reads and writes of JSON data at any scale.",
+    "Most requests can name one item or one partition key value.",
+    "Your AI app wants app data and vectors in the same items.",
+  ]}
+  avoid={[
+    "You need joins across many tables and ad hoc reporting. A relational database like PostgreSQL fits better.",
+    "You can't find a partition key that most queries filter on. Every request would fan out.",
+    "You need a cache in front of a database for repeated reads. That's Azure Managed Redis.",
+  ]}
+  alternatives={[
+    "<strong>Azure Database for PostgreSQL</strong> for relational data, SQL joins and pgvector.",
+    "<strong>Azure Managed Redis</strong> for in-memory caching and very fast key lookups.",
+  ]}
+/>

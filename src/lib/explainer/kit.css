@@ -50,6 +50,7 @@
   font-size: 0.68rem;
   letter-spacing: 0.08em;
 }
+.xv-head .xv-ai { padding: 0.1rem 0.5rem; border-radius: 999px; border: 1px solid var(--card-line, #dde3ea); font-size: 0.68rem; letter-spacing: 0.04em; }
 .xv-head .xv-len { margin-left: auto; font-weight: 600; font-variant-numeric: tabular-nums; }
 
 /* ------------------------------------------------------------- frame -- */

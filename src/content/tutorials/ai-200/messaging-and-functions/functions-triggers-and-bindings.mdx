@@ -1,0 +1,240 @@
+---
+title: "Azure Functions: Serverless APIs with Triggers and Bindings"
+seoTitle: Azure Functions Triggers and Bindings in Python | AI-200
+description: Build serverless Python APIs with the Azure Functions v2 model for AI-200, using HTTP, Service Bus, Event Grid and timer triggers plus output bindings.
+answer: >-
+  An **Azure Function** is a small piece of code that runs when its **trigger** fires: an HTTP request, a Service Bus message, an Event Grid event, a timer or a Cosmos DB change. Each function has exactly one trigger. **Bindings** connect inputs and outputs without client code, so an HTTP API can drop a message on a queue through an **output binding**. In the **Python v2 programming model** you write everything in `function_app.py` with decorators on `func.FunctionApp()`, such as `@app.route`, `@app.service_bus_queue_trigger` and `@app.service_bus_queue_output`.
+updated: 2026-11-18
+readingMinutes: 11
+keyTerms:
+  - term: Trigger
+    definition: What starts a function run, such as an HTTP request or a queue message. Every function has exactly one.
+  - term: Binding
+    definition: A declared connection to another service that passes data in (input) or out (output) without writing SDK code.
+  - term: Python v2 programming model
+    definition: The decorator-based way to write Python functions in function_app.py, with no function.json files.
+  - term: func.FunctionApp
+    definition: The object in function_app.py that functions are registered on with decorators.
+  - term: Authorization level
+    definition: Whether an HTTP function needs a key - ANONYMOUS (none), FUNCTION (a function or host key) or ADMIN (the master key).
+  - term: Connection setting
+    definition: The name of an app setting that tells a trigger or binding how to reach a service, by connection string or by identity.
+  - term: NCRONTAB
+    definition: The six-field schedule format used by the timer trigger, with seconds first, such as 0 */5 * * * *.
+interview:
+  - level: beginner
+    q: What's the difference between a trigger and a binding?
+    a: >-
+      The trigger is why the function runs: an HTTP call, a message, a timer. A function has exactly one. Bindings are optional extra connections for data in or out, like writing to a queue or reading a blob, and a function can have several. The trigger is itself a kind of input binding.
+    followUps: []
+  - level: intermediate
+    q: How do you write a Service Bus message from an HTTP function in Python without the Service Bus SDK?
+    a: >-
+      I add @app.service_bus_queue_output with arg_name, queue_name and connection, then add a parameter of type func.Out[str] with that name. Inside the function I call msg.set(json_text). The Functions host sends it to the queue when the function finishes.
+    followUps: []
+  - level: experienced
+    q: What happens to a Service Bus message if your queue-triggered function throws an exception?
+    a: >-
+      The trigger uses peek-lock. If the function succeeds, the host completes the message. If it throws, the host abandons it, so it's delivered again. After the queue's max delivery count, 10 by default, Service Bus dead-letters it. So my function should be idempotent and only throw for errors worth retrying.
+    followUps: []
+  - level: scenario
+    q: You need a public endpoint for a partner to request summaries, but only partners with a key should get in. How would you set up the function?
+    a: >-
+      An HTTP trigger with auth_level FUNCTION, so callers pass a function key in the x-functions-key header or the code query string. I'd give the partner their own key so I can revoke it alone. For real user identity I'd add App Service authentication with Microsoft Entra ID or put API Management in front.
+    followUps: []
+revision:
+  keyPoints:
+    - One trigger per function. Bindings (input and output) are optional and can be many.
+    - Python v2 - function_app.py, app = func.FunctionApp(), decorators per function. No function.json.
+    - HTTP - @app.route with auth levels ANONYMOUS, FUNCTION, ADMIN.
+    - Service Bus trigger completes on success and abandons on exception. Output bindings use func.Out[...] and .set().
+    - The connection argument names an app setting, not the connection string itself.
+  mistakes:
+    - Putting the connection string straight into the decorator instead of an app setting name.
+    - Expecting a Service Bus-triggered function to retry forever. After max delivery count the message is dead-lettered.
+    - Writing six-field NCRONTAB as five-field cron.
+  examTips:
+    - '"Start when a message lands in a queue" = **Service Bus queue trigger**.'
+    - '"Write to a queue without SDK code" = **output binding**.'
+    - '"Run every 15 minutes" = **timer trigger**, 0 */15 * * * *.'
+  quick:
+    - q: How many triggers can a function have?
+      a: Exactly one.
+    - q: Which file holds Python v2 functions?
+      a: function_app.py.
+    - q: Which decorator defines an HTTP-triggered function?
+      a: "@app.route."
+    - q: Which auth level needs no key?
+      a: ANONYMOUS.
+    - q: How do you set an output binding value in Python?
+      a: Call .set() on the func.Out parameter.
+references:
+  - title: Azure Functions triggers and bindings concepts
+    url: https://learn.microsoft.com/azure/azure-functions/functions-triggers-bindings
+  - title: Azure Functions Python developer guide
+    url: https://learn.microsoft.com/azure/azure-functions/functions-reference-python
+  - title: Azure Service Bus bindings for Azure Functions
+    url: https://learn.microsoft.com/azure/azure-functions/functions-bindings-service-bus
+  - title: Azure Event Grid trigger for Azure Functions
+    url: https://learn.microsoft.com/azure/azure-functions/functions-bindings-event-grid-trigger
+related:
+  - deploy-function-apps
+  - service-bus-queues
+  - event-grid
+---
+
+## Start with a question
+
+<Story question="Do you really need a whole server just to run 20 lines of code when a file arrives?">
+
+Think of the motion-sensor light in a corridor. It doesn't burn all night. Someone walks in, it switches on, does its job, and switches off. You pay for the minutes it was on.
+
+**Azure Functions** works like that light. You write a small function, say which event switches it on (the **trigger**), and Azure runs it only when that happens. **Bindings** are the wiring to other services, so your function can write to a queue or read a blob without you writing connection code.
+
+</Story>
+
+## Explain it like I'm 10
+
+<Eli10>
+
+A function is like a vending machine.
+
+Pressing the button is the **trigger**. Nothing happens until someone presses it.
+
+The coin slot and the snack tray are **bindings**. The coin goes in (input), the snack comes out (output). The machine doesn't care how the snack got loaded into the back, it just hands it over.
+
+</Eli10>
+
+## The technical explanation
+
+A **function app** is the unit you deploy and scale. Inside it you write one or more **functions**. Each function has:
+
+- exactly **one trigger**, which starts it and usually passes in the data (the request, the message, the event);
+- zero or more **input bindings**, which read extra data (a blob, a Cosmos DB item);
+- zero or more **output bindings**, which write results (a queue message, a blob, a Cosmos DB document).
+
+### The Python v2 programming model
+
+In the v2 model there's no `function.json`. You create one `FunctionApp` object in `function_app.py` and decorate plain Python functions:
+
+```python
+import json, logging
+import azure.functions as func
+
+app = func.FunctionApp(http_auth_level=func.AuthLevel.FUNCTION)
+
+# 1. HTTP API that queues work through an output binding
+@app.route(route="summarise", methods=["POST"])
+@app.service_bus_queue_output(arg_name="job", queue_name="summarise-jobs",
+                              connection="ServiceBusConnection")
+def summarise(req: func.HttpRequest, job: func.Out[str]) -> func.HttpResponse:
+    body = req.get_json()
+    job.set(json.dumps({"docId": body["docId"], "blob": body["blob"]}))
+    return func.HttpResponse(json.dumps({"status": "accepted"}), status_code=202,
+                             mimetype="application/json")
+
+# 2. Worker triggered by each queue message
+@app.service_bus_queue_trigger(arg_name="msg", queue_name="summarise-jobs",
+                               connection="ServiceBusConnection")
+def worker(msg: func.ServiceBusMessage):
+    job = json.loads(msg.get_body().decode("utf-8"))
+    logging.info("Summarising %s (delivery %s)", job["docId"], msg.delivery_count)
+    summarise_document(job["blob"])      # raise to retry, return to complete
+```
+
+`connection="ServiceBusConnection"` is the **name of an app setting**, not the secret itself. In Azure that setting can be a connection string, or you can use identity-based connections (covered in the deploy lesson).
+
+### Common triggers and bindings
+
+| Decorator | Fires when / does | Notes |
+| --- | --- | --- |
+| `@app.route` | An HTTP request arrives at `/api/<route>` | Returns `func.HttpResponse`. Auth levels below. |
+| `@app.service_bus_queue_trigger` / `@app.service_bus_topic_trigger` | A message arrives on a queue or subscription | Peek-lock: completed on success, abandoned on exception. |
+| `@app.event_grid_trigger` | Event Grid pushes an event | Receives `func.EventGridEvent`. The validation handshake is handled for you. |
+| `@app.timer_trigger` | A schedule is due | Six-field NCRONTAB, seconds first: `0 */15 * * * *`. |
+| `@app.cosmos_db_trigger` | Items are inserted or updated in a container | Reads the change feed and needs a lease container. |
+| `@app.blob_trigger` | A blob is added or updated | For high volume, Event Grid-based blob triggers are faster. |
+| `@app.service_bus_queue_output` / `@app.queue_output` | Writes a message to Service Bus / Storage queue | Parameter type `func.Out[str]`, then `.set()`. |
+| `@app.blob_input`, `@app.cosmos_db_input` | Reads a blob or item before the function runs | Value arrives as a parameter. |
+
+Two more you'll see often:
+
+```python
+@app.event_grid_trigger(arg_name="event")
+def on_blob(event: func.EventGridEvent):
+    data = event.get_json()
+    logging.info("%s on %s", event.event_type, event.subject)
+
+@app.timer_trigger(schedule="0 0 2 * * *", arg_name="timer", run_on_startup=False)
+def nightly_reindex(timer: func.TimerRequest):
+    if timer.past_due:
+        logging.warning("Running late")
+    rebuild_index()
+```
+
+You can split a big app into files with `func.Blueprint()` and register it with `app.register_functions(bp)`.
+
+### HTTP authorization levels
+
+| Level | Caller needs |
+| --- | --- |
+| `ANONYMOUS` | Nothing. Anyone with the URL can call it. |
+| `FUNCTION` | A function key or host key, in the `x-functions-key` header or `?code=` query string. This is the default. |
+| `ADMIN` | The master key. Keep it for admin tools only. |
+
+Keys aren't checked when you run locally with Core Tools. Keys prove "this caller has the key", not who the user is. For user identity, add built-in authentication with Microsoft Entra ID or put Azure API Management in front.
+
+<Flow
+  caption="An HTTP call turned into background work"
+  steps={[
+    { title: 'Call', text: 'A client POSTs to /api/summarise with a function key.' },
+    { title: 'Bind out', text: 'The output binding writes a message to summarise-jobs. The API returns 202.' },
+    { title: 'Trigger', text: 'The Service Bus trigger hands the message to the worker function.' },
+    { title: 'Settle', text: 'Success completes the message. An exception abandons it for another try.' },
+  ]}
+/>
+
+<TryIt labs="dev-functions" text="Create a Flex Consumption function app, add an HTTP-triggered function, then wire a Service Bus output binding." />
+
+<Callout type="exam">
+"Run code when X happens" maps straight to a **trigger** (HTTP, Service Bus, Event Grid, timer, Cosmos DB, blob). "Send the result somewhere without client code" is an **output binding**. Remember that a function has **one trigger only**. In Python v2 questions, look for `function_app.py`, `func.FunctionApp()` and decorators; `func.Out[...]` with `.set()` means an output binding. A `connection` value is an **app setting name**. For timers, count the fields: NCRONTAB has six, starting with seconds.
+</Callout>
+
+<DeepDive title="Retries, timeouts and long AI work">
+
+A Service Bus-triggered function gets Service Bus's own retry: abandon on failure, dead-letter after max delivery count. Event Grid has its own retry policy too. For other triggers you can add a function-level **retry policy** (fixed delay or exponential backoff) in some cases, but don't stack retries on top of the broker's retries without thinking about the total.
+
+HTTP functions behind the Azure load balancer must respond within about 230 seconds, whatever the function timeout. That's why the pattern above returns 202 straight away and lets a queue-triggered function do the slow model call. For multi-step workflows with waits and fan-out, **Durable Functions** (orchestrator and activity functions) keeps state for you.
+
+</DeepDive>
+
+## Real-world business scenario
+
+<Scenario
+  company="Wide World Importers (fictional)"
+  industry="Retail"
+  problem="Product descriptions for 40,000 items needed regenerating with a language model whenever a supplier sent new specs, and an old VM script ran all day even when nothing changed."
+  service="A Python v2 function app with an Event Grid trigger on the specs container, a Service Bus output binding that queues one job per product, a Service Bus-triggered worker that calls the model and a Cosmos DB output binding that saves the new description. A nightly timer trigger re-queues anything that failed."
+  why="Each step runs only when there's work, bindings removed most of the SDK code, and failed products end up in the dead-letter queue instead of vanishing."
+  outcome="The VM was switched off, new specs show up on the site within minutes, and the team edits one function_app.py file instead of three scripts."
+/>
+
+## When to use it and when not to
+
+<UseWhen
+  use={[
+    'Small units of code that should run in response to HTTP calls, messages, events or schedules.',
+    'Glue between services where bindings remove most of the client code.',
+    'Spiky workloads that sit idle a lot and should scale to zero.',
+  ]}
+  avoid={[
+    'Long-running processes or servers that need to stay up and hold connections. Use Container Apps or App Service.',
+    'A big web app with many routes and its own framework. App Service or Container Apps fits better.',
+    'Work that must answer an HTTP caller after several minutes. Queue it and reply 202 instead.',
+  ]}
+  alternatives={[
+    '<strong>Azure Container Apps</strong> for containerised APIs and workers with KEDA scaling.',
+    '<strong>Durable Functions</strong> for stateful, multi-step workflows.',
+    '<strong>Azure Logic Apps</strong> for low-code workflows with connectors.',
+  ]}
+/>

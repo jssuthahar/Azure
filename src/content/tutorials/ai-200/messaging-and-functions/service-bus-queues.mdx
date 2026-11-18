@@ -1,0 +1,240 @@
+---
+title: "Azure Service Bus Queues: Send, Receive and Settle Messages"
+seoTitle: Azure Service Bus Queues in Python Explained | AI-200
+description: Send, receive and settle Azure Service Bus queue messages in Python for AI-200, with peek-lock, complete, abandon, lock duration, TTL, sessions and tiers.
+answer: >-
+  An **Azure Service Bus queue** holds messages until one receiver takes each one, so a web API can hand slow AI work to a background worker. In Python you create a **ServiceBusClient** with the **fully qualified namespace** and **DefaultAzureCredential**, send a **ServiceBusMessage** with a queue sender, and read with a queue receiver. In the default **peek-lock** mode the receiver must **complete** the message when it's done; **abandon** makes it available again, and after the **max delivery count** (10 by default) it goes to the dead-letter queue.
+updated: 2026-11-18
+readingMinutes: 11
+keyTerms:
+  - term: Service Bus namespace
+    definition: The container for queues and topics, reached at <name>.servicebus.windows.net, with a pricing tier of Basic, Standard or Premium.
+  - term: Queue
+    definition: A Service Bus entity that stores messages in order and delivers each message to one competing receiver.
+  - term: Peek-lock
+    definition: The default receive mode. The message is locked for the receiver and only removed when the receiver completes it.
+  - term: Receive-and-delete
+    definition: A receive mode that removes the message as soon as it's delivered, so a crash loses it.
+  - term: Lock duration
+    definition: How long a peek-locked message stays hidden from other receivers. The default is 1 minute and the maximum is 5 minutes.
+  - term: Max delivery count
+    definition: How many times a message can be delivered before Service Bus moves it to the dead-letter queue. The default is 10.
+  - term: Message session
+    definition: A group of messages that share a session ID and are handled in order by one receiver at a time.
+  - term: Duplicate detection
+    definition: A queue option that drops a second message with the same MessageId sent within the detection window.
+interview:
+  - level: beginner
+    q: Why would an AI web API put work on a Service Bus queue instead of doing it straight away?
+    a: >-
+      Because some AI work is slow. Summarising a long PDF can take a minute, and an HTTP request shouldn't hang that long. The API drops a message on the queue, replies "accepted" right away, and a worker processes the job at its own pace. If the worker is down, the messages wait in the queue instead of being lost.
+    followUps:
+      - q: What happens if the worker crashes halfway through a message?
+        a: >-
+          In peek-lock mode nothing is lost. The lock expires after the lock duration and the message becomes visible again, so another worker picks it up. Its delivery count goes up by one.
+  - level: intermediate
+    q: What's the difference between peek-lock and receive-and-delete?
+    a: >-
+      Peek-lock locks the message and waits for me to settle it: complete, abandon, dead-letter or defer. Receive-and-delete removes it the moment it's handed over. It's a bit faster, but if my code crashes after receiving, that message is gone. For anything that matters, like a paid summarisation job, I use peek-lock.
+    followUps: []
+  - level: experienced
+    q: How would you authenticate a Python worker to Service Bus without a connection string?
+    a: >-
+      I'd create the ServiceBusClient with fully_qualified_namespace set to mynamespace.servicebus.windows.net and DefaultAzureCredential. In Azure the worker's managed identity gets the Azure Service Bus Data Receiver role on the queue, and the API that sends gets Azure Service Bus Data Sender. Locally the same code uses my az login.
+    followUps: []
+  - level: scenario
+    q: Your worker takes about three minutes per document and you keep seeing the same document processed twice. What's going on?
+    a: >-
+      The lock is expiring before the worker finishes. The default lock duration is one minute, so the message becomes visible again and a second worker grabs it. I'd raise the lock duration (up to five minutes), renew the lock while processing with AutoLockRenewer, and make the handler idempotent so a repeat does no harm.
+    followUps: []
+revision:
+  keyPoints:
+    - A queue delivers each message to one receiver (competing consumers).
+    - ServiceBusClient(fully_qualified_namespace, DefaultAzureCredential()) then get_queue_sender and get_queue_receiver.
+    - Peek-lock is the default. Settle with complete_message, abandon_message, dead_letter_message or defer_message.
+    - Lock duration defaults to 1 minute (max 5). Max delivery count defaults to 10, then the message is dead-lettered.
+    - Sessions give ordered handling per session ID. Duplicate detection drops repeats by MessageId. Basic tier has queues only.
+  mistakes:
+    - Forgetting to complete the message in peek-lock mode, so it comes back again and again until it's dead-lettered.
+    - Choosing receive-and-delete for work that can't be lost.
+  examTips:
+    - '"Message must not be lost if the worker fails" = **peek-lock**, then **complete** after processing.'
+    - '"Process messages for one customer in order" = **sessions** (session ID).'
+    - '"Basic tier" can''t do **topics**, sessions or duplicate detection.'
+  quick:
+    - q: What is the default receive mode in Service Bus?
+      a: Peek-lock.
+    - q: What is the default max delivery count?
+      a: '10.'
+    - q: What is the default lock duration?
+      a: 1 minute (maximum 5 minutes).
+    - q: Which method makes a locked message available again straight away?
+      a: abandon_message.
+    - q: Which role does a worker need to read messages with Entra ID?
+      a: Azure Service Bus Data Receiver.
+references:
+  - title: What is Azure Service Bus?
+    url: https://learn.microsoft.com/azure/service-bus-messaging/service-bus-messaging-overview
+  - title: "Quickstart: Send and receive messages from a Service Bus queue (Python)"
+    url: https://learn.microsoft.com/azure/service-bus-messaging/service-bus-python-how-to-use-queues
+  - title: Message transfers, locks and settlement
+    url: https://learn.microsoft.com/azure/service-bus-messaging/message-transfers-locks-settlement
+  - title: Message sessions
+    url: https://learn.microsoft.com/azure/service-bus-messaging/message-sessions
+related:
+  - service-bus-topics-and-dead-letters
+  - event-grid
+  - functions-triggers-and-bindings
+---
+
+## Start with a question
+
+<Story question="Why does the upload page freeze every time someone sends a big PDF?">
+
+Picture a busy photocopy shop. If the person at the counter made every copy while you stood there, the queue out the door would never move. Instead they take your order, give you a token and say "come back in ten minutes". The copying happens at the back.
+
+Your AI app has the same problem. Summarising a 40-page PDF takes a minute. If the web API does it inline, requests pile up and time out. An **Azure Service Bus queue** is the token system: the API drops a job on the queue, replies straight away, and a worker at the back does the slow part.
+
+</Story>
+
+## Explain it like I'm 10
+
+<Eli10>
+
+Think of a pile of homework sheets on the teacher's desk. Each kid takes one sheet, does it and hands it back.
+
+While you're working on a sheet, nobody else can take it. That's the **lock**.
+
+If you finish, the sheet's done for good (**complete**). If you get stuck, you put it back on the pile so someone else can try (**abandon**). If nobody can finish it after ten tries, the teacher puts it in a special "problem" tray. That tray is the **dead-letter queue**.
+
+</Eli10>
+
+## The technical explanation
+
+Service Bus is a message broker. You create a **namespace** (`contoso-ai.servicebus.windows.net`) and inside it one or more **queues**. A queue keeps messages in the order they arrived and hands each message to **one** receiver. If you run five workers on the same queue, they compete and share the load.
+
+### Pick a tier
+
+| Tier | What you get | Use it for |
+| --- | --- | --- |
+| **Basic** | Queues only. No topics, sessions, transactions or duplicate detection. | Simple dev/test or one-way job queues |
+| **Standard** | Queues and topics, sessions, duplicate detection, transactions. Shared capacity, messages up to 256 KB. | Most apps |
+| **Premium** | Dedicated messaging units, predictable latency, larger messages, network isolation. | Production with steady high volume |
+
+### Send a message
+
+Install `azure-servicebus` and `azure-identity`. Give the sender the **Azure Service Bus Data Sender** role, then sign in with Microsoft Entra ID instead of a connection string:
+
+```python
+import json
+from azure.identity import DefaultAzureCredential
+from azure.servicebus import ServiceBusClient, ServiceBusMessage
+
+NAMESPACE = "contoso-ai.servicebus.windows.net"
+credential = DefaultAzureCredential()
+
+with ServiceBusClient(fully_qualified_namespace=NAMESPACE, credential=credential) as client:
+    with client.get_queue_sender(queue_name="summarise-jobs") as sender:
+        msg = ServiceBusMessage(
+            json.dumps({"docId": "invoice-42", "blob": "uploads/invoice-42.pdf"}),
+            content_type="application/json",
+            subject="summarise",
+            message_id="invoice-42",              # used by duplicate detection
+            application_properties={"tier": "premium"},
+        )
+        sender.send_messages(msg)
+```
+
+You can pass a list of messages, or build a batch with `sender.create_message_batch()` so you don't go over the size limit.
+
+### Receive and settle
+
+The worker gets the **Azure Service Bus Data Receiver** role. In the default **peek-lock** mode, each message you receive is locked for you and stays in the queue until you **settle** it:
+
+```python
+with ServiceBusClient(fully_qualified_namespace=NAMESPACE, credential=credential) as client:
+    with client.get_queue_receiver(queue_name="summarise-jobs", max_wait_time=5) as receiver:
+        for msg in receiver.receive_messages(max_message_count=10, max_wait_time=5):
+            job = json.loads(str(msg))
+            try:
+                summarise(job["blob"])
+                receiver.complete_message(msg)        # done, remove it
+            except TemporaryError:
+                receiver.abandon_message(msg)         # unlock, try again later
+            except BadInputError as e:
+                receiver.dead_letter_message(msg, reason="BadInput", error_description=str(e))
+```
+
+| Settlement | What happens |
+| --- | --- |
+| `complete_message` | The message is removed from the queue. |
+| `abandon_message` | The lock is released and the message is available again. Delivery count goes up by one. |
+| `dead_letter_message` | The message moves to the queue's dead-letter sub-queue with your reason. |
+| `defer_message` | The message stays in the queue but is set aside. You fetch it later with `receive_deferred_messages(sequence_numbers=[...])`. |
+
+If you don't settle in time, the **lock duration** runs out (1 minute by default, 5 minutes at most) and the message becomes visible to other receivers. Long jobs should renew the lock, for example with `AutoLockRenewer`, rather than relying on a huge lock. Every time a message is delivered its delivery count goes up. When it passes the **max delivery count** (10 by default), Service Bus moves it to the **dead-letter queue**.
+
+**Receive-and-delete** (`receive_mode=ServiceBusReceiveMode.RECEIVE_AND_DELETE`) skips the lock and removes the message on delivery. It's faster but a crash loses the message. Use it only for data you can afford to drop, such as live telemetry samples.
+
+<Flow
+  caption="One job through a queue in peek-lock mode"
+  steps={[
+    { title: 'Send', text: 'The API sends a ServiceBusMessage and replies 202 Accepted.' },
+    { title: 'Lock', text: 'A worker receives it. Other workers can\'t see it while the lock lasts.' },
+    { title: 'Work', text: 'The worker summarises the PDF, renewing the lock if it takes long.' },
+    { title: 'Settle', text: 'complete removes it. abandon or a lost lock sends it back for another try.' },
+  ]}
+/>
+
+<TryIt labs="dev-service-bus" text="Create a namespace and a queue, send three messages, then receive them and complete one and abandon another." />
+
+### Queue settings worth knowing
+
+- **Message time to live (TTL)**: a message that isn't processed in time expires. Set it per message (`time_to_live`) or as a queue default. Turn on **dead-lettering on message expiration** if you want expired messages kept instead of dropped.
+- **Sessions**: turn on **requires session** when you create the queue, then set `session_id` on each message. One receiver locks a whole session at a time, so all messages for `customer-17` are handled in order. Receive with `client.get_queue_receiver(queue_name=..., session_id="customer-17")`.
+- **Duplicate detection**: turn it on when you create the queue and choose a window (10 minutes by default). A second message with the same `message_id` inside the window is quietly dropped, which protects you when a sender retries after a timeout.
+- **Scheduled messages**: set `scheduled_enqueue_time_utc` or call `sender.schedule_messages()` to deliver later.
+- **Peek**: `receiver.peek_messages()` reads messages without locking them. Handy for debugging.
+
+<Callout type="exam">
+Watch the verbs. "Must not lose the message if processing fails" points to **peek-lock** with **complete** at the end. "Make it available to another receiver now" is **abandon**. "Set it aside and get it later by sequence number" is **defer**. "Process each customer's messages in order" is **sessions**. "Ignore a resend with the same ID" is **duplicate detection**. If a question uses the **Basic** tier and needs a topic or sessions, the fix is to move to Standard or Premium.
+</Callout>
+
+<DeepDive title="At-least-once means your handler must be idempotent">
+
+Peek-lock gives you at-least-once delivery. A worker can finish the summary, then crash before `complete_message` reaches Service Bus. The lock expires and another worker processes the same job again. So design for repeats: write the summary with an upsert keyed on `docId`, or check a "processed" marker before doing paid model calls. Duplicate detection only stops duplicate *sends*; it doesn't stop a message being *delivered* twice.
+
+For high throughput, use the async client in `azure.servicebus.aio`, receive in batches, and set `prefetch_count` so the next messages are already on their way while you work. Keep prefetch modest with long jobs, because prefetched messages are locked too and their locks keep ticking.
+
+</DeepDive>
+
+## Real-world business scenario
+
+<Scenario
+  company="Fabrikam Legal (fictional)"
+  industry="Legal services"
+  problem="Lawyers uploaded contracts for an AI summary and the web app timed out whenever a 100-page contract arrived during the morning rush."
+  service="The upload API now sends a ServiceBusMessage to a summarise-jobs queue on the Standard tier and returns 202 Accepted. Three Python workers receive in peek-lock mode with managed identities, renew locks on long contracts and complete each message after saving the summary."
+  why="The queue absorbs the morning burst, peek-lock means a crashed worker never loses a contract, and duplicate detection stops a retried upload from being summarised (and billed) twice."
+  outcome="Uploads return in under a second, summaries arrive a minute or two later, and the team scales workers instead of making the web tier bigger."
+/>
+
+## When to use it and when not to
+
+<UseWhen
+  use={[
+    'A web API needs to hand slow or bursty AI work to a background worker.',
+    'Each job must be processed once by one worker, and must not be lost if a worker fails.',
+    'You need ordering per customer (sessions), duplicate protection or scheduled delivery.',
+  ]}
+  avoid={[
+    'Several different systems each need their own copy of the message. Use a topic with subscriptions.',
+    'You only want to announce that something happened, like a blob being created. Event Grid fits better.',
+    'You need to stream millions of telemetry events per second for analytics. That\'s Azure Event Hubs.',
+  ]}
+  alternatives={[
+    '<strong>Service Bus topics</strong> for one message, many independent readers.',
+    '<strong>Azure Queue Storage</strong> for very simple, cheap queues without sessions or dead-lettering features.',
+    '<strong>Azure Event Grid</strong> for reactive, push-style event notifications.',
+  ]}
+/>

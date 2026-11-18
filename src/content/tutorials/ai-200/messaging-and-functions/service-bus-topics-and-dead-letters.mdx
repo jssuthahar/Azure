@@ -1,0 +1,250 @@
+---
+title: Service Bus Topics, Subscriptions and Dead-Letter Queues
+seoTitle: Service Bus Topics, Filters and Dead-Letter Queues | AI-200
+description: Publish to Service Bus topics, filter subscriptions with SQL and correlation rules, and read and resubmit dead-lettered messages in Python for AI-200.
+answer: >-
+  A **Service Bus topic** is a queue with many readers: every **subscription** gets its own copy of each message, and **filters** decide which messages a subscription keeps. **SQL filters** use a condition such as `tier = 'premium'`; **correlation filters** match exact property values and are cheaper to evaluate. Messages that can't be processed land in the **dead-letter queue (DLQ)**, a sub-queue you read in Python with `sub_queue=ServiceBusSubQueue.DEAD_LETTER`, fix and resubmit.
+updated: 2026-11-18
+readingMinutes: 10
+keyTerms:
+  - term: Topic
+    definition: A Service Bus entity that accepts messages from senders and copies each one to every matching subscription.
+  - term: Subscription
+    definition: A named, queue-like view of a topic. Each subscription has its own receivers, settings and dead-letter queue.
+  - term: SQL filter
+    definition: A subscription rule written as a SQL-like condition on message properties, such as tier = 'premium' AND pages > 20.
+  - term: Correlation filter
+    definition: A subscription rule that matches exact values of system or application properties, faster to evaluate than a SQL filter.
+  - term: $Default rule
+    definition: The rule every new subscription starts with. It's a true filter (1=1) that accepts every message.
+  - term: Dead-letter queue (DLQ)
+    definition: A sub-queue of each queue and subscription that holds messages that couldn't be delivered or processed.
+  - term: Poison message
+    definition: A message that fails every time it's processed, for example because its data is corrupt.
+interview:
+  - level: beginner
+    q: When would you choose a topic over a queue?
+    a: >-
+      When more than one system needs the same message. A "document uploaded" message might need to go to the indexer, the billing service and the audit log. With a queue, only one of them would get it. With a topic, each one has its own subscription and its own copy.
+    followUps: []
+  - level: intermediate
+    q: What's the difference between a SQL filter and a correlation filter?
+    a: >-
+      A SQL filter is a condition, so it can use comparisons, AND, OR, LIKE and so on, like pages > 20 AND tier = 'premium'. A correlation filter only checks that properties equal set values, such as subject equals "invoice" and tier equals "premium". Correlation filters are cheaper for the broker, so I use them when equality is enough.
+    followUps:
+      - q: Why does a new subscription receive everything?
+        a: >-
+          Because it starts with the $Default rule, which is a true filter. If I add my own filter, I remove $Default or the subscription keeps receiving every message.
+  - level: experienced
+    q: How do messages end up in a dead-letter queue?
+    a: >-
+      The common reasons are the delivery count going over the max delivery count (MaxDeliveryCountExceeded), a message expiring when dead-lettering on expiration is turned on, an error evaluating a subscription filter, or my code calling dead_letter_message with its own reason. Service Bus stamps DeadLetterReason and DeadLetterErrorDescription on the message so I can see why.
+    followUps: []
+  - level: scenario
+    q: Overnight, 300 messages piled up in a subscription's dead-letter queue. What would you do in the morning?
+    a: >-
+      Peek a few to read the dead-letter reason. If it's MaxDeliveryCountExceeded, I'd check the worker logs for the bug, fix and deploy it, then read the DLQ with sub_queue set to DEAD_LETTER, send a fresh copy of each message back to the topic and complete the dead-lettered one. Nothing moves out of a DLQ by itself, so if no one reads it, it just grows.
+    followUps: []
+revision:
+  keyPoints:
+    - A topic copies each message to every subscription whose rules match.
+    - New subscriptions start with the $Default true filter. Replace it with a SQL or correlation filter.
+    - Correlation filters match exact values and are cheaper. SQL filters allow conditions like > and LIKE.
+    - Every queue and subscription has its own DLQ, read with sub_queue=ServiceBusSubQueue.DEAD_LETTER.
+    - Dead-lettered messages stay until you receive and complete them. Resubmit by sending a new copy.
+  mistakes:
+    - Adding a filter but leaving the $Default rule, so the subscription still gets every message.
+    - Expecting dead-lettered messages to retry or expire on their own.
+    - Trying to create a topic on the Basic tier.
+  examTips:
+    - '"Each service needs its own copy of the message" = **topic + subscriptions**.'
+    - '"Match exact property values, best performance" = **correlation filter**.'
+    - '"Read messages that failed max delivery count" = **dead-letter sub-queue**.'
+  quick:
+    - q: Which tier doesn't support topics?
+      a: Basic.
+    - q: What filter does a new subscription start with?
+      a: The $Default rule, a true filter (1=1).
+    - q: Which filter type is cheapest to evaluate?
+      a: Correlation filter.
+    - q: Which Python argument opens a dead-letter queue?
+      a: sub_queue=ServiceBusSubQueue.DEAD_LETTER.
+    - q: What reason is stamped when the delivery limit is hit?
+      a: MaxDeliveryCountExceeded.
+references:
+  - title: Service Bus queues, topics and subscriptions
+    url: https://learn.microsoft.com/azure/service-bus-messaging/service-bus-queues-topics-subscriptions
+  - title: Topic filters and actions
+    url: https://learn.microsoft.com/azure/service-bus-messaging/topic-filters
+  - title: Overview of Service Bus dead-letter queues
+    url: https://learn.microsoft.com/azure/service-bus-messaging/service-bus-dead-letter-queues
+  - title: "Quickstart: Service Bus topics and subscriptions (Python)"
+    url: https://learn.microsoft.com/azure/service-bus-messaging/service-bus-python-how-to-use-topics-subscriptions
+related:
+  - service-bus-queues
+  - event-grid
+  - functions-triggers-and-bindings
+---
+
+## Start with a question
+
+<Story question="One upload, three teams. How does each one hear about it?">
+
+Think about a newspaper. The printer prints one edition, but every subscriber gets their own copy. The sports fan reads the cricket page, the investor reads business. Nobody has to fight over the single paper on the table.
+
+When a document lands in your AI app, the search indexer, the billing team and the audit log all want to know. A **Service Bus topic** works like that newspaper: one message in, a copy for every **subscription**. And when a message is broken beyond repair, it goes to a **dead-letter queue** where you can look at it instead of losing it.
+
+</Story>
+
+## Explain it like I'm 10
+
+<Eli10>
+
+Imagine the school office makes one announcement and photocopies it for every class.
+
+Some classes only want certain notices. The Year 6 class says "only send me notices about the trip". That's a **filter**.
+
+If a notice is torn and unreadable, the class can't use it. After a few tries, it goes into the "broken notices" box at the office. Someone checks that box later, fixes the notice and sends it again. That box is the **dead-letter queue**.
+
+</Eli10>
+
+## The technical explanation
+
+A **topic** accepts messages from senders exactly like a queue. The difference is on the receiving side: a topic has **subscriptions**, and each subscription behaves like its own queue with its own receivers, lock settings, max delivery count and dead-letter queue. Topics need the **Standard** or **Premium** tier; Basic has queues only.
+
+### Send to a topic, read from a subscription
+
+```python
+from azure.identity import DefaultAzureCredential
+from azure.servicebus import ServiceBusClient, ServiceBusMessage
+
+NAMESPACE = "contoso-ai.servicebus.windows.net"
+
+with ServiceBusClient(NAMESPACE, DefaultAzureCredential()) as client:
+    with client.get_topic_sender(topic_name="documents") as sender:
+        sender.send_messages(ServiceBusMessage(
+            '{"docId": "contract-88", "pages": 64}',
+            subject="uploaded",
+            application_properties={"tier": "premium", "pages": 64},
+        ))
+
+    with client.get_subscription_receiver(topic_name="documents",
+                                          subscription_name="indexer") as receiver:
+        for msg in receiver.receive_messages(max_message_count=20, max_wait_time=5):
+            index_document(str(msg))
+            receiver.complete_message(msg)
+```
+
+Senders don't know or care how many subscriptions exist. You can add a new reader next month without touching the sender.
+
+### Filters decide what each subscription keeps
+
+Every new subscription starts with a rule called **$Default**: a true filter (`1=1`) that lets everything through. To be picky, add your own rule and remove `$Default`.
+
+| Filter | Example | Notes |
+| --- | --- | --- |
+| **SQL filter** | `tier = 'premium' AND pages > 20` or `sys.Label LIKE 'invoice%'` | Conditions, comparisons, LIKE, IN. Application properties by name, system properties with `sys.`. Most flexible, most work for the broker. |
+| **Correlation filter** | subject = `uploaded`, tier = `premium` | Exact-match on system properties (correlation ID, message ID, subject, content type, to, reply-to, session ID) and application properties. Cheaper and faster. |
+| **True / False filter** | `1=1` / `1=0` | Accept everything, or nothing. |
+
+A SQL rule can also have an **action** that changes the copy for that subscription, such as `SET priority = 'high'`. If a message matches no rule on a subscription, that subscription simply doesn't get it.
+
+```bash
+az servicebus topic subscription rule create \
+  --resource-group rg-ai --namespace-name contoso-ai \
+  --topic-name documents --subscription-name billing \
+  --name PremiumOnly --filter-sql-expression "tier = 'premium'"
+
+az servicebus topic subscription rule delete \
+  --resource-group rg-ai --namespace-name contoso-ai \
+  --topic-name documents --subscription-name billing --name '$Default'
+```
+
+<TryIt labs="dev-service-bus" text="Add a topic with two subscriptions, give one a SQL filter for premium messages, then read the dead-letter queue." />
+
+### The dead-letter queue
+
+Every queue and every subscription has a **dead-letter queue (DLQ)**, a sub-queue at `<entity>/$deadletterqueue`. Messages go there when:
+
+| Reason | When |
+| --- | --- |
+| `MaxDeliveryCountExceeded` | The message was delivered more times than the max delivery count (10 by default). This is the classic poison message. |
+| `TTLExpiredException` | The message expired and **dead-lettering on message expiration** is turned on. |
+| Filter evaluation error | A subscription rule threw an error for this message (on by default for subscriptions). |
+| Your own reason | Your code called `dead_letter_message(msg, reason=..., error_description=...)`. |
+
+Dead-lettered messages don't expire and aren't retried. They wait until you receive and complete them. You read a DLQ like any other queue:
+
+```python
+from azure.servicebus import ServiceBusSubQueue
+
+with ServiceBusClient(NAMESPACE, DefaultAzureCredential()) as client:
+    dlq = client.get_subscription_receiver(
+        topic_name="documents", subscription_name="indexer",
+        sub_queue=ServiceBusSubQueue.DEAD_LETTER)
+    sender = client.get_topic_sender(topic_name="documents")
+    with dlq, sender:
+        for msg in dlq.receive_messages(max_message_count=50, max_wait_time=5):
+            print(msg.dead_letter_reason, msg.dead_letter_error_description)
+            if can_fix(msg):
+                sender.send_messages(ServiceBusMessage(fix(msg),
+                                     application_properties=msg.application_properties))
+                dlq.complete_message(msg)   # resubmitted, remove it from the DLQ
+            else:
+                dlq.abandon_message(msg)    # leave it there for a person to check
+```
+
+For a queue, it's `client.get_queue_receiver(queue_name="summarise-jobs", sub_queue=ServiceBusSubQueue.DEAD_LETTER)`.
+
+<Flow
+  caption="A poison message on its way to the DLQ"
+  steps={[
+    { title: 'Deliver', text: 'The worker receives the message and fails on a corrupt PDF link.' },
+    { title: 'Retry', text: 'The lock expires or the worker abandons it. Delivery count goes up.' },
+    { title: 'Give up', text: 'Past the max delivery count, Service Bus moves it to the DLQ.' },
+    { title: 'Fix', text: 'You read the DLQ, fix the cause, resubmit a copy and complete the original.' },
+  ]}
+/>
+
+<Callout type="exam">
+"Several services each need every message" means **topic and subscriptions**, never a single queue with competing receivers. "Only premium messages for billing" means a **filter** on that subscription. If the question stresses **exact property matches** and **performance**, pick a **correlation filter**. If it needs **greater than**, **LIKE** or **OR**, pick a **SQL filter**. For "find messages that failed repeatedly", open the **dead-letter sub-queue**. Basic tier plus topic is always wrong.
+</Callout>
+
+<DeepDive title="Auto-forwarding and alerting on the DLQ">
+
+You can set **forward to** on a subscription so its messages land in another queue or topic, which helps when one team owns a queue and another owns the topic. You can also set **forward dead-lettered messages to** so every DLQ in a system feeds one central queue that your support tooling reads.
+
+Don't let a DLQ grow unnoticed. Azure Monitor exposes a dead-lettered message count metric for each entity; put a metric alert on it so the team hears about poison messages the same day. When you resubmit, send a *new* message; there's no single "move back" call in the SDK. For a handful of messages, Service Bus Explorer in the portal can peek the DLQ and resend selected messages.
+
+</DeepDive>
+
+## Real-world business scenario
+
+<Scenario
+  company="Northwind Health (fictional)"
+  industry="Healthcare"
+  problem="Scanned referral letters needed OCR, a billing record and an audit entry. Three teams had built three separate upload hooks, and a broken scan would quietly block one of them for hours."
+  service="One Service Bus topic, referrals, on the Standard tier. Subscriptions for ocr, billing (correlation filter on insurer = 'private') and audit (no filter). A metric alert watches each subscription's dead-letter count."
+  why="Each team reads its own copy at its own pace, filters keep billing away from public-insurance letters, and bad scans land in the DLQ with a reason instead of blocking the line."
+  outcome="Adding a fourth consumer for analytics took one new subscription and no change to the upload code, and the support desk clears the DLQ each morning."
+/>
+
+## When to use it and when not to
+
+<UseWhen
+  use={[
+    'One message needs to reach several independent consumers.',
+    'Different consumers want different subsets of messages, chosen by properties.',
+    'You need a safe place for messages that can\'t be processed, so you can inspect and resubmit them.',
+  ]}
+  avoid={[
+    'Only one worker pool processes each job. A queue is simpler.',
+    'You only broadcast lightweight "something happened" notifications to many handlers. Event Grid is cheaper and push-based.',
+    'You\'re on the Basic tier and can\'t upgrade. Topics aren\'t available there.',
+  ]}
+  alternatives={[
+    '<strong>Service Bus queues</strong> for one consumer pool.',
+    '<strong>Azure Event Grid</strong> for push delivery of events with event-type and subject filters.',
+    '<strong>Azure Event Hubs</strong> for high-volume streams that many readers replay.',
+  ]}
+/>

@@ -6,6 +6,7 @@
  * PRACTICE ONLY — nothing here touches real Azure. Prices are illustrative.
  */
 import { Sim, SimError, SUB_ID, SUB_NAME, REGIONS, VM_SIZES, type Res, type RG, type Via } from './engine';
+import { kql as devKql, isDevTable } from './devsvc';
 
 export const TENANT = 'msdevbuild.onmicrosoft.com';
 export const ME = 'learner@msdevbuild.com';
@@ -84,6 +85,8 @@ export class World extends Sim {
   /** Cloud Shell environment variables (export NAME=value) and pip packages, for the AI-901 Python labs. */
   env: Record<string, string> = {};
   pip: string[] = [];
+  /** AI-200 developer-services state: kubectl context, data-plane role assignments, simulated clock. */
+  dev: Record<string, any> = {};
 
   notify(kind: Notice['kind'], title: string, text: string) {
     this.notices.unshift({ kind, title, text, at: Date.now() });
@@ -683,6 +686,7 @@ export class World extends Sim {
   }
   query(kql: string) {
     const q = (kql ?? '').trim();
+    if (isDevTable(q)) return devKql(this, q);
     const table = q.split(/[\s|]/)[0];
     const take = Number(/take\s+(\d+)/i.exec(q)?.[1] ?? 20);
     let rows: Record<string, unknown>[];

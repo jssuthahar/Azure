@@ -1,0 +1,147 @@
+{
+  "cert": "ai-200",
+  "domain": 1,
+  "topic": "azure-container-registry",
+  "questions": [
+    {
+      "id": "dev-acr-1",
+      "type": "single",
+      "question": "You need to copy the image python:3.12-slim from Docker Hub into your Azure container registry named contosoacr. The computer that you use does not have Docker installed. Which command should you run?",
+      "options": [
+        {
+          "text": "az acr import --name contosoacr --source docker.io/library/python:3.12-slim --image python:3.12-slim",
+          "why": "Correct. az acr import copies the image on the server side without a local Docker engine."
+        },
+        {
+          "text": "docker pull python:3.12-slim followed by docker push",
+          "why": "These commands require Docker on the local computer."
+        },
+        {
+          "text": "az acr repository show-tags --name contosoacr --repository python",
+          "why": "This lists tags that already exist in the registry. It does not copy images."
+        },
+        {
+          "text": "az acr login --name contosoacr",
+          "why": "This signs in to the registry. It does not copy images."
+        }
+      ],
+      "answer": [
+        0
+      ],
+      "explanation": "az acr import copies images from another registry directly into Azure Container Registry.",
+      "objective": "1.1.1"
+    },
+    {
+      "id": "dev-acr-2",
+      "type": "single",
+      "question": "A production deployment references the image contosoacr.azurecr.io/ragapi:latest. After a node restart, some pods run different code from others. What should you do to ensure that every replica runs exactly the same image?",
+      "options": [
+        {
+          "text": "Deploy by using a unique tag, such as a version number, or by using the image digest",
+          "why": "Correct. A digest always identifies the same image, and a unique tag that is never reused avoids the drift."
+        },
+        {
+          "text": "Enable the admin account on the registry",
+          "why": "The admin account affects authentication, not which image a tag points to."
+        },
+        {
+          "text": "Upgrade the registry to the Premium SKU",
+          "why": "The SKU does not change how tags are resolved."
+        },
+        {
+          "text": "Push the image again with the latest tag",
+          "why": "Pushing latest again moves the tag and can make the problem worse."
+        }
+      ],
+      "answer": [
+        0
+      ],
+      "explanation": "Tags such as latest can be moved. Unique tags or digests identify a fixed image.",
+      "objective": "1.1.1"
+    },
+    {
+      "id": "dev-acr-3",
+      "type": "single",
+      "question": "You must prevent the image ragapi:2.0.0 in the registry contosoacr from being overwritten or deleted. Which command should you run?",
+      "options": [
+        {
+          "text": "az acr repository update --name contosoacr --image ragapi:2.0.0 --write-enabled false --delete-enabled false",
+          "why": "Correct. Setting write-enabled and delete-enabled to false locks the image."
+        },
+        {
+          "text": "az acr repository delete --name contosoacr --image ragapi:2.0.0",
+          "why": "This deletes the image."
+        },
+        {
+          "text": "az acr update --name contosoacr --admin-enabled false",
+          "why": "This disables the admin account. It does not lock an image."
+        },
+        {
+          "text": "az acr repository show-tags --name contosoacr --repository ragapi",
+          "why": "This lists the tags and does not change any attributes."
+        }
+      ],
+      "answer": [
+        0
+      ],
+      "explanation": "Image locking is configured by setting the write-enabled and delete-enabled attributes to false.",
+      "objective": "1.1.1"
+    },
+    {
+      "id": "dev-acr-4",
+      "type": "single",
+      "question": "Your company runs AKS clusters in three Azure regions. Each cluster must pull images from a registry endpoint in its own region, and the images must be managed as a single registry. Which registry configuration should you use?",
+      "options": [
+        {
+          "text": "A Premium SKU registry with geo-replication to the three regions",
+          "why": "Correct. Geo-replication is available in the Premium SKU and serves images from a regional replica of one registry."
+        },
+        {
+          "text": "A Standard SKU registry with a webhook",
+          "why": "Webhooks send notifications. They do not replicate images."
+        },
+        {
+          "text": "Three Basic SKU registries managed separately",
+          "why": "Separate registries do not meet the single-registry requirement."
+        },
+        {
+          "text": "A Basic SKU registry with the admin account enabled",
+          "why": "The admin account does not provide regional replication."
+        }
+      ],
+      "answer": [
+        0
+      ],
+      "explanation": "Geo-replication, which requires Premium, gives each region a local replica of a single registry.",
+      "objective": "1.1.1"
+    },
+    {
+      "id": "dev-acr-5",
+      "type": "single",
+      "question": "A developer needs to list all tags in the ragapi repository of the registry contosoacr, with the most recent first. Which command should the developer run?",
+      "options": [
+        {
+          "text": "az acr repository show-tags --name contosoacr --repository ragapi --orderby time_desc",
+          "why": "Correct. show-tags lists the tags in a repository, and time_desc orders them newest first."
+        },
+        {
+          "text": "az acr repository list --name contosoacr",
+          "why": "This lists repositories, not the tags within a repository."
+        },
+        {
+          "text": "az acr task list --registry contosoacr",
+          "why": "This lists ACR tasks, not image tags."
+        },
+        {
+          "text": "az acr build --registry contosoacr --image ragapi .",
+          "why": "This builds and pushes a new image."
+        }
+      ],
+      "answer": [
+        0
+      ],
+      "explanation": "az acr repository show-tags returns the tags for a repository.",
+      "objective": "1.1.1"
+    }
+  ]
+}
