@@ -1,6 +1,6 @@
 ---
 /**
- * The one "Simulations" area of every lesson: 3D View | Azure Portal | Practice Lab.
+ * The one "Simulations" area of every lesson: Azure Portal | 3D View | Practice Lab.
  * Each tab opens in place; nothing navigates away. The 3D engine loads when
  * its tab is visible, and the practice lab loads the first time its tab opens.
  * In-lesson "Practise it" buttons (data-sim-tab) switch to a tab and scroll here.
@@ -23,15 +23,15 @@ const labList = [...labs.filter((l) => l.id !== 'sandbox'), sandbox];
       <p class="text-sm text-muted">Feel it before you read it. No Azure account, nothing leaves this page.</p>
     </div>
     <div class="lsims-tabs" role="tablist" aria-label="Simulations">
-      <button type="button" role="tab" id="lsim-t-3d" aria-controls="lsim-p-3d" aria-selected="true" data-tab="3d"><span aria-hidden="true">🧊</span> 3D View</button>
-      <button type="button" role="tab" id="lsim-t-portal" aria-controls="lsim-p-portal" aria-selected="false" tabindex="-1" data-tab="portal"><span aria-hidden="true">🖥️</span> Azure Portal</button>
+      <button type="button" role="tab" id="lsim-t-portal" aria-controls="lsim-p-portal" aria-selected="true" data-tab="portal"><span aria-hidden="true">🖥️</span> Azure Portal</button>
+      <button type="button" role="tab" id="lsim-t-3d" aria-controls="lsim-p-3d" aria-selected="false" tabindex="-1" data-tab="3d"><span aria-hidden="true">🧊</span> 3D View</button>
       <button type="button" role="tab" id="lsim-t-lab" aria-controls="lsim-p-lab" aria-selected="false" tabindex="-1" data-tab="lab"><span aria-hidden="true">🧪</span> Practice Lab</button>
     </div>
-    <div id="lsim-p-3d" role="tabpanel" aria-labelledby="lsim-t-3d" class="lsims-panel">
-      <Datacenter3D mode={sims.d3.mode} start={sims.d3.start} intro={sims.d3.intro} />
-    </div>
-    <div id="lsim-p-portal" role="tabpanel" aria-labelledby="lsim-t-portal" class="lsims-panel" hidden>
+    <div id="lsim-p-portal" role="tabpanel" aria-labelledby="lsim-t-portal" class="lsims-panel">
       <PortalTour id={sims.tour.id} intro={sims.tour.intro} />
+    </div>
+    <div id="lsim-p-3d" role="tabpanel" aria-labelledby="lsim-t-3d" class="lsims-panel" hidden>
+      <Datacenter3D mode={sims.d3.mode} start={sims.d3.start} intro={sims.d3.intro} />
     </div>
     <div id="lsim-p-lab" role="tabpanel" aria-labelledby="lsim-t-lab" class="lsims-panel" hidden>
       <div class="lsims-lab">

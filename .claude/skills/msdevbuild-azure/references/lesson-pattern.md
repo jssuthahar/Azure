@@ -5,7 +5,7 @@ Every lesson on the site is built the same way. Use this checklist for a new les
 ## Page flow (fixed, checked by `npm run qa -- lessons`)
 
 ```
-30-second answer  →  Simulations [ 3D View | Azure Portal | Practice Lab ]  →  Explanation  →  Exam tip  →  Quiz  →  Previous / Next
+30-second answer  →  Simulations [ Azure Portal | 3D View | Practice Lab ]  →  Explanation  →  Exam tip  →  Quiz  →  Previous / Next
 ```
 
 The learner stays on the page from the answer to the quiz. Don't add same-tab links that leave the page. `<TryIt>` switches simulation tabs on the same page.

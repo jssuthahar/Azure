@@ -1,0 +1,96 @@
+---
+/**
+ * Course discussion with Giscus: comments, replies and reactions stored in GitHub
+ * Discussions on the site repo (GISCUS in src/config.ts). Visitors read without an
+ * account; to post, react, edit or delete they sign in with GitHub inside the widget.
+ * Moderation happens in the repo's Discussions tab. Only on course details pages
+ * (owner's decision, 17–18 Nov 2026), one discussion per exam ("<exam> course").
+ *
+ * The widget (an iframe from giscus.app) loads only when the visitor scrolls near,
+ * and only on the live site, so local builds and QA never call it. It follows the
+ * site's light/dark theme. Dev/QA preview on another host: localStorage['msdb-giscus-preview'] = '1'.
+ */
+import { SITE, GISCUS } from '../config';
+interface Props {
+  exam: string;
+  code: string;
+}
+const { exam, code } = Astro.props;
+const ready = Boolean(GISCUS.repoId && GISCUS.categoryId);
+---
+{ready && (
+  <section id="discussion" class="cd-sec discuss scroll-mt-28" aria-labelledby="discussion-h"
+    data-live-host={new URL(SITE.url).hostname} data-term={`${exam} course`}
+    data-repo={GISCUS.repo} data-repo-id={GISCUS.repoId} data-category={GISCUS.category} data-category-id={GISCUS.categoryId}>
+    <h2 id="discussion-h" class="cd-h2">{code} discussion</h2>
+    <p class="mt-1 text-sm text-muted">Questions about the course or the exam, tips that helped you pass, or a lesson you'd like added. Sign in with GitHub to post, reply or react. Be kind, and please don't post real exam questions: they get removed.</p>
+    <div id="giscus-box" class="giscus-box mt-4">
+      <p id="giscus-wait" class="text-sm text-muted">
+        <a class="text-accent underline" href={`https://github.com/${GISCUS.repo}/discussions`} target="_blank" rel="noopener">Open the discussion on GitHub ↗</a>
+      </p>
+    </div>
+  </section>
+)}
+
+<style is:global>
+  .giscus-box { min-height: 120px; }
+  .giscus-box .giscus, .giscus-box .giscus-frame { width: 100%; }
+  @media print { .discuss { display: none !important; } }
+</style>
+
+<script>
+  const root = document.getElementById('discussion');
+  if (root) {
+    const d = root.dataset;
+    const live = location.hostname === d.liveHost;
+    const preview = (() => { try { return !live && localStorage.getItem('msdb-giscus-preview') === '1'; } catch { return false; } })();
+    const theme = () => (document.documentElement.dataset.theme === 'dark' ? 'dark' : 'light');
+
+    const load = () => {
+      const s = document.createElement('script');
+      s.src = 'https://giscus.app/client.js';
+      s.async = true;
+      s.crossOrigin = 'anonymous';
+      const attrs: Record<string, string> = {
+        'data-repo': d.repo!,
+        'data-repo-id': d.repoId!,
+        'data-category': d.category!,
+        'data-category-id': d.categoryId!,
+        // One discussion per course, whatever the URL looks like (query strings, trailing slashes).
+        'data-mapping': 'specific',
+        'data-term': d.term!,
+        'data-strict': '1',
+        'data-reactions-enabled': '1',
+        'data-emit-metadata': '0',
+        'data-input-position': 'top',
+        'data-theme': theme(),
+        'data-lang': 'en',
+        'data-loading': 'lazy',
+      };
+      for (const [k, v] of Object.entries(attrs)) s.setAttribute(k, v);
+      s.addEventListener('error', () => {
+        document.getElementById('giscus-wait')!.prepend('The discussion couldn’t load just now. ');
+      });
+      document.getElementById('giscus-box')!.append(s);
+    };
+
+    // Keep the widget in step with the site's theme toggle.
+    new MutationObserver(() => {
+      const f = document.querySelector<HTMLIFrameElement>('iframe.giscus-frame');
+      f?.contentWindow?.postMessage({ giscus: { setConfig: { theme: theme() } } }, 'https://giscus.app');
+    }).observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme'] });
+
+    // Hide the fallback link once the widget is in.
+    new MutationObserver((_, o) => {
+      if (document.querySelector('iframe.giscus-frame')) { document.getElementById('giscus-wait')?.remove(); o.disconnect(); }
+    }).observe(document.getElementById('giscus-box')!, { childList: true, subtree: true });
+
+    if (live || preview) {
+      let started = false;
+      const start = () => { if (!started) { started = true; load(); } };
+      const io = new IntersectionObserver((es) => { if (es.some((x) => x.isIntersecting)) { io.disconnect(); start(); } }, { rootMargin: '600px 0px' });
+      io.observe(root);
+      if (location.hash === '#discussion' || location.search.includes('giscus=')) start(); // back from GitHub sign-in
+    }
+  }
+</script>

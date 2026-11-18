@@ -74,3 +74,17 @@ export const AUTH_HOST = 'azure.msdevbuild.com';
 
 /** Usage counts are only sent from the live site, never from localhost, previews or QA runs. */
 export const COUNT_HOSTS = ['azure.msdevbuild.com'] as const;
+
+/**
+ * Course discussion with Giscus (comments in GitHub Discussions, no database of ours).
+ * Shown only on course details pages (/<exam>/#discussion), one discussion per exam.
+ * Setup: enable Discussions on the repo, install https://github.com/apps/giscus on it,
+ * then copy repoId and categoryId from https://giscus.app (pick the category below).
+ * Set up 18 Nov 2026. The section stays hidden if either id is emptied.
+ */
+export const GISCUS = {
+  repo: 'jssuthahar/Azure',
+  repoId: 'R_kgDOVqlSfQ',
+  category: 'General',
+  categoryId: 'DIC_kwDOVqlSfc4DLYKM',
+} as const;

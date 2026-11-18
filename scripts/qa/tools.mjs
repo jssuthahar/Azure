@@ -154,6 +154,36 @@ await p.click('#ask-close');
   await p.evaluate(() => localStorage.removeItem('msdb-lesson-pos-v1'));
 }
 
+// 3a5. Course discussion (Giscus): only on the course page; the widget is faked so QA never calls giscus.app.
+{
+  await p.goto(`${BASE}/az-900/cloud-concepts/iaas/`, { waitUntil: 'networkidle' });
+  if (await p.locator('#discussion').count()) fail.push('discussion: must not appear on lesson pages');
+  await p.goto(`${BASE}/az-900/`, { waitUntil: 'networkidle' });
+  if (await p.locator('#discussion').count()) {
+    // Ids are set in GISCUS: check the widget gets the right settings and follows the theme.
+    await p.route('https://giscus.app/client.js', (r) => r.fulfill({ contentType: 'text/javascript', body: `
+      const s = document.currentScript; window.__giscus = Object.fromEntries([...s.attributes].map((a) => [a.name, a.value]));
+      const f = document.createElement('iframe'); f.className = 'giscus-frame'; f.title = 'Comments'; s.after(f);` }));
+    await p.evaluate(() => localStorage.setItem('msdb-giscus-preview', '1'));
+    await p.reload({ waitUntil: 'networkidle' });
+    await p.locator('#discussion').scrollIntoViewIfNeeded();
+    await p.waitForFunction(() => window.__giscus, null, { timeout: 5000 }).catch(() => fail.push('discussion: Giscus did not load when scrolled to'));
+    const g = await p.evaluate(() => window.__giscus || {});
+    if (g['data-mapping'] !== 'specific' || g['data-term'] !== 'az-900 course' || !g['data-repo-id'] || g['data-reactions-enabled'] !== '1') fail.push(`discussion: wrong Giscus settings ${JSON.stringify(g)}`);
+    await p.evaluate(() => localStorage.removeItem('msdb-giscus-preview'));
+    await p.unroute('https://giscus.app/client.js');
+  } else {
+    // Not configured yet: nothing shown, and nothing fetched from giscus.app even when scrolled to the end.
+    const hits = [];
+    const spy = (r) => { if (r.url().includes('giscus.app')) hits.push(r.url()); };
+    p.on('request', spy);
+    await p.evaluate(() => scrollTo(0, document.documentElement.scrollHeight));
+    await p.waitForTimeout(800);
+    p.off('request', spy);
+    if (hits.length) fail.push('discussion: giscus.app was contacted before Giscus is configured');
+  }
+}
+
 // 3b. Ask Nimbus answers simulation first: 3D, then the Azure portal, then the explanation.
 await p.goto(`${BASE}/az-900/`, { waitUntil: 'networkidle' });
 await p.click('#ask-fab');

@@ -14,6 +14,9 @@ import Base from '../layouts/Base.astro';
     <p>You can sign in with Google to sync your progress across devices. Sign-in is handled by Google Firebase Authentication. We receive your name, email address, profile picture and a user ID from Google. We don't receive your password.</p>
     <p>While you're signed in, the progress listed above is copied to a private record in Google Cloud Firestore that only your account can read or write. We use it only to sync your progress. We don't email you, share it or sell it.</p>
 
+    <h2 id="discussion">Course discussion (Giscus and GitHub)</h2>
+    <p>The discussion on each course page (for example <a href="/az-900/#discussion">AZ-900</a>) runs on <a href="https://giscus.app" target="_blank" rel="noopener">Giscus ↗</a>, which keeps comments in GitHub Discussions. It loads only when you scroll to it. Reading needs no account. To post, reply or react you sign in with GitHub inside the widget. Your comments are public on GitHub under your GitHub name, and GitHub's and Giscus's privacy policies apply (<a href="https://docs.github.com/site-policy/privacy-policies/github-general-privacy-statement" target="_blank" rel="noopener">GitHub ↗</a>, <a href="https://github.com/giscus/giscus/blob/main/PRIVACY-POLICY.md" target="_blank" rel="noopener">Giscus ↗</a>). We don't store comments ourselves.</p>
+
     <h2 id="counts">Anonymous usage counts</h2>
     <p>To understand how the site is used, we count events: a visit (once per browser per day), a new learner (once per browser), a lesson completed, a quiz taken, a mock exam sat, a lab finished and a new sign-in. Each event only adds 1 to a daily total. There are no cookies, no IDs, and nothing that links a count to you.</p>
     <p>We don't count anything if your browser sends a Do Not Track or Global Privacy Control signal. We don't use Google Analytics or any advertising tracker.</p>
@@ -25,6 +28,7 @@ import Base from '../layouts/Base.astro';
     <ul>
       <li><strong>On this device:</strong> erase everything with “Reset my progress” on the <a href="/progress/">My Progress</a> page, or by clearing this site's data in your browser.</li>
       <li><strong>Synced copy:</strong> when signed in, use “Delete my synced data” on the My Progress page. It removes your cloud record straight away. Signing out keeps your progress on the device you're using.</li>
+      <li><strong>Comments:</strong> edit or delete your own comment from the menu on it in the course discussion, or on GitHub.</li>
       <li><strong>Questions:</strong> <a href="https://blog.msdevbuild.com/contact/">contact us</a> and we'll help.</li>
     </ul>
   </div>

@@ -1,5 +1,5 @@
 /**
- * Simulations shown in each lesson's "Simulations" section (3D View | Azure Portal | Practice Lab).
+ * Simulations shown in each lesson's "Simulations" section (Azure Portal | 3D View | Practice Lab).
  * Every AZ-900 lesson has a 3D scene and an Azure portal walkthrough; the
  * Practice Lab tab uses the lesson's matching lab, or the free sandbox.
  */

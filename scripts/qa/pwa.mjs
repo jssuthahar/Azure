@@ -54,6 +54,7 @@ const profile = mkdtempSync(join(tmpdir(), 'msdb-qa-profile-'));
     check(!/offline/i.test(await p.locator('h1').first().textContent()), `${u} not available offline after saving`);
   }
   await p.goto(BASE + '/az-900/cloud-concepts/iaas/', { waitUntil: 'load' });
+  await p.click('#lsim-t-3d'); // Azure Portal is the default tab; the 3D scene loads once its tab shows
   check(await p.waitForSelector('figure.d3.d3-ready', { timeout: 20000 }).then(() => true).catch(() => false), '3D scene does not start offline');
   await ctx.setOffline(false);
   await ctx.close();

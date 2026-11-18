@@ -5,7 +5,7 @@ Free Azure certification learning site (AZ-900 live, AI-901 next) by **MSDEVBUIL
 **Before any change, use the `msdevbuild-azure` skill** (`.claude/skills/msdevbuild-azure/`). It holds the house rules for content, voice, SEO/AEO/GEO, style, phones/iPad/PWA, accessibility and adding exams.
 
 Always:
-- Lesson flow: 30-second answer → Simulations (3D View | Azure Portal | Practice Lab) → Explanation → Exam tip → Quiz → Previous/Next. Learners never leave the lesson mid-way.
+- Lesson flow: 30-second answer → Simulations (Azure Portal | 3D View | Practice Lab) → Explanation → Exam tip → Quiz → Previous/Next. Learners never leave the lesson mid-way.
 - Every new or rewritten lesson (any exam) follows `.claude/skills/msdevbuild-azure/references/lesson-pattern.md`; use the `lesson-agent` (`.claude/agents/lesson-agent.md`) for lesson work.
 - Brand line on every surface via `SITE.brandLine` / `<BrandLine />`; never retype it.
 - Writing must read as human-written (`npm run check:human`); exam questions stay formal.

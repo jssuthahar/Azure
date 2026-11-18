@@ -10,6 +10,7 @@ import Mascot from '../../components/Mascot.astro';
 import CertIcon from '../../components/course/CertIcon.astro';
 import Curriculum from '../../components/course/Curriculum.astro';
 import CourseFeatures from '../../components/course/CourseFeatures.astro';
+import CourseDiscussion from '../../components/CourseDiscussion.astro';
 import { getNav, getQuestionBank, moduleUrl } from '../../lib/learn';
 import { getGlossary } from '../../lib/glossary';
 import { LABS } from '../../lib/sim/labs';
@@ -290,6 +291,9 @@ const schema = [
       ))}
     </div>
   </section>
+
+  <!-- Discussion (GitHub Gist comments) -->
+  <CourseDiscussion exam={exam.slug} code={exam.code} />
 
   <!-- Final CTA -->
   <section class="cd-sec" aria-labelledby="ready-h">
