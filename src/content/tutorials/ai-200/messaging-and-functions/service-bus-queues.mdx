@@ -109,6 +109,12 @@ If you finish, the sheet's done for good (**complete**). If you get stuck, you p
 
 </Eli10>
 
+## Visual: a Service Bus queue in motion
+
+Follow three jobs through a queue in peek-lock mode, including one that ends up in the dead-letter queue.
+
+<Explainer id="service-bus-queue" />
+
 ## The technical explanation
 
 Service Bus is a message broker. You create a **namespace** (`contoso-ai.servicebus.windows.net`) and inside it one or more **queues**. A queue keeps messages in the order they arrived and hands each message to **one** receiver. If you run five workers on the same queue, they compete and share the load.

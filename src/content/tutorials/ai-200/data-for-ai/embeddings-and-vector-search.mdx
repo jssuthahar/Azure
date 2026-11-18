@@ -116,6 +116,12 @@ When you ask a question, you drop a new pin on the map and look at the pins near
 
 </Eli10>
 
+## Visual: vector search in motion
+
+Watch one question become 1,536 numbers, land on a map of meaning and pull back the closest help articles.
+
+<Explainer id="embeddings-vectors" />
+
 ## The technical explanation
 
 An **embedding model** reads text and returns a fixed-length array of floating-point numbers. With **text-embedding-3-small** you get **1,536** numbers by default; **text-embedding-3-large** gives **3,072**. Both let you ask for fewer dimensions with the `dimensions` parameter, which saves storage at a small cost in quality. Whatever you choose, every vector in one index must have the same length.
