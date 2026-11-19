@@ -1,0 +1,114 @@
+---
+/**
+ * "Buy me a coffee" support card. Free site, no paywall: this is a thank-you, never a gate.
+ *   variant="card"  full message + button (site footer, About, certificate)
+ *   variant="strip" one slim line (learning footer, below the lesson, never mid-way)
+ */
+import { SUPPORT } from '../config';
+interface Props { variant?: 'card' | 'strip'; /** In page content: the footer copy then hides so it shows once. */ inPage?: boolean; class?: string }
+const { variant = 'card', inPage = false, class: cls = '' } = Astro.props;
+const hid = `coffee-h-${inPage ? 'page' : 'foot'}`;
+---
+{variant === 'strip' ? (
+  <div class:list={['coffee-strip not-prose', cls]}>
+    <p><span aria-hidden="true">☕</span> Free for everyone. If it helped you, a coffee helps underprivileged children learn too.</p>
+    <a class="coffee-btn coffee-btn--sm" href={SUPPORT.url} target="_blank" rel="noopener">
+      <span aria-hidden="true">☕</span> {SUPPORT.label}<span class="sr-only"> (opens in a new tab)</span>
+    </a>
+  </div>
+) : (
+  <section class:list={['coffee-card not-prose', inPage && 'coffee-card--page', cls]} aria-labelledby={hid}>
+    <div class="coffee-cup" aria-hidden="true">
+      <span class="steam s1"></span><span class="steam s2"></span><span class="steam s3"></span>
+      <span class="cup">☕</span>
+    </div>
+    <div class="min-w-0">
+      <p class="coffee-eyebrow">Support free learning</p>
+      <h2 id={hid} class="coffee-title">Hi, I'm an educator and developer passionate about making learning accessible to everyone.</h2>
+      <p class="coffee-text">I spend my time creating innovative learning experiences and free educational resources. Your support motivates me to continue this journey and help underprivileged children access quality education.</p>
+      <p class="coffee-text font-semibold">Every coffee makes a difference. Thank you! <span aria-hidden="true">❤️</span></p>
+    </div>
+    <a class="coffee-btn" href={SUPPORT.url} target="_blank" rel="noopener">
+      <span aria-hidden="true">☕</span> {SUPPORT.label}<span class="sr-only"> (opens in a new tab)</span>
+    </a>
+  </section>
+)}
+
+<style>
+  .coffee-card {
+    --c-bg: linear-gradient(135deg, #fff8e6 0%, #ffeccc 55%, #ffe1b8 100%);
+    --c-line: #f3cf8f;
+    --c-text: #3b2410;
+    --c-muted: #6b4a2b;
+    position: relative;
+    display: grid;
+    gap: 1rem 1.5rem;
+    align-items: center;
+    grid-template-columns: auto 1fr;
+    padding: 1.5rem;
+    border: 1px solid var(--c-line);
+    border-radius: 1.25rem;
+    background: var(--c-bg);
+    color: var(--c-text);
+    box-shadow: 0 12px 30px -12px rgb(160 90 20 / 0.35);
+    overflow: hidden;
+  }
+  .coffee-card::after {
+    content: '';
+    position: absolute;
+    inset: -40% -10% auto auto;
+    width: 220px;
+    height: 220px;
+    border-radius: 50%;
+    background: radial-gradient(circle, rgb(255 221 0 / 0.35), transparent 70%);
+    pointer-events: none;
+  }
+  :global([data-theme='dark']) .coffee-card {
+    --c-bg: linear-gradient(135deg, #2a1d10 0%, #33220f 55%, #3d2810 100%);
+    --c-line: #6b4a22;
+    --c-text: #fbeedd;
+    --c-muted: #e0c6a6;
+  }
+  .coffee-card .coffee-btn { grid-column: 1 / -1; justify-self: start; }
+  @media (min-width: 768px) {
+    .coffee-card { grid-template-columns: auto 1fr auto; padding: 1.75rem 2rem; }
+    .coffee-card .coffee-btn { grid-column: auto; justify-self: end; }
+  }
+  .coffee-eyebrow { font-size: 0.72rem; font-weight: 700; letter-spacing: 0.14em; text-transform: uppercase; color: var(--c-muted); }
+  .coffee-title { margin-top: 0.25rem; font-size: 1.15rem; font-weight: 700; line-height: 1.35; }
+  .coffee-text { margin-top: 0.5rem; font-size: 0.95rem; line-height: 1.6; color: var(--c-muted); }
+
+  .coffee-cup { position: relative; width: 4rem; height: 4rem; display: grid; place-items: center; border-radius: 50%; background: #ffdd00; box-shadow: 0 6px 16px -4px rgb(180 120 0 / 0.5); }
+  .cup { font-size: 2rem; line-height: 1; }
+  .steam { position: absolute; top: -0.5rem; width: 6px; height: 16px; border-radius: 6px; background: currentColor; opacity: 0; filter: blur(2px); color: var(--c-muted); animation: steam 2.6s ease-in-out infinite; }
+  .s1 { left: 1.4rem; } .s2 { left: 1.9rem; animation-delay: 0.8s; } .s3 { left: 2.4rem; animation-delay: 1.6s; }
+  @keyframes steam { 0% { transform: translateY(6px) scaleY(0.6); opacity: 0; } 40% { opacity: 0.5; } 100% { transform: translateY(-14px) scaleY(1.2); opacity: 0; } }
+
+  .coffee-btn {
+    display: inline-flex; align-items: center; gap: 0.5rem; min-height: 44px;
+    padding: 0.7rem 1.4rem; border-radius: 999px;
+    background: #ffdd00; color: #1b1205 !important; font-weight: 700; text-decoration: none; white-space: nowrap;
+    border: 2px solid #1b1205;
+    box-shadow: 4px 4px 0 #1b1205;
+    transition: transform 0.15s ease, box-shadow 0.15s ease;
+  }
+  .coffee-btn:hover { transform: translate(-2px, -2px); box-shadow: 6px 6px 0 #1b1205; }
+  .coffee-btn:active { transform: translate(2px, 2px); box-shadow: 1px 1px 0 #1b1205; }
+  .coffee-btn:focus-visible { outline: 3px solid var(--accent); outline-offset: 3px; }
+  .coffee-btn--sm { min-height: 36px; padding: 0.4rem 1rem; font-size: 0.875rem; box-shadow: 3px 3px 0 #1b1205; }
+
+  .coffee-strip {
+    display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 0.75rem 1rem;
+    padding: 0.85rem 1rem; border-radius: 0.9rem;
+    border: 1px solid #f3cf8f; background: linear-gradient(90deg, #fff8e6, #ffeccc);
+    color: #3b2410; font-size: 0.9rem;
+  }
+  :global([data-theme='dark']) .coffee-strip { border-color: #6b4a22; background: linear-gradient(90deg, #2a1d10, #3d2810); color: #fbeedd; }
+
+  @media (prefers-reduced-motion: reduce) {
+    .steam { animation: none; }
+    .coffee-btn { transition: none; }
+  }
+  :global(body:has(:not([hidden]) > .coffee-card--page)) .coffee-card:not(.coffee-card--page) { display: none; }
+  @media print { .coffee-card, .coffee-strip { display: none !important; } }
+</style>

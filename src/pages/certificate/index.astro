@@ -1,6 +1,7 @@
 ---
 import Base from '../../layouts/Base.astro';
 import ShareButtons from '../../components/ShareButtons.astro';
+import SupportCoffee from '../../components/SupportCoffee.astro';
 import { liveExams } from '../../data/exams';
 const exams = liveExams().map((e) => ({ slug: e.slug, code: e.code, name: e.name }));
 const crumbs = [{ name: 'Home', url: '/' }, { name: 'AZ-900 Ready certificate', url: '/certificate/' }];
@@ -43,6 +44,7 @@ const crumbs = [{ name: 'Home', url: '/' }, { name: 'AZ-900 Ready certificate', 
       </div>
       <ShareButtons class="mt-4" text="I’m AZ-900 Ready! 🏆 I passed the full Azure Fundamentals mock exam on MSDEVBUILD. Try it free:" />
       <p class="mt-6 text-sm text-muted">This is a self-assessed practice certificate from azure.msdevbuild.com. It is not a Microsoft certification. To get certified, book the official <span class="c-code">AZ-900</span> exam with Microsoft.</p>
+      <SupportCoffee inPage class="mt-8" />
     </section>
   </div>
 </Base>

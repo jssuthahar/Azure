@@ -21,6 +21,12 @@ export const SITE = {
   brandLine: 'MSDEVBUILD · Multi-Stack Dev Build',
 } as const;
 
+/** Buy Me a Coffee: the only way to support the site. Shown by <SupportCoffee /> (footer, About, certificate). Never mid-lesson. */
+export const SUPPORT = {
+  url: 'https://buymeacoffee.com/jssuthahar',
+  label: 'Buy me a coffee',
+} as const;
+
 /** Social profiles (from blog.msdevbuild.com). Used in the footer, About page and schema sameAs. */
 export const SOCIAL = [
   { name: 'LinkedIn', href: 'https://www.linkedin.com/in/jssuthahar', icon: 'in', color: '#0a66c2' },

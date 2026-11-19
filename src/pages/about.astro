@@ -3,6 +3,7 @@ import Base from '../layouts/Base.astro';
 import Mascot from '../components/Mascot.astro';
 import { SITE } from '../config';
 import SocialLinks from '../components/SocialLinks.astro';
+import SupportCoffee from '../components/SupportCoffee.astro';
 ---
 <Base title="About MSDEVBUILD Azure" description="Why MSDEVBUILD Azure exists, how lessons are written and checked against official Microsoft documentation, and who is behind it." wide={false} breadcrumbs={[{ name: 'Home', url: '/' }, { name: 'About', url: '/about/' }]}>
   <div class="lesson">
@@ -20,6 +21,7 @@ import SocialLinks from '../components/SocialLinks.astro';
       </div>
     </section>
     <p>It is built by <a href={SITE.profile}>{SITE.author}</a>, the person behind the <a href={SITE.blog}>MSDEVBUILD blog</a>. The goal is simple. A student who has never heard of the cloud should leave able to explain Azure clearly, and an engineer with twenty years of experience should still find something useful.</p>
+    <SupportCoffee inPage class="my-8" />
     <h2 id="how-we-write">How lessons are written</h2>
     <ul>
       <li>Every lesson follows the same template: a real problem first, an everyday analogy, the correct technical explanation, a business scenario, when to use it and when not to, interview questions, exam practice and a quick revision sheet.</li>
