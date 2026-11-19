@@ -278,6 +278,40 @@ export class Player {
     if (!w || !h) return;
     const s = Math.min(w / cw, h / ch);
     this.canvas.style.transform = `translate(-50%, -50%) scale(${s})`;
+    this.fitStage();
+  }
+
+  /** Smallest content scale used so far, per orientation: the stage only ever shrinks, so it never jumps back. */
+  private fitScale: Record<'port' | 'land', number> = { port: 1, land: 1 };
+  /**
+   * Safety net for specs whose content is taller or wider than the stage
+   * (often the 1080×1920 portrait layout): scale the stage's root element down
+   * so nothing runs under the subtitles. Hidden, not-yet-revealed elements
+   * still take up space, so the scale is usually steady across steps.
+   */
+  private fitStage() {
+    const root = this.stage.firstElementChild as HTMLElement | null;
+    if (!root) return;
+    const key = this.canvas.classList.contains('xv-port') ? 'port' : 'land';
+    root.style.transform = '';
+    root.style.width = '';
+    const R = this.stage.getBoundingClientRect();
+    if (!R.width || !R.height) return;
+    let bottom = R.top;
+    let right = R.left;
+    for (const el of this.stage.querySelectorAll<HTMLElement>('*')) {
+      const c = el.getBoundingClientRect();
+      if (!c.width && !c.height) continue;
+      bottom = Math.max(bottom, c.bottom);
+      right = Math.max(right, c.right);
+    }
+    const need = Math.min(1, R.height / Math.max(1, bottom - R.top), R.width / Math.max(1, right - R.left));
+    const s = Math.min(this.fitScale[key], need);
+    if (s >= 0.995) return;
+    this.fitScale[key] = s;
+    root.style.transformOrigin = 'top left';
+    root.style.transform = `scale(${s})`;
+    root.style.width = `${100 / s}%`;
   }
 
   private onFullscreen() {
@@ -596,6 +630,9 @@ export class Player {
     const tok = this.token;
     this.cur = i;
     this.paint(i);
+    // The stage HTML is rebuilt on seek and grows as steps reveal things: re-fit now and once the step has settled.
+    requestAnimationFrame(() => this.fitStage());
+    setTimeout(() => tok === this.token && this.fitStage(), 1200);
     SFX.whoosh(true);
     if (i === 0) SFX.thud();
     else SFX.blip(i);
