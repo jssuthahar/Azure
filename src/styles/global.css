@@ -501,6 +501,7 @@
     /* Long paths and URLs (e.g. ~/.copilot/mcp-config.json) wrap on small phones. */
     overflow-wrap: anywhere;
   }
+  .answer-text code { overflow-wrap: anywhere; }
   .lesson pre {
     overflow-x: auto;
     border: 1px solid var(--border);
