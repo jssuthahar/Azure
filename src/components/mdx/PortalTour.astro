@@ -53,9 +53,6 @@ const noun = dev ? 'VS Code & GitHub' : 'Azure portal';
 
   const md = (s: string) => s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>').replace(/`(.+?)`/g, '<code>$1</code>').replace(/\*(.+?)\*/g, '<em>$1</em>');
   const plain = (s: string) => s.replace(/\*\*|\*|`/g, '');
-// GitHub-exam tours draw VS Code or github.com instead of the Azure portal.
-const dev = tour.steps.some((s) => s.chrome === 'vscode' || s.chrome === 'github');
-const noun = dev ? 'VS Code & GitHub' : 'Azure portal';
 
   function scrollIntoFrame(el: HTMLElement) {
     let p = el.parentElement;
