@@ -135,7 +135,7 @@ const schema = [
         <div><dt>Prerequisites</dt><dd>None</dd></div>
       </dl>
       <p class="cd-note">
-        Syllabus checked against Microsoft Learn on {new Date(exam.syllabusVerifiedOn).toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' })}. Confirm length, price and format on the <a class="underline" rel="noopener">Coming Soon</a>. Microsoft also offers a free <a class="underline" href={exam.facts.practiceAssessmentUrl} rel="noopener">practice assessment</a>.
+        Syllabus checked against Microsoft Learn on {new Date(exam.syllabusVerifiedOn).toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' })}. Confirm length, price and format on the <a class="underline" href={exam.info.officialUrl} rel="noopener">Microsoft Learn exam page</a>. Microsoft also offers a free <a class="underline" href={exam.facts.practiceAssessmentUrl} rel="noopener">practice assessment</a>.
       </p>
     </div>
   </Fragment>

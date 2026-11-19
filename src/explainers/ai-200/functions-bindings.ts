@@ -150,8 +150,8 @@ const spec: ExplainerSpec = {
       },
     },
     {
-      title: 'An output binding sends the message',
-      key: 'output binding',
+      title: 'Output binding sends the message',
+      key: 'Output binding',
       desc: 'service_bus_queue_output plus func.Out[str] and job.set(). The host sends it when the function ends.',
       status: 'output binding · summarise-jobs +1',
       say: "Now the output binding. Declare the queue in a decorator, take a func dot Out parameter, and call set. The Functions host drops the message on the queue for you. No Service Bus client code at all.",

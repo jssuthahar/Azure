@@ -1,8 +1,7 @@
 ---
 /**
  * Course card for one certification. Live exams link to their course details
- * page; planned exams say so plainly and point to Microsoft Learn instead of
- * an empty page.
+ * page; planned exams link to their "coming soon" details page ([soon]/index.astro).
  */
 import CertIcon from './CertIcon.astro';
 import { difficulty, type Certification } from '../../data/certifications';
@@ -33,7 +32,7 @@ const features = live
       {live ? (
         <a href={`/${c.slug}/`} class="btn btn-accent cc-btn">View course details <span aria-hidden="true">→</span></a>
       ) : (
-        <a class="btn btn-outline cc-btn" target="_blank" rel="noopener">Coming Soon<span class="sr-only">on Microsoft Learn (opens in a new tab)</span><span aria-hidden="true">↗</span></a>
+        <a href={`/${c.slug}/`} class="btn btn-outline cc-btn">Coming soon · see details <span aria-hidden="true">→</span></a>
       )}
     </div>
   </div>

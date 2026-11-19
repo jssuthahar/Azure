@@ -10,6 +10,7 @@ Design reference (approved by the owner): https://claude.ai/artifact/DSB44hzwHVY
 
 1. **Check the official outline on Microsoft Learn** (skills measured date, domains and weights, passing score, duration). Use the Microsoft Learn MCP tools; record the date you checked.
 2. **Certification entry**: in `src/data/certifications.ts` set the exam's `status` to `'active'` (only when its content is ready).
+   While an exam is `planned`, `/<exam>/` is a "coming soon" page (`src/pages/[soon]/index.astro`) fed by `src/data/planned-outlines.ts`. Switching to `active` hands the URL to `[cert]/index.astro` automatically; delete its outline entry then.
 3. **Data folder** `src/data/<exam>/` with the same files as `az-900/`:
    `syllabus.ts` (MODULES with `domain`, `weight`, `weightMid`, groups/objectives/topics; EXAM_FACTS; SKILLS_MEASURED_AS_OF; SYLLABUS_VERIFIED_ON; STUDY_GUIDE_URL), `lesson-sims.ts`, `portal-tours.ts` / `sims3d.ts` additions, `compare.ts`, `whatifs.ts`, `exam-items.ts`, `games.ts`, `visuals.ts`, `problem-solution.ts`. Services stay shared in `az-900/services.ts` unless the exam needs its own.
 4. **Register it** in `EXAMS` in `src/data/exams.ts` (slug, code, name, accent colour, courseUrl, and every data field).

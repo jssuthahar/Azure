@@ -123,7 +123,7 @@ const spec: ExplainerSpec = {
   `,
   stages: [
     {
-      title: 'Every write lands in the change feed',
+      title: 'Writes land in the change feed',
       key: 'change feed',
       desc: 'Creates and updates are appended in order, per partition key range. The feed is on for every container.',
       status: 'change feed · 6 changes · 2 ranges',

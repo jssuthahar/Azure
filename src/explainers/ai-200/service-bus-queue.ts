@@ -212,8 +212,8 @@ const spec: ExplainerSpec = {
       },
     },
     {
-      title: 'Ten tries, then the dead-letter queue',
-      key: 'dead-letter queue',
+      title: 'Ten tries, then dead-letter',
+      key: 'dead-letter',
       desc: 'After the max delivery count (10 by default), Service Bus moves the message to the dead-letter queue.',
       status: 'MaxDeliveryCountExceeded → $deadletterqueue',
       say: "contract-88 keeps failing. After ten deliveries, the default max, Service Bus moves it to the dead-letter queue so it can't cycle forever. You inspect it there and fix the cause.",

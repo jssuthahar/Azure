@@ -153,18 +153,18 @@ const schema = [
           </div>
         </article>
       ); })}
-      <div class="road mt-10" aria-labelledby="road-h">
+      <div id="roadmap" class="road mt-10 scroll-mt-28" aria-labelledby="road-h">
         <div class="road-head">
           <h3 id="road-h" class="text-lg font-bold">On the roadmap</h3>
           <p class="text-sm text-muted">Each course opens once its lessons, questions and mock exam are complete.</p>
         </div>
         <ul class="road-list">
           {roadmap.map((c) => (
-            <li class={`road-item${c.next ? ' is-next' : ''}`}>
+            <li><a href={`/${c.slug}/`} class={`road-item${c.next ? ' is-next' : ''}`}>
               <CertIcon icon={c.icon} size={28} />
               <span class="min-w-0"><strong>{c.code}</strong><span class="road-name">{c.name}</span></span>
               <em>{c.next ? 'Up next' : c.level}</em>
-            </li>
+            </a></li>
           ))}
         </ul>
       </div>
@@ -391,6 +391,7 @@ const schema = [
   .road-name { display: block; color: var(--text-muted); font-size: .8rem; line-height: 1.3; }
   .road-item em { margin-left: auto; flex: none; font-style: normal; font-size: .7rem; font-weight: 700; color: var(--text-muted); }
   .road-item.is-next { border-color: var(--accent); }
+  a.road-item:hover, a.road-item:focus-visible { border-color: var(--accent); }
   .road-item.is-next em { color: #fff; background: #005a9e; padding: .15rem .5rem; border-radius: 999px; }
   .h-stats { border-top: 1px solid rgb(255 255 255 / .16); padding-top: 1.1rem; }
   .h-stats > div { padding: 0 .75rem; text-align: center; }

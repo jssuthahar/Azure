@@ -1,0 +1,199 @@
+---
+/**
+ * "Coming soon" details page for every exam that is still 'planned' in
+ * certifications.ts. Same look as a live course page, but honest about status:
+ * the official outline, what the course will include, and live courses to start
+ * with meanwhile. When an exam goes live, [cert]/index.astro takes over its URL.
+ */
+import CourseDetailsLayout from '../../layouts/CourseDetailsLayout.astro';
+import BrandLine from '../../components/BrandLine.astro';
+import Mascot from '../../components/Mascot.astro';
+import CertIcon from '../../components/course/CertIcon.astro';
+import CertCard from '../../components/course/CertCard.astro';
+import { getNav, getQuestionBank } from '../../lib/learn';
+import { SITE } from '../../config';
+import { CERTIFICATIONS, difficulty, type Certification } from '../../data/certifications';
+import { PLANNED_OUTLINES } from '../../data/planned-outlines';
+import { liveExams } from '../../data/exams';
+
+export function getStaticPaths() {
+  return CERTIFICATIONS.filter((c) => c.status === 'planned').map((c) => ({ params: { soon: c.slug }, props: { cert: c } }));
+}
+const { cert: c } = Astro.props as { cert: Certification };
+const o = PLANNED_OUTLINES[c.slug];
+const x = `/${c.slug}`;
+const isGitHub = c.code.startsWith('GH-');
+const fmt = (d: string) => new Date(d).toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' });
+
+const live = liveExams();
+const counts: Record<string, { lessons: number; questions: number }> = {};
+for (const e of live) counts[e.slug] = { lessons: (await getNav(e.slug)).filter((t) => t.published).length, questions: (await getQuestionBank(e.slug)).length };
+// Suggest the live courses closest to this exam first (same level, then the rest).
+const suggest = live.map((e) => e.info).sort((a, b) => Number(b.level === c.level) - Number(a.level === c.level)).slice(0, 3);
+
+const planned: [string, string][] = [
+  ['📘', 'Step-by-step lessons on every objective'],
+  ['🧊', 'Interactive 3D scenes'],
+  ['🖥️', isGitHub ? 'GitHub and VS Code walkthroughs' : 'Azure portal walkthroughs'],
+  ['🧪', 'Hands-on practice labs, no account needed'],
+  ['✅', 'Original practice questions and quizzes'],
+  ['⏱️', 'Timed mock exams weighted like the real one'],
+  ['💼', 'Interview questions with answers'],
+  ['🏆', 'Shareable practice certificate'],
+];
+
+const fullTitle = `${c.code} ${c.name}: Free Course Coming Soon`;
+const title = fullTitle.length <= 62 ? fullTitle : `${c.code}: Free Course Coming Soon, Exam Domains & Weights`;
+const description = `Free ${c.code} ${c.name} course coming soon to MSDEVBUILD. See the official exam domains and weights, and start a live course today.`;
+const crumbs = [
+  { name: 'Home', url: '/' },
+  { name: 'Certifications', url: '/certifications/' },
+  { name: c.code, url: `${x}/` },
+];
+const schema = [
+  {
+    '@type': 'WebPage',
+    '@id': `${SITE.url}${x}/#webpage`,
+    name: title,
+    description,
+    url: `${SITE.url}${x}/`,
+    about: { '@type': 'EducationalOccupationalCredential', name: `${c.code}: ${c.name}`, credentialCategory: 'certification', url: c.officialUrl },
+    publisher: { '@id': `${SITE.url}/#organization` },
+  },
+];
+---
+<CourseDetailsLayout title={title} description={description} schema={schema} breadcrumbs={crumbs}
+  eyebrow={`${c.level} certification · ${c.code}`} heading={`${c.code}: ${c.name}`} subtitle={c.blurb}>
+  <Fragment slot="hero">
+    <ul class="cs-badges">
+      <li class="cs-badge cs-badge-soon">Coming soon</li>
+      <li class="cs-badge">Free when it opens</li>
+      <li class="cs-badge">{difficulty(c)}</li>
+      {o && <li class="cs-badge">{o.domains.length} exam domains</li>}
+    </ul>
+    <p class="cs-by">{o ? `Outline checked on Microsoft Learn, ${fmt(o.verifiedOn)}` : 'Outline to be checked on Microsoft Learn'} · English</p>
+    <BrandLine variant="light" class="mt-2" />
+  </Fragment>
+
+  <Fragment slot="card">
+    <div class="cs-banner">
+      <CertIcon icon={c.icon} size={52} />
+      <span class="cs-banner-code">{c.code}</span>
+      <span class="cs-banner-name">{c.name}</span>
+    </div>
+    <div class="cs-card-in">
+      <p class="cs-status"><span class="cs-dot" aria-hidden="true"></span>Coming soon</p>
+      <p class="cs-small">We're building this course. It opens once the lessons, questions and mock exam are complete.</p>
+      <a href="/certifications/" class="btn btn-accent cs-btn">Browse live courses</a>
+      <a href={c.officialUrl} class="btn btn-outline cs-btn mt-2" target="_blank" rel="noopener">Official exam page<span class="sr-only"> (opens in a new tab)</span> <span aria-hidden="true">↗</span></a>
+      <h2 class="cs-inc-h">Exam at a glance</h2>
+      <dl class="cs-facts">
+        <div><dt>Passing score</dt><dd>{o ? `${o.passingScore} / 1000` : '700 / 1000'}</dd></div>
+        <div><dt>Level</dt><dd>{c.level}</dd></div>
+        <div><dt>Domains</dt><dd>{o ? o.domains.length : '–'}</dd></div>
+        <div><dt>Maintained by</dt><dd>{o?.owner ?? (isGitHub ? 'GitHub' : 'Microsoft')}</dd></div>
+      </dl>
+      <p class="cs-note">
+        Confirm length, price and format on the <a class="underline" href={c.officialUrl} target="_blank" rel="noopener">Microsoft Learn exam page</a>.
+        {c.studyGuideUrl && <>The <a class="underline" href={c.studyGuideUrl} target="_blank" rel="noopener">study guide</a> lists every objective.</>}
+      </p>
+    </div>
+  </Fragment>
+
+  {(c.verifyNote || o?.note) && (
+    <section class="cs-sec" aria-label="Status note">
+      <p class="cs-caution"><span aria-hidden="true">⚠️</span><span>{o?.note ?? c.verifyNote}</span></p>
+    </section>
+  )}
+
+  <!-- Exam domains -->
+  <section id="domains" class="cs-sec scroll-mt-28" aria-labelledby="dom-h">
+    <h2 id="dom-h" class="cs-h2">Exam domains</h2>
+    {o ? (
+      <>
+        <p class="cs-p">{o.asOf ? `Skills measured as of ${o.asOf}.` : 'From the current study guide.'} Microsoft weights the exam by domain, so plan your study time the same way.</p>
+        <ol class="cs-dom">
+          {o.domains.map((d, i) => (
+            <li class="cs-dom-row">
+              <span class="cs-dom-n">{i + 1}</span>
+              <span class="cs-dom-t">{d.title}</span>
+              <span class="cs-dom-w">{d.weight}</span>
+            </li>
+          ))}
+        </ol>
+      </>
+    ) : (
+      <p class="cs-p">We'll publish the domains here after checking the exam on Microsoft Learn. Until then, see the <a class="text-accent underline" href={c.officialUrl} target="_blank" rel="noopener">official exam page</a>.</p>
+    )}
+  </section>
+
+  <!-- What the course will include -->
+  <section class="cs-sec" aria-labelledby="inc-h">
+    <h2 id="inc-h" class="cs-h2">What the course will include</h2>
+    <p class="cs-p">Every lesson follows the same flow as our live courses: a 30-second answer, simulations, the explanation, an exam tip and a quiz. All of it free, in your browser, with no sign-up.</p>
+    <ul class="cs-inc">
+      {planned.map(([ic, t]) => <li><span aria-hidden="true">{ic}</span>{t}</li>)}
+    </ul>
+    <p class="cs-p">The practice questions are our own. We never use real or leaked exam questions.</p>
+  </section>
+
+  <!-- Start with a live course -->
+  <section class="cs-sec" aria-labelledby="live-h">
+    <h2 id="live-h" class="cs-h2">Start with a live course today</h2>
+    <p class="cs-p">These courses are open now and free.</p>
+    <div class="cs-live">
+      {suggest.map((s) => <CertCard cert={s} lessons={counts[s.slug]?.lessons} questions={counts[s.slug]?.questions} />)}
+    </div>
+  </section>
+
+  <section class="cs-sec" aria-labelledby="ready-h">
+    <div class="cs-ready">
+      <Mascot size={64} mood="cheer" />
+      <div class="min-w-0 flex-1">
+        <h2 id="ready-h" class="text-2xl font-bold">{c.code} is on the way</h2>
+        <p class="mt-1 text-muted">Check the roadmap on the home page to see which course we're building next.</p>
+      </div>
+      <a href="/#roadmap" class="btn btn-outline cs-btn sm:w-auto">See the roadmap</a>
+    </div>
+  </section>
+</CourseDetailsLayout>
+
+<style>
+  .cs-badges { display: flex; flex-wrap: wrap; gap: .5rem; margin-top: 1.1rem; }
+  .cs-badge { border-radius: 999px; border: 1px solid rgb(255 255 255 / .3); padding: .2rem .75rem; font-size: .85rem; font-weight: 600; color: #fff; }
+  .cs-badge-soon { background: #ffd75e; border-color: #ffd75e; color: #0b1020; }
+  .cs-by { margin-top: .9rem; font-size: .9rem; color: #c9d6e6; }
+
+  .cs-banner { display: grid; grid-template-columns: auto 1fr; align-items: center; column-gap: .9rem; padding: 1.4rem 1.25rem; color: #fff; background: radial-gradient(14rem 8rem at 90% 0%, rgb(255 255 255 / .22), transparent 70%), linear-gradient(135deg, #4a5568, #2d3a5c); }
+  .cs-banner > :global(svg) { grid-row: span 2; }
+  .cs-banner-code { font-size: 1.8rem; font-weight: 800; line-height: 1; }
+  .cs-banner-name { font-size: .92rem; opacity: .95; }
+  .cs-card-in { padding: 1.25rem; }
+  .cs-status { display: flex; align-items: center; gap: .5rem; font-size: 1.5rem; font-weight: 800; }
+  .cs-dot { width: .7rem; height: .7rem; border-radius: 999px; background: #f5a623; box-shadow: 0 0 0 4px rgb(245 166 35 / .25); }
+  .cs-small { margin-top: .4rem; font-size: .88rem; line-height: 1.5; color: var(--text-muted); }
+  .cs-btn { width: 100%; justify-content: center; min-height: 46px; font-size: 1rem; }
+  .cs-card-in > .cs-btn:first-of-type { margin-top: 1rem; }
+  .cs-inc-h { margin-top: 1.4rem; font-size: 1rem; font-weight: 700; }
+  .cs-facts { margin-top: .6rem; display: grid; grid-template-columns: 1fr 1fr; gap: .5rem; font-size: .85rem; }
+  .cs-facts div { border-radius: 10px; border: 1px solid var(--card-line); background: var(--bg); padding: .55rem .7rem; }
+  .cs-facts dt { color: var(--text-muted); }
+  .cs-facts dd { font-weight: 700; font-size: 1rem; }
+  .cs-note { margin-top: 1rem; font-size: .75rem; line-height: 1.55; color: var(--text-muted); }
+
+  .cs-sec { margin-top: 3rem; }
+  .cs-sec:first-child { margin-top: 0; }
+  .cs-h2 { font-size: 1.6rem; font-weight: 800; letter-spacing: -.01em; }
+  .cs-p { margin-top: .6rem; line-height: 1.7; color: var(--text-muted); max-width: 70ch; }
+  .cs-caution { display: flex; gap: .6rem; border-radius: 14px; border: 1px solid #f5a623; background: rgb(245 166 35 / .1); padding: .9rem 1rem; font-size: .92rem; line-height: 1.55; }
+  .cs-dom { margin-top: 1rem; display: grid; gap: .6rem; }
+  .cs-dom-row { display: grid; grid-template-columns: auto 1fr auto; align-items: center; gap: .9rem; border-radius: 14px; border: 1px solid var(--card-line); background: var(--card); padding: .85rem 1rem; }
+  .cs-dom-n { display: grid; place-items: center; width: 2rem; height: 2rem; border-radius: 999px; background: var(--pastel-blue); color: var(--accent-deep); font-weight: 800; }
+  .cs-dom-t { min-width: 0; font-weight: 600; line-height: 1.4; }
+  .cs-dom-w { font-weight: 800; color: var(--accent); white-space: nowrap; }
+  .cs-inc { margin-top: 1rem; display: grid; gap: .55rem 1.75rem; font-size: .95rem; }
+  @media (min-width: 720px) { .cs-inc { grid-template-columns: 1fr 1fr; } }
+  .cs-inc li { display: flex; gap: .6rem; }
+  .cs-live { margin-top: 1rem; display: grid; gap: 1rem; grid-template-columns: repeat(auto-fill, minmax(min(100%, 16rem), 1fr)); }
+  .cs-ready { display: flex; flex-wrap: wrap; align-items: center; gap: 1rem 1.25rem; border-radius: 18px; background: var(--pastel-blue); padding: 1.4rem; }
+</style>

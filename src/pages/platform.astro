@@ -155,7 +155,7 @@ const schema = [
             <h3 class="text-sm font-bold tracking-[0.12em] text-accent uppercase">{lv}</h3>
             <ul class="mt-3 space-y-2">
               {live.filter((e) => e.info.level === lv).map((e) => <li class="pf-exam"><a href={`/${e.slug}/`}><strong>{e.code}</strong> <span>{e.name.replace(/^Microsoft /, '')}</span></a><em class="pf-live">Live</em></li>)}
-              {planned.filter((c) => c.level === lv).map((c) => <li class="pf-exam"><span><strong>{c.code}</strong> <span>{c.name}</span></span><em>Planned</em></li>)}
+              {planned.filter((c) => c.level === lv).map((c) => <li class="pf-exam"><a href={`/${c.slug}/`}><strong>{c.code}</strong> <span>{c.name}</span></a><em>Coming soon</em></li>)}
             </ul>
           </div>
         ))}

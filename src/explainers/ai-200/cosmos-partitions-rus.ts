@@ -214,7 +214,7 @@ const spec: ExplainerSpec = {
       },
     },
     {
-      title: 'Exclude /embedding/* to trim writes',
+      title: 'Skip indexing /embedding/*',
       key: '/embedding/*',
       desc: 'Add the path to excludedPaths. A vector index can still cover it. Never exclude a path you filter on.',
       status: 'excludedPaths: ["/embedding/*"] · write charge drops',
