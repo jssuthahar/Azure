@@ -84,7 +84,9 @@ const schema = [
     <div class="cs-card-in">
       <p class="cs-status"><span class="cs-dot" aria-hidden="true"></span>Coming soon</p>
       <p class="cs-small">We're building this course. It opens once the lessons, questions and mock exam are complete.</p>
-      <a href="/certifications/" class="btn btn-accent cs-btn">Browse live courses</a>
+      <button type="button" class="btn cs-btn cs-learn" disabled aria-describedby="cs-learn-note">Start learning <span class="cs-learn-tag">Coming soon</span></button>
+      <p id="cs-learn-note" class="cs-small mt-2">Lessons unlock when the course opens. Until then, try a live course.</p>
+      <a href="/certifications/" class="btn btn-accent cs-btn mt-3">Browse live courses</a>
       <a href={c.officialUrl} class="btn btn-outline cs-btn mt-2" target="_blank" rel="noopener">Official exam page<span class="sr-only"> (opens in a new tab)</span> <span aria-hidden="true">↗</span></a>
       <h2 class="cs-inc-h">Exam at a glance</h2>
       <dl class="cs-facts">
@@ -173,7 +175,8 @@ const schema = [
   .cs-dot { width: .7rem; height: .7rem; border-radius: 999px; background: #f5a623; box-shadow: 0 0 0 4px rgb(245 166 35 / .25); }
   .cs-small { margin-top: .4rem; font-size: .88rem; line-height: 1.5; color: var(--text-muted); }
   .cs-btn { width: 100%; justify-content: center; min-height: 46px; font-size: 1rem; }
-  .cs-card-in > .cs-btn:first-of-type { margin-top: 1rem; }
+  .cs-learn { margin-top: 1rem; gap: .5rem; border: 1px dashed var(--card-line); background: var(--bg); color: var(--text-muted); cursor: not-allowed; }
+  .cs-learn-tag { border-radius: 999px; background: #ffd75e; color: #0b1020; padding: .1rem .55rem; font-size: .75rem; font-weight: 700; }
   .cs-inc-h { margin-top: 1.4rem; font-size: 1rem; font-weight: 700; }
   .cs-facts { margin-top: .6rem; display: grid; grid-template-columns: 1fr 1fr; gap: .5rem; font-size: .85rem; }
   .cs-facts div { border-radius: 10px; border: 1px solid var(--card-line); background: var(--bg); padding: .55rem .7rem; }

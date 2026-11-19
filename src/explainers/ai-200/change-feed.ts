@@ -117,7 +117,8 @@ const spec: ExplainerSpec = {
   @P .cf-src .msd-node{ padding:10px 16px; }
   @P .cf-feed{ padding:14px 18px; gap:10px; }
   @P .cf-track{ min-height:78px; padding:8px 10px; }
-  @P .cf-work, @P .cf-lease{ padding:14px 18px; gap:10px; }
+  @P .cf-work, @P .cf-lease{ padding:12px 18px; gap:8px; }
+  @P .cf-w{ padding:8px 14px; }
   @P .cf-th, @P .cf-row{ padding:6px 14px; }
   @S .cf-flow{ position:absolute; inset:0; pointer-events:none; z-index:6; }
   `,

@@ -89,8 +89,8 @@ const spec: ExplainerSpec = {
   @L .fb-tr{ padding:8px 12px; }
   @L .fb-tr .fb-tn{ gap:1px; }
   @L .fb-scale{ padding:10px 18px; gap:18px; flex-direction:row; align-items:center; }
-  @L .fb-sh{ flex-wrap:wrap; gap:0 14px; width:330px; flex-shrink:0; }
-  @L .fb-sh .msd-label{ width:100%; font-size:19px; }
+  @L .fb-sh{ flex-wrap:wrap; align-items:baseline; gap:0 14px; width:450px; flex-shrink:0; }
+  @L .fb-sh .msd-label{ width:100%; font-size:18px; white-space:nowrap; }
   @L .fb-ex{ margin-left:0; }
   @L .fb-cnt{ font-size:30px; }
   @L .fb-insts{ min-height:56px; }

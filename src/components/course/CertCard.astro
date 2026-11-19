@@ -30,9 +30,9 @@ const features = live
     </ul>
     <div class="cc-foot">
       {live ? (
-        <a href={`/${c.slug}/`} class="btn btn-accent cc-btn">View course details <span aria-hidden="true">→</span></a>
+        <a href={`/${c.slug}/`} class="btn btn-accent cc-btn cc-link">View course details <span aria-hidden="true">→</span></a>
       ) : (
-        <a href={`/${c.slug}/`} class="btn btn-outline cc-btn">Coming soon · see details <span aria-hidden="true">→</span></a>
+        <a href={`/${c.slug}/`} class="btn btn-outline cc-btn cc-link">Coming soon · see details <span aria-hidden="true">→</span></a>
       )}
     </div>
   </div>
@@ -61,5 +61,9 @@ const features = live
     .cc-feat span { color: var(--accent); font-weight: 700; }
     .cc-foot { margin-top: auto; padding-top: 16px; }
     .cc-btn { width: 100%; justify-content: center; min-height: 42px; }
+    /* The whole card opens the course details page (stretched link). */
+    .cc { position: relative; cursor: pointer; }
+    .cc .cc-link, .cc .cc-link:hover { position: static; transform: none; } /* a transform would trap the overlay inside the button */
+    .cc .cc-link::after { content: ''; position: absolute; inset: 0; z-index: 1; border-radius: inherit; }
   }
 </style>
