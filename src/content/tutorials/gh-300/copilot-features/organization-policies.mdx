@@ -1,0 +1,204 @@
+---
+title: Copilot Policies for Organizations and Enterprises
+seoTitle: Copilot Policies for Organizations and Enterprises | GH-300
+description: Assign Copilot seats, switch features on or off for IDEs, github.com and the CLI, enable code review, choose models and see how enterprise policies win.
+answer: >-
+  Copilot policies decide what members with a Copilot seat can use. In **Organization settings › Copilot**, **Access** sets who gets a seat (all members, selected members and teams, or nobody), **Policies** switch features on or off (Copilot Chat in the IDE and on github.com, **Copilot CLI**, **Copilot code review**, **Copilot coding agent**, **MCP servers in Copilot** and **suggestions matching public code**), and **Models** chooses which models appear in the picker. An **enterprise** can **enforce** a policy for all its organizations, which they can't override, or leave it at **No policy** so each organization decides.
+updated: 2026-11-19
+readingMinutes: 10
+keyTerms:
+  - term: Copilot policy
+    definition: An organization or enterprise setting that turns a Copilot feature on or off for members who get Copilot through it.
+  - term: Copilot access
+    definition: The organization setting that decides who gets a Copilot seat, all members, selected members and teams, or nobody.
+  - term: Enforced policy
+    definition: A policy set at the enterprise level. Organizations in that enterprise see it locked and can't change it.
+  - term: No policy
+    definition: The enterprise choice that leaves a Copilot setting for each organization to decide.
+  - term: Models policy
+    definition: The setting that controls which AI models members can choose in the Copilot model picker.
+  - term: Suggestions matching public code
+    definition: A policy that blocks suggestions matching public code, or allows them with code references.
+interview:
+  - level: beginner
+    q: Where does an organization owner turn Copilot features on or off?
+    a: >-
+      In the organization's settings, under Copilot. Access decides who has a seat, Policies switches features like Copilot Chat on github.com, the CLI, code review and the coding agent, and Models decides which models people can pick.
+    followUps:
+      - q: Who do those policies affect?
+        a: >-
+          Members who get their Copilot seat from that organization. Someone on a personal Pro plan isn't controlled by the org's Copilot policies for their own work.
+  - level: intermediate
+    q: An organization owner wants to enable Copilot coding agent, but the setting is greyed out. Why?
+    a: >-
+      The enterprise has enforced that policy, probably as Disabled. When an enterprise sets a policy, organizations can't override it. The owner needs to ask the enterprise admins to enable it or switch it to No policy.
+    followUps: []
+  - level: experienced
+    q: How would you roll Copilot out to a 2,000-person enterprise in stages?
+    a: >-
+      I'd leave most feature policies at No policy at enterprise level, enforce the few we're sure about, like blocking suggestions matching public code, and in each organization give seats to selected teams first. Then I'd turn on chat and code review, watch the metrics and audit log, and enable the coding agent and MCP once we had guidance written.
+    followUps:
+      - q: Why not just enforce everything at the top?
+        a: >-
+          Because different organizations have different needs. A research org may want the coding agent early, a regulated one may not. Enforce what's truly company-wide and let orgs decide the rest.
+  - level: scenario
+    q: Security wants only approved models and no third-party tools for Copilot in your org. What do you change?
+    a: >-
+      Under Models, I'd turn off any model that isn't approved so it disappears from the picker. Under Policies, I'd disable MCP servers in Copilot so agents can't call outside tools. Both changes land in the audit log.
+    followUps: []
+  - level: architecture
+    q: How do Copilot policies relate to content exclusions and the public code filter?
+    a: >-
+      They're layers. Policies decide which features exist at all. The public code filter is itself a policy and decides what happens to suggestions that match public code. Content exclusions are a separate setting that keeps sensitive paths out of Copilot's context. Together with seat access and the audit log, that's the governance set for Business and Enterprise.
+    followUps: []
+revision:
+  keyPoints:
+    - "Organization settings › Copilot › Access: seats for all members, selected members and teams, or nobody."
+    - "Policies switch features: Copilot in the IDE, Copilot Chat on github.com, Copilot CLI, code review, coding agent, MCP servers, suggestions matching public code."
+    - Models controls which models members can pick. A disabled model disappears from the picker.
+    - An enterprise can enforce a policy that organizations can't override, or choose No policy so each org decides.
+    - Org policies apply to members who get Copilot through that org.
+    - Policy changes appear in the audit log.
+  mistakes:
+    - Trying to change an enforced enterprise policy at the organization level.
+    - Thinking Access and Policies are the same setting. Access is who; Policies is what.
+    - Forgetting that disabling a feature (like the CLI) is a policy, not something each developer configures.
+  examTips:
+    - '"Organizations can''t change this setting" = the **enterprise enforces** the policy.'
+    - '"Let each organization decide" = enterprise **No policy**.'
+    - '"Turn on Copilot code review for the org" = **Copilot › Policies**, often with a **ruleset** for automatic review.'
+    - '"Limit which models members can use" = **Copilot › Models**.'
+  quick:
+    - q: Which settings page decides who gets a Copilot seat?
+      a: Organization settings › Copilot › Access.
+    - q: Name three features you can switch on or off under Policies.
+      a: Any three of Copilot Chat in the IDE, Copilot Chat on github.com, Copilot CLI, code review, coding agent, MCP servers, suggestions matching public code.
+    - q: What happens when an enterprise enforces a Copilot policy?
+      a: All its organizations get that setting and can't override it.
+    - q: What does No policy mean at enterprise level?
+      a: Each organization decides for itself.
+    - q: How do you hide a model from members' model picker?
+      a: Turn it off under Copilot › Models.
+references:
+  - title: Managing policies and features for GitHub Copilot in your organization
+    url: https://docs.github.com/en/copilot/how-tos/administer-copilot/manage-for-organization/manage-policies
+  - title: Managing policies and features for GitHub Copilot in your enterprise
+    url: https://docs.github.com/en/copilot/how-tos/administer-copilot/manage-for-enterprise/manage-enterprise-policies
+  - title: Granting access to GitHub Copilot for members of your organization
+    url: https://docs.github.com/en/copilot/how-tos/administer-copilot/manage-for-organization/manage-access/grant-access
+  - title: Configuring access to AI models in GitHub Copilot
+    url: https://docs.github.com/en/copilot/how-tos/use-ai-models/configure-access-to-ai-models
+  - title: "Study guide for Exam GH-300: GitHub Copilot"
+    url: https://learn.microsoft.com/en-us/credentials/certifications/resources/study-guides/gh-300
+related:
+  - copilot-plans
+  - audit-log-and-seats-api
+  - content-exclusions
+  - public-code-filter-and-references
+---
+
+## Start with a question
+
+<Story question="Our company bought Copilot for 300 developers. Who decides whether they can use the CLI, the coding agent or a particular model?">
+
+A school buys tablets for every class. The head office decides some rules for every school ("no social media apps"). For everything else, each school's principal decides ("tablets allowed in the library, not at lunch").
+
+GitHub works the same way. Contoso buys **Copilot Business** for the `contoso` organization. The organization owner decides **who gets a seat** and **which features** those people can use: chat on github.com, the Copilot CLI, Copilot code review, the coding agent, MCP servers, which models. If Contoso has an **enterprise** account above several organizations, the enterprise can lock a rule for all of them.
+
+</Story>
+
+## Explain it like I'm 10
+
+<Eli10>
+
+Head office makes a rule: "No phones in exams." Every school must follow it. That's an **enforced** policy.
+
+For other things head office says: "You decide." That's **No policy**.
+
+Then each principal decides: "Our class can use the art room, not the science lab." Those are the **organization's** policies.
+
+And the principal decides which kids get a tablet at all. That's **access**.
+
+</Eli10>
+
+## The technical explanation
+
+### Three pages under Organization settings › Copilot
+
+| Page | Question it answers | Options |
+| --- | --- | --- |
+| **Access** | Who gets a Copilot seat? | All members, selected members and teams, or nobody (disabled) |
+| **Policies** | Which features can seat holders use? | Each feature Enabled or Disabled |
+| **Models** | Which models show in the model picker? | Each model on or off |
+
+The same Copilot menu also holds **Content exclusion** (paths Copilot shouldn't use), **MCP** and **Metrics**, which have their own lessons.
+
+### The feature policies you'll see on the exam
+
+| Policy | What it controls |
+| --- | --- |
+| Copilot in the IDE / Copilot Chat in the IDE | Chat and agent features in supported editors |
+| Copilot Chat in github.com | Asking Copilot on the GitHub website |
+| Copilot CLI | Whether members can use the `copilot` command in the terminal |
+| Copilot code review | Whether Copilot can review pull requests (add a **ruleset** for automatic reviews) |
+| Copilot coding agent | Whether issues can be assigned to Copilot to open pull requests |
+| MCP servers in Copilot | Whether agents can use Model Context Protocol servers |
+| Suggestions matching public code | **Block** them, or **Allow** them with code references |
+
+These policies apply to people who get Copilot through the organization. Turning a feature off removes it for them across IDEs and github.com, so you don't need to touch anyone's editor settings.
+
+### Enterprise versus organization
+
+<Flow
+  caption="How a Copilot policy reaches a developer"
+  steps={[
+    { title: 'Enterprise', text: 'Enforce Enabled, enforce Disabled, or No policy.' },
+    { title: 'Organization', text: 'If No policy, the org owner picks Enabled or Disabled.' },
+    { title: 'Seat', text: 'Access decides if the member has Copilot at all.' },
+    { title: 'Developer', text: 'Gets the features the policies allow, in every supported client.' },
+  ]}
+/>
+
+An enterprise owner (GitHub Enterprise Cloud) sets each Copilot policy to an enforced value or to **No policy**. Enforced means every organization in the enterprise gets that value, and the organization's settings page shows it locked. No policy hands the decision to each organization.
+
+<Callout type="exam">
+Two traps. First, **Access** and **Policies** are different questions: Access is *who* has Copilot, Policies is *what* they can use. Second, if a question says an organization owner "can't change" a Copilot setting, the answer is that the **enterprise enforces** it. "Let each organization choose" is **No policy**. And "enable Copilot code review on every new pull request" needs the **code review policy** plus a **ruleset**.
+</Callout>
+
+<TryIt labs="gh-seats-audit" text="Act as the Contoso org admin: check the subscription, manage seats with the REST API and find the changes in the audit log." />
+
+<DeepDive title="Roll out in stages">
+
+Big rollouts go better in steps. Give seats to one or two teams first. Start with inline suggestions, chat and code review, block suggestions matching public code if your legal team prefers it, and leave the coding agent and MCP off until you've written guidance (which servers are approved, who reviews agent pull requests). Watch the Copilot metrics and the audit log, then widen access. Because policies are central, turning something off later is one click, not a message to 300 developers.
+
+</DeepDive>
+
+## Real-world business scenario
+
+<Scenario
+  company="Contoso (fictional)"
+  industry="Online retail"
+  problem="Contoso has an enterprise with three organizations: shop, payments and research. Payments is regulated and can't use outside tools; research wants every new feature early."
+  service="At enterprise level Contoso enforces 'Suggestions matching public code: Blocked' and leaves the other Copilot policies at No policy. The payments org disables MCP servers and the coding agent and limits models; research enables everything."
+  why="Company-wide rules are enforced once and can't drift, while each organization picks what fits its risk."
+  outcome="Each team gets the Copilot it needs, and every policy change shows in the audit log for the compliance team."
+/>
+
+## When to use it and when not to
+
+<UseWhen
+  use={[
+    'Controlling which Copilot features members with org seats can use, centrally.',
+    'Enforcing a company-wide rule from the enterprise so no organization can drift.',
+    'Limiting models or turning off MCP servers to meet security requirements.',
+  ]}
+  avoid={[
+    'Enforcing every policy at enterprise level when organizations have different needs.',
+    'Relying on policies alone for data protection. Add content exclusions and reviews.',
+    'Expecting org policies to control someone’s personal Copilot Pro plan.',
+  ]}
+  alternatives={[
+    '<strong>Content exclusions</strong> to keep specific files or repositories out of Copilot’s context.',
+    '<strong>Rulesets and branch protection</strong> to control what can merge, whoever wrote it.',
+  ]}
+/>

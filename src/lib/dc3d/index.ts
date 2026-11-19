@@ -17,8 +17,9 @@ import { containers } from './containers';
 import { vectordata } from './vectordata';
 import { messaging } from './messaging';
 import { observe } from './observe';
+import { copilotflow, copilotcontext, copilotagent, copilotgov } from './copilot';
 
-const BUILDERS: Record<Mode3D, (c: Ctx) => Ctl> = { datacenter, zones, regions, redundancy, scale, network, governance, identity, responsible, genai, foundry, perception, containers, vectordata, messaging, observe };
+const BUILDERS: Record<Mode3D, (c: Ctx) => Ctl> = { datacenter, zones, regions, redundancy, scale, network, governance, identity, responsible, genai, foundry, perception, containers, vectordata, messaging, observe, copilotflow, copilotcontext, copilotagent, copilotgov };
 
 export function webglOk() {
   try {

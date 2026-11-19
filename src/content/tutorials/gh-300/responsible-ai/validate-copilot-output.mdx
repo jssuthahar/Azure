@@ -1,0 +1,215 @@
+---
+title: Validate Copilot Output and Use It Responsibly
+seoTitle: Validate GitHub Copilot Output Before You Merge | GH-300
+description: Learn why every Copilot suggestion needs checking and how to validate it with review, tests, linting and code scanning, plus habits for responsible daily use.
+answer: >-
+  You **validate** Copilot output because it predicts code and can't check it, so a suggestion can look right and still be wrong, insecure or outdated. Read it until you understand it, **run tests** with edge cases, lint it, let **code scanning** and dependency review check it, and keep **human pull request review** before merge. Operating Copilot responsibly also means giving it good context, keeping secrets and personal data out of prompts, and owning what you accept.
+updated: 2026-11-19
+readingMinutes: 10
+keyTerms:
+  - term: Validation
+    definition: Checking that AI output is correct, secure and fits your requirements before you use it.
+  - term: Edge case
+    definition: An unusual input, such as an empty list, a zero or an unknown code, where bugs often hide.
+  - term: Code scanning
+    definition: Automated analysis, for example with CodeQL, that finds security vulnerabilities and coding errors.
+  - term: Dependency review
+    definition: A pull request check that shows new or changed dependencies and known vulnerabilities in them.
+  - term: Linter
+    definition: A tool that flags style problems and likely bugs without running the code.
+  - term: Human review
+    definition: A person reads and approves a change before it merges.
+interview:
+  - level: beginner
+    q: Why can't you just accept a Copilot suggestion if it compiles?
+    a: >-
+      Compiling only means the syntax is fine. Copilot predicts code, it doesn't run it, so the logic can still be wrong for some inputs, or it can be insecure. I read it, then I test it, especially with odd inputs.
+    followUps: []
+  - level: intermediate
+    q: Walk me through how you validate a function Copilot wrote.
+    a: >-
+      I read it line by line until I can explain it. Then I write or generate tests, including edge cases like an empty cart or an unknown discount code, and run them. The linter and type checks run too. In the pull request, code scanning and dependency review add another layer, and a teammate reviews it.
+    followUps:
+      - q: Can Copilot write those tests for you?
+        a: >-
+          Yes, /tests is a good start, but I review the tests too. If the same model wrote the code and the tests, they can share the same wrong assumption, so I add the edge cases I care about myself.
+  - level: experienced
+    q: What does "operate Copilot responsibly" mean day to day?
+    a: >-
+      Give it the right context so the output is better, keep secrets and real personal data out of prompts, never accept code I don't understand, keep the normal review and CI gates, give feedback with thumbs up or down, and be open in the pull request about where Copilot helped.
+    followUps: []
+  - level: scenario
+    q: Copilot generated a database query that passes all tests. A reviewer still blocks it. Why might they be right?
+    a: >-
+      Tests only cover what we thought to test. The query might build SQL from user input, which works in tests and is an injection risk in production. That's why code scanning and a human reviewer sit on top of tests.
+    followUps: []
+  - level: architecture
+    q: How do you stop unvalidated AI output from reaching main?
+    a: >-
+      Branch protection or rulesets on main: required pull request reviews from a person, required status checks for tests, lint and CodeQL, and dependency review. Copilot code review can add comments, but its review doesn't count as an approval, so a human still has to sign off.
+    followUps: []
+revision:
+  keyPoints:
+    - AI output is a draft. It can be wrong, insecure, outdated or biased while looking confident.
+    - Understand the code before you accept it.
+    - Test it, with edge cases, and run the linter and type checks.
+    - Code scanning and dependency review catch security problems tests miss.
+    - Human pull request review stays, and Copilot code review doesn't count as an approval.
+    - "Responsible operation: good context, no secrets or personal data in prompts, feedback, transparency, ownership."
+  mistakes:
+    - Letting Copilot write both the code and the only tests, then trusting both.
+    - Skipping review because "Copilot already reviewed it".
+    - Accepting long suggestions with Tab without reading them.
+  examTips:
+    - '"Best way to confirm a suggestion is correct" = **run tests** (with edge cases), not "ask Copilot if it is correct".'
+    - '"Find vulnerabilities in AI-generated code" = **code scanning**.'
+    - '"Who decides to merge" = a **person**, after review and checks.'
+  quick:
+    - q: Does passing tests prove a suggestion is safe?
+      a: No. Tests cover only what you thought of; add scanning and review.
+    - q: Which chat command drafts tests for selected code?
+      a: /tests.
+    - q: Does Copilot code review count toward required approvals?
+      a: No. It leaves comments; a person approves.
+    - q: What should never go into a prompt?
+      a: Secrets and real personal data.
+    - q: What's the first validation step?
+      a: Read the suggestion until you understand it.
+references:
+  - title: Best practices for using GitHub Copilot
+    url: https://docs.github.com/en/copilot/get-started/best-practices
+  - title: Responsible use of GitHub Copilot features
+    url: https://docs.github.com/en/copilot/responsible-use
+  - title: About code scanning
+    url: https://docs.github.com/en/code-security/code-scanning/introduction-to-code-scanning/about-code-scanning
+  - title: About dependency review
+    url: https://docs.github.com/en/code-security/supply-chain-security/understanding-your-software-supply-chain/about-dependency-review
+  - title: Responsible AI with GitHub Copilot (Microsoft Learn)
+    url: https://learn.microsoft.com/training/modules/responsible-ai-with-github-copilot/
+related:
+  - generative-ai-risks-and-limitations
+  - responsible-ai-principles
+  - unit-and-integration-tests
+  - copilot-code-review
+---
+
+## Start with a question
+
+<Story question="Copilot wrote applyDiscount() in two seconds. It looks perfect. Do you press Tab and move on?">
+
+Press Tab if you like, but don't move on yet.
+
+Here's what happened in contoso-shop. The suggestion handled `SAVE10` and `HALF` nicely. Then a customer typed a code that didn't exist, and the cart total became `NaN`. Nobody had asked "what about an unknown code?"
+
+**Validating** AI output means asking those questions before your users do. Read it, run it, test the odd cases, and let the usual checks look at it. Two seconds to write, two minutes to check. It's still a great deal.
+
+</Story>
+
+## Explain it like I'm 10
+
+<Eli10>
+
+Your friend does your maths homework really fast.
+
+Before you hand it in, you check a few answers yourself. You try the tricky ones, like dividing by zero.
+
+Then the teacher checks it too.
+
+Fast help is great. Checking is what makes it right.
+
+</Eli10>
+
+## Visual: validating a suggestion in motion
+
+Watch a suggestion that looks right fail a test, get fixed, and pass the checks before anyone merges it.
+
+<Explainer id="validate-copilot-suggestion" />
+
+## The technical explanation
+
+Copilot predicts code. It doesn't run it, test it or know your business rules. So the output needs the same checks as code from a new colleague, plus a bit more care because it sounds so sure of itself.
+
+### Why validation isn't optional
+
+- **It can be wrong and look right.** No warning appears on a bad suggestion.
+- **It can be insecure.** Insecure patterns exist in the code models learned from.
+- **It can be outdated.** The knowledge cut-off means old APIs and versions.
+- **It can miss your rules.** If a rule wasn't in the context, Copilot didn't see it.
+- **You own it.** Once you accept it, it's your code.
+
+### A validation routine that works
+
+<Flow
+  caption="From suggestion to merge"
+  steps={[
+    { title: 'Read', text: 'Understand every line. If you cannot explain it, ask Copilot to explain it, then check that against the code.' },
+    { title: 'Test', text: 'Run existing tests and add edge cases: empty input, zero, unknown values, very large numbers.' },
+    { title: 'Lint and type check', text: 'Let the linter and type checker flag likely bugs and unknown symbols.' },
+    { title: 'Scan', text: 'Code scanning finds vulnerabilities; dependency review checks any new packages.' },
+    { title: 'Human review', text: 'A teammate reviews the pull request. Required checks must pass before merge.' },
+  ]}
+/>
+
+In contoso-shop, the test that catches the bug is short:
+
+```js
+// tests/discount.test.js
+test('unknown code leaves the total unchanged', () => {
+  expect(applyDiscount(100, 'NOPE')).toBe(100);   // fails: NaN
+});
+```
+
+The fix is one line, `const pct = CODES[code] ?? 0;`, and then `npm test` passes. Ask Copilot for tests with `/tests`, but add the edge cases you care about yourself. If the same model wrote the code and the tests, both can share one wrong assumption.
+
+### Operating Copilot responsibly every day
+
+| Habit | Why |
+| --- | --- |
+| Give clear context (open the right files, use `#file`, write a specific prompt) | Better input means fewer wrong guesses |
+| Keep secrets and real personal data out of prompts | Prompts leave your machine; use fake sample data |
+| Never accept code you don't understand | You can't review or maintain what you can't explain |
+| Keep pull request review, CI and branch protection | Copilot speeds up writing, it doesn't replace the gates |
+| Give feedback with thumbs up or down | It helps GitHub improve responses |
+| Say when Copilot helped | Reviewers know where to look harder |
+
+**Copilot code review** is useful here, but know its limits: it leaves comments and suggested changes, it never approves, and it doesn't count toward required approvals. A person still signs off.
+
+<Callout type="exam">
+If a question asks the best way to confirm that Copilot's code works, the answer is to **test it** (and review it), not to ask Copilot whether it's correct or to rewrite the prompt. For security problems the answer is **code scanning** or security review. And when two answers both sound reasonable, prefer the one that keeps a **human** reviewing before merge.
+</Callout>
+
+<DeepDive title="Why tests written by the same model aren't enough">
+
+If you ask Copilot to write `applyDiscount` and then its tests, both come from the same prompt and the same patterns. If the model assumed every code is valid, the tests may only use valid codes and pass happily. Write at least the edge-case tests yourself, or ask for them explicitly ("include an unknown code, a zero total and a negative total"), and review the expected values with the business rule in hand.
+
+</DeepDive>
+
+## Real-world business scenario
+
+<Scenario
+  company="Contoso Shop (fictional)"
+  industry="Online retail"
+  problem="After adopting Copilot, the team shipped faster, but two production bugs in a month came from suggestions accepted without tests: a NaN total and a date bug at month end."
+  service="A validation routine in the team guide (read, test edge cases, lint, scan, review), a ruleset on main requiring one human approval plus passing tests, lint and CodeQL checks, and Copilot code review added as an extra reviewer."
+  why="Tests catch logic errors, scanning catches insecure patterns, and human review catches what neither thought of. Copilot code review adds comments without replacing the human approval."
+  outcome="Bugs from AI-written code dropped back to the team's normal rate, and developers kept using Copilot for first drafts and test ideas."
+/>
+
+## When to use it and when not to
+
+<UseWhen
+  use={[
+    'Every Copilot suggestion that goes into code you will commit, however small.',
+    'Suggestions that touch money, security, personal data or dates, where edge cases bite.',
+    'Copilot-written tests, which need review too.',
+  ]}
+  avoid={[
+    'Asking Copilot "is this correct?" as your only check.',
+    'Skipping human review because Copilot code review commented.',
+    'Pasting real customer data into a prompt to test a suggestion.',
+  ]}
+  alternatives={[
+    '<strong>Rulesets or branch protection</strong> to make tests, scanning and human review required.',
+    '<strong>Copilot code review</strong> as an extra set of eyes, not a replacement for a person.',
+  ]}
+/>

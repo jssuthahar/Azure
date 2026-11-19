@@ -1,0 +1,28 @@
+{ "cert": "gh-300", "domain": 2, "topic": "agent-mode-mcp-and-subagents", "questions": [
+  { "id": "gh-agentmcp-1", "type": "single", "question": "You want GitHub Copilot in Visual Studio Code to query issues in your GitHub repositories by using the GitHub MCP server. The configuration must be shared with everyone who opens the workspace. What should you do?", "options": [
+    { "text": "Add the server to a .vscode/mcp.json file in the repository.", "why": "Correct. VS Code reads MCP server definitions from .vscode/mcp.json, which can be committed and shared with the team." },
+    { "text": "Add the server URL to .github/copilot-instructions.md.", "why": "Custom instructions add guidance to prompts; they do not register MCP servers." },
+    { "text": "Add the server to a content exclusion in the repository settings.", "why": "Content exclusions prevent Copilot from using files and do not configure tools." },
+    { "text": "Create a prompt file named github.prompt.md.", "why": "Prompt files store reusable prompts and do not add tools." } ], "answer": [0], "explanation": "Workspace MCP servers are configured in .vscode/mcp.json under the servers key.", "objective": "2.3.1" },
+  { "id": "gh-agentmcp-2", "type": "single", "question": "A developer needs Copilot to update three specific files that the developer selects and to show each change for review. Copilot must not run any terminal commands. Which feature should the developer use?", "options": [
+    { "text": "Copilot Edits (Edit mode)", "why": "Correct. Edit mode applies changes to the files in the working set and lets you keep or undo each diff without running commands." },
+    { "text": "Agent mode", "why": "Agent mode can run terminal commands after approval and chooses files itself, which exceeds the requirement." },
+    { "text": "Ask mode", "why": "Ask mode answers questions and does not apply changes to files." },
+    { "text": "Copilot coding agent", "why": "The coding agent works on GitHub in its own environment and opens a pull request rather than editing selected files in the IDE." } ], "answer": [0], "explanation": "Copilot Edits makes multi-file changes to a working set you choose, with no terminal commands.", "objective": "2.3.1" },
+  { "id": "gh-agentmcp-3", "type": "single", "question": "An agent mode conversation has read many files while researching how logging is implemented, and answers about the main task are becoming less accurate. You want the research to be done without adding all of the files it reads to the main conversation. What should you use?", "options": [
+    { "text": "A sub-agent that performs the research in its own context and returns a summary", "why": "Correct. A sub-agent uses its own context window and returns only a summary to the main agent." },
+    { "text": "A larger custom instructions file", "why": "Custom instructions are added to every request and would consume more of the context window." },
+    { "text": "The Allow for this session option for terminal commands", "why": "Session approvals reduce prompts for commands but do not change how context is used." },
+    { "text": "Copilot Edits", "why": "Edit mode changes selected files and does not perform separate research." } ], "answer": [0], "explanation": "Delegating a side task to a sub-agent keeps its intermediate context out of the main conversation.", "objective": "2.3.1" },
+  { "id": "gh-agentmcp-4", "type": "multi", "question": "Developers in an organization that uses Copilot Business report that MCP tools are unavailable in Copilot, even though .vscode/mcp.json is configured correctly. Which TWO actions should you check? Each correct answer presents part of the solution.", "options": [
+    { "text": "Verify that the MCP servers in Copilot policy is enabled for the organization.", "why": "Correct. Organizations can block MCP servers for members by policy." },
+    { "text": "Verify that the tools are enabled in the agent mode tools picker.", "why": "Correct. Individual tools can be turned off in the tools picker." },
+    { "text": "Verify that the Suggestions matching public code policy is set to Allow.", "why": "This policy controls public code matches in suggestions and does not affect MCP." },
+    { "text": "Verify that the repository contains a .github/prompts folder.", "why": "Prompt files are optional and unrelated to MCP tool availability." },
+    { "text": "Verify that Ask mode is selected in Copilot Chat.", "why": "MCP tools are used by Agent mode, not Ask mode." } ], "answer": [0, 1], "explanation": "MCP tools depend on the organization's MCP policy and on the tools being enabled for the agent.", "objective": "2.3.1" },
+  { "id": "gh-agentmcp-5", "type": "single", "question": "In agent mode, Copilot proposes running npm test to verify its changes. What happens before the command runs?", "options": [
+    { "text": "Copilot asks the developer to allow or skip the command unless it has already been approved.", "why": "Correct. Agent mode requests approval for terminal commands; you can allow once, allow for the session or skip." },
+    { "text": "The command runs automatically because agent mode always has full terminal access.", "why": "Agent mode asks before running terminal commands that have not been approved." },
+    { "text": "An organization owner must approve the command on GitHub.", "why": "Command approvals are given by the developer in the IDE." },
+    { "text": "Copilot opens a draft pull request containing the command.", "why": "Draft pull requests are created by Copilot coding agent, not by agent mode command approvals." } ], "answer": [0], "explanation": "The developer approves terminal commands in agent mode, either once or for the session.", "objective": "2.3.1" }
+] }

@@ -1,0 +1,152 @@
+{
+  "cert": "gh-300",
+  "domain": 3,
+  "topic": "proxy-filtering-and-post-processing",
+  "questions": [
+    {
+      "id": "gh-proxy-1",
+      "type": "single",
+      "question": "A file contains a comment that tries to instruct the AI to ignore its rules and reveal secrets. At which stage is a prompt checked for this kind of prompt injection before it reaches the model?",
+      "options": [
+        {
+          "text": "Post-processing after the model responds",
+          "why": "Post-processing checks the model's response, not the incoming prompt."
+        },
+        {
+          "text": "Content exclusion in repository settings",
+          "why": "Content exclusions remove listed paths from context. They do not inspect prompt text."
+        },
+        {
+          "text": "Code scanning in GitHub Actions",
+          "why": "Code scanning analyzes code in the repository, not Copilot prompts."
+        },
+        {
+          "text": "Pre-filtering in the GitHub Copilot proxy",
+          "why": "Correct. The proxy pre-filters prompts for harmful content and prompt injection before the model."
+        }
+      ],
+      "answer": [
+        3
+      ],
+      "explanation": "The proxy authenticates the request and runs pre-filters, including for prompt injection, before the prompt reaches the model.",
+      "objective": "3.1.3"
+    },
+    {
+      "id": "gh-proxy-2",
+      "type": "multi",
+      "question": "Which two checks are performed during post-processing of a Copilot response before the suggestion is shown? Each correct answer presents part of the solution.",
+      "options": [
+        {
+          "text": "Verifying that the developer has a Copilot seat",
+          "why": "Authentication happens in the proxy before the model, not during post-processing."
+        },
+        {
+          "text": "Compiling the suggestion for the target platform",
+          "why": "Post-processing does not compile or execute code."
+        },
+        {
+          "text": "Checks for common insecure code patterns",
+          "why": "Correct. Post-processing includes quality and insecure-pattern checks."
+        },
+        {
+          "text": "Checks for matches with public code when the policy is set to Block",
+          "why": "Correct. Matches of about 150 characters are hidden when the policy is Block."
+        },
+        {
+          "text": "Running the project's unit tests",
+          "why": "Copilot's post-processing does not run your tests. You still need to test the code."
+        }
+      ],
+      "answer": [
+        2,
+        3
+      ],
+      "explanation": "Post-processing covers quality and insecure patterns, offensive content and public code matching.",
+      "objective": "3.1.3"
+    },
+    {
+      "id": "gh-proxy-3",
+      "type": "single",
+      "question": "An organization sets Suggestions matching public code to Block. A developer types code for which the model generates a completion that matches public code of about 150 characters. What happens?",
+      "options": [
+        {
+          "text": "The suggestion is shown with a code reference and licence.",
+          "why": "That is the behaviour when the policy is set to Allow."
+        },
+        {
+          "text": "The developer's Copilot seat is suspended.",
+          "why": "Matching public code does not affect the seat."
+        },
+        {
+          "text": "The suggestion is shown and an audit log event is created for the match.",
+          "why": "Blocked matches are not shown, and individual matches are not audit log events."
+        },
+        {
+          "text": "The suggestion is not shown to the developer.",
+          "why": "Correct. With Block, post-processing hides suggestions that match public code."
+        }
+      ],
+      "answer": [
+        3
+      ],
+      "explanation": "Block hides matching suggestions; Allow shows them with a code reference.",
+      "objective": "3.1.3"
+    },
+    {
+      "id": "gh-proxy-4",
+      "type": "single",
+      "question": "A team lead proposes skipping code scanning for code written with Copilot because Copilot filters insecure patterns. What is the best response?",
+      "options": [
+        {
+          "text": "Turn off the public code filter so that more insecure patterns are detected.",
+          "why": "The public code filter is about public code matches, not vulnerability detection."
+        },
+        {
+          "text": "Keep code scanning and reviews, because the filters catch some common patterns but not every vulnerability.",
+          "why": "Correct. Filters reduce risk; they do not replace review, tests and scanning."
+        },
+        {
+          "text": "Agree, because post-processing guarantees that suggestions are secure.",
+          "why": "Post-processing does not guarantee security."
+        },
+        {
+          "text": "Agree, but only for repositories that use Copilot Enterprise.",
+          "why": "No plan makes Copilot's filters a replacement for code scanning."
+        }
+      ],
+      "answer": [
+        1
+      ],
+      "explanation": "Copilot's filters are one layer. Developers remain responsible for reviewing, testing and scanning code.",
+      "objective": "3.1.3"
+    },
+    {
+      "id": "gh-proxy-5",
+      "type": "single",
+      "question": "Which statement about the GitHub Copilot proxy is correct?",
+      "options": [
+        {
+          "text": "It is a component that each developer installs on their computer.",
+          "why": "Developers do not install the proxy. The IDE extension connects to it."
+        },
+        {
+          "text": "It is configured in .vscode/mcp.json.",
+          "why": "mcp.json configures MCP servers, not the Copilot proxy."
+        },
+        {
+          "text": "It runs only for Copilot Enterprise customers.",
+          "why": "All Copilot requests pass through the proxy."
+        },
+        {
+          "text": "It is hosted by GitHub and authenticates and filters requests between the IDE and the model.",
+          "why": "Correct. The proxy is a GitHub-hosted service in the request path."
+        }
+      ],
+      "answer": [
+        3
+      ],
+      "explanation": "Every Copilot request passes through the GitHub-hosted proxy, which authenticates, pre-filters and post-processes.",
+      "objective": "3.1.3"
+    }
+  ]
+}

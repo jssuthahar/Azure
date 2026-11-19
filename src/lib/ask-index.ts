@@ -6,7 +6,7 @@
  */
 import { getNav, getTutorial } from './learn';
 import { getGlossary } from './glossary';
-import { getExam } from '../data/exams';
+import { getExam, simLabels } from '../data/exams';
 import { labsForTopic } from './sim/labs';
 
 export interface AskEntry {
@@ -50,6 +50,8 @@ export interface TutorEntry {
 
 export interface AskIndex {
   exam: { slug: string; code: string; name: string };
+  /** "the Azure portal", or "VS Code and GitHub" for GitHub exams. */
+  simNoun: string;
   tutor: Record<string, TutorEntry>;
   /** Simulations per lesson URL. */
   sims: Record<string, SimCard>;
@@ -119,7 +121,7 @@ export async function buildAskIndex(cert: string): Promise<AskIndex> {
     }
     if (tour && !indexed.has(`tour:${ls!.tour.id}`)) {
       indexed.add(`tour:${ls!.tour.id}`);
-      entries.push({ q: `How do I ${tour.title.replace(/^./, (c) => c.toLowerCase())} in the Azure portal?`, a: `${ls!.tour.intro} ${tour.steps.map((s) => plain(s.say)).join(' ')}`, u: `${t.url}#sim-portal`, k: 'Azure Portal', t: d.title, l });
+      entries.push({ q: `How do I ${tour.title.replace(/^./, (c) => c.toLowerCase())} in ${simLabels(exam).noun}?`, a: `${ls!.tour.intro} ${tour.steps.map((s) => plain(s.say)).join(' ')}`, u: `${t.url}#sim-portal`, k: 'Azure Portal', t: d.title, l });
     }
     for (const x of labs) {
       if (indexed.has(`lab:${x.id}`)) continue;
@@ -153,6 +155,7 @@ export async function buildAskIndex(cert: string): Promise<AskIndex> {
 
   return {
     exam: { slug: exam.slug, code: exam.code, name: exam.name },
+    simNoun: simLabels(exam).noun,
     tutor,
     sims,
     suggest: [

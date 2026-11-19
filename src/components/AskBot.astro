@@ -141,7 +141,7 @@ const here = exams.find((e) => e.slug === Astro.url.pathname.split('/')[1])?.slu
     const lesson = current.idx.tutor?.[location.pathname];
     if (lesson && slug === here) return tutorHello(lesson, location.pathname);
     const f = document.createDocumentFragment();
-    f.append(text(`Great, ${exam.code} it is. Ask me anything. I’ll show it to you in 3D first, then walk you through the Azure portal, then explain it. A few to try:`));
+    f.append(text(`Great, ${exam.code} it is. Ask me anything. I’ll show it to you in 3D first, then walk you through ${current.idx.simNoun ?? 'the Azure portal'}, then explain it. A few to try:`));
     f.append(chips(current.idx.suggest.map((q) => ({ label: q, on: () => question(q) }))));
     say(f);
     input.focus();
@@ -181,16 +181,16 @@ const here = exams.find((e) => e.slug === Astro.url.pathname.split('/')[1])?.slu
     if (!c.portal && !c.labs.length) return;
     const f = document.createDocumentFragment();
     if (c.portal) {
-      f.append(head(`🖥️ ${c.d3 ? 2 : 1} · Do it in the Azure portal`));
+      f.append(head(`🖥️ ${c.d3 ? 2 : 1} · Do it in ${current?.idx.simNoun ?? 'the Azure portal'}`));
       f.append(el('p', 'ask-strong', c.portal.title));
       f.append(text(c.portal.intro));
       const ol = el('ol', 'ask-list ask-steps');
       for (const st of c.portal.steps.slice(0, 4)) ol.append(el('li', '', short(st, 160)));
       f.append(ol);
-      f.append(row(simJump(url, '#sim-portal', '▶ Start the portal walkthrough')));
+      f.append(row(simJump(url, '#sim-portal', /portal/.test(current?.idx.simNoun ?? 'portal') ? '▶ Start the portal walkthrough' : '▶ Start the walkthrough')));
     }
     if (c.labs.length) {
-      f.append(el('p', 'ask-more', '🧪 Then try it yourself, no Azure account needed:'));
+      f.append(el('p', 'ask-more', '🧪 Then try it yourself, no account needed:'));
       f.append(row(...c.labs.map((l) => simJump(url, `#sim-lab-${l.id}`, `${l.icon} ${l.title} · ${l.tasks} tasks · ${l.minutes} min`))));
     }
     say(f);
@@ -226,7 +226,7 @@ const here = exams.find((e) => e.slug === Astro.url.pathname.split('/')[1])?.slu
     const c = simsFor(url);
     const opts = [
       c?.d3 && { label: '🧊 Show me in 3D', on: () => { say(text('Show me in 3D'), 'me'); show3d(url, c); say(tutorMore(t, url)); } },
-      c?.portal && { label: '🖥️ Walk me through the portal', on: () => { say(text('Walk me through the portal'), 'me'); showPortal(url, { ...c, labs: [] }); say(tutorMore(t, url)); } },
+      c?.portal && { label: /portal/.test(current?.idx.simNoun ?? 'portal') ? '🖥️ Walk me through the portal' : '💻 Walk me through it', on: () => { say(text('Walk me through it'), 'me'); showPortal(url, { ...c, labs: [] }); say(tutorMore(t, url)); } },
       c?.labs.length && { label: '🧪 Let me try a lab', on: () => { say(text('Let me try a lab'), 'me'); showPortal(url, { ...c, portal: undefined }); say(tutorMore(t, url)); } },
       t.simple && { label: '🧒 Explain it simpler', on: () => tutorSay(t, url, 'Explain it simpler', [text(short(t.simple, 700))]) },
       t.example && !compact && { label: '🏢 Show me a real example', on: () => tutorSay(t, url, 'Show me a real example', [text(short(t.example, 700))]) },
@@ -245,7 +245,7 @@ const here = exams.find((e) => e.slug === Astro.url.pathname.split('/')[1])?.slu
   }
   function tutorHello(t: TutorEntry, url: string) {
     const f = document.createDocumentFragment();
-    f.append(text(`I’m your tutor for “${t.t}”. See it in 3D, click through it in the Azure portal, try a lab, or pick another way to explain it. You can also type any question.`));
+    f.append(text(`I’m your tutor for “${t.t}”. See it in 3D, click through it in ${current?.idx.simNoun ?? 'the Azure portal'}, try a lab, or pick another way to explain it. You can also type any question.`));
     f.append(tutorChips(t, url));
     say(f);
     input.focus();

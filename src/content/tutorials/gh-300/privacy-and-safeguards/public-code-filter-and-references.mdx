@@ -1,0 +1,197 @@
+---
+title: "Public Code Matching in Copilot: Block or Show References"
+seoTitle: Copilot Public Code Filter and Code References | GH-300
+description: Set the GitHub Copilot policy for suggestions matching public code to Block or Allow, read code references with licences, and know who sets the policy.
+answer: >-
+  When a Copilot suggestion matches code in a public GitHub repository (a match of about **150 characters** or more), the **"Suggestions matching public code"** policy decides what happens. **Block** hides the matching suggestion. **Allow** shows it and adds a **code reference**: the matching repositories and their **licences**, in VS Code's **Output › GitHub Copilot Log (Code References)** and in chat answers. Organization owners set it for Business and Enterprise seats (an enterprise can enforce it); individuals on Free, Pro or Pro+ set it in their own Copilot settings. Either way, you're responsible for what you accept.
+updated: 2026-11-19
+readingMinutes: 9
+keyTerms:
+  - term: Suggestions matching public code
+    definition: The Copilot policy with two values, Block and Allow, that controls suggestions matching code in public repositories.
+  - term: Block
+    definition: The policy value that stops Copilot showing a suggestion that matches public code.
+  - term: Allow
+    definition: The policy value that shows matching suggestions and adds a code reference so you can see where similar code exists.
+  - term: Code reference
+    definition: Details Copilot shows for a match with public code, including the repository URL and the licence type.
+  - term: Code referencing log
+    definition: The "GitHub Copilot Log (Code References)" channel in VS Code's Output panel, where inline suggestion matches are listed.
+  - term: Policy enforcement
+    definition: An enterprise can set the policy for all its organizations, or leave it to each organization to decide.
+interview:
+  - level: beginner
+    q: What's the difference between Block and Allow for public code matches?
+    a: >-
+      Block means I never see a suggestion that matches public code. Allow means I see it, and Copilot tells me which public repositories have similar code and under which licence, so I can decide.
+    followUps:
+      - q: Where do you see that information in VS Code?
+        a: >-
+          For inline suggestions, in the Output panel under GitHub Copilot Log (Code References). In chat, the answer itself lists the reference.
+  - level: intermediate
+    q: Roughly how long does a match have to be for the filter to apply?
+    a: >-
+      About 150 characters. Short, common lines like a for loop don't count. It's aimed at longer chunks that look copied.
+    followUps: []
+  - level: experienced
+    q: A developer on Copilot Business wants to change the public code setting for themselves. Can they?
+    a: >-
+      No. For organization seats the organization owner sets it in the Copilot policies, and if the enterprise enforces it, the organization can't change it either. The developer would need to ask the admin. Only individual plans control it in personal settings.
+    followUps:
+      - q: Where does the admin set it?
+        a: >-
+          Organization settings, Copilot, Policies, under suggestions matching public code.
+  - level: scenario
+    q: With Allow on, Copilot shows a reference to a GPL-licensed repository for a suggestion. What do you do?
+    a: >-
+      Stop and think before accepting. If our project can't meet the GPL's terms, I'd reject it and write the code differently, or ask legal. If the licence is permissive, like MIT, I'd keep it and add the attribution it requires.
+    followUps: []
+  - level: architecture
+    q: Which setting would you recommend for a company, and why?
+    a: >-
+      Block is the simple default for most companies: matches never appear, so nobody has to judge licences under deadline. Allow suits teams that want the visibility and have clear rules on attribution. Whatever we choose, I'd enforce it at the enterprise level so it's consistent.
+    followUps: []
+revision:
+  keyPoints:
+    - The policy is "Suggestions matching public code" with values Block and Allow.
+    - A match is about 150 characters or more of code that matches a public repository.
+    - Block hides matching suggestions; Allow shows them with code references (repository and licence).
+    - Inline matches appear in Output › GitHub Copilot Log (Code References); chat lists references in the answer.
+    - Organization owners set it for org seats; enterprises can enforce it; individuals set it for Free, Pro and Pro+.
+    - Whatever the setting, the developer is responsible for accepted code.
+  mistakes:
+    - Thinking Block means Copilot can never produce code like public code. It hides matches it detects.
+    - Expecting a Business user to change the setting in personal settings.
+    - Treating a code reference as permission to use the code. You still have to follow the licence.
+  examTips:
+    - '"Prevent suggestions that match public code" = set the policy to **Block**.'
+    - '"See the licence of matching code" = **Allow** plus **code references**.'
+    - '"Where are inline code references in VS Code?" = **Output › GitHub Copilot Log (Code References)**.'
+    - '"All organizations must use the same setting" = **enforce it at the enterprise**.'
+  quick:
+    - q: What are the two values of the public code policy?
+      a: Block and Allow.
+    - q: About how long is a match?
+      a: About 150 characters.
+    - q: What does a code reference show?
+      a: The matching repository and its licence.
+    - q: Who sets the policy for Copilot Business users?
+      a: The organization owner, unless the enterprise enforces it.
+    - q: Does a code reference mean you can use the code freely?
+      a: No. You must follow the licence it shows.
+references:
+  - title: GitHub Copilot code referencing
+    url: https://docs.github.com/en/copilot/concepts/completions/code-referencing
+  - title: Managing policies and features for Copilot in your organization
+    url: https://docs.github.com/en/copilot/how-tos/administer-copilot/manage-for-organization/manage-policies
+  - title: Managing Copilot policies as an individual subscriber
+    url: https://docs.github.com/en/copilot/how-tos/manage-your-account/manage-policies
+  - title: Responsible use of GitHub Copilot inline suggestions
+    url: https://docs.github.com/en/copilot/responsible-use/copilot-code-completion
+  - title: GitHub Copilot fundamentals (Microsoft Learn)
+    url: https://learn.microsoft.com/training/paths/copilot/
+related:
+  - output-ownership-and-limits
+  - organization-policies
+  - proxy-filtering-and-post-processing
+  - troubleshoot-copilot
+---
+
+## Start with a question
+
+<Story question="Copilot just suggested 30 lines that look a lot like a popular open-source library. Can you use them?">
+
+Maybe. It depends on the licence of the code it matches, and whether you'll follow it.
+
+Most of what Copilot suggests is new, stitched together from patterns. But now and then a longer suggestion matches code that already exists in a public repository. If that repository is MIT-licensed, you're probably fine with attribution. If it's GPL, your legal team will want a word.
+
+The problem is you can't tell by looking. So Copilot gives your organization a choice: **hide** those matches entirely, or **show** them with a note saying where the code came from and under which licence.
+
+</Story>
+
+## Explain it like I'm 10
+
+<Eli10>
+
+Your teacher has two rules she could pick for essays.
+
+Rule one: if a sentence is copied from a book, cross it out. You never even see it. That's **Block**.
+
+Rule two: you can keep it, but you have to write the book's name next to it so everyone knows where it came from. That's **Allow** with a **code reference**.
+
+The teacher (the admin) picks the rule for the whole class.
+
+</Eli10>
+
+## The technical explanation
+
+### How a match is found
+
+Before a suggestion reaches your editor, Copilot's post-processing compares it with code in public GitHub repositories. A **match** means a stretch of about **150 characters** or more that's the same. Short, common code like `for (let i = 0; i < n; i++)` doesn't trigger it.
+
+### Block or Allow
+
+| | **Block** | **Allow** |
+| --- | --- | --- |
+| Matching suggestion shown? | No | Yes |
+| Code reference? | — | Yes: repository URL and licence |
+| Where | Suggestion simply doesn't appear | Inline: **Output › GitHub Copilot Log (Code References)**. Chat: listed in the answer |
+| Good for | Teams that want no licence decisions at the keyboard | Teams that want visibility and know how to attribute |
+
+A code reference for an inline suggestion looks something like this in the Output panel:
+
+```text
+[GitHub Copilot] Code reference
+  Similar code found with 1 license type: MIT
+  github.com/example/cart-utils/blob/main/total.js
+```
+
+### Who sets it
+
+| Plan | Who controls the setting | Where |
+| --- | --- | --- |
+| Copilot Free, Pro, Pro+ | You | Your personal Copilot settings on github.com |
+| Copilot Business | Organization owner | **Organization settings › Copilot › Policies** |
+| Copilot Enterprise | Enterprise owner (enforce) or each organization | Enterprise policies, or the org's Copilot policies when the enterprise leaves "No policy" |
+
+If a developer gets a seat from an organization, the organization's choice applies. They can't override it in personal settings.
+
+<Callout type="exam">
+"Ensure Copilot doesn't suggest code that matches public repositories" is the policy set to **Block**. "Developers need to see the licence of matching code" is **Allow**, which shows **code references**. "The same setting for every organization" means the **enterprise enforces** the policy. Remember the number: about **150 characters**. And a code reference is information, not permission: the developer still follows the licence.
+</Callout>
+
+<DeepDive title="Why Block isn't a legal guarantee">
+
+Block hides suggestions the filter detects as matches. It doesn't promise that nothing Copilot writes resembles existing code, and it doesn't check code you paste in yourself. It lowers the risk; it doesn't remove responsibility. That's why many teams pair it with licence scanning on dependencies and a clear rule on attribution. For the contract side, Business and Enterprise terms include IP indemnity, with conditions that the terms spell out.
+
+</DeepDive>
+
+## Real-world business scenario
+
+<Scenario
+  company="Contoso (fictional)"
+  industry="Online retail"
+  problem="Contoso's open-source office allowed MIT and Apache code with attribution but not GPL in the closed-source contoso-shop. Developers had no way to tell where a long Copilot suggestion came from."
+  service="The enterprise enforced Suggestions matching public code: Allow, so every match came with a code reference, and the team added a pull request checklist item to note any referenced code and its licence."
+  why="Developers saw the licence at the moment of choice, and the open-source office could audit attributions instead of guessing."
+  outcome="Two GPL matches were caught and rewritten before merge in the first month, and MIT snippets carry their attribution."
+/>
+
+## When to use it and when not to
+
+<UseWhen
+  use={[
+    'Block, when you want the simplest rule and no licence decisions at the keyboard.',
+    'Allow, when developers should see where similar code exists and can attribute it properly.',
+    'Enterprise enforcement, when every organization must use the same setting.',
+  ]}
+  avoid={[
+    'Treating Block as proof that no code resembles anything public.',
+    'Treating a code reference as permission. Read the licence it shows.',
+    'Asking developers with organization seats to change it themselves. It\'s an admin setting.',
+  ]}
+  alternatives={[
+    '<strong>Dependency review and licence scanning</strong> for the packages you add.',
+    '<strong>Content exclusions</strong> when the worry is your own sensitive files, not public code.',
+  ]}
+/>

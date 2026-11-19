@@ -1,0 +1,188 @@
+---
+title: "How GitHub Copilot Handles Your Data"
+seoTitle: How GitHub Copilot Handles Your Code and Data | GH-300
+description: Follow your code from the IDE to the Copilot proxy, the model and back, and learn what Copilot Business and Enterprise keep, share and never train on.
+answer: >-
+  When you use **GitHub Copilot**, the IDE extension collects **context** (code around your cursor, the file name and language, related open tabs), builds a **prompt** and sends it **encrypted over HTTPS** to the **GitHub Copilot proxy**. The proxy authenticates you and runs **pre-filters**, the **large language model** generates a reply, and **post-processing** checks it before it reaches your editor. With **Copilot Business and Enterprise**, your code **isn't used to train** the models. Per the GitHub Copilot Trust Center at the time of writing, prompts and suggestions from **IDE code completions** aren't retained once the response is returned, while other features such as chat and the CLI may keep them for **up to 28 days**. **Engagement data** (accepts, rejects, errors) is kept to run the service and power usage metrics.
+updated: 2026-11-19
+readingMinutes: 9
+keyTerms:
+  - term: Prompt
+    definition: The bundle Copilot sends to the model, built from your code context, your question (in chat) and any instructions.
+  - term: GitHub Copilot proxy
+    definition: The GitHub-hosted service between your IDE and the model. It authenticates requests, runs pre-filters and post-processing.
+  - term: Engagement data
+    definition: Usage events such as accepted or dismissed suggestions, errors and latency. Kept to operate the service and to build usage metrics.
+  - term: Retention
+    definition: How long GitHub keeps prompts and suggestions after a request. It differs by feature and plan, so check the Trust Center for current numbers.
+  - term: Model training
+    definition: Using data to improve an AI model. Copilot Business and Enterprise data isn't used to train GitHub's models.
+  - term: Encryption in transit
+    definition: Data is protected with TLS (HTTPS) while it travels between your machine and GitHub.
+interview:
+  - level: beginner
+    q: What leaves my machine when Copilot gives me an inline suggestion?
+    a: >-
+      A prompt built by the extension: the code before and after my cursor, the file name and language, and short snippets from related open tabs. It goes over HTTPS to the Copilot proxy. My whole repository isn't uploaded for a completion, only the context the extension picks.
+    followUps:
+      - q: Does that include excluded files?
+        a: >-
+          No. If an admin has set a content exclusion for a path, supported IDEs don't use that file as context and don't give suggestions inside it.
+  - level: intermediate
+    q: A security lead asks whether Copilot Business trains on company code. What do you say?
+    a: >-
+      No. For Copilot Business and Enterprise, GitHub doesn't use your code, prompts or suggestions to train its models. I'd also explain retention: per the Trust Center at the time of writing, IDE completion prompts aren't kept after the response, other features like chat may keep prompts for up to 28 days, and engagement data is kept to run the service. I'd point them to the Trust Center for the current wording.
+    followUps: []
+  - level: experienced
+    q: Your org dashboard shows acceptance rates per editor. Does that mean GitHub is storing everyone's code?
+    a: >-
+      No. Those metrics come from engagement data: events like a suggestion shown, accepted or dismissed, with the editor and language. That's different from the prompt and suggestion content. Metrics and the seats API tell you who uses Copilot and how much, not what code they wrote.
+    followUps: []
+  - level: scenario
+    q: A developer on a Copilot Pro plan worries about their side-project code being used to improve products. What can they change?
+    a: >-
+      On individual plans they control it in their Copilot settings on github.com: the setting that allows GitHub to use their data for product improvements. They can turn it off. Business and Enterprise users don't need to, because their data isn't used for training anyway.
+    followUps: []
+revision:
+  keyPoints:
+    - "Flow: IDE extension gathers context → builds a prompt → HTTPS → Copilot proxy (auth, pre-filters) → model → post-processing → editor."
+    - Only the context the extension picks is sent for a completion, not your whole repository.
+    - Copilot Business and Enterprise data isn't used to train GitHub's models.
+    - Per the Trust Center at the time of writing, IDE completion prompts and suggestions aren't retained after the response; chat and CLI may keep them up to 28 days.
+    - Engagement data (accepts, rejects, errors) is kept to operate the service and power metrics.
+    - Individual plans have a personal setting about using data for product improvements.
+  mistakes:
+    - Thinking Copilot uploads the whole repository for every suggestion.
+    - Saying every Copilot feature has the same retention. Completions and chat differ.
+    - Confusing engagement data (usage events) with prompt content (your code).
+  examTips:
+    - '"Is our code used to train the model on Copilot Business?" = **No**.'
+    - '"What is kept for metrics?" = **engagement data** (accepted, dismissed, errors).'
+    - '"Which component authenticates and filters requests before the model?" = the **Copilot proxy**.'
+  quick:
+    - q: How is data protected on its way to GitHub?
+      a: Encrypted in transit over HTTPS (TLS).
+    - q: What sits between the IDE and the model?
+      a: The GitHub Copilot proxy.
+    - q: Does Copilot Business use your code to train models?
+      a: "No."
+    - q: What kind of data powers Copilot usage metrics?
+      a: Engagement data, such as accepted and dismissed suggestions.
+    - q: Where do you check current retention numbers?
+      a: The GitHub Copilot Trust Center.
+references:
+  - title: GitHub Copilot Trust Center
+    url: https://resources.github.com/copilot-trust-center/
+  - title: Responsible use of GitHub Copilot inline suggestions
+    url: https://docs.github.com/en/copilot/responsible-use-of-github-copilot-features/responsible-use-of-github-copilot-code-completion
+  - title: Managing Copilot policies as an individual subscriber
+    url: https://docs.github.com/en/copilot/managing-copilot/managing-copilot-as-an-individual-subscriber/managing-copilot-policies-as-an-individual-subscriber
+  - title: Introduction to GitHub Copilot (Microsoft Learn)
+    url: https://learn.microsoft.com/training/modules/introduction-to-github-copilot/
+related:
+  - prompt-building-and-context
+  - proxy-filtering-and-post-processing
+  - suggestion-lifecycle-and-limits
+  - content-exclusions
+---
+
+## Start with a question
+
+<Story question="When you press a key and Copilot finishes your line, where did your code just go, and who kept a copy?">
+
+Think of sending a parcel through a courier. You don't ship your whole house. You pack the few things that matter, the courier checks the label and scans the box, the parcel arrives, and the courier keeps a delivery record (sent, delivered, signed for), not the contents.
+
+**GitHub Copilot** works much the same way. The extension in your editor packs a small **prompt** from the code around your cursor, sends it **encrypted** to GitHub's **Copilot proxy**, and gets a suggestion back. What's kept afterwards depends on your plan and the feature, and companies care a lot about that answer.
+
+</Story>
+
+## Explain it like I'm 10
+
+<Eli10>
+
+You're doing homework and you call a friend for help.
+
+You don't read them your whole notebook. You read the question and the line you're stuck on.
+
+Your friend thinks, then tells you an idea. Before you hear it, a grown-up listens in and makes sure nothing rude or unsafe gets said.
+
+Afterwards, your friend remembers that you called and whether the idea helped. If you're on the school plan, they promise not to copy your homework into their own notes.
+
+</Eli10>
+
+## The technical explanation
+
+### The round trip
+
+Every Copilot request makes the same journey. Here it is for an inline suggestion in `src/discount.js` of the `contoso-shop` repo.
+
+<Flow
+  caption="One Copilot request, there and back"
+  steps={[
+    { title: 'Gather context', text: 'The IDE extension reads the code before and after your cursor, the file name and language, and related snippets from open tabs.' },
+    { title: 'Build the prompt', text: 'It ranks that context and trims it to fit the model\'s limited context window. Excluded files are left out.' },
+    { title: 'Send over HTTPS', text: 'The prompt travels encrypted to the GitHub Copilot proxy.' },
+    { title: 'Proxy pre-filters', text: 'The proxy authenticates you and filters for harmful or offensive content and prompt injection.' },
+    { title: 'Model generates', text: 'The large language model predicts a completion.' },
+    { title: 'Post-processing', text: 'The reply is checked for quality, insecure patterns, offensive content and (if blocked by policy) public code matches.' },
+    { title: 'Back to the editor', text: 'You see ghost text or a chat answer and decide what to do with it.' },
+  ]}
+/>
+
+Two things to notice. First, for a completion the extension sends **context it picked**, not your whole repository. Second, the proxy sits on GitHub's side, so filtering happens before the model sees your prompt and again before you see the answer. The next two lessons zoom into each half.
+
+### What's kept, and what isn't
+
+| Data | What it is | What happens to it (Business and Enterprise) |
+| --- | --- | --- |
+| **Prompts and suggestions** (IDE code completions) | Your code context and the completion | Per the GitHub Copilot Trust Center at the time of writing, not retained once the response is returned |
+| **Prompts and suggestions** (other features, such as chat and the CLI) | Your question, attached context, the answer | May be retained for up to 28 days, per the Trust Center at the time of writing |
+| **Engagement data** | Events: shown, accepted, dismissed, errors, latency, editor and language | Kept to operate the service and to build usage metrics |
+| **Model training** | Using your data to improve models | Your code isn't used to train GitHub's models |
+
+Everything travels **encrypted in transit**. Retention numbers can change, so treat the Trust Center as the source of truth and quote it with a date.
+
+On individual plans (**Copilot Free, Pro and Pro+**), you'll find a personal setting on github.com under your Copilot settings that controls whether GitHub may use your data for product improvements. The walkthrough in the **VS Code & GitHub** tab shows that setting next to the request flow.
+
+### Who sees what inside a company
+
+Admins don't get a feed of everyone's code. They get **metrics** built from engagement data: active users, acceptance rate, chat turns. The seats API shows each person's `last_activity_at` and `last_activity_editor`. Settings changes, seat changes and content exclusion changes appear in the **audit log** as `copilot.` events. That's enough to manage adoption and licences without reading anybody's prompts.
+
+<Callout type="exam">
+Expect a security-officer story. "Will our code train the model?" On **Copilot Business or Enterprise**, **no**. "What does GitHub keep to show usage dashboards?" **Engagement data**, not code. "What sits between the IDE and the LLM and filters requests?" The **Copilot proxy**. If a question mentions retention, remember completions and chat are treated differently, and the numbers come from the Trust Center.
+</Callout>
+
+<DeepDive title="Why sending less context is a privacy feature too">
+
+The context window limit is usually explained as a quality problem: the model can only read so much. It also helps privacy. Because the extension sends nearby code and short snippets from related tabs instead of the whole project, less of your code travels for each completion. Chat is different: when you use `#codebase` or `@workspace`, Copilot searches your workspace and may attach more files to the request. If some paths should never leave the machine as context, the right tool is a **content exclusion**, set by a repository, organization or enterprise admin on Business or Enterprise.
+
+</DeepDive>
+
+## Real-world business scenario
+
+<Scenario
+  company="Contoso Retail (fictional)"
+  industry="E-commerce"
+  problem="Contoso's legal team blocked a Copilot rollout for the contoso-shop team. They assumed every keystroke uploaded the full repository and that GitHub would train on their pricing logic."
+  service="GitHub Copilot Business, with the platform team walking legal through the data flow, the Trust Center retention table, the org metrics page and content exclusions for the /secrets/ folder."
+  why="Business data isn't used for training, completions send only nearby context, engagement data powers the metrics, and exclusions keep the most sensitive paths out of prompts."
+  outcome="Legal approved a pilot for 40 developers. The platform team now reviews the Copilot metrics page monthly instead of guessing at adoption."
+/>
+
+## When to use it and when not to
+
+<UseWhen
+  use={[
+    'You need to explain Copilot to security, legal or compliance before a rollout.',
+    'You\'re choosing between individual plans and Copilot Business for a team that handles private code.',
+    'You want usage numbers without collecting anyone\'s code.',
+  ]}
+  avoid={[
+    'Pasting real secrets or customer personal data into chat. Retention and filtering don\'t make that a good idea.',
+    'Quoting retention numbers from memory in a policy document. Link the Trust Center and date it.',
+  ]}
+  alternatives={[
+    '<strong>Content exclusions</strong> when specific files must never be used as context.',
+    '<strong>Organization policies</strong> to turn off features (for example chat on github.com or the CLI) that a team isn\'t allowed to use yet.',
+  ]}
+/>

@@ -1,0 +1,27 @@
+{ "cert": "gh-300", "domain": 2, "topic": "copilot-code-review", "questions": [
+  { "id": "gh-review-1", "type": "single", "question": "A repository has a branch rule that requires one approving review before a pull request can be merged. A developer requests a review from Copilot, and Copilot completes its review. What is the result?", "options": [
+    { "text": "Copilot leaves a Comment review, and the pull request still needs one approval from a person", "why": "Correct. Copilot code review always leaves Comment reviews and does not count toward required approvals." },
+    { "text": "Copilot approves the pull request if it finds no problems, and the pull request can be merged", "why": "Copilot never submits an Approve review." },
+    { "text": "Copilot requests changes and blocks the merge until its comments are resolved", "why": "Copilot never submits a Request changes review." },
+    { "text": "Copilot merges the pull request after the status checks pass", "why": "Copilot code review does not merge pull requests." } ], "answer": [0], "explanation": "Copilot code review provides comments, often with suggested changes, but a required human approval is still needed.", "objective": "2.3.2" },
+  { "id": "gh-review-2", "type": "single", "question": "An organization wants Copilot to review every new pull request in its repositories without developers having to request the review manually. What should an administrator configure?", "options": [
+    { "text": "A ruleset that requests an automatic Copilot code review", "why": "Correct. A repository or organization ruleset can request a Copilot review on new pull requests automatically." },
+    { "text": "A .github/copilot-instructions.md file in each repository", "why": "Instructions define review standards. They do not request the review." },
+    { "text": "A CODEOWNERS file that lists Copilot for every path", "why": "Automatic Copilot reviews are configured through rulesets, not CODEOWNERS." },
+    { "text": "The Copilot coding agent policy set to Enabled", "why": "The coding agent works on assigned tasks. Enabling it does not review every pull request." } ], "answer": [0], "explanation": "Automatic Copilot code review is configured with a ruleset, after the Copilot code review policy is enabled.", "objective": "2.3.2" },
+  { "id": "gh-review-3", "type": "single", "question": "A team wants Copilot code review to flag any change to discount logic that does not include a unit test. What should the team do?", "options": [
+    { "text": "Add the rule to .github/copilot-instructions.md in the repository", "why": "Correct. Copilot code review uses repository custom instructions as review standards." },
+    { "text": "Add the rule to the pull request template", "why": "A pull request template pre-fills the description for authors. It is not where Copilot code review reads review standards." },
+    { "text": "Add the rule as a comment at the top of src/discount.js", "why": "A code comment is not a supported way to define review standards for every pull request." },
+    { "text": "Enable the suggestions matching public code policy", "why": "This policy controls public code matches. It does not define review rules." } ], "answer": [0], "explanation": "Customizable review standards are written in custom instruction files, which Copilot code review reads.", "objective": "2.3.3" },
+  { "id": "gh-review-4", "type": "multi", "question": "Which TWO actions can a pull request author take on a Copilot code review comment that contains a suggested change?", "options": [
+    { "text": "Commit the suggested change directly from the comment", "why": "Correct. Suggested changes can be committed from the review comment." },
+    { "text": "Reply to the comment or resolve the conversation without applying the change", "why": "Correct. The author decides whether the suggestion fits and can reply or resolve it." },
+    { "text": "Convert the Copilot review into an approval", "why": "A Copilot review cannot be converted into an approval." },
+    { "text": "Mark the Copilot comment as satisfying a required reviewer", "why": "Copilot reviews do not count toward required approvals." } ], "answer": [0, 1], "explanation": "Authors review each Copilot suggestion and either commit it or reply and resolve it. Copilot's review never acts as an approval.", "objective": "2.3.2" },
+  { "id": "gh-review-5", "type": "single", "question": "A developer wants Copilot to point out problems in local changes before pushing them to GitHub. What should the developer use?", "options": [
+    { "text": "Copilot code review from the IDE, on the selected code or the pending changes", "why": "Correct. Copilot code review can run in supported IDEs on code before it is pushed." },
+    { "text": "A Copilot pull request summary", "why": "A summary describes changes in a pull request. It does not review code for problems." },
+    { "text": "GitHub Spark", "why": "Spark builds micro apps from natural language. It does not review local changes." },
+    { "text": "The organization audit log", "why": "The audit log records administrative events, not code issues." } ], "answer": [0], "explanation": "Copilot code review is available on pull requests and in supported IDEs, so developers can get feedback before they push.", "objective": "2.3.2" }
+] }

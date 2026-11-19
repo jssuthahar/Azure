@@ -1,0 +1,28 @@
+{ "cert": "gh-300", "domain": 2, "topic": "copilot-cli-install-and-commands", "questions": [
+  { "id": "gh-cliinst-1", "type": "single", "question": "A developer has Node.js 22 installed and wants to install GitHub Copilot CLI by using npm. Which command should the developer run?", "options": [
+    { "text": "npm install -g @github/copilot", "why": "Correct. Copilot CLI is published to npm as @github/copilot and is installed globally." },
+    { "text": "gh extension install github/gh-copilot", "why": "This installs the older gh copilot extension, which has been replaced by Copilot CLI." },
+    { "text": "npm install -g copilot-cli", "why": "This is not the package name of GitHub Copilot CLI." },
+    { "text": "npx github-copilot login", "why": "This is not a valid installation command for Copilot CLI." } ], "answer": [0], "explanation": "The npm package for GitHub Copilot CLI is @github/copilot and requires Node.js 22 or later.", "objective": "2.2.2" },
+  { "id": "gh-cliinst-2", "type": "single", "question": "You need to run GitHub Copilot CLI in an automated job where no interactive sign-in is possible. Which credential should you provide?", "options": [
+    { "text": "A fine-grained personal access token with the Copilot Requests permission, stored in the COPILOT_GITHUB_TOKEN environment variable", "why": "Correct. Copilot CLI reads a token from COPILOT_GITHUB_TOKEN, GH_TOKEN or GITHUB_TOKEN, and the token must be fine-grained with Copilot Requests." },
+    { "text": "A classic personal access token with the repo scope, stored in GH_TOKEN", "why": "Classic personal access tokens are not supported by Copilot CLI." },
+    { "text": "The one-time device code displayed by /login", "why": "The device code requires a person to approve it in a browser, which is not possible in an automated job." },
+    { "text": "An SSH key added to the GitHub account", "why": "SSH keys authenticate Git operations and are not used to authenticate Copilot CLI requests." } ], "answer": [0], "explanation": "For non-interactive use, Copilot CLI authenticates with a fine-grained personal access token that has the Copilot Requests permission.", "objective": "2.2.2" },
+  { "id": "gh-cliinst-3", "type": "multi", "question": "Which TWO statements describe GitHub Copilot CLI? Each correct answer presents a complete solution.", "options": [
+    { "text": "It runs as an agent in the terminal that can read, edit and create files in a trusted folder.", "why": "Correct. Copilot CLI works on the files in folders that you trust." },
+    { "text": "It asks for approval before using a tool, such as running a shell command, that has not been allowed.", "why": "Correct. Copilot CLI requests permission before it uses a new tool unless the tool was allowed in advance." },
+    { "text": "It runs only inside the Visual Studio Code integrated terminal.", "why": "Copilot CLI runs in any terminal on macOS, Linux and Windows." },
+    { "text": "It can be used without a GitHub account.", "why": "Copilot CLI requires a GitHub account with access to Copilot." },
+    { "text": "It cannot be disabled by an organization.", "why": "Organizations can disable Copilot CLI for members by policy." } ], "answer": [0, 1], "explanation": "Copilot CLI is a terminal agent that works in trusted folders and asks before using tools that have not been approved.", "objective": "2.2.1" },
+  { "id": "gh-cliinst-4", "type": "single", "question": "During an interactive Copilot CLI session, a developer wants to include the file src/cart.js in the next prompt. What should the developer type?", "options": [
+    { "text": "explain @src/cart.js", "why": "Correct. The @ prefix adds a file to the context of the prompt." },
+    { "text": "explain !src/cart.js", "why": "The ! prefix runs a shell command rather than adding a file." },
+    { "text": "explain #file:src/cart.js", "why": "#file is the context syntax for Copilot Chat in the IDE, not for Copilot CLI." },
+    { "text": "/context src/cart.js", "why": "/context shows how the context window is being used and does not add a file." } ], "answer": [0], "explanation": "In Copilot CLI, @path adds a file to the prompt context.", "objective": "2.2.3" },
+  { "id": "gh-cliinst-5", "type": "single", "question": "A developer starts GitHub Copilot CLI in a newly cloned repository for the first time. What does Copilot CLI ask the developer to do before it works with the files?", "options": [
+    { "text": "Confirm whether the files in the current folder are trusted", "why": "Correct. On first run in a folder, Copilot CLI asks whether to trust it, for this session or permanently." },
+    { "text": "Create a .github/copilot-instructions.md file", "why": "Custom instructions are optional and are not required before Copilot CLI starts." },
+    { "text": "Configure an MCP server in mcp-config.json", "why": "MCP servers are optional; the GitHub MCP server is built in." },
+    { "text": "Choose a premium model with /model", "why": "Choosing a model is optional; a default model is used if none is selected." } ], "answer": [0], "explanation": "Copilot CLI asks you to confirm folder trust because it can read, change and run files in that folder.", "objective": "2.2.3" }
+] }

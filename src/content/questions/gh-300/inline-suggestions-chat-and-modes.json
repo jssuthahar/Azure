@@ -1,0 +1,28 @@
+{ "cert": "gh-300", "domain": 2, "topic": "inline-suggestions-chat-and-modes", "questions": [
+  { "id": "gh-modes-1", "type": "single", "question": "A developer wants GitHub Copilot in Visual Studio Code to explain how a function in src/legacy/report.js works. The file must not be modified. Which Copilot Chat mode should the developer use?", "options": [
+    { "text": "Ask", "why": "Correct. Ask mode answers questions and can suggest code blocks, but it does not edit files on its own." },
+    { "text": "Edit", "why": "Edit mode applies changes to the files in the working set, which the developer wants to avoid." },
+    { "text": "Agent", "why": "Agent mode can edit files and run commands to complete a task, which is more than an explanation requires." },
+    { "text": "Inline chat with Ctrl+I", "why": "Inline chat is designed to change the selected code in place." } ], "answer": [0], "explanation": "Ask mode is the read-only way to get explanations from Copilot Chat.", "objective": "2.1.2" },
+  { "id": "gh-modes-2", "type": "single", "question": "You request a change in Copilot Chat. Copilot must locate the relevant files, modify them, run the test suite in the terminal and fix any failures before it reports back. Which mode should you select?", "options": [
+    { "text": "Agent", "why": "Correct. Agent mode plans the work, edits files, runs terminal commands after approval and iterates on the results." },
+    { "text": "Edit", "why": "Edit mode changes the files you choose but does not run terminal commands or iterate on test output." },
+    { "text": "Ask", "why": "Ask mode answers questions and does not edit files or run commands." },
+    { "text": "Next edit suggestions", "why": "Next edit suggestions predict your next edit while you type and do not run tests." } ], "answer": [0], "explanation": "Running commands and iterating until a task is complete is what distinguishes Agent mode.", "objective": "2.1.2" },
+  { "id": "gh-modes-3", "type": "single", "question": "Copilot displays a long inline suggestion in Visual Studio Code. You want to accept only the first word of the suggestion. Which action should you perform on Windows?", "options": [
+    { "text": "Press Ctrl+Right Arrow", "why": "Correct. Ctrl+Right Arrow accepts the next word of the suggestion." },
+    { "text": "Press Tab", "why": "Tab accepts the entire suggestion." },
+    { "text": "Press Alt+]", "why": "Alt+] shows the next alternative suggestion instead of accepting part of the current one." },
+    { "text": "Press Esc", "why": "Esc dismisses the suggestion entirely." } ], "answer": [0], "explanation": "Ctrl+Right Arrow accepts a suggestion word by word.", "objective": "2.1.2" },
+  { "id": "gh-modes-4", "type": "multi", "question": "A developer uses GitHub Copilot in Visual Studio Code. Which TWO statements describe Edit mode (Copilot Edits)? Each correct answer presents a complete solution.", "options": [
+    { "text": "It applies changes across multiple files that the developer adds to the working set.", "why": "Correct. Edit mode works on the files you choose and can change several at once." },
+    { "text": "It presents each change so the developer can keep or undo it.", "why": "Correct. Each proposed diff can be kept or undone." },
+    { "text": "It runs terminal commands such as npm test after the developer approves them.", "why": "Running terminal commands is a capability of Agent mode." },
+    { "text": "It answers questions without proposing any code changes.", "why": "That describes Ask mode." },
+    { "text": "It automatically opens a draft pull request on GitHub.", "why": "Draft pull requests are opened by Copilot coding agent, not by Edit mode in the IDE." } ], "answer": [0, 1], "explanation": "Edit mode makes multi-file changes to a chosen working set and lets you keep or undo each diff.", "objective": "2.1.2" },
+  { "id": "gh-modes-5", "type": "single", "question": "A team wants Copilot inline suggestions in JavaScript files but not in Markdown files in Visual Studio Code. What should each developer configure?", "options": [
+    { "text": "The github.copilot.enable setting with markdown set to false", "why": "Correct. github.copilot.enable turns completions on or off per language." },
+    { "text": "A content exclusion for *.md in the repository settings", "why": "Content exclusions stop Copilot from using files as context and from suggesting in them, and are meant for sensitive files, not for language preferences. They also require Copilot Business or Enterprise." },
+    { "text": "Ask mode as the default chat mode", "why": "Chat modes do not control inline suggestions." },
+    { "text": "The Suggestions matching public code policy set to Block", "why": "That policy filters suggestions that match public code and applies to all languages." } ], "answer": [0], "explanation": "The github.copilot.enable setting controls completions for each language.", "objective": "2.1.2" }
+] }

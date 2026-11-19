@@ -24,3 +24,13 @@ export const COURSE_FEATURES: CourseFeature[] = [
   { id: 'interview', icon: '💼', title: 'Interview preparation', text: 'Beginner to architect-level questions with model answers and the follow-ups interviewers really ask, so the exam turns into job conversations.', href: (s) => `/${s}/interview/`, cta: 'Practise interviews' },
   { id: 'resources', icon: '📚', title: 'Learning resources', text: 'Printable cheat sheets, flashcards, a glossary, service comparisons, a study plan with calendar reminders and an exam day guide.', href: (s) => `/${s}/cheat-sheet/`, cta: 'Browse resources' },
 ];
+
+/** GitHub exams simulate VS Code, github.com and a Copilot terminal instead of Azure. */
+const GH: Record<string, Partial<CourseFeature>> = {
+  labs: { text: 'Guided tasks in a practice terminal with GitHub Copilot CLI, git and gh, each step ticked off as you go: install, permissions, instructions, tests, MCP and seats.' },
+  portal: { icon: '💻', title: 'VS Code and GitHub simulation', text: 'Walk through simplified VS Code and github.com screens with Copilot: ghost text, Chat modes, agent mode, settings, policies and pull request reviews. For education only.', href: (s) => `/${s}/labs/gh-sandbox/`, cta: 'Open the sandbox' },
+  shell: { title: 'Copilot CLI terminal', text: 'Type real Copilot CLI, git and gh commands in a practice terminal. Copilot’s answers are scripted examples, so nothing leaves your browser.', href: (s) => `/${s}/labs/gh-sandbox/`, cta: 'Type your first command' },
+  '3d': { title: '3D Copilot explorer', text: 'Follow a prompt from your keystroke to a suggestion, watch filters and policies act, and see Ask, Edit, Agent and the coding agent work, all in 3D with text steps beside it.' },
+};
+/** The feature list for one exam, with GitHub wording for GitHub exams. */
+export const featuresFor = (slug: string): CourseFeature[] => (slug.startsWith('gh-') ? COURSE_FEATURES.map((f) => ({ ...f, ...GH[f.id] })) : COURSE_FEATURES);

@@ -16,7 +16,7 @@ import { getGlossary } from '../../lib/glossary';
 import { labsForExam } from '../../lib/sim/labs';
 import { SITE } from '../../config';
 import { difficulty } from '../../data/certifications';
-import { getExam, examStaticPaths } from '../../data/exams';
+import { getExam, examStaticPaths, simLabels } from '../../data/exams';
 
 export function getStaticPaths() {
   return examStaticPaths();
@@ -24,6 +24,9 @@ export function getStaticPaths() {
 const exam = getExam(Astro.params.cert);
 const c = exam.course;
 const x = `/${exam.slug}`;
+const SL = simLabels(exam);
+const gh = exam.slug.startsWith('gh-');
+const platform = gh ? 'GitHub' : 'Azure';
 
 const nav = await getNav(exam.slug);
 const bank = await getQuestionBank(exam.slug);
@@ -42,8 +45,8 @@ const includes: [string, string][] = [
   ['📘', `${published.length} step-by-step lessons`],
   ['✅', `${bank.length} original practice questions`],
   ['🧊', `${scenes} interactive 3D scenes`],
-  ['🖥️', `${tours} Azure portal walkthroughs`],
-  ['🧪', `${labsForExam(exam.slug).length} hands-on labs + Cloud Shell`],
+  [SL.icon, `${tours} ${gh ? 'VS Code and GitHub' : 'Azure portal'} walkthroughs`],
+  ['🧪', `${labsForExam(exam.slug).length} hands-on labs + ${gh ? 'Copilot CLI terminal' : 'Cloud Shell'}`],
   ['⏱️', 'Timed mock exams with a score report'],
   ['💼', `${interviewCount} interview questions with answers`],
   ['📖', `${glossaryCount}-term glossary, cheat sheet, flashcards`],
@@ -52,7 +55,7 @@ const includes: [string, string][] = [
 ];
 const sequence = [
   ['📘', 'Read the lesson', 'Start with the 30-second answer, then the story and explanation.'],
-  ['🧊', 'Feel it', 'Use the 3D view, the portal walkthrough and the lab in the lesson.'],
+  ['🧊', 'Feel it', `Use the 3D view, the ${gh ? 'VS Code and GitHub' : 'portal'} walkthrough and the lab in the lesson.`],
   ['✅', 'Pass the quiz', 'Score 75% or more and the lesson is marked complete.'],
   ['🧠', 'Fix weak spots', 'Smart practice brings back what you missed.'],
   ['⏱️', 'Sit mock exams', 'Aim for 80% twice in a row before you book.'],
@@ -82,10 +85,10 @@ const schema = [
     hasCourseInstance: { '@type': 'CourseInstance', courseMode: 'Online', courseWorkload: 'PT12H', instructor: { '@id': `${SITE.url}/#author` } },
     creator: { '@id': `${SITE.url}/#author` },
     image: new URL(`/og/${exam.slug}.png`, SITE.url).href,
-    coursePrerequisites: 'None. No Azure account or prior cloud experience needed.',
+    coursePrerequisites: gh ? 'Basic GitHub and one programming language. No GitHub account or Copilot subscription needed.' : 'None. No Azure account or prior cloud experience needed.',
     educationalCredentialAwarded: `MSDEVBUILD ${exam.code} Ready practice certificate (self-assessed)`,
     numberOfLessons: published.length,
-    hasPart: published.map((t, i) => ({ '@type': 'LearningResource', position: i + 1, name: t.title, url: `${SITE.url}${t.url}`, learningResourceType: 'Lesson with 3D simulation, portal walkthrough and quiz' })),
+    hasPart: published.map((t, i) => ({ '@type': 'LearningResource', position: i + 1, name: t.title, url: `${SITE.url}${t.url}`, learningResourceType: `Lesson with 3D simulation, ${gh ? 'VS Code and GitHub' : 'portal'} walkthrough and quiz` })),
     offers: { '@type': 'Offer', category: 'Free', price: 0, priceCurrency: 'USD' },
   },
   {
@@ -103,7 +106,7 @@ const schema = [
       <li class="cd-badge">{difficulty(exam.info)} friendly</li>
       <li class="cd-badge">{published.length} lessons</li>
       <li class="cd-badge">{bank.length} questions</li>
-      <li class="cd-badge">No Azure account needed</li>
+      <li class="cd-badge">No {platform} account needed</li>
     </ul>
     <p class="cd-by">Updated {updatedText} · Follows the skills outline as of {exam.skillsMeasuredAsOf} · English</p>
     <BrandLine variant="light" class="mt-2" />
@@ -172,7 +175,7 @@ const schema = [
   <!-- Curriculum -->
   <section id="curriculum" class="cd-sec scroll-mt-28" aria-labelledby="cur-h">
     <h2 id="cur-h" class="cd-h2">Course curriculum</h2>
-    <p class="cd-p">Every lesson has the same flow: a 30-second answer, simulations (3D view, Azure portal and practice lab), the explanation, an exam tip and a quiz.</p>
+    <p class="cd-p">Every lesson has the same flow: a 30-second answer, simulations (3D view, {gh ? 'VS Code and GitHub' : 'Azure portal'} and practice lab), the explanation, an exam tip and a quiz.</p>
     <div class="mt-4"><Curriculum exam={exam} /></div>
   </section>
 

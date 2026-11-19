@@ -1,0 +1,27 @@
+{ "cert": "gh-300", "domain": 2, "topic": "enable-copilot-in-the-ide", "questions": [
+  { "id": "gh-ide-1", "type": "single", "question": "You need to use GitHub Copilot chat, inline suggestions, and agent mode in Visual Studio Code. What should you install?", "options": [
+    { "text": "The GitHub Copilot Chat extension", "why": "Correct. In current VS Code, the GitHub Copilot Chat extension provides chat, inline suggestions and agents." },
+    { "text": "The GitHub CLI", "why": "The GitHub CLI manages GitHub from the terminal. It does not add Copilot to the editor." },
+    { "text": "The Copilot CLI package", "why": "Copilot CLI runs Copilot in the terminal, not inside VS Code's editor." },
+    { "text": "The GitHub Pull Requests extension", "why": "That extension manages pull requests and issues. It does not provide Copilot." } ], "answer": [0], "explanation": "Install the GitHub Copilot Chat extension and sign in with a GitHub account that has Copilot access.", "objective": "2.1.1" },
+  { "id": "gh-ide-2", "type": "single", "question": "A developer installs the Copilot extension in VS Code and signs in to GitHub, but receives no suggestions in any file. Other developers in the same organization have no issues. What should you check first?", "options": [
+    { "text": "Whether the developer's GitHub account has a Copilot seat or plan", "why": "Correct. Signing in without Copilot access does not enable suggestions." },
+    { "text": "Whether the public code filter is set to Allow", "why": "The filter affects only suggestions that match public code. It would not stop all suggestions." },
+    { "text": "Whether the repository has a copilot-instructions.md file", "why": "Custom instructions are optional and do not enable or disable Copilot." },
+    { "text": "Whether the developer has enabled agent mode", "why": "Inline suggestions do not depend on agent mode." } ], "answer": [0], "explanation": "Copilot access belongs to the GitHub account. Verify the seat or plan before investigating other causes.", "objective": "2.1.1" },
+  { "id": "gh-ide-3", "type": "single", "question": "A developer wants GitHub Copilot completions in all languages except plain text files in VS Code. Which configuration should the developer use?", "options": [
+    { "text": "\"github.copilot.enable\": { \"*\": true, \"plaintext\": false }", "why": "Correct. The setting enables all languages with * and overrides plain text with false." },
+    { "text": "\"editor.inlineSuggest.enabled\": false", "why": "This disables inline suggestions for every language in the editor." },
+    { "text": "Uninstall the extension when editing plain text files", "why": "This removes Copilot entirely and is not a per-language setting." },
+    { "text": "Add *.txt to a repository content exclusion", "why": "Content exclusions are a data control managed by administrators, not a personal per-language preference." } ], "answer": [0], "explanation": "github.copilot.enable accepts a language map where * sets the default and specific languages override it.", "objective": "2.1.1" },
+  { "id": "gh-ide-4", "type": "multi", "question": "Which TWO actions can a developer use to troubleshoot GitHub Copilot when it stops providing suggestions in VS Code?", "options": [
+    { "text": "Open the Output panel and select the GitHub Copilot channel", "why": "Correct. The Copilot output logs show authentication, network and other errors." },
+    { "text": "Select the Copilot icon in the status bar to check its state", "why": "Correct. The status bar icon shows whether Copilot is ready and offers quick settings." },
+    { "text": "Delete the repository's .github folder", "why": "Deleting repository files does not troubleshoot Copilot and can cause data loss." },
+    { "text": "Switch the chat mode from Ask to Agent", "why": "The chat mode does not control inline suggestions." } ], "answer": [0, 1], "explanation": "The status bar icon and the GitHub Copilot output logs are the first places to look when suggestions stop.", "objective": "2.1.1" },
+  { "id": "gh-ide-5", "type": "single", "question": "A team uses VS Code, Visual Studio, and JetBrains IDEs. Each developer has a Copilot Business seat. What is required for each developer to use Copilot in their preferred IDE?", "options": [
+    { "text": "Install the Copilot extension or plugin for that IDE and sign in with the GitHub account that has the seat", "why": "Correct. The seat belongs to the GitHub account and works in any supported IDE." },
+    { "text": "Purchase a separate Copilot seat for each IDE", "why": "A seat is assigned to a user, not to an editor." },
+    { "text": "Use VS Code, because Copilot Business supports only VS Code", "why": "Copilot supports several IDEs, including Visual Studio and JetBrains IDEs." },
+    { "text": "Configure an MCP server for each IDE before Copilot can start", "why": "MCP servers add tools. They are not required to enable Copilot." } ], "answer": [0], "explanation": "Copilot access is tied to the GitHub account. Each supported IDE needs its Copilot extension and the same sign-in.", "objective": "2.1.1" }
+] }

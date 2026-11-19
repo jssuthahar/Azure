@@ -1,0 +1,219 @@
+---
+title: Copilot Code Review on Pull Requests
+seoTitle: Copilot Code Review on Pull Requests Explained | GH-300
+description: Request Copilot as a pull request reviewer, turn on automatic reviews with rulesets, commit its suggested changes and set review standards with instructions.
+answer: >-
+  **Copilot code review** reads a pull request and leaves review **comments**, often with a **suggested change** you can commit in one click. You add **Copilot** under **Reviewers** (or ask for a review in your IDE), or a **ruleset** requests it automatically on new pull requests. Its review is always a **Comment**: it never approves or requests changes and **doesn't count toward required approvals**, so a person still approves and merges. It follows your team's standards from **`.github/copilot-instructions.md`** and path-specific **`.instructions.md`** files, and it's part of the paid Copilot plans.
+updated: 2026-11-19
+readingMinutes: 9
+keyTerms:
+  - term: Copilot code review
+    definition: A Copilot feature that reviews a pull request or your local changes and leaves comments with suggested fixes.
+  - term: Suggested change
+    definition: A code block in a review comment that the pull request author can commit straight from the comment.
+  - term: Comment review
+    definition: A review that gives feedback without approving or requesting changes. Copilot's reviews are always this type.
+  - term: Ruleset
+    definition: A set of repository or organization rules for branches. One rule can request a Copilot review on new pull requests automatically.
+  - term: Required approvals
+    definition: A branch protection or ruleset setting that blocks merging until enough human reviewers approve. Copilot's review never counts.
+interview:
+  - level: beginner
+    q: Can Copilot approve my pull request so I can merge faster?
+    a: >-
+      No. Copilot code review only leaves Comment reviews. It never approves and never requests changes, and it doesn't count toward required approvals. It's an extra pair of eyes before a human reviewer, not a replacement.
+    followUps:
+      - q: Then why use it?
+        a: >-
+          It catches the obvious things fast, like an unhandled null or a missing test, so the human reviewer can spend their time on design and business logic.
+  - level: intermediate
+    q: How do you make Copilot review every new pull request without anyone remembering to ask?
+    a: >-
+      Set up a ruleset on the repository or the organization with the rule that requests an automatic Copilot review. Then every new pull request on the targeted branches gets one.
+    followUps: []
+  - level: experienced
+    q: Your team wants Copilot's review comments to follow its own standards. How?
+    a: >-
+      Write them into .github/copilot-instructions.md, for example "flag discount logic without a unit test" or "prefer early returns". For rules that only apply to part of the code, I'd use an .instructions.md file with applyTo. Copilot code review reads both.
+    followUps:
+      - q: Does that make the review deterministic?
+        a: >-
+          No. Two reviews of the same change can comment differently, and it can miss things. That's why it's comments, not a gate, and why we keep tests and code scanning in the pipeline.
+  - level: scenario
+    q: Copilot left a suggested change on line 4 of discount.js. What do you do with it?
+    a: >-
+      Read it first. If it's right, I commit the suggestion from the comment, then let the tests run. If it's wrong or doesn't fit, I reply or resolve the conversation. The author owns the code either way.
+    followUps: []
+  - level: architecture
+    q: Where does Copilot code review fit in a secure delivery pipeline?
+    a: >-
+      Early, as fast feedback on every pull request. Behind it I still want required human approvals, status checks for tests and code scanning, and branch protections. Copilot reduces the noise humans see, but the gates that block a merge stay human and automated, not AI opinion.
+    followUps: []
+revision:
+  keyPoints:
+    - Request Copilot under Reviewers on a pull request, or ask for a review from the IDE.
+    - A ruleset can request a Copilot review on every new pull request automatically.
+    - Copilot leaves Comment reviews with suggested changes you can commit.
+    - It never approves or requests changes and doesn't count toward required approvals.
+    - It reads .github/copilot-instructions.md and .instructions.md files for review standards.
+    - Admins enable Copilot code review through Copilot policies. It's a paid-plan feature.
+  mistakes:
+    - Expecting Copilot's review to satisfy a "1 required approval" branch rule.
+    - Committing every suggestion without reading it or running the tests.
+    - Writing review standards in a wiki instead of the instructions file Copilot reads.
+  examTips:
+    - '"Review every new PR automatically" = a **ruleset** that requests a Copilot review.'
+    - '"Does Copilot''s review satisfy required approvals?" = **No**, it only leaves **Comment** reviews.'
+    - '"Make reviews follow team standards" = **.github/copilot-instructions.md**.'
+  quick:
+    - q: Which review type does Copilot leave?
+      a: Comment. Never Approve or Request changes.
+    - q: Does a Copilot review count toward required approvals?
+      a: No.
+    - q: How do you get automatic Copilot reviews on new pull requests?
+      a: With a ruleset rule that requests a Copilot review.
+    - q: Which file sets review standards for Copilot code review?
+      a: .github/copilot-instructions.md, plus path-specific .instructions.md files.
+    - q: What can you do with a suggested change in a Copilot comment?
+      a: Commit it straight from the comment, after reviewing it.
+references:
+  - title: About GitHub Copilot code review
+    url: https://docs.github.com/en/copilot/concepts/agents/code-review
+  - title: Using GitHub Copilot code review
+    url: https://docs.github.com/en/copilot/how-tos/use-copilot-agents/request-a-code-review/use-code-review
+  - title: Configuring automatic code review by GitHub Copilot
+    url: https://docs.github.com/en/copilot/how-tos/use-copilot-agents/request-a-code-review/configure-automatic-review
+  - title: Adding repository custom instructions for GitHub Copilot
+    url: https://docs.github.com/en/copilot/how-tos/configure-custom-instructions/add-repository-instructions
+  - title: "Study guide for Exam GH-300: GitHub Copilot"
+    url: https://learn.microsoft.com/en-us/credentials/certifications/resources/study-guides/gh-300
+related:
+  - custom-instructions-and-prompt-files
+  - organization-policies
+  - spaces-spark-and-pr-summaries
+  - validate-copilot-output
+---
+
+## Start with a question
+
+<Story question="My pull request waits two days for a reviewer, and then they only spot a typo and a missing null check. Can something catch that sooner?">
+
+You open pull request #52 on contoso-shop: a new `FREE` discount code. The senior developer is busy. When she finally looks, her first three comments are things any careful reader would have caught: `free` and `FREE` behave differently, an unknown code returns `NaN`, there's no test for the new branch.
+
+**Copilot code review** reads the same diff in a few minutes and leaves those comments, often with a fix you can commit. The senior developer still reviews, but now she's looking at the design, not the typos. And she's still the one who approves.
+
+</Story>
+
+## Explain it like I'm 10
+
+<Eli10>
+
+You write a story for class.
+
+Before the teacher reads it, a helper reads it and puts sticky notes on it: "This word is spelled wrong. Here's the fix." You can take the fix or ignore it.
+
+The helper can't give you a grade. Only the teacher can.
+
+Copilot is the helper with the sticky notes. The teacher is the human reviewer who approves.
+
+</Eli10>
+
+## The technical explanation
+
+### Three ways to get a Copilot review
+
+| Where | How | Good for |
+| --- | --- | --- |
+| On a pull request | Open the PR, go to **Reviewers**, pick **Copilot** | A review on demand. Request it again after you push fixes. |
+| Automatically | A repository or organization **ruleset** with the rule that requests a Copilot review | Every new pull request gets reviewed, nobody has to remember |
+| In the IDE | Ask Copilot to review your selection or your changes in VS Code (and other supported editors) | Catching problems before you even push |
+
+### What the review looks like
+
+Copilot reads the changed files and posts a review such as "Copilot reviewed 2 files and left 1 comment". Each comment points to a line and usually explains the problem in a sentence. Many include a **suggested change**:
+
+```js
+// suggested change on src/discount.js, line 4
+const pct = CODES[String(code).toUpperCase()] ?? 0;
+```
+
+The author can **Commit suggestion** from the comment, or reply and **Resolve conversation** if it doesn't fit.
+
+### What it doesn't do
+
+This is the part the exam loves:
+
+- It always submits a **Comment** review. It never **Approves** and never **Requests changes**.
+- Its review **doesn't count toward required approvals**. A branch that needs one approval still needs one human approval.
+- It doesn't merge. A person does, and branch protections and status checks still apply.
+- It can miss problems and can be wrong. Treat each comment like a colleague's suggestion: read it, then decide.
+
+### Review standards from your instructions
+
+Copilot code review reads the same instruction files as Chat. Put your team's review rules in `.github/copilot-instructions.md`:
+
+```markdown
+## Code review
+- Flag any discount logic without a unit test.
+- Prefer early returns over nested ifs.
+- Comment in English, be brief.
+```
+
+Rules for one part of the codebase go in a path-specific `.instructions.md` file with `applyTo`, and Copilot code review uses those for matching files too.
+
+### Turning it on
+
+Copilot code review is part of the paid plans. In an organization, an admin controls it under **Organization settings › Copilot › Policies**, and can add a **ruleset** so it runs on new pull requests. If an enterprise enforces the policy, the organization can't change it.
+
+<Flow
+  caption="A pull request with Copilot code review"
+  steps={[
+    { title: 'Open PR', text: 'You open #52, or a ruleset requests Copilot automatically.' },
+    { title: 'Copilot reviews', text: 'It reads the diff and your instruction files.' },
+    { title: 'Comments', text: 'A Comment review with suggested changes.' },
+    { title: 'You decide', text: 'Commit, reply or resolve each comment, then push.' },
+    { title: 'Human approves', text: 'A required human approval and passing checks, then merge.' },
+  ]}
+/>
+
+<Callout type="exam">
+Watch for answers that give Copilot more power than it has. "Copilot approves the pull request" or "Copilot's review satisfies the required reviewer rule" is wrong: it leaves **Comment** reviews only. "Review every new pull request without manual requests" is a **ruleset**. "Make Copilot's review comments follow the team's coding standards" is **custom instructions** in `.github/copilot-instructions.md`, not a setting in the PR.
+</Callout>
+
+<TryIt labs="gh-mcp-agents" text="Delegate an issue to Copilot coding agent and see the draft pull request it opens for human review." />
+
+<DeepDive title="Copilot reviewing Copilot">
+
+When Copilot coding agent opens a draft pull request, you can ask Copilot code review to look at it too. That's fine as a first pass, but it's the same family of models checking its own kind of output, so it shares blind spots. Keep at least one human approval required, keep tests and code scanning as status checks, and make sure whoever assigned the issue to the agent isn't the only one approving its pull request.
+
+</DeepDive>
+
+## Real-world business scenario
+
+<Scenario
+  company="Contoso (fictional)"
+  industry="Online retail"
+  problem="Pull requests on contoso-shop waited a day or more for a first review, and most first comments were about missing tests and unhandled inputs."
+  service="An organization ruleset that requests a Copilot code review on every new pull request, plus review rules in .github/copilot-instructions.md. Branch rules still require one human approval and passing tests."
+  why="Copilot comments within minutes, authors fix the easy issues before a person looks, and Copilot's review can't approve, so the human gate stays."
+  outcome="Human reviewers see cleaner pull requests and spend their comments on design and business rules."
+/>
+
+## When to use it and when not to
+
+<UseWhen
+  use={[
+    'Fast first feedback on every pull request, before a human reviewer is free.',
+    'Checking your own changes in the IDE before you push.',
+    'Teams with written standards that can go into the instructions file.',
+  ]}
+  avoid={[
+    'As a replacement for required human approvals. It can never approve.',
+    'As your only security check. Keep code scanning, secret scanning and tests.',
+    'Accepting suggested changes without reading them or running the tests.',
+  ]}
+  alternatives={[
+    '<strong>Code scanning and linters</strong> as status checks for rules that must block a merge.',
+    '<strong>Copilot Chat</strong> with /explain or /fix when you want to discuss one change interactively.',
+  ]}
+/>

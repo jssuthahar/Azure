@@ -1,0 +1,224 @@
+---
+title: "Inline Suggestions, Chat, Edit and Agent Mode"
+seoTitle: Copilot Inline Suggestions, Chat and Agent Mode | GH-300
+description: Learn every way to trigger GitHub Copilot in VS Code, from ghost text and inline chat to the Chat view's Ask, Edit and Agent modes, with the keys to use.
+answer: >-
+  You trigger GitHub Copilot in four main ways. **Inline suggestions** appear as grey **ghost text** while you type (**Tab** accepts, **Esc** dismisses, **Alt+]** shows the next one). **Inline chat** (**Ctrl+I**) changes the code in front of you. The **Chat view** (**Ctrl+Alt+I**) has three modes: **Ask** answers without editing, **Edit** changes the files you pick for you to **Keep** or **Undo**, and **Agent** plans, edits, runs commands after your approval and iterates until the task is done. In the terminal, **Copilot CLI** does the same agent work.
+updated: 2026-11-19
+readingMinutes: 10
+keyTerms:
+  - term: Inline suggestion
+    definition: Grey ghost text Copilot shows at the cursor as you type. Tab accepts it, Esc dismisses it.
+  - term: Next edit suggestions (NES)
+    definition: Copilot predicts where your next edit will be and what it should be, based on the change you just made.
+  - term: Inline chat
+    definition: A small chat box opened with Ctrl+I inside the editor that changes the selected code in place.
+  - term: Ask mode
+    definition: Chat mode that answers questions and suggests code blocks but doesn't edit your files.
+  - term: Edit mode
+    definition: Chat mode (Copilot Edits) that applies changes across the files you choose and lets you Keep or Undo each diff.
+  - term: Agent mode
+    definition: Chat mode where Copilot picks the files, edits them, runs terminal commands after approval, reads the results and iterates.
+interview:
+  - level: beginner
+    q: How do you accept only part of an inline suggestion?
+    a: >-
+      I press Ctrl plus Right Arrow to take the next word, and keep pressing it until I have what I want. Tab takes the whole thing. If none of the options fit, Alt plus right bracket cycles to the next suggestion, or I open the completions panel with Ctrl plus Enter.
+    followUps:
+      - q: And if you don't want suggestions at all in Markdown files?
+        a: >-
+          I set github.copilot.enable to false for markdown in my settings. Completions stay on for every other language.
+  - level: intermediate
+    q: When would you pick Edit mode over Agent mode?
+    a: >-
+      When I already know which files need to change and want tight control. Edit only touches the files I add and shows me each diff. Agent decides which files to open, runs commands and loops, which is great for a whole task but more than I need for a rename across three files.
+    followUps: []
+  - level: experienced
+    q: A teammate says agent mode ran a command they didn't expect. How do you explain what happened?
+    a: >-
+      Agent mode asks before it runs a terminal command, but you can approve a command for the session, and after that it won't ask again for that command in that session. I'd check what they approved, remind them that Allow once is the safer default, and review the chat log, which lists every tool call and command it ran.
+    followUps: []
+  - level: scenario
+    q: A developer wants to understand a legacy file without risking any change to it. Which Copilot surface do you recommend?
+    a: >-
+      Ask mode in the Chat view, with the file added as context. Ask explains and suggests code blocks but never edits files on its own, so there's nothing to undo.
+    followUps: []
+revision:
+  keyPoints:
+    - "Inline suggestions: Tab accept, Esc dismiss, Alt+] / Alt+[ next and previous (Option on macOS), Ctrl+Right Arrow next word, Ctrl+Enter completions panel."
+    - Next edit suggestions (NES) predict your next edit, not only the next characters.
+    - Inline chat is Ctrl+I and changes code in place; the Chat view is Ctrl+Alt+I.
+    - Ask answers, Edit changes the files you choose, Agent does the whole task and runs commands after approval.
+    - github.copilot.enable turns completions on or off per language.
+    - Copilot CLI brings agent-style work to the terminal with the copilot command.
+  mistakes:
+    - Using Agent mode just to ask a question, when Ask would answer without touching files.
+    - Pressing Tab on a long suggestion without reading it.
+    - Thinking Edit mode can run tests. Running commands is Agent mode.
+  examTips:
+    - '"Answer only, no file changes" = **Ask** mode.'
+    - '"Change these three files and let me review each diff" = **Edit** mode.'
+    - '"Implement the feature, run the tests and fix failures" = **Agent** mode.'
+  quick:
+    - q: Which key accepts a whole inline suggestion?
+      a: Tab
+    - q: Which shortcut opens inline chat in VS Code?
+      a: Ctrl+I
+    - q: Which chat mode can run terminal commands?
+      a: Agent mode
+    - q: Which setting turns completions off for one language?
+      a: github.copilot.enable
+    - q: What does Ctrl+Right Arrow do with a suggestion?
+      a: Accepts the next word only.
+references:
+  - title: GitHub Copilot code suggestions in your IDE
+    url: https://docs.github.com/en/copilot/how-tos/get-code-suggestions/get-ide-code-suggestions
+  - title: Asking GitHub Copilot questions in your IDE
+    url: https://docs.github.com/en/copilot/how-tos/use-chat/use-chat-in-ide
+  - title: Inline suggestions from GitHub Copilot in VS Code
+    url: https://code.visualstudio.com/docs/copilot/ai-powered-suggestions
+  - title: "Introduction to GitHub Copilot (Microsoft Learn)"
+    url: https://learn.microsoft.com/en-us/training/modules/introduction-to-github-copilot/
+related:
+  - enable-copilot-in-the-ide
+  - copilot-chat-commands-and-limits
+  - agent-mode-mcp-and-subagents
+  - copilot-cli-install-and-commands
+---
+
+## Start with a question
+
+<Story question="If a helper sits next to you while you cook, do you want them to hand you the salt, answer a question, or cook the whole dish?">
+
+It depends on the moment. Sometimes you only want the salt passed before you reach for it. Sometimes you want to ask "is this oil hot enough?". And some evenings you'd happily say "make dinner, and tell me before you turn the oven on".
+
+GitHub Copilot works the same way. **Inline suggestions** pass you the next line before you ask. **Ask** mode answers your question. **Edit** mode changes the files you point at. **Agent** mode takes the whole task and asks before it runs anything in your terminal.
+
+</Story>
+
+## Explain it like I'm 10
+
+<Eli10>
+
+Copilot is a helper sitting in your code editor.
+
+When you pause while typing, it whispers a guess in grey. Press Tab to keep it, Esc to ignore it.
+
+You can also talk to it in a chat box.
+
+In Ask, it just answers. In Edit, it changes the pages you hand it. In Agent, it does the whole job and checks with you before pressing any big buttons.
+
+</Eli10>
+
+## The technical explanation
+
+### Inline suggestions (ghost text)
+
+When you pause while typing, the Copilot extension sends the code around your cursor as context and shows the reply as grey **ghost text**. Nothing goes into your file until you accept it.
+
+| Action | Windows / Linux | macOS |
+| --- | --- | --- |
+| Accept the whole suggestion | Tab | Tab |
+| Dismiss it | Esc | Esc |
+| Next / previous alternative | Alt+] / Alt+[ | Option+] / Option+[ |
+| Accept the next word only | Ctrl+Right Arrow | Cmd+Right Arrow |
+| Open the completions panel (several options) | Ctrl+Enter | Ctrl+Enter |
+
+Say you type the start of a function in `src/discount.js`:
+
+```js
+export function applyDiscount(total, code) {
+  // ghost text appears here:
+  const pct = CODES[code] ?? 0;
+  return Math.max(0, total - (total * pct) / 100);
+}
+```
+
+Writing a clear function name and a short comment first gives Copilot much better context than an empty file.
+
+**Next edit suggestions (NES)** go a step further. Rename a parameter on line 3, and Copilot predicts the matching edit on line 9 and offers it. You jump to it and press Tab.
+
+To turn completions off for one language, set `github.copilot.enable` in your settings, for example `{ "*": true, "markdown": false }`. The Copilot icon in the status bar also lets you snooze suggestions.
+
+### Inline chat (Ctrl+I)
+
+Select some code, press **Ctrl+I** and type what you want: "make unknown codes return the total unchanged". Copilot shows the change as a diff in place. **Accept** keeps it, **Discard** throws it away. Use it for small, local changes where opening a full chat would be overkill.
+
+### The Chat view and its three modes
+
+Open the Chat view with **Ctrl+Alt+I**. A picker at the bottom switches the mode.
+
+<Compare
+  caption="Three chat modes, three levels of hands-on"
+  columns={[
+    { title: 'Ask', icon: '💬', subtitle: 'Answers', items: ['Explains code and concepts', 'Suggests code blocks you can insert', 'Doesn\'t edit files on its own'], tone: 'neutral' },
+    { title: 'Edit', icon: '✏️', subtitle: 'Copilot Edits', items: ['Changes the files you add to the working set', 'Several files in one go', 'You <strong>Keep</strong> or <strong>Undo</strong> each diff'], tone: 'accent' },
+    { title: 'Agent', icon: '🤖', subtitle: 'Does the task', items: ['Finds the files itself', 'Runs terminal commands after you approve', 'Reads errors and test output, then iterates', 'Can call MCP tools'], tone: 'ok' },
+  ]}
+/>
+
+Here's the same request in each mode: "Add a FREE code that gives 100% off, with tests."
+
+- **Ask** explains how you'd do it and shows code. You copy what you want.
+- **Edit** changes `src/discount.js` and `tests/discount.test.js` if you added them, and waits for Keep or Undo.
+- **Agent** searches the codebase, edits both files, asks to run `npm test`, reads the result and fixes a failure before reporting back.
+
+<Flow
+  caption="What agent mode does with one request"
+  steps={[
+    { title: 'Plan', text: 'Reads the request and searches the codebase for the right files.' },
+    { title: 'Edit', text: 'Changes the files and shows each diff.' },
+    { title: 'Run', text: 'Asks before running npm test or any other terminal command.' },
+    { title: 'Iterate', text: 'Reads the output, fixes failures and runs again.' },
+    { title: 'Report', text: 'Summarises what changed. You Keep or Undo.' },
+  ]}
+/>
+
+Agent mode is covered properly, with MCP tools and sub-agents, in its own lesson.
+
+### Outside VS Code
+
+Visual Studio, JetBrains IDEs, Xcode, Eclipse and Vim/Neovim all have Copilot extensions with inline suggestions, and most have chat. Feature names and shortcuts differ a little, so check the docs for your editor. In the terminal, **Copilot CLI** (the `copilot` command) gives you an agent that reads your repo, edits files and runs commands with your permission. On github.com you can assign an issue to the **Copilot coding agent**, which opens a draft pull request.
+
+<TryIt labs="gh-mcp-agents" text="Start a Copilot CLI session, let it call a tool to read your issues, then hand a task to the coding agent." />
+
+<Callout type="exam">
+Questions describe a need and ask for the surface. "Explain this code without changing it" is **Ask**. "Apply a change across files I choose and review each diff" is **Edit**. "Implement it, run the tests and fix what fails" is **Agent**. "Change just this selection right here" is **inline chat (Ctrl+I)**. Know the keys too: **Tab**, **Esc**, **Alt+]**, **Ctrl+Right Arrow** for one word, and `github.copilot.enable` to switch completions off for a language.
+</Callout>
+
+<DeepDive title="Why suggestions change when you open other tabs">
+
+Inline suggestions don't only look at the current file. The extension also pulls snippets from **other open tabs** and neighbouring files to build the prompt, then trims it to fit the model's **context window**. That's why a test file open next to your code gives better suggestions, and why ten unrelated tabs can make them worse. Chat works differently: it uses the active file, your selection and whatever you add with `#file`, `#codebase` or a participant such as `@workspace`. Agent mode searches the workspace on its own. If a file is covered by a content exclusion, Copilot won't use it as context or suggest inside it in supported IDEs.
+
+</DeepDive>
+
+## Real-world business scenario
+
+<Scenario
+  company="Contoso (fictional)"
+  industry="Online retail"
+  problem="Contoso's shop team turned on Copilot and everyone used Agent mode for everything. Simple questions about the cart code produced surprise edits, and reviewers were tired of undoing changes nobody had asked for."
+  service="A short team guide: inline suggestions and Ctrl+I for small changes, Ask mode to understand code, Edit mode for planned multi-file changes, and Agent mode for whole tasks with tests, with commands approved once rather than for the session."
+  why="Each surface matches how much control the developer wants to hand over, so changes only happen when someone meant them to."
+  outcome="Unwanted edits in pull requests dropped, and new joiners used Ask mode to learn the codebase without touching it."
+/>
+
+## When to use it and when not to
+
+<UseWhen
+  use={[
+    'Inline suggestions for boilerplate, repetitive code and the next line you were about to type.',
+    'Ask mode to understand unfamiliar code or compare approaches before changing anything.',
+    'Edit mode when you know exactly which files should change.',
+    'Agent mode for a whole task that needs searching, edits, commands and a few rounds of fixing.',
+  ]}
+  avoid={[
+    'Accepting long suggestions without reading them. They can be wrong, outdated or insecure.',
+    'Agent mode for a quick question. It may start changing files.',
+    'Approving every command for the session on a repository you don\'t know well.',
+  ]}
+  alternatives={[
+    '<strong>Copilot CLI</strong> when you live in the terminal or want to script a prompt.',
+    '<strong>Copilot coding agent</strong> on github.com to hand off an issue and get a draft pull request back.',
+  ]}
+/>

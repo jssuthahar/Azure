@@ -1,10 +1,11 @@
 ---
 /** The ten learning features of a course, each linking to the real tool. */
-import { COURSE_FEATURES } from '../../data/course-features';
+import { featuresFor } from '../../data/course-features';
 interface Props { slug: string; headingLevel?: 'h3' | 'h4'; only?: string[] }
 const { slug, headingLevel = 'h3', only } = Astro.props;
 const H = headingLevel;
-const list = only ? COURSE_FEATURES.filter((f) => only.includes(f.id)) : COURSE_FEATURES;
+const all = featuresFor(slug);
+const list = only ? all.filter((f) => only.includes(f.id)) : all;
 ---
 <ul class="cf-grid">
   {list.map((f, i) => (

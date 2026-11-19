@@ -1,22 +1,22 @@
 ---
 import Base from '../../../layouts/Base.astro';
 import Simulator from '../../../components/Simulator.astro';
-import { SANDBOX, labsForExam, type Lab } from '../../../lib/sim/labs';
+import { sandboxFor, labsForExam, type Lab } from '../../../lib/sim/labs';
 import { getNav } from '../../../lib/learn';
 import { getExam, liveExams } from '../../../data/exams';
 
 export function getStaticPaths() {
-  return liveExams().flatMap((exam) => [...labsForExam(exam.slug), SANDBOX].map((lab) => ({ params: { cert: exam.slug, lab: lab.id }, props: { lab } })));
+  return liveExams().flatMap((exam) => [...labsForExam(exam.slug), sandboxFor(exam.slug)].map((lab) => ({ params: { cert: exam.slug, lab: lab.id }, props: { lab } })));
 }
 const exam = getExam(Astro.params.cert);
 const { lab } = Astro.props as { lab: Lab };
 const nav = await getNav(exam.slug);
 const related = lab.topics.map((t) => nav.find((n) => n.slug === t && n.published)).filter(Boolean);
-const examLabs = [...labsForExam(exam.slug), SANDBOX];
+const examLabs = [...labsForExam(exam.slug), sandboxFor(exam.slug)];
 const idx = examLabs.findIndex((l) => l.id === lab.id);
 const next = examLabs[idx + 1];
 const title = lab.id === 'sandbox' ? (exam.course.hubs?.sandboxTitle ?? 'Azure Sandbox Simulator: Practise Free | MSDEVBUILD') : `${lab.title} · Free Azure Lab`.slice(0, 65);
-const description = (lab.id === 'sandbox' && exam.course.labs ? `Free ${exam.code} sandbox: explore a simulated Azure portal, Microsoft Foundry and Cloud Shell with no tasks and no rules. Nothing here costs real money.` : `${lab.intro}`).slice(0, 155);
+const description = (lab.id === 'sandbox' && exam.course.labs ? `Free ${exam.code} sandbox: explore a simulated Azure portal, Microsoft Foundry and Cloud Shell with no tasks and no rules. Nothing here costs real money.` : lab.id === 'gh-sandbox' ? `Free ${exam.code} sandbox: a simulated terminal with GitHub Copilot CLI, git and gh. No tasks, no account, nothing leaves your browser.` : `${lab.intro}`).slice(0, 155);
 ---
 <Base title={title} description={description} breadcrumbs={[{ name: 'Home', url: '/' }, { name: `${exam.code}`, url: `/${exam.slug}/` }, { name: 'Practice labs', url: `/${exam.slug}/labs/` }, { name: lab.title, url: Astro.url.pathname }]}>
   <div class="mx-auto max-w-7xl px-4 py-6 sm:px-6">

@@ -10,7 +10,8 @@ const LABS_CLI_ONLY = ['tags-chargeback', 'vm-power-states', 'cli-storage', 'rea
   'service-models', 'serverless-function', 'hybrid-arc', 'containers', 'build-network', 'vpn-gateway', 'dns-private-endpoint',
   'identity-access', 'conditional-access', 'policy-guardrails', 'bicep-deploy', 'monitor-alerts', 'migrate-databox'].map((id) => `az-900/labs/${id}`)
   .concat(['dev-acr', 'dev-app-service-container', 'dev-container-apps', 'dev-keda', 'dev-aks', 'dev-cosmos', 'dev-cosmos-vector',
-    'dev-postgres', 'dev-redis', 'dev-service-bus', 'dev-event-grid', 'dev-functions', 'dev-key-vault', 'dev-observe'].map((id) => `ai-200/labs/${id}`));
+    'dev-postgres', 'dev-redis', 'dev-service-bus', 'dev-event-grid', 'dev-functions', 'dev-key-vault', 'dev-observe'].map((id) => `ai-200/labs/${id}`))
+  .concat(['gh-cli-setup', 'gh-cli-scripts', 'gh-instructions', 'gh-tests', 'gh-mcp-agents', 'gh-seats-audit'].map((id) => `gh-300/labs/${id}`));
 
 const b = await launch();
 const fail = [];
@@ -225,10 +226,11 @@ for (const id of LABS_CLI_ONLY) {
     await btn.evaluate((el) => /** @type {HTMLElement} */ (el).click());
     await p.press('.sim-in', 'Enter');
     await p.waitForTimeout(50);
-    // answer any y/n question from a delete in the chain
-    if (/\(y\/n\)/.test((await p.textContent('.sim-prompt')) || '')) {
+    // answer any y/n questions in the chain (a delete; Copilot CLI's folder trust and tool permission)
+    for (let q = 0; q < 5 && /\(y\/n/.test((await p.textContent('.sim-prompt')) || ''); q++) {
       await p.fill('.sim-in', 'y');
       await p.press('.sim-in', 'Enter');
+      await p.waitForTimeout(50);
     }
   }
   const done = Number(await p.textContent('.sim-done'));

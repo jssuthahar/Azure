@@ -1,0 +1,229 @@
+---
+title: "GitHub Copilot Content Exclusions and Editor Settings"
+seoTitle: Copilot Content Exclusions and Editor Settings | GH-300
+description: Exclude files and paths from GitHub Copilot at repository, organization and enterprise level, know what exclusions cover, and set per-language editor settings.
+answer: >-
+  **Content exclusions** stop GitHub Copilot from using chosen files. A repository admin lists paths under **Settings › Copilot › Content exclusion**; an organization admin writes **YAML** that maps repositories (or `"*"` for all) to paths; enterprises can set them too. In supported IDEs an excluded file gets **no inline suggestions** and **isn't used as context** for other files. Exclusions need **Copilot Business or Enterprise**, can take **up to 30 minutes** to reach an open IDE, show up in the **audit log**, and don't apply to every Copilot feature. Separately, the **`github.copilot.enable`** editor setting turns completions on or off per language for you only.
+updated: 2026-11-19
+readingMinutes: 10
+keyTerms:
+  - term: Content exclusion
+    definition: A Copilot Business or Enterprise setting that lists files or paths Copilot must not use for suggestions or as context.
+  - term: Repository-level exclusion
+    definition: A list of paths, one per line, set under the repository's Settings › Copilot › Content exclusion. It applies to that repository only.
+  - term: Organization-level exclusion
+    definition: YAML set by an organization owner that maps a repository name, or "*" for every repository, to the paths to exclude.
+  - term: fnmatch pattern
+    definition: The glob style used for exclusion paths, such as "/secrets/**" or "*.pem".
+  - term: github.copilot.enable
+    definition: A VS Code setting that turns Copilot inline completions on or off per language, for example off for plaintext or YAML. It's a personal preference, not a policy.
+  - term: Copilot status icon
+    definition: The icon in the IDE status bar that shows whether Copilot is working, signed out, or disabled because the file is excluded.
+interview:
+  - level: beginner
+    q: What does a content exclusion actually do to a file?
+    a: >-
+      In a supported IDE, Copilot won't offer inline suggestions inside that file, and it won't pull snippets from it as context when I'm working in other files. The file itself isn't changed or hidden from me.
+    followUps:
+      - q: How do you know it's working?
+        a: >-
+          I open the file and look at the Copilot icon in the status bar. It says the file is excluded, and no ghost text appears.
+  - level: intermediate
+    q: Where can content exclusions be set, and who can set them?
+    a: >-
+      Three places. A repository admin sets paths for one repository. An organization owner writes YAML that can target named repositories or all of them with "*". An enterprise owner can set rules across the enterprise. All of it needs Copilot Business or Enterprise.
+    followUps: []
+  - level: experienced
+    q: A developer says they can still see suggestions in a file you excluded ten minutes ago. Is the exclusion broken?
+    a: >-
+      Probably not. Exclusion changes can take up to 30 minutes to reach an IDE that's already open. I'd ask them to reload the window, check the status icon, and confirm the path pattern actually matches the file, for example a leading slash for the repository root.
+    followUps:
+      - q: And if it still doesn't match after a reload?
+        a: >-
+          I'd check the pattern against the real path, check they're using a supported IDE and an up-to-date extension, and check which Copilot feature they mean, because exclusions don't cover every feature.
+  - level: scenario
+    q: Your security team wants every .env file in the company ignored by Copilot. How do you do it with the least effort?
+    a: >-
+      One organization-level rule with "*" as the repository and "**/.env" as the path. That covers every repository in the org, including new ones, without touching each repository's settings. The change appears in the audit log.
+    followUps: []
+  - level: architecture
+    q: Is turning off Copilot for YAML in VS Code a good way to protect your infrastructure files?
+    a: >-
+      No. github.copilot.enable is a personal editor setting. Anyone can switch it back, and it does nothing for other developers. If the files are sensitive, the control is a content exclusion set by an admin, backed by not storing secrets in the repo at all.
+    followUps: []
+revision:
+  keyPoints:
+    - Content exclusions are a Copilot Business and Enterprise feature.
+    - Repository level is a list of paths; organization level is YAML mapping a repository (or "*") to paths; enterprises can also set them.
+    - Excluded files get no inline suggestions and aren't used as context in supported IDEs.
+    - Changes can take up to 30 minutes to reach an open IDE. Reloading the window helps.
+    - Exclusions don't apply to every Copilot feature, so check the docs for the ones you rely on.
+    - Exclusion changes are recorded in the audit log.
+    - github.copilot.enable switches completions per language for one user. It isn't a security control.
+  mistakes:
+    - Treating the per-language editor setting as a way to protect sensitive files.
+    - Expecting an exclusion to take effect the second you save it.
+    - Assuming exclusions are available on Copilot Free, Pro or Pro+.
+    - Writing a path without the leading slash and matching the wrong files, or missing the right ones.
+  examTips:
+    - '"Stop Copilot using one folder in one repository" = **repository settings › Copilot › Content exclusion**.'
+    - '"Same rule for every repository in the org" = **organization YAML with `"*"`**.'
+    - '"Excluded but still suggesting" = wait **up to 30 minutes** or **reload the window**.'
+    - '"Turn off completions for Markdown just for me" = **`github.copilot.enable`**.'
+  quick:
+    - q: Which plans support content exclusions?
+      a: Copilot Business and Copilot Enterprise.
+    - q: What does "*" mean in an organization exclusion?
+      a: Apply the listed paths to every repository in the organization.
+    - q: How long can an exclusion change take to reach an open IDE?
+      a: Up to 30 minutes.
+    - q: Where can you see who changed an exclusion?
+      a: In the audit log, as a copilot event.
+    - q: Which VS Code setting turns completions off for one language?
+      a: github.copilot.enable.
+references:
+  - title: Excluding content from GitHub Copilot
+    url: https://docs.github.com/en/copilot/how-tos/configure-content-exclusion/exclude-content-from-copilot
+  - title: About content exclusion for GitHub Copilot
+    url: https://docs.github.com/en/copilot/concepts/context/content-exclusion
+  - title: Configuring GitHub Copilot in your environment
+    url: https://docs.github.com/en/copilot/how-tos/configure-personal-settings/configure-in-ide
+  - title: GitHub Copilot fundamentals (Microsoft Learn)
+    url: https://learn.microsoft.com/training/paths/copilot/
+related:
+  - organization-policies
+  - troubleshoot-copilot
+  - prompt-building-and-context
+  - audit-log-and-seats-api
+---
+
+## Start with a question
+
+<Story question="The payment key lives in config/secrets.js, and that file is open in a tab while you code. Is Copilot reading it?">
+
+It can. When you're typing in `src/cart.js`, Copilot builds its prompt from the code around your cursor and from snippets in your other open tabs. If `config/secrets.js` is one of those tabs, bits of it may be sent along.
+
+Nobody did anything wrong here. That's how Copilot finds useful context. But your security team would rather that file never went anywhere, and asking 40 developers to "close that tab" isn't a control.
+
+A **content exclusion** is the control. An admin lists the path once, and Copilot leaves that file alone for everyone in the repository.
+
+</Story>
+
+## Explain it like I'm 10
+
+<Eli10>
+
+Think of a helper who reads over your shoulder to guess the next word in your homework. Handy.
+
+But your diary is open on the same desk. You put a sticker on it that says "not for helpers". Now the helper skips the diary when guessing, and won't write anything in it either.
+
+The sticker is the **content exclusion**. A grown-up (the admin) puts it on, and it works for every kid at the desk, not just you.
+
+</Eli10>
+
+## Visual: Content exclusions in motion
+
+Watch a secret file get pulled into Copilot's context, then left out once an admin excludes it.
+
+<Explainer id="copilot-content-exclusions" />
+
+## The technical explanation
+
+Content exclusions are part of **Copilot Business** and **Copilot Enterprise**. Individual plans (Free, Pro, Pro+) don't have them.
+
+### What an excluded file means in the IDE
+
+In supported IDEs, when a file matches an exclusion:
+
+- Copilot gives **no inline suggestions** inside it.
+- Copilot **doesn't use it as context** for suggestions in other files.
+- The **Copilot status icon** says the file is excluded, so developers can tell "blocked on purpose" from "broken".
+
+The file isn't hidden, encrypted or changed. You can still open and edit it. Exclusions also don't apply to every Copilot feature, so check GitHub's docs for the features your team relies on before you promise anything.
+
+### Three places to set them
+
+| Level | Who | Format | Reach |
+| --- | --- | --- | --- |
+| **Repository** | Repository admin | List of paths, one per line | That repository |
+| **Organization** | Organization owner | YAML: repository name (or `"*"`) → paths | Named repos, or all of them |
+| **Enterprise** | Enterprise owner | YAML, like the organization | Repositories across the enterprise |
+
+Repository level, under **Settings › Copilot › Content exclusion**:
+
+```yaml
+- "/config/secrets.js"   # one file, from the repository root
+- "/secrets/**"          # everything under /secrets
+- "*.pem"                # any .pem file anywhere
+```
+
+Organization level, under **Organization settings › Copilot › Content exclusion**:
+
+```yaml
+contoso-shop:
+  - "/src/legacy/report.js"
+"*":
+  - "**/.env"
+```
+
+Paths use fnmatch-style patterns. A leading `/` anchors the path at the repository root. Without it, the pattern can match in any folder, which is sometimes what you want and sometimes a surprise.
+
+### Timing and the audit log
+
+An exclusion change can take **up to 30 minutes** to reach IDEs that are already open. If a developer still sees suggestions right after you save, ask them to **reload the window** before you start debugging. Every change to exclusions is recorded in the organization's **audit log** as a `copilot.` event, so you can see who changed what.
+
+### Editor settings are a different thing
+
+Each developer can switch inline completions on or off per language in VS Code:
+
+```json
+"github.copilot.enable": {
+  "*": true,
+  "plaintext": false,
+  "markdown": false,
+  "yaml": false
+}
+```
+
+That's handy when ghost text gets in the way of writing docs. But it's **personal**. Anyone can flip it back, and it does nothing for the next developer. If a file is sensitive, the answer is a content exclusion set by an admin, not an editor preference.
+
+<Callout type="exam">
+Read who's asking. "An administrator must prevent Copilot from using files in a folder" points to **content exclusion** at repository or organization level. "Apply to all repositories" means organization YAML with **`"*"`**. "A developer wants no suggestions in Markdown" is the **`github.copilot.enable`** setting. "The exclusion was just added but suggestions still appear" means **wait up to 30 minutes or reload the window**. And remember: exclusions need **Business or Enterprise**.
+</Callout>
+
+<DeepDive title="Exclusions are a second line, not the first">
+
+An exclusion stops Copilot reading a file. It doesn't stop the secret being in Git history, in a fork, or on a laptop. The first line is keeping secrets out of the repository: environment variables, a secrets manager, and **secret scanning with push protection** so a key can't be pushed by mistake. Use exclusions for files that must live in the repo but shouldn't feed an AI tool, such as licensed third-party code or customer data samples.
+
+</DeepDive>
+
+## Real-world business scenario
+
+<Scenario
+  company="Contoso (fictional)"
+  industry="Online retail"
+  problem="The contoso-shop repo kept a vendor's licensed tax engine under /vendor/tax and a config file with test card numbers. Legal didn't want either used as Copilot context, and the team had 30 repositories with .env files."
+  service="A repository exclusion for /vendor/tax/** and /config/test-cards.json, plus one organization rule that excludes **/.env in every repository, on Copilot Business."
+  why="One org rule covered all 30 repositories, including new ones, and the audit log showed legal exactly when each rule was added."
+  outcome="Developers open those files and see the excluded status instead of suggestions, and nobody has to remember to close tabs."
+/>
+
+## When to use it and when not to
+
+<UseWhen
+  use={[
+    'Files with secrets, keys or customer data that must stay in the repository.',
+    'Licensed or third-party code your legal team doesn\'t want used as AI context.',
+    'An org-wide rule, such as every .env file, across many repositories.',
+  ]}
+  avoid={[
+    'As your only protection for secrets. Keep them out of the repo and use secret scanning.',
+    'When you only want fewer suggestions while writing docs. Use github.copilot.enable instead.',
+    'On individual plans. Exclusions need Copilot Business or Enterprise.',
+  ]}
+  alternatives={[
+    '<strong>Secret scanning with push protection</strong> to stop secrets reaching the repository.',
+    '<strong>github.copilot.enable</strong> for a personal, per-language on/off switch.',
+    '<strong>Organization policies</strong> to turn whole Copilot features off.',
+  ]}
+/>

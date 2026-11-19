@@ -21,7 +21,7 @@ const published = nav.filter((t) => t.published);
 
 const tools: [string, string, string, string][] = [
   ['🧠', 'Practice', `${x}/practice/`, 'Readiness score and spaced repetition'],
-  ['🧪', 'Practice Labs', `${x}/labs/`, 'Portal and Cloud Shell tasks'],
+  ['🧪', 'Practice Labs', `${x}/labs/`, exam.slug.startsWith('gh-') ? 'Copilot CLI terminal tasks' : 'Portal and Cloud Shell tasks'],
   ['⚡', 'Simulations', '/simulator/', 'What happens if a region goes down?'],
   ['🧊', '3D Explorer', `${x}/3d-explorer/`, 'Datacenters, zones and regions in 3D'],
   ['⏱️', 'Mock Exams', `${x}/mock-exam/`, 'Timed, weighted like the real exam'],

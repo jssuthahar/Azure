@@ -1,0 +1,153 @@
+{
+  "cert": "gh-300",
+  "domain": 3,
+  "topic": "prompt-building-and-context",
+  "questions": [
+    {
+      "id": "gh-pbuild-1",
+      "type": "multi",
+      "question": "A developer is typing inside a function in src/cart.js in Visual Studio Code. Which three sources of context can the Copilot extension include when it builds the prompt for an inline suggestion? Each correct answer presents part of the solution.",
+      "options": [
+        {
+          "text": "The file name and programming language",
+          "why": "Correct. The file name and language tell the model what kind of code to write."
+        },
+        {
+          "text": "Related snippets from other files open in editor tabs",
+          "why": "Correct. Open tabs are used to find related code."
+        },
+        {
+          "text": "Every file in every repository the developer can access",
+          "why": "The context window is limited, so the extension selects context. It does not send every repository."
+        },
+        {
+          "text": "Files covered by a content exclusion",
+          "why": "Excluded files are not used as context in supported IDEs."
+        },
+        {
+          "text": "Code before and after the cursor",
+          "why": "Correct. The code on both sides of the cursor is the main context for a completion."
+        }
+      ],
+      "answer": [
+        0,
+        1,
+        4
+      ],
+      "explanation": "Inline suggestions use nearby code, the file name and language, and related snippets from open tabs.",
+      "objective": "3.1.2"
+    },
+    {
+      "id": "gh-pbuild-2",
+      "type": "single",
+      "question": "Why does the Copilot extension rank and trim context before it sends a prompt?",
+      "options": [
+        {
+          "text": "Trimming removes all comments so the model only sees code.",
+          "why": "Comments are useful context and are not removed by design."
+        },
+        {
+          "text": "The model can process only a limited amount of text in one request.",
+          "why": "Correct. The context window is limited, so the most relevant context is kept."
+        },
+        {
+          "text": "GitHub charges per character sent in each prompt.",
+          "why": "Copilot plans are not billed per character of context."
+        },
+        {
+          "text": "The proxy rejects any prompt longer than one file.",
+          "why": "There is no one-file rule. The limit is the model's context window."
+        }
+      ],
+      "answer": [
+        1
+      ],
+      "explanation": "Models have a limited context window, so the extension picks the most relevant context for each request.",
+      "objective": "3.1.2"
+    },
+    {
+      "id": "gh-pbuild-3",
+      "type": "single",
+      "question": "A developer asks Copilot Chat about a bug, and the answer ignores src/discount.js. The developer wants to confirm which files were used to produce the answer. What should the developer do?",
+      "options": [
+        {
+          "text": "Open the organization audit log and search for action:copilot.",
+          "why": "The audit log records administrative events, not the context of individual answers."
+        },
+        {
+          "text": "Run /clear and ask the same question again.",
+          "why": "Clearing the chat starts fresh but does not show which files were used."
+        },
+        {
+          "text": "Check the Copilot status bar icon.",
+          "why": "The status icon shows Copilot's state, such as signed in or excluded, not answer references."
+        },
+        {
+          "text": "Expand Used n references below the answer.",
+          "why": "Correct. The references list shows the files and snippets used as context."
+        }
+      ],
+      "answer": [
+        3
+      ],
+      "explanation": "Used n references lists the context that went into a chat answer.",
+      "objective": "3.1.2"
+    },
+    {
+      "id": "gh-pbuild-4",
+      "type": "single",
+      "question": "A developer writes tests in tests/discount.test.js, but inline suggestions keep using function names from an unrelated file. Several old files are open in other tabs. What should the developer do first?",
+      "options": [
+        {
+          "text": "Ask an administrator to exclude the tests folder.",
+          "why": "Excluding the folder would stop suggestions in the tests entirely."
+        },
+        {
+          "text": "Close unrelated tabs and open src/discount.js in a tab.",
+          "why": "Correct. Open tabs are used as context, so relevant tabs help and unrelated ones can mislead."
+        },
+        {
+          "text": "Disable Copilot for JavaScript in github.copilot.enable.",
+          "why": "That turns off suggestions instead of improving them."
+        },
+        {
+          "text": "Change the public code filter to Allow.",
+          "why": "The public code filter affects matches with public code, not which local files are used as context."
+        }
+      ],
+      "answer": [
+        1
+      ],
+      "explanation": "Inline suggestions draw on open tabs, so keeping relevant files open and closing unrelated ones improves results.",
+      "objective": "3.1.2"
+    },
+    {
+      "id": "gh-pbuild-5",
+      "type": "single",
+      "question": "In Copilot Chat, a developer wants Copilot to search the whole workspace for code related to a question about discount codes. Which context should the developer add to the prompt?",
+      "options": [
+        {
+          "text": "#selection",
+          "why": "#selection adds only the code currently highlighted in the editor."
+        },
+        {
+          "text": "#terminalLastCommand",
+          "why": "This adds the last terminal command and its output, not workspace code."
+        },
+        {
+          "text": "/clear",
+          "why": "/clear starts a new conversation. It does not add context."
+        },
+        {
+          "text": "#codebase",
+          "why": "Correct. #codebase searches the workspace and adds relevant code to the prompt."
+        }
+      ],
+      "answer": [
+        3
+      ],
+      "explanation": "#codebase (or the @workspace participant) brings relevant code from across the workspace into the chat prompt.",
+      "objective": "3.1.2"
+    }
+  ]
+}

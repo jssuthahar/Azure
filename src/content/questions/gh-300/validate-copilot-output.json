@@ -1,0 +1,28 @@
+{ "cert": "gh-300", "domain": 1, "topic": "validate-copilot-output", "questions": [
+  { "id": "gh-val-1", "type": "single", "question": "A developer accepts a GitHub Copilot suggestion for a function that calculates order discounts. What is the most reliable way to confirm that the function behaves correctly?", "options": [
+    { "text": "Run unit tests that include edge cases, such as an unknown discount code", "why": "Correct. Running tests with edge cases verifies behavior directly instead of relying on appearance." },
+    { "text": "Ask Copilot Chat whether the function is correct", "why": "Copilot can help explain code, but its answer is another prediction, not verification." },
+    { "text": "Confirm that the code compiles without errors", "why": "Compilation confirms syntax only. Logic errors can still exist." },
+    { "text": "Regenerate the suggestion and compare the two versions", "why": "Comparing two predictions does not verify that either one is correct." } ], "answer": [0], "explanation": "AI output must be validated. Tests with edge cases are the most direct way to confirm behavior.", "objective": "1.2.1" },
+  { "id": "gh-val-2", "type": "single", "question": "A repository requires that AI-assisted code be checked for security vulnerabilities before it is merged. Which control should you add to the pull request workflow?", "options": [
+    { "text": "Code scanning with CodeQL as a required status check", "why": "Correct. Code scanning analyzes code for vulnerabilities and can block merges when it is a required check." },
+    { "text": "A larger premium request allowance", "why": "Premium requests affect model usage, not security analysis." },
+    { "text": "Next edit suggestions in the IDE", "why": "Next edit suggestions predict edits. They do not scan for vulnerabilities." },
+    { "text": "A prompt file that asks Copilot to write secure code", "why": "Prompting may improve output but does not verify it." } ], "answer": [0], "explanation": "Code scanning detects security issues that tests often miss and is a key validation step for AI-generated code.", "objective": "1.2.1" },
+  { "id": "gh-val-3", "type": "single", "question": "A team adds GitHub Copilot as a reviewer on every pull request. The repository requires one approving review before merge. Which statement is true?", "options": [
+    { "text": "Copilot leaves comments and suggested changes, and a human approval is still required", "why": "Correct. Copilot code review does not approve pull requests or count toward required approvals." },
+    { "text": "Copilot's review satisfies the required approval", "why": "Copilot code review leaves Comment reviews only and does not count toward required approvals." },
+    { "text": "Copilot can request changes and block the merge", "why": "Copilot does not submit Request changes reviews." },
+    { "text": "Copilot merges the pull request automatically when its review passes", "why": "Copilot code review does not merge pull requests." } ], "answer": [0], "explanation": "Human review remains part of responsible operation. Copilot code review is an additional reviewer, not an approver.", "objective": "1.2.2" },
+  { "id": "gh-val-4", "type": "multi", "question": "Which THREE practices are part of operating GitHub Copilot responsibly?", "options": [
+    { "text": "Review and understand each suggestion before accepting it", "why": "Correct. Developers must understand code they accept and maintain." },
+    { "text": "Exclude secrets and real personal data from prompts", "why": "Correct. Prompts are sent to the service, so sensitive data should not be included." },
+    { "text": "Keep pull request reviews and CI checks in place for AI-assisted code", "why": "Correct. Existing safeguards still apply to code that Copilot helped write." },
+    { "text": "Accept long suggestions without reading them to save time", "why": "Unreviewed code can introduce bugs and vulnerabilities." },
+    { "text": "Rely on Copilot-generated tests as the only validation of Copilot-generated code", "why": "Tests from the same model can share the same incorrect assumptions." } ], "answer": [0, 1, 2], "explanation": "Responsible use combines understanding, data protection and the normal review and CI safeguards.", "objective": "1.2.2" },
+  { "id": "gh-val-5", "type": "single", "scenario": "A developer uses the /tests command to generate tests for a Copilot-written applyDiscount function. All generated tests pass. In production, an unknown discount code returns NaN.", "question": "What is the most likely reason the tests did not detect the defect?", "options": [
+    { "text": "The generated tests shared the same assumption as the code and did not cover an unknown code", "why": "Correct. Tests produced from the same context can miss the same edge cases as the code." },
+    { "text": "The /tests command cannot generate tests for JavaScript", "why": "/tests can generate tests for JavaScript and many other languages." },
+    { "text": "Copilot does not allow tests to run in the terminal", "why": "Tests run with the project's own test runner, such as npm test." },
+    { "text": "The public code filter removed the failing test", "why": "The public code filter acts on suggestions that match public code, not on test coverage." } ], "answer": [0], "explanation": "Review generated tests and add edge cases yourself, so that code and tests do not share one blind spot.", "objective": "1.2.1" }
+] }

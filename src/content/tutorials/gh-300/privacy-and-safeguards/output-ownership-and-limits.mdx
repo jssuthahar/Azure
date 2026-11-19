@@ -1,0 +1,199 @@
+---
+title: "Who Owns GitHub Copilot Output, and Its Limits"
+seoTitle: Who Owns Copilot Output and Its Limits | GH-300
+description: Learn who owns code that GitHub Copilot suggests, who is responsible for it, how code references and IP terms fit in, and the limits every suggestion has.
+answer: >-
+  **GitHub doesn't claim ownership of Copilot's suggestions.** Once you accept a suggestion it's part of your code, and **you're responsible** for it: whether it's correct, secure, and allowed under the licences involved. Copilot's output has limits: it can be **wrong**, **insecure**, **outdated** (the model has a training cut-off), it can invent APIs or packages, it may **match public code** under a licence, and it can't run or truly understand your code. Business and Enterprise terms include **IP indemnity**, so know what your plan's terms say. In practice: review, test, scan and check licences before anything ships.
+updated: 2026-11-19
+readingMinutes: 9
+keyTerms:
+  - term: Suggestion ownership
+    definition: GitHub doesn't claim ownership of the code Copilot suggests. Accepted code is treated like code you wrote.
+  - term: Accountability
+    definition: The developer and organization that ship code are responsible for it, whether a person or Copilot wrote the first draft.
+  - term: Code reference
+    definition: A note Copilot shows when a suggestion matches public code, listing the repository and its licence.
+  - term: IP indemnity
+    definition: A contractual promise in some plans' terms that GitHub will defend customers against certain IP claims about Copilot output, subject to conditions in those terms.
+  - term: Knowledge cut-off
+    definition: The date the model's training data ends. Libraries and APIs released after it may be missing or wrong in suggestions.
+  - term: Hallucination
+    definition: Output that looks confident and plausible but is false, such as a function or package that doesn't exist.
+interview:
+  - level: beginner
+    q: If Copilot writes a function and you commit it, who owns it?
+    a: >-
+      GitHub doesn't claim ownership of Copilot's suggestions, so it's treated like code I wrote, under my employer's usual rules. That also means I'm responsible for it, bugs and all.
+    followUps:
+      - q: So can you blame Copilot if it's wrong?
+        a: >-
+          No. Accepting a suggestion is a decision I made. If it breaks something, it's my change, the same as if I'd copied it from a blog.
+  - level: intermediate
+    q: Name three limits of Copilot output you'd tell a new developer about.
+    a: >-
+      It has a training cut-off, so newer APIs may be missing. It can invent things that don't exist, like a package name. And it predicts likely code rather than running it, so it can be insecure or just wrong, with full confidence.
+    followUps: []
+  - level: experienced
+    q: Your legal team asks whether Copilot output could include someone else's licensed code. How do you answer?
+    a: >-
+      It can happen, rarely, with longer suggestions that match public code. We control it with the "suggestions matching public code" policy: Block hides those matches, Allow shows them with a code reference giving the repository and licence. Either way the developer decides what to keep. I'd also point legal to our plan's terms, since Business and Enterprise include IP indemnity with conditions.
+    followUps:
+      - q: Which setting would you pick?
+        a: >-
+          Block for most teams, because it's the simplest. Allow with references if developers need the visibility and know how to handle attribution.
+  - level: scenario
+    q: Copilot suggests installing a package you've never heard of to parse dates. What do you do?
+    a: >-
+      Check it exists on the registry, who publishes it, how widely it's used and its licence, before installing. Made-up package names are a known risk, and attackers sometimes register names that models tend to suggest.
+    followUps: []
+  - level: architecture
+    q: How would you write a team policy on AI-generated code?
+    a: >-
+      Short and practical: the author owns every line they commit; AI-drafted code gets the same review, tests and code scanning as anything else; no secrets or personal data in prompts; public code matching set by the org; and say in the pull request when AI did a large part of the work.
+    followUps: []
+revision:
+  keyPoints:
+    - GitHub doesn't claim ownership of Copilot suggestions.
+    - The developer who accepts a suggestion is responsible for its correctness, security and licensing.
+    - Output can be wrong, insecure, outdated or invented, and may match public code.
+    - Copilot predicts code; it doesn't run, test or understand it.
+    - Code references show the repository and licence when a suggestion matches public code (policy Allow).
+    - Business and Enterprise terms include IP indemnity. Know your plan's terms.
+  mistakes:
+    - Thinking GitHub or Microsoft owns code Copilot helped write.
+    - Assuming accepted code is someone else's responsibility.
+    - Trusting a suggestion about a library released after the model's cut-off.
+    - Installing a suggested package without checking that it exists and who publishes it.
+  examTips:
+    - '"Who is responsible for code accepted from Copilot?" = **the developer (and their organization)**.'
+    - '"Does GitHub claim ownership of suggestions?" = **No**.'
+    - '"Copilot used an API that doesn''t exist" = a **limitation** (hallucination); validate output.'
+    - '"See the licence of matching public code" = **code references** with the policy set to **Allow**.'
+  quick:
+    - q: Does GitHub claim ownership of Copilot suggestions?
+      a: No.
+    - q: Who answers for a bug in accepted Copilot code?
+      a: The developer and organization that shipped it.
+    - q: Why might Copilot not know a library released last month?
+      a: The model's training data has a cut-off date.
+    - q: What does a code reference show?
+      a: The matching public repository and its licence.
+    - q: Which plans' terms include IP indemnity?
+      a: Copilot Business and Copilot Enterprise (check the terms for conditions).
+references:
+  - title: GitHub Terms for Additional Products and Features (GitHub Copilot)
+    url: https://docs.github.com/en/site-policy/github-terms/github-terms-for-additional-products-and-features
+  - title: Responsible use of GitHub Copilot inline suggestions
+    url: https://docs.github.com/en/copilot/responsible-use/copilot-code-completion
+  - title: GitHub Copilot code referencing
+    url: https://docs.github.com/en/copilot/concepts/completions/code-referencing
+  - title: GitHub Copilot Trust Center
+    url: https://copilot.github.trust.page/
+  - title: GitHub Copilot fundamentals (Microsoft Learn)
+    url: https://learn.microsoft.com/training/paths/copilot/
+related:
+  - public-code-filter-and-references
+  - generative-ai-risks-and-limitations
+  - validate-copilot-output
+  - responsible-ai-principles
+---
+
+## Start with a question
+
+<Story question="Copilot wrote half of src/discount.js. A customer finds a bug that gives everyone 100% off. Whose bug is it?">
+
+Yours. Not Copilot's, not GitHub's.
+
+That sounds harsh, but it's how every other tool works. If you paste a snippet from a forum and it's wrong, you don't get to blame the forum. You read it, you pressed Tab, you committed it.
+
+The flip side is good news: GitHub doesn't claim ownership of what Copilot suggests. The code you accept is yours to use, under the same rules as code you typed. Owning it and being responsible for it come together.
+
+</Story>
+
+## Explain it like I'm 10
+
+<Eli10>
+
+You ask your older cousin to help with a school project. They suggest a great sentence, and you write it in.
+
+It's your project now. Your name's on it. If the sentence has a mistake, the teacher marks *your* work.
+
+And if your cousin copied that sentence from a book, you should say where it came from. That's what **code references** do: they tell you "this looks like it came from that book".
+
+</Eli10>
+
+## The technical explanation
+
+### Ownership
+
+GitHub's terms for Copilot say GitHub **doesn't claim ownership** of suggestions. Once accepted, the code sits in your repository like anything else. Whether it belongs to you or your employer is decided by your normal employment and contract rules, the same as code you wrote by hand.
+
+### Responsibility
+
+You're responsible for what you accept. That covers three things:
+
+| Check | Question to ask | Tool that helps |
+| --- | --- | --- |
+| **Correctness** | Does it do what I need, for every input? | Tests, review |
+| **Security** | Could it be abused or leak data? | Code scanning, secret scanning, review |
+| **Licensing** | Does it match code under a licence I must follow? | Code references, the public code policy |
+
+The **public code** policy decides what happens when a suggestion matches public code of about 150 characters or more. **Block** hides it. **Allow** shows it with a **code reference** listing the repository and licence, so you can decide whether you can use it and how to attribute it.
+
+On the legal side, Copilot Business and Copilot Enterprise terms include **IP indemnity**. The details and conditions live in the terms, so know what your plan says rather than assuming.
+
+### Limits of the output
+
+Copilot is a large language model. It predicts likely code from patterns in its training data and the context you give it. That leads to predictable limits:
+
+- **Wrong with confidence.** It doesn't run your code, so it can't tell when it's wrong.
+- **Hallucinated APIs and packages.** It can call `cart.applyCoupon()` when no such method exists, or suggest a package that was never published.
+- **Outdated.** The model has a **knowledge cut-off**. A library version released after it may be missing or misused.
+- **Insecure.** Public code includes insecure patterns, and filters catch only some.
+- **Limited context.** It sees a slice of your project, not all of it, so it can miss rules defined elsewhere.
+- **Uneven quality.** Results are weaker for rare languages and frameworks with less public code.
+- **Not repeatable.** Ask twice and you may get two different answers.
+- **Bias.** Generated names, comments or logic can carry assumptions from training data.
+
+None of these mean "don't use it". They mean "check it the way you'd check a new teammate's first pull request".
+
+<Callout type="exam">
+Two answers come up again and again. **Who is responsible for accepted code?** The developer and their organization. **Does GitHub own Copilot's suggestions?** No. For limits, map the symptom: "used a method that doesn't exist" is a **hallucination**; "didn't know a new library version" is the **knowledge cut-off**; "matched a licensed repository" calls for **code references** or the **Block** policy. The fix for every limit is human review, tests and scanning.
+</Callout>
+
+<DeepDive title="Why a made-up package is a security problem">
+
+If a model often suggests a package name that doesn't exist, an attacker can publish a malicious package under that name and wait. Developers who trust the suggestion install it. Before adding any dependency Copilot proposes, check it exists, who publishes it, how many people use it and what licence it has. Dependency review on pull requests catches some of this; your own check catches the rest.
+
+</DeepDive>
+
+## Real-world business scenario
+
+<Scenario
+  company="Contoso (fictional)"
+  industry="Online retail"
+  problem="After rolling out Copilot Business, Contoso's legal team asked who owned AI-written code and what happened if it copied licensed code. Developers weren't sure either."
+  service="A one-page team policy: the committer owns every line, AI-drafted code gets normal review, tests and code scanning, the org sets suggestions matching public code to Block, and legal keeps a copy of the plan's terms, including IP indemnity."
+  why="It answered legal's questions with facts from GitHub's terms and gave developers clear rules without banning the tool."
+  outcome="Copilot stayed on for all 120 developers, and the next audit found no unreviewed AI-generated changes in contoso-shop."
+/>
+
+## When to use it and when not to
+
+<UseWhen
+  use={[
+    'Drafting code you understand and will review, test and scan before it ships.',
+    'Boilerplate and patterns that are easy to check.',
+    'Learning a new area, while checking facts against the official docs.',
+  ]}
+  avoid={[
+    'Accepting code you can\'t explain, especially security or money-handling logic.',
+    'Trusting suggestions about libraries newer than the model\'s cut-off.',
+    'Adding a suggested package without checking it exists and who publishes it.',
+  ]}
+  alternatives={[
+    '<strong>The public code policy (Block)</strong> to hide suggestions that match public code.',
+    '<strong>Code references (Allow)</strong> to see the repository and licence before you decide.',
+    '<strong>Official docs and release notes</strong> for anything newer than the model.',
+  ]}
+/>

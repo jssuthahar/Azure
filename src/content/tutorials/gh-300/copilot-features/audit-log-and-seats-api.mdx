@@ -1,0 +1,227 @@
+---
+title: Audit Log Events and Managing Seats with the REST API
+seoTitle: Copilot Audit Log and Seat Management REST API | GH-300
+description: Find Copilot events in the audit log with action:copilot, list seats with last_activity_at, and add or cancel seats for users and teams with the REST API.
+answer: >-
+  Every Copilot admin change leaves a trail in the organization's **audit log**: events start with **`copilot.`** (seats added or cancelled, policy changes, content exclusion changes) and you find them by searching **`action:copilot`**. To manage the subscription in code, use the **Copilot user management REST API**: **GET** `/orgs/{org}/copilot/billing` for the settings, **GET** `/orgs/{org}/copilot/billing/seats` for every seat with **`last_activity_at`** and **`last_activity_editor`**, and **POST** or **DELETE** `/orgs/{org}/copilot/billing/selected_users` (or `/selected_teams`) to add or cancel seats. The token needs the **`manage_billing:copilot`** scope, and a cancelled seat stays active until the **end of the billing cycle**.
+updated: 2026-11-19
+readingMinutes: 10
+keyTerms:
+  - term: Audit log
+    definition: The organization's record of who did what and when, including Copilot settings, seat and content exclusion changes.
+  - term: action:copilot
+    definition: The audit log search qualifier that filters the log to Copilot events, whose names start with copilot.
+  - term: Copilot user management API
+    definition: REST endpoints under /orgs/{org}/copilot/billing to read Copilot settings, list seats and add or cancel seats.
+  - term: last_activity_at
+    definition: A field on each seat returned by the seats endpoint, showing when the user last used Copilot. Empty if they never have.
+  - term: selected_users
+    definition: The endpoint that adds seats (POST) or cancels seats (DELETE) for a list of usernames in selected_usernames.
+  - term: manage_billing:copilot
+    definition: The token scope needed to call the Copilot user management endpoints for an organization.
+  - term: Pending cancellation
+    definition: The state of a cancelled seat. The user keeps Copilot until the end of the current billing cycle.
+interview:
+  - level: beginner
+    q: Someone turned off Copilot Chat on github.com for the whole org last week. How do you find out who?
+    a: >-
+      Open the organization's audit log and search action:copilot. Copilot policy changes are logged there with the actor and the time.
+    followUps:
+      - q: What else shows up there for Copilot?
+        a: >-
+          Seats being added or cancelled, policy changes and content exclusion changes.
+  - level: intermediate
+    q: How would you find Copilot seats nobody is using?
+    a: >-
+      Call GET /orgs/contoso/copilot/billing/seats and look at last_activity_at on each seat. An old date, or no date at all, means the person isn't using it. last_activity_editor tells me which editor they last used.
+    followUps: []
+  - level: experienced
+    q: You cancel a seat on the 3rd of the month with the REST API. When does the user lose Copilot?
+    a: >-
+      At the end of the current billing cycle. The DELETE call returns seats_cancelled and the seat goes into pending cancellation, but it stays usable until the cycle ends.
+    followUps:
+      - q: And what token do you need?
+        a: >-
+          One with the manage_billing:copilot scope, from someone allowed to manage Copilot billing for the org, like an owner or billing manager.
+  - level: scenario
+    q: Every new developer joins the "web" team. How do you make sure they all get Copilot without a ticket each time?
+    a: >-
+      Assign seats to the team instead of to people: POST /orgs/contoso/copilot/billing/selected_teams with selected_teams set to web. Anyone added to the team gets a seat, and anyone removed loses it at the end of the cycle.
+    followUps: []
+  - level: architecture
+    q: Design a monthly Copilot licence review for an org with 800 seats.
+    a: >-
+      A scheduled workflow calls the seats endpoint, flags seats with no activity in, say, 60 days, and opens an issue listing them for managers to confirm. Confirmed ones are cancelled with DELETE selected_users. The metrics endpoint shows overall usage for the report, and the audit log, searched with action:copilot, proves who changed what.
+    followUps: []
+revision:
+  keyPoints:
+    - Copilot audit log events start with copilot. Search action:copilot.
+    - Logged events include seats added or cancelled, policy changes and content exclusion changes.
+    - GET /orgs/{org}/copilot/billing shows the subscription settings and seat counts.
+    - GET /orgs/{org}/copilot/billing/seats lists seats with last_activity_at and last_activity_editor.
+    - POST or DELETE /orgs/{org}/copilot/billing/selected_users (selected_usernames) or /selected_teams (selected_teams) add or cancel seats.
+    - Token scope manage_billing:copilot. A cancelled seat lasts until the end of the billing cycle.
+    - /orgs/{org}/copilot/metrics returns usage metrics.
+  mistakes:
+    - Expecting a cancelled seat to stop working immediately.
+    - Using PATCH or PUT for seats. Adding is POST, cancelling is DELETE.
+    - Looking for Copilot settings changes in the repository's history instead of the organization audit log.
+  examTips:
+    - '"Who changed a Copilot policy?" = **audit log**, search **action:copilot**.'
+    - '"Find inactive seats" = **GET .../copilot/billing/seats** and **last_activity_at**.'
+    - '"Give a team Copilot by API" = **POST .../copilot/billing/selected_teams**.'
+    - '"Scope for the token" = **manage_billing:copilot**.'
+  quick:
+    - q: Which search finds Copilot events in the audit log?
+      a: "action:copilot"
+    - q: Which field shows when a seat was last used?
+      a: last_activity_at.
+    - q: Which HTTP method cancels seats for users?
+      a: DELETE on /orgs/{org}/copilot/billing/selected_users.
+    - q: When does a cancelled seat stop working?
+      a: At the end of the current billing cycle.
+    - q: Which token scope do the seat endpoints need?
+      a: manage_billing:copilot.
+references:
+  - title: REST API endpoints for Copilot user management
+    url: https://docs.github.com/en/rest/copilot/copilot-user-management
+  - title: Reviewing audit logs for GitHub Copilot Business
+    url: https://docs.github.com/en/copilot/how-tos/administer-copilot/manage-for-organization/review-activity/review-audit-logs
+  - title: Reviewing the audit log for your organization
+    url: https://docs.github.com/en/organizations/keeping-your-organization-secure/managing-security-settings-for-your-organization/reviewing-the-audit-log-for-your-organization
+  - title: REST API endpoints for Copilot metrics
+    url: https://docs.github.com/en/rest/copilot/copilot-metrics
+  - title: "Study guide for Exam GH-300: GitHub Copilot"
+    url: https://learn.microsoft.com/en-us/credentials/certifications/resources/study-guides/gh-300
+related:
+  - organization-policies
+  - copilot-plans
+  - content-exclusions
+---
+
+## Start with a question
+
+<Story question="We pay for 120 Copilot seats. Finance asks how many people actually use them, and security asks who switched off the public code filter. Where do I look?">
+
+Think of an office building. The front desk keeps a **visitor book**: who came in, when, which floor. And the facilities team has a **badge list**: who has a badge, and when each badge last opened a door.
+
+GitHub gives a Copilot admin both. The **audit log** is the visitor book: every Copilot settings change, seat change and content exclusion change, with who did it and when. The **Copilot user management REST API** is the badge list: every seat, when it was last used, and calls to hand out or take back seats in bulk.
+
+</Story>
+
+## Explain it like I'm 10
+
+<Eli10>
+
+Your class has a box of 30 library cards.
+
+The teacher keeps a notebook: "Monday, Sam got a card. Tuesday, the rule changed to 2 books each." That's the **audit log**.
+
+The teacher also checks the cards: "Mia hasn't borrowed a book since September." That's **last activity**.
+
+So she gives Mia's card to the new kid. Mia can still use it until the end of the month.
+
+</Eli10>
+
+## The technical explanation
+
+### Audit log events for Copilot
+
+Organization owners open the **Audit log** page in the organization settings. Copilot events have names that start with **`copilot.`**, so the search **`action:copilot`** filters to them. You'll see things like:
+
+- a seat added or cancelled for a user or team
+- a Copilot policy changed (for example, a feature enabled or disabled)
+- content exclusion settings changed
+
+Each entry has the **actor**, the **action**, the **time** and details. You can export the results. Event names change over time, so check the docs' list of audit log events rather than memorising each one. For the exam, remember the prefix and the search.
+
+### The Copilot user management REST API
+
+All the endpoints sit under `/orgs/{org}/copilot/billing`. With the GitHub CLI, `gh api` makes the calls for you:
+
+| Method and path | What it does |
+| --- | --- |
+| `GET /orgs/{org}/copilot/billing` | Subscription settings and a seat breakdown for the org |
+| `GET /orgs/{org}/copilot/billing/seats` | Every seat with `assignee`, `last_activity_at` and `last_activity_editor` |
+| `POST /orgs/{org}/copilot/billing/selected_users` | Add seats for `selected_usernames` |
+| `DELETE /orgs/{org}/copilot/billing/selected_users` | Cancel seats for `selected_usernames` |
+| `POST` / `DELETE /orgs/{org}/copilot/billing/selected_teams` | The same, for `selected_teams` |
+| `GET /orgs/{org}/copilot/metrics` | Usage metrics for the org |
+
+Finding an unused seat:
+
+```bash
+gh api /orgs/contoso/copilot/billing/seats
+# { "total_seats": 3, "seats": [
+#   { "assignee": { "login": "chen-qa" },
+#     "last_activity_at": "2026-09-02T09:12:00Z",
+#     "last_activity_editor": "jetbrains/2026.2" }, ... ] }
+```
+
+Giving one person a seat and taking one away:
+
+```bash
+gh api -X POST /orgs/contoso/copilot/billing/selected_users -f "selected_usernames[]=dina-new"
+# { "seats_created": 1 }
+gh api -X DELETE /orgs/contoso/copilot/billing/selected_users -f "selected_usernames[]=chen-qa"
+# { "seats_cancelled": 1 }
+```
+
+Three rules to remember:
+
+1. The token needs the **`manage_billing:copilot`** scope.
+2. Adding and cancelling by user or team applies when the org gives Copilot to **selected** members and teams, not "all members".
+3. A cancelled seat goes into **pending cancellation** and keeps working until the **end of the billing cycle**.
+
+<Flow
+  caption="A monthly seat review at Contoso"
+  steps={[
+    { title: 'List seats', text: 'GET .../copilot/billing/seats' },
+    { title: 'Spot idle ones', text: 'last_activity_at older than 60 days, or empty.' },
+    { title: 'Cancel', text: 'DELETE .../selected_users with their usernames.' },
+    { title: 'Add new joiners', text: 'POST .../selected_users or assign their team.' },
+    { title: 'Prove it', text: 'The audit log shows each change under action:copilot.' },
+  ]}
+/>
+
+<Callout type="exam">
+Match the question to the tool. "Who changed a Copilot setting" or "when was a seat removed" is the **audit log** with **`action:copilot`**. "Which seats are inactive" is **GET `/copilot/billing/seats`** and **`last_activity_at`**. "Assign seats to a team in a script" is **POST `/copilot/billing/selected_teams`**. Distractors use PUT or PATCH, a `/copilot/seats` path without `billing`, or claim a cancelled seat stops at once.
+</Callout>
+
+<TryIt labs="gh-seats-audit" text="List the seats, give dina-new a seat, cancel chen-qa's unused one and find both changes in the audit log." />
+
+<DeepDive title="Automate the review, keep a human in it">
+
+You can run the seat review on a schedule, for example a GitHub Actions workflow that calls the seats endpoint once a month and opens an issue listing seats with no activity in 60 days. Don't let the script cancel seats on its own: someone on leave or using an editor that reports activity late would lose access. Let a manager confirm, then cancel with one API call. Keep the token in an Actions secret, scoped to just what the job needs, and the audit log will show the cancellations with the token's owner as the actor.
+
+</DeepDive>
+
+## Real-world business scenario
+
+<Scenario
+  company="Contoso (fictional)"
+  industry="Online retail"
+  problem="Contoso paid for 120 Copilot Business seats but nobody knew who used them, and security couldn't tell who had changed the public code policy."
+  service="A monthly workflow that calls GET /orgs/contoso/copilot/billing/seats, an issue listing seats idle for 60 days, DELETE selected_users for confirmed ones, team-based seats for new joiners through selected_teams, and audit log searches with action:copilot."
+  why="The seats endpoint shows real usage per person, team seats remove the ticket for every new joiner, and the audit log answers 'who changed what' without guesswork."
+  outcome="Contoso cancelled 18 idle seats in the first review, new developers get Copilot the day they join a team, and security can trace every Copilot policy change."
+/>
+
+## When to use it and when not to
+
+<UseWhen
+  use={[
+    'Auditing who changed a Copilot policy, seat or content exclusion, with action:copilot.',
+    'Finding idle seats with last_activity_at before a renewal.',
+    'Adding or cancelling many seats in a script, or tying seats to a team.',
+  ]}
+  avoid={[
+    'Expecting a seat cancelled by API to stop working immediately.',
+    'Auto-cancelling seats with no human check.',
+    'Storing the manage_billing:copilot token in code or a shared file.',
+  ]}
+  alternatives={[
+    '<strong>Organization settings › Copilot › Access</strong> for a handful of seat changes by hand.',
+    '<strong>The Copilot metrics API and dashboard</strong> for adoption trends rather than per-seat activity.',
+  ]}
+/>

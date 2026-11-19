@@ -1,0 +1,232 @@
+---
+title: "Copilot CLI Sessions, Scripts and Files"
+seoTitle: Copilot CLI Sessions, Scripts and Tool Permissions | GH-300
+description: Use GitHub Copilot CLI interactively or with copilot -p, control tools with --allow-tool and --deny-tool, resume sessions, and generate scripts you review.
+answer: >-
+  GitHub Copilot CLI runs two ways. An **interactive session** (`copilot`, or `copilot -i "…"` to start with a prompt) asks before each new tool, and a yes can last for the session; **/exit** saves it and **`copilot --continue`** or **`--resume`** brings it back. A **non-interactive** run (`copilot -p "…"`) does one prompt and exits, so it can't ask: it only uses tools you pre-approve with **`--allow-tool`** (such as `'write'` or `'shell(git)'`), and **`--deny-tool`** always wins. Use it to generate scripts and tidy files, then **read the result before you run it**.
+updated: 2026-11-19
+readingMinutes: 11
+keyTerms:
+  - term: Interactive session
+    definition: A Copilot CLI conversation started with copilot or copilot -i, where it can ask you to approve tools as it goes.
+  - term: Programmatic mode
+    definition: Running one prompt with copilot -p "..." that exits when done and can't stop to ask for approval.
+  - term: "--allow-tool"
+    definition: A flag that pre-approves a tool, for example 'write', 'shell(git)' or an MCP server's tool.
+  - term: "--deny-tool"
+    definition: A flag that blocks a tool. A deny always beats an allow.
+  - term: "--continue"
+    definition: Resumes the most recent Copilot CLI session. --resume lets you pick an earlier one.
+  - term: /compact
+    definition: Summarises the conversation so far to free space in the context window without starting over.
+interview:
+  - level: beginner
+    q: What's the difference between copilot and copilot -p?
+    a: >-
+      Plain copilot opens an interactive session where I chat, approve tools as they come up and keep going. copilot -p runs one prompt and exits, which suits scripts and CI. Because it can't stop to ask, it only uses tools I've allowed on the command line.
+    followUps: []
+  - level: intermediate
+    q: You want Copilot CLI to write a file in a CI job but never delete anything. How?
+    a: >-
+      copilot -p with --allow-tool 'write' and --deny-tool 'shell(rm)'. The deny wins even if something broader is allowed. I avoid --allow-all-tools in CI because then it can run anything the job's account can.
+    followUps:
+      - q: What happens if you forget --allow-tool 'write'?
+        a: >-
+          It can't write the file. In programmatic mode there's nobody to ask, so the tool is refused and it tells you it needed permission.
+  - level: experienced
+    q: A long Copilot CLI session is getting slow and the answers drift. What are your options?
+    a: >-
+      /context shows what's filling the window. /compact summarises the history so I keep the thread without the bulk. If the topic has changed, /clear or a fresh session is cleaner. For a side task, a sub-agent or /delegate keeps that work out of my main context.
+    followUps: []
+  - level: scenario
+    q: Copilot CLI wrote a backup script that deletes old archives. Do you run it?
+    a: >-
+      Not before I read it. I check what it deletes, whether paths are quoted, and that set -euo pipefail is there. I'd run it once against a test folder, then commit it so the change is reviewed like any other code.
+    followUps: []
+revision:
+  keyPoints:
+    - copilot starts an interactive session; copilot -i "prompt" starts one with a first prompt.
+    - copilot -p "prompt" runs once and exits; it can only use pre-approved tools.
+    - "--allow-tool and --deny-tool take patterns: 'write', 'shell', 'shell(git)', '<mcp-server>(tool)'. Deny wins."
+    - --allow-all-tools approves everything. Use it only where you trust the task and the environment.
+    - In a session, approve a tool once or for the rest of the session.
+    - /exit saves the session; --continue resumes the latest, --resume picks one; /resume and /session work inside.
+    - /context and /compact manage the context window.
+    - Generated scripts and file moves are drafts. Read and test them.
+  mistakes:
+    - Expecting copilot -p to pause and ask for permission.
+    - Using --allow-all-tools in CI.
+    - Running a generated script before reading it.
+  examTips:
+    - '"Run Copilot CLI in a script with no prompts" = **copilot -p** plus **--allow-tool**.'
+    - '"Block a command even if other tools are allowed" = **--deny-tool** (deny wins).'
+    - '"Pick up yesterday''s conversation" = **copilot --continue** or **--resume**.'
+  quick:
+    - q: Which flag runs a single prompt non-interactively?
+      a: -p (or --prompt)
+    - q: Which wins, --allow-tool or --deny-tool?
+      a: --deny-tool
+    - q: Which tool pattern allows only git commands?
+      a: shell(git)
+    - q: How do you resume the most recent session?
+      a: copilot --continue
+    - q: Which slash command summarises history to free context space?
+      a: /compact
+references:
+  - title: Using GitHub Copilot CLI
+    url: https://docs.github.com/en/copilot/how-tos/use-copilot-agents/use-copilot-cli
+  - title: About GitHub Copilot CLI
+    url: https://docs.github.com/en/copilot/concepts/agents/about-copilot-cli
+  - title: Responsible use of GitHub Copilot CLI
+    url: https://docs.github.com/en/copilot/responsible-use/copilot-cli
+  - title: "Study guide for Exam GH-300 (Microsoft Learn)"
+    url: https://learn.microsoft.com/en-us/credentials/certifications/resources/study-guides/gh-300
+related:
+  - copilot-cli-install-and-commands
+  - agent-mode-mcp-and-subagents
+  - validate-copilot-output
+  - custom-instructions-and-prompt-files
+---
+
+## Start with a question
+
+<Story question="Would you give a new assistant your house keys and say 'do whatever you think is needed' while you're away?">
+
+Probably not. You'd say "you can water the plants and take in the post, but don't touch the car". And if you're at home, you'd rather they ask before each new job.
+
+Copilot CLI works exactly like that. In an **interactive session** you're at home: it asks before each new tool, like writing a file or running `mv`. In a **non-interactive** run (`copilot -p`) you're away, so you hand over a written list: `--allow-tool 'write'`, `--deny-tool 'shell(rm)'`. Anything not on the list, it doesn't do.
+
+</Story>
+
+## Explain it like I'm 10
+
+<Eli10>
+
+You can talk with Copilot in the terminal for a long time, like a phone call. It asks "may I?" before it does something new.
+
+Or you can leave it one note with one job, and walk away.
+
+When you leave a note, you also write what it's allowed to do and what it must never do.
+
+"Never" always beats "allowed".
+
+And whatever it makes, you check before you use it.
+
+</Eli10>
+
+## The technical explanation
+
+### Interactive sessions
+
+```text
+$ copilot                                         # open a session
+$ copilot -i "organize the old log files into logs/archive"   # open one with a first prompt
+```
+
+In a session, Copilot asks before it uses a tool it hasn't been allowed:
+
+```text
+? Allow Copilot to use shell(mv)? (y/n) y
+✔ Moved 2 files to logs/archive/
+```
+
+The real prompt lets you approve that tool once or for the rest of the session, or say no and tell Copilot what to do instead (the exact wording changes between versions). Useful session commands:
+
+- `/exit` leaves and **saves** the session. `copilot --continue` resumes the most recent one; `copilot --resume` lets you pick. Inside a session, `/resume` switches and `/session` shows details.
+- `/context` shows what's filling the context window, `/compact` summarises history to free space, and `/clear` starts over.
+- `/usage` shows what the session used, including premium requests.
+- `!git status` runs a shell command yourself without leaving.
+
+### Non-interactive runs with -p
+
+`copilot -p "…"` (or `--prompt`) runs one prompt and exits. That's what you want in shell scripts, cron jobs and CI. It **can't stop to ask**, so any tool you haven't pre-approved is refused:
+
+```text
+$ copilot -p "write a bash script that backs up logs/ and keeps 7 archives"
+✖ Create scripts/backup-logs.sh: needs permission for "write".
+```
+
+Give it exactly what it needs:
+
+```bash
+copilot -p "write a bash script that backs up logs/ and keeps 7 archives" \
+  --allow-tool 'write' \
+  --deny-tool 'shell(rm)'
+```
+
+### Tool patterns and the deny rule
+
+| Pattern | Means |
+| --- | --- |
+| `'write'` | Create or change files |
+| `'shell'` | Any shell command |
+| `'shell(git)'` | Only `git` commands |
+| `'github(list_issues)'` | One tool from an MCP server (server name, then tool) |
+
+Two rules matter. **`--deny-tool` always wins** over an allow, so `--allow-tool 'shell' --deny-tool 'shell(rm)'` runs anything except `rm`. And **`--allow-all-tools`** approves everything: fine in a throwaway container you trust, risky on your laptop or in a CI job that holds secrets.
+
+<Flow
+  caption="How Copilot CLI decides whether to use a tool"
+  steps={[
+    { title: 'Denied?', text: 'If a --deny-tool pattern matches, the tool is refused. Full stop.' },
+    { title: 'Allowed?', text: 'If --allow-tool or a session approval matches, it runs.' },
+    { title: 'Interactive?', text: 'In a session, Copilot asks you.' },
+    { title: 'Programmatic', text: 'With -p there is nobody to ask, so the tool is refused.' },
+  ]}
+/>
+
+### Scripts and files: review the draft
+
+Here's the kind of script you might get:
+
+```bash
+#!/usr/bin/env bash
+set -euo pipefail
+mkdir -p backups
+tar -czf "backups/logs-$(date +%F).tar.gz" logs/
+ls -1t backups/logs-*.tar.gz | tail -n +8 | xargs -r rm --
+```
+
+It looks fine, but the last line deletes files. Read it, check it keeps seven archives as you asked, run it once against a test folder, then commit it so someone reviews it. The same goes for file moves and renames: check `git status` afterwards and make sure nothing went missing.
+
+<TryIt labs="gh-cli-scripts" text="Run a -p prompt with no permissions, then allow write and deny a command, review the script and resume your session." />
+
+<Callout type="exam">
+Look for the word "non-interactive", "script" or "pipeline": that's **copilot -p** with **--allow-tool**. "Block one command no matter what" is **--deny-tool**, because **deny wins**. "Approve everything" is **--allow-all-tools**, usually the wrong answer when the question mentions safety. "Continue where you left off" is **--continue** (latest) or **--resume** (choose). "The session is getting long" points to **/compact** or **/context**.
+</Callout>
+
+<DeepDive title="Configuration, custom agents and MCP in scripted runs">
+
+Copilot CLI keeps its settings in `~/.copilot/`: `settings.json`, `mcp-config.json` for MCP servers, and `agents/` for personal custom agents. A repository can add its own agents in `.github/agents/*.agent.md` and instructions in `.github/copilot-instructions.md` or `AGENTS.md`, which the CLI reads. In a script you can combine them: `copilot --agent=test-writer -p "write tests for src/discount.js" --allow-tool 'write' --model <model>`. MCP tools follow the same permission rules, so allow them by name, for example `--allow-tool 'github(list_issues)'`, rather than opening everything.
+
+</DeepDive>
+
+## Real-world business scenario
+
+<Scenario
+  company="Contoso (fictional)"
+  industry="Online retail"
+  problem="Contoso wanted a nightly job that writes release notes from merged pull requests. The first attempt used --allow-all-tools on a runner holding deployment secrets, and security blocked it."
+  service="A scheduled job running copilot -p with a fine-grained token, --allow-tool 'write' and 'shell(git)', and --deny-tool 'shell(curl)' and 'shell(rm)'. The output goes into a pull request, not straight to main."
+  why="The job gets exactly the tools it needs, a deny always wins, and a person reviews the notes before they're merged."
+  outcome="Release notes now arrive every morning, and the security team approved the job because its permissions fit on one line."
+/>
+
+## When to use it and when not to
+
+<UseWhen
+  use={[
+    'Interactive sessions for exploring a repo, tidying files and multi-step work you want to watch.',
+    'copilot -p in scripts and CI with the smallest set of --allow-tool patterns.',
+    '--continue or --resume to pick up a long task without explaining it again.',
+  ]}
+  avoid={[
+    '--allow-all-tools on a machine with secrets or production access.',
+    'Running a generated script or bulk file move without reading it first.',
+    'One endless session for unrelated work. Use /compact, /clear or a new session.',
+  ]}
+  alternatives={[
+    '<strong>/delegate</strong> to hand a bigger task to Copilot coding agent, which works on its own branch and opens a draft PR.',
+    '<strong>Agent mode in VS Code</strong> when you want to see diffs in the editor.',
+  ]}
+/>

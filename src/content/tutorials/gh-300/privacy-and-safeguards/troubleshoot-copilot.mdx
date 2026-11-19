@@ -1,0 +1,199 @@
+---
+title: "Troubleshoot GitHub Copilot Suggestions and Content Exclusions"
+seoTitle: Troubleshoot Copilot Suggestions and Exclusions | GH-300
+description: Fix GitHub Copilot when it stops suggesting. Check sign-in and seat, excluded files, language settings, the public code filter, proxies, the extension and logs.
+answer: >-
+  When Copilot goes quiet, start with the **status bar icon** and work outward. Are you **signed in** with an account that has a **seat**? Is the file **excluded** by a content exclusion? Are completions **disabled for that language** in `github.copilot.enable`? Is the **public code filter** (Block) hiding a match? Is a **proxy or firewall** blocking Copilot's endpoints? Is the **extension up to date**, and does an **organization policy** turn the feature off? Read **Output › GitHub Copilot** (or run **GitHub Copilot: Open Logs**) for the real error. For exclusions, remember changes can take **up to 30 minutes** to reach an open IDE; reload the window.
+updated: 2026-11-19
+readingMinutes: 10
+keyTerms:
+  - term: Copilot status icon
+    definition: The icon in the IDE status bar that shows whether Copilot is ready, signed out, disabled, or blocked for the current file.
+  - term: Seat
+    definition: A Copilot licence assigned to a user, from their own plan or from an organization.
+  - term: GitHub Copilot logs
+    definition: The Output panel channel for GitHub Copilot in VS Code, opened with Output › GitHub Copilot or the command GitHub Copilot - Open Logs.
+  - term: Proxy
+    definition: A network server that relays traffic. A corporate proxy or firewall must allow Copilot's endpoints or requests fail.
+  - term: Reload Window
+    definition: A VS Code command that restarts the window and its extensions, often used to pick up new settings or exclusion changes.
+  - term: Organization policy
+    definition: A Copilot setting chosen by an organization or enterprise owner that can turn features such as chat or the CLI on or off for its seats.
+interview:
+  - level: beginner
+    q: Copilot stopped suggesting in VS Code. What's the first thing you check?
+    a: >-
+      The Copilot icon in the status bar. It tells me straight away if I'm signed out, if Copilot is disabled, or if the file is excluded. Then I check that my account actually has a seat.
+    followUps:
+      - q: And if the icon looks fine?
+        a: >-
+          I open Output and pick GitHub Copilot to read the logs. Network errors, auth errors and policy messages show up there.
+  - level: intermediate
+    q: Suggestions work everywhere except Markdown files. What's likely going on?
+    a: >-
+      Completions are probably turned off for Markdown in the github.copilot.enable setting. That's a per-language switch. If the setting's fine, I'd check whether the Markdown files are covered by a content exclusion.
+    followUps: []
+  - level: experienced
+    q: The logs show a 407 error when fetching completions. What does that mean and what do you do?
+    a: >-
+      A 407 is proxy authentication required, so a corporate proxy is in the way. I'd set VS Code's http.proxy settings correctly, or ask IT to allow Copilot's endpoints through the proxy and firewall. If the proxy inspects TLS, the corporate certificate may need to be trusted too.
+    followUps:
+      - q: How do you confirm it's fixed?
+        a: >-
+          Reload the window, type in a file, and watch the Copilot log for successful requests instead of errors.
+  - level: scenario
+    q: An admin excluded /secrets/** five minutes ago, but a developer still gets suggestions in that folder. What do you tell them?
+    a: >-
+      It can take up to 30 minutes for exclusion changes to reach an IDE that's already open. Reload the window first. If it still happens after that, check the pattern matches the path from the repository root and that they're in a supported IDE with a current extension.
+    followUps: []
+  - level: architecture
+    q: How would you cut down Copilot support tickets across 500 developers?
+    a: >-
+      Publish a short checklist: status icon, seat, exclusions, language settings, proxy, extension version, logs. Make sure the network team has allowed Copilot's endpoints before rollout, keep extensions updated through managed settings, and tell people when policies or exclusions change, since both look like "Copilot is broken" from the editor.
+    followUps: []
+revision:
+  keyPoints:
+    - Start with the status bar icon, then the seat and sign-in.
+    - One file only? Check content exclusions and the per-language github.copilot.enable setting.
+    - Missing one suggestion with Block set? The public code filter may be hiding a match.
+    - Network errors mean a proxy or firewall is blocking Copilot's endpoints.
+    - Update the extension and check organization policies for disabled features.
+    - Logs live in Output › GitHub Copilot, or run GitHub Copilot - Open Logs.
+    - Exclusion changes can take up to 30 minutes; reload the window.
+  mistakes:
+    - Reinstalling everything before reading the logs.
+    - Assuming exclusions apply instantly and filing a bug after five minutes.
+    - Forgetting that an organization policy can switch off a feature, such as chat or the CLI.
+    - Debugging the network when the user simply has no seat.
+  examTips:
+    - '"No suggestions in any file" = **sign-in / seat** first, then **network**.'
+    - '"No suggestions in one file" = **content exclusion** or **language disabled**.'
+    - '"Exclusion added but suggestions continue" = wait **up to 30 minutes** or **reload the window**.'
+    - '"Find the error details" = **Output › GitHub Copilot** logs.'
+  quick:
+    - q: Where's the first place to look when Copilot stops?
+      a: The Copilot status bar icon.
+    - q: Which setting turns completions off for a language?
+      a: github.copilot.enable.
+    - q: What does a proxy error in the logs point to?
+      a: A proxy or firewall blocking Copilot's endpoints.
+    - q: How long can an exclusion change take to reach an open IDE?
+      a: Up to 30 minutes.
+    - q: Which command opens the Copilot logs?
+      a: GitHub Copilot - Open Logs (or Output › GitHub Copilot).
+references:
+  - title: Troubleshooting common issues with GitHub Copilot
+    url: https://docs.github.com/en/copilot/how-tos/troubleshoot-copilot/troubleshoot-common-issues
+  - title: Viewing logs for GitHub Copilot in your environment
+    url: https://docs.github.com/en/copilot/how-tos/troubleshoot-copilot/view-logs
+  - title: Troubleshooting firewall settings for GitHub Copilot
+    url: https://docs.github.com/en/copilot/how-tos/troubleshoot-copilot/troubleshoot-firewall-settings
+  - title: Troubleshooting network errors for GitHub Copilot
+    url: https://docs.github.com/en/copilot/how-tos/troubleshoot-copilot/troubleshoot-network-errors
+  - title: GitHub Copilot fundamentals (Microsoft Learn)
+    url: https://learn.microsoft.com/training/paths/copilot/
+related:
+  - content-exclusions
+  - enable-copilot-in-the-ide
+  - organization-policies
+  - public-code-filter-and-references
+---
+
+## Start with a question
+
+<Story question="Monday morning, you open contoso-shop, start typing, and no grey text appears. Where do you start?">
+
+Not by reinstalling VS Code. That's the slow way.
+
+Copilot can go quiet for about seven ordinary reasons, and most of them tell you which one it is if you look in the right place. The status bar icon, then the logs. Five minutes, usually.
+
+Some of the reasons aren't bugs at all. An admin may have excluded the file you're in. You may have switched off suggestions for YAML last week and forgotten. Knowing the list means you can tell "broken" from "working as configured".
+
+</Story>
+
+## Explain it like I'm 10
+
+<Eli10>
+
+Your torch won't turn on. You don't throw it away. You check, in order:
+
+Is it switched on? Are there batteries? Are they the right way round? Is the bulb OK?
+
+Copilot is the same. Are you **signed in**? Do you have a **seat** (the batteries)? Is this **one file** blocked on purpose? Is the **internet** getting through? You go down the list until you find it.
+
+</Eli10>
+
+## The technical explanation
+
+### Work from the editor outwards
+
+| Symptom | Likely cause | Check or fix |
+| --- | --- | --- |
+| No suggestions anywhere, icon shows signed out | Not signed in | **GitHub Copilot: Sign in** from the Command Palette |
+| Signed in, still nothing | No **seat**, or the seat was removed | Check your Copilot settings on github.com, or ask the org admin |
+| Nothing in **one file** | File is **excluded** | Status icon says excluded. Expected behaviour, ask the admin if it's wrong |
+| Nothing in one **language** | Disabled in `github.copilot.enable` | Set that language to `true` |
+| A suggestion seems to vanish | **Public code filter** is Block and it matched | Expected. The org chose Block |
+| Spinner, then errors | **Proxy or firewall** blocks Copilot's endpoints | Read the logs, set `http.proxy`, ask IT to allow the endpoints |
+| Odd errors after an update | **Extension out of date** or mismatched with VS Code | Update the GitHub Copilot Chat extension and VS Code |
+| Chat or CLI missing, completions fine | **Organization policy** turned the feature off | Ask the admin which policies are set |
+
+### Read the logs
+
+In VS Code, open **View › Output** and pick **GitHub Copilot** from the dropdown, or run **GitHub Copilot: Open Logs** from the Command Palette. That's where the real reason shows up:
+
+```text
+[GitHub Copilot] Fetching completions…
+[GitHub Copilot] Error: request blocked by proxy (407)
+```
+
+A `407` means proxy authentication. Errors about certificates often mean a proxy that inspects TLS traffic, and the corporate root certificate needs to be trusted. Connection timeouts mean a firewall isn't letting Copilot's endpoints through. GitHub's firewall troubleshooting page lists the hosts your network team needs to allow.
+
+### Content exclusion problems
+
+Exclusions cause two kinds of tickets.
+
+**"I excluded it, but Copilot still suggests there."** Changes can take **up to 30 minutes** to reach an IDE that's already open. Reload the window (**Developer: Reload Window**). If it still happens, check the pattern: `/secrets/**` anchors at the repository root, `secrets/**` can match anywhere. Also check the IDE and extension are supported and current, and remember exclusions don't apply to every Copilot feature.
+
+**"Copilot doesn't work in this file and I need it."** Look at the status icon. If it says the file is excluded, Copilot is doing what the admin asked. Talk to whoever owns the rule (repository admin or org owner). The audit log shows who changed it, as a `copilot.` event.
+
+<Callout type="exam">
+Match the scope of the symptom to the cause. **Every file** silent: sign-in, seat, network, extension. **One file**: content exclusion. **One language**: `github.copilot.enable`. **Exclusion not working yet**: up to **30 minutes**, reload the window. **Need error details**: **Output › GitHub Copilot** logs. If a feature like chat is missing for everyone in the org, think **policy**, not a broken install.
+</Callout>
+
+<DeepDive title="The Copilot CLI has its own checks">
+
+In the terminal, Copilot CLI problems follow the same idea. `copilot version` and `copilot update` deal with old builds. `/login` fixes authentication, or check the token in `COPILOT_GITHUB_TOKEN`, `GH_TOKEN` or `GITHUB_TOKEN` (a fine-grained token with the Copilot Requests permission; classic tokens aren't supported). If the CLI won't start at all for an org seat, the organization may have turned the CLI off by policy.
+
+</DeepDive>
+
+## Real-world business scenario
+
+<Scenario
+  company="Contoso (fictional)"
+  industry="Online retail"
+  problem="After Contoso moved to a new corporate proxy, 60 developers reported that Copilot had stopped working, and the help desk started reinstalling VS Code on each laptop."
+  service="One engineer read Output › GitHub Copilot, found 407 proxy errors, and the network team allowed Copilot's endpoints and pushed the proxy settings through managed VS Code settings. The team also published a one-page checklist."
+  why="The logs pointed at the real cause in minutes, so nobody had to rebuild machines."
+  outcome="Copilot came back for everyone the same afternoon, and later tickets dropped because most turned out to be excluded files or a disabled language."
+/>
+
+## When to use it and when not to
+
+<UseWhen
+  use={[
+    'Copilot stops suggesting, everywhere or in one file.',
+    'A new content exclusion doesn\'t seem to work, or blocks a file someone needs.',
+    'Copilot works at home but not on the office network.',
+  ]}
+  avoid={[
+    'Reinstalling the editor before you\'ve read the status icon and the logs.',
+    'Filing a bug when the status icon says the file is excluded. That\'s a configuration choice.',
+    'Changing your proxy settings when the real issue is a missing seat.',
+  ]}
+  alternatives={[
+    '<strong>GitHub Status</strong> to check for a service incident before you debug locally.',
+    '<strong>Your organization admin</strong> for seats, policies and exclusion rules.',
+    '<strong>GitHub Support</strong> with your Copilot logs attached when the checklist doesn\'t find it.',
+  ]}
+/>

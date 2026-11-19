@@ -1,0 +1,27 @@
+{ "cert": "gh-300", "domain": 4, "topic": "prompt-engineering-and-chat-history", "questions": [
+  { "id": "gh-chist-1", "type": "single", "question": "A developer uses one GitHub Copilot Chat conversation all day. Early in the conversation the developer said to use version 1 of an internal pricing API, and later said the team moved to version 2. New responses still call version 1. What is the most likely cause?", "options": [
+    { "text": "Earlier messages in the conversation are still sent as context with each new prompt", "why": "Correct. Chat history is part of the prompt, so the outdated instruction continues to influence responses." },
+    { "text": "Copilot permanently learns instructions from each user", "why": "Copilot does not permanently learn from a conversation. Each request is processed from the prompt it receives." },
+    { "text": "The content exclusion settings block version 2 files", "why": "Nothing in the scenario indicates a content exclusion." },
+    { "text": "The public code filter replaced the version 2 endpoint", "why": "The public code filter blocks or references matching public code. It does not change API versions." } ], "answer": [0], "explanation": "Chat history within the same conversation is included in each request. Start a new chat and state the current facts.", "objective": "4.2.2" },
+  { "id": "gh-chist-2", "type": "single", "question": "A developer finishes a task in GitHub Copilot Chat and starts work on an unrelated module. The developer wants the next answers not to be influenced by the previous discussion. What should the developer do?", "options": [
+    { "text": "Start a new chat or run /clear", "why": "Correct. This removes the earlier conversation from the context of the next prompt." },
+    { "text": "Run /explain on the new module", "why": "/explain explains code but does not remove the earlier history from the conversation." },
+    { "text": "Change the model in the model picker", "why": "Changing the model does not clear the existing conversation history." },
+    { "text": "Give a thumbs-down to the last response", "why": "Feedback is sent to GitHub but does not clear the conversation." } ], "answer": [0], "explanation": "A new chat or /clear starts without previous history.", "objective": "4.2.2" },
+  { "id": "gh-chist-3", "type": "multi", "question": "Which TWO items can be included in the prompt that Visual Studio Code sends when a developer submits a message in GitHub Copilot Chat?", "options": [
+    { "text": "Earlier messages from the same chat conversation", "why": "Correct. Chat history provides context for follow-up questions." },
+    { "text": "The code currently selected in the active editor", "why": "Correct. The active file and selection are common sources of context." },
+    { "text": "Messages from the developer's other chat conversations last week", "why": "A conversation does not include history from other conversations." },
+    { "text": "Files in a path excluded by an organization content exclusion", "why": "Excluded content is not used as context in supported IDEs." } ], "answer": [0, 1], "explanation": "The prompt combines the user's message with context such as the selection, active file, references, custom instructions and the current chat history.", "objective": "4.2.2" },
+  { "id": "gh-chist-4", "type": "single", "question": "Microsoft Learn describes prompt engineering principles for GitHub Copilot as the 4 S's. A developer opens related files and uses descriptive file and function names so that Copilot has useful context. Which principle does this represent?", "options": [
+    { "text": "Surround", "why": "Correct. Surround means providing relevant context, such as related open files and clear names." },
+    { "text": "Single", "why": "Single means focusing the prompt on one well-defined task." },
+    { "text": "Specific", "why": "Specific means giving explicit, detailed requirements." },
+    { "text": "Short", "why": "Short means keeping the prompt concise." } ], "answer": [0], "explanation": "The 4 S's are single, specific, short and surround.", "objective": "4.2.1" },
+  { "id": "gh-chist-5", "type": "single", "question": "A developer submits a prompt in GitHub Copilot Chat. Which sequence describes how the request is processed?", "options": [
+    { "text": "The IDE gathers context and builds the prompt, sends it over HTTPS to the Copilot proxy for authentication and filtering, the model generates a response, and the response is post-processed before it is displayed", "why": "Correct. Context gathering, the proxy, the model and post-processing occur in this order." },
+    { "text": "The model generates a response, the IDE gathers context, and the proxy filters the context", "why": "Context must be gathered before the model can generate a response." },
+    { "text": "The IDE sends the prompt directly to the model, and the proxy is used only for code completions", "why": "Requests pass through the Copilot proxy before reaching the model." },
+    { "text": "The IDE runs the generated code to validate it, then displays the response", "why": "Copilot does not execute generated code to validate it. The developer must review and test it." } ], "answer": [0], "explanation": "The prompt flow is context gathering, secure transmission to the proxy with filtering, generation, then post-processing and display.", "objective": "4.2.2" }
+] }

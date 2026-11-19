@@ -1,0 +1,213 @@
+---
+title: "Prompt Engineering Principles and Chat History in Copilot"
+seoTitle: Prompt Principles and Chat History in Copilot | GH-300
+description: The principles behind good Copilot prompts, how a chat prompt flows to the model and back, and how chat history helps follow-ups or drags answers off topic.
+answer: >-
+  **Prompt engineering** means shaping what you send Copilot so it can act on it: one clear task, specific details, short and relevant context, examples when the format matters, then refine. Microsoft Learn sums it up as the **4 S's**: **single**, **specific**, **short** and **surround** (keep related files open, use clear names). When you send a chat message, the IDE adds your selection, the active file, any `#` references, custom instructions and the **earlier messages in the same chat**, sends that prompt over HTTPS through the Copilot proxy to the model, and filters the reply before you see it. **Chat history** makes follow-ups like "now add tests" work, but old or unrelated turns can confuse answers and use up the context window, so start a **new chat** or type `/clear` when the topic changes.
+updated: 2026-11-19
+readingMinutes: 10
+keyTerms:
+  - term: Prompt engineering
+    definition: Writing and structuring the input to a model (instruction, context, examples, constraints) so the output is useful with less clean-up.
+  - term: 4 S's
+    definition: Microsoft Learn's prompt principles for Copilot - single task, specific details, short prompts, and surround (relevant context such as open files and clear names).
+  - term: Chat history
+    definition: The earlier questions and answers in the current Copilot Chat conversation, which are sent as context with each new message.
+  - term: Context window
+    definition: The limited amount of text a model can take in for one request. History, files and instructions all compete for it.
+  - term: /clear
+    definition: A chat slash command that clears the current conversation so the next prompt starts without old history.
+interview:
+  - level: beginner
+    q: Does Copilot Chat remember what you said earlier?
+    a: >-
+      Within the same conversation, yes. The earlier messages go along with each new prompt, which is why "now write tests for it" works. A new chat starts empty, and Copilot doesn't carry memory from one conversation into another.
+    followUps:
+      - q: So how do I make something stick across chats?
+        a: >-
+          Put it in custom instructions, like .github/copilot-instructions.md, which are added to requests automatically. Don't rely on an old chat.
+  - level: intermediate
+    q: Walk me through what happens when you press Enter in Copilot Chat.
+    a: >-
+      The extension builds a prompt from my message, the active file and selection, any #file or #codebase references, custom instructions and the chat history. It sends it over HTTPS to the Copilot proxy, which authenticates it and runs filters, for example for harmful content and prompt injection. The model generates a reply, it's post-processed and filtered again, and it appears in chat. Then I review it and either follow up or start fresh.
+    followUps: []
+  - level: experienced
+    q: Answers in a long chat have started mixing up an old API version with the new one. Why, and what's your fix?
+    a: >-
+      The old instruction is still in the history, so it keeps being sent as context, and a long thread also crowds the context window. I'd start a new chat, put the current facts in the first prompt (API v2, the endpoint, an example file) and keep that thread to one topic.
+    followUps: []
+  - level: scenario
+    q: A teammate writes one giant prompt asking for a feature, tests, docs and a migration. The result is shallow. How would you coach them?
+    a: >-
+      Break it into small steps in one focused chat: the function first, check it, then the tests, then the docs. Each prompt is single and specific, and the history from earlier steps helps the later ones. That's the 4 S's in practice.
+    followUps: []
+revision:
+  keyPoints:
+    - "Principles: one task, specific details, short and relevant context, examples, iterate."
+    - "Microsoft Learn's 4 S's: single, specific, short, surround."
+    - "Prompt flow: your words + selection/active file + # references + instructions + chat history → proxy (auth, filters) → model → post-processing → chat."
+    - Chat history is sent with each message in the same conversation; that's what makes follow-ups work.
+    - Old or off-topic history confuses answers and uses context window. Start a new chat or /clear.
+    - Copilot doesn't remember other conversations. Standing rules belong in custom instructions.
+  mistakes:
+    - Keeping one endless chat for every topic of the day.
+    - Correcting a fact mid-thread and expecting old answers to be forgotten.
+    - Asking for several unrelated things in one prompt.
+  examTips:
+    - '"Answers reference something from earlier in the conversation" = **chat history** is part of the prompt.'
+    - '"Responses became confused after switching topics" = start a **new chat** or **/clear**.'
+    - '"Rules must apply to every conversation" = **custom instructions**, not chat history.'
+  quick:
+    - q: What are the 4 S's?
+      a: Single, specific, short, surround.
+    - q: Which slash command clears the current chat?
+      a: /clear
+    - q: Does a new chat include the previous conversation?
+      a: No. It starts without that history.
+    - q: Name two things besides your message that go into a chat prompt.
+      a: The active file or selection and the chat history (also # references and custom instructions).
+    - q: Why can a very long chat give worse answers?
+      a: Old turns compete for the limited context window and can steer answers off topic.
+references:
+  - title: Prompt engineering for GitHub Copilot Chat
+    url: https://docs.github.com/en/copilot/concepts/prompting/prompt-engineering
+  - title: Introduction to prompt engineering with GitHub Copilot (Microsoft Learn)
+    url: https://learn.microsoft.com/training/modules/introduction-prompt-engineering-with-github-copilot/
+  - title: Asking GitHub Copilot questions in your IDE
+    url: https://docs.github.com/en/copilot/how-tos/chat-with-copilot/chat-in-ide
+  - title: Study guide for Exam GH-300 GitHub Copilot
+    url: https://learn.microsoft.com/credentials/certifications/resources/study-guides/gh-300
+related:
+  - zero-shot-and-few-shot-prompting
+  - prompt-structure-and-context
+  - copilot-data-flow
+  - custom-instructions-and-prompt-files
+---
+
+## Start with a question
+
+<Story question="If you told a colleague at 9 am to use the v1 pricing API, then at 11 am said 'actually we moved to v2', which one would they use at 4 pm?">
+
+A person would probably remember the correction. Copilot Chat sees the whole conversation every time you send a message, both the 9 am instruction and the 11 am correction, and it has to weigh them. In a long thread, the old one can win.
+
+That's what happened to Asha on the contoso-shop team. She asked for a discount endpoint late in the day, and Copilot called `/v1/prices`. Nothing was wrong with the model. The history was. She opened a new chat, wrote "Using pricing API v2 (`/v2/prices`), add a discount endpoint, follow #file:src/orders.js", and got the right answer first time.
+
+</Story>
+
+## Explain it like I'm 10
+
+<Eli10>
+
+Imagine passing a notebook to a friend. Every time you write a new question, they read the **whole notebook** before answering.
+
+That's handy when your question is "and what about the next one?", because they can see what "the next one" means.
+
+But if the first pages are about maths and you've switched to a story about dragons, the maths pages still get read. Your friend gets muddled.
+
+So when you change subject, you start a fresh notebook.
+
+</Eli10>
+
+## Visual: the prompt loop
+
+<Flow
+  caption="What goes into one Copilot Chat request"
+  steps={[
+    { title: 'You write', text: 'One task, specific details, examples if the format matters.' },
+    { title: 'IDE adds context', text: 'Active file, selection, #file / #codebase, custom instructions and earlier messages in this chat.' },
+    { title: 'Proxy and model', text: 'Sent over HTTPS to the Copilot proxy (auth, filters), then the model generates a reply.' },
+    { title: 'Filtered reply', text: 'Post-processing checks the answer before it appears in chat.' },
+    { title: 'You review', text: 'Keep, refine with a follow-up, or start a new chat if the topic changed.' },
+  ]}
+/>
+
+## The technical explanation
+
+### Principles of prompt engineering
+
+Prompt engineering is just giving the model what it needs to do the job. Microsoft Learn's GitHub Copilot training uses the **4 S's**:
+
+| Principle | What it means | Example |
+| --- | --- | --- |
+| **Single** | One well-defined task per prompt | "Add input validation to applyDiscount" (not validation, tests and docs at once) |
+| **Specific** | Clear inputs, outputs, rules | "Unknown codes return the total unchanged" |
+| **Short** | Concise; no padding | Two sentences, not a page |
+| **Surround** | Useful context around the prompt | Related files open, clear file and function names, `#file:` references |
+
+Add to that the ideas from the few-shot lesson: give **examples** when the format matters, **break big work into steps**, and **iterate** instead of expecting perfection first time.
+
+### The prompt process flow
+
+When you press Enter in Copilot Chat, more than your sentence goes to the model.
+
+1. **Context gathering.** The extension collects your message, the active file and any selection, references you added (`#file`, `#selection`, `#codebase`, `@workspace`), repository **custom instructions**, and the **chat history** of this conversation. Everything has to fit in a limited **context window**, so the extension picks what matters most.
+2. **Secure transmission.** The prompt goes over **HTTPS** to the GitHub Copilot **proxy**.
+3. **Filtering.** The proxy authenticates the request and runs pre-filters, for example for harmful or offensive content and prompt-injection attempts.
+4. **Generation.** The large language model produces a reply.
+5. **Post-processing.** The response is checked again (for example quality, insecure patterns, offensive content, and public code matching where that policy applies) before it reaches you.
+6. **You review and continue.** Your next message repeats the loop, now with this answer in the history.
+
+Expand **Used n references** under a reply to see exactly which files went in.
+
+### How chat history helps
+
+History is what makes a conversation possible:
+
+```text
+You:     Explain applyDiscount in #file:src/discount.js
+Copilot: It looks up the code in CODES and subtracts that percentage...
+You:     What happens for an unknown code?
+Copilot: CODES[code] is undefined, so the result is NaN...
+You:     Fix it and write a test for that case.
+```
+
+"It", "that case" and "fix it" only make sense because the earlier turns are part of the prompt.
+
+### How chat history hurts
+
+The same mechanism causes trouble when the thread drifts:
+
+- **Stale facts.** A correction doesn't delete the original instruction. Both are still in the history.
+- **Topic bleed.** Answers about the payment module leak into a question about the report module.
+- **Crowding.** A long thread takes space in the context window that your actual code could use.
+
+The fixes are simple. Start a **new chat** (the **+** button) or type **`/clear`** when the topic changes. Put the facts that matter **in the new prompt** rather than relying on something said an hour ago. Copilot doesn't remember other conversations, so anything that should apply every time belongs in `.github/copilot-instructions.md`. In Copilot CLI, `/clear` does the same, `/context` shows how full the context is, and `/compact` summarises a long session to free space.
+
+<Callout type="exam">
+Expect stories. "Copilot's answer refers to code you discussed three questions ago" means **chat history** is part of the prompt. "After switching to an unrelated task the answers became inaccurate" means start a **new chat** or run **/clear**. "Every developer's chats must follow the team's conventions" means **custom instructions**, because history doesn't carry between conversations. And if a question lists the 4 S's, remember **single, specific, short, surround**.
+</Callout>
+
+<DeepDive title="Why the model doesn't just 'know' the latest instruction wins">
+
+A model doesn't keep a list of facts that get overwritten. Each request is a fresh pass over the whole prompt, and the model predicts the most likely reply given all of it. Recent turns usually carry more weight, but an earlier detailed instruction can still pull the answer its way, especially if the correction was brief. Restating the current facts in one clear prompt, in a clean conversation, removes the conflict instead of hoping the model resolves it.
+
+</DeepDive>
+
+## Real-world business scenario
+
+<Scenario
+  company="Contoso (fictional)"
+  industry="Online retail"
+  problem="Developers on contoso-shop kept one Copilot Chat open all day. After the pricing service moved from v1 to v2, generated code still called /v1/prices in about one answer in five, and those bugs reached code review."
+  service="A team habit: one chat per task, /clear or a new chat when switching topics, and the current API version and endpoint written into .github/copilot-instructions.md."
+  why="Old turns stopped leaking into new answers, and the API version reached every request through instructions rather than through history."
+  outcome="v1 calls disappeared from new pull requests within a week, and reviewers stopped seeing answers that mixed two topics."
+/>
+
+## When to use it and when not to
+
+<UseWhen
+  use={[
+    'Keep one chat for one task so follow-ups like "now add tests" can rely on history.',
+    'Start a new chat or /clear when you change topic, file area or a key fact changes.',
+    'Apply the 4 S\'s to every prompt: single, specific, short, surround.',
+  ]}
+  avoid={[
+    'Relying on a correction buried in a long thread. Restate the facts in a fresh prompt.',
+    'Expecting Copilot to remember yesterday\'s conversation. It doesn\'t carry history between chats.',
+  ]}
+  alternatives={[
+    '<strong>Custom instructions</strong> for rules that should apply to every conversation.',
+    '<strong>Copilot Spaces</strong> to share a curated set of files, issues and notes as context with your team.',
+  ]}
+/>

@@ -2,6 +2,8 @@
 /**
  * Azure practice simulator: guided tasks on the left, a simulated portal and
  * Cloud Shell on the right, sharing one simulated Azure. Practice only.
+ * Labs with start 'terminal' (GitHub exams) show only a developer terminal
+ * with GitHub Copilot CLI, git and gh (src/lib/sim/ghsim.ts).
  */
 import type { Lab } from '../lib/sim/labs';
 import { inlineMd } from '../lib/learn';
@@ -10,6 +12,8 @@ import '../styles/portal.css';
 interface Props { lab: Lab }
 const { lab } = Astro.props;
 const labsHub = `/${lab.exam ?? examFromPath(Astro.url.pathname).slug}/labs/`;
+const term = lab.start === 'terminal';
+const shellName = term ? 'terminal' : 'Cloud Shell';
 ---
 <div class="sim-root grid gap-5 lg:grid-cols-[22rem_minmax(0,1fr)]" data-lab={lab.id} data-start={lab.start}>
   <!-- Tasks -->
@@ -31,15 +35,25 @@ const labsHub = `/${lab.exam ?? examFromPath(Astro.url.pathname).slug}/labs/`;
                 {t.portal && <p class="mt-1.5"><strong>Portal:</strong> {t.portal}</p>}
                 {t.cli && (
                   <div class="mt-1.5">
-                    <p><strong>Cloud Shell:</strong></p>
+                    <p><strong>{term ? 'Terminal' : 'Cloud Shell'}:</strong></p>
                     <code class="mt-1 block overflow-x-auto rounded bg-[#0b1020] px-2 py-1.5 text-xs text-[#9fe870]">{t.cli}</code>
-                    <button type="button" class="sim-try mt-1.5 rounded-full bg-[#0078d4] px-3 py-1 text-xs font-bold text-white" data-cmd={t.cli}>▶ Try it in Cloud Shell</button>
+                    <button type="button" class="sim-try mt-1.5 rounded-full bg-[#0078d4] px-3 py-1 text-xs font-bold text-white" data-cmd={t.cli}>▶ Try it in the {shellName}</button>
                   </div>
                 )}
               </details>
             </li>
           ))}
         </ol>
+      </div>
+    ) : term ? (
+      <div class="rounded-xl bg-[var(--pastel-yellow)] p-4 text-sm leading-relaxed">
+        <p class="font-semibold">🎛️ Ideas to try</p>
+        <ul class="mt-2 list-disc space-y-1 pl-5">
+          <li>Install the CLI with <code>npm install -g @github/copilot</code>, then run <code>copilot</code>.</li>
+          <li>In a session, try <code>/help</code>, <code>/model</code> and <code>/mcp list</code>.</li>
+          <li>Run <code>copilot -p "write unit tests for src/discount.js"</code> without and with <code>--allow-tool 'write'</code>.</li>
+          <li>List Copilot seats: <code>gh api /orgs/contoso/copilot/billing/seats</code>.</li>
+        </ul>
       </div>
     ) : (
       <div class="rounded-xl bg-[var(--pastel-yellow)] p-4 text-sm leading-relaxed">
@@ -59,17 +73,19 @@ const labsHub = `/${lab.exam ?? examFromPath(Astro.url.pathname).slug}/labs/`;
       <p class="mt-2 text-sm leading-relaxed">{lab.wrap}</p>
       <a href={labsHub} class="nav-btn mt-4">More labs ❯</a>
     </div>
-    <p class="sim-disclaimer rounded-lg border border-dashed border-default p-3 text-xs leading-relaxed text-muted">🎓 <strong>For education only.</strong> This is a simulation of the Azure portal and Cloud Shell built for learning. It is not affiliated with or endorsed by Microsoft, needs no Azure account, and nothing touches real Azure or costs money. Prices are illustrative.</p>
+    {term
+      ? <p class="sim-disclaimer rounded-lg border border-dashed border-default p-3 text-xs leading-relaxed text-muted">🎓 <strong>For education only.</strong> This is a simulation of a developer terminal with GitHub Copilot CLI, git and the GitHub CLI, built for learning. It is not affiliated with or endorsed by GitHub or Microsoft, needs no GitHub account, and nothing talks to GitHub or an AI model: Copilot's answers here are scripted examples.</p>
+      : <p class="sim-disclaimer rounded-lg border border-dashed border-default p-3 text-xs leading-relaxed text-muted">🎓 <strong>For education only.</strong> This is a simulation of the Azure portal and Cloud Shell built for learning. It is not affiliated with or endorsed by Microsoft, needs no Azure account, and nothing touches real Azure or costs money. Prices are illustrative.</p>}
   </aside>
 
   <!-- Simulator -->
   <section class="min-w-0">
     <div class="flex flex-wrap items-center gap-2">
       <div class="inline-flex rounded-full border border-default bg-[var(--pastel-grey)] p-1 text-sm font-semibold" role="tablist" aria-label="Simulator view">
-        <button type="button" role="tab" data-tab="portal" class="rounded-full px-4 py-1.5">🖥️ Portal</button>
-        <button type="button" role="tab" data-tab="shell" class="rounded-full px-4 py-1.5">⌨️ Cloud Shell</button>
+        {!term && <button type="button" role="tab" data-tab="portal" class="rounded-full px-4 py-1.5">🖥️ Portal</button>}
+        <button type="button" role="tab" data-tab="shell" class="rounded-full px-4 py-1.5">{term ? '⌨️ Terminal' : '⌨️ Cloud Shell'}</button>
       </div>
-      <span class="sim-cost chip ml-auto">💰 0/mo</span>
+      <span class={`sim-cost chip ml-auto${term ? ' hidden' : ''}`}>💰 0/mo</span>
       <button type="button" class="sim-full rounded-full border border-default px-3 py-1.5 text-sm hover:bg-[var(--pastel-grey)]" title="Full screen">⛶ Full screen</button>
       <button type="button" class="sim-reset rounded-full border border-default px-3 py-1.5 text-sm hover:bg-[var(--pastel-grey)]">↺ Reset</button>
     </div>
@@ -77,12 +93,12 @@ const labsHub = `/${lab.exam ?? examFromPath(Astro.url.pathname).slug}/labs/`;
     <div class="sim-portal relative mt-3 overflow-hidden rounded-xl border border-default" data-panel="portal"></div>
 
     <div class="sim-shell mt-3 hidden overflow-hidden rounded-xl border border-[#243a5e] bg-[#0b1020] text-[#e6edf3]" data-panel="shell">
-      <div class="flex items-center gap-2 bg-[#243a5e] px-3 py-1.5 text-xs"><span class="font-semibold">Bash</span><span class="rounded bg-white/15 px-1.5 font-bold">PRACTICE</span><span class="text-white/70">Azure Cloud Shell (simulated)</span></div>
+      <div class="flex items-center gap-2 bg-[#243a5e] px-3 py-1.5 text-xs"><span class="font-semibold">Bash</span><span class="rounded bg-white/15 px-1.5 font-bold">PRACTICE</span><span class="text-white/70">{term ? 'VS Code terminal · ~/contoso-shop (simulated)' : 'Azure Cloud Shell (simulated)'}</span></div>
       <div class="sim-out h-[26rem] overflow-y-auto p-3 font-mono text-[0.8rem] leading-relaxed whitespace-pre-wrap" aria-live="polite"></div>
       <form class="sim-form flex items-center gap-2 border-t border-white/10 px-3 py-2 font-mono text-[0.85rem]">
-        <span class="sim-prompt shrink-0 text-[#9fe870]">learner@Azure:~$</span>
+        <span class="sim-prompt shrink-0 text-[#9fe870]">{term ? 'learner@dev:~/contoso-shop$' : 'learner@Azure:~$'}</span>
         <label class="sr-only" for={`sim-in-${lab.id}`}>Command</label>
-        <input id={`sim-in-${lab.id}`} class="sim-in min-w-0 flex-1 bg-transparent text-white outline-none" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="type an az command, e.g. az --help" />
+        <input id={`sim-in-${lab.id}`} class="sim-in min-w-0 flex-1 bg-transparent text-white outline-none" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder={term ? 'type a command, e.g. help or copilot' : 'type an az command, e.g. az --help'} />
         <button class="rounded bg-[#0078d4] px-3 py-1 text-xs font-bold text-white">Run ↵</button>
       </form>
     </div>
@@ -114,6 +130,7 @@ const labsHub = `/${lab.exam ?? examFromPath(Astro.url.pathname).slug}/labs/`;
   import { SUB_NAME } from '../lib/sim/engine';
   import { World } from '../lib/sim/world';
   import { runCli, COMPLETIONS, type CliResult } from '../lib/sim/cli';
+  import { runDev, DEV_COMPLETIONS, BASH_PROMPT, COPILOT_PROMPT } from '../lib/sim/ghsim';
   import { Portal } from '../lib/sim/portal';
   import { ALL_LABS } from '../lib/sim/labs';
   import { saveLab } from '../lib/progress';
@@ -135,6 +152,11 @@ const labsHub = `/${lab.exam ?? examFromPath(Astro.url.pathname).slug}/labs/`;
     let hIdx = 0;
     let pending: CliResult['confirm'] | null = null;
     let finished = false;
+    const term = lab.start === 'terminal';
+    /** The prompt shown when no y/n question is pending (changes inside a Copilot session). */
+    let basePrompt = term ? BASH_PROMPT : 'learner@Azure:~$';
+    const run = (line: string): CliResult & { prompt?: string } => (term ? runDev(line, sim) : runCli(line, sim));
+    const completions = term ? DEV_COMPLETIONS : COMPLETIONS;
 
     const print = (text: string, cls = '') => {
       const d = document.createElement('div');
@@ -145,6 +167,12 @@ const labsHub = `/${lab.exam ?? examFromPath(Astro.url.pathname).slug}/labs/`;
     };
     const banner = () => {
       out.innerHTML = '';
+      if (term) {
+        print('Practice terminal with GitHub Copilot CLI (simulated) 🎓', 'info');
+        print('Repository: ~/contoso-shop (Node.js) · Organization: contoso', 'info');
+        print("Type 'help' to see what you can do. Use ↑/↓ for history and Tab to complete.\n", 'info');
+        return;
+      }
       print('Welcome to Azure Cloud Shell (practice simulator) 🎓', 'info');
       print(`Subscription: ${SUB_NAME}`, 'info');
       print("Type 'help' or 'az --help' to see what you can do. Use ↑/↓ for history and Tab to complete.\n", 'info');
@@ -155,7 +183,7 @@ const labsHub = `/${lab.exam ?? examFromPath(Astro.url.pathname).slug}/labs/`;
       tabs.forEach((b) => b.setAttribute('aria-selected', String(b.dataset.tab === t)));
       root.querySelectorAll<HTMLElement>('[data-panel]').forEach((p) => p.classList.toggle('hidden', p.dataset.panel !== t));
       if (t === 'shell') setTimeout(() => input.focus(), 50);
-      if (t === 'portal') portal.render();
+      if (t === 'portal' && !term) portal.render();
     };
     tabs.forEach((b) => b.addEventListener('click', () => show(b.dataset.tab!)));
 
@@ -218,6 +246,9 @@ const labsHub = `/${lab.exam ?? examFromPath(Astro.url.pathname).slug}/labs/`;
       doneSet.clear();
       finished = Boolean(saved?.finished);
       history.length = 0;
+      pending = null;
+      if (term) basePrompt = (sim as any).dev?.gh?.session ? COPILOT_PROMPT : BASH_PROMPT;
+      prompt.textContent = basePrompt;
       if (saved) {
         out.innerHTML = saved.shell ?? '';
         history.push(...(saved.history ?? []));
@@ -238,21 +269,22 @@ const labsHub = `/${lab.exam ?? examFromPath(Astro.url.pathname).slug}/labs/`;
         print(`${pending.question}${line}`);
         const c = pending;
         pending = null;
-        prompt.textContent = 'learner@Azure:~$';
+        prompt.textContent = basePrompt;
         if (/^y(es)?$/i.test(line.trim())) handle(c.then());
         else print('Operation cancelled.', 'info');
         return;
       }
-      print(`learner@Azure:~$ ${line}`, 'cmd');
+      print(`${basePrompt} ${line}`, 'cmd');
       if (line.trim()) { history.push(line); hIdx = history.length; }
       if (line.trim() === 'history') return print(history.map((h, i) => `${i + 1}  ${h}`).join('\n'));
       try {
-        handle(runCli(line, sim));
+        handle(run(line));
       } catch (err) {
         print(`ERROR: ${(err as Error).message}`, 'err');
       }
     });
-    const handle = (r: CliResult) => {
+    const handle = (r: CliResult & { prompt?: string }) => {
+      if (r.prompt) { basePrompt = r.prompt; prompt.textContent = basePrompt; }
       if (r.clear) { out.innerHTML = ''; return; }
       // A chain (a && b) can print earlier output and then stop at a y/n question.
       if (r.confirm) { if (r.out) print(r.out); pending = r.confirm; prompt.textContent = r.confirm.question; return; }
@@ -266,7 +298,7 @@ const labsHub = `/${lab.exam ?? examFromPath(Astro.url.pathname).slug}/labs/`;
       else if (e.key === 'Tab') {
         e.preventDefault();
         const v = input.value.trimStart();
-        const hits = COMPLETIONS.filter((c) => c.startsWith(v));
+        const hits = completions.filter((c) => c.startsWith(v));
         if (hits.length === 1) input.value = hits[0] + ' ';
         else if (hits.length > 1) {
           let pre = hits[0];
@@ -302,6 +334,6 @@ const labsHub = `/${lab.exam ?? examFromPath(Astro.url.pathname).slug}/labs/`;
     document.addEventListener('fullscreenchange', () => { fullBtn.textContent = document.fullscreenElement === root ? '✕ Exit full screen' : '⛶ Full screen'; });
 
     boot();
-    show(root.dataset.start === 'shell' ? 'shell' : 'portal');
+    show(root.dataset.start === 'portal' ? 'portal' : 'shell');
   });
 </script>

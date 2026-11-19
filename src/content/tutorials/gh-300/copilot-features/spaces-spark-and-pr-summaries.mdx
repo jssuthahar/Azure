@@ -1,0 +1,193 @@
+---
+title: Copilot Spaces, Spark and Pull Request Summaries
+seoTitle: Copilot Spaces, Spark and PR Summaries | GH-300
+description: Write pull request descriptions with Copilot, ground answers in shared Copilot Spaces and build micro apps with GitHub Spark, and know which one fits.
+answer: >-
+  Three Copilot features on github.com solve three different problems. A **pull request summary** comes from the **Copilot** button in the PR description box: it describes what changed and which files, and you edit in the *why*. **Copilot Spaces** collect curated context (files, issues, notes and instructions) for a topic, so every question asked in that space is grounded in the same sources and the team can share it. **GitHub Spark** turns a plain-language description into a working **micro app** you can refine and publish; it's available on **Copilot Pro+** and **Copilot Enterprise**.
+updated: 2026-11-19
+readingMinutes: 8
+keyTerms:
+  - term: Pull request summary
+    definition: A description of a pull request's changes that Copilot writes when you select the Copilot button in the description box.
+  - term: Copilot Spaces
+    definition: A place on github.com to gather files, issues, notes and instructions for a topic, so Copilot answers from that context. Spaces can be shared.
+  - term: Space instructions
+    definition: Guidance added to a Copilot Space that shapes every answer in it, such as "answer for new joiners".
+  - term: GitHub Spark
+    definition: A Copilot feature that builds and hosts small full-stack apps from a natural-language description. Available on Pro+ and Enterprise.
+  - term: Micro app
+    definition: A small, single-purpose app such as an internal tracker or calculator, the kind Spark is built for.
+interview:
+  - level: beginner
+    q: What does the Copilot button in a pull request description do?
+    a: >-
+      It reads the diff and writes a summary: what changed, often grouped by file. I still edit it, because the diff shows what changed but not why we changed it or how to test it.
+    followUps:
+      - q: Is the summary always right?
+        a: >-
+          Not always. It can miss intent or describe something too broadly, so I read it like any other Copilot output before I open the PR.
+  - level: intermediate
+    q: What's a Copilot Space and how is it different from asking Copilot Chat a question?
+    a: >-
+      A space is curated context. I add the files, issues, notes and instructions for one topic, like onboarding to contoso-shop, and then every question in that space is answered from those sources. Plain chat only has what I attach in that one conversation.
+    followUps: []
+  - level: experienced
+    q: When would you use custom instructions and when a Copilot Space?
+    a: >-
+      Instructions are rules that ride along with requests in a repository, like "use the Node test runner". A space is knowledge for a topic, maybe across repos, like the payments rules plus three key issues and an architecture decision. Rules versus reference material.
+    followUps: []
+  - level: scenario
+    q: A product manager wants a small app to track which discount codes customers use. No developer has time. What could help?
+    a: >-
+      GitHub Spark, if they're on Copilot Pro+ or Enterprise. They describe the app, Spark builds and hosts it, and they refine it by chat. If it grows into something customers rely on, it becomes a real project with code review and tests.
+    followUps: []
+  - level: architecture
+    q: How would you use Spaces to cut onboarding time for a team?
+    a: >-
+      I'd create an onboarding space with the README, the docs folder, the architecture decision records and the issues a new joiner usually hits, add instructions like "explain for someone new to the codebase", and share it with the team. New people ask the space instead of interrupting seniors, and the answers point back to our own sources.
+    followUps: []
+revision:
+  keyPoints:
+    - The Copilot button in the pull request description box writes a summary of the changes.
+    - Edit the summary. Add the why, the risk and how to test, which a diff can't tell Copilot.
+    - Copilot Spaces gather files, issues, notes and instructions so answers are grounded in the same sources.
+    - Spaces can be shared with a team or organization.
+    - GitHub Spark builds and hosts micro apps from a description. It needs Copilot Pro+ or Enterprise.
+    - Review code from any of these like any other Copilot output.
+  mistakes:
+    - Opening a pull request with an unedited Copilot summary that says what changed but not why.
+    - Confusing Copilot Spaces (shared context for questions) with GitHub Spark (building apps).
+    - Assuming Spark is in every plan. It's Pro+ and Enterprise.
+  examTips:
+    - '"Describe the changes in a pull request quickly" = **Copilot PR summary** in the description box.'
+    - '"Share curated context so everyone''s questions use the same sources" = **Copilot Spaces**.'
+    - '"Build a small app from a natural-language description" = **GitHub Spark**.'
+  quick:
+    - q: Where do you generate a pull request summary?
+      a: With the Copilot button in the pull request description box.
+    - q: What can you add to a Copilot Space?
+      a: Files, issues, notes and instructions.
+    - q: Which plans include GitHub Spark?
+      a: Copilot Pro+ and Copilot Enterprise.
+    - q: Which feature grounds team questions in the same curated sources?
+      a: Copilot Spaces.
+    - q: What should you add to a Copilot PR summary before opening the PR?
+      a: The why, the risks and how to test, then check the summary is accurate.
+references:
+  - title: Creating a pull request summary with GitHub Copilot
+    url: https://docs.github.com/en/copilot/how-tos/use-copilot-for-common-tasks/create-a-pr-summary
+  - title: About GitHub Copilot Spaces
+    url: https://docs.github.com/en/copilot/concepts/context/spaces
+  - title: About GitHub Spark
+    url: https://docs.github.com/en/copilot/concepts/spark
+  - title: "Study guide for Exam GH-300: GitHub Copilot"
+    url: https://learn.microsoft.com/en-us/credentials/certifications/resources/study-guides/gh-300
+related:
+  - copilot-code-review
+  - custom-instructions-and-prompt-files
+  - copilot-plans
+  - generate-refactor-and-document
+---
+
+## Start with a question
+
+<Story question="My pull request description just says 'fixes stuff'. Reviewers hate it, new joiners keep asking the same questions, and the product team wants a tiny app nobody has time to build. Is there one fix for all three?">
+
+Not one fix, but three small tools that live on github.com.
+
+When you open pull request #53 on contoso-shop, Copilot can **write the description** from the diff. When new joiners keep asking how discounts work, a **Copilot Space** holds the files, issues and notes that answer it, so they ask the space instead of you. And when the product manager wants a quick page that tracks which discount codes get used, **GitHub Spark** can build it from a sentence.
+
+The trick for the exam is knowing which tool matches which problem.
+
+</Story>
+
+## Explain it like I'm 10
+
+<Eli10>
+
+**PR summary**: you finish a Lego build and a helper writes the label for the box: "Red car, 4 wheels, new doors". You add "built for my brother's birthday".
+
+**Spaces**: a shelf in the library with every book about dinosaurs. Anyone who asks a dinosaur question gets answers from that shelf.
+
+**Spark**: you say "I want a little game that counts my jumps" and a toy machine builds it for you.
+
+</Eli10>
+
+## The technical explanation
+
+### Pull request summaries
+
+When you create or edit a pull request, the description box has a **Copilot** button. Select it and Copilot reads the changes and writes a summary, for example:
+
+```text
+What changed: adds page and pageSize query params to GET /orders (max 100).
+Files: src/orders.js, tests/orders.test.js
+```
+
+It's a draft. A diff tells Copilot **what** changed, not **why**, so add the reason, the risk and how to test it. Then check the summary is accurate: it can describe a change too broadly or miss one. Copilot can also summarise in other places on github.com, but for the exam the PR description is the one to know.
+
+### Copilot Spaces
+
+A **Copilot Space** is curated context for a topic. You add:
+
+| Source | Example for contoso-shop |
+| --- | --- |
+| Files from repositories | `README.md`, `docs/`, `src/discount.js` |
+| Issues and pull requests | #41 HALF applies twice, #44 NaN for unknown codes |
+| Notes | "Discounts never stack. Totals never go below 0." |
+| Instructions | "Answer for someone new to the codebase. Cite the file." |
+
+Then you ask questions in the space, and Copilot answers from those sources. You can keep a space personal or **share** it with your team or organization, so everyone's questions are grounded in the same material. Compared with custom instructions: instructions are **rules** added to requests in a repository; a space is **knowledge** for a topic, and it can pull from more than one repository.
+
+### GitHub Spark
+
+**GitHub Spark** builds **micro apps** from natural language. You describe what you want, Spark builds a working full-stack app and hosts it, and you **iterate** by chatting or by editing the code. When you're happy, you publish it, or open the code in a repository to keep working on it like any other project. Spark is available on **Copilot Pro+** and **Copilot Enterprise**.
+
+It's for small tools and prototypes. Anything that handles customer data or money needs the same review, tests and security checks as hand-written code.
+
+| You want to… | Use |
+| --- | --- |
+| Describe a pull request's changes quickly | PR summary |
+| Give the team one place to ask about a topic, grounded in your sources | Copilot Spaces |
+| Build a small app from a description | GitHub Spark |
+| Set rules Copilot follows in a repo, including review standards | Custom instructions |
+
+<Callout type="exam">
+The exam groups these features in one objective and swaps them in the answers. "Curated context shared with a team" or "ground answers in selected files and issues" is **Copilot Spaces**. "Natural-language micro app" is **GitHub Spark**, and only Pro+ and Enterprise include it. "Generate a description of the changes in a pull request" is a **PR summary**. "Customizable review standards" means **instructions files**, not Spaces.
+</Callout>
+
+<DeepDive title="What a summary can and can't know">
+
+A PR summary is generated from the diff and the pull request's own content. It doesn't know the conversation you had in a meeting, the customer complaint behind the change, or which parts you're unsure about. That's exactly what reviewers need most. A good habit: let Copilot write the "what changed" part, then write two lines yourself, "why" and "how to test". It takes a minute, and it makes the summary honest about where the human judgement went.
+
+</DeepDive>
+
+## Real-world business scenario
+
+<Scenario
+  company="Contoso (fictional)"
+  industry="Online retail"
+  problem="Pull request descriptions were empty or vague, new developers took weeks to learn the discount rules, and the marketing team waited months for a small dashboard."
+  service="Copilot PR summaries on every pull request, a shared 'Payments rules' Copilot Space with discount.js, refunds.md and the key issues, and GitHub Spark on Copilot Enterprise for the marketing dashboard."
+  why="Each tool fits one problem: summaries save writing time, the space gives grounded answers from Contoso's own sources, and Spark builds a small internal app from a description."
+  outcome="Reviewers get clear descriptions, new joiners ask the space before asking a senior, and marketing had a prototype the same week, reviewed before wider use."
+/>
+
+## When to use it and when not to
+
+<UseWhen
+  use={[
+    'PR summaries for a quick, accurate first draft of what changed.',
+    'Copilot Spaces when a team keeps asking about the same topic and the answers live in known files and issues.',
+    'GitHub Spark for small internal tools and prototypes, on Pro+ or Enterprise.',
+  ]}
+  avoid={[
+    'An unedited summary as the whole PR description. Add the why and how to test.',
+    'Putting secrets or personal data into a shared space.',
+    'Shipping a Spark app to customers without the usual review, tests and security checks.',
+  ]}
+  alternatives={[
+    '<strong>Custom instructions</strong> for rules Copilot should follow in a repository.',
+    '<strong>Copilot coding agent</strong> when you want a pull request built from an issue in an existing repo.',
+  ]}
+/>

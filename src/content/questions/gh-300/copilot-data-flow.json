@@ -1,0 +1,152 @@
+{
+  "cert": "gh-300",
+  "domain": 3,
+  "topic": "copilot-data-flow",
+  "questions": [
+    {
+      "id": "gh-dataflow-1",
+      "type": "single",
+      "question": "Your company uses GitHub Copilot Business. The security team asks whether code from the company's private repositories is used to train the models that power GitHub Copilot. What should you tell them?",
+      "options": [
+        {
+          "text": "Code is used for training unless each developer turns off a personal setting.",
+          "why": "The personal product-improvement setting applies to individual plans, not to Copilot Business seats."
+        },
+        {
+          "text": "Only code from repositories marked as public within the organization is used for training.",
+          "why": "Copilot Business does not use the organization's code for training, whatever the repository visibility."
+        },
+        {
+          "text": "Code is used for training after it has been retained for 28 days.",
+          "why": "Retention and training are separate. Business data is not used for training."
+        },
+        {
+          "text": "Code, prompts and suggestions from Copilot Business are not used to train GitHub's models.",
+          "why": "Correct. Copilot Business and Enterprise data is not used for model training."
+        }
+      ],
+      "answer": [
+        3
+      ],
+      "explanation": "For Copilot Business and Enterprise, GitHub does not use your code, prompts or suggestions to train its models.",
+      "objective": "3.1.1"
+    },
+    {
+      "id": "gh-dataflow-2",
+      "type": "single",
+      "question": "A developer accepts an inline suggestion in Visual Studio Code. Which component receives the prompt directly from the IDE extension?",
+      "options": [
+        {
+          "text": "The organization's audit log",
+          "why": "The audit log records events such as policy and seat changes. It does not process prompts."
+        },
+        {
+          "text": "The GitHub Copilot proxy",
+          "why": "Correct. The extension sends the prompt over HTTPS to the GitHub-hosted proxy, which authenticates and filters it before the model."
+        },
+        {
+          "text": "The large language model",
+          "why": "The prompt reaches the model only after the proxy has authenticated and pre-filtered it."
+        },
+        {
+          "text": "The repository's GitHub Actions runner",
+          "why": "Actions runners are used by the Copilot coding agent, not by inline suggestions."
+        }
+      ],
+      "answer": [
+        1
+      ],
+      "explanation": "The flow is IDE extension, HTTPS, Copilot proxy, model, post-processing, editor.",
+      "objective": "3.1.1"
+    },
+    {
+      "id": "gh-dataflow-3",
+      "type": "multi",
+      "question": "An organization administrator views Copilot usage metrics showing active users and acceptance rates. Which two types of data does GitHub retain to provide these metrics and operate the service? Each correct answer presents part of the solution.",
+      "options": [
+        {
+          "text": "Whether suggestions were accepted or dismissed",
+          "why": "Correct. Accept and dismiss events are engagement data."
+        },
+        {
+          "text": "Errors and latency of Copilot requests",
+          "why": "Correct. Errors and performance events are engagement data used to operate the service."
+        },
+        {
+          "text": "A full copy of each developer's local repository",
+          "why": "Copilot sends selected context for a request. It does not copy entire repositories for metrics."
+        },
+        {
+          "text": "The source code of every accepted suggestion, kept indefinitely",
+          "why": "Metrics are built from engagement events, not from stored code."
+        },
+        {
+          "text": "Developers' IDE passwords",
+          "why": "Copilot authenticates through GitHub sign-in. It does not collect IDE passwords."
+        }
+      ],
+      "answer": [
+        0,
+        1
+      ],
+      "explanation": "Engagement data, such as accepts, rejects and errors, is kept to operate the service and to power usage metrics.",
+      "objective": "3.1.1"
+    },
+    {
+      "id": "gh-dataflow-4",
+      "type": "single",
+      "question": "A developer with a Copilot Pro plan does not want GitHub to use their prompts and suggestions for product improvements. What should the developer do?",
+      "options": [
+        {
+          "text": "Switch the public code filter to Block.",
+          "why": "The public code filter controls matching suggestions, not how GitHub uses data."
+        },
+        {
+          "text": "Turn off the setting that allows GitHub to use their data for product improvements in their Copilot settings on GitHub.",
+          "why": "Correct. Individual plans include a personal setting that controls this."
+        },
+        {
+          "text": "Add a .github/copilot-instructions.md file that forbids data collection.",
+          "why": "Custom instructions guide Copilot's answers. They do not change data handling."
+        },
+        {
+          "text": "Configure a content exclusion for every repository they own.",
+          "why": "Content exclusions are a Business and Enterprise feature that removes files from context. They are not a data-use setting."
+        }
+      ],
+      "answer": [
+        1
+      ],
+      "explanation": "On individual plans, the developer controls the product-improvement data setting in their own Copilot settings.",
+      "objective": "3.1.1"
+    },
+    {
+      "id": "gh-dataflow-5",
+      "type": "single",
+      "question": "Which statement describes how data travels between the IDE and GitHub when Copilot generates a suggestion?",
+      "options": [
+        {
+          "text": "The prompt is sent in plain text so the proxy can filter it.",
+          "why": "The proxy filters prompts after they arrive. The connection itself is encrypted."
+        },
+        {
+          "text": "The prompt is sent only through a VPN that the organization must configure.",
+          "why": "No VPN is required. The extension uses HTTPS to Copilot's endpoints."
+        },
+        {
+          "text": "The prompt never leaves the developer's computer because the model runs locally.",
+          "why": "Copilot's models are hosted. The prompt is sent to GitHub for processing."
+        },
+        {
+          "text": "The prompt and the suggestion are encrypted in transit over HTTPS.",
+          "why": "Correct. Copilot traffic between the IDE and GitHub is encrypted in transit."
+        }
+      ],
+      "answer": [
+        3
+      ],
+      "explanation": "Prompts and suggestions are encrypted in transit between the editor and the Copilot service.",
+      "objective": "3.1.1"
+    }
+  ]
+}

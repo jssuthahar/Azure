@@ -1,0 +1,207 @@
+---
+title: "Generate Sample Data and Modernize Legacy Code with Copilot"
+seoTitle: Sample Data and Legacy Code Modernization | GH-300
+description: Use GitHub Copilot to create clearly fake test data, explain old code before touching it, and modernize legacy code in small, tested steps with the same output.
+answer: >-
+  For **sample data**, ask Copilot for the exact shape you need (JSON, CSV, SQL inserts) with **clearly fake** values such as example.com emails and "Test Customer" names, and never paste real customer data into a prompt. For **legacy code**, start with `/explain` so you understand what it does, add **tests that pin the current behaviour**, then ask Copilot to modernize it in **small steps** that keep the **same output**. Agent mode can update callers and run the tests for you after you approve. Copilot can also translate between languages, but it's weaker on rare or old languages, so review and test every change.
+updated: 2026-11-19
+readingMinutes: 9
+keyTerms:
+  - term: Sample data
+    definition: Made-up records used for tests, demos and development, shaped like real data but containing no real personal information.
+  - term: Legacy code
+    definition: Older code still in production, often without tests or documentation, written with outdated language features or frameworks.
+  - term: Characterization test
+    definition: A test that records what existing code currently does, so you can tell if a rewrite changes its behaviour.
+  - term: Modernization
+    definition: Updating old code to current language features, libraries or frameworks while keeping its behaviour.
+  - term: example.com
+    definition: A domain reserved for documentation and examples, safe to use in fake email addresses.
+interview:
+  - level: beginner
+    q: How would you get test data from Copilot?
+    a: >-
+      I'd say exactly what I need, like "10 sample orders as JSON with id, customer, email and total, fake data only, example.com emails". I'd point it at the type or schema with #file so the fields match, and check the result before using it.
+    followUps:
+      - q: Can you give Copilot a few real rows so it gets the shape right?
+        a: >-
+          Not real ones. I'd give it the schema or one made-up example instead. Real customer data doesn't belong in a prompt.
+  - level: intermediate
+    q: What's your first step before modernizing a legacy file with Copilot?
+    a: >-
+      Understand it. I run /explain on the file, ask what calls it, and write characterization tests that capture today's output, including the odd cases. Only then do I ask for the rewrite, so the tests tell me if behaviour changed.
+    followUps: []
+  - level: experienced
+    q: Your team wants to convert a 3,000-line callback-based module to async/await with agent mode in one go. What do you advise?
+    a: >-
+      Break it up. One function or one file per change, with tests running after each step, and a diff small enough to review. A single huge edit is hard to review and easy to break. Agent mode is great for updating callers and re-running tests, but each step should still be reviewable.
+    followUps: []
+  - level: scenario
+    q: Copilot's translation of an old VB6 routine to C# compiles but gives different totals. What happened and what now?
+    a: >-
+      Copilot's suggestions are less reliable for older, rarer languages, and subtle things like rounding or integer division can change in translation. I'd write tests from the old system's real outputs (with fake inputs), run the new code against them, and fix the differences one by one.
+    followUps: []
+revision:
+  keyPoints:
+    - Ask for sample data in an exact shape, pointing Copilot at the schema or type.
+    - Use clearly fake values (example.com, test names); never put real personal data in a prompt.
+    - "Legacy first step: /explain, then characterization tests that pin current behaviour."
+    - Modernize in small steps that keep the same output, reviewing each diff.
+    - Agent mode can update callers and run tests after you approve commands.
+    - Copilot is weaker on rare or old languages, so translations need careful testing.
+  mistakes:
+    - Pasting production records into chat to get realistic test data.
+    - Rewriting legacy code before understanding or testing it.
+    - Asking for one giant modernization change instead of small reviewable ones.
+  examTips:
+    - '"Create test data without exposing personal information" = ask for **fake/synthetic** data.'
+    - '"Understand old code before changing it" = **/explain**.'
+    - '"Make sure the modernized code behaves the same" = **tests first**, small steps, review diffs.'
+  quick:
+    - q: Which slash command helps you understand a legacy file?
+      a: /explain
+    - q: What kind of email domain should fake data use?
+      a: example.com (a reserved example domain).
+    - q: What tests should you write before modernizing?
+      a: Characterization tests that capture current behaviour.
+    - q: Which chat mode can update callers and run tests?
+      a: Agent mode.
+    - q: Why test translations from older languages extra carefully?
+      a: Copilot is less reliable on rare or older languages.
+references:
+  - title: Modernizing legacy code with GitHub Copilot
+    url: https://docs.github.com/en/copilot/tutorials/modernize-legacy-code
+  - title: Copilot Chat cookbook
+    url: https://docs.github.com/en/copilot/tutorials/copilot-chat-cookbook
+  - title: Study guide for Exam GH-300 GitHub Copilot
+    url: https://learn.microsoft.com/credentials/certifications/resources/study-guides/gh-300
+related:
+  - generate-refactor-and-document
+  - unit-and-integration-tests
+  - responsible-ai-principles
+  - agent-mode-mcp-and-subagents
+---
+
+## Start with a question
+
+<Story question="Would you rewire a house you'd never seen, with no plan, while people still lived in it?">
+
+That's what touching legacy code feels like. contoso-shop still runs `src/legacy/report.js`, written in 2014. It uses `var`, string concatenation in a loop and a Node-style callback. Nobody on the team wrote it, and the finance department relies on its CSV every morning.
+
+Meena didn't start by asking Copilot to rewrite it. She asked `/explain` first, wrote two tests that captured today's exact output, and only then asked agent mode to "modernize report.js to an ES module, keep the same output, and update the callers". The tests passed, the diff was twelve lines, and finance never noticed a thing. That's the goal.
+
+</Story>
+
+## Explain it like I'm 10
+
+<Eli10>
+
+Your grandma has a cake recipe on an old, smudged card. You want to type it up neatly.
+
+First you read it carefully and ask her what the smudged bits mean. Then you bake it once the old way and remember how it tastes.
+
+Now you type the new card and bake again. If it tastes the same, the new card is right.
+
+And when your friends want to practise decorating, you give them pretend cakes made of foam, not grandma's real cake.
+
+</Eli10>
+
+## The technical explanation
+
+### Generate sample data
+
+Copilot is quick at producing data shaped like your real data:
+
+```text
+Generate 5 sample orders as JSON matching #file:src/types/order.js.
+Fake data only: "Test Customer N" names, customerN@example.com emails,
+totals between 50 and 5000, one order with an empty items array.
+```
+
+What makes a good sample data prompt:
+
+| Ask for | Why |
+| --- | --- |
+| The exact format (JSON, CSV, SQL `INSERT`) | So you can drop it straight into a test or seed script |
+| The schema, via `#file` or a type | Field names and types match your code |
+| Clearly fake values | example.com emails, "Test Customer" names, made-up IDs |
+| Edge cases on purpose | Empty lists, zero, very large numbers, unusual characters |
+| A generator for big volumes | For thousands of rows, ask for a script using a fake-data library instead of pasting rows |
+
+The rule that matters most: **never paste real customer or employee data into a prompt** to "show the shape". Give the schema or one invented example. Using fake data is one of the responsible-AI mitigations the exam expects you to know.
+
+### Modernize legacy code
+
+Here's the before:
+
+```js
+// 2014 code, still in production
+var report = function (rows, cb) {
+  var out = '';
+  for (var i = 0; i < rows.length; i++) {
+    out = out + rows[i].name + ',' + rows[i].total + '\n';
+  }
+  cb(null, out);
+};
+module.exports = report;
+```
+
+And a safe path to the after:
+
+1. **Understand it.** Select the file and run **`/explain`**. Ask follow-ups: who calls it, what happens with an empty array, any hidden side effects.
+2. **Pin the behaviour.** Ask for **characterization tests** that capture the current output, including odd cases. Run them against the old code; they must pass.
+3. **Modernize in small steps.** "Convert to an ES module with the same CSV output." Then, separately, "update the two callers".
+4. **Let agent mode do the legwork.** It can find callers, edit them and run `npm test` after you approve the command, then fix failures it sees.
+5. **Review every diff** and keep the tests in the repo.
+
+```js
+// Modernized with Copilot: same CSV output as before
+export function report(rows) {
+  return rows.map((r) => `${r.name},${r.total}`).join('\n') + '\n';
+}
+```
+
+Notice the `+ '\n'` at the end. The old code added a newline after every row, including the last. Without the characterization test, a "cleaner" version would drop it and the finance import could break.
+
+### Translating between languages
+
+Copilot can translate code, for example COBOL to Java or VB6 to C#, and explain old idioms along the way. Treat that output with extra care. Models see far less code in older or rarer languages, so suggestions are less reliable, and details such as rounding, integer division, date handling and character encoding can change silently. Tests built from the old system's outputs are your safety net.
+
+<Callout type="exam">
+"Generate test data without exposing customer information" points to asking Copilot for **synthetic, clearly fake** data, never pasting production rows. "A developer must understand a legacy module before changing it" is **/explain**. "Ensure the modernized code produces the same results" means **write tests first**, change in **small steps**, and **review the diffs**. Options that skip testing because "Copilot understands the code" are wrong: it predicts code, it doesn't run it.
+</Callout>
+
+<DeepDive title="Why small steps beat one big rewrite">
+
+Each Copilot request works within a limited context window. A 3,000-line file asked to "modernize everything" means the model can't see all of it at once in detail, and you get a huge diff that nobody reviews properly. Small steps keep each request focused, keep each diff readable, and let the tests catch a mistake right where it was introduced. In agent mode, a long task also fills the session's context; splitting the work, or letting a sub-agent do research in its own context, keeps answers sharp.
+
+</DeepDive>
+
+## Real-world business scenario
+
+<Scenario
+  company="Contoso (fictional)"
+  industry="Online retail"
+  problem="contoso-shop's legacy reporting module blocked an upgrade to ES modules. Developers avoided it because it had no tests, and they'd been copying real order exports into test fixtures."
+  service="Copilot Chat /explain for each legacy file, characterization tests generated and reviewed, agent mode to modernize one file at a time and update callers, and Copilot-generated fake fixtures with example.com emails."
+  why="The tests proved each change kept the same output, small steps kept diffs reviewable, and fake fixtures removed real customer data from the repo."
+  outcome="The module moved to ES modules over two sprints with no change in the finance CSV, and the real-data fixtures were deleted from the repository."
+/>
+
+## When to use it and when not to
+
+<UseWhen
+  use={[
+    'Fake data for tests, demos and seed scripts in a precise shape.',
+    'Explaining legacy code you didn\'t write before changing it.',
+    'Modernizing in small steps, backed by tests that pin current behaviour.',
+  ]}
+  avoid={[
+    'Pasting real personal or customer data into a prompt, even to show the format.',
+    'A one-shot rewrite of a large untested module.',
+  ]}
+  alternatives={[
+    '<strong>A fake-data library</strong> in a script when you need thousands of rows repeatably.',
+    '<strong>Copilot coding agent</strong> for a well-scoped modernization issue delivered as a draft pull request you review.',
+  ]}
+/>

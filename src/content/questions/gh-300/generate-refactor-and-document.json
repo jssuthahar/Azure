@@ -1,0 +1,27 @@
+{ "cert": "gh-300", "domain": 5, "topic": "generate-refactor-and-document", "questions": [
+  { "id": "gh-grd-1", "type": "single", "question": "A developer wants GitHub Copilot to rewrite a loop in a function as a call to reduce. The function's behavior must not change, and the developer wants to review the proposed changes before they are applied. What should the developer do?", "options": [
+    { "text": "Select the function, ask Copilot Chat in Edit mode for the refactor while stating that behavior must stay the same, review the diff, run the tests, and then select Keep", "why": "Correct. Edit mode shows a diff that can be kept or undone, and tests confirm the behavior is unchanged." },
+    { "text": "Ask Copilot coding agent to merge the change directly to the main branch", "why": "The coding agent opens a draft pull request for human review and cannot bypass review requirements." },
+    { "text": "Accept the first inline suggestion without running the tests", "why": "Accepting output without review or testing risks an unnoticed behavior change." },
+    { "text": "Run /doc on the function", "why": "/doc generates documentation comments and does not refactor code." } ], "answer": [0], "explanation": "Refactoring with Copilot should be specific, reviewed as a diff and verified with tests.", "objective": "5.1.1" },
+  { "id": "gh-grd-2", "type": "single", "question": "A developer needs to add documentation comments that describe the parameters and return value of a selected function. Which GitHub Copilot Chat slash command should the developer use?", "options": [
+    { "text": "/doc", "why": "Correct. /doc generates documentation comments for the selected code." },
+    { "text": "/explain", "why": "/explain describes code in the chat response but does not add documentation comments to the file." },
+    { "text": "/fix", "why": "/fix proposes changes for problems in the selected code." },
+    { "text": "/tests", "why": "/tests generates tests for the selected code." } ], "answer": [0], "explanation": "Use /doc for documentation comments, then review them for accuracy.", "objective": "5.1.1" },
+  { "id": "gh-grd-3", "type": "multi", "question": "A new team member must understand an unfamiliar repository quickly and wants to avoid switching between Visual Studio Code, search engines and internal wikis. Which TWO GitHub Copilot Chat features should the team member use?", "options": [
+    { "text": "Select a file's code and run /explain", "why": "Correct. /explain describes the selected code without leaving the editor." },
+    { "text": "Ask a question with @workspace or #codebase about where functionality is implemented", "why": "Correct. Workspace context lets Copilot answer questions about the repository as a whole." },
+    { "text": "Configure the suggestions matching public code policy to Allow", "why": "This policy affects how public code matches are handled. It does not help explain the repository." },
+    { "text": "Assign the repository's open issues to Copilot coding agent", "why": "The coding agent implements changes in pull requests. It is not used to explain a codebase to a developer." } ], "answer": [0, 1], "explanation": "/explain and workspace-wide context reduce context switching by answering questions inside the IDE.", "objective": "5.1.2" },
+  { "id": "gh-grd-4", "type": "single", "question": "A developer types a descriptive comment above an empty function and pauses. GitHub Copilot shows gray text that implements the function. Which key accepts the entire suggestion?", "options": [
+    { "text": "Tab", "why": "Correct. Tab accepts the whole inline suggestion." },
+    { "text": "Esc", "why": "Esc dismisses the suggestion." },
+    { "text": "Ctrl+Right Arrow", "why": "Ctrl+Right Arrow accepts the next word of the suggestion only." },
+    { "text": "Alt+]", "why": "Alt+] shows the next alternative suggestion." } ], "answer": [0], "explanation": "Tab accepts the full suggestion. Ctrl+Right Arrow accepts one word at a time.", "objective": "5.1.1" },
+  { "id": "gh-grd-5", "type": "single", "question": "A team uses GitHub Copilot to refactor modules. After a refactor is merged, a rarely used report produces incorrect results. The refactored module had no automated tests. What should the team do first to prevent this problem in future refactors?", "options": [
+    { "text": "Add tests that capture the current behavior before asking Copilot to refactor, and run them before keeping changes", "why": "Correct. Tests detect behavior changes that a diff review can miss." },
+    { "text": "Use a different language model for refactoring", "why": "Any model can produce behavior changes. The missing safeguard is testing." },
+    { "text": "Disable inline suggestions for the repository", "why": "This removes a productivity feature without adding a check for behavior changes." },
+    { "text": "Rely on Copilot code review to approve refactoring pull requests", "why": "Copilot code review leaves comments and does not count as an approval. It does not replace tests." } ], "answer": [0], "explanation": "Refactoring safely requires tests that confirm behavior is unchanged, plus human review of the diff.", "objective": "5.1.1" }
+] }

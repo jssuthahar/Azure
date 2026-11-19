@@ -1,0 +1,196 @@
+---
+title: Generative AI Risks and Limitations
+seoTitle: Generative AI Risks and Limits for Copilot | GH-300
+description: Learn why GitHub Copilot can suggest wrong, invented, insecure or outdated code, where those limits come from, and how to spot each one before it ships.
+answer: >-
+  **Generative AI** tools like GitHub Copilot predict the most likely next code from patterns, so they can be confidently wrong. The main risks are **hallucinations** (invented APIs or packages), **insecure or outdated code**, **bias**, **non-deterministic output** and a **limited context window**. The model can't run, test or truly understand your code, which is why every suggestion is a draft you review and test.
+updated: 2026-11-19
+readingMinutes: 9
+keyTerms:
+  - term: Generative AI
+    definition: AI that creates new content, such as code or text, by predicting likely output from patterns it learned in training.
+  - term: Large language model (LLM)
+    definition: The model behind Copilot. It predicts the next token based on its training data and the prompt it receives.
+  - term: Hallucination
+    definition: Output that sounds right but is made up, such as a function, package or setting that doesn't exist.
+  - term: Knowledge cut-off
+    definition: The date the model's training data ends. Newer libraries, versions and fixes may be unknown to it.
+  - term: Context window
+    definition: The limited amount of text the model can see in one request. Anything outside it is invisible to the model.
+  - term: Non-deterministic output
+    definition: The same prompt can give different answers on different runs.
+  - term: Over-reliance
+    definition: Trusting AI output without checking it, so mistakes reach production.
+interview:
+  - level: beginner
+    q: Why can Copilot suggest code that calls a function that doesn't exist?
+    a: >-
+      Because it predicts what code usually looks like, it doesn't look anything up. If lots of projects have a helper with that kind of name, the model can produce it even though my project doesn't have it. That's a hallucination, and the fix is to check the name against my code and the docs.
+    followUps:
+      - q: How would you check quickly?
+        a: >-
+          I'd search the workspace, look in package.json, or ask Copilot Chat with #codebase. If the tests or the linter fail on an unknown symbol, that's another quick signal.
+  - level: intermediate
+    q: What does a knowledge cut-off mean for the code Copilot writes?
+    a: >-
+      The model learned from data up to a certain date. It may suggest an older version of a library, a deprecated API, or miss a security fix that came later. I check the current docs and run a dependency audit rather than trusting the version it picks.
+    followUps: []
+  - level: experienced
+    q: Copilot gave you two different answers to the same prompt. Is something broken?
+    a: >-
+      No. LLM output is non-deterministic, so the same prompt can produce different suggestions. That's why I don't treat one answer as the truth. I pick the version I understand, and the tests decide whether it's right.
+    followUps: []
+  - level: scenario
+    q: A teammate wants to paste a 4,000-line legacy file into chat and ask for a full rewrite. What risks do you raise?
+    a: >-
+      The context window is limited, so Copilot may not see all of the file and could drop behaviour it never read. Legacy languages and odd patterns are also weaker spots for the model. I'd split the work into small functions, write tests for the current behaviour first, and review each change.
+    followUps: []
+  - level: architecture
+    q: How would you set up a team so these limits don't reach production?
+    a: >-
+      Treat AI output like any other code. Required pull request reviews by a person, CI with tests and linting, code scanning and dependency review, and branch protection so nothing merges without those checks. The tool speeds up writing, the pipeline still decides what ships.
+    followUps: []
+revision:
+  keyPoints:
+    - Copilot predicts likely code from patterns. It doesn't run, test or understand it.
+    - "Hallucinations: invented functions, packages, flags or settings that look plausible."
+    - The knowledge cut-off means suggestions can be outdated or miss recent security fixes.
+    - Output can be insecure, biased or simply wrong, and still look confident.
+    - The same prompt can give different answers (non-deterministic).
+    - The context window is limited, so Copilot only knows what fits in the prompt.
+    - Rare languages and unusual code get weaker suggestions.
+  mistakes:
+    - Installing a package Copilot named without checking it exists and is the real one.
+    - Assuming a confident, well-formatted answer must be correct.
+    - Expecting Copilot to know about code that isn't in its context.
+  examTips:
+    - '"Suggests a method that does not exist" = **hallucination**.'
+    - '"Unaware of a library released recently" = **knowledge cut-off**.'
+    - '"Same prompt, different result" = **non-deterministic** output.'
+    - '"Misses code in a large project" = **limited context window**.'
+  quick:
+    - q: Does Copilot execute code to check its suggestions?
+      a: No. It predicts code; you run and test it.
+    - q: What's a hallucination?
+      a: Plausible-looking output that's made up, like an API that doesn't exist.
+    - q: Why might Copilot suggest a deprecated API?
+      a: Its training data has a cut-off and older patterns are common in it.
+    - q: Why does Copilot miss code in files it can't see?
+      a: The context window is limited to what's in the prompt.
+    - q: What's the general fix for all these limits?
+      a: Human review plus tests, linting and scanning.
+references:
+  - title: Responsible use of GitHub Copilot features
+    url: https://docs.github.com/en/copilot/responsible-use
+  - title: Best practices for using GitHub Copilot
+    url: https://docs.github.com/en/copilot/get-started/best-practices
+  - title: Introduction to GitHub Copilot (Microsoft Learn)
+    url: https://learn.microsoft.com/training/modules/introduction-to-github-copilot/
+  - title: Responsible AI with GitHub Copilot (Microsoft Learn)
+    url: https://learn.microsoft.com/training/modules/responsible-ai-with-github-copilot/
+related:
+  - responsible-ai-principles
+  - validate-copilot-output
+  - suggestion-lifecycle-and-limits
+  - security-and-performance-fixes
+---
+
+## Start with a question
+
+<Story question="Copilot wrote a neat line of code that calls Money.roundBankers(). Your project has never had a Money library. Where did it come from?">
+
+It came from patterns. Plenty of codebases have a money helper with a rounding function, so the model guessed that yours might too. It didn't check, because it can't.
+
+That's the heart of this lesson. **Generative AI** predicts what code usually looks like. Most of the time that's very useful. Some of the time it's wrong in a way that looks completely right, and you're the one who has to notice.
+
+</Story>
+
+## Explain it like I'm 10
+
+<Eli10>
+
+Think of a friend who has read a million recipes but has never cooked.
+
+Ask for a cake recipe and you'll get a great one, fast. Ask about a brand-new oven and they might invent a button it doesn't have.
+
+They aren't lying. They're just guessing from what recipes usually say.
+
+So you still taste the cake before you serve it.
+
+</Eli10>
+
+## The technical explanation
+
+Copilot runs on **large language models (LLMs)**. An LLM takes your prompt (the code around your cursor, open files, your chat message) and predicts the next tokens, one after another. It's very good at "what usually comes next". It isn't checking facts, running code or reading your whole repository.
+
+Every risk below comes from that one idea.
+
+### The limits you need to know
+
+| Limit | What it looks like in contoso-shop | Why it happens |
+| --- | --- | --- |
+| **Hallucination** | `Money.roundBankers(total)`, or `npm install` for a package name that doesn't exist | The model produces plausible names from patterns, not from your code or a registry |
+| **Knowledge cut-off** | An old Node.js API, a library version with a known vulnerability | Training data ends at a date; newer releases and fixes aren't in it |
+| **Insecure code** | String-built SQL, a hard-coded secret, no input validation | Insecure patterns exist in public code the model learned from |
+| **Bias** | Sample data that assumes every customer has a first and last name | Training data reflects human bias |
+| **Non-deterministic output** | Ask twice, get two different versions of `applyDiscount` | Generation involves sampling, so answers vary |
+| **Limited context window** | Copilot ignores a rule in a file it never saw | Only so much fits into one prompt |
+| **Weaker on rare languages** | Thin suggestions for an old in-house scripting language | Less training data for that language |
+| **No real understanding** | Code that compiles but breaks the business rule | It predicts text; it doesn't know your intent |
+
+### Confident isn't the same as correct
+
+The tricky part is tone. A wrong answer is formatted just as nicely as a right one. There's no warning label on a hallucination. Here's a suggestion that reads fine:
+
+```js
+export function applyDiscount(total, code) {
+  const pct = CODES[code];
+  return total - (total * pct) / 100;
+}
+```
+
+It works for `SAVE10`. For an unknown code, `pct` is `undefined` and the function returns `NaN`. Nothing about the suggestion hinted at that. A one-line test would have caught it.
+
+### What the context window means for you
+
+Copilot only knows what's in the prompt. In the editor that's mostly the current file, the code near your cursor and related snippets from open tabs. In chat it's what you add with `#file`, `#codebase` or a selection, plus earlier messages. If a validation rule lives in a file Copilot never saw, it can't respect it. Long chats also push older details out.
+
+<Callout type="exam">
+The exam describes a symptom and asks for the limit behind it. "Suggests a function or package that doesn't exist" is a **hallucination**. "Doesn't know a recent library version" is the **knowledge cut-off**. "Gives different code for the same prompt" is **non-deterministic output**. "Ignores code in other parts of a large project" is the **limited context window**. The answer to "how do you reduce the risk" is almost always **human review plus testing**, not "write a longer prompt" on its own.
+</Callout>
+
+<DeepDive title="Package hallucinations are a supply-chain risk">
+
+If a model keeps inventing the same plausible package name, someone can publish a malicious package under that name and wait. A developer who runs `npm install` on the suggestion without checking pulls it in. So check that a package is real, maintained and the one you meant before you add it, and let dependency review and `npm audit` look at every new dependency in the pull request.
+
+</DeepDive>
+
+## Real-world business scenario
+
+<Scenario
+  company="Contoso Shop (fictional)"
+  industry="Online retail"
+  problem="A new developer accepted a Copilot suggestion that used a deprecated crypto API and another that imported a package nobody had heard of. Both passed a quick read and reached a pull request."
+  service="The team kept Copilot but added the guardrails that catch its known limits: required tests for new functions, CodeQL code scanning, dependency review on every pull request and a short team guide on hallucinations and the knowledge cut-off."
+  why="Each check targets a specific limit. Tests catch confident-but-wrong logic, scanning catches insecure patterns, and dependency review catches invented or risky packages."
+  outcome="The next suggestion with an unknown package failed dependency review before anyone had to spot it by eye, and new developers learned to treat Copilot output as a draft."
+/>
+
+## When to use it and when not to
+
+<UseWhen
+  use={[
+    'Boilerplate, common patterns and first drafts you can check quickly with tests.',
+    'Explaining unfamiliar code, as long as you confirm the explanation against the code itself.',
+    'Suggesting test cases and edge cases you might have missed.',
+  ]}
+  avoid={[
+    'Trusting package names, API signatures or config flags without checking the docs or registry.',
+    'Security-critical code (auth, crypto, payments) accepted without expert review and scanning.',
+    'Large rewrites in one go, where the context window can drop behaviour silently.',
+  ]}
+  alternatives={[
+    '<strong>Official documentation</strong> for exact API signatures and current versions.',
+    '<strong>Small, tested steps</strong>: ask for one function at a time and run the tests after each.',
+  ]}
+/>

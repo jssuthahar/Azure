@@ -1,0 +1,206 @@
+---
+title: "The Copilot Code Suggestion Lifecycle and LLM Limits"
+seoTitle: Copilot Suggestion Lifecycle and LLM Limits | GH-300
+description: Follow a GitHub Copilot suggestion from keystroke to ghost text, learn the keys to accept or cycle it, and know where large language models fall short.
+answer: >-
+  A Copilot inline suggestion has a lifecycle: you **pause typing**, the IDE extension **gathers context** and checks **content exclusions**, builds a **prompt** that fits the **context window**, and sends it over HTTPS to the **Copilot proxy** (auth and pre-filters). The **LLM** predicts tokens, **post-processing** filters the reply, and it appears as **grey ghost text**. You **Tab** to accept, **Esc** to dismiss, **Alt+]** / **Alt+[** to cycle alternatives, **Ctrl+→** to accept word by word, and **engagement data** records what you chose. LLM limits still apply: a **knowledge cut-off**, **hallucinated** APIs or packages, **insecure or outdated** code, **bias**, **non-deterministic** output, a **limited context window**, weaker results for **rare languages**, and **no real understanding** or execution of your code.
+updated: 2026-11-19
+readingMinutes: 10
+keyTerms:
+  - term: Ghost text
+    definition: The grey, italic inline suggestion Copilot shows at your cursor before you accept it.
+  - term: Completions panel
+    definition: A side panel (Ctrl+Enter) that lists several alternative suggestions so you can compare them.
+  - term: Next edit suggestions (NES)
+    definition: A Copilot feature that predicts the next edit you're likely to make, possibly elsewhere in the file, based on your recent changes.
+  - term: Knowledge cut-off
+    definition: The date the model's training data ends. Libraries and APIs released later may be missing or wrong.
+  - term: Hallucination
+    definition: Output that looks plausible but is false, such as a function, API or package that doesn't exist.
+  - term: Non-deterministic output
+    definition: The same prompt can produce different suggestions each time, because the model samples from probabilities.
+interview:
+  - level: beginner
+    q: Walk me through what happens between pausing and seeing ghost text.
+    a: >-
+      The extension notices the pause and gathers context: code around my cursor, the file name and language, and snippets from open tabs, skipping excluded files. It builds a prompt that fits the context window and sends it over HTTPS to the Copilot proxy, which authenticates and pre-filters it. The model predicts a completion, post-processing checks it, and it shows up as ghost text. Then I accept, cycle or dismiss it.
+    followUps:
+      - q: What gets recorded after that?
+        a: >-
+          Engagement data: whether I accepted or dismissed it, plus errors and timing. That powers the service and usage metrics.
+  - level: intermediate
+    q: How do you see a different suggestion without retyping?
+    a: >-
+      Alt+] for the next one and Alt+[ for the previous one, or Option on macOS. If I want to compare several at once, Ctrl+Enter opens the completions panel. Ctrl+Right Arrow accepts just the next word if only the start is right.
+    followUps: []
+  - level: experienced
+    q: Copilot suggested a call to a library method that doesn't exist. Why, and what do you do?
+    a: >-
+      That's a hallucination. The model predicts likely-looking code from patterns; it doesn't check the library. The method might be from an old version before its knowledge cut-off, or it just sounds right. I check the library's docs, run the code and tests, and give Copilot the real API in context, for example by opening the file that uses it.
+    followUps: []
+  - level: scenario
+    q: Two developers ask Copilot the same thing and get different code. One says Copilot is broken.
+    a: >-
+      It isn't. Model output is non-deterministic, so the same prompt can give different answers, and their context differs too: different open tabs, different nearby code. What matters is that each answer is reviewed and tested against the same requirements.
+    followUps: []
+revision:
+  keyPoints:
+    - "Lifecycle: pause → gather context → exclusions → prompt → HTTPS → proxy (auth, pre-filters) → LLM → post-processing → ghost text → accept or reject → engagement data."
+    - "Keys: Tab accept, Esc dismiss, Alt+] / Alt+[ cycle (Option on macOS), Ctrl+→ next word, Ctrl+Enter completions panel."
+    - Next edit suggestions predict your next edit based on recent changes.
+    - "LLM limits: knowledge cut-off, hallucinations, insecure or outdated code, bias, non-determinism, limited context window, weaker for rare languages, no real understanding or execution."
+    - Every accepted suggestion is a draft you review and test.
+  mistakes:
+    - Treating ghost text as verified because it looks confident.
+    - Expecting identical output for the same prompt every time.
+    - Assuming Copilot knows the newest version of a library.
+  examTips:
+    - '"See an alternative suggestion" = **Alt+]** (next) or **Alt+[** (previous).'
+    - '"Accept only part of a suggestion" = **Ctrl+→** (next word).'
+    - '"Suggested package doesn''t exist" = **hallucination**; verify before installing.'
+  quick:
+    - q: Which key accepts a whole suggestion?
+      a: Tab
+    - q: Which shortcut opens the completions panel?
+      a: Ctrl+Enter
+    - q: Why can Copilot suggest outdated APIs?
+      a: Its training data has a knowledge cut-off.
+    - q: Does the model run your code before suggesting it?
+      a: No.
+    - q: What triggers an inline suggestion?
+      a: Pausing while you type (or an explicit trigger).
+references:
+  - title: Getting code suggestions in your IDE with GitHub Copilot
+    url: https://docs.github.com/en/copilot/using-github-copilot/getting-code-suggestions-in-your-ide-with-github-copilot
+  - title: Responsible use of GitHub Copilot inline suggestions
+    url: https://docs.github.com/en/copilot/responsible-use-of-github-copilot-features/responsible-use-of-github-copilot-code-completion
+  - title: Best practices for using GitHub Copilot
+    url: https://docs.github.com/en/copilot/using-github-copilot/best-practices-for-using-github-copilot
+  - title: Introduction to GitHub Copilot (Microsoft Learn)
+    url: https://learn.microsoft.com/training/modules/introduction-to-github-copilot/
+related:
+  - copilot-data-flow
+  - proxy-filtering-and-post-processing
+  - generative-ai-risks-and-limitations
+  - validate-copilot-output
+---
+
+## Start with a question
+
+<Story question="Copilot finishes your line almost before you've stopped typing. How many checks did that suggestion pass, and which mistakes could still be inside it?">
+
+Think of ordering food on an app. You tap, the restaurant gets your order, the kitchen cooks, someone packs and seals it, and a rider drops it at your door. Plenty of checks happen. You still open the box before you eat.
+
+A Copilot suggestion has the same kind of journey. It's quick because every step is small, but there are several of them, and the model at the centre has real limits. Knowing the lifecycle helps you answer exam questions, and it helps you spot when a suggestion is likely to be wrong.
+
+</Story>
+
+## Explain it like I'm 10
+
+<Eli10>
+
+You start a sentence and stop. Your friend leans over and whispers how it might end.
+
+Before whispering, they peek at what you've written above and below. Then they guess the next words.
+
+They're a great guesser, but they've never actually read today's news. Sometimes they guess something that sounds right and isn't.
+
+You can nod and write it down, shake your head, or ask "got another idea?"
+
+</Eli10>
+
+## Visual: a suggestion's life in motion
+
+Watch one suggestion travel from a pause in `src/discount.js` to ghost text, then meet the limits it still carries.
+
+<Explainer id="suggestion-lifecycle" />
+
+## The technical explanation
+
+### The lifecycle, step by step
+
+| Step | What happens | Where |
+| --- | --- | --- |
+| 1. Trigger | You pause while typing (or trigger a suggestion explicitly) | Your editor |
+| 2. Gather context | Code before and after the cursor, file name and language, related open tabs | IDE extension |
+| 3. Exclusions | Files covered by a content exclusion are skipped | IDE extension |
+| 4. Build the prompt | Context is ranked and trimmed to fit the context window | IDE extension |
+| 5. Send | Encrypted over HTTPS | Network |
+| 6. Proxy | Authentication and pre-filters (offensive content, prompt injection) | GitHub |
+| 7. Generate | The LLM predicts the most likely tokens, sometimes several candidates | Model |
+| 8. Post-process | Quality, insecure patterns, offensive content, public code match | GitHub |
+| 9. Display | Grey ghost text at your cursor | Your editor |
+| 10. Decide | Accept, accept part, cycle, or dismiss; engagement data is recorded | You |
+
+### Your keys at step 10
+
+| Action | Windows and Linux | macOS |
+| --- | --- | --- |
+| Accept the whole suggestion | Tab | Tab |
+| Dismiss | Esc | Esc |
+| Next / previous alternative | Alt+] / Alt+[ | Option+] / Option+[ |
+| Accept the next word | Ctrl+→ | Cmd+→ |
+| Open the completions panel | Ctrl+Enter | Ctrl+Enter |
+
+**Next edit suggestions (NES)** extend the idea: after you change something, Copilot predicts the next edit you're likely to make, even a few lines away, and you jump to it and accept with Tab. The **VS Code & GitHub** tab shows cycling three alternatives and accepting word by word.
+
+### Limits of LLMs and Copilot
+
+The model in step 7 is powerful and still a guesser. Know these limits by name:
+
+- **Knowledge cut-off.** Training data stops at a date, so newer library versions and APIs may be missing or wrong.
+- **Hallucinations.** It can invent functions, options or whole packages that don't exist. Installing a made-up package name is a real supply-chain risk.
+- **Insecure or outdated code.** It learned from public code, including bad patterns.
+- **Bias.** Assumptions in training data can show up in names, examples and logic.
+- **Non-deterministic output.** The same prompt can give different results.
+- **Limited context window.** It only sees what fits in the prompt, not your whole system.
+- **Rare languages and frameworks.** Less training data means weaker suggestions.
+- **No real understanding or execution.** It doesn't run, compile or test what it suggests.
+
+```javascript
+// Copilot suggested this in src/discount.js. Looks fine. Is it?
+const pct = CODES[code] ?? 0;
+return Math.round(total - (total * pct) / 100);   // rounding rule: does the business want this?
+```
+
+The code is plausible, and only you know whether rounding belongs there. That's the whole point: review it, run `npm test`, and keep it only if it matches the requirement.
+
+<Callout type="exam">
+Lifecycle questions often give you the steps out of order. Remember the shape: **context → prompt → proxy (pre-filter) → model → post-process → you**. Limit questions describe a symptom: "suggests a method from an old version" is the **knowledge cut-off**; "a package that doesn't exist" is a **hallucination**; "different answer each time" is **non-deterministic output**; "ignores code in a file it never saw" is the **context window**.
+</Callout>
+
+<DeepDive title="Why non-determinism isn't a bug">
+
+A language model gives a probability for each possible next token. If it always picked the single most likely one, output would be repetitive and often worse. So it samples, which means two runs can differ. Your context also changes constantly as you type and switch tabs. That's why the completions panel and Alt+] exist: you're expected to look at options and choose. It's also why you can't treat "Copilot wrote it the same way last time" as evidence of correctness. Tests are the evidence.
+
+</DeepDive>
+
+## Real-world business scenario
+
+<Scenario
+  company="Northwind Traders (fictional)"
+  industry="Wholesale distribution"
+  problem="A junior developer accepted a Copilot suggestion that imported a package which didn't exist on npm. The install failed, and a teammate nearly swapped in a similar-looking package from an unknown publisher before review caught it."
+  service="Team training on the suggestion lifecycle and LLM limits, a rule that every new dependency is checked on the registry, plus Dependabot and code scanning in CI."
+  why="Developers now know suggestions are predictions with a knowledge cut-off and can hallucinate, so they verify packages and APIs instead of trusting confident ghost text."
+  outcome="New dependencies now go through a quick registry check in review, and no invented package has reached the main branch since."
+/>
+
+## When to use it and when not to
+
+<UseWhen
+  use={[
+    'Accept boilerplate and patterns you recognise, then run the tests.',
+    'Cycle alternatives with Alt+] or the completions panel when the first idea is close but not right.',
+    'Accept word by word when only the start of a suggestion is useful.',
+  ]}
+  avoid={[
+    'Accepting calls to APIs or packages you haven\'t checked exist.',
+    'Trusting suggestions for brand-new library versions released after the model\'s cut-off.',
+    'Skipping review because the suggestion passed Copilot\'s filters.',
+  ]}
+  alternatives={[
+    '<strong>Copilot Chat</strong> with #file context when you need an explanation, not just a completion.',
+    '<strong>Agent mode</strong> when you want Copilot to run the tests and iterate, still with your approval and review.',
+  ]}
+/>

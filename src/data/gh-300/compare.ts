@@ -1,0 +1,93 @@
+/**
+ * GH-300 "X vs Y" comparison pages: /gh-300/compare/<slug>/.
+ * Prices written as $12.34 are shown in the learner's currency (default INR);
+ * they are list prices for "price feel" only, checked on github.com in Nov 2026.
+ */
+import type { Comparison } from '../az-900/compare';
+
+export const COMPARISONS: Comparison[] = [
+  {
+    slug: 'ask-vs-edit-vs-agent-mode',
+    title: 'Ask vs Edit vs Agent mode',
+    seoTitle: 'Copilot Ask vs Edit vs Agent Mode Compared | GH-300',
+    description: 'Which Copilot Chat mode should you use? Ask, Edit and Agent compared on what they change, which files they touch, whether they run commands, and when to pick each.',
+    answer: 'Use **Ask** to understand code or get an answer; it changes nothing by itself. Use **Edit** when you know which files should change and want to review each diff. Use **Agent** when you want Copilot to work out the files, make the changes, **run commands and tests** and iterate until the task is done.',
+    cols: ['Ask', 'Edit', 'Agent'],
+    rows: [
+      ['Changes your files', 'No (suggests code blocks)', 'Yes, the files you add', 'Yes, files it finds itself'],
+      ['Runs terminal commands', 'No', 'No', 'Yes, after asking you'],
+      ['Uses tools / MCP servers', 'No', 'No', 'Yes'],
+      ['Iterates on errors', 'No', 'You ask again', 'Yes, reads errors and retries'],
+      ['Best for', 'Explaining, learning, small snippets', 'Targeted multi-file edits', 'Whole tasks: features, fixes with tests'],
+      ['Your control', 'Copy or insert', 'Keep or Undo each change', 'Approve commands, then Keep or Undo'],
+    ],
+    pick: [['Ask', 'you want to understand code, compare approaches or get a quick snippet'], ['Edit', 'you know the files and want a reviewable change across them'], ['Agent', 'the task needs searching, several edits and running tests until it works']],
+    examTip: '“Copilot should run the tests and fix failures without being told which files to change” = **Agent mode**. “Explain this regex” = **Ask**. “Apply this rename to these three files and review each diff” = **Edit**.',
+    sim: { mode: 'copilotagent', start: 0, tour: 'gh-inline-and-chat', intro: 'Try Ask, Edit and Agent on the same task.' },
+    lessons: ['inline-suggestions-chat-and-modes', 'agent-mode-mcp-and-subagents', 'generate-refactor-and-document'],
+    faq: [['Is Copilot Edits the same as Edit mode?', 'Yes. Copilot Edits is the multi-file editing experience; in the Chat view it appears as the Edit mode next to Ask and Agent.'], ['Can agent mode run any command?', 'It asks before running terminal commands unless you approved that command for the session, and an organization can turn agent features and MCP servers off with policies.']],
+  },
+  {
+    slug: 'inline-vs-chat-vs-cli-vs-coding-agent',
+    title: 'Inline suggestions vs Chat vs Copilot CLI vs coding agent',
+    seoTitle: 'Copilot Inline vs Chat vs CLI vs Coding Agent | GH-300',
+    description: 'Four ways to use GitHub Copilot compared: ghost-text suggestions, Copilot Chat in the IDE, Copilot CLI in the terminal and Copilot coding agent on github.com.',
+    answer: '**Inline suggestions** finish the code you are typing. **Copilot Chat** answers and edits in the IDE (Ask, Edit, Agent). **Copilot CLI** brings the agent to your terminal, interactively or with `copilot -p`. **Copilot coding agent** works on its own in a GitHub Actions environment and opens a **pull request**.',
+    cols: ['Inline suggestions', 'Copilot Chat', 'Copilot CLI', 'Coding agent'],
+    rows: [
+      ['Where', 'In the editor as you type', 'IDE chat view / inline chat', 'Your terminal', 'github.com (or /delegate)'],
+      ['How you start it', 'Just type and pause', 'Ctrl+Alt+I or Ctrl+I', 'copilot or copilot -p', 'Assign an issue to Copilot'],
+      ['Changes files', 'Only what you accept', 'Edit and Agent modes', 'With your approval', 'On its own branch'],
+      ['Result', 'Ghost text', 'Answers and diffs', 'Edits, scripts, commands', 'A draft pull request'],
+      ['You review', 'Each suggestion', 'Each diff', 'Each tool use', 'The pull request'],
+    ],
+    pick: [['Inline suggestions', 'you know what you are writing and want to type less'], ['Copilot Chat', 'you need to understand code or make changes inside the IDE'], ['Copilot CLI', 'you live in the terminal or want Copilot in scripts and CI'], ['Coding agent', 'a well-described issue can be done in the background and reviewed as a PR']],
+    examTip: '“Work on an issue in the background and open a pull request” = **Copilot coding agent**. “Run a prompt in a CI script with only write access” = **copilot -p --allow-tool \'write\'**.',
+    wide: true,
+    sim: { mode: 'copilotagent', start: 5, tour: 'gh-cli-terminal', intro: 'Follow a task from the terminal to a pull request.' },
+    lessons: ['inline-suggestions-chat-and-modes', 'copilot-cli-install-and-commands', 'agent-mode-mcp-and-subagents', 'spaces-spark-and-pr-summaries'],
+    faq: [['Does the coding agent merge its own pull requests?', 'No. It opens a pull request and asks for review; people with write access review and merge. Branch protections and required reviews still apply.'], ['Is gh copilot the same as Copilot CLI?', 'No. The old gh copilot extension (suggest and explain) was replaced by GitHub Copilot CLI, the copilot command installed from @github/copilot.']],
+  },
+  {
+    slug: 'copilot-plans-compared',
+    title: 'Copilot Free vs Pro vs Pro+ vs Business vs Enterprise',
+    seoTitle: 'GitHub Copilot Plans Compared: Free to Enterprise | GH-300',
+    description: 'GitHub Copilot Free, Pro, Pro+, Business and Enterprise compared: who each plan is for, who manages it, policies, content exclusions, audit log and price feel.',
+    answer: '**Free, Pro and Pro+** are personal plans you buy (or get) yourself. **Business** is bought by an organization per seat and adds central **policies**, **content exclusions**, the **audit log** and IP indemnity terms. **Enterprise** builds on Business for GitHub Enterprise Cloud with extra enterprise features.',
+    cols: ['Free', 'Pro / Pro+', 'Business', 'Enterprise'],
+    rows: [
+      ['Who buys it', 'Nobody, it’s free', 'An individual', 'An organization, per seat', 'An enterprise, per seat'],
+      ['Usage', 'Monthly limits', 'Unlimited completions; premium allowance', 'Unlimited completions; premium allowance', 'Unlimited completions; larger premium allowance'],
+      ['Policies and seats', 'No', 'Personal settings', 'Org policies, seat management', 'Enterprise + org policies'],
+      ['Content exclusions', 'No', 'No', 'Yes', 'Yes'],
+      ['Audit log events', 'No', 'No', 'Yes', 'Yes'],
+      ['Price feel', '$0', 'Pro ≈ $10/month, Pro+ ≈ $39/month', '≈ $19 per user/month', '≈ $39 per user/month'],
+    ],
+    pick: [['Free', 'you are trying Copilot or use it lightly'], ['Pro / Pro+', 'you pay for yourself and want more usage and models'], ['Business', 'a company needs seats, policies and content exclusions'], ['Enterprise', 'the company runs GitHub Enterprise Cloud and wants enterprise-wide control and features']],
+    examTip: '“Exclude files from Copilot for everyone in the company” or “manage seats with the REST API” point to **Business or Enterprise**. Personal plans don’t have organization policies.',
+    wide: true,
+    sim: { mode: 'copilotgov', start: 0, tour: 'gh-plans-settings', intro: 'See which settings come from the plan and which from the org.' },
+    lessons: ['copilot-plans', 'organization-policies', 'content-exclusions'],
+    faq: [['Can a student or open-source maintainer get Copilot free?', 'Verified students, teachers and maintainers of popular open-source projects can get Copilot Pro at no cost. Check GitHub’s current eligibility rules.'], ['If I have a Business seat, do my personal settings apply?', 'Organization policies win. Settings such as the public code filter are set by the org and show as read-only for you.']],
+  },
+  {
+    slug: 'instructions-vs-prompt-files-vs-agents',
+    title: 'Custom instructions vs prompt files vs custom agents',
+    seoTitle: 'Copilot Instructions vs Prompt Files vs Custom Agents | GH-300',
+    description: 'How to steer GitHub Copilot: repository and path-specific instructions, reusable prompt files and custom agents compared, with file names and when to use each.',
+    answer: '**Custom instructions** are rules Copilot adds to requests automatically (`.github/copilot-instructions.md`, or `.instructions.md` files with `applyTo`). A **prompt file** (`.github/prompts/*.prompt.md`) is a reusable request you run on demand with `/name`. A **custom agent** (`.agent.md`) is a named persona with its own instructions and tools.',
+    cols: ['Repository instructions', 'Path-specific instructions', 'Prompt file', 'Custom agent'],
+    rows: [
+      ['File', '.github/copilot-instructions.md', '.github/instructions/*.instructions.md', '.github/prompts/*.prompt.md', '.github/agents/*.agent.md'],
+      ['When it applies', 'Every request in the repo', 'Requests about files matching applyTo', 'Only when you run /name', 'When you pick the agent'],
+      ['Good for', 'House style, stack, rules', 'Rules for tests, docs, a folder', 'Repeatable tasks done the same way', 'A role with limited tools'],
+      ['Used by', 'Chat, coding agent, code review', 'Chat, coding agent, code review', 'Chat in the IDE', 'IDE, CLI, coding agent'],
+    ],
+    pick: [['Repository instructions', 'every answer should follow the same team rules'], ['Path-specific instructions', 'rules only make sense for some files'], ['Prompt file', 'the team runs the same multi-step request again and again'], ['Custom agent', 'you want a specialist (test writer, reviewer) with its own tools']],
+    examTip: '“Make Copilot code review apply our standards on every PR” = put them in **.github/copilot-instructions.md**. “A reusable prompt the whole team runs with a slash command” = a **prompt file**.',
+    wide: true,
+    sim: { mode: 'copilotcontext', start: 5, tour: 'gh-instructions-files', intro: 'Write each file and watch Copilot use it.' },
+    lessons: ['custom-instructions-and-prompt-files', 'copilot-code-review', 'agent-mode-mcp-and-subagents'],
+    faq: [['Does Copilot read AGENTS.md?', 'Yes, agents such as Copilot coding agent and Copilot CLI read AGENTS.md files as instructions, alongside .github/copilot-instructions.md.'], ['Do instructions replace a good prompt?', 'No. They add standing rules; you still describe the task, the context and the outcome in each prompt.']],
+  },
+];

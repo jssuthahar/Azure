@@ -1,0 +1,228 @@
+---
+title: "Security Improvements and Performance Fixes with GitHub Copilot"
+seoTitle: Copilot for Security and Performance Fixes | GH-300
+description: Use GitHub Copilot Chat to find SQL injection, hard-coded secrets and N+1 queries, ask for fixes, and back every change with tests and code scanning.
+answer: >-
+  GitHub Copilot can **review code for security and performance** when you ask. Select the code and ask in Chat ("Is this safe?", "Find vulnerabilities", "This runs in a loop, can it be faster?") or use **/fix**. It spots common problems such as **SQL injection**, **hard-coded secrets**, missing input validation, **N+1 queries** and repeated work in loops, then proposes a fix. Copilot's filters also block some insecure patterns in suggestions, but **not all**. Treat its advice as a starting point: confirm with **tests**, **code scanning (CodeQL)**, dependency checks and a human review.
+updated: 2026-11-19
+readingMinutes: 10
+keyTerms:
+  - term: SQL injection
+    definition: An attack where user input changes the meaning of a database query because the query was built by joining strings.
+  - term: Parameterised query
+    definition: A query with placeholders such as $1, where the database driver passes values separately so they can't change the SQL.
+  - term: N+1 query
+    definition: A performance problem where code runs one query to get a list and then one more query for each item, instead of a single query.
+  - term: Code scanning
+    definition: A GitHub Advanced Security feature that analyses code, usually with CodeQL, and raises alerts for vulnerabilities on pushes and pull requests.
+  - term: Insecure-pattern filter
+    definition: Part of Copilot's post-processing that checks suggestions for common insecure code, such as hard-coded credentials, before you see them.
+  - term: /fix
+    definition: A Copilot Chat slash command that proposes a fix for a problem in the selected code.
+interview:
+  - level: beginner
+    q: How would you ask Copilot to check a function for security problems?
+    a: >-
+      I'd select the function and ask in Chat, something like "Review this for security issues, for example injection or unsafe input handling." Being specific about the risk helps. Then I'd read the fix and run the tests before keeping it.
+    followUps:
+      - q: Does Copilot find every vulnerability?
+        a: >-
+          No. It catches common patterns, but it can miss things and it can be wrong. That's why I still run code scanning and keep a human review.
+  - level: intermediate
+    q: Copilot suggests a fix for an N+1 query. What do you check before accepting it?
+    a: >-
+      That the new query returns the same results, including empty lists and duplicates, that the tests still pass, and that it's actually faster with realistic data. A quick timing or a query plan tells me more than the suggestion does.
+    followUps: []
+  - level: experienced
+    q: Copilot has a filter for insecure code. Why do you still need code scanning?
+    a: >-
+      The filter checks suggestions for some common insecure patterns before they appear. It doesn't analyse data flow across the whole codebase, and it doesn't look at code humans wrote. CodeQL does, on every pull request, and it gives an alert I can track until it's fixed.
+    followUps:
+      - q: Where does Copilot fit alongside CodeQL?
+        a: >-
+          Before the pull request: explaining a risk, proposing a fix, writing a test that proves the bug. CodeQL is the check that runs whether or not anyone remembered to ask.
+  - level: scenario
+    q: A teammate pastes a production stack trace with customer emails into Chat to get a performance fix. What do you say?
+    a: >-
+      Strip the personal data first, or reproduce the problem with fake data. Prompts leave the editor, and our policy is no customer data in prompts. The fix doesn't need real emails to be right.
+    followUps: []
+  - level: architecture
+    q: How would you build Copilot into a team's secure development process without trusting it blindly?
+    a: >-
+      Use it where it's cheap to check: reviewing diffs, suggesting fixes, writing regression tests. Keep the gates that don't depend on it: code scanning and secret scanning on pull requests, dependency review, branch protection with human approval. Add security standards to the repository's custom instructions so suggestions follow them more often.
+    followUps: []
+revision:
+  keyPoints:
+    - Ask Copilot directly to review for security or performance, and name the risk you care about.
+    - Common security finds include SQL injection, hard-coded secrets, missing input validation and unsafe deserialisation.
+    - Common performance finds include N+1 queries, repeated work inside loops, selecting more data than needed and missing caching.
+    - Copilot's post-processing filters catch some insecure patterns in suggestions, not all.
+    - Confirm every fix with tests, code scanning, dependency checks and human review.
+    - Never paste secrets or real personal data into prompts to get help.
+  mistakes:
+    - Accepting a security fix because it looks right, without a test that shows the old bug and the fix.
+    - Assuming Copilot's insecure-pattern filter means suggestions are secure.
+    - Asking "make it faster" with no context about how the code is called.
+    - Pasting production data or keys into Chat.
+  examTips:
+    - '"Use Copilot to find vulnerabilities in selected code" = select it and ask **Chat** (or **/fix** for a known problem).'
+    - '"Ensure a Copilot security fix actually works" = **tests** plus **code scanning**, not more prompts.'
+    - '"One query per item in a loop" = **N+1**; the fix is a single batched query.'
+    - '"Copilot filters insecure code, so review is optional" is always **false**.'
+  quick:
+    - q: What's the usual fix for SQL injection?
+      a: A parameterised query with placeholders instead of string concatenation.
+    - q: Name a performance problem Copilot can spot in loops.
+      a: An N+1 query, or repeating the same work on every pass.
+    - q: Do Copilot's filters block all insecure code?
+      a: No, only some common patterns.
+    - q: Which GitHub feature runs CodeQL on pull requests?
+      a: Code scanning.
+    - q: Which slash command asks Copilot to propose a fix?
+      a: /fix.
+references:
+  - title: Finding existing vulnerabilities in code (Copilot Chat cookbook)
+    url: https://docs.github.com/en/copilot/tutorials/copilot-chat-cookbook/analyze-security/find-vulnerabilities
+  - title: Refactoring code (Copilot Chat cookbook)
+    url: https://docs.github.com/en/copilot/tutorials/copilot-chat-cookbook/refactor-code
+  - title: About code scanning
+    url: https://docs.github.com/en/code-security/code-scanning/introduction-to-code-scanning/about-code-scanning
+  - title: Responsible use of GitHub Copilot inline suggestions
+    url: https://docs.github.com/en/copilot/responsible-use/copilot-code-completion
+  - title: GitHub Copilot fundamentals (Microsoft Learn)
+    url: https://learn.microsoft.com/training/paths/copilot/
+related:
+  - unit-and-integration-tests
+  - validate-copilot-output
+  - proxy-filtering-and-post-processing
+  - copilot-code-review
+---
+
+## Start with a question
+
+<Story question='Your orders page is slow and a reviewer wrote "this looks injectable". Can Copilot help with both?'>
+
+Yes, if you ask it the right way. Here's the function in `contoso-shop`:
+
+```js
+export async function findOrders(db, customer) {
+  return db.query(`SELECT * FROM orders WHERE customer = '${customer}'`);
+}
+```
+
+The customer name goes straight into the SQL. Type `' OR '1'='1` as a name and you get every order in the table. And the page calls this once per customer in a loop, so 200 customers means 200 queries.
+
+Select it, ask Copilot "Is this safe, and can it be faster?", and it'll name both problems and suggest a fix. Your job is to prove the fix works.
+
+</Story>
+
+## Explain it like I'm 10
+
+<Eli10>
+
+Imagine a friend who's read a lot of books about locks. You show them your front door and ask, "Can someone get in?" They spot that the window's open.
+
+Great tip. But you still walk round the house and check every window yourself, and you ask the locksmith (that's **code scanning**) to come once a week.
+
+Copilot is the friend who's read the books. Helpful, quick, and sometimes wrong.
+
+</Eli10>
+
+## The technical explanation
+
+Copilot doesn't scan your code on its own. You get security and performance help by **asking**, and the more you say about the risk and how the code is used, the better the answer.
+
+### Asking for a security review
+
+Select the code, open Chat, and be specific:
+
+- "Review this for security issues, especially injection and input validation."
+- "Is there anything here that would leak a secret?"
+- `/fix` when you already know what's wrong, for example after a test fails.
+
+Here's what Copilot usually suggests for the function above:
+
+```js
+export async function findOrders(db, customer) {
+  return db.query('SELECT id, total FROM orders WHERE customer = $1', [customer]);
+}
+```
+
+The value goes in as a parameter, so it can't change the SQL. It also selects only the columns the page needs.
+
+| Problem Copilot often spots | Typical fix it proposes |
+| --- | --- |
+| SQL built by joining strings | Parameterised query |
+| API key written in the code | Read it from an environment variable or a secrets manager |
+| No checks on user input | Validate type, length and range at the edge |
+| Weak hashing for passwords | A slow password hash such as bcrypt or Argon2 |
+| Unescaped HTML from user input | Escape the output, or use the framework's safe rendering |
+
+### Asking for a performance fix
+
+"Make this faster" on its own gets you a guess. Tell Copilot how the code runs: "This is called once per customer in a loop of a few hundred."
+
+| Problem | What it looks like | Fix |
+| --- | --- | --- |
+| **N+1 queries** | One query per item in a loop | One query: `WHERE customer = ANY($1)` |
+| Repeated work | Same calculation on every pass | Compute once, outside the loop |
+| Too much data | `SELECT *` for two fields | Select only what you use |
+| No caching | Same expensive call every request | Cache the result with a sensible expiry |
+
+### What Copilot's filters do and don't do
+
+Before a suggestion reaches your editor, Copilot's **post-processing** checks it for some common insecure patterns, such as hard-coded credentials. That helps. It doesn't make suggestions secure. The model predicts likely code, and plenty of public code is insecure or out of date. It can also invent package names or use an API that's been deprecated.
+
+So every Copilot fix gets the same checks as human code:
+
+<Flow
+  caption="From a Copilot suggestion to a fix you can trust"
+  steps={[
+    { title: 'Ask', text: 'Select the code and name the risk or how it runs.' },
+    { title: 'Read', text: 'Understand the fix. Don\'t accept what you can\'t explain.' },
+    { title: 'Test', text: 'Add a test that fails on the old code and passes on the new.' },
+    { title: 'Scan', text: 'Code scanning and dependency checks run on the pull request.' },
+    { title: 'Review', text: 'A teammate approves. Branch protection keeps that step.' },
+  ]}
+/>
+
+<Callout type="exam">
+Questions here test judgement. If Copilot suggested a security fix, the next step is **validate it** with tests, code scanning and review, never "accept because Copilot filters insecure code". If the scenario says performance advice was vague, the fix is **more context** (how often the code runs, data size), not a different model. And don't paste secrets or real customer data into a prompt to get help.
+</Callout>
+
+<DeepDive title="Make good habits the default with custom instructions">
+
+You can put your security rules in `.github/copilot-instructions.md`, for example "Always use parameterised queries with the pg driver" and "Read secrets from process.env, never literals". Chat, the coding agent and Copilot code review all read that file, so suggestions follow your standards more often. It nudges the output. It doesn't replace code scanning.
+
+</DeepDive>
+
+## Real-world business scenario
+
+<Scenario
+  company="Contoso (fictional)"
+  industry="Online retail"
+  problem="The order history page in contoso-shop took eight seconds for big accounts, and a pen test flagged two string-built SQL queries."
+  service="Developers asked Copilot Chat to review src/orders.js for injection and to batch the per-customer queries, then added regression tests and kept CodeQL code scanning on every pull request."
+  why="Copilot found both problems in minutes and drafted the fixes. The tests proved the queries returned the same rows, and code scanning confirmed the alerts closed."
+  outcome="The page loads in under a second, the pen-test findings are closed, and the team added its SQL rule to the repository's custom instructions."
+/>
+
+## When to use it and when not to
+
+<UseWhen
+  use={[
+    'A second pair of eyes on a function before you open a pull request.',
+    'Explaining why a code scanning alert matters and drafting the fix.',
+    'Spotting N+1 queries and repeated work when you describe how the code runs.',
+  ]}
+  avoid={[
+    'As your only security check. Keep code scanning, secret scanning and human review.',
+    'Pasting production data, keys or customer details into the prompt.',
+    'Accepting a fix you can\'t explain or haven\'t tested.',
+  ]}
+  alternatives={[
+    '<strong>Code scanning with CodeQL</strong> for automatic analysis on every pull request.',
+    '<strong>Copilot code review</strong> to get comments on a whole pull request.',
+    '<strong>A profiler or query plan</strong> to measure a performance fix instead of guessing.',
+  ]}
+/>

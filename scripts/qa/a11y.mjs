@@ -12,7 +12,7 @@ const PAGES = [
   ['/az-900/services/virtual-machines/', null], ['/az-900/mock-exam/', null], ['/az-900/practice/', null], ['/az-900/study-plan/', null], ['/az-900/cheat-sheet/', null], ['/az-900/exam-day/', null], ['/progress/', null], ['/progress/', async (p) => { await p.click('.sync-card [data-account-signin]'); await p.waitForTimeout(300); }], ['/certificate/', null], ['/app/', null], ['/offline/', null],
   ['/az-900/glossary/', async (p) => { await p.click('#install-btn'); await p.waitForTimeout(300); }],
   ['/ai-901/', null], ['/ai-901/ai-concepts/how-generative-ai-works/', null], ['/ai-901/mock-exam/', null], ['/ai-901/labs/ai-deploy-chat/', null], ['/certificate/?exam=ai-901', null],
-  ['/ai-200/', null], ['/ai-200/data-for-ai/cosmos-db-vector-search/', null], ['/ai-200/mock-exam/', null], ['/ai-200/labs/dev-service-bus/', null], ['/certificate/?exam=ai-200', null], ['/gh-300/', null], ['/sc-500/', null],
+  ['/ai-200/', null], ['/ai-200/data-for-ai/cosmos-db-vector-search/', null], ['/ai-200/mock-exam/', null], ['/ai-200/labs/dev-service-bus/', null], ['/certificate/?exam=ai-200', null], ['/gh-300/', null], ['/gh-300/copilot-features/agent-mode-mcp-and-subagents/', null], ['/gh-300/mock-exam/', null], ['/gh-300/labs/gh-cli-setup/', null], ['/gh-600/', null], ['/sc-500/', null],
 ];
 const b = await launch();
 const fail = [];

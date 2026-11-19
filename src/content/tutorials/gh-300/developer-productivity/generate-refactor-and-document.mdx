@@ -1,0 +1,209 @@
+---
+title: "Generate, Refactor and Document Code with GitHub Copilot"
+seoTitle: Generate, Refactor and Document Code with Copilot | GH-300
+description: Use GitHub Copilot to write code from comments, refactor in Edit mode with a reviewed diff, add docs with /doc, and learn new code without leaving your editor.
+answer: >-
+  Copilot speeds up three everyday jobs. **Generate**: describe what you want in a comment or a chat prompt and accept the inline suggestion or code block. **Refactor**: select code and ask, usually in **Edit** mode, for a change that **keeps the behaviour the same**; review the **diff**, run the tests, then **Keep** or **Undo**. **Document**: `/doc` writes doc comments, and chat can draft README sections or explain a file. It also cuts **context switching**: `/explain`, `@workspace` and `#codebase` answer questions about unfamiliar code inside the IDE instead of a browser search. Every result is a draft you review and test.
+updated: 2026-11-19
+readingMinutes: 10
+keyTerms:
+  - term: Refactoring
+    definition: Changing the structure of code to make it clearer or easier to maintain without changing what it does.
+  - term: Edit mode (Copilot Edits)
+    definition: A Copilot Chat mode that applies changes to the files you choose and shows each diff for you to Keep or Undo.
+  - term: /doc
+    definition: A Copilot Chat slash command that generates documentation comments for the selected code.
+  - term: /explain
+    definition: A Copilot Chat slash command that explains the selected code or the active file in plain language.
+  - term: Context switching
+    definition: Leaving your editor to search docs, forums or other tools, which breaks focus. Asking Copilot in the IDE reduces it.
+interview:
+  - level: beginner
+    q: How do you get Copilot to generate a function?
+    a: >-
+      I write a clear comment or function signature saying what it does, its inputs and output, and pause. Copilot suggests the body as ghost text and I press Tab if it's right. For anything bigger, I ask in chat and review the code block before inserting it.
+    followUps:
+      - q: Do you accept it straight away?
+        a: >-
+          No. I read it, check it handles the edge cases I care about, and run the tests. It's a draft from a model, not tested code.
+  - level: intermediate
+    q: How do you refactor safely with Copilot?
+    a: >-
+      I make sure there are tests first. Then I select the code and ask in Edit mode for the specific refactor, saying the behaviour must stay the same. I read the diff line by line, run the tests, and only then choose Keep. Small refactors, one at a time, are much easier to review.
+    followUps: []
+  - level: experienced
+    q: You've joined a team with a large unfamiliar codebase. How does Copilot help you get productive?
+    a: >-
+      I ask @workspace or use #codebase for "where is the discount logic and how is it called", /explain on the files I need to change, and ask for a summary of the folder structure. That keeps me in the editor instead of hopping between search, wikis and chat. I still confirm the important answers by reading the code.
+    followUps: []
+  - level: scenario
+    q: Copilot's refactor passes review but breaks a rarely used report. What went wrong in the process?
+    a: >-
+      The refactor changed behaviour and nothing caught it. Either there were no tests around that path or nobody ran them before Keep. I'd add a test for the report, ask for smaller refactors with "keep behaviour identical", and make CI run the suite on every pull request.
+    followUps: []
+revision:
+  keyPoints:
+    - "Generate: comments, signatures or chat prompts; accept with Tab or insert from chat."
+    - "Refactor: select the code, use Edit mode, say the behaviour must not change, review the diff, run tests, Keep or Undo."
+    - "Document: /doc for doc comments; chat can draft README sections and explain code."
+    - "/explain, @workspace and #codebase answer questions inside the IDE, reducing context switching."
+    - Next edit suggestions (NES) predict the next edit after a change, handy for repetitive refactors.
+    - Everything Copilot produces is a draft you review and test.
+  mistakes:
+    - Refactoring without tests, so a behaviour change goes unnoticed.
+    - Accepting a large multi-file edit without reading the diff.
+    - Trusting generated docs that describe what the code should do rather than what it does.
+  examTips:
+    - '"Restructure code without changing behaviour" = **refactor**, review the diff and run tests.'
+    - '"Generate documentation comments" = **/doc**. "Understand unfamiliar code" = **/explain**.'
+    - '"Reduce time spent searching outside the editor" = ask Copilot Chat in the IDE (context switching).'
+  quick:
+    - q: Which slash command writes documentation comments?
+      a: /doc
+    - q: Which chat mode applies changes to files and shows diffs to Keep or Undo?
+      a: Edit mode.
+    - q: What should you do before choosing Keep on a refactor?
+      a: Review the diff and run the tests.
+    - q: Which participant asks questions about the whole workspace?
+      a: "@workspace"
+    - q: What does reducing context switching mean here?
+      a: Getting answers inside the IDE instead of leaving for search or docs.
+references:
+  - title: Copilot Chat cookbook (refactoring, documenting and more)
+    url: https://docs.github.com/en/copilot/tutorials/copilot-chat-cookbook
+  - title: GitHub Copilot Chat cheat sheet
+    url: https://docs.github.com/en/copilot/reference/cheat-sheet
+  - title: Study guide for Exam GH-300 GitHub Copilot
+    url: https://learn.microsoft.com/credentials/certifications/resources/study-guides/gh-300
+related:
+  - sample-data-and-legacy-code
+  - unit-and-integration-tests
+  - inline-suggestions-chat-and-modes
+  - validate-copilot-output
+---
+
+## Start with a question
+
+<Story question="How much of your coding day is actually writing new logic, and how much is tidying, explaining and documenting?">
+
+For most developers, less than half is new logic. The rest is renaming, untangling loops, writing doc comments nobody wants to write, and searching for "what does this function even do".
+
+That's where Copilot earns its place. On the contoso-shop team, Ravi needed to clean up `cartTotal`. He selected the loop, asked Copilot in Edit mode to "use reduce and keep the behaviour the same", read the red and green diff, ran `npm test`, and pressed **Keep**. Then `/doc` wrote the JSDoc. Five minutes, and he never opened a browser tab.
+
+</Story>
+
+## Explain it like I'm 10
+
+<Eli10>
+
+You've built a Lego house. It works, but the walls are a mess of random bricks.
+
+A helper offers to rebuild the walls neatly. You say, "Same house, same doors, same windows. Just tidier."
+
+Before you say yes, you look at what they changed, brick by brick. You check the doors still open.
+
+Then the helper writes a little label: "Front door. Opens outward." That's the documentation.
+
+</Eli10>
+
+## The technical explanation
+
+### Generate code
+
+Copilot generates code in two main ways:
+
+- **Inline suggestions.** Write a comment or a function signature, pause, and ghost text appears. **Tab** accepts, **Esc** dismisses, **Alt+]** / **Alt+[** (Option on macOS) cycle alternatives, **Ctrl+→** accepts one word at a time.
+- **Chat.** Ask in the Chat view (**Ctrl+Alt+I**) or inline chat (**Ctrl+I**) and insert the code block you want. Agent mode can create whole files and wire them up.
+
+```js
+// Return the cart total in paise, rounded, after applying the discount code
+export function cartTotalPaise(items, code) {
+  // Copilot suggests the body here as ghost text
+}
+```
+
+A precise comment is a prompt. "Return the total in paise, rounded" gets better code than "calculate total".
+
+### Refactor without changing behaviour
+
+A refactor changes structure, not behaviour. The safe loop:
+
+1. **Have tests** for the code you're about to change. If there aren't any, ask Copilot for some first.
+2. **Select** the code and open chat in **Edit** mode (or inline chat for a single spot).
+3. **Say what must not change**: "Refactor cartTotal to use reduce and keep the behaviour the same."
+4. **Read the diff**. Removed lines show in red, added in green.
+5. **Run the tests**, then **Keep** or **Undo**.
+
+```js
+// before
+let total = 0;
+for (const i of items) total += i.price * i.qty;
+
+// after (Copilot Edits)
+const total = items.reduce((sum, i) => sum + i.price * i.qty, 0);
+```
+
+Good refactor prompts are specific: extract a function, rename a variable everywhere, replace callbacks with async/await, split a long file. After you make one change, **next edit suggestions (NES)** can predict the related edit further down the file, which suits repetitive renames.
+
+<TryIt labs="gh-tests" text="Write tests first, let Copilot propose a fix, and only commit once the whole suite is green." />
+
+### Document code
+
+- **`/doc`** on a selection writes doc comments (JSDoc, docstrings, XML comments depending on the language).
+- Chat can draft a **README** section, a usage example, or a changelog entry from a diff.
+- On github.com, the Copilot button in a pull request description drafts a **PR summary**.
+
+Read generated docs as carefully as code. Copilot describes what the code looks like it does, and if the code has a bug, the docs will cheerfully describe the bug as intended.
+
+### Learn faster, switch less
+
+The exam groups "accelerate learning and reduce context switching" with this topic. Inside the IDE you can:
+
+| Ask | Use |
+| --- | --- |
+| What does this code do? | Select it, `/explain` |
+| Where is X handled in this repo? | `@workspace` or `#codebase` |
+| How do I do Y in this framework? | Ask chat with the relevant file attached |
+| What does this error mean? | `#terminalLastCommand` or `@terminal` |
+| What's open in this repo's issues? | `@github` |
+
+Each answer saves a trip to a search engine or a wiki, and keeps your focus on the code. Confirm the answers that matter by reading the code yourself; Copilot can be confidently wrong.
+
+<Callout type="exam">
+"Change the structure of code without changing its behaviour" is a **refactor**: review the **diff** and run **tests** before keeping it. "Generate documentation comments for a function" is **/doc**. "A new developer must understand an unfamiliar module without leaving Visual Studio Code" is **/explain** or **@workspace**. If an option says Copilot's output can be merged without review, it's wrong.
+</Callout>
+
+<DeepDive title="Ask, Edit or Agent for a refactor?">
+
+**Ask** suggests code you copy in yourself, fine for learning or a tiny change. **Edit** applies changes to the files you pick and shows each diff, the usual choice for a refactor you want to control. **Agent** decides which files to touch, edits them, can run the tests after you approve the command, and iterates on failures. Use agent mode for wider changes such as "rename this field across the API, the UI and the tests", and keep the request small enough that you can still review every diff.
+
+</DeepDive>
+
+## Real-world business scenario
+
+<Scenario
+  company="Contoso (fictional)"
+  industry="Online retail"
+  problem="contoso-shop had grown fast. Functions were long, half had no comments, and new joiners spent their first two weeks asking 'where does this happen?' in team chat."
+  service="Copilot Chat in VS Code: /explain and @workspace for onboarding, Edit mode refactors with a tests-first rule, /doc for comments, and Copilot PR summaries on github.com."
+  why="Answers came inside the editor, refactors stayed small and reviewable as diffs, and docs were written while the code was fresh."
+  outcome="New joiners shipped their first pull request in their first week, and the team cleared a backlog of 'add comments' tickets in one sprint."
+/>
+
+## When to use it and when not to
+
+<UseWhen
+  use={[
+    'Boilerplate and well-understood code from a clear comment or signature.',
+    'Small, focused refactors with tests in place and a diff you can read.',
+    'Doc comments, README drafts and explanations of unfamiliar code.',
+  ]}
+  avoid={[
+    'Large refactors with no tests. You can\'t tell whether behaviour changed.',
+    'Accepting generated docs or code without reading them.',
+  ]}
+  alternatives={[
+    '<strong>IDE refactoring tools</strong> (Rename Symbol, Extract Method) for purely mechanical changes that must be exact.',
+    '<strong>Copilot coding agent</strong> for a well-described refactor you want delivered as a draft pull request.',
+  ]}
+/>

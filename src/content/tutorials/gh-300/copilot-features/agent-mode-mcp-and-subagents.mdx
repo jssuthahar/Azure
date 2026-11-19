@@ -1,0 +1,224 @@
+---
+title: "Agent Mode, MCP Servers and Sub-Agents"
+seoTitle: Copilot Agent Mode, MCP Servers and Sub-Agents | GH-300
+description: See how Copilot agent mode plans, edits, runs commands and iterates, how Copilot Edits differs, how MCP servers add tools, and why sub-agents save context.
+answer: >-
+  **Agent mode** lets Copilot take a whole task: it **plans**, finds and **edits** files, **runs terminal commands after you approve them**, reads the output and **iterates** until the task is done. **Copilot Edits** (Edit mode) only changes the files you choose. **MCP (Model Context Protocol) servers** give the agent extra **tools**, such as the **GitHub MCP server** at `https://api.githubcopilot.com/mcp/`, configured in **`.vscode/mcp.json`** and allowed or blocked by an organization's **MCP policy**. **Agent sessions** keep separate pieces of work apart, and a **sub-agent** does a side task in its **own context** and returns only a summary, so the main conversation's context window stays focused.
+updated: 2026-11-19
+readingMinutes: 12
+keyTerms:
+  - term: Agent mode
+    definition: A Copilot Chat mode where Copilot plans a task, edits files, runs commands after approval and iterates on the results.
+  - term: Copilot Edits
+    definition: Edit mode, which applies changes to a working set of files you choose and lets you Keep or Undo each diff.
+  - term: Model Context Protocol (MCP)
+    definition: An open standard that lets AI apps connect to servers offering tools and data, such as GitHub, a browser or a docs search.
+  - term: GitHub MCP server
+    definition: GitHub's MCP server for issues, pull requests, Actions and more. Remote URL https://api.githubcopilot.com/mcp/.
+  - term: Agent session
+    definition: One piece of agent work with its own history and context, kept separate from other sessions.
+  - term: Sub-agent
+    definition: A helper agent that runs a side task in its own context window and returns a summary to the main agent.
+interview:
+  - level: beginner
+    q: What does agent mode do that Ask mode doesn't?
+    a: >-
+      Ask answers. Agent acts: it searches the codebase, edits files, asks to run commands like npm test, reads the results and keeps fixing until the task passes. I still review the diffs and decide what to keep.
+    followUps: []
+  - level: intermediate
+    q: How do you give agent mode access to your GitHub issues?
+    a: >-
+      Add the GitHub MCP server. In VS Code that's a .vscode/mcp.json file with a servers entry pointing at https://api.githubcopilot.com/mcp/. Then the agent can call tools like list_issues, and it asks me before each tool call unless I've approved it.
+    followUps:
+      - q: And if the tool never shows up?
+        a: >-
+          Check that the server started, that my organization's MCP servers in Copilot policy allows MCP, and that the tool is enabled in the tools picker.
+  - level: experienced
+    q: Why would you use a sub-agent rather than just asking the main agent?
+    a: >-
+      Context. If the main agent reads twenty files to research how logging works, all of that sits in its context window and crowds out the actual task. A sub-agent does the research in its own context and hands back a short summary, so the main thread stays lean and focused.
+    followUps: []
+  - level: architecture
+    q: How would you let a team use MCP servers safely across many repositories?
+    a: >-
+      Set the organization's MCP policy deliberately, keep approved servers in a checked-in .vscode/mcp.json so everyone uses the same ones, prefer remote servers with OAuth over tokens pasted into config, and leave tool approvals on so a person sees each call. Anything that writes, like creating issues, deserves an extra look.
+    followUps: []
+revision:
+  keyPoints:
+    - Agent mode plans, edits files, runs terminal commands after approval and iterates until done.
+    - Copilot Edits (Edit mode) changes only the files you add and shows diffs to Keep or Undo.
+    - MCP servers add tools. VS Code reads .vscode/mcp.json with a "servers" object; the CLI uses /mcp and ~/.copilot/mcp-config.json.
+    - The GitHub MCP server's remote URL is https://api.githubcopilot.com/mcp/.
+    - Organizations control MCP with the "MCP servers in Copilot" policy.
+    - Agent sessions keep work separate; sub-agents run side tasks in their own context and return a summary.
+    - You can approve a command once or for the session; review every diff either way.
+  mistakes:
+    - Thinking Edit mode runs tests. Only Agent mode runs commands.
+    - Putting a personal access token in a shared mcp.json.
+    - Letting one agent conversation do research and implementation until the context window overflows.
+  examTips:
+    - '"Connect Copilot to an external tool or data source" = **MCP server**.'
+    - '"Multi-file change you review, no commands" = **Copilot Edits**.'
+    - '"Do a side task without filling the main context" = **sub-agent**.'
+  quick:
+    - q: Which file configures MCP servers for a VS Code workspace?
+      a: .vscode/mcp.json
+    - q: Which top-level key holds the servers in that file?
+      a: '"servers"'
+    - q: What is the GitHub MCP server's remote URL?
+      a: https://api.githubcopilot.com/mcp/
+    - q: Which chat mode can run npm test?
+      a: Agent mode
+    - q: What does a sub-agent return to the main agent?
+      a: A summary of its result, not its whole context.
+references:
+  - title: About Model Context Protocol (MCP)
+    url: https://docs.github.com/en/copilot/concepts/context/mcp
+  - title: Using the GitHub MCP server
+    url: https://docs.github.com/en/copilot/how-tos/provide-context/use-mcp/use-the-github-mcp-server
+  - title: Use agent mode in VS Code
+    url: https://code.visualstudio.com/docs/copilot/chat/chat-agent-mode
+  - title: "Build applications with GitHub Copilot agent mode (Microsoft Learn)"
+    url: https://learn.microsoft.com/en-us/training/modules/github-copilot-agent-mode/
+related:
+  - inline-suggestions-chat-and-modes
+  - copilot-cli-sessions-and-scripts
+  - custom-instructions-and-prompt-files
+  - organization-policies
+---
+
+## Start with a question
+
+<Story question="If you hire a contractor to redo your kitchen, do you want them to just give advice, or plan the job, fetch tools, ask before cutting into a wall, and keep going until it's done?">
+
+For a full kitchen, you want the second one. But you also want them to check with you before anything loud, and you don't want them rifling through every room of the house to figure out where the fuse box is.
+
+That's **agent mode**. Copilot plans the job, edits files and **asks before running commands**. **MCP servers** are the extra tools in its van: a GitHub tool for issues, a browser, a docs search. And a **sub-agent** is the apprentice sent to find the fuse box, who comes back with one sentence ("it's under the stairs") instead of a tour of the house.
+
+</Story>
+
+## Explain it like I'm 10
+
+<Eli10>
+
+Agent mode is Copilot doing a whole job, not just answering.
+
+It makes a plan, changes the files and asks "can I run the tests?". You say yes or no.
+
+If a test fails, it tries again.
+
+MCP is like plugging new tools into it, such as one that reads your GitHub issues.
+
+A sub-agent is a little helper it sends off to look something up. The helper comes back with a short note, so the main agent's head doesn't get too full.
+
+</Eli10>
+
+## Visual: agent mode in motion
+
+Watch one request go through plan, edit, an approved test run, a failure, a fix, an MCP tool call and a sub-agent.
+
+<Explainer id="agent-mode-loop" />
+
+## The technical explanation
+
+### Agent mode vs Copilot Edits
+
+Both live in the Chat view's mode picker in VS Code.
+
+| | Edit mode (Copilot Edits) | Agent mode |
+| --- | --- | --- |
+| Which files | The ones you add to the working set | Finds them itself |
+| Runs commands | No | Yes, after you approve |
+| Reads errors and tests | No | Yes, and iterates |
+| Uses tools / MCP | No | Yes |
+| You review | Each diff: Keep or Undo | Each diff, each command, each tool call |
+
+Ask agent mode for an outcome, not steps: "Add a FREE code that gives 100% off, make sure totals never go negative, and add tests." It searches for `discount`, edits `src/discount.js`, creates `tests/discount.test.js`, then asks:
+
+```text
+⌨️ Run in terminal: npm test
+   [Allow]  [Allow for this session]  [Skip]
+```
+
+If a test fails it reads the assertion, fixes the code and runs the tests again. When it's done you get a summary and the diffs to **Keep** or **Undo**. "Allow for this session" saves clicks but means it won't ask again for that command, so use it in repos you know.
+
+### MCP servers add tools
+
+The **Model Context Protocol** is an open standard for connecting AI apps to tools and data. An MCP server exposes **tools** (functions the agent can call) and sometimes resources. In VS Code you list servers in **`.vscode/mcp.json`**, which you can commit so the whole team gets the same setup:
+
+```json
+{
+  "servers": {
+    "github": {
+      "type": "http",
+      "url": "https://api.githubcopilot.com/mcp/"
+    }
+  }
+}
+```
+
+That's the **GitHub MCP server**: tools for issues, pull requests, Actions and more. Ask "Which open issues are labelled bug?" and the agent calls `list_issues`, after asking you. Other servers can run locally (`"type": "stdio"` with a command) for a browser, a database or your own API. In **Copilot CLI**, `/mcp` lists and adds servers and they're saved in `~/.copilot/mcp-config.json`; the GitHub MCP server is built in.
+
+Two controls matter. You can switch individual tools on or off in the **tools picker**, and an organization with Copilot Business or Enterprise has an **MCP servers in Copilot** policy that allows or blocks MCP for its members. If the policy blocks it, no `mcp.json` file will bring it back.
+
+<Flow
+  caption="An MCP tool call from agent mode"
+  steps={[
+    { title: 'Ask', text: 'You ask about open bugs.' },
+    { title: 'Choose', text: 'The agent picks the github server\'s list_issues tool.' },
+    { title: 'Approve', text: 'You allow the call (once or for the session).' },
+    { title: 'Call', text: 'The MCP server queries GitHub and returns the issues.' },
+    { title: 'Answer', text: 'The agent uses the result in its reply or next step.' },
+  ]}
+/>
+
+### Sessions and sub-agents: managing context
+
+Every file the agent reads, every command output and every turn of chat goes into its **context window**. Long tasks fill it, and a crowded window means slower, vaguer answers.
+
+- **Agent sessions** keep separate pieces of work apart. Start a new session for a new task instead of piling everything into one, and you can come back to an earlier session later. In the CLI that's `/session`, `/resume` and `--continue`.
+- A **sub-agent** runs a side task in **its own context**: "find every place we log user emails" or "research how the report module is used". It reads what it needs and returns a **summary**, and only that summary enters the main conversation.
+- **Delegating** a whole task to Copilot coding agent (`/delegate` in the CLI, or assigning an issue on github.com) moves the work off your machine entirely; it comes back as a draft pull request.
+
+<TryIt labs="gh-mcp-agents" text="List the MCP servers, add one, let Copilot call a tool to read your issues, then delegate a fix to the coding agent." />
+
+<Callout type="exam">
+Read the verbs. "Run the tests and fix failures automatically" is **Agent mode**; "change these files, no commands" is **Copilot Edits**. "Connect Copilot to an external system or tool" is an **MCP server**, configured in **`.vscode/mcp.json`** (key `"servers"`) or with **/mcp** in the CLI. "MCP tools don't appear for anyone in the company" suggests the organization's **MCP policy**. "Keep the main conversation's context small while researching something else" is a **sub-agent**; "keep two tasks separate" is **agent sessions**.
+</Callout>
+
+<DeepDive title="Custom agents, tools lists and trust">
+
+A **custom agent** (`.github/agents/<name>.agent.md` in a repo, or `~/.copilot/agents/` for your own CLI agents) is a named persona with its own instructions and a `tools` list. A "test-writer" agent that can only read and edit files, with no shell access, is a neat way to limit what an agent can do. MCP servers run with whatever access you give them, so treat third-party servers like any dependency: check who publishes them, prefer OAuth over tokens pasted into config, and keep secrets out of a committed `mcp.json` (VS Code supports input variables for that). Tool approvals stay on by default for a reason.
+
+</DeepDive>
+
+## Real-world business scenario
+
+<Scenario
+  company="Contoso (fictional)"
+  industry="Online retail"
+  problem="Contoso's developers copied issue details from github.com into chat by hand, and long agent conversations that mixed research with coding kept running out of context and giving muddled answers."
+  service="A committed .vscode/mcp.json with the GitHub MCP server, the organization's MCP policy enabled for the shop team, agent mode for implementation with command approvals left on, and sub-agents for research tasks."
+  why="The agent reads issues itself through MCP, every tool call and command is approved by a person, and research stays out of the main context."
+  outcome="Bug fixes started from the real issue text, and agent sessions stayed on task long enough to finish with passing tests."
+/>
+
+## When to use it and when not to
+
+<UseWhen
+  use={[
+    'Agent mode for tasks that need searching, multi-file edits, running tests and a few rounds of fixing.',
+    'Copilot Edits when you know the files and want no commands run.',
+    'MCP servers when the agent needs data or actions outside your repo, such as issues or docs.',
+    'Sub-agents or new sessions to keep research and side tasks out of the main context.',
+  ]}
+  avoid={[
+    'Approving every command for the session in an unfamiliar repository.',
+    'Adding MCP servers from unknown publishers, or committing tokens in mcp.json.',
+    'Merging agent changes without reading the diffs and running the tests yourself.',
+  ]}
+  alternatives={[
+    '<strong>Copilot coding agent</strong> to work on an issue in the background and open a draft pull request.',
+    '<strong>Copilot CLI</strong> for the same agent loop in the terminal, scriptable with copilot -p.',
+  ]}
+/>

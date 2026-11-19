@@ -6,6 +6,7 @@ import type { Sim } from './engine';
 import { ME, type World } from './world';
 import { AI_LABS } from './labs-ai';
 import { DEV_LABS } from './labs-dev';
+import { GH_LABS, GH_SANDBOX } from './labs-gh';
 
 export interface LabTask {
   text: string;
@@ -21,7 +22,8 @@ export interface Lab {
   icon: string;
   level: 'Beginner' | 'Intermediate';
   minutes: number;
-  start: 'portal' | 'shell';
+  /** 'terminal' = a local developer terminal with GitHub Copilot CLI (GitHub exams, see ghsim.ts). */
+  start: 'portal' | 'shell' | 'terminal';
   intro: string;
   learn: string[];
   topics: string[]; // related lesson slugs
@@ -521,6 +523,7 @@ export const LABS: Lab[] = [
   },
   ...AI_LABS,
   ...DEV_LABS,
+  ...GH_LABS,
 ];
 
 export const SANDBOX: Lab = {
@@ -537,7 +540,9 @@ export const SANDBOX: Lab = {
   wrap: '',
 };
 
-export const ALL_LABS = [...LABS, SANDBOX];
+export const ALL_LABS = [...LABS, SANDBOX, GH_SANDBOX];
+/** The free sandbox for an exam: the Azure portal one, or the Copilot terminal for GitHub exams. */
+export const sandboxFor = (exam: string): Lab => (exam.startsWith('gh-') ? GH_SANDBOX : SANDBOX);
 /** Guided labs for one exam (the sandbox is shared). */
 export const labsForExam = (exam: string) => LABS.filter((l) => (l.exam ?? 'az-900') === exam);
 export const labsForTopic = (slug: string) => LABS.filter((l) => l.topics.includes(slug));

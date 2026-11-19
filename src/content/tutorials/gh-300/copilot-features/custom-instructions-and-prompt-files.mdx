@@ -1,0 +1,246 @@
+---
+title: Custom Instructions and Prompt Files
+seoTitle: Copilot Custom Instructions and Prompt Files | GH-300
+description: Write .github/copilot-instructions.md, path-specific .instructions.md files with applyTo and reusable .prompt.md files you run with /name in Copilot Chat.
+answer: >-
+  **Custom instructions** are standing rules that Copilot adds to requests for you. Repository-wide rules go in **`.github/copilot-instructions.md`**, which Copilot Chat, the **coding agent** and **code review** all read; **path-specific** rules go in **`.github/instructions/*.instructions.md`** with an **`applyTo`** glob; agents also read **AGENTS.md**. A **prompt file** (`.github/prompts/*.prompt.md`) is a reusable prompt you run with **`/name`** in chat, with front matter for mode, description, tools and model and **`${input:name}`** variables, so everyone on the team sends the same request.
+updated: 2026-11-19
+readingMinutes: 10
+keyTerms:
+  - term: Repository custom instructions
+    definition: A Markdown file at .github/copilot-instructions.md whose rules Copilot adds to chat, coding agent and code review requests in that repository.
+  - term: Path-specific instructions
+    definition: Files in .github/instructions/ ending in .instructions.md, with an applyTo glob in front matter so the rules only apply to matching files.
+  - term: applyTo
+    definition: The front matter field in an .instructions.md file that holds a glob such as "tests/**/*.js" to say which files the rules cover.
+  - term: AGENTS.md
+    definition: An instructions file that agents, including the Copilot coding agent, read for project rules.
+  - term: Prompt file
+    definition: A reusable prompt saved as .github/prompts/<name>.prompt.md and run in Copilot Chat by typing /name.
+  - term: Input variable
+    definition: A placeholder such as ${input:resource} in a prompt file that Copilot fills from what you type after the command.
+  - term: Custom agent
+    definition: A named persona with its own instructions and tools, defined in .github/agents/<name>.agent.md (or ~/.copilot/agents/ for the CLI).
+interview:
+  - level: beginner
+    q: What's the difference between custom instructions and a prompt file?
+    a: >-
+      Custom instructions are always on. Copilot adds them to every relevant request without me asking, so they're for house rules like "we use ES modules". A prompt file only runs when I call it with /name. It's a saved task, like "add a REST endpoint with validation and tests".
+    followUps:
+      - q: Where do they live?
+        a: >-
+          Repository instructions in .github/copilot-instructions.md, path-specific ones in .github/instructions/ with an applyTo glob, and prompt files in .github/prompts/ as .prompt.md files.
+  - level: intermediate
+    q: Your test rules keep showing up when Copilot edits production code. How would you fix that?
+    a: >-
+      I'd move them out of copilot-instructions.md into a path-specific file, say .github/instructions/tests.instructions.md, with applyTo set to "tests/**/*.js". Then they only ride along when the work touches test files.
+    followUps: []
+  - level: experienced
+    q: How do you check that Copilot actually used your instructions?
+    a: >-
+      The chat response lists its references, and the instructions file shows up there when it was applied. If it's missing, I check the file name and folder, that the setting for instruction files is on in my editor, and that the applyTo glob really matches the file I'm working on.
+    followUps:
+      - q: Can instructions guarantee Copilot follows a rule?
+        a: >-
+          No. They're added to the prompt, so they steer the model, but the output still needs review. For hard rules I add a linter or a test that fails the build.
+  - level: scenario
+    q: Five developers write the same "new endpoint" prompt five different ways and get five different styles. What do you do?
+    a: >-
+      Write one prompt file, .github/prompts/new-endpoint.prompt.md, with agent mode in the front matter and an ${input:resource} variable. Commit it, and everyone types /new-endpoint resource=orders. Same request, same shape of result, and the prompt gets reviewed like code.
+    followUps: []
+  - level: architecture
+    q: How would you organise instructions in a large monorepo?
+    a: >-
+      Keep copilot-instructions.md short and true for the whole repo: language version, test runner, security rules. Then add one .instructions.md per area with its own applyTo, like the API, the web front end and the tests. Prompt files cover repeated tasks, and a custom agent covers a role such as a test writer with limited tools. Everything is in .github, so changes go through pull requests.
+    followUps: []
+revision:
+  keyPoints:
+    - ".github/copilot-instructions.md holds repository-wide rules. Copilot Chat, the coding agent and code review read it."
+    - Path-specific rules go in .github/instructions/*.instructions.md with an applyTo glob in front matter.
+    - Agents also read AGENTS.md. Personal and organization instructions can exist too.
+    - "Prompt files are .github/prompts/<name>.prompt.md and run with /name in chat."
+    - Prompt file front matter can set the mode or agent, a description, tools and the model. ${input:name} adds variables.
+    - Custom agents live in .github/agents/*.agent.md (repo) or ~/.copilot/agents/ (CLI, personal).
+  mistakes:
+    - Putting every rule in copilot-instructions.md so test-only rules apply to all code.
+    - Treating instructions as a guarantee. They steer the model; reviews, linters and tests still enforce the rule.
+    - Saving a prompt file outside .github/prompts or without the .prompt.md ending, then wondering why /name doesn't appear.
+  examTips:
+    - '"Rules for the whole repository, used by chat, coding agent and code review" = **.github/copilot-instructions.md**.'
+    - '"Rules only for some files" = **.instructions.md** with **applyTo**.'
+    - '"Reuse the same prompt for consistent responses" = **prompt file** run with **/name**.'
+  quick:
+    - q: Which file holds repository-wide custom instructions?
+      a: .github/copilot-instructions.md.
+    - q: Which front matter field limits an .instructions.md file to certain paths?
+      a: applyTo, with a glob.
+    - q: How do you run .github/prompts/new-endpoint.prompt.md in chat?
+      a: Type /new-endpoint.
+    - q: How do you add a variable to a prompt file?
+      a: "With ${input:name}, for example ${input:resource}."
+    - q: Does Copilot code review read repository custom instructions?
+      a: Yes, it uses them as the team's review standards.
+references:
+  - title: Adding repository custom instructions for GitHub Copilot
+    url: https://docs.github.com/en/copilot/how-tos/configure-custom-instructions/add-repository-instructions
+  - title: About customizing GitHub Copilot responses
+    url: https://docs.github.com/en/copilot/concepts/prompting/response-customization
+  - title: Use prompt files in VS Code
+    url: https://code.visualstudio.com/docs/copilot/customization/prompt-files
+  - title: Use custom instructions in VS Code
+    url: https://code.visualstudio.com/docs/copilot/customization/custom-instructions
+  - title: "Study guide for Exam GH-300: GitHub Copilot"
+    url: https://learn.microsoft.com/en-us/credentials/certifications/resources/study-guides/gh-300
+related:
+  - copilot-chat-commands-and-limits
+  - copilot-code-review
+  - agent-mode-mcp-and-subagents
+  - prompt-structure-and-context
+---
+
+## Start with a question
+
+<Story question="Why do I have to tell Copilot 'we use ES modules and the Node test runner' every single time?">
+
+You join the contoso-shop team. On day one you ask Copilot for a test, and it writes Jest with `require()`. The team uses the Node test runner and ES modules. So you correct it. Next chat, same thing. Next developer, same thing.
+
+A new colleague would read the team's README once and remember. Copilot doesn't remember between chats, but it does read a file you give it. Put the house rules in **`.github/copilot-instructions.md`** and Copilot adds them to every request in that repo. Save the tasks you repeat as **prompt files**, and the whole team runs the same prompt with one slash command.
+
+</Story>
+
+## Explain it like I'm 10
+
+<Eli10>
+
+Imagine a cook in a new kitchen.
+
+On the wall is a poster: "No peanuts. Wash hands. Plates go on the left." The cook reads it before every dish. That poster is **custom instructions**.
+
+On the shelf are recipe cards: "Tomato soup for 10 people". Anyone can grab one and get the same soup. Those are **prompt files**.
+
+Some posters hang only in the bakery corner. They're the rules with **applyTo**.
+
+</Eli10>
+
+## Visual: Custom instructions in motion
+
+Watch which instruction files ride along with a request, how `applyTo` picks the right ones, and how a prompt file runs with one slash command.
+
+<Explainer id="copilot-custom-instructions" />
+
+## The technical explanation
+
+Copilot only knows what's in the prompt. Custom instructions and prompt files are two ways to put the same good context into the prompt every time, without typing it.
+
+### The instruction files
+
+| File | Where | When it applies | Who reads it |
+| --- | --- | --- | --- |
+| `copilot-instructions.md` | `.github/` | Every request in the repository | Copilot Chat, Copilot coding agent, Copilot code review |
+| `*.instructions.md` | `.github/instructions/` | Only when the files involved match its `applyTo` glob | Chat and agents in supported editors, coding agent, code review |
+| `AGENTS.md` | Repo root (or a folder) | Agent work in that part of the repo | Agents, including the coding agent |
+| Personal and organization instructions | Your GitHub settings, or set by the org | Your requests, or the org's | Copilot Chat on github.com and supported clients |
+
+A repository file for contoso-shop might look like this:
+
+```markdown
+# Copilot instructions for contoso-shop
+- Node.js 22, ES modules, no CommonJS.
+- Tests use the Node test runner: node --test.
+- Never log secrets; read config from environment variables.
+```
+
+Keep it short and true for the whole repo. Rules that only matter for some files go in a path-specific file:
+
+```markdown
+---
+applyTo: "tests/**/*.js"
+---
+Arrange, act, assert. One behaviour per test.
+Name each test after the behaviour it checks.
+```
+
+Save that as `.github/instructions/tests.instructions.md`. When you ask Copilot to change `tests/cart.test.js`, both files go into the prompt. When you change `src/discount.js`, only the repo-wide file does.
+
+### Did it work?
+
+In Copilot Chat, the answer's **references** list shows the instruction files that were used. If yours isn't there, check the folder and file name, check that instruction files are turned on in your editor's Copilot settings, and check that the `applyTo` glob really matches.
+
+### Prompt files: reusable prompts
+
+A prompt file is a saved task. It lives in `.github/prompts/` and ends in `.prompt.md`. The front matter is optional and can set:
+
+| Field | What it does |
+| --- | --- |
+| `mode` (or `agent`) | Which chat mode or custom agent runs it, for example `agent` |
+| `description` | The text you see when you pick the command |
+| `tools` | Which tools the prompt may use |
+| `model` | A model to use, if your organization allows it |
+
+```markdown
+---
+mode: agent
+description: Add a REST endpoint with validation and tests
+---
+Create a new endpoint for ${input:resource}.
+Validate input, return 400 on bad data, and add tests.
+```
+
+Save it as `.github/prompts/new-endpoint.prompt.md` and type `/new-endpoint resource=orders` in Chat. `${input:resource}` becomes `orders`. Because the file is in the repo, the prompt gets reviewed in pull requests and improves over time, and every developer gets a **consistent response** shape.
+
+### Custom agents, briefly
+
+If you keep asking Copilot to play the same role, make a **custom agent**: `.github/agents/test-writer.agent.md` with a name, a description, a short list of tools and its own instructions. In the CLI you can keep personal agents in `~/.copilot/agents/` and run one with `--agent=test-writer` or pick it with `/agent`.
+
+<Flow
+  caption="What goes into a chat request in contoso-shop"
+  steps={[
+    { title: 'You type', text: '/new-endpoint resource=orders' },
+    { title: 'Prompt file', text: 'new-endpoint.prompt.md expands with orders filled in.' },
+    { title: 'Repo rules', text: '.github/copilot-instructions.md is added.' },
+    { title: 'Path rules', text: 'tests.instructions.md joins only when tests/ files are involved.' },
+    { title: 'Answer', text: 'The references list shows which files were used.' },
+  ]}
+/>
+
+<Callout type="exam">
+Read the verbs. "Every request in the repository" or "review standards for Copilot code review" points to **`.github/copilot-instructions.md`**. "Only for files in a folder" or "only test files" points to an **`.instructions.md`** file with **`applyTo`**. "Reuse a prompt so the team gets consistent responses" points to a **prompt file** in **`.github/prompts/`** run with **`/name`**. A distractor often swaps the folder (`.vscode/` instead of `.github/`) or the ending (`.md` instead of `.prompt.md`).
+</Callout>
+
+<TryIt labs="gh-instructions" text="Write repository instructions and a path-specific file for tests, then run a custom agent and see Copilot follow the rules." />
+
+<DeepDive title="Instructions steer; they don't enforce">
+
+Instructions are text added to the prompt. The model weighs them with everything else, so a long, contradictory file works worse than ten clear lines. Write rules as short statements, avoid "always try to" phrasing, and don't paste whole style guides. If a rule must never break (no `console.log` of tokens, no new dependencies without approval), back it with a linter rule, a test or a branch protection check. Copilot code review reading your instructions is useful, but it leaves comments only, and a person still decides.
+
+</DeepDive>
+
+## Real-world business scenario
+
+<Scenario
+  company="Contoso (fictional)"
+  industry="Online retail"
+  problem="Twelve developers on contoso-shop got Copilot answers in three test frameworks and two module styles, and new endpoints all looked different. Reviews kept catching the same style issues."
+  service="A ten-line .github/copilot-instructions.md, a tests.instructions.md with applyTo for tests/, and a new-endpoint.prompt.md that runs in agent mode."
+  why="The rules ride along with every chat, coding agent task and Copilot code review in the repo, and the prompt file gives everyone the same starting request."
+  outcome="Generated tests now use the Node test runner by default, new endpoints follow one pattern, and reviewers spend their time on logic instead of style."
+/>
+
+## When to use it and when not to
+
+<UseWhen
+  use={[
+    'Rules that are true for the whole repository: language version, test runner, security basics.',
+    'Rules that only apply to some folders or file types, using applyTo.',
+    'Tasks your team repeats, saved as prompt files so the request is the same every time.',
+  ]}
+  avoid={[
+    'Secrets or private data. Instruction and prompt files live in the repo and go into prompts.',
+    'Rules that must never break. Use linters, tests and branch protection, and let instructions remind.',
+    'A huge style guide pasted in full. Short, clear rules work better.',
+  ]}
+  alternatives={[
+    '<strong>Custom agents</strong> (.agent.md) when you want a named role with its own tools.',
+    '<strong>Copilot Spaces</strong> when the team needs shared documents and issues as context, not rules.',
+  ]}
+/>

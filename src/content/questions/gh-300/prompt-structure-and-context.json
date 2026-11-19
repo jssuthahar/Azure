@@ -1,0 +1,153 @@
+{
+  "cert": "gh-300",
+  "domain": 4,
+  "topic": "prompt-structure-and-context",
+  "questions": [
+    {
+      "id": "gh-pstruct-1",
+      "type": "single",
+      "question": "A developer types the prompt \"fix the discount bug\" in Copilot Chat and receives changes to the wrong function. Which revised prompt is most likely to produce the intended change?",
+      "options": [
+        {
+          "text": "Please fix the discount bug carefully.",
+          "why": "Politeness does not add a goal, context or constraints."
+        },
+        {
+          "text": "Fix all bugs in the repository.",
+          "why": "This widens the request instead of narrowing it."
+        },
+        {
+          "text": "Explain what a discount is.",
+          "why": "This asks a different question and does not request the fix."
+        },
+        {
+          "text": "In #file:src/discount.js, make applyDiscount return the total unchanged for unknown codes, never return a negative value, and keep the function signature.",
+          "why": "Correct. It states the goal, points to the code and sets constraints."
+        }
+      ],
+      "answer": [
+        3
+      ],
+      "explanation": "Effective prompts include a specific goal, the relevant context and constraints.",
+      "objective": "4.1.1"
+    },
+    {
+      "id": "gh-pstruct-2",
+      "type": "multi",
+      "question": "Which three items can Copilot Chat in Visual Studio Code include as context for a question? Each correct answer presents part of the solution.",
+      "options": [
+        {
+          "text": "Files covered by a content exclusion",
+          "why": "Excluded files are not used as context in supported IDEs."
+        },
+        {
+          "text": "Conversations from other chat sessions",
+          "why": "Copilot uses history from the current conversation only."
+        },
+        {
+          "text": "The active file or the current selection",
+          "why": "Correct. Chat uses the active file or selection by default."
+        },
+        {
+          "text": "Files added with #file",
+          "why": "Correct. #file attaches a specific file."
+        },
+        {
+          "text": "Rules in .github/copilot-instructions.md",
+          "why": "Correct. Repository custom instructions are added to chat requests."
+        }
+      ],
+      "answer": [
+        2,
+        3,
+        4
+      ],
+      "explanation": "Chat context includes the active file or selection, # variables, participants, custom instructions and the current conversation history.",
+      "objective": "4.1.2"
+    },
+    {
+      "id": "gh-pstruct-3",
+      "type": "single",
+      "question": "Every developer on a team adds \"use ES modules and the Node test runner\" to each Copilot Chat prompt. You need these rules applied automatically to chat requests in the repository. What should you create?",
+      "options": [
+        {
+          "text": "A .vscode/mcp.json file",
+          "why": "mcp.json configures MCP servers, not prompt rules."
+        },
+        {
+          "text": "A content exclusion for the src folder",
+          "why": "Content exclusions remove files from context. They do not add rules."
+        },
+        {
+          "text": "A CODEOWNERS file",
+          "why": "CODEOWNERS assigns reviewers. Copilot does not use it as prompt instructions."
+        },
+        {
+          "text": "A .github/copilot-instructions.md file",
+          "why": "Correct. Repository custom instructions are added automatically to chat, agent and code review requests."
+        }
+      ],
+      "answer": [
+        3
+      ],
+      "explanation": "Repository-wide rules belong in .github/copilot-instructions.md.",
+      "objective": "4.1.2"
+    },
+    {
+      "id": "gh-pstruct-4",
+      "type": "single",
+      "question": "A developer starts a new file and receives generic inline suggestions. The developer wants suggestions that follow the intended behaviour of a new function. What should the developer do first?",
+      "options": [
+        {
+          "text": "Disable the public code filter.",
+          "why": "The public code filter does not affect how well suggestions match your intent."
+        },
+        {
+          "text": "Write a descriptive function name and a comment that states the inputs, outputs and rules above the cursor.",
+          "why": "Correct. Nearby code and comments are the prompt for inline suggestions."
+        },
+        {
+          "text": "Increase the font size in the editor.",
+          "why": "Display settings do not change Copilot's context."
+        },
+        {
+          "text": "Open the Copilot completions panel before typing anything.",
+          "why": "With no context, the alternatives will also be generic."
+        }
+      ],
+      "answer": [
+        1
+      ],
+      "explanation": "In the editor, the code and comments around the cursor steer inline suggestions.",
+      "objective": "4.1.1"
+    },
+    {
+      "id": "gh-pstruct-5",
+      "type": "single",
+      "question": "Which description best matches a well-structured prompt for GitHub Copilot?",
+      "options": [
+        {
+          "text": "As much background text as possible so the model has every detail",
+          "why": "Unneeded background uses the context window without improving the answer."
+        },
+        {
+          "text": "A single keyword such as \"optimize\"",
+          "why": "A single keyword leaves the goal and context unclear."
+        },
+        {
+          "text": "A request that combines several unrelated tasks to save time",
+          "why": "Unrelated tasks in one prompt reduce focus. Break work into smaller steps."
+        },
+        {
+          "text": "A clear goal, the relevant context and the constraints the answer must follow",
+          "why": "Correct. Goal, context and constraints form the structure of a good prompt."
+        }
+      ],
+      "answer": [
+        3
+      ],
+      "explanation": "Short and specific prompts with a goal, context and constraints give the best results.",
+      "objective": "4.1.1"
+    }
+  ]
+}

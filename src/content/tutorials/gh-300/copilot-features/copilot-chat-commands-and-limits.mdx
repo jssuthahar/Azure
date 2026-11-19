@@ -1,0 +1,221 @@
+---
+title: "Copilot Chat: Slash Commands, Participants and Limits"
+seoTitle: Copilot Chat Slash Commands, Participants, Limits | GH-300
+description: "Use Copilot Chat's slash commands, @ participants, # context, the model picker, feedback and prompt files, and know the limits behind wrong answers."
+answer: >-
+  In Copilot Chat, **slash commands** run common jobs (**/explain**, **/fix**, **/tests**, **/doc**, **/new**, **/clear**, **/help**), **participants** starting with **@** bring in a domain expert (**@workspace**, **@vscode**, **@terminal**, **@github**), and **#** adds context (**#file**, **#selection**, **#codebase**, **#terminalLastCommand**, **#changes**). The **model picker** (including **Auto**) chooses the model your plan and organization allow, **👍 / 👎** sends feedback, and **prompt files** (`.github/prompts/*.prompt.md`, run as **/name**) reuse a good prompt. Chat only sees the context you give it in a finite **context window**, and its answers can be wrong.
+updated: 2026-11-19
+readingMinutes: 10
+keyTerms:
+  - term: Slash command
+    definition: A shortcut typed with / in Copilot Chat, such as /explain, /fix or /tests, that tells Copilot the kind of job you want.
+  - term: Chat participant
+    definition: An @ handle such as @workspace or @terminal that routes the question to an expert with its own context.
+  - term: Chat variable (# context)
+    definition: "A # reference such as #file, #selection or #codebase that adds specific context to the prompt."
+  - term: Prompt file
+    definition: A reusable prompt saved as .github/prompts/<name>.prompt.md and run in chat with /<name>.
+  - term: Context window
+    definition: The maximum amount of text a model can take in one request, including your message, context and chat history.
+  - term: Used references
+    definition: The list under a chat answer showing which files and sources Copilot actually used.
+interview:
+  - level: beginner
+    q: "What's the difference between @workspace and #file?"
+    a: >-
+      @workspace is a participant: it answers questions about the whole project and finds the relevant code itself. #file adds one specific file I choose to the prompt. If I know where the answer is, #file is more precise. If I don't, @workspace or #codebase searches for me.
+    followUps: []
+  - level: intermediate
+    q: Copilot Chat starts giving answers about an old bug you discussed an hour ago. What do you do?
+    a: >-
+      Start a new chat, or use /clear. The earlier turns are still in the prompt as history, so they eat the context window and pull the answer off topic. A fresh chat with only the context for the new question gives better answers.
+    followUps: []
+  - level: experienced
+    q: Your team keeps writing the same long prompt for API endpoint reviews. How would you make that consistent?
+    a: >-
+      I'd save it as a prompt file, .github/prompts/review-endpoint.prompt.md, with a description and maybe the mode and tools in the front matter, and an input variable for the file name. Everyone runs it with /review-endpoint, gets the same instructions, and we change it in one place through a pull request.
+    followUps:
+      - q: How is that different from copilot-instructions.md?
+        a: >-
+          Repository instructions are added to every request automatically. A prompt file only runs when someone calls it, so it's for a specific task, not house rules.
+  - level: scenario
+    q: A developer asks for a model that isn't in their model picker. Why might that be?
+    a: >-
+      The models offered depend on their Copilot plan and on what the organization has enabled under Copilot › Models. An admin may have turned that model off, or it's only on a higher plan.
+    followUps: []
+revision:
+  keyPoints:
+    - "Slash commands: /explain, /fix, /tests, /doc, /new, /clear, /help."
+    - "Participants (@): @workspace, @vscode, @terminal, @github."
+    - "Context (#): #file, #selection, #codebase, #terminalSelection, #terminalLastCommand, #changes. You can also drag in files and images."
+    - The model picker includes Auto; your plan and organization decide which models appear, and premium models use your premium-request allowance.
+    - 👍 / 👎 sends feedback; "Used n references" shows which context Copilot used.
+    - Prompt files in .github/prompts/*.prompt.md run with /name and can take ${input:name} variables.
+    - "Limits: finite context window, history counts against it, answers can be wrong or outdated."
+  mistakes:
+    - Keeping one endless chat for unrelated topics.
+    - Assuming Copilot read the whole repo when it only used the open file.
+    - Confusing prompt files (run on demand) with custom instructions (added automatically).
+  examTips:
+    - '"Generate unit tests for the selected function" = **/tests**.'
+    - '"Ask about the whole project" = **@workspace** (or **#codebase**).'
+    - '"Reuse the same prompt across the team" = a **prompt file** in .github/prompts.'
+  quick:
+    - q: Which slash command starts a fresh conversation?
+      a: /clear
+    - q: Which participant answers questions about VS Code itself?
+      a: "@vscode"
+    - q: Which variable adds the output of the last terminal command?
+      a: "#terminalLastCommand"
+    - q: Where do prompt files live?
+      a: .github/prompts/ with the .prompt.md extension
+    - q: Where can you see which files Copilot used for an answer?
+      a: The "Used n references" list under the answer.
+references:
+  - title: GitHub Copilot Chat cheat sheet
+    url: https://docs.github.com/en/copilot/reference/cheat-sheet
+  - title: Asking GitHub Copilot questions in your IDE
+    url: https://docs.github.com/en/copilot/how-tos/use-chat/use-chat-in-ide
+  - title: Use prompt files in VS Code
+    url: https://code.visualstudio.com/docs/copilot/customization/prompt-files
+  - title: "Introduction to prompt engineering with GitHub Copilot (Microsoft Learn)"
+    url: https://learn.microsoft.com/en-us/training/modules/introduction-prompt-engineering-with-github-copilot/
+related:
+  - inline-suggestions-chat-and-modes
+  - custom-instructions-and-prompt-files
+  - prompt-structure-and-context
+  - prompt-engineering-and-chat-history
+---
+
+## Start with a question
+
+<Story question="If you call a plumber and just say 'it's broken', how long before they fix the right pipe?">
+
+A long time. Now imagine you say "the kitchen tap drips, here's a photo, it started after last week's repair". The plumber knows what kind of job it is, where to look and what changed.
+
+Copilot Chat is the same. A **slash command** tells it the kind of job (`/fix`, `/tests`). A **participant** like `@workspace` sends the question to someone who knows the whole house. **#** context like `#file` is the photo. And like any plumber, it only knows what you showed it.
+
+</Story>
+
+## Explain it like I'm 10
+
+<Eli10>
+
+Copilot Chat is a clever friend you text about your code.
+
+A word starting with / says what you want: explain, fix, write tests.
+
+A word starting with @ picks who to ask: the whole project, the terminal, GitHub.
+
+A word starting with # hands over a page to look at.
+
+Your friend can only remember so much at once, so start a new chat when you change the subject.
+
+</Eli10>
+
+## The technical explanation
+
+### Slash commands
+
+Type **/** in the chat box to see them. Select code first, so Copilot knows what "this" means.
+
+| Command | What it does |
+| --- | --- |
+| `/explain` | Explains the selected code or the active file |
+| `/fix` | Proposes a fix for problems in the selection |
+| `/tests` | Writes unit tests for the selection |
+| `/doc` | Adds documentation comments |
+| `/new` | Scaffolds a new project or file |
+| `/clear` | Starts a fresh conversation |
+| `/help` | Lists what's available |
+
+Select `applyDiscount` in `src/discount.js`, type `/tests`, and Copilot writes tests for SAVE10, an unknown code, no code and an empty cart. You then **Insert into new file** or **Copy**.
+
+### Participants (@) and context (#)
+
+**Participants** are experts with their own context:
+
+- `@workspace` answers questions about your whole project ("where is the discount applied?").
+- `@vscode` answers questions about the editor and its settings.
+- `@terminal` helps with shell commands and the integrated terminal.
+- `@github` brings in GitHub data such as issues and pull requests.
+
+**Context variables** start with `#` and add exactly what you choose: `#file:src/cart.js`, `#selection`, `#codebase` (search the workspace), `#terminalSelection`, `#terminalLastCommand` and `#changes` (your uncommitted changes). You can also drag files or a screenshot into the chat.
+
+```text
+@workspace why could cartTotal return NaN? #file:src/discount.js
+```
+
+Under each answer, **Used n references** lists what Copilot actually read. If the file you care about isn't there, add it.
+
+<TryIt labs="gh-instructions" text="Write repository instructions and a custom agent in the terminal, then watch Copilot follow them." />
+
+### Model picker and feedback
+
+The **model picker** lets you choose a model or **Auto**, which picks one for you. Which models you see depends on your plan and on your organization's **Models** policy. Premium models use your monthly premium-request allowance, and extra use can be paid for or blocked by a budget.
+
+Use **👍 / 👎** on an answer to send feedback. It helps GitHub improve the service and it's a habit worth having: a thumbs down on a confident but wrong answer is useful data.
+
+### Prompt files: reuse a good prompt
+
+If you keep typing the same careful prompt, save it as a **prompt file** in `.github/prompts/`:
+
+```markdown
+---
+description: Write edge-case tests for one module
+mode: agent
+---
+Write unit tests for ${input:file} with the Node test runner.
+Cover an unknown code, no code, an empty cart and totals that would go negative.
+```
+
+Save it as `.github/prompts/edge-tests.prompt.md` and run it with `/edge-tests` in chat. Everyone on the team gets the same instructions, and you improve the prompt through a pull request. Front matter can also set `tools` and `model`. Prompt files run only when you call them; repository instructions (`.github/copilot-instructions.md`) are added to every request automatically.
+
+### The limits you need to know
+
+- **Context window.** Each request has a size limit. Your message, the context you added, custom instructions and the **chat history** all count. Long files get trimmed.
+- **History helps and hurts.** Follow-ups like "now add tests" work because earlier turns are included. Old, unrelated turns confuse the answer. Use `/clear` or a new chat when the topic changes.
+- **Only what it can see.** Chat doesn't magically know your whole repo. It uses the active file, your selection and what you add.
+- **Answers can be wrong.** Made-up APIs, outdated library versions and insecure code all happen. Review and test.
+- **Not deterministic.** The same question can give a different answer next time.
+
+<Callout type="exam">
+Map the need to the syntax. "Write tests for the selection" is **/tests**; "fix this error" is **/fix**; "start over" is **/clear**. "Question about the whole project" is **@workspace** or **#codebase**; "about the editor" is **@vscode**; "about the last command's output" is **#terminalLastCommand**. "Reuse the same prompt for consistent answers" is a **prompt file** (`.prompt.md`, run with `/name`). "Answers drift off topic in a long chat" points to **chat history** filling the **context window**.
+</Callout>
+
+<DeepDive title="Participants, tools and agent mode">
+
+In Ask mode, participants decide whose context is used. In **Agent** mode the model chooses **tools** itself (search the codebase, read a file, run a terminal command, call an MCP tool), so you'll mostly use `#` references to point it in the right direction. A prompt file's `tools` list limits which tools it may use when it runs as an agent, which is a simple way to make a reusable prompt that can read and edit but never run shell commands. Organization policies still apply: if an admin turns off a feature or a model, no prompt file can turn it back on.
+
+</DeepDive>
+
+## Real-world business scenario
+
+<Scenario
+  company="Contoso (fictional)"
+  industry="Online retail"
+  problem="Contoso's developers each asked Copilot for tests in their own words. Some got tests without edge cases, some got Jest instead of the Node test runner, and long chats wandered off topic."
+  service="A shared prompt file, .github/prompts/edge-tests.prompt.md, run with /edge-tests, plus a team habit of adding #file context and starting a new chat per task."
+  why="The prompt file gives everyone the same instructions, and fresh chats keep old history out of the context window."
+  outcome="Test pull requests became consistent enough that reviewers stopped asking for missing edge cases."
+/>
+
+## When to use it and when not to
+
+<UseWhen
+  use={[
+    'Slash commands for quick, common jobs on selected code.',
+    '@workspace or #codebase when you don\'t know where the answer lives.',
+    'Prompt files for tasks the team repeats and wants done the same way.',
+    'A new chat each time the topic changes.',
+  ]}
+  avoid={[
+    'Pasting secrets or customer data into chat to "give it context".',
+    'Trusting an answer because it sounds sure. Check the references and test the code.',
+    'Putting house rules in a prompt file that people may forget to run. Use custom instructions for those.',
+  ]}
+  alternatives={[
+    '<strong>Custom instructions</strong> (.github/copilot-instructions.md) for rules that should apply to every request.',
+    '<strong>Copilot CLI</strong> slash commands (/model, /context, /usage) when you work in the terminal.',
+  ]}
+/>

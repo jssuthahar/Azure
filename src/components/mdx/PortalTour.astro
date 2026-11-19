@@ -15,22 +15,25 @@ const { id, intro, title, embed = false } = Astro.props;
 const tour = TOURS[id];
 if (!tour) throw new Error(`<PortalTour>: unknown tour id "${id}"`);
 const plain = (s: string) => s.replace(/\*\*|\*|`/g, '');
+// GitHub-exam tours draw VS Code or github.com instead of the Azure portal.
+const dev = tour.steps.some((s) => s.chrome === 'vscode' || s.chrome === 'github');
+const noun = dev ? 'VS Code & GitHub' : 'Azure portal';
 ---
 <figure class="pt-root not-prose" data-tour={JSON.stringify(tour.steps)}>
   <div class="pt-head">
-    <span class="pt-head-ico" aria-hidden="true">🖥️</span>
+    <span class="pt-head-ico" aria-hidden="true">{dev ? "💻" : "🖥️"}</span>
     <span class="min-w-0 flex-1">
-      <span class="block font-semibold leading-snug">{title ?? `Azure portal: ${tour.title}`}</span>
-      <span class="block text-sm text-muted">{intro ? <span set:html={inlineMd(intro)} /> : 'Click the glowing item in the portal, or use Next.'}</span>
+      <span class="block font-semibold leading-snug">{title ?? `${noun}: ${tour.title}`}</span>
+      <span class="block text-sm text-muted">{intro ? <span set:html={inlineMd(intro)} /> : `Click the glowing item in the ${dev ? 'window' : 'portal'}, or use Next.`}</span>
     </span>
-    <span class="flex shrink-0 items-center gap-1.5"><CurrencySelect compact />{!embed && <EmbedButton path={`/embed/portal/${id}/`} title={tour.title} height={860} />}</span>
+    <span class="flex shrink-0 items-center gap-1.5">{!dev && <CurrencySelect compact />}{!embed && <EmbedButton path={`/embed/portal/${id}/`} title={tour.title} height={860} />}</span>
   </div>
-  <div class="pt-frame" aria-label="Simulated Azure portal" role="group"><div class="pt-boot">Loading the portal…</div></div>
+  <div class={`pt-frame${dev ? ' pt-dev' : ''}`} aria-label={dev ? 'Simulated VS Code and GitHub' : 'Simulated Azure portal'} role="group"><div class="pt-boot">{dev ? 'Loading…' : 'Loading the portal…'}</div></div>
   <div class="pt-cap">
     <div class="pt-progress"><span></span></div>
     <p class="pt-cap-row"><span class="pt-cap-n"></span> <button type="button" class="speak-btn pt-say" data-say="" aria-label="Listen to this step">🔊</button></p>
     <p class="pt-cap-t" aria-live="polite">{inlineMd(tour.steps[0].say)}</p>
-    <p class="pt-cap-hint">👆 Click the <strong>glowing</strong> item in the portal to continue</p>
+    <p class="pt-cap-hint">👆 Click the <strong>glowing</strong> item {dev ? 'on screen' : 'in the portal'} to continue</p>
     <div class="pt-cap-nav">
       <button type="button" class="pt-back">❮ Back</button>
       <button type="button" class="pt-next">Next ❯</button>
@@ -40,7 +43,7 @@ const plain = (s: string) => s.replace(/\*\*|\*|`/g, '');
     <summary>Read the steps as text</summary>
     <ol>{tour.steps.map((s) => <li>{plain(s.say)}</li>)}</ol>
   </details>
-  <p class="pt-disclaimer">🧪 Simulation for learning. Screens are simplified versions of the Azure portal; names, prices and IDs are examples. Nothing here touches real Azure.</p>
+  <p class="pt-disclaimer">{dev ? '🧪 Simulation for learning. Screens are simplified versions of Visual Studio Code and github.com with GitHub Copilot; names, files and suggestions are examples. Not affiliated with GitHub or Microsoft, and nothing here touches your real account.' : '🧪 Simulation for learning. Screens are simplified versions of the Azure portal; names, prices and IDs are examples. Nothing here touches real Azure.'}</p>
 </figure>
 
 
@@ -50,6 +53,9 @@ const plain = (s: string) => s.replace(/\*\*|\*|`/g, '');
 
   const md = (s: string) => s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>').replace(/`(.+?)`/g, '<code>$1</code>').replace(/\*(.+?)\*/g, '<em>$1</em>');
   const plain = (s: string) => s.replace(/\*\*|\*|`/g, '');
+// GitHub-exam tours draw VS Code or github.com instead of the Azure portal.
+const dev = tour.steps.some((s) => s.chrome === 'vscode' || s.chrome === 'github');
+const noun = dev ? 'VS Code & GitHub' : 'Azure portal';
 
   function scrollIntoFrame(el: HTMLElement) {
     let p = el.parentElement;

@@ -1,0 +1,189 @@
+---
+title: "How GitHub Copilot Builds a Prompt from Context"
+seoTitle: How Copilot Builds a Prompt from Your Code | GH-300
+description: See which context GitHub Copilot gathers for inline suggestions and chat, how it fits a limited context window, and how to check the references it used.
+answer: >-
+  Copilot never sees "your project" as a whole. For an **inline suggestion**, the IDE extension gathers the code **before and after your cursor**, the **file name and language**, and related snippets from **open tabs**, then ranks and trims them into a **prompt** that fits the model's limited **context window**. In **chat**, the prompt also includes your question, the **active file** or **selection**, anything you attach (`#file`, `#selection`, `#codebase`, `#terminalLastCommand`, images), **custom instructions** and earlier turns of the conversation. **Content exclusions** remove files from that context, and **Used n references** shows what was really sent.
+updated: 2026-11-19
+readingMinutes: 9
+keyTerms:
+  - term: Context
+    definition: The information Copilot adds to a request so the model knows what you're working on, such as nearby code, open tabs or attached files.
+  - term: Context window
+    definition: The maximum amount of text (in tokens) a model can read in one request. Context has to be ranked and trimmed to fit.
+  - term: Neighbouring tabs
+    definition: Other files open in your editor. Copilot looks in them for snippets related to the code you're writing.
+  - term: Chat variable
+    definition: A "#" reference in Copilot Chat, such as #file, #selection or #codebase, that attaches specific context to your question.
+  - term: Chat participant
+    definition: An "@" expert in Copilot Chat, such as @workspace, @terminal, @vscode or @github, that brings its own context and tools.
+  - term: Used n references
+    definition: The expandable list under a chat answer that shows which files and snippets Copilot used as context.
+interview:
+  - level: beginner
+    q: Why do Copilot's suggestions get better when I open a related file?
+    a: >-
+      Because open tabs are part of the context for inline suggestions. If I'm writing a test and the code under test is open in another tab, the extension can pull matching snippets from it into the prompt, so the model sees the real function names.
+    followUps:
+      - q: Can open tabs make things worse?
+        a: >-
+          Yes. An old, unrelated file in a tab can pull suggestions off course. I close tabs I'm not using.
+  - level: intermediate
+    q: What does Copilot Chat include in the prompt when I ask a question?
+    a: >-
+      My question, the active file or my selection, anything I attach with # variables or by dragging files in, context from a participant like @workspace, the repository's custom instructions, and the earlier turns of the same conversation. All of that has to fit the model's context window.
+    followUps: []
+  - level: experienced
+    q: Chat gave an answer that ignored the file you cared about. How do you check and fix it?
+    a: >-
+      I expand Used n references under the answer to see what was actually sent. If the file isn't there, I attach it with #file or select the code, and ask again. If the file should be there but never shows up, I check whether it's covered by a content exclusion.
+    followUps: []
+  - level: scenario
+    q: A developer asks why Copilot doesn't just read the whole monorepo for every suggestion.
+    a: >-
+      The model's context window is limited, and inline suggestions need to be fast. So the extension picks the most relevant bits: the code around the cursor, the file's language and name, and related snippets from open tabs. For broader questions in chat, #codebase or @workspace searches the workspace and adds the best matches.
+    followUps: []
+revision:
+  keyPoints:
+    - "Inline suggestion context: code before and after the cursor, file name and language, related snippets from open tabs."
+    - The context window is limited, so context is ranked and trimmed before it's sent.
+    - "Chat adds: your question, active file or selection, # variables, @ participants, custom instructions and chat history."
+    - "#file, #selection, #codebase, #changes, #terminalSelection and #terminalLastCommand attach specific context."
+    - Content exclusions remove files from context in supported IDEs.
+    - Used n references shows what context a chat answer really used.
+  mistakes:
+    - Assuming Copilot reads the whole repository for every inline suggestion.
+    - Leaving unrelated tabs open and wondering why suggestions drift.
+    - Not checking Used n references when an answer ignores a file.
+  examTips:
+    - '"Improve inline suggestions with related code" = **open the related file in a tab**.'
+    - '"Ask chat about one specific file" = **#file** (or select the code).'
+    - '"Search the whole workspace from chat" = **#codebase** or **@workspace**.'
+  quick:
+    - q: Name two things the extension includes for an inline suggestion.
+      a: Code around the cursor and the file name or language (also open tabs).
+    - q: Why does context have to be trimmed?
+      a: The model's context window is limited.
+    - q: Which chat variable attaches the code you've highlighted?
+      a: "#selection"
+    - q: Where do you see which files a chat answer used?
+      a: Used n references, under the answer.
+    - q: Does an excluded file get used as context?
+      a: No, not in supported IDEs.
+references:
+  - title: Prompt engineering for GitHub Copilot Chat
+    url: https://docs.github.com/en/copilot/using-github-copilot/prompt-engineering-for-github-copilot
+  - title: Best practices for using GitHub Copilot
+    url: https://docs.github.com/en/copilot/using-github-copilot/best-practices-for-using-github-copilot
+  - title: Responsible use of GitHub Copilot inline suggestions
+    url: https://docs.github.com/en/copilot/responsible-use-of-github-copilot-features/responsible-use-of-github-copilot-code-completion
+  - title: Introduction to prompt engineering with GitHub Copilot (Microsoft Learn)
+    url: https://learn.microsoft.com/training/modules/introduction-prompt-engineering-with-github-copilot/
+related:
+  - copilot-data-flow
+  - prompt-structure-and-context
+  - proxy-filtering-and-post-processing
+  - content-exclusions
+---
+
+## Start with a question
+
+<Story question="Copilot suggests a function name that doesn't exist in your project. Was the model wrong, or did it never see the right file?">
+
+Picture a tailor stitching a shirt for you over the phone. If you only say "make it nice", you get a standard shirt. If you send your measurements, a photo of a shirt you love and the fabric, you get something that fits.
+
+Copilot is that tailor. It only knows what's in the **prompt**, and for an inline suggestion the IDE builds that prompt for you from whatever is near your cursor and open in your editor. When the right file isn't in that bundle, the model guesses, and guesses can look confident.
+
+</Story>
+
+## Explain it like I'm 10
+
+<Eli10>
+
+Imagine your backpack can only hold five books.
+
+Your teacher asks a maths question. You pack the maths book, your notes from today, and the page you were reading. You leave the comic at home.
+
+Copilot packs its backpack the same way before every question. It picks the most useful pages and leaves the rest, because the bag is small.
+
+If you leave a silly comic on your desk, sometimes it sneaks into the bag. So tidy your desk.
+
+</Eli10>
+
+## The technical explanation
+
+### Context for inline suggestions
+
+When you pause while typing, the Copilot extension gathers:
+
+- **Code before the cursor** (the prefix) and **code after it** (the suffix), so the suggestion fits in the middle.
+- The **file name, path and language**. `tests/discount.test.js` tells the model you're writing a test in JavaScript.
+- **Related snippets from open tabs** (neighbouring tabs). Having `src/discount.js` open while you write its test helps a lot.
+Repository custom instructions are used by chat, agents and code review, not by inline completions, so don't count on them to steer ghost text.
+
+Then it **ranks and trims**. A model reads a limited number of tokens per request (the **context window**), and completions need to come back quickly, so only the most relevant pieces go in. Files covered by a **content exclusion** are skipped.
+
+### Context for chat
+
+Chat prompts carry more, because you're asking a question rather than continuing a line.
+
+| Piece | Where it comes from |
+| --- | --- |
+| Your question | What you typed, plus any slash command such as `/explain` or `/tests` |
+| Active file or selection | Included automatically in the editor's chat |
+| Chat variables | `#file`, `#selection`, `#codebase`, `#changes`, `#terminalSelection`, `#terminalLastCommand`, or files and images you drag in |
+| Participants | `@workspace` (your project), `@terminal`, `@vscode`, `@github` |
+| Custom instructions | `.github/copilot-instructions.md` and matching `.github/instructions/*.instructions.md` files |
+| Chat history | Earlier turns in the same conversation |
+
+All of that has to fit the context window too. Long conversations push older turns out or crowd the useful context, which is why starting a new chat for a new topic helps.
+
+```text
+You:  Why does applyDiscount return NaN for unknown codes? #file:src/discount.js
+      📎 Used 2 references: discount.js, cart.js
+```
+
+### Check what was really used
+
+Under a chat answer, expand **Used n references** to see exactly which files and snippets went in. If the file you care about is missing, attach it and ask again. If it never appears even when attached, it may be excluded. The **VS Code & GitHub** tab walks through this with open tabs, a `#file` chip and the references list.
+
+In the Copilot CLI, `@path` adds a file to your prompt and `/context` shows how full the context window is. You can try `/context` in the Practice Lab sandbox.
+
+<Callout type="exam">
+Questions here test **what Copilot looks at**. For inline suggestions, the answer is code around the cursor, the file's name and language, and **open tabs**. For chat, add the **selection or active file**, **# variables**, **@ participants**, **instructions** and **history**. "Copilot keeps suggesting code from an unrelated file" means **close the unrelated tab**. "Make sure chat uses a specific file" means **#file** or select it.
+</Callout>
+
+<DeepDive title="Why the suffix matters">
+
+Older autocomplete only looked backwards. Copilot also sends the code **after** your cursor, which lets the model fill a gap instead of just continuing. If you're writing the middle of `applyDiscount` and the `return` line already exists below, the suggestion will define the variable that `return` needs. That's also why a half-finished file with a clear function signature and a comment above it gets better suggestions than an empty one: there's more signal on both sides of the cursor.
+
+</DeepDive>
+
+## Real-world business scenario
+
+<Scenario
+  company="Tailspin Toys (fictional)"
+  industry="Online retail"
+  problem="Developers on a 400-file Node.js repo complained that Copilot invented helper names. Most had a dozen old tabs open from other features, and they asked chat vague questions without attaching any file."
+  service="A short team guide: open the file under test beside the test file, close unrelated tabs, attach code with #file or #selection, use #codebase for broad questions, and check Used n references before trusting an answer."
+  why="Inline suggestions read open tabs and nearby code, and chat answers come from whatever context is attached. Better context means fewer invented names."
+  outcome="In their next retro, developers reported far fewer made-up helpers, and code reviewers stopped flagging calls to functions that didn't exist."
+/>
+
+## When to use it and when not to
+
+<UseWhen
+  use={[
+    'Open the related source file when you write its tests or callers.',
+    'Attach #file or #selection when you ask chat about specific code.',
+    'Use #codebase or @workspace when you don\'t know which file holds the answer.',
+  ]}
+  avoid={[
+    'Leaving stale or unrelated tabs open while you work on something new.',
+    'Pasting a huge file into chat when one function would do. It crowds the context window.',
+  ]}
+  alternatives={[
+    '<strong>Custom instructions</strong> for rules every chat and agent request should follow.',
+    '<strong>Copilot Spaces</strong> to share a curated set of files and notes as context with your team.',
+  ]}
+/>

@@ -6,5 +6,6 @@
 import { TOURS as AZ } from './az-900/portal-tours';
 import { TOURS_AI as AI } from './ai-901/portal-tours';
 import { TOURS_DEV as DEV } from './ai-200/portal-tours';
+import { TOURS_GH as GH } from './gh-300/portal-tours';
 
-export const TOURS = { ...AZ, ...AI, ...DEV };
+export const TOURS = { ...AZ, ...AI, ...DEV, ...GH };

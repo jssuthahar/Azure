@@ -1,0 +1,28 @@
+{ "cert": "gh-300", "domain": 6, "topic": "troubleshoot-copilot", "questions": [
+  { "id": "gh-trb-1", "type": "single", "question": "A developer receives GitHub Copilot inline suggestions in JavaScript and Python files but receives no suggestions in YAML files. No content exclusions apply to the YAML files. What is the most likely cause?", "options": [
+    { "text": "The developer does not have a Copilot seat", "why": "Without a seat, no suggestions would appear in any language." },
+    { "text": "YAML is disabled in the github.copilot.enable setting", "why": "Correct. github.copilot.enable can turn completions off for specific languages." },
+    { "text": "A proxy server is blocking Copilot endpoints", "why": "A blocked network would affect every language, not only YAML." },
+    { "text": "The public code filter is set to Block", "why": "The filter hides individual matching suggestions. It does not disable a language." } ], "answer": [1], "explanation": "A problem limited to one language points to the per-language github.copilot.enable setting.", "objective": "6.2.2" },
+  { "id": "gh-trb-2", "type": "single", "question": "An organization owner adds a content exclusion for /secrets/** in a repository. Ten minutes later, a developer who had Visual Studio Code open still receives suggestions in files under /secrets. What should the developer do first?", "options": [
+    { "text": "Reload the VS Code window, because exclusion changes can take up to 30 minutes to reach an open IDE", "why": "Correct. Exclusion changes are not instant. Reloading the window helps the IDE pick up the change." },
+    { "text": "Uninstall and reinstall Visual Studio Code", "why": "Reinstalling is unnecessary. The change has likely not reached the IDE yet." },
+    { "text": "Set the public code policy to Block", "why": "The public code policy is unrelated to content exclusions." },
+    { "text": "Ask the administrator to remove the developer's Copilot seat", "why": "Removing the seat would stop Copilot entirely and is not a troubleshooting step." } ], "answer": [0], "explanation": "Content exclusion changes can take up to 30 minutes to reach IDEs that are already open. Reloading the window is the first step.", "objective": "6.2.2" },
+  { "id": "gh-trb-3", "type": "single", "question": "After an office network change, GitHub Copilot stops returning suggestions for every developer in the office. Developers working from home are not affected. Where should a developer look first to identify the cause?", "options": [
+    { "text": "The repository's content exclusion settings", "why": "Content exclusions would affect specific files for all developers, regardless of location." },
+    { "text": "The github.copilot.enable setting", "why": "A per-language setting would not explain a location-specific failure." },
+    { "text": "The GitHub Copilot output logs in the IDE", "why": "Correct. The logs show network errors, such as proxy or firewall failures, that match a location-specific problem." },
+    { "text": "The Copilot metrics dashboard", "why": "Metrics show usage trends. They do not show the error that a specific request returned." } ], "answer": [2], "explanation": "A failure tied to one network suggests a proxy or firewall. The Copilot logs in Output › GitHub Copilot show the error.", "objective": "6.2.2" },
+  { "id": "gh-trb-4", "type": "multi", "question": "A developer reports that GitHub Copilot provides no suggestions in any file. Which THREE items should you check? Each correct answer presents part of the solution.", "options": [
+    { "text": "Whether the developer is signed in to GitHub in the IDE", "why": "Correct. Copilot requires the IDE to be signed in." },
+    { "text": "Whether the developer's account has an assigned Copilot seat", "why": "Correct. Without a seat, Copilot does not provide suggestions." },
+    { "text": "Whether the GitHub Copilot Chat extension is up to date", "why": "Correct. An outdated or mismatched extension can stop Copilot from working." },
+    { "text": "Whether the repository has a .github/copilot-instructions.md file", "why": "Custom instructions are optional and their absence does not stop suggestions." },
+    { "text": "Whether Copilot code review is enabled for the repository", "why": "Code review is a separate feature and does not affect inline suggestions." } ], "answer": [0, 1, 2], "explanation": "When suggestions are missing everywhere, check sign-in, seat assignment and the extension version before investigating further.", "objective": "6.2.2" },
+  { "id": "gh-trb-5", "type": "single", "question": "A developer opens config/secrets.js and notices that Copilot provides no suggestions. The Copilot status bar icon indicates that content is excluded for the file. Suggestions work in all other files. What should you conclude?", "options": [
+    { "text": "The Copilot extension is corrupted and must be reinstalled.", "why": "The status icon reports an intended exclusion, not a fault." },
+    { "text": "The developer's seat has expired.", "why": "An expired seat would affect every file." },
+    { "text": "A firewall is blocking requests for this file type.", "why": "Network problems are not limited to a single file." },
+    { "text": "Copilot is working as configured because the file matches a content exclusion.", "why": "Correct. The status icon shows that an admin excluded the file. Changing this requires the owner of the exclusion rule." } ], "answer": [3], "explanation": "An excluded file is expected behavior. If the developer needs Copilot in that file, they must ask the repository or organization admin.", "objective": "6.2.2" }
+] }

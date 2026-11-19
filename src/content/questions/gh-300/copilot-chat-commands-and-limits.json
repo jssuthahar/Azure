@@ -1,0 +1,28 @@
+{ "cert": "gh-300", "domain": 2, "topic": "copilot-chat-commands-and-limits", "questions": [
+  { "id": "gh-chatcmd-1", "type": "single", "question": "A developer selects the applyDiscount function in Visual Studio Code and wants Copilot Chat to generate unit tests for it. Which slash command should the developer use?", "options": [
+    { "text": "/tests", "why": "Correct. /tests generates unit tests for the selected code." },
+    { "text": "/fix", "why": "/fix proposes a fix for problems in the selected code." },
+    { "text": "/doc", "why": "/doc adds documentation comments." },
+    { "text": "/new", "why": "/new scaffolds a new project or file." } ], "answer": [0], "explanation": "The /tests slash command writes unit tests for the current selection.", "objective": "2.3.4" },
+  { "id": "gh-chatcmd-2", "type": "single", "question": "A developer has been using one Copilot Chat conversation for several hours across unrelated tasks. Answers now reference code from earlier tasks that is not relevant. What should the developer do first?", "options": [
+    { "text": "Start a new conversation by using /clear.", "why": "Correct. Earlier turns are sent as chat history and consume the context window. A new conversation removes the unrelated history." },
+    { "text": "Switch the model picker to a different model.", "why": "A different model still receives the same unrelated chat history." },
+    { "text": "Add a content exclusion for the earlier files.", "why": "Content exclusions are for sensitive files and do not remove chat history from the conversation." },
+    { "text": "Give the answer a thumbs-down rating.", "why": "Feedback helps improve the service but does not change the context of the current conversation." } ], "answer": [0], "explanation": "Chat history is part of the prompt. Clearing the conversation keeps old, unrelated turns out of the context window.", "objective": "2.3.4" },
+  { "id": "gh-chatcmd-3", "type": "multi", "question": "A developer asks Copilot Chat in Visual Studio Code why the cart total can be NaN. Which TWO references add specific context to the prompt? Each correct answer presents a complete solution.", "options": [
+    { "text": "#file:src/discount.js", "why": "Correct. #file adds the named file to the prompt." },
+    { "text": "#selection", "why": "Correct. #selection adds the code currently selected in the editor." },
+    { "text": "/help", "why": "/help lists available commands and does not add code context." },
+    { "text": "👍", "why": "The thumbs-up button sends feedback on an answer and does not add context." },
+    { "text": "Ctrl+Enter", "why": "Ctrl+Enter opens the completions panel for inline suggestions." } ], "answer": [0, 1], "explanation": "Context variables that start with # add chosen files, selections and other sources to the prompt.", "objective": "2.3.4" },
+  { "id": "gh-chatcmd-4", "type": "single", "question": "Your team repeatedly writes the same detailed prompt to generate edge-case tests. You need every developer to run an identical, version-controlled prompt on demand from Copilot Chat. What should you create?", "options": [
+    { "text": "A file named .github/prompts/edge-tests.prompt.md", "why": "Correct. Prompt files are stored in the repository and run on demand in chat with /edge-tests." },
+    { "text": "A file named .github/copilot-instructions.md", "why": "Repository custom instructions are added to every request automatically rather than run on demand for one task." },
+    { "text": "A .vscode/mcp.json file", "why": "This file configures MCP servers, which add tools rather than reusable prompts." },
+    { "text": "A content exclusion in the repository settings", "why": "Content exclusions prevent Copilot from using files and do not store prompts." } ], "answer": [0], "explanation": "Prompt files (.prompt.md) in .github/prompts provide reusable prompts that are run with a slash command.", "objective": "2.3.4" },
+  { "id": "gh-chatcmd-5", "type": "single", "question": "A developer with a Copilot Business seat cannot find a specific model in the Copilot Chat model picker, although a colleague in another organization can select it. What is the most likely reason?", "options": [
+    { "text": "The developer's organization has not enabled that model in its Copilot model settings.", "why": "Correct. Available models depend on the plan and on the models the organization allows." },
+    { "text": "The developer has not added #codebase to the prompt.", "why": "Context variables do not affect which models appear in the picker." },
+    { "text": "The repository does not contain a copilot-instructions.md file.", "why": "Custom instructions do not control model availability." },
+    { "text": "The developer is using Ask mode instead of Agent mode.", "why": "The model picker is available in each chat mode; the mode does not hide models permitted by the organization." } ], "answer": [0], "explanation": "Organization administrators decide which models are available to members through Copilot policies.", "objective": "2.3.4" }
+] }

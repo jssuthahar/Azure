@@ -1,0 +1,201 @@
+---
+title: "Responsible AI: Principles, Harms and Mitigations"
+seoTitle: Responsible AI Principles for GitHub Copilot | GH-300
+description: Learn Microsoft's six responsible AI principles, the harms AI coding tools can cause and the mitigations that match each harm when your team uses Copilot.
+answer: >-
+  **Responsible AI** means using AI in a way that's fair, safe and accountable. Microsoft's six principles are **fairness**, **reliability and safety**, **privacy and security**, **inclusiveness**, **transparency** and **accountability**. With Copilot, the harms to watch are hallucinated or insecure code, bias, licensing questions, privacy leaks and over-reliance, and you reduce them with **human review**, tests, code scanning, content exclusions, the public code filter, fake sample data and being open about AI use.
+updated: 2026-11-19
+readingMinutes: 10
+keyTerms:
+  - term: Responsible AI
+    definition: Designing and using AI so it's fair, safe, private, inclusive, transparent and has a person accountable for it.
+  - term: Fairness
+    definition: AI systems should treat all people fairly and not produce biased results for some groups.
+  - term: Reliability and safety
+    definition: AI systems should behave as intended, including in unexpected conditions, and fail safely.
+  - term: Privacy and security
+    definition: AI systems should protect personal and confidential data and resist attacks.
+  - term: Inclusiveness
+    definition: AI systems should work for people of all abilities and backgrounds.
+  - term: Transparency
+    definition: People should understand how an AI system works, its limits, and when AI was involved.
+  - term: Accountability
+    definition: People remain responsible for AI systems and the results they produce.
+  - term: Human in the loop
+    definition: A person reviews and approves AI output before it takes effect.
+interview:
+  - level: beginner
+    q: Name Microsoft's six responsible AI principles.
+    a: >-
+      Fairness, reliability and safety, privacy and security, inclusiveness, transparency, and accountability. I remember that the last two are about people: say when AI was used, and someone owns the result.
+    followUps: []
+  - level: intermediate
+    q: Copilot wrote a sign-up form that rejects names with an apostrophe. Which principle does that touch, and what do you do?
+    a: >-
+      Fairness and inclusiveness, because it fails for real people with names like O'Brien. I'd fix the validation, add test cases with names from different cultures, and mention the pattern to the team so reviewers look for it.
+    followUps:
+      - q: Is that Copilot's fault?
+        a: >-
+          It's where the bias came from, but accountability sits with us. We accepted and merged it, so we own fixing it.
+  - level: experienced
+    q: Which Copilot features help with the privacy and security principle?
+    a: >-
+      Content exclusions keep sensitive paths out of Copilot's context, the public code filter can block matching suggestions, and on Business and Enterprise plans our code isn't used to train models. On the team side, we don't paste secrets or real customer data into prompts, and code scanning checks what Copilot writes.
+    followUps: []
+  - level: scenario
+    q: Your manager asks whether you should tell reviewers that a pull request was mostly written with Copilot. What do you say?
+    a: >-
+      Yes. That's the transparency principle. A short note in the description helps reviewers look harder at the parts that came from AI, and it's honest. It doesn't lower the bar; the code still gets the same review and tests.
+    followUps: []
+  - level: architecture
+    q: How would you turn responsible AI principles into something enforceable for 200 developers?
+    a: >-
+      Policies and pipelines, not just a slide. Organization Copilot policies for the public code filter and allowed features, content exclusions for sensitive repos, required reviews and status checks with tests and code scanning, a pull request template that asks about AI use, and short training on the known harms.
+    followUps: []
+revision:
+  keyPoints:
+    - "Six principles: fairness, reliability and safety, privacy and security, inclusiveness, transparency, accountability."
+    - "Harms with AI coding tools: hallucinated or insecure code, bias, IP and licensing questions, privacy leaks, over-reliance."
+    - Each harm has a matching mitigation, and human review sits under all of them.
+    - Accountability stays with the people who accept and ship the code, never with the tool.
+    - Transparency means telling people when AI helped and being clear about its limits.
+    - Use fake sample data, never real personal data or secrets, in prompts.
+  mistakes:
+    - Treating Copilot as accountable for a bug it suggested.
+    - Pasting real customer records into chat to "get better answers".
+    - Thinking policies alone make AI use responsible without review and tests.
+  examTips:
+    - '"Who is responsible for AI-generated code" = the **developer and team** (accountability).'
+    - '"Disclose that AI helped write this" = **transparency**.'
+    - '"Works for users of all abilities and backgrounds" = **inclusiveness**.'
+    - '"Keep sensitive files out of Copilot" = **content exclusions** (privacy and security).'
+  quick:
+    - q: Which principle says people stay responsible for AI results?
+      a: Accountability.
+    - q: Which principle covers biased output against a group?
+      a: Fairness.
+    - q: Which mitigation fits the harm of matching public code?
+      a: The public code filter (Block, or Allow with code references) plus a licence check.
+    - q: Which mitigation fits privacy leaks in prompts?
+      a: Don't paste secrets or personal data, use fake data and content exclusions.
+    - q: What mitigation applies to every harm?
+      a: Human review, backed by tests and scanning.
+references:
+  - title: Responsible use of GitHub Copilot features
+    url: https://docs.github.com/en/copilot/responsible-use
+  - title: What is Responsible AI? (Azure Machine Learning)
+    url: https://learn.microsoft.com/azure/machine-learning/concept-responsible-ai
+  - title: Responsible AI with GitHub Copilot (Microsoft Learn)
+    url: https://learn.microsoft.com/training/modules/responsible-ai-with-github-copilot/
+  - title: GitHub Copilot Trust Center
+    url: https://copilot.github.trust.page/
+related:
+  - generative-ai-risks-and-limitations
+  - validate-copilot-output
+  - content-exclusions
+  - public-code-filter-and-references
+---
+
+## Start with a question
+
+<Story question="If Copilot writes a bug that leaks customer data, who gets the phone call at 2 a.m.?">
+
+You do. Or your team lead. Not Copilot.
+
+That one answer explains most of responsible AI. The tool can draft code faster than any of us, but it can't be held responsible, so people have to be. **Responsible AI** is the set of principles and habits that keep a person in charge: checking for bias, protecting data, being open about AI use, and owning the result.
+
+</Story>
+
+## Explain it like I'm 10
+
+<Eli10>
+
+Imagine a robot that helps you with homework.
+
+It's fast, but sometimes it's wrong, and sometimes it only thinks about kids like the ones in its books.
+
+So there are rules. Check its answers. Don't tell it secrets. Make sure its answer works for every kid in class. Tell the teacher when the robot helped.
+
+And if the homework is wrong, it's still your name on it.
+
+</Eli10>
+
+## The technical explanation
+
+Microsoft describes six **responsible AI principles**. GitHub builds Copilot with them in mind, and the GH-300 exam expects you to know them and apply them to everyday coding.
+
+### The six principles, in Copilot terms
+
+| Principle | What it means | What it looks like with Copilot |
+| --- | --- | --- |
+| **Fairness** | No unfair treatment of groups of people | Check generated validation, sample data and messages for assumptions about names, genders, regions or languages |
+| **Reliability and safety** | Works as intended and fails safely | Test suggestions, cover edge cases, don't ship code you don't understand |
+| **Privacy and security** | Protects data and resists attack | No secrets or real personal data in prompts, content exclusions, code scanning |
+| **Inclusiveness** | Works for people of all abilities and backgrounds | Ask for accessible UI (labels, contrast, keyboard use) and test it |
+| **Transparency** | People understand the system and know when AI was used | Say in the pull request when Copilot drafted code; know its limits |
+| **Accountability** | People stay responsible | A person reviews, approves and owns every change |
+
+The last two are the ones people forget. Transparency isn't about blame. It helps reviewers know where to look harder. Accountability means "Copilot wrote it" is never a reason a bug shipped.
+
+### Harms and the mitigation for each
+
+The exam likes to pair a harm with the right fix. Learn these as pairs.
+
+| Harm | Example | Mitigation |
+| --- | --- | --- |
+| **Hallucination / wrong code** | An API that doesn't exist, a function that returns `NaN` | Human review, tests, checking the docs |
+| **Insecure code** | String-built SQL, missing input checks | Code scanning (for example CodeQL), secure review, dependency review |
+| **Bias** | A form that rejects one-word names | Diverse test data, review for assumptions |
+| **IP and licensing** | A suggestion that matches public code | Public code filter (Block, or Allow with code references), licence check |
+| **Privacy leaks** | Real customer data pasted into chat | Fake sample data, content exclusions, team guidance |
+| **Over-reliance** | Accepting everything with Tab, skills fading | Review every suggestion, understand before you accept |
+
+Here's a small fairness example in contoso-shop:
+
+```js
+// Copilot's first suggestion
+const valid = /^[A-Za-z]+ [A-Za-z]+$/.test(fullName);
+// Rejects "Siddharth", "O'Brien", "José García" and many real names
+```
+
+The fix is less clever code: accept any non-empty display name, and test with names from different cultures.
+
+<Callout type="exam">
+When a question asks who's responsible for code that Copilot suggested, the answer is the **developer** (and the team that reviews it), never GitHub or the model. "Tell reviewers AI helped" maps to **transparency**. A question about "users with disabilities" maps to **inclusiveness**, and "biased results for a group" maps to **fairness**. For mitigations, pick the one that matches the harm: content exclusions for sensitive files, the public code filter for matching public code, code scanning for vulnerabilities.
+</Callout>
+
+<DeepDive title="Policies help, people still decide">
+
+An organization can set Copilot policies (which features are on, whether suggestions matching public code are blocked, which models and MCP servers are allowed) and content exclusions. Those reduce risk across hundreds of developers. They don't make a suggestion correct or fair. Responsible use is the mix of both: guardrails from admins, and a person who reviews, tests and owns each change.
+
+</DeepDive>
+
+## Real-world business scenario
+
+<Scenario
+  company="Contoso Shop (fictional)"
+  industry="Online retail"
+  problem="Copilot was rolled out to 60 developers with no guidance. Within a month, one pull request included real customer emails used as test data and another had name validation that rejected many international customers."
+  service="A short responsible AI guide built on the six principles, a pull request template asking whether Copilot helped, fake sample data for tests, content exclusions for the customer export folder, the public code filter set to Block, and required reviews with CodeQL scanning."
+  why="Each harm got a matching mitigation, and the template made transparency normal instead of awkward. Reviewers knew which parts to read more carefully."
+  outcome="No more real data in test fixtures, international sign-ups stopped failing, and the team kept the speed gains from Copilot."
+/>
+
+## When to use it and when not to
+
+<UseWhen
+  use={[
+    'Every time you use Copilot: the principles apply to small suggestions as much as big features.',
+    'Code that touches people directly, such as forms, names, addresses, accessibility and personal data.',
+    'Setting team rules for a Copilot rollout.',
+  ]}
+  avoid={[
+    'Treating the principles as a one-off training slide with no checks in the pipeline.',
+    'Relying on Copilot policies alone to make output safe or fair.',
+    'Hiding AI use from reviewers.',
+  ]}
+  alternatives={[
+    '<strong>Organization policies and content exclusions</strong> to enforce part of this for everyone.',
+    '<strong>Pull request templates and required checks</strong> to make review and transparency routine.',
+  ]}
+/>

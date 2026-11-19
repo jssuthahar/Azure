@@ -1,0 +1,27 @@
+{ "cert": "gh-300", "domain": 5, "topic": "sample-data-and-legacy-code", "questions": [
+  { "id": "gh-sdlc-1", "type": "single", "question": "A developer needs realistic order records for unit tests. The records must not contain personal information. How should the developer use GitHub Copilot?", "options": [
+    { "text": "Reference the order schema and ask for synthetic records that use clearly fake names and example.com email addresses", "why": "Correct. Copilot can generate data in the required shape without exposing real personal data." },
+    { "text": "Paste a sample of production orders into the prompt so that Copilot can copy the format", "why": "Real customer data must not be placed in prompts." },
+    { "text": "Add the production database export to the repository and let Copilot read it as context", "why": "This exposes real personal data in the repository and in prompts." },
+    { "text": "Ask Copilot to retrieve records from the production database", "why": "Test data should be synthetic, and production data should not be used." } ], "answer": [0], "explanation": "Ask for fake data in a precise format and point Copilot at the schema, never at real records.", "objective": "5.1.3" },
+  { "id": "gh-sdlc-2", "type": "single", "question": "A developer is assigned to modernize a legacy JavaScript module that has no documentation and no tests. What should the developer do first?", "options": [
+    { "text": "Use /explain to understand the module and then add tests that capture its current behavior", "why": "Correct. Understanding and pinning the current behavior make it possible to verify the modernized code." },
+    { "text": "Ask Copilot agent mode to rewrite the entire module in a single change", "why": "A large rewrite without tests is difficult to review and verify." },
+    { "text": "Delete the module and ask Copilot to generate a new one from its file name", "why": "Copilot cannot reproduce behavior it has not seen, and callers may break." },
+    { "text": "Enable content exclusion for the module", "why": "Excluding the module prevents Copilot from using it as context." } ], "answer": [0], "explanation": "Explain first, then write characterization tests, then modernize in small, reviewed steps.", "objective": "5.1.3" },
+  { "id": "gh-sdlc-3", "type": "multi", "question": "A team uses GitHub Copilot to convert a callback-based Node.js module to async/await. Which TWO practices reduce the risk of introducing defects?", "options": [
+    { "text": "Convert one function or file at a time and review each diff", "why": "Correct. Small changes are easier to review and isolate when a test fails." },
+    { "text": "Run the existing and characterization tests after each change", "why": "Correct. Tests confirm that each step keeps the same behavior." },
+    { "text": "Accept the full module rewrite because Copilot executed the code during generation", "why": "Copilot does not execute code to validate suggestions." },
+    { "text": "Disable the tests during the conversion to avoid failures", "why": "Disabling tests removes the check that detects behavior changes." } ], "answer": [0, 1], "explanation": "Modernize incrementally and verify each step with tests.", "objective": "5.1.3" },
+  { "id": "gh-sdlc-4", "type": "single", "question": "A developer uses GitHub Copilot to translate business logic from an older, rarely used programming language to C#. The translated code compiles. What should the developer consider before deploying it?", "options": [
+    { "text": "Suggestions can be less reliable for less common languages, so the code must be tested against known outputs from the original system", "why": "Correct. Details such as rounding and data types can change during translation." },
+    { "text": "Code that compiles is guaranteed to have the same behavior as the original", "why": "Compiling does not confirm that the logic is equivalent." },
+    { "text": "Copilot validates translated code against the original program before returning it", "why": "Copilot does not run either program." },
+    { "text": "Translation is safe only when the public code filter is set to Block", "why": "The public code filter does not verify functional equivalence." } ], "answer": [0], "explanation": "Copilot can help translate code, but output for rare languages needs careful testing.", "objective": "5.1.3" },
+  { "id": "gh-sdlc-5", "type": "single", "question": "A developer wants GitHub Copilot to modernize a legacy report module, update the two files that call it, and run the test suite, with the developer approving terminal commands. Which Copilot Chat mode should the developer use?", "options": [
+    { "text": "Agent mode", "why": "Correct. Agent mode determines which files to change, edits them and runs commands such as tests after approval." },
+    { "text": "Ask mode", "why": "Ask mode answers questions and suggests code but does not edit files or run commands." },
+    { "text": "Edit mode with no files selected", "why": "Edit mode applies changes to files the developer chooses and does not run terminal commands." },
+    { "text": "Inline suggestions only", "why": "Inline suggestions complete code at the cursor and do not run tests." } ], "answer": [0], "explanation": "Agent mode can plan multi-file changes, run tests after approval and iterate on failures.", "objective": "5.1.3" }
+] }

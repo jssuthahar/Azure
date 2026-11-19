@@ -1,0 +1,28 @@
+{ "cert": "gh-300", "domain": 2, "topic": "copilot-cli-sessions-and-scripts", "questions": [
+  { "id": "gh-clisess-1", "type": "single", "question": "A nightly job runs GitHub Copilot CLI with copilot -p to generate a script file. The job log shows that Copilot could not create the file because it needed permission. What should you add to the command?", "options": [
+    { "text": "--allow-tool 'write'", "why": "Correct. In programmatic mode Copilot CLI cannot ask for approval, so file writes must be allowed in advance." },
+    { "text": "--deny-tool 'write'", "why": "This blocks file writes, which is the opposite of what is required." },
+    { "text": "--continue", "why": "--continue resumes the most recent session and does not grant tool permissions." },
+    { "text": "/compact", "why": "/compact summarises the conversation to free context space and does not grant permissions." } ], "answer": [0], "explanation": "copilot -p cannot prompt for approval, so tools such as write must be pre-approved with --allow-tool.", "objective": "2.2.5" },
+  { "id": "gh-clisess-2", "type": "single", "question": "You run the following command: copilot -p \"clean up the build output\" --allow-tool 'shell' --deny-tool 'shell(rm)'. Copilot attempts to run an rm command. What happens?", "options": [
+    { "text": "The rm command is refused because a deny rule takes precedence over an allow rule.", "why": "Correct. --deny-tool always wins over --allow-tool." },
+    { "text": "The rm command runs because 'shell' allows all shell commands.", "why": "A matching deny rule overrides the broader allow rule." },
+    { "text": "Copilot pauses and asks the user to approve the rm command.", "why": "In programmatic mode there is no interactive prompt, and the command is denied in any case." },
+    { "text": "The whole command fails to start because the flags conflict.", "why": "Combining allow and deny rules is supported; the deny rule simply takes precedence." } ], "answer": [0], "explanation": "When an allow and a deny pattern both match, the deny pattern applies.", "objective": "2.2.5" },
+  { "id": "gh-clisess-3", "type": "single", "question": "Yesterday a developer worked through a refactoring in an interactive Copilot CLI session and left it with /exit. Today the developer wants to return to the same conversation with the least effort. Which command should the developer run?", "options": [
+    { "text": "copilot --continue", "why": "Correct. --continue resumes the most recent session." },
+    { "text": "copilot -p \"continue the refactoring\"", "why": "This starts a new one-off prompt without the earlier conversation." },
+    { "text": "copilot update", "why": "This updates the CLI and does not resume a session." },
+    { "text": "copilot --allow-all-tools", "why": "This starts a session with every tool approved and does not resume the earlier conversation." } ], "answer": [0], "explanation": "Sessions are saved on exit. --continue resumes the latest one, and --resume lets you choose an earlier session.", "objective": "2.2.4" },
+  { "id": "gh-clisess-4", "type": "multi", "question": "A developer is in a long interactive Copilot CLI session. Responses are slowing down and referencing earlier, unrelated work. The developer wants to keep working on the current task. Which TWO slash commands help manage the context? Each correct answer presents a complete solution.", "options": [
+    { "text": "/context", "why": "Correct. /context shows what is filling the context window." },
+    { "text": "/compact", "why": "Correct. /compact summarises the conversation history to free space while keeping the thread." },
+    { "text": "/login", "why": "/login signs in to GitHub and does not affect the context window." },
+    { "text": "/model", "why": "/model changes the model but keeps the same oversized history." },
+    { "text": "/delegate", "why": "/delegate hands a task to Copilot coding agent on GitHub rather than managing the current session's context." } ], "answer": [0, 1], "explanation": "/context reveals what uses the context window and /compact reduces it by summarising history.", "objective": "2.2.4" },
+  { "id": "gh-clisess-5", "type": "single", "question": "Copilot CLI generates a Bash script that archives log files and deletes archives older than seven days. What should the developer do before scheduling the script?", "options": [
+    { "text": "Read the script, test it against non-production data and submit it for review.", "why": "Correct. Generated scripts are drafts that the developer is responsible for validating." },
+    { "text": "Schedule it immediately because Copilot CLI tested it before returning it.", "why": "Copilot CLI does not guarantee that generated code is correct or safe; it must be reviewed and tested." },
+    { "text": "Run it again with --allow-all-tools so Copilot can verify the result.", "why": "Granting every tool increases risk and does not replace human review." },
+    { "text": "Add the script to a content exclusion so it is not changed again.", "why": "Content exclusions control what Copilot can use as context; they do not validate code." } ], "answer": [0], "explanation": "Copilot output, including scripts that delete files, must be reviewed and tested by a person before use.", "objective": "2.2.5" }
+] }

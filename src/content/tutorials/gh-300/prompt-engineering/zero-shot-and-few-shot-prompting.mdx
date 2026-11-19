@@ -1,0 +1,203 @@
+---
+title: "Zero-Shot and Few-Shot Prompting with GitHub Copilot"
+seoTitle: Zero-Shot and Few-Shot Prompting in Copilot | GH-300
+description: When a plain instruction (zero-shot) is enough, and when two or three examples (few-shot) make GitHub Copilot follow your exact format. Plus prompt tips.
+answer: >-
+  A **zero-shot** prompt gives Copilot only the instruction ("write a log line for a failed payment"), so it falls back to the most common pattern it knows. A **few-shot** prompt adds one or more **examples** of the input and output you want, then asks, so Copilot copies your format, naming and style. Use zero-shot for common, well-known tasks and few-shot when your format is unusual or house-specific. In the editor, a couple of example lines above the cursor work as few-shot for inline suggestions too. Best practice: be **specific**, give **examples**, keep each prompt to **one task**, and **iterate** on the answer.
+updated: 2026-11-19
+readingMinutes: 9
+keyTerms:
+  - term: Zero-shot prompt
+    definition: A prompt that contains only the instruction and no examples of the output you want.
+  - term: Few-shot prompt
+    definition: A prompt that includes one or more worked examples of input and output before the actual request, so the model follows the pattern.
+  - term: One-shot prompt
+    definition: A few-shot prompt with exactly one example.
+  - term: Ghost text
+    definition: The grey inline suggestion Copilot shows in the editor, which you accept with Tab or dismiss with Esc.
+  - term: Iteration
+    definition: Refining a prompt or asking follow-up questions until the answer is right, instead of expecting a perfect result first time.
+interview:
+  - level: beginner
+    q: What's the difference between zero-shot and few-shot prompting?
+    a: >-
+      Zero-shot means I only give the instruction. Few-shot means I show a couple of examples of what I want first, then ask. With examples, Copilot matches my format instead of guessing the most common one.
+    followUps:
+      - q: Is one example enough?
+        a: >-
+          Often, yes. That's called one-shot. I add a second or third example when the pattern has variations, like different log levels, so Copilot sees what changes and what stays the same.
+  - level: intermediate
+    q: How do you do few-shot prompting with inline suggestions, where there's no chat box?
+    a: >-
+      I write the first one or two items myself in the file, for example two test cases or two log calls, and put the cursor on the next line. Copilot reads the code above the cursor as context and continues the pattern as ghost text.
+    followUps: []
+  - level: experienced
+    q: Your team's generated code keeps using a different error format from the house standard. Few-shot fixed it in one chat, but people forget. What do you do?
+    a: >-
+      I'd put the standard and one short example in .github/copilot-instructions.md so it's added to every chat request in the repo automatically. For a repeated task, I'd also save the few-shot prompt as a prompt file in .github/prompts so anyone can run it with a slash command.
+    followUps: []
+  - level: scenario
+    q: A zero-shot prompt for a SQL migration gave you generic syntax for the wrong database. What would you change?
+    a: >-
+      I'd make it specific: name the database and version, paste or reference one existing migration from the repo as an example, and say what the new one must do. That's a few-shot prompt with the right context, and it nearly always lands closer.
+    followUps: []
+revision:
+  keyPoints:
+    - Zero-shot is the instruction only; Copilot uses the most common pattern it has seen.
+    - Few-shot adds examples of the output you want before the request; Copilot follows them.
+    - Few-shot wins for unusual or house-specific formats, naming and styles.
+    - Example lines above the cursor act as few-shot context for inline suggestions.
+    - "Best practices: be specific, give examples, one task per prompt, keep it short, iterate."
+  mistakes:
+    - Expecting Copilot to guess a house format from a zero-shot prompt.
+    - Giving examples that disagree with each other, so the pattern is unclear.
+    - Packing several unrelated tasks into one long prompt.
+  examTips:
+    - '"Copilot ignores our custom format" = add **examples** (few-shot).'
+    - '"A prompt with no examples" = **zero-shot**. "With one example" = one-shot, a kind of few-shot.'
+    - '"Make the format apply to every chat in the repo" = **custom instructions**, not repeating examples each time.'
+  quick:
+    - q: What do you add to turn a zero-shot prompt into a few-shot prompt?
+      a: Examples of the input and output you want.
+    - q: When is zero-shot usually enough?
+      a: For common, well-known tasks with a standard answer.
+    - q: How do you few-shot an inline suggestion?
+      a: Write one or two example lines above the cursor and let Copilot continue the pattern.
+    - q: What is a one-shot prompt?
+      a: A few-shot prompt with exactly one example.
+    - q: Name two prompt best practices.
+      a: Be specific and iterate (also give examples, one task per prompt, keep it short).
+references:
+  - title: Prompt engineering for GitHub Copilot Chat
+    url: https://docs.github.com/en/copilot/concepts/prompting/prompt-engineering
+  - title: Introduction to prompt engineering with GitHub Copilot (Microsoft Learn)
+    url: https://learn.microsoft.com/training/modules/introduction-prompt-engineering-with-github-copilot/
+  - title: Study guide for Exam GH-300 GitHub Copilot
+    url: https://learn.microsoft.com/credentials/certifications/resources/study-guides/gh-300
+related:
+  - prompt-structure-and-context
+  - prompt-engineering-and-chat-history
+  - custom-instructions-and-prompt-files
+  - generate-refactor-and-document
+---
+
+## Start with a question
+
+<Story question="If you asked a new colleague to 'write a log line', would you get the format your team uses?">
+
+Probably not. They'd write what they wrote at their last job. Now imagine you show them two lines from your logs first: `[INFO] 2026-11-19 10:02 | cart | Cart created`. They'd get it right straight away.
+
+Copilot works the same way. Asked with no examples (**zero-shot**), it writes `console.error("Payment failed")`, the most common answer on the internet. Shown two examples first (**few-shot**), it writes `[ERROR] 2026-11-19 10:04 | payments | Payment failed for order 1004`. Same model, same request. The examples did the work.
+
+</Story>
+
+## Explain it like I'm 10
+
+<Eli10>
+
+Your teacher says, "Draw a monster." You draw any monster you like.
+
+Then she says, "Here are two monsters from our class book. Draw one more for the book." Now you copy the style: the same big eyes, the same green colour, the same name tag at the bottom.
+
+The first time you had no examples. The second time you had two, so your drawing fitted the book.
+
+</Eli10>
+
+## The technical explanation
+
+### Zero-shot: the instruction alone
+
+A zero-shot prompt is just the task: "Write a function that validates an Indian PIN code." There are no examples of the answer. Copilot relies on patterns from its training data and the context it can see (your file, your selection, open tabs).
+
+Zero-shot is fine, and fastest, when the task is common and has a standard answer:
+
+- "Write a function that reverses a string."
+- "Explain what this regex does." (with the regex selected)
+- "/tests for applyDiscount" when your test style is already obvious from `tests/`.
+
+It goes wrong when the answer depends on **your** conventions: a log format, an error envelope, a naming scheme, a test layout nobody else uses. Copilot can't guess those, so it picks the popular option.
+
+### Few-shot: show, then ask
+
+A few-shot prompt puts one or more **examples** of the output (and often the input) before the real request. The model spots the pattern and continues it. With exactly one example it's sometimes called **one-shot**.
+
+```text
+Examples:
+[INFO] 2026-11-19 10:02 | cart | Cart created
+[WARN] 2026-11-19 10:03 | discount | Unknown code NOPE
+Now: a failed payment for order 1004.
+```
+
+Copilot answers `[ERROR] 2026-11-19 10:04 | payments | Payment failed for order 1004`. It inferred the level, the date layout, the pipe separators and the module name from just two lines.
+
+Tips for good examples:
+
+| Do | Why |
+| --- | --- |
+| Use 2 or 3 short examples | Enough to show what varies and what stays fixed |
+| Make them agree with each other | Mixed formats give a mixed answer |
+| Show the variation you need | One INFO and one WARN teaches that the level changes |
+| Use real-looking but fake data | Never paste real customer data into a prompt |
+
+### Few-shot in the editor
+
+You don't need chat for this. Inline suggestions read the code above and below the cursor, so examples in the file act as few-shot context:
+
+```js
+// Format: [LEVEL] yyyy-mm-dd hh:mm | module | message
+logLine('INFO', 'cart', 'Cart created');
+logLine('WARN', 'discount', 'Unknown code NOPE');
+// cursor here: Copilot suggests the next logLine(...) in the same shape
+```
+
+The same trick works for test cases, enum maps, SQL inserts and translation files. Write two by hand, then let Tab do the rest, and still read every line you accept.
+
+<Callout type="exam">
+"Copilot keeps producing a generic format instead of ours" points to **few-shot**: add examples to the prompt. "A prompt that gives only the instruction" is **zero-shot**. If the question says the format must apply to **every** chat in the repository without people pasting examples, the answer moves to **custom instructions** (`.github/copilot-instructions.md`), and a reusable few-shot prompt belongs in a **prompt file** (`.github/prompts/*.prompt.md`).
+</Callout>
+
+### Best practices for crafting prompts
+
+The exam lists "apply best practices for prompt crafting" next to few-shot. These are the ones that matter most with Copilot:
+
+1. **Be specific.** Name the language, framework, inputs, outputs and rules. "Return 0 for unknown codes" beats "handle errors".
+2. **Give examples** when the format matters (that's few-shot).
+3. **One task per prompt.** Ask for the function, then the tests, then the docs. Big combined requests give shallow answers.
+4. **Keep it short and relevant.** Extra noise competes for space in a limited context window.
+5. **Point at the right code.** Select it, or add `#file:src/discount.js`, or `@workspace` for repo-wide questions.
+6. **Iterate.** Treat the first answer as a draft. Say what to keep and what to change.
+
+<DeepDive title="Why examples work so well on a language model">
+
+A large language model predicts the most likely next tokens given everything in the prompt. With no examples, "most likely" means most common across its training data. Examples change the odds: once two lines in the prompt share a pattern, the most likely continuation is a third line in that pattern. That's also why conflicting examples hurt, and why output can still vary between runs. The model isn't learning permanently; the examples only affect this request.
+
+</DeepDive>
+
+## Real-world business scenario
+
+<Scenario
+  company="Contoso (fictional)"
+  industry="Online retail"
+  problem="The contoso-shop team asked Copilot Chat to add logging to new payment code. Every answer used console.log with free text, so their log search and alerts couldn't parse the lines, and reviewers rewrote them by hand."
+  service="Few-shot prompts with two real-format log lines for one-off work, then the format and one example moved into .github/copilot-instructions.md, plus a prompt file /add-logging for the repeated task."
+  why="Examples showed Copilot the exact layout. Putting them in repository instructions meant nobody had to remember to paste them."
+  outcome="Generated log lines matched the house format on the first try in review, and the payment alerts started firing on the new code paths."
+/>
+
+## When to use it and when not to
+
+<UseWhen
+  use={[
+    'Few-shot when your output must match a house format, naming scheme or style Copilot can\'t know.',
+    'Few-shot in the editor for repetitive structures such as test cases, mappings or data rows.',
+    'Zero-shot for common tasks with a standard answer, where examples would only add length.',
+  ]}
+  avoid={[
+    'Pasting the same examples into every chat. Put standing rules in custom instructions instead.',
+    'Using real customer records as examples. Make up clearly fake ones.',
+  ]}
+  alternatives={[
+    '<strong>Custom instructions</strong> (.github/copilot-instructions.md) for rules that apply to every request in the repo.',
+    '<strong>Prompt files</strong> (.github/prompts/*.prompt.md) to save a good few-shot prompt and run it with /name.',
+  ]}
+/>

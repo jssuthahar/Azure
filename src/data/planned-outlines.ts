@@ -19,17 +19,6 @@ export interface PlannedOutline {
 const CHECKED = '2026-11-19';
 
 export const PLANNED_OUTLINES: Record<string, PlannedOutline> = {
-  'gh-300': {
-    asOf: 'August 7, 2026', verifiedOn: CHECKED, passingScore: 700, owner: 'GitHub',
-    domains: [
-      { title: 'Use GitHub Copilot responsibly', weight: '15–20%' },
-      { title: 'Use GitHub Copilot features', weight: '25–30%' },
-      { title: 'Understand GitHub Copilot data and architecture', weight: '10–15%' },
-      { title: 'Apply prompt engineering and context crafting', weight: '10–15%' },
-      { title: 'Improve developer productivity with GitHub Copilot', weight: '10–15%' },
-      { title: 'Configure privacy, content exclusions, and safeguards', weight: '10–15%' },
-    ],
-  },
   'gh-600': {
     asOf: '', verifiedOn: CHECKED, passingScore: 700, owner: 'GitHub',
     domains: [

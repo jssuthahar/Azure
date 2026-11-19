@@ -1,0 +1,206 @@
+---
+title: "Prompt Structure and Context for GitHub Copilot"
+seoTitle: Prompt Structure and Context for Copilot | GH-300
+description: Write Copilot prompts with a clear goal, the right context and constraints, and learn how Copilot decides context from files, selections, # variables and history.
+answer: >-
+  A good Copilot prompt has three parts: a **goal** (what you want and why), **context** (which code, framework or data it applies to) and **constraints** (style, edge cases, what not to change). Copilot only knows what reaches the prompt. In the editor, context comes from the **current file**, code around the cursor and **open tabs**. In chat, it comes from the **active file or selection**, what you attach with **#file**, **#selection**, **#codebase** or images, **@ participants** such as **@workspace**, **custom instructions** in `.github/copilot-instructions.md`, and earlier **chat history**. Be specific, point at the right code, and check **Used n references** to see what was used.
+updated: 2026-11-19
+readingMinutes: 9
+keyTerms:
+  - term: Goal
+    definition: The part of a prompt that says what you want Copilot to produce and, ideally, why.
+  - term: Constraints
+    definition: Rules the answer must follow, such as language version, style, edge cases to handle or files not to touch.
+  - term: Context
+    definition: The code, files and information Copilot uses alongside your words to answer.
+  - term: Repository custom instructions
+    definition: A .github/copilot-instructions.md file whose rules are added to chat, agent and code review requests in that repository.
+  - term: Comment prompt
+    definition: A code comment that describes what you want next, used to steer inline suggestions in the editor.
+  - term: "#codebase"
+    definition: A chat variable that searches your workspace for code relevant to the question and adds it as context.
+interview:
+  - level: beginner
+    q: What makes a prompt for Copilot "good"?
+    a: >-
+      It says what I want, gives the right context and lists the rules. "Write a function" is vague. "In src/discount.js, make applyDiscount return the total unchanged for unknown codes, and never return a negative number" has a goal, points at the code and sets constraints.
+    followUps:
+      - q: Does a good prompt have to be long?
+        a: >-
+          No. Short is fine. Vague isn't. One clear sentence with the file and the rule beats a paragraph of background.
+  - level: intermediate
+    q: How does Copilot Chat decide which code to look at?
+    a: >-
+      It uses the active file and my selection by default, plus anything I add: #file, #selection, #codebase to search the workspace, terminal context, images, or a participant like @workspace. Custom instructions and earlier turns in the conversation are included too. I check Used n references to confirm.
+    followUps: []
+  - level: experienced
+    q: Your team keeps repeating "use ES modules and the Node test runner" in every prompt. How do you fix that?
+    a: >-
+      Put it in .github/copilot-instructions.md. Repository instructions are added automatically to chat, agent and code review requests in that repo. For rules that only apply to tests, I'd add a path-specific .instructions.md file with applyTo set to tests/**.
+    followUps: []
+  - level: scenario
+    q: Copilot's inline suggestions in a new file are generic and miss the project's conventions. What do you change?
+    a: >-
+      Give it more to work with. I'd write a clear function name and a comment describing inputs, outputs and rules above the cursor, open a similar file from the project in another tab, and close unrelated tabs. Inline suggestions are driven by nearby code and open tabs.
+    followUps: []
+revision:
+  keyPoints:
+    - "Prompt structure: goal + context + constraints. Add examples when the format matters."
+    - Copilot only knows what reaches the prompt.
+    - "Editor context: current file, code around the cursor, open tabs. Comments steer inline suggestions."
+    - "Chat context: active file or selection, # variables, @ participants, custom instructions, chat history."
+    - Repository instructions in .github/copilot-instructions.md travel with chat, agent and review requests.
+    - Check Used n references to see what context was used.
+  mistakes:
+    - Vague prompts like "fix this" with no file, no expected behaviour and no constraints.
+    - Asking about a file that isn't open, selected or attached.
+    - Repeating the same house rules in every prompt instead of using custom instructions.
+  examTips:
+    - '"Improve a vague prompt" = add the **goal**, the **context** (file, function) and **constraints**.'
+    - '"Make Copilot use a specific file" = **#file** or select the code.'
+    - '"Apply team rules to every chat request in a repo" = **.github/copilot-instructions.md**.'
+  quick:
+    - q: Name the three parts of a well-structured prompt.
+      a: Goal, context and constraints.
+    - q: Which chat variable searches your whole workspace?
+      a: "#codebase"
+    - q: Where do repository-wide custom instructions live?
+      a: .github/copilot-instructions.md
+    - q: What steers inline suggestions in the editor?
+      a: Nearby code, comments, the file name and open tabs.
+    - q: How do you check which files a chat answer used?
+      a: Expand Used n references.
+references:
+  - title: Prompt engineering for GitHub Copilot Chat
+    url: https://docs.github.com/en/copilot/using-github-copilot/prompt-engineering-for-github-copilot
+  - title: Adding repository custom instructions for GitHub Copilot
+    url: https://docs.github.com/en/copilot/customizing-copilot/adding-repository-custom-instructions-for-github-copilot
+  - title: Best practices for using GitHub Copilot
+    url: https://docs.github.com/en/copilot/using-github-copilot/best-practices-for-using-github-copilot
+  - title: Introduction to prompt engineering with GitHub Copilot (Microsoft Learn)
+    url: https://learn.microsoft.com/training/modules/introduction-prompt-engineering-with-github-copilot/
+related:
+  - prompt-building-and-context
+  - zero-shot-and-few-shot-prompting
+  - prompt-engineering-and-chat-history
+  - custom-instructions-and-prompt-files
+---
+
+## Start with a question
+
+<Story question="You ask Copilot to 'fix the discount bug' and it rewrites the wrong function. Whose fault is that?">
+
+Think of an auto-rickshaw driver. "Take me somewhere nice" gets you a ride, just not to where you wanted. "MG Road metro station, the gate near the bank, and please avoid the flyover, it's jammed" gets you there.
+
+Copilot works the same way. It can only act on what's in the **prompt**: your words plus the **context** it can see. Give it a clear goal, point it at the right code and tell it the rules, and you spend less time cleaning up.
+
+</Story>
+
+## Explain it like I'm 10
+
+<Eli10>
+
+You ask your older brother, "Can you help me draw something?"
+
+He draws a cat. You wanted a red racing car for your science poster, and it had to fit on half a page.
+
+Next time you say: "Draw a red racing car for my science poster, half a page, no people." And you show him the poster.
+
+That's a good prompt. What you want, what it's for, the rules, and something to look at.
+
+</Eli10>
+
+## The technical explanation
+
+### Goal, context, constraints
+
+| Part | Ask yourself | In the contoso-shop example |
+| --- | --- | --- |
+| **Goal** | What do I want, and why? | Unknown discount codes should leave the total unchanged instead of returning NaN |
+| **Context** | Which code, framework or data? | `applyDiscount(total, code)` in `src/discount.js`, Node.js 22, ES modules |
+| **Constraints** | What rules must the answer follow? | Never return a negative total, don't change the function signature, add a test in `tests/` |
+
+Here's the difference in chat:
+
+```text
+Vague:    fix the discount bug
+
+Specific: In #file:src/discount.js, applyDiscount returns NaN for unknown
+          codes. Return the total unchanged when the code isn't in CODES,
+          never return a negative number, and keep the signature.
+          Then suggest a test for tests/discount.test.js.
+```
+
+Short is fine. Vague isn't. When the output format matters, add an example (that's few-shot prompting, covered in the next lesson), and break big jobs into small steps you check one at a time.
+
+### Prompting in the editor
+
+Inline suggestions don't have a chat box, so your prompt is the code itself:
+
+```javascript
+// Return the total after the discount for `code`.
+// Unknown codes: return total unchanged. Never return less than 0.
+export function applyDiscount(total, code) {
+```
+
+A clear **function name**, a **comment** with inputs, outputs and rules, and **meaningful variable names** all go into the prompt. Copilot also reads related **open tabs**, so open a similar file you'd like it to imitate and close ones that have nothing to do with the task.
+
+### How context is determined
+
+| Surface | Context Copilot uses |
+| --- | --- |
+| Inline suggestions | Code before and after the cursor, file name and language, related open tabs |
+| Chat in the editor | Your question, the active file or selection, plus what you add |
+| What you can add in chat | `#file`, `#selection`, `#codebase`, `#changes`, `#terminalSelection`, `#terminalLastCommand`, dragged-in files and images |
+| Participants | `@workspace`, `@terminal`, `@vscode`, `@github` |
+| Always added when present | Repository instructions (`.github/copilot-instructions.md`) and matching `.github/instructions/*.instructions.md` files |
+| The conversation | Earlier turns in the same chat |
+| Never | Files covered by a content exclusion (in supported IDEs) |
+
+After an answer, expand **Used n references** to check what was sent. The **VS Code & GitHub** tab shows an old tab pulling suggestions off course, a `#file` chip in chat, and the references list.
+
+### Put house rules in instructions, not every prompt
+
+If you keep typing "use ES modules, tests use `node --test`, never log secrets", move it into `.github/copilot-instructions.md`. Those rules are added to chat, agent and code review requests in the repo automatically. Path-specific rules go in `.github/instructions/tests.instructions.md` with `applyTo: "tests/**"`.
+
+<TryIt labs="gh-instructions" text="Write repository instructions and a path-specific file for tests, then ask Copilot CLI for tests and see it follow your rules." />
+
+<Callout type="exam">
+Prompt questions usually show a weak prompt and ask what would improve it. The best answer adds a **specific goal**, the **relevant context** (the file or function) and **constraints**, not just "more words". For context questions: inline suggestions use **nearby code and open tabs**; chat uses the **selection or active file**, **# variables**, **@ participants**, **instructions** and **history**. Rules for every request in a repo belong in **.github/copilot-instructions.md**.
+</Callout>
+
+<DeepDive title="Why specific beats polite or long">
+
+The model predicts text that fits the prompt. Vague prompts fit thousands of possible answers, so you get the most average one. Each specific detail (a file name, a version, an edge case, an example) removes possibilities and moves the answer towards yours. Background that doesn't change the answer just uses up the context window. So a good prompt reads like a clear ticket: one goal, the code it applies to, the acceptance criteria. If the first answer is close, keep the conversation going and refine rather than starting over with a longer prompt.
+
+</DeepDive>
+
+## Real-world business scenario
+
+<Scenario
+  company="Woodgrove Bank (fictional)"
+  industry="Banking"
+  problem="New developers on the payments team got generic Copilot answers that ignored the team's logging rules and test style. Senior engineers spent review time fixing the same issues in every pull request."
+  service="A prompt checklist (goal, context, constraints) in the team wiki, #file and #selection for every chat question about specific code, and a .github/copilot-instructions.md with the logging and testing rules."
+  why="Specific prompts with the right context get specific answers, and repository instructions carry the house rules into every chat and agent request automatically."
+  outcome="Review comments about logging and test style dropped sharply over the next month, and new joiners said Copilot's answers finally looked like the team's code."
+/>
+
+## When to use it and when not to
+
+<UseWhen
+  use={[
+    'Name the file, function and expected behaviour when you ask chat for a change.',
+    'Write a clear comment and function signature before you wait for an inline suggestion.',
+    'Move rules you repeat into repository or path-specific instructions.',
+  ]}
+  avoid={[
+    'One-word prompts like "fix" or "optimize" with no target and no rule.',
+    'Pasting secrets or real customer data as context.',
+    'Adding long background that doesn\'t change the answer.',
+  ]}
+  alternatives={[
+    '<strong>Prompt files</strong> (.github/prompts/*.prompt.md) for a task your team runs often, invoked with /name.',
+    '<strong>Few-shot prompting</strong> when the output must follow an unusual format.',
+  ]}
+/>

@@ -1,0 +1,27 @@
+{ "cert": "gh-300", "domain": 1, "topic": "responsible-ai-principles", "questions": [
+  { "id": "gh-rai-1", "type": "single", "question": "A developer merges code suggested by GitHub Copilot, and the code later causes a production incident. According to responsible AI principles, who is accountable for the code?", "options": [
+    { "text": "The developer and the team that reviewed and merged the change", "why": "Correct. Accountability means people remain responsible for AI-assisted output they accept and ship." },
+    { "text": "GitHub, because Copilot generated the code", "why": "The tool provides suggestions. Responsibility for accepting and shipping code stays with people." },
+    { "text": "The model provider, because the model produced the suggestion", "why": "Model providers do not take responsibility for code that a team chooses to merge." },
+    { "text": "No one, because the code was generated automatically", "why": "Responsible AI requires that a person is always accountable for outcomes." } ], "answer": [0], "explanation": "The accountability principle states that people are responsible for AI systems and their results.", "objective": "1.1.2" },
+  { "id": "gh-rai-2", "type": "single", "question": "A team adds a pull request template that asks contributors to state whether GitHub Copilot helped write the change. Which responsible AI principle does this practice support most directly?", "options": [
+    { "text": "Transparency", "why": "Correct. Disclosing AI involvement helps reviewers understand how the change was produced." },
+    { "text": "Inclusiveness", "why": "Inclusiveness concerns systems that work for people of all abilities and backgrounds." },
+    { "text": "Fairness", "why": "Fairness concerns avoiding biased treatment of groups of people." },
+    { "text": "Reliability and safety", "why": "Reliability and safety concern consistent, safe behavior. Disclosure is primarily a transparency practice." } ], "answer": [0], "explanation": "Transparency means people know when AI was involved and understand its limitations.", "objective": "1.1.2" },
+  { "id": "gh-rai-3", "type": "single", "question": "GitHub Copilot generates a name validation regular expression that rejects names containing apostrophes or accented characters. Which responsible AI principles are MOST directly affected?", "options": [
+    { "text": "Fairness and inclusiveness", "why": "Correct. The validation treats some people unfairly and excludes users with names from many cultures." },
+    { "text": "Privacy and security", "why": "The issue does not expose data or weaken security." },
+    { "text": "Transparency and accountability", "why": "These principles concern disclosure and ownership, not biased behavior toward users." },
+    { "text": "Reliability and safety only", "why": "The code runs consistently. The core problem is that it excludes groups of people." } ], "answer": [0], "explanation": "Biased output that excludes groups of users conflicts with fairness and inclusiveness. Mitigate it with diverse test data and review.", "objective": "1.1.2" },
+  { "id": "gh-rai-4", "type": "multi", "question": "A company wants to reduce the risk of sensitive data being exposed when developers use GitHub Copilot Business. Which TWO actions should the company take?", "options": [
+    { "text": "Configure content exclusions for paths that contain sensitive configuration", "why": "Correct. Excluded files are not used as context and receive no inline suggestions in supported IDEs." },
+    { "text": "Instruct developers to use fictitious sample data instead of real customer records in prompts", "why": "Correct. Keeping personal data out of prompts reduces the risk of privacy leaks." },
+    { "text": "Set the public code filter to Allow", "why": "The public code filter addresses matches with public code, not exposure of sensitive data." },
+    { "text": "Ask developers to paste secrets into prompts only when Copilot needs them", "why": "Secrets should never be included in prompts." } ], "answer": [0, 1], "explanation": "Content exclusions and the use of fake data are mitigations for privacy and security harms.", "objective": "1.1.3" },
+  { "id": "gh-rai-5", "type": "single", "question": "You need to mitigate the risk that GitHub Copilot suggestions closely match code from public repositories with incompatible licenses. What should you configure?", "options": [
+    { "text": "The suggestions matching public code policy, set to Block or to Allow with code references reviewed", "why": "Correct. The policy either hides matching suggestions or shows code references with repository and license information." },
+    { "text": "Content exclusions for all public repositories", "why": "Content exclusions control which of your files Copilot uses as context. They do not filter matches with public code." },
+    { "text": "A custom instructions file that asks Copilot not to copy code", "why": "Instructions guide responses but do not provide a reliable filter for public code matches." },
+    { "text": "Copilot code review as a required reviewer", "why": "Copilot code review comments on pull requests. It is not a public code matching control." } ], "answer": [0], "explanation": "The public code filter is the mitigation for IP and licensing harms. Developers remain responsible for checking licenses.", "objective": "1.1.3" }
+] }

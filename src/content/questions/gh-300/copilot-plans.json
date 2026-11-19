@@ -1,0 +1,27 @@
+{ "cert": "gh-300", "domain": 2, "topic": "copilot-plans", "questions": [
+  { "id": "gh-plan-1", "type": "single", "question": "An organization must assign GitHub Copilot to selected teams, configure Copilot policies, and exclude a folder of configuration files from Copilot. The organization does not use GitHub Enterprise Cloud. Which plan should the organization purchase?", "options": [
+    { "text": "Copilot Business", "why": "Correct. Copilot Business provides seat assignment, policies and content exclusions for an organization." },
+    { "text": "Copilot Pro", "why": "Copilot Pro is an individual plan without central seat management or content exclusions." },
+    { "text": "Copilot Enterprise", "why": "Copilot Enterprise requires GitHub Enterprise Cloud, which the organization does not use." },
+    { "text": "Copilot Free", "why": "Copilot Free is an individual plan with monthly limits and no organization controls." } ], "answer": [0], "explanation": "Copilot Business is the organization plan for seats, policies, content exclusions and audit log events.", "objective": "2.1.1" },
+  { "id": "gh-plan-2", "type": "multi", "question": "Which TWO GitHub Copilot plans are purchased by individuals for their own use?", "options": [
+    { "text": "Copilot Pro", "why": "Correct. Copilot Pro is a paid individual plan." },
+    { "text": "Copilot Pro+", "why": "Correct. Copilot Pro+ is the top individual plan." },
+    { "text": "Copilot Business", "why": "Copilot Business is purchased by an organization per seat." },
+    { "text": "Copilot Enterprise", "why": "Copilot Enterprise is purchased by an enterprise on GitHub Enterprise Cloud." } ], "answer": [0, 1], "explanation": "Copilot Free, Pro and Pro+ are individual plans. Business and Enterprise are organization plans.", "objective": "2.1.1" },
+  { "id": "gh-plan-3", "type": "single", "question": "A Copilot Business organization has used its monthly premium request allowance. The administrator wants to prevent any additional charges until the next month. What should the administrator configure?", "options": [
+    { "text": "A budget that blocks usage beyond the included allowance", "why": "Correct. A budget determines whether extra premium usage is billed or blocked." },
+    { "text": "A content exclusion for all repositories", "why": "Content exclusions control context, not billing." },
+    { "text": "The public code filter set to Block", "why": "The public code filter affects suggestions that match public code, not spending." },
+    { "text": "An audit log stream", "why": "Audit log streaming records events. It does not limit usage." } ], "answer": [0], "explanation": "Premium requests beyond the allowance are billed or blocked according to the configured budget.", "objective": "2.4.1" },
+  { "id": "gh-plan-4", "type": "single", "question": "A developer has a Copilot Business seat from the contoso organization. In the developer's personal Copilot settings, the Suggestions matching public code option appears as read-only. Why?", "options": [
+    { "text": "The setting is controlled by the organization's Copilot policy", "why": "Correct. With an organization seat, policies such as the public code filter are set by the organization." },
+    { "text": "The developer's extension is out of date", "why": "An outdated extension does not make a github.com setting read-only." },
+    { "text": "Copilot Business does not support the public code filter", "why": "The public code filter is available and is managed centrally by the organization." },
+    { "text": "The developer must upgrade to Copilot Pro+ to change it", "why": "An individual plan does not override organization policy for the organization's seat." } ], "answer": [0], "explanation": "Organization plans centralize control. Policies set by the organization appear as managed settings to members.", "objective": "2.4.1" },
+  { "id": "gh-plan-5", "type": "single", "question": "A company uses GitHub Enterprise Cloud with 12 organizations. It wants Copilot for all developers and the ability to enforce Copilot policies across every organization. Which plan best meets the requirement?", "options": [
+    { "text": "Copilot Enterprise", "why": "Correct. Copilot Enterprise is designed for GitHub Enterprise Cloud and supports enterprise-level policy enforcement." },
+    { "text": "Copilot Pro+ for each developer", "why": "Individual plans do not provide central policy enforcement across organizations." },
+    { "text": "Copilot Free for each developer", "why": "Copilot Free has monthly limits and no organization or enterprise controls." },
+    { "text": "Copilot Pro for each developer", "why": "Individual plans are managed by each user, not by the enterprise." } ], "answer": [0], "explanation": "Copilot Enterprise targets GitHub Enterprise Cloud customers and adds enterprise-wide control on top of Business features.", "objective": "2.1.1" }
+] }

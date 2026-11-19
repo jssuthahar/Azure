@@ -1,0 +1,191 @@
+---
+title: "GitHub Copilot Plans: Free, Pro, Business and Enterprise"
+seoTitle: "GitHub Copilot Plans: Free, Pro, Business | GH-300"
+description: Compare Copilot Free, Pro, Pro+, Business and Enterprise, see who buys each plan, how seats and policies work and how premium requests and budgets are billed.
+answer: >-
+  GitHub Copilot has five plans. **Copilot Free**, **Pro** and **Pro+** are for individuals, with Free capped by monthly limits. **Copilot Business** is bought by an organization per seat and adds central **seat management**, **policies**, **content exclusions** and the **audit log**, and **Copilot Enterprise** adds more on top for companies on GitHub Enterprise Cloud. Premium models use a monthly **premium request** allowance, and extra usage is either paid for or blocked by a budget.
+updated: 2026-11-19
+readingMinutes: 9
+keyTerms:
+  - term: Copilot Free
+    definition: A plan for individuals with a limited number of code completions and chat requests each month.
+  - term: Copilot Pro
+    definition: A paid individual plan with unlimited completions, more models and a premium request allowance.
+  - term: Copilot Pro+
+    definition: The top individual plan, with everything in Pro plus a larger premium request allowance and access to more models.
+  - term: Copilot Business
+    definition: An organization plan billed per seat, with seat assignment, policies, content exclusions and audit log events.
+  - term: Copilot Enterprise
+    definition: An enterprise plan for GitHub Enterprise Cloud customers, with everything in Business plus enterprise-only features.
+  - term: Seat
+    definition: A Copilot licence assigned to one user by an organization.
+  - term: Premium request
+    definition: A request that uses a premium model or feature and counts against a monthly allowance.
+  - term: Budget
+    definition: A spending limit that decides whether usage beyond the allowance is billed or blocked.
+interview:
+  - level: beginner
+    q: What's the difference between Copilot Pro and Copilot Business?
+    a: >-
+      Pro is bought by one person for themselves. Business is bought by an organization, which assigns seats to its members and controls Copilot through policies, content exclusions and the audit log. On Business, your code isn't used to train models.
+    followUps: []
+  - level: intermediate
+    q: A developer has Copilot Pro personally and a Business seat from work. Whose settings apply in the work repos?
+    a: >-
+      In the organization's context, the organization's Copilot policies apply, so settings like the public code filter show as set by the org. That's the point of Business: the company, not the individual, decides how Copilot behaves on its code.
+    followUps: []
+  - level: experienced
+    q: How do premium requests affect cost planning?
+    a: >-
+      Each plan includes a monthly allowance of premium requests for premium models and some features. Once it's used up, extra requests are either billed or blocked, depending on the budget. For a team, I'd set a budget, watch usage, and decide which models people really need.
+    followUps: []
+  - level: scenario
+    q: A 30-person startup on GitHub Team wants Copilot and needs to exclude a folder of customer configs. Which plan fits?
+    a: >-
+      Copilot Business. It's bought per seat by the organization and supports content exclusions, policies and the audit log. Individual plans don't have content exclusions, and Enterprise needs GitHub Enterprise Cloud, which they don't need just for this.
+    followUps: []
+  - level: architecture
+    q: When would you recommend Copilot Enterprise over Business?
+    a: >-
+      When the company already runs GitHub Enterprise Cloud and wants the enterprise-only extras and enterprise-level control, such as enforcing Copilot policies across many organizations. If they just need seats, policies and exclusions for one org, Business is enough.
+    followUps: []
+revision:
+  keyPoints:
+    - "Individual plans: Copilot Free (monthly limits), Pro and Pro+."
+    - "Organization plans: Copilot Business (per seat) and Copilot Enterprise (GitHub Enterprise Cloud)."
+    - Business and Enterprise add seat management, policies, content exclusions and audit log events.
+    - On Business and Enterprise, your code isn't used to train GitHub's models.
+    - Premium models use a monthly premium request allowance; extra usage is billed or blocked by a budget.
+    - With an org seat, Copilot settings come from the organization's policies.
+  mistakes:
+    - Thinking content exclusions are available on Free or Pro. They're Business and Enterprise features.
+    - Assuming Enterprise is just Business with more seats. It needs GitHub Enterprise Cloud.
+    - Forgetting that a cancelled seat stays active until the end of the billing cycle.
+  examTips:
+    - '"Organization needs to manage who gets Copilot and set policies" = **Copilot Business** (or Enterprise).'
+    - '"Company already on GitHub Enterprise Cloud wants the full feature set" = **Copilot Enterprise**.'
+    - '"Exclude files from Copilot" = a **Business or Enterprise** feature.'
+  quick:
+    - q: Which plans are for individuals?
+      a: Copilot Free, Pro and Pro+.
+    - q: Which plans support content exclusions?
+      a: Copilot Business and Copilot Enterprise.
+    - q: What does Copilot Enterprise require?
+      a: GitHub Enterprise Cloud.
+    - q: What happens when the premium request allowance runs out?
+      a: Extra requests are billed or blocked, depending on the budget.
+    - q: How is Copilot Business billed?
+      a: Per assigned seat, per month.
+references:
+  - title: Plans for GitHub Copilot
+    url: https://docs.github.com/en/copilot/get-started/plans
+  - title: About billing for GitHub Copilot
+    url: https://docs.github.com/en/billing/managing-billing-for-your-products/managing-billing-for-github-copilot/about-billing-for-github-copilot
+  - title: Requests in GitHub Copilot (premium requests)
+    url: https://docs.github.com/en/copilot/concepts/billing/copilot-requests
+  - title: Introduction to GitHub Copilot (Microsoft Learn)
+    url: https://learn.microsoft.com/training/modules/introduction-to-github-copilot/
+related:
+  - enable-copilot-in-the-ide
+  - organization-policies
+  - audit-log-and-seats-api
+  - content-exclusions
+---
+
+## Start with a question
+
+<Story question="You use Copilot Free at home. Your company wants all 40 developers on Copilot. Do they all just sign up for Pro?">
+
+They could, but the company would have no say in how Copilot behaves on its code. No central list of who has it. No way to keep a secrets folder out of it. No audit trail.
+
+That's why Copilot has **plans for individuals** and **plans for organizations**. A person picks Free, Pro or Pro+ for themselves. A company buys **Copilot Business** or **Copilot Enterprise**, assigns **seats** to its people and sets the rules once for everyone.
+
+</Story>
+
+## Explain it like I'm 10
+
+<Eli10>
+
+Think about a gym.
+
+You can buy your own pass: a free trial with a few visits a month, a normal pass, or the premium pass.
+
+Or your school buys passes for the whole class. The school decides who gets one and sets the rules, like no phones in the pool.
+
+Copilot works the same way. Your own plan, or one your company gives you.
+
+</Eli10>
+
+## The technical explanation
+
+### The five plans
+
+Prices below are approximate list prices, converted to your currency (change it in the site settings). Check GitHub's plans page for current pricing.
+
+| Plan | Who buys it | Approx. price | What stands out |
+| --- | --- | --- | --- |
+| **Copilot Free** | An individual | Free | Monthly limits on completions and chat |
+| **Copilot Pro** | An individual | <span data-usd="10" data-per=" a month">₹880 a month</span> | Unlimited completions, more models, premium request allowance, coding agent |
+| **Copilot Pro+** | An individual | <span data-usd="39" data-per=" a month">₹3,432 a month</span> | Everything in Pro, the most models, a bigger premium request allowance, GitHub Spark |
+| **Copilot Business** | An organization | <span data-usd="19" data-per=" per user a month">₹1,672 per user a month</span> | Seats, policies, content exclusions, audit log; code not used for training |
+| **Copilot Enterprise** | A company on GitHub Enterprise Cloud | <span data-usd="39" data-per=" per user a month">₹3,432 per user a month</span> | Everything in Business plus enterprise features, enterprise-wide policy control and GitHub Spark |
+
+### What an organization plan adds
+
+The jump from individual to organization plans isn't about smarter suggestions. It's about **control**.
+
+- **Seat management.** Admins give Copilot to all members, selected users or teams, or nobody. You pay per assigned seat. A cancelled seat keeps working until the end of the billing cycle. Seats can also be managed with the REST API.
+- **Policies.** Turn features on or off for the org: Copilot Chat in the IDE, Copilot on github.com, Copilot CLI, code review, the coding agent, MCP servers, allowed models and whether **suggestions matching public code** are blocked.
+- **Content exclusions.** Keep paths or whole repositories out of Copilot's context.
+- **Audit log.** Copilot events such as seat changes and policy changes are recorded.
+- **Data handling.** On Business and Enterprise, your code isn't used to train GitHub's models.
+
+When you sign in with a Business or Enterprise seat, settings like the public code filter come from your organization and show as read-only in your personal Copilot settings.
+
+### Enterprise on top of Business
+
+An **enterprise** account groups many organizations. It can **enforce** a Copilot policy for all of them, or choose **No policy** so each organization decides. Copilot Enterprise needs **GitHub Enterprise Cloud**.
+
+### Premium requests and budgets
+
+Some models and features count as **premium requests**. Each paid plan includes a monthly allowance. When it runs out, what happens depends on the **budget**: extra usage is billed, or it's blocked until the next month. Admins see seats and usage under **Billing and licensing**.
+
+<Callout type="exam">
+Read the buyer in the question. "A developer wants Copilot for personal projects" points to an **individual plan** (Free, Pro or Pro+). "An organization must assign licences, set policies or exclude files" points to **Copilot Business**. "A company using GitHub Enterprise Cloud wants enterprise-wide control" points to **Copilot Enterprise**. Content exclusions and audit log events aren't available on individual plans.
+</Callout>
+
+<DeepDive title="Personal settings versus organization policy">
+
+A developer can use Copilot on personal projects and also hold a seat from an employer. What matters for the exam is where the rules come from. In the organization's context, the organization's Copilot policies decide which features are on and whether suggestions matching public code are blocked, and the developer sees those settings as managed by the org. If the enterprise enforces a policy, the organization can't override it either. Check GitHub's billing docs for how a personal plan is handled once an organization seat is assigned.
+
+</DeepDive>
+
+## Real-world business scenario
+
+<Scenario
+  company="Contoso (fictional)"
+  industry="Retail software"
+  problem="Twelve developers paid for Copilot Pro on their own cards and claimed it back. Finance couldn't track it, security couldn't exclude the payments config folder, and nobody knew whether public-code matches were blocked."
+  service="Copilot Business for the contoso organization, seats assigned to the dev and qa teams, the public code filter set to Block, a content exclusion for the payments config path and a monthly budget for premium requests."
+  why="Business gave one bill per seat, central policies and exclusions, and audit log events for every change, without changing how developers use Copilot in the editor."
+  outcome="Expense claims stopped, the security team could show who had Copilot and which rules applied, and premium usage stayed inside the budget."
+/>
+
+## When to use it and when not to
+
+<UseWhen
+  use={[
+    'Copilot Free to try Copilot or for light personal use.',
+    'Copilot Pro or Pro+ when you pay for yourself and want more models and usage.',
+    'Copilot Business when an organization needs seats, policies, content exclusions and an audit trail.',
+    'Copilot Enterprise when the company runs GitHub Enterprise Cloud and wants enterprise-wide control.',
+  ]}
+  avoid={[
+    'Individual plans for company code that needs exclusions or central policy.',
+    'Copilot Enterprise just to get policies for one organization. Business already has them.',
+  ]}
+  alternatives={[
+    '<strong>Selected users or teams</strong> to start a pilot without giving every member a seat.',
+    '<strong>A budget</strong> to block premium usage beyond the allowance if cost matters more than access.',
+  ]}
+/>

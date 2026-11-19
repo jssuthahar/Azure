@@ -1,0 +1,212 @@
+---
+title: Set Up GitHub Copilot in Your IDE
+seoTitle: Set Up GitHub Copilot in VS Code and Other IDEs | GH-300
+description: Install the GitHub Copilot Chat extension in VS Code, sign in with a Copilot plan or seat, read the status bar and turn suggestions on or off per language.
+answer: >-
+  To enable Copilot in VS Code, install the **GitHub Copilot Chat** extension, **sign in with GitHub** using an account that has Copilot access (Copilot Free, a paid plan or a **seat** from your organization), and check the **Copilot icon** in the status bar. The `github.copilot.enable` setting turns completions on or off per language. Visual Studio, JetBrains IDEs, Xcode, Eclipse and Vim/Neovim have their own Copilot extension with the same GitHub sign-in.
+updated: 2026-11-19
+readingMinutes: 9
+keyTerms:
+  - term: GitHub Copilot Chat extension
+    definition: The VS Code extension that provides Copilot chat, inline suggestions and agent mode.
+  - term: Copilot status bar icon
+    definition: The icon in the VS Code status bar that shows whether Copilot is ready and opens quick settings.
+  - term: github.copilot.enable
+    definition: A VS Code setting that turns Copilot completions on or off for all languages or specific ones.
+  - term: Inline suggestion
+    definition: Grey ghost text that Copilot shows as you type. Tab accepts it and Esc dismisses it.
+  - term: Next edit suggestions (NES)
+    definition: A Copilot feature that predicts where and what your next edit is likely to be.
+  - term: Seat
+    definition: A Copilot licence that an organization assigns to a user. Without one (or a personal plan), sign-in gives no access.
+interview:
+  - level: beginner
+    q: How do you get Copilot working in VS Code?
+    a: >-
+      Install the GitHub Copilot Chat extension from the Extensions view, sign in with my GitHub account, and check that the Copilot icon in the status bar looks ready. My account needs Copilot access, either Copilot Free, a paid plan or a seat from my organization.
+    followUps: []
+  - level: intermediate
+    q: You want Copilot in JavaScript files but not in plain text files. How?
+    a: >-
+      With the github.copilot.enable setting. It takes an object of languages, so I set "*" to true and "plaintext" to false. I can also toggle it for the current language from the status bar icon.
+    followUps: []
+  - level: experienced
+    q: A new hire installed the extension and signed in, but gets no suggestions. What do you check first?
+    a: >-
+      Whether their account actually has a Copilot seat in our organization, or a personal plan. Then the status bar icon for errors, whether the language is disabled, whether the file is covered by a content exclusion, and the Output panel for GitHub Copilot to see network or proxy errors.
+    followUps:
+      - q: Where are the logs?
+        a: >-
+          Output panel, GitHub Copilot channel, or the command "GitHub Copilot: Open Logs" from the Command Palette.
+  - level: scenario
+    q: Half your team uses JetBrains IDEs, half uses VS Code. Do you need different Copilot plans?
+    a: >-
+      No. The plan or seat belongs to the GitHub account, not the editor. Each IDE has its own Copilot plugin, and people sign in with the same GitHub account. Organization policies apply in all of them.
+    followUps: []
+  - level: architecture
+    q: How do you roll Copilot out to 100 developers smoothly?
+    a: >-
+      Assign seats to the right teams in the organization's Copilot access settings, set policies first, publish the extension name and the sign-in steps, make sure the proxy and firewall allow Copilot's endpoints, and give people a short troubleshooting list: seat, sign-in, status bar, language setting, exclusions, logs.
+    followUps: []
+revision:
+  keyPoints:
+    - "VS Code: install the GitHub Copilot Chat extension, which brings chat, inline suggestions and agents."
+    - Sign in with a GitHub account that has Copilot Free, a paid plan or an organization seat.
+    - The status bar icon shows Copilot's state and opens quick settings.
+    - github.copilot.enable turns completions on or off per language.
+    - "Keys: Tab accept, Esc dismiss, Alt+] / Alt+[ next or previous, Ctrl+I inline chat, Ctrl+Alt+I Chat view."
+    - Visual Studio, JetBrains, Xcode, Eclipse and Vim/Neovim have their own Copilot extensions.
+  mistakes:
+    - Signing in with a personal account when the seat belongs to the work account.
+    - Forgetting a language was disabled in github.copilot.enable.
+    - Blaming the extension when a proxy blocks Copilot's endpoints.
+  examTips:
+    - '"Turn off Copilot for Markdown files only" = **github.copilot.enable** with that language set to false.'
+    - '"Installed and signed in, still no Copilot" = check the **seat** (licence) first.'
+    - '"Where to see Copilot errors in VS Code" = **Output › GitHub Copilot** or **GitHub Copilot: Open Logs**.'
+  quick:
+    - q: Which VS Code extension provides Copilot chat and inline suggestions?
+      a: GitHub Copilot Chat.
+    - q: Which key accepts a ghost text suggestion?
+      a: Tab.
+    - q: Which shortcut opens inline chat in VS Code?
+      a: Ctrl+I.
+    - q: Which setting disables Copilot completions for one language?
+      a: github.copilot.enable.
+    - q: Does the IDE decide which Copilot plan you have?
+      a: No. Your GitHub account's plan or seat does.
+references:
+  - title: Set up GitHub Copilot in your environment
+    url: https://docs.github.com/en/copilot/how-tos/set-up/install-copilot-extension
+  - title: Set up GitHub Copilot in VS Code
+    url: https://code.visualstudio.com/docs/copilot/setup
+  - title: Get code suggestions in your IDE with GitHub Copilot
+    url: https://docs.github.com/en/copilot/how-tos/get-code-suggestions/get-ide-code-suggestions
+  - title: Introduction to GitHub Copilot (Microsoft Learn)
+    url: https://learn.microsoft.com/training/modules/introduction-to-github-copilot/
+related:
+  - copilot-plans
+  - inline-suggestions-chat-and-modes
+  - troubleshoot-copilot
+  - content-exclusions
+---
+
+## Start with a question
+
+<Story question="You installed Copilot, signed in, opened src/cart.js and started typing. Nothing happens. What did you miss?">
+
+Usually one of three things. The GitHub account you signed in with doesn't have Copilot access. Copilot is turned off for that language. Or something between you and GitHub, like a company proxy, is blocking it.
+
+Setting up Copilot is quick: **install the extension, sign in, check the status bar**. Knowing what each step does is what lets you fix it when it doesn't work, and that's what the exam asks about.
+
+</Story>
+
+## Explain it like I'm 10
+
+<Eli10>
+
+Getting Copilot is like getting a library card.
+
+First you install the library app (the extension).
+
+Then you show your card (sign in). The card has to be valid: your own, or one the school gave you.
+
+A little light in the corner turns on when it's ready. If the light's off, check your card first.
+
+</Eli10>
+
+## The technical explanation
+
+### Step 1: install the extension
+
+In VS Code, open **Extensions** (Ctrl+Shift+X), search for **GitHub Copilot** and install it. In current VS Code one extension, **GitHub Copilot Chat**, brings chat, inline suggestions and agent mode together.
+
+Other editors have their own Copilot extension or plugin:
+
+| IDE | How you get Copilot |
+| --- | --- |
+| **Visual Studio Code** | GitHub Copilot Chat extension from the Extensions view |
+| **Visual Studio** | Built in to recent versions; sign in with GitHub |
+| **JetBrains IDEs** (IntelliJ IDEA, PyCharm, Rider and others) | GitHub Copilot plugin from the JetBrains Marketplace |
+| **Xcode** | GitHub Copilot for Xcode extension |
+| **Eclipse** | GitHub Copilot plugin from the Eclipse Marketplace |
+| **Vim / Neovim** | The `copilot.vim` plugin |
+
+### Step 2: sign in with an account that has access
+
+VS Code asks you to **sign in to GitHub**. The account needs one of these: **Copilot Free**, a paid individual plan (**Pro** or **Pro+**), or a **seat** assigned by an organization on **Copilot Business** or **Enterprise**. Signing in with an account that has none of these won't light Copilot up. If your seat comes from work, sign in with the account that's a member of that organization.
+
+### Step 3: check the status bar
+
+The **Copilot icon** in the status bar tells you it's ready. Click it to see your plan, snooze suggestions for a while, or turn completions off for the current language. If something's wrong, the icon shows it.
+
+### Turn suggestions on or off per language
+
+The `github.copilot.enable` setting takes an object of languages:
+
+```json
+{
+  "github.copilot.enable": {
+    "*": true,
+    "plaintext": false,
+    "markdown": true
+  }
+}
+```
+
+`"*"` covers every language; the other keys override it. **Next edit suggestions** (NES), which predict your next edit, have their own setting.
+
+### The keys you'll use from day one
+
+| Action | VS Code (Windows/Linux) |
+| --- | --- |
+| Accept a suggestion | **Tab** |
+| Dismiss it | **Esc** |
+| Next / previous suggestion | **Alt+]** / **Alt+[** (Option on macOS) |
+| Accept the next word | **Ctrl+→** |
+| Open the completions panel | **Ctrl+Enter** |
+| Inline chat in the editor | **Ctrl+I** |
+| Open the Chat view | **Ctrl+Alt+I** |
+
+### When nothing appears
+
+Work through it in order: does the account have a **seat** or plan, is the status bar icon showing an error, is the **language disabled**, is the file covered by a **content exclusion**, is a **proxy or firewall** blocking Copilot, is the extension **out of date**. The logs are in **Output › GitHub Copilot**, or run **GitHub Copilot: Open Logs** from the Command Palette.
+
+<Callout type="exam">
+"Installed and signed in but no suggestions" questions usually want you to check the **licence (seat)** before anything else. "Disable Copilot for one file type" is the **github.copilot.enable** setting, not uninstalling the extension. And remember that the **plan belongs to the GitHub account**, not to the IDE, so the same seat works in VS Code, Visual Studio and JetBrains.
+</Callout>
+
+<DeepDive title="Why an organization policy can hide a feature you expect">
+
+Even with a seat, an organization can turn features off by policy, for example Copilot Chat in the IDE, the CLI or certain models. If a teammate has a feature you don't, compare which organization granted each of your seats and check its Copilot policies. An enterprise-enforced policy wins over the organization's own choice.
+
+</DeepDive>
+
+## Real-world business scenario
+
+<Scenario
+  company="Contoso (fictional)"
+  industry="Retail software"
+  problem="On rollout day, a third of the 45 developers reported that Copilot didn't work. Most had signed in with personal GitHub accounts, and a few were behind the office proxy."
+  service="A one-page setup guide: install GitHub Copilot Chat, sign in with the contoso member account, check the status bar icon, and open Output › GitHub Copilot if anything looks wrong. IT allowed Copilot's endpoints through the proxy."
+  why="Most failures came from the account or the network, not the extension. A short checklist let developers fix it themselves."
+  outcome="Every developer had Copilot running by the end of the day, and setup questions dropped to almost none for later hires."
+/>
+
+## When to use it and when not to
+
+<UseWhen
+  use={[
+    'Setting up Copilot on a new machine or a new editor.',
+    'Turning completions off for languages where they get in the way, such as plain text or commit messages.',
+    'Snoozing suggestions from the status bar while you focus or present.',
+  ]}
+  avoid={[
+    'Uninstalling the extension just to stop suggestions in one language. Use github.copilot.enable.',
+    'Signing in with a personal account for work code when your organization gives you a seat.',
+  ]}
+  alternatives={[
+    '<strong>Copilot CLI</strong> when you want Copilot in the terminal instead of an editor.',
+    '<strong>Copilot on github.com</strong> for chat, pull request summaries and code review in the browser.',
+  ]}
+/>

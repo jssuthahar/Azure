@@ -5,17 +5,20 @@
  */
 import type { SyllabusModule } from '../data/types';
 import { sectionLabs } from '../lib/section-labs';
+import { sandboxFor } from '../lib/sim/labs';
 
 interface Props { mod: SyllabusModule; examSlug: string; headingLevel?: 'h2' | 'h3' }
 const { mod, examSlug, headingLevel = 'h2' } = Astro.props;
-const sections = sectionLabs(mod);
+const sections = sectionLabs(mod, examSlug);
+const gh = examSlug.startsWith('gh-');
+const sandbox = sandboxFor(examSlug);
 const H = headingLevel;
 const S = headingLevel === 'h2' ? 'h3' : 'h4';
 const id = `labs-${mod.slug}`;
 ---
 <section class="seclabs" aria-labelledby={id}>
   <H id={id} class="seclabs-h">{headingLevel === 'h2' ? 'Hands-On Labs' : `Domain ${mod.domain}: ${mod.shortTitle}`}</H>
-  {headingLevel === 'h2' && <p class="seclabs-sub">Every section of this domain has guided labs in the practice portal and Cloud Shell. No Azure account, nothing to pay, and your progress stays in this browser.</p>}
+  {headingLevel === 'h2' && <p class="seclabs-sub">{gh ? 'Guided labs in a practice terminal with GitHub Copilot CLI, git and gh. No GitHub account, nothing to pay, and your progress stays in this browser.' : 'Every section of this domain has guided labs in the practice portal and Cloud Shell. No Azure account, nothing to pay, and your progress stays in this browser.'}</p>}
   <div class="seclabs-grid">
     {sections.map((s) => (
       <div class="seclabs-card">
@@ -29,6 +32,7 @@ const id = `labs-${mod.slug}`;
             </a></li>
           ))}
         </ul>
+        {s.labs.length === 0 && <p class="seclabs-more">No guided lab for this section yet. Try it in the <a href={`/${examSlug}/labs/${sandbox.id}/`}>{gh ? 'Copilot terminal sandbox' : 'free sandbox'}</a>.</p>}
         {s.labs.length > 5 && <p class="seclabs-more">+ {s.labs.length - 5} more on the <a href={`/${examSlug}/labs/#by-section`}>labs page</a></p>}
       </div>
     ))}

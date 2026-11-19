@@ -48,6 +48,17 @@ import { EXAM_ITEMS as ai200Items } from './ai-200/exam-items';
 import { PROBLEM_SOLUTION as ai200Problems } from './ai-200/problem-solution';
 import { SERVICES as ai200Services } from './ai-200/services';
 import { SORT_SETS as ai200Sort, RIDDLES as ai200Riddles } from './ai-200/games';
+import * as gh300 from './gh-300/syllabus';
+import { COURSE as gh300Course } from './gh-300/course';
+import { SIMS3D_GH as gh300Sims3d } from './gh-300/sims3d';
+import { TOURS_GH as gh300Tours } from './gh-300/portal-tours';
+import { EMBED_LESSON_3D as gh300Embed3d } from './gh-300/embeds';
+import { LESSON_SIMS as gh300Sims } from './gh-300/lesson-sims';
+import { COMPARISONS as gh300Compare } from './gh-300/compare';
+import { EXAM_ITEMS as gh300Items } from './gh-300/exam-items';
+import { PROBLEM_SOLUTION as gh300Problems } from './gh-300/problem-solution';
+import { SERVICES as gh300Services } from './gh-300/services';
+import { SORT_SETS as gh300Sort, RIDDLES as gh300Riddles } from './gh-300/games';
 
 
 export interface Exam {
@@ -85,7 +96,32 @@ export interface Exam {
   tours: Record<string, Tour>;
   /** "Every service in 60 seconds" reference for this exam. */
   services: Service[];
+  /** What the guided-walkthrough tab simulates. Defaults to the Azure portal (see simLabels). */
+  sim?: Partial<SimLabels>;
 }
+
+/** Wording for the walkthrough tab and practice labs; GitHub exams simulate VS Code and github.com. */
+export interface SimLabels {
+  /** Tab label, e.g. 'Azure Portal'. */
+  tab: string;
+  /** In a sentence: "do it in the Azure portal". */
+  noun: string;
+  icon: string;
+  /** Lab terminal name, e.g. 'Cloud Shell'. */
+  shell: string;
+  /** Disclaimer line under a walkthrough. */
+  disclaimer: string;
+  /** Lab id used when no lab fits a lesson (always offered last). */
+  sandbox: string;
+  /** Short line under the practice lab. */
+  labNote: string;
+}
+const AZURE_SIM: SimLabels = {
+  tab: 'Azure Portal', noun: 'the Azure portal', icon: '🖥️', shell: 'Cloud Shell',
+  disclaimer: '🧪 Simulation for learning. Screens are simplified versions of the Azure portal; names, prices and IDs are examples. Nothing here touches real Azure.',
+  sandbox: 'sandbox', labNote: 'simulated Azure portal and Cloud Shell',
+};
+export const simLabels = (e: Exam): SimLabels => ({ ...AZURE_SIM, ...e.sim });
 
 const info = (slug: string) => {
   const c = CERTIFICATIONS.find((x) => x.slug === slug);
@@ -171,6 +207,36 @@ const EXAMS: Record<string, Exam> = {
     lesson3d: ai200Embed3d,
     tours: ai200Tours,
     services: ai200Services,
+  },
+  'gh-300': {
+    slug: 'gh-300',
+    code: 'GH-300',
+    name: info('gh-300').name,
+    info: info('gh-300'),
+    accent: '#1f883d',
+    modules: gh300.MODULES,
+    skillsMeasuredAsOf: gh300.SKILLS_MEASURED_AS_OF,
+    syllabusVerifiedOn: gh300.SYLLABUS_VERIFIED_ON,
+    studyGuideUrl: gh300.STUDY_GUIDE_URL,
+    courseUrl: 'https://learn.microsoft.com/en-us/training/courses/gh-300t00',
+    facts: gh300.EXAM_FACTS,
+    lessonSims: gh300Sims,
+    comparisons: gh300Compare,
+    whatIfs: [],
+    examItems: gh300Items,
+    visuals: {},
+    problems: gh300Problems,
+    games: { sortSets: gh300Sort, riddles: gh300Riddles },
+    activities: {},
+    course: gh300Course,
+    sims3d: gh300Sims3d,
+    lesson3d: gh300Embed3d,
+    tours: gh300Tours,
+    services: gh300Services,
+    sim: {
+      tab: 'VS Code & GitHub', noun: 'VS Code and GitHub', icon: '💻', shell: 'terminal', sandbox: 'gh-sandbox', labNote: 'simulated terminal with GitHub Copilot CLI',
+      disclaimer: '🧪 Simulation for learning. Screens are simplified versions of Visual Studio Code and github.com with GitHub Copilot. Not affiliated with GitHub or Microsoft.',
+    },
   },
 };
 

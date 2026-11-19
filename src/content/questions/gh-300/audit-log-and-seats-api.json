@@ -1,0 +1,28 @@
+{ "cert": "gh-300", "domain": 2, "topic": "audit-log-and-seats-api", "questions": [
+  { "id": "gh-audit-1", "type": "single", "question": "A compliance officer asks who changed a Copilot policy in the organization last month. What should an organization owner do?", "options": [
+    { "text": "Search the organization audit log for action:copilot", "why": "Correct. Copilot policy changes are recorded in the audit log as events whose names start with copilot." },
+    { "text": "Call GET /orgs/{org}/copilot/billing/seats", "why": "The seats endpoint lists seats and activity. It does not show who changed a policy." },
+    { "text": "Review the commit history of .github/copilot-instructions.md", "why": "That history shows instruction file changes, not organization policy changes." },
+    { "text": "Open the Copilot metrics dashboard", "why": "Metrics show usage and adoption, not who changed settings." } ], "answer": [0], "explanation": "The audit log records Copilot events such as policy changes, seat changes, and content exclusion changes, with the actor and the time.", "objective": "2.4.2" },
+  { "id": "gh-audit-2", "type": "single", "question": "You need to identify Copilot seats in an organization that have not been used recently by using the REST API. Which endpoint and field should you use?", "options": [
+    { "text": "GET /orgs/{org}/copilot/billing/seats and the last_activity_at field", "why": "Correct. The seats endpoint returns each seat with last_activity_at and last_activity_editor." },
+    { "text": "GET /orgs/{org}/copilot/billing and the seat_management_setting field", "why": "This endpoint returns subscription settings, not per-seat activity." },
+    { "text": "GET /orgs/{org}/audit-log and the created_at field", "why": "The audit log records events such as seat assignments, not each seat's latest Copilot use." },
+    { "text": "GET /orgs/{org}/members and the last_login field", "why": "The members endpoint does not report Copilot activity." } ], "answer": [0], "explanation": "last_activity_at on each seat shows when the user last used Copilot. An old or empty value indicates an unused seat.", "objective": "2.4.3" },
+  { "id": "gh-audit-3", "type": "single", "question": "An administrator cancels a user's Copilot seat on the fifth day of the billing cycle by calling DELETE /orgs/{org}/copilot/billing/selected_users. When does the user lose access to Copilot?", "options": [
+    { "text": "At the end of the current billing cycle", "why": "Correct. A cancelled seat is pending cancellation and stays active until the end of the billing cycle." },
+    { "text": "Immediately after the API call returns", "why": "Cancelled seats are not removed immediately." },
+    { "text": "After 30 days, regardless of the billing cycle", "why": "The seat ends with the billing cycle, not after a fixed number of days." },
+    { "text": "When the user next signs out of the IDE", "why": "Signing out does not determine when a cancelled seat ends." } ], "answer": [0], "explanation": "The DELETE call returns seats_cancelled, and the seat remains usable until the end of the current billing cycle.", "objective": "2.4.3" },
+  { "id": "gh-audit-4", "type": "multi", "question": "An organization gives Copilot to selected members and teams. You need to grant Copilot seats to every member of the web team by using the REST API. Which TWO items are required?", "options": [
+    { "text": "A POST request to /orgs/{org}/copilot/billing/selected_teams with selected_teams set to web", "why": "Correct. This endpoint adds Copilot seats for the members of the listed teams." },
+    { "text": "A token that has the manage_billing:copilot scope", "why": "Correct. The Copilot user management endpoints require this scope." },
+    { "text": "A PUT request to /orgs/{org}/copilot/seats with the team name", "why": "This is not a Copilot user management endpoint. Seats are added with POST under /copilot/billing." },
+    { "text": "A token that has only the read:org scope", "why": "read:org does not allow seat management." },
+    { "text": "A PATCH request to /orgs/{org}/teams/web that sets copilot to true", "why": "Team settings do not assign Copilot seats." } ], "answer": [0, 1], "explanation": "Seats for teams are added with POST /orgs/{org}/copilot/billing/selected_teams, using a token with the manage_billing:copilot scope.", "objective": "2.4.3" },
+  { "id": "gh-audit-5", "type": "single", "question": "Which audit log search returns events related to Copilot seat assignments, Copilot policy changes, and Copilot content exclusion changes in an organization?", "options": [
+    { "text": "action:copilot", "why": "Correct. Copilot audit log events have names that start with copilot, so this qualifier filters to them." },
+    { "text": "repo:copilot", "why": "The repo qualifier filters by repository name, not by Copilot event type." },
+    { "text": "actor:copilot", "why": "The actor qualifier filters by the user who performed the action." },
+    { "text": "event:seat", "why": "This is not the qualifier used to filter Copilot events." } ], "answer": [0], "explanation": "Searching action:copilot returns Copilot events such as seat changes, policy changes, and content exclusion changes.", "objective": "2.4.2" }
+] }

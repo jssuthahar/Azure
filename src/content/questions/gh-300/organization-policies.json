@@ -1,0 +1,28 @@
+{ "cert": "gh-300", "domain": 2, "topic": "organization-policies", "questions": [
+  { "id": "gh-orgpol-1", "type": "single", "question": "An organization owner tries to enable Copilot coding agent in the organization's Copilot policies, but the setting is locked. What is the most likely cause?", "options": [
+    { "text": "The enterprise that owns the organization enforces the policy", "why": "Correct. When an enterprise enforces a Copilot policy, organizations cannot override it." },
+    { "text": "The organization has content exclusions configured", "why": "Content exclusions control which files Copilot can use. They do not lock feature policies." },
+    { "text": "The organization owner does not have a Copilot seat", "why": "Managing policies does not depend on the administrator holding a seat." },
+    { "text": "The suggestions matching public code policy is set to Block", "why": "The public code filter is an independent policy and does not lock other policies." } ], "answer": [0], "explanation": "An enterprise can enforce a policy for all of its organizations or select No policy to let each organization decide.", "objective": "2.4.1" },
+  { "id": "gh-orgpol-2", "type": "single", "question": "An enterprise has three organizations with different risk requirements. Enterprise administrators want each organization to decide whether Copilot CLI is available to its members. How should the enterprise configure the Copilot CLI policy?", "options": [
+    { "text": "No policy", "why": "Correct. No policy leaves the decision to each organization." },
+    { "text": "Enabled, enforced at the enterprise level", "why": "An enforced value applies to every organization and cannot be changed by them." },
+    { "text": "Disabled, enforced at the enterprise level", "why": "An enforced value applies to every organization and cannot be changed by them." },
+    { "text": "Disabled, with a content exclusion for the CLI", "why": "Content exclusions apply to files and repositories, not to features." } ], "answer": [0], "explanation": "Selecting No policy at the enterprise level allows each organization to set the policy for its own members.", "objective": "2.4.1" },
+  { "id": "gh-orgpol-3", "type": "single", "question": "A security team requires that members of an organization can choose only approved AI models in the Copilot model picker. Where should an organization owner configure this?", "options": [
+    { "text": "Organization settings > Copilot > Models", "why": "Correct. The Models page controls which models are available to members." },
+    { "text": "Organization settings > Copilot > Access", "why": "Access controls who receives a Copilot seat, not which models they can use." },
+    { "text": "Repository settings > Copilot > Content exclusion", "why": "Content exclusion controls which files Copilot can use, not models." },
+    { "text": "Each developer's github.copilot.enable setting", "why": "This editor setting turns completions on or off per language and is not centrally enforced." } ], "answer": [0], "explanation": "Disabling a model on the Models page removes it from the model picker for members who receive Copilot through the organization.", "objective": "2.4.1" },
+  { "id": "gh-orgpol-4", "type": "multi", "question": "Which THREE Copilot features can an organization owner enable or disable on the organization's Copilot Policies page?", "options": [
+    { "text": "Copilot Chat in github.com", "why": "Correct. This feature policy controls Copilot Chat on the GitHub website." },
+    { "text": "Copilot code review", "why": "Correct. This feature policy controls whether Copilot can review pull requests." },
+    { "text": "MCP servers in Copilot", "why": "Correct. This policy controls whether Copilot agents can use MCP servers." },
+    { "text": "Branch protection for the default branch", "why": "Branch protection is configured in repository settings or rulesets, not in Copilot policies." },
+    { "text": "Two-factor authentication for members", "why": "Two-factor authentication is an organization security setting, not a Copilot policy." } ], "answer": [0, 1, 2], "explanation": "Copilot policies cover features such as chat in the IDE and on github.com, Copilot CLI, code review, coding agent, MCP servers, and suggestions matching public code.", "objective": "2.4.1" },
+  { "id": "gh-orgpol-5", "type": "single", "question": "An organization uses Copilot Business. The organization owner wants only the members of two teams to receive Copilot. Which setting should the owner configure?", "options": [
+    { "text": "Copilot Access set to selected members and teams", "why": "Correct. Access decides who receives a seat, and it can be limited to selected members and teams." },
+    { "text": "A Copilot policy that disables Copilot in the IDE for all other members", "why": "Policies control which features seat holders can use. They do not assign seats." },
+    { "text": "A content exclusion for every repository outside the two teams", "why": "Content exclusions control which files Copilot can use, not who has access." },
+    { "text": "An enterprise policy set to No policy", "why": "No policy delegates a feature decision to organizations. It does not assign seats." } ], "answer": [0], "explanation": "The Access page answers who gets Copilot. The Policies page answers what seat holders can use.", "objective": "2.4.1" }
+] }

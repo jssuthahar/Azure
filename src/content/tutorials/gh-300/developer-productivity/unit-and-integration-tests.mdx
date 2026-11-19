@@ -1,0 +1,238 @@
+---
+title: "Unit Tests, Integration Tests and Edge Cases with Copilot"
+seoTitle: Unit and Integration Tests with GitHub Copilot | GH-300
+description: Generate unit and integration tests with GitHub Copilot, name the edge cases that matter, write strong assertions, and treat a failing test as a clue.
+answer: >-
+  Select the code and run **`/tests`** in Copilot Chat (or ask agent mode) to generate **unit tests**, which check one function in isolation. Name the **edge cases** you care about (unknown input, missing values, zero, empty lists, very large numbers, boundaries) and ask Copilot to suggest ones you missed. Check every test has a **clear assertion** of one behaviour with an exact expected value. **Integration tests** check pieces working together, such as an API route calling the discount module; ask Copilot for the setup and teardown too. Run the tests: when a generated test fails, decide whether the **code has a bug or the test is wrong**, then fix the right one.
+updated: 2026-11-19
+readingMinutes: 10
+keyTerms:
+  - term: Unit test
+    definition: A test that checks one small piece of code, such as a single function, in isolation from databases, networks and other modules.
+  - term: Integration test
+    definition: A test that checks several parts working together, for example an HTTP route, the business logic and the JSON response.
+  - term: Edge case
+    definition: An input at or beyond the normal range, such as empty, missing, zero, negative, very large or invalid values.
+  - term: Assertion
+    definition: The line in a test that compares the actual result with the expected one and fails the test if they differ.
+  - term: /tests
+    definition: A Copilot Chat slash command that generates tests for the selected code.
+  - term: Arrange, act, assert
+    definition: A common test layout - set up the inputs, call the code, then check the result.
+interview:
+  - level: beginner
+    q: How do you generate unit tests with Copilot?
+    a: >-
+      I select the function and type /tests in Copilot Chat, adding the edge cases I want, like "unknown code, no code, zero total". Copilot writes tests in the framework the project already uses. Then I read each one and run them.
+    followUps:
+      - q: What if the project has no test framework yet?
+        a: >-
+          Copilot can suggest one and the setup, but I'd decide which framework the team should use and tell it, rather than accept whatever it picks.
+  - level: intermediate
+    q: What makes a generated test good or weak?
+    a: >-
+      A good test checks one behaviour with an exact expected value, like expect applyDiscount(100, 'NOPE') to equal 100. A weak one only checks that the result is defined or doesn't throw, so it passes even when the logic is wrong. I also check the test name says the behaviour.
+    followUps: []
+  - level: experienced
+    q: Copilot generated ten tests and two fail. Do you delete the failing ones?
+    a: >-
+      No, those two are the interesting ones. I read the assertion and the code. If the code is wrong, like returning NaN for an unknown discount code, I fix the code and keep the test. If the test assumed behaviour we don't want, I fix the test. Deleting it throws away the bug report.
+    followUps: []
+  - level: scenario
+    q: Unit tests pass, but the checkout API still returns the wrong total in staging. What test is missing?
+    a: >-
+      An integration test. Each unit works alone, but something between them is wrong, maybe the route passes the code in a different field. I'd ask Copilot for a supertest test that posts a real cart to POST /cart/total and checks the status and total, with the server started and stopped in setup and teardown.
+    followUps: []
+revision:
+  keyPoints:
+    - "/tests on a selection generates tests in the project's framework; agent mode can also write and run them."
+    - Unit tests check one function in isolation; integration tests check parts working together.
+    - Name edge cases in the prompt and ask Copilot for the ones you missed.
+    - "Strong assertions: one behaviour, exact expected value. Weak: only 'is defined'."
+    - A failing generated test means a bug in the code or in the test. Decide which, don't just delete it.
+    - Tests from Copilot are code you review; a passing test can still check the wrong thing.
+  mistakes:
+    - Accepting tests with weak assertions that can never fail.
+    - Deleting failing generated tests instead of investigating them.
+    - Calling a test that hits a real database and API a unit test.
+  examTips:
+    - '"Generate tests for selected code" = **/tests**.'
+    - '"Make sure tests cover unusual inputs" = ask Copilot to identify **edge cases**.'
+    - '"Verify the API and the business logic work together" = **integration test**.'
+  quick:
+    - q: Which slash command generates tests?
+      a: /tests
+    - q: What does a unit test isolate?
+      a: One small piece of code, such as a single function.
+    - q: Give two edge cases for applyDiscount(total, code).
+      a: An unknown code and no code (also a zero or very large total).
+    - q: What makes an assertion strong?
+      a: It checks one behaviour against an exact expected value.
+    - q: A generated test fails. What are the two possibilities?
+      a: The code has a bug, or the test is wrong.
+references:
+  - title: Generating unit tests (Copilot Chat cookbook)
+    url: https://docs.github.com/en/copilot/tutorials/copilot-chat-cookbook/testing-code/generate-unit-tests
+  - title: Copilot Chat cookbook
+    url: https://docs.github.com/en/copilot/tutorials/copilot-chat-cookbook
+  - title: Study guide for Exam GH-300 GitHub Copilot
+    url: https://learn.microsoft.com/credentials/certifications/resources/study-guides/gh-300
+related:
+  - generate-refactor-and-document
+  - security-and-performance-fixes
+  - validate-copilot-output
+  - sample-data-and-legacy-code
+---
+
+## Start with a question
+
+<Story question="Who's better at thinking of the weird inputs that break your code: you, at the end of a long day, or a tool that has seen millions of test files?">
+
+Honestly, neither on its own. You know what the code is for. Copilot is good at listing the cases people forget.
+
+On contoso-shop, Asha selected `applyDiscount` and asked: "/tests applyDiscount: cover unknown codes, no code, 0 and very large totals." Copilot wrote six tests in seconds. Two failed. Her first thought was "Copilot got it wrong". It hadn't. `applyDiscount(100, 'NOPE')` returned `NaN`, because `CODES['NOPE']` is `undefined`. That bug had been in production for months. The failing test was the most useful thing on the screen.
+
+</Story>
+
+## Explain it like I'm 10
+
+<Eli10>
+
+You built a vending machine out of cardboard. A test is a friend who tries it out.
+
+A **unit test** checks one part: does the coin slot take a coin?
+
+An **integration test** checks the whole thing together: put a coin in, press a button, does a sweet come out?
+
+**Edge cases** are the tricky tries: a bent coin, no coin, a button pressed twice.
+
+If the machine gets stuck, that's not your friend's fault. They just found the problem before a real customer did.
+
+</Eli10>
+
+## Visual: tests that find a bug in motion
+
+Watch Copilot write tests with edge cases, two of them fail, and a small fix turns the suite green.
+
+<Explainer id="copilot-test-loop" />
+
+## The technical explanation
+
+### Generate unit tests
+
+Select the function and ask:
+
+```text
+/tests applyDiscount: cover unknown codes, no code, 0 and very large totals
+```
+
+Copilot writes tests in the framework your project already uses (it reads `package.json` and existing files in `tests/`). You can also ask agent mode: "Write unit tests for src/discount.js, run them, and tell me what fails." It writes the file, asks before running `npm test`, and reports back. If you keep test rules in `.github/instructions/tests.instructions.md` with `applyTo: "tests/**"`, Copilot follows them.
+
+```js
+import { test } from 'node:test';
+import assert from 'node:assert/strict';
+import { applyDiscount } from '../src/discount.js';
+
+test('SAVE10 takes 10% off', () => assert.equal(applyDiscount(100, 'SAVE10'), 90));
+test('unknown code leaves the total unchanged', () => assert.equal(applyDiscount(100, 'NOPE'), 100));
+test('no code leaves the total unchanged', () => assert.equal(applyDiscount(100), 100));
+test('empty cart stays at 0', () => assert.equal(applyDiscount(0, 'HALF'), 0));
+```
+
+### Find the edge cases
+
+Edge cases are where bugs live. Name the ones you know and ask Copilot for more: "What edge cases am I missing for applyDiscount?"
+
+| Category | For `applyDiscount(total, code)` |
+| --- | --- |
+| Unknown or invalid input | `'NOPE'`, lowercase `'save10'` |
+| Missing input | no code, `null`, empty string |
+| Zero and boundaries | total `0`, a 100% code |
+| Very large or small | `1e12`, negative totals |
+| Wrong type | `'100'` as a string |
+
+Copilot is good at producing this list. You decide which behaviours are correct, because only you know the business rule: should a lowercase code work? Should a negative total throw?
+
+### Write assertions that can fail
+
+An assertion compares the actual result with an exact expected value. Check every generated test for this:
+
+| Weak | Strong |
+| --- | --- |
+| `assert.ok(applyDiscount(100, 'SAVE10'))` | `assert.equal(applyDiscount(100, 'SAVE10'), 90)` |
+| "doesn't throw" | "throws a RangeError for a negative total" |
+| one test checking five things | five tests, each named after one behaviour |
+
+A weak test passes even when the code is wrong, which is worse than no test because it looks like coverage. Use **arrange, act, assert**: set up inputs, call the code, check one result.
+
+### Integration tests
+
+Unit tests isolate one function. **Integration tests** check that parts work together: the HTTP route, the cart and discount modules, and the JSON response.
+
+```js
+import request from 'supertest';
+import { app } from '../src/app.js';
+
+test('POST /cart/total applies SAVE10', async () => {
+  const res = await request(app)
+    .post('/cart/total')
+    .send({ items: [{ price: 50, qty: 2 }], code: 'SAVE10' });
+  assert.equal(res.status, 200);
+  assert.equal(res.body.total, 90);
+});
+```
+
+Ask Copilot for the **setup and teardown** too: starting the app, seeding a test database with fake data, cleaning up afterwards. Mocks and stubs keep unit tests isolated; integration tests use the real pieces (or realistic test doubles for external services).
+
+### Read the failures
+
+```text
+$ npm test
+✔ SAVE10 takes 10% off
+✖ unknown code leaves the total unchanged   expected 100, got NaN
+✖ no code leaves the total unchanged        expected 100, got NaN
+ℹ pass 4  fail 2
+```
+
+A failing generated test means one of two things: **the code has a bug** or **the test expects the wrong behaviour**. Here the code is wrong, so ask for the smallest fix (`const pct = CODES[code] ?? 0;`), read the diff and rerun. Never delete a failing test just to get green.
+
+<TryIt labs="gh-tests" text="Ask Copilot CLI for tests with edge cases, read the two failures, then fix the bug and commit only when the suite is green." />
+
+<Callout type="exam">
+"Generate tests for the selected function" is **/tests**. "Ensure the tests cover unusual and boundary inputs" means asking Copilot to **identify edge cases**. "Verify the API route, discount logic and response work together" is an **integration test**, while "test one function in isolation" is a **unit test**. If a generated test fails, the right answer is to **investigate** whether the code or the test is wrong, never to delete the test or accept the output without review.
+</Callout>
+
+<DeepDive title="Coverage numbers can lie">
+
+Copilot can push line coverage up quickly, and that's tempting to celebrate. But coverage only says which lines ran, not whether anything was checked. A test that calls every function and asserts nothing gives high coverage and zero protection. Look at the assertions, try breaking the code on purpose to see if a test fails (the idea behind mutation testing), and keep tests readable so the next person knows what behaviour each one protects.
+
+</DeepDive>
+
+## Real-world business scenario
+
+<Scenario
+  company="Contoso (fictional)"
+  industry="Online retail"
+  problem="contoso-shop's discount module had almost no tests. A customer typed a code in lowercase, got a NaN total, and checkout failed for every order using that code until someone noticed hours later."
+  service="Copilot Chat /tests with named edge cases for each module, Copilot-drafted supertest integration tests for the checkout API, path-specific test instructions, and a rule that failing generated tests are investigated, not deleted."
+  why="Copilot listed edge cases the team had skipped, the assertions checked exact values, and the integration tests caught problems between the route and the modules."
+  outcome="The next two discount bugs were caught in pull requests by failing tests instead of by customers at checkout."
+/>
+
+## When to use it and when not to
+
+<UseWhen
+  use={[
+    'Generating a first set of unit tests for existing code, then reviewing each one.',
+    'Listing edge cases you might miss and turning them into precise assertions.',
+    'Drafting integration test setup and teardown for APIs and services.',
+  ]}
+  avoid={[
+    'Accepting tests whose assertions can\'t fail, just to raise coverage.',
+    'Letting Copilot decide business rules. You decide what the correct behaviour is.',
+  ]}
+  alternatives={[
+    '<strong>Write the test first yourself</strong> (test-driven development) and let Copilot write the code to pass it.',
+    '<strong>Code scanning and CI checks</strong> alongside tests, so security issues are caught too.',
+  ]}
+/>

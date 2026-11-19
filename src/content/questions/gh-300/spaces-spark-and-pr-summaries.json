@@ -1,0 +1,27 @@
+{ "cert": "gh-300", "domain": 2, "topic": "spaces-spark-and-pr-summaries", "questions": [
+  { "id": "gh-spaces-1", "type": "single", "question": "A team wants new developers to ask Copilot questions about the payment rules and receive answers that are grounded in a selected set of files, issues, and notes. The context must be shared with the whole team. Which feature should the team use?", "options": [
+    { "text": "Copilot Spaces", "why": "Correct. A space gathers curated context such as files, issues, notes, and instructions, and it can be shared with a team." },
+    { "text": "GitHub Spark", "why": "Spark builds micro apps from natural language. It does not provide shared context for questions." },
+    { "text": "Copilot pull request summaries", "why": "Summaries describe the changes in a pull request." },
+    { "text": "Content exclusions", "why": "Content exclusions remove files from Copilot's context instead of curating context." } ], "answer": [0], "explanation": "Copilot Spaces provide curated, shareable context so that answers are grounded in the same sources.", "objective": "2.3.3" },
+  { "id": "gh-spaces-2", "type": "single", "question": "A developer opens a pull request and wants Copilot to draft a description of the changes. What should the developer do?", "options": [
+    { "text": "Select the Copilot button in the pull request description box", "why": "Correct. The Copilot option in the description box generates a summary of the pull request changes." },
+    { "text": "Request Copilot as a reviewer", "why": "This starts a code review that leaves comments. It does not write the description." },
+    { "text": "Assign the pull request to Copilot coding agent", "why": "The coding agent works on issues and tasks. It is not used to write a pull request description." },
+    { "text": "Run /doc in Copilot Chat in the IDE", "why": "/doc generates documentation comments for code, not a pull request description on GitHub." } ], "answer": [0], "explanation": "Pull request summaries are generated from the Copilot button in the description box, and the author should review and edit the result.", "objective": "2.3.3" },
+  { "id": "gh-spaces-3", "type": "single", "question": "A product manager wants to build a small internal app that tracks discount code usage by describing it in natural language. Which feature and plan combination supports this requirement?", "options": [
+    { "text": "GitHub Spark with Copilot Pro+ or Copilot Enterprise", "why": "Correct. Spark builds micro apps from natural language and is available on Copilot Pro+ and Copilot Enterprise." },
+    { "text": "GitHub Spark with Copilot Free", "why": "Spark is not included in Copilot Free." },
+    { "text": "Copilot Spaces with Copilot Business", "why": "Spaces provide curated context for questions. They do not build apps." },
+    { "text": "Copilot pull request summaries with Copilot Pro", "why": "Pull request summaries describe changes. They do not build apps." } ], "answer": [0], "explanation": "GitHub Spark turns a natural-language description into a working micro app and is available on Copilot Pro+ and Copilot Enterprise.", "objective": "2.3.3" },
+  { "id": "gh-spaces-4", "type": "multi", "question": "Which TWO types of content can you add to a Copilot Space?", "options": [
+    { "text": "Files from a repository", "why": "Correct. Repository files are a common source in a space." },
+    { "text": "Issues", "why": "Correct. Issues can be added to a space as context." },
+    { "text": "Copilot seat assignments", "why": "Seats are managed in organization settings or through the REST API." },
+    { "text": "Organization Copilot policies", "why": "Policies are configured in organization or enterprise settings, not in a space." } ], "answer": [0, 1], "explanation": "A Copilot Space can include files, issues, notes, and instructions. Seats and policies are administrative settings.", "objective": "2.3.3" },
+  { "id": "gh-spaces-5", "type": "single", "question": "A developer generates a Copilot pull request summary. The summary accurately lists the changed files but does not explain why the change was needed. What should the developer do before requesting reviews?", "options": [
+    { "text": "Edit the description to add the reason for the change and how to test it", "why": "Correct. A summary is generated from the changes and cannot know the business reason, so the author adds it." },
+    { "text": "Leave the summary unchanged because Copilot summaries are complete", "why": "A generated summary is a draft and can miss intent, so it should be reviewed and edited." },
+    { "text": "Regenerate the summary until it explains the business reason", "why": "Regenerating cannot add information that is not in the changes, such as a decision made in a meeting." },
+    { "text": "Ask Copilot code review to approve the summary", "why": "Copilot code review leaves comments on code and does not approve descriptions." } ], "answer": [0], "explanation": "Copilot can describe what changed. The author is responsible for adding why it changed and how to verify it.", "objective": "2.3.3" }
+] }
