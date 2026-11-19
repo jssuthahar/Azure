@@ -498,6 +498,8 @@
     background: var(--bg-code);
     padding: 0.1rem 0.35rem;
     font-size: 0.88em;
+    /* Long paths and URLs (e.g. ~/.copilot/mcp-config.json) wrap on small phones. */
+    overflow-wrap: anywhere;
   }
   .lesson pre {
     overflow-x: auto;

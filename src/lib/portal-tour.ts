@@ -303,10 +303,10 @@ function ide(sc: Ide) {
   const active = sc.tab ?? tabs[0];
   const side = sc.side ?? 'explorer';
   const sideHtml = side === 'none' ? '' : side === 'extensions'
-    ? `<aside class="vc-side"><p class="vc-side-h">EXTENSIONS</p><div class="vc-ext-q">🔍 ${esc((sc.ext ?? [])[0]?.n ?? 'Search Extensions in Marketplace')}</div>${(sc.ext ?? []).map((x) => `<div class="vc-ext" ${T(`ext:${x.n}`)}><span class="vc-ext-i" aria-hidden="true">✨</span><div><p class="vc-ext-n">${esc(x.n)}</p><p class="vc-ext-b">${esc(x.by)}</p><p class="vc-ext-d">${esc(x.d)}</p></div><button class="vc-btn ${x.on ? '' : 'vc-primary'}" ${T(x.on ? `ext-on:${x.n}` : 'install')}>${x.on ? '⚙' : 'Install'}</button></div>`).join('')}</aside>`
+    ? `<aside class="vc-side" tabindex="0" aria-label="Extensions"><p class="vc-side-h">EXTENSIONS</p><div class="vc-ext-q">🔍 ${esc((sc.ext ?? [])[0]?.n ?? 'Search Extensions in Marketplace')}</div>${(sc.ext ?? []).map((x) => `<div class="vc-ext" ${T(`ext:${x.n}`)}><span class="vc-ext-i" aria-hidden="true">✨</span><div><p class="vc-ext-n">${esc(x.n)}</p><p class="vc-ext-b">${esc(x.by)}</p><p class="vc-ext-d">${esc(x.d)}</p></div><button class="vc-btn ${x.on ? '' : 'vc-primary'}" ${T(x.on ? `ext-on:${x.n}` : 'install')}>${x.on ? '⚙' : 'Install'}</button></div>`).join('')}</aside>`
     : side === 'settings'
-      ? `<aside class="vc-side vc-set"><p class="vc-side-h">SETTINGS</p><div class="vc-ext-q">🔍 copilot</div>${(sc.settings ?? []).map(([n, v, k = 't']) => `<div class="vc-setr" ${T(`set:${n}`)}><p class="vc-set-n">${md(n)}</p>${k === 'tg' ? `<span class="pt-toggle ${v === 'On' ? 'on' : ''}"><i></i>${esc(v)}</span>` : `<code class="vc-set-v">${esc(v)}</code>`}</div>`).join('')}</aside>`
-      : `<aside class="vc-side"><p class="vc-side-h">EXPLORER</p><p class="vc-root">⌄ CONTOSO-SHOP</p>${files.map((f) => {
+      ? `<aside class="vc-side vc-set" tabindex="0" aria-label="Settings"><p class="vc-side-h">SETTINGS</p><div class="vc-ext-q">🔍 copilot</div>${(sc.settings ?? []).map(([n, v, k = 't']) => `<div class="vc-setr" ${T(`set:${n}`)}><p class="vc-set-n">${md(n)}</p>${k === 'tg' ? `<span class="pt-toggle ${v === 'On' ? 'on' : ''}"><i></i>${esc(v)}</span>` : `<code class="vc-set-v">${esc(v)}</code>`}</div>`).join('')}</aside>`
+      : `<aside class="vc-side" tabindex="0" aria-label="Explorer"><p class="vc-side-h">EXPLORER</p><p class="vc-root">⌄ CONTOSO-SHOP</p>${files.map((f) => {
         const dir = f.endsWith('/');
         const depth = f.replace(/\/$/, '').split('/').length - 1;
         const name = f.replace(/\/$/, '').split('/').pop()!;
@@ -327,12 +327,12 @@ function ide(sc: Ide) {
       ${sc.inline ? `<div class="vc-inline" ${T('inline')}><div class="vc-inline-q">✨ ${esc(sc.inline.q)}</div>${sc.inline.a ? `<p class="vc-inline-a">${md(sc.inline.a)}</p><div class="vc-acts"><button class="vc-btn vc-primary" ${T('keep')}>Accept</button><button class="vc-btn" ${T('undo')}>Discard</button></div>` : ''}</div>` : ''}
       ${sc.palette ? `<div class="vc-pal"><div class="vc-pal-q">&gt; ${esc(sc.palette.q)}</div>${sc.palette.items.map((x, i) => `<button class="vc-pal-i ${i === 0 ? 'on' : ''}" ${T(`palette:${x}`)}>${md(x)}</button>`).join('')}</div>` : ''}
     </div>
-    ${sc.term ? `<div class="vc-term" ${T('term')}><div class="vc-term-h"><span class="on">TERMINAL</span><span>PROBLEMS</span><span>OUTPUT</span></div><pre>${sc.term.map((l) => (l.startsWith('$ ') ? `<span class="pt-ps">learner@dev:~/contoso-shop$</span> ${esc(l.slice(2))}` : esc(l))).join('\n')}</pre></div>` : ''}
+    ${sc.term ? `<div class="vc-term" ${T('term')}><div class="vc-term-h"><span class="on">TERMINAL</span><span>PROBLEMS</span><span>OUTPUT</span></div><pre tabindex="0" aria-label="Terminal output">${sc.term.map((l) => (l.startsWith('$ ') ? `<span class="pt-ps">learner@dev:~/contoso-shop$</span> ${esc(l.slice(2))}` : esc(l))).join('\n')}</pre></div>` : ''}
   </div>`;
   const c = sc.chat;
   const chat = c ? `<aside class="vc-chat" ${T('chat')}>
     <div class="vc-chat-h"><b>CHAT</b><span aria-hidden="true">＋ ⋯</span></div>
-    <div class="vc-msgs">${c.msgs.map((m) => `<div class="vc-m vc-m-${m.r}">${m.r === 'me' ? '<b>You</b>' : m.r === 'ai' ? '<b>✨ GitHub Copilot</b>' : ''}<div>${md(m.t).replace(/\n/g, '<br>')}</div></div>`).join('')}
+    <div class="vc-msgs" tabindex="0" aria-label="Copilot chat messages">${c.msgs.map((m) => `<div class="vc-m vc-m-${m.r}">${m.r === 'me' ? '<b>You</b>' : m.r === 'ai' ? '<b>✨ GitHub Copilot</b>' : ''}<div>${md(m.t).replace(/\n/g, '<br>')}</div></div>`).join('')}
       ${c.acts ? `<div class="vc-acts">${c.acts.map((a, i) => `<button class="vc-btn ${i === 0 ? 'vc-primary' : ''}" ${T(`act:${a}`)}>${esc(a)}</button>`).join('')}</div>` : ''}</div>
     <div class="vc-in">
       ${c.ctx?.length ? `<div class="vc-ctx">${c.ctx.map((x) => `<span class="vc-chip" ${T(`ctx:${x}`)}>${esc(x)}</span>`).join('')}<span class="vc-chip vc-add-ctx" ${T('add-ctx')}>＋ Add context</span></div>` : `<div class="vc-ctx"><span class="vc-chip vc-add-ctx" ${T('add-ctx')}>＋ Add context</span></div>`}
@@ -353,7 +353,7 @@ function pr(sc: Pr) {
     ? (sc.diff ?? []).map((d) => `<div class="gh-diff"><p class="gh-diff-h">${esc(d.file)}</p><pre>${d.lines.map((l) => `<span class="${l.startsWith('+') ? 'gh-a' : l.startsWith('-') ? 'gh-d' : ''}">${esc(l)}</span>`).join('\n')}</pre></div>`).join('')
     : `${sc.body ? `<div class="gh-c"><p class="gh-c-h"><b>${esc(sc.by ?? 'learner')}</b> commented</p><div class="gh-c-b">${md(sc.body).replace(/\n/g, '<br>')}</div></div>` : ''}
        ${sc.items.map((it, i) => `<div class="gh-c ${it.bot ? 'gh-bot' : ''}" ${T(`comment:${i + 1}`)}><p class="gh-c-h">${it.bot ? '✨ ' : ''}<b>${esc(it.by)}</b> ${it.bot ? '<span class="gh-badge">bot</span> ' : ''}${it.file ? `reviewed <code>${esc(it.file)}</code>` : 'commented'}</p><div class="gh-c-b">${md(it.t).replace(/\n/g, '<br>')}${it.code ? `<pre class="gh-sugg">${esc(it.code)}</pre>` : ''}</div></div>`).join('')}`;
-  return `<div class="pt-page gh-pr">
+  return `<div class="pt-page gh-pr" tabindex="0">
     <h3 class="gh-pr-t">${esc(sc.title)} <span class="gh-pr-n">#${sc.n}</span></h3>
     <p class="gh-pr-m"><span class="gh-state gh-${st.toLowerCase()}">${st === 'Merged' ? '⑃' : '⑂'} ${st}</span> <b>${esc(sc.by ?? 'learner')}</b> wants to merge into <code>main</code> from <code>${esc(sc.branch ?? 'feature')}</code></p>
     <div class="gh-tabs">${tabs.map((t) => `<button class="gh-tab ${t === tab ? 'on' : ''}" ${T(`pr-tab:${t}`)}>${t}</button>`).join('')}</div>

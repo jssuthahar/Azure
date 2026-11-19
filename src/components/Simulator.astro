@@ -95,10 +95,10 @@ const shellName = term ? 'terminal' : 'Cloud Shell';
     <div class="sim-shell mt-3 hidden overflow-hidden rounded-xl border border-[#243a5e] bg-[#0b1020] text-[#e6edf3]" data-panel="shell">
       <div class="flex items-center gap-2 bg-[#243a5e] px-3 py-1.5 text-xs"><span class="font-semibold">Bash</span><span class="rounded bg-white/15 px-1.5 font-bold">PRACTICE</span><span class="text-white/70">{term ? 'VS Code terminal · ~/contoso-shop (simulated)' : 'Azure Cloud Shell (simulated)'}</span></div>
       <div class="sim-out h-[26rem] overflow-y-auto p-3 font-mono text-[0.8rem] leading-relaxed whitespace-pre-wrap" aria-live="polite"></div>
-      <form class="sim-form flex items-center gap-2 border-t border-white/10 px-3 py-2 font-mono text-[0.85rem]">
-        <span class="sim-prompt shrink-0 text-[#9fe870]">{term ? 'learner@dev:~/contoso-shop$' : 'learner@Azure:~$'}</span>
+      <form class="sim-form flex flex-wrap items-center gap-2 border-t border-white/10 px-3 py-2 font-mono text-[0.85rem]">
+        <span class="sim-prompt max-w-full break-words text-[#9fe870]">{term ? 'learner@dev:~/contoso-shop$' : 'learner@Azure:~$'}</span>
         <label class="sr-only" for={`sim-in-${lab.id}`}>Command</label>
-        <input id={`sim-in-${lab.id}`} class="sim-in min-w-0 flex-1 bg-transparent text-white outline-none" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder={term ? 'type a command, e.g. help or copilot' : 'type an az command, e.g. az --help'} />
+        <input id={`sim-in-${lab.id}`} class="sim-in min-w-[8rem] flex-1 bg-transparent text-white outline-none" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder={term ? 'type a command, e.g. help or copilot' : 'type an az command, e.g. az --help'} />
         <button class="rounded bg-[#0078d4] px-3 py-1 text-xs font-bold text-white">Run ↵</button>
       </form>
     </div>

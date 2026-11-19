@@ -124,6 +124,14 @@ function plan(w: World, text: string, agent?: string): Plan {
   const head = notes.length ? `${notes.join('\n')}\n` : '';
   const usesJest = /jest/i.test(instr ?? '');
 
+  // Questions about issues and PRs go to the GitHub MCP server (checked before "bug"/"fix").
+  if (/\bissues?\b|pull requests?|\bprs?\b/.test(t) && !/\bfix\b/.test(t)) {
+    const gh = s.mcp.find((m) => m.builtin);
+    return {
+      kind: 'mcp', say: `${head}I'll ask the GitHub MCP server for open issues labelled "bug" in ${ORG}/contoso-shop.`,
+      actions: [{ tool: `${gh?.name ?? 'github-mcp-server'}(list_issues)` as Tool, label: 'Call MCP tool github-mcp-server › list_issues', run: () => { w.emit('gh.mcp.call', { server: 'github-mcp-server', tool: 'list_issues' }); return '✔ 2 open bugs:\n  #41  Discount code HALF applies twice on refresh\n  #44  Cart total shows NaN for unknown codes'; } }],
+    };
+  }
   if (/backup|script|\.sh\b|bash/.test(t)) {
     return {
       kind: 'script', say: `${head}I'll write scripts/backup-logs.sh: it zips logs/ into backups/logs-<date>.tar.gz and keeps the last 7 archives.`,
@@ -169,13 +177,6 @@ function plan(w: World, text: string, agent?: string): Plan {
     return {
       kind: 'data', say: `${head}I'll write 5 sample orders to data/sample-orders.json. They're made up: no real names, emails or card numbers.`,
       actions: [{ tool: 'write', label: 'Create data/sample-orders.json', run: () => { s.files['data/sample-orders.json'] = JSON.stringify([1, 2, 3, 4, 5].map((n) => ({ id: `ord-${1000 + n}`, customer: `Test Customer ${n}`, email: `customer${n}@example.com`, items: n, total: 12.5 * n })), null, 2); w.emit('gh.sampledata', {}); return '✔ Created data/sample-orders.json (5 orders, example.com emails)'; } }],
-    };
-  }
-  if (/issue|pull request|\bpr\b|repo/.test(t)) {
-    const gh = s.mcp.find((m) => m.builtin);
-    return {
-      kind: 'mcp', say: `${head}I'll ask the GitHub MCP server for open issues labelled "bug" in ${ORG}/contoso-shop.`,
-      actions: [{ tool: `${gh?.name ?? 'github-mcp-server'}(list_issues)` as Tool, label: 'Call MCP tool github-mcp-server › list_issues', run: () => { w.emit('gh.mcp.call', { server: 'github-mcp-server', tool: 'list_issues' }); return '✔ 2 open bugs:\n  #41  Discount code HALF applies twice on refresh\n  #44  Cart total shows NaN for unknown codes'; } }],
     };
   }
   if (/doc|readme|comment/.test(t)) {
@@ -284,7 +285,7 @@ function slash(w: World, line: string): DevResult {
       const n = 45 + s.prs.length;
       s.prs.push({ n, title: `[WIP] ${arg.slice(0, 50)}`, by: 'Copilot' });
       w.emit('copilot.delegate', { task: arg, pr: n });
-      return ok(`✔ Handed off to Copilot coding agent.\n  It works in a GitHub Actions environment on branch copilot/${arg.split(/\s+/).slice(0, 3).join('-').toLowerCase()}\n  and opened draft pull request #${n}. You'll be asked to review it.\n  Your local session keeps going.`, COPILOT_PROMPT);
+      return ok(`✔ Handed off to Copilot coding agent.\n  It works in a GitHub Actions environment on branch copilot/${arg.toLowerCase().replace(/[^a-z0-9\s]/g, '').split(/\s+/).filter(Boolean).slice(0, 4).join('-')}\n  and opened draft pull request #${n}. You'll be asked to review it.\n  Your local session keeps going.`, COPILOT_PROMPT);
     }
     case '/session': case '/sessions': return ok(`Session #${s.sessionId} · ${s.sessions.find((x) => x.id === s.sessionId)?.turns ?? 0} turns · model ${s.model}\nFiles changed: ${Object.keys(s.files).filter((f) => !(f in SEED_FILES)).join(', ') || 'none'}`, COPILOT_PROMPT);
     case '/usage': w.emit('copilot.usage', {}); return ok(`This session: ${s.turns} requests · ~${s.tokens.toLocaleString()} tokens · model ${s.model}\nUsage counts toward your plan's allowance (example numbers).`, COPILOT_PROMPT);
