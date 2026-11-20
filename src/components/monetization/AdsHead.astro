@@ -1,0 +1,48 @@
+---
+/**
+ * Google AdSense, loaded ONCE per page from <head>.
+ *
+ * AdSense dashboard settings (set these by hand at adsense.google.com):
+ *   - Auto ads: ON. Formats: anchor ads ON (mobile bottom anchor), vignette ads OFF
+ *     (or lowest frequency), in-page Auto ads optional; our own placements are manual.
+ *   - Auto ads > URL exclusions: every entry in MONETIZATION.adFreePaths
+ *     (src/lib/monetization/config.ts), e.g. /az-900/mock-exam/, /simulator/, /progress/.
+ *   - Privacy & messaging: turn on the GDPR consent message (EEA, UK, Switzerland). Google's
+ *     own certified message is served by this same script, so no extra code is needed.
+ *
+ * The script is not added at all on ad-free paths, so Auto ads can't appear there either.
+ * Before paint, the inline script sets <html data-ads>:
+ *   live  = real ads (live site, online, not a supporter)
+ *   debug = ?ads=debug: grey labelled boxes, no request to Google (never click live ads)
+ *   off   = nothing, and no reserved space
+ */
+import { MONETIZATION, LIVE_HOST, isAdFreePath } from '../../lib/monetization/config';
+import { SUPPORTER_KEY } from '../../lib/monetization/supporter';
+const adFree = !MONETIZATION.adsEnabled || isAdFreePath(Astro.url.pathname);
+const client = MONETIZATION.adClient;
+const liveHost = LIVE_HOST;
+const supporterKey = SUPPORTER_KEY;
+const supporterAdFree = MONETIZATION.supporterAdFree;
+---
+<meta name="google-adsense-account" content={client} />
+<script is:inline define:vars={{ adFree, client, liveHost, supporterKey, supporterAdFree }}>
+  (() => {
+    const d = document.documentElement;
+    let sup = false;
+    try { sup = supporterAdFree && localStorage.getItem(supporterKey) === '1'; } catch {}
+    const debug = /[?&]ads=debug\b/.test(location.search);
+    const live = location.hostname === liveHost;
+    const on = !adFree && !sup && navigator.onLine !== false && (live || debug);
+    d.dataset.ads = on ? (debug ? 'debug' : 'live') : 'off';
+    if (on && !debug) {
+      const s = document.createElement('script');
+      s.async = true;
+      s.crossOrigin = 'anonymous';
+      s.src = 'https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=' + client;
+      document.head.appendChild(s);
+    }
+  })();
+</script>
+<script>
+  import '../../lib/monetization/ads';
+</script>

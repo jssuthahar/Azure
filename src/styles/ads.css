@@ -1,0 +1,71 @@
+/*
+ * Ad slots (src/components/monetization/AdSlot.astro + src/lib/monetization/ads.ts).
+ * Ads must look clearly different from site content: no card, no accent colour, no arrows.
+ * Space is reserved before paint (html[data-ads] is set in <head>) so content never jumps.
+ * Reserved height = label (24px) + the unit's minHeight from config.ts.
+ */
+.ad-host { display: block; margin-block: 32px; }
+html:not([data-ads='live']):not([data-ads='debug']) .ad-host,
+.ad-host[data-ad-state='off'],
+.ad-host[hidden],
+html[data-ads='live'] .ad-host[data-placeholder] { display: none !important; }
+
+/* keep clear of buttons, quiz options, game controls and simulation canvases */
+.ad-host.ad-host[data-guard='both'] { margin-block: 150px; }
+.ad-host.ad-host[data-guard='above'] { margin-top: 150px; }
+.ad-host.ad-host[data-guard='below'] { margin-bottom: 150px; }
+
+.ad-wrap { margin: 0; }
+.ad-label { display: block; font-size: 12px; line-height: 18px; color: var(--text-muted); margin-bottom: 6px; }
+
+/* in-article: reserve before it loads (not for hosts that wait for a quiz or results screen) */
+.ad-host[data-unit='inArticle']:not([data-ad-trigger], [data-ad-reveal]),
+.ad-wrap[data-unit='inArticle'] { min-height: calc(24px + 250px); }
+@media (min-width: 768px) {
+  .ad-host[data-unit='inArticle']:not([data-ad-trigger], [data-ad-reveal]),
+  .ad-wrap[data-unit='inArticle'] { min-height: calc(24px + 280px); }
+}
+@media (min-width: 1024px) { .ad-host[data-max-viewport='1023'] { display: none !important; } }
+
+/* multiplex: end of page only, set apart by a divider */
+.ad-host[data-unit='multiplex'] { margin-top: 48px; border-top: 1px solid var(--border); padding-top: 16px; }
+.ad-host[data-unit='multiplex']:not([data-ad-trigger], [data-ad-reveal]),
+.ad-wrap[data-unit='multiplex'] { min-height: calc(24px + 300px); }
+
+/* leaderboard: 970x90, only at ≥1024px and only where 970px really fits (container query) */
+.ad-cq { container-type: inline-size; }
+.ad-cq > .ad-host[data-unit='leaderboard'] { display: none; }
+@media (min-width: 1024px) {
+  @container (min-width: 970px) {
+    .ad-cq > .ad-host[data-unit='leaderboard'] { display: block; min-height: calc(24px + 90px); margin-block: 24px; text-align: center; overflow: hidden; }
+  }
+}
+html:not([data-ads='live']):not([data-ads='debug']) .ad-cq > .ad-host { display: none !important; }
+
+/* sidebar: sticky right column beside lesson text, ≥1200px */
+.ad-host[data-unit='sidebar'] { margin: 0; position: sticky; top: 88px; width: 100%; max-width: 300px; }
+.ad-wrap[data-unit='sidebar'] { min-height: calc(24px + 600px); }
+@media (max-width: 1199px) { .ad-host[data-unit='sidebar'] { display: none !important; } }
+
+/* ?ads=debug, or a unit whose AdSense slot isn't created yet */
+.ad-debug {
+  display: grid; place-items: center; padding: 12px; text-align: center;
+  border: 2px dashed #9aa3ad; border-radius: 4px; color: #4a5163;
+  background: repeating-linear-gradient(45deg, #eef0f2 0 10px, #e4e7ea 10px 20px);
+  font: 600 13px/1.4 ui-monospace, Menlo, monospace;
+}
+.ad-wrap[data-unit='inArticle'] .ad-debug { height: 250px; }
+.ad-wrap[data-unit='multiplex'] .ad-debug { height: 300px; }
+.ad-wrap[data-unit='leaderboard'] .ad-debug { width: 970px; height: 90px; margin-inline: auto; }
+.ad-wrap[data-unit='sidebar'] .ad-debug { height: 600px; }
+@media (min-width: 768px) { .ad-wrap[data-unit='inArticle'] .ad-debug { height: 280px; } }
+[data-theme='dark'] .ad-debug { border-color: #5b6878; color: #c3ccd8; background: repeating-linear-gradient(45deg, #172235 0 10px, #1d2a40 10px 20px); }
+
+.ad-nudge { margin-top: 8px; text-align: center; font-size: 13px; color: var(--text-muted); }
+.ad-nudge a { text-decoration: underline; }
+
+/* mobile anchor ad (Auto ads) stays out of the way while a simulation, quiz or game is on screen */
+body.focus-mode ins.adsbygoogle[data-anchor-status],
+body.focus-mode ins.adsbygoogle[data-anchor-shown] { display: none !important; }
+
+@media print { .ad-host, .ad-cq, ins.adsbygoogle { display: none !important; } }

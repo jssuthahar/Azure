@@ -1,4 +1,5 @@
 ---
+import AdSlot from '../../../components/monetization/AdSlot.astro';
 import { getCollection } from 'astro:content';
 import GameLayout from '../../../layouts/GameLayout.astro';
 import { getExam, examStaticPaths } from '../../../data/exams';
@@ -22,12 +23,14 @@ const payload = JSON.stringify(pairs).replace(/</g, '\\u003c');
     <p class="text-lg">Moves: <strong id="moves">0</strong> · Pairs: <strong id="found">0</strong>/6 · ⏱ <span id="time">0</span>s</p>
     <button type="button" id="new" class="nav-btn">New board</button>
   </div>
-  <div id="board" class="mt-6 grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4" aria-live="polite"></div>
+  <div id="board" data-focus-zone class="mt-6 grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4" aria-live="polite"></div>
   <div id="win" class="mt-8 hidden rounded-2xl bg-[var(--pastel-green)] p-6 text-center">
     <p class="text-6xl">🎉</p>
     <p id="win-text" class="mt-2 text-2xl font-bold"></p>
     <p id="win-sub" class="mt-1 text-muted"></p>
   </div>
+  <!-- results screen only, never during play -->
+  <AdSlot unit="multiplex" reveal="#win" guard="above" />
 </GameLayout>
 <style is:global>
   .mcard {

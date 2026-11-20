@@ -1,0 +1,38 @@
+---
+/**
+ * A place an ad may appear. Renders an empty host; src/lib/monetization/ads.ts decides
+ * whether to fill it (path, supporter, offline, viewport, 3-per-page cap) and lazy-loads it.
+ *
+ *   <AdSlot unit="inArticle" />
+ *   <AdSlot unit="inArticle" maxViewport={1023} />     phones/tablets only (stands in for the leaderboard)
+ *   <AdSlot unit="leaderboard" />                       desktop, only where 970px fits
+ *   <AdSlot unit="multiplex" trigger="quiz" />          after a lesson quiz is checked, never on load
+ *   <AdSlot unit="multiplex" reveal="#done" />          when that results screen shows
+ *   guard                                               150px clear of buttons, quizzes, games, simulations
+ */
+import { MONETIZATION, isAdFreePath, type UnitKey } from '../../lib/monetization/config';
+interface Props {
+  unit: UnitKey;
+  maxViewport?: number;
+  trigger?: 'quiz';
+  reveal?: string;
+  /** Keep 150px clear of nearby controls: true/'both', or just 'above' / 'below'. */
+  guard?: boolean | 'both' | 'above' | 'below';
+  class?: string;
+}
+const { unit, maxViewport, trigger, reveal, guard = false, class: cls = '' } = Astro.props;
+const off = !MONETIZATION.adsEnabled || isAdFreePath(Astro.url.pathname);
+const placeholder = MONETIZATION.units[unit].slot.startsWith('SLOT_ID_');
+const attrs = {
+  'data-unit': unit,
+  'data-max-viewport': maxViewport,
+  'data-ad-trigger': trigger,
+  'data-ad-reveal': reveal,
+  'data-guard': guard === true ? 'both' : guard || undefined,
+  'data-placeholder': placeholder ? '' : undefined,
+  'data-slide-skip': '',
+  'data-no-annotate': '',
+};
+---
+{!off && unit === 'leaderboard' && <div class="ad-cq"><div class:list={['ad-host not-prose', cls]} {...attrs} /></div>}
+{!off && unit !== 'leaderboard' && <div class:list={['ad-host not-prose', cls]} {...attrs} />}

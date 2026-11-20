@@ -1,6 +1,7 @@
 ---
 import '@fontsource-variable/inter';
 import '../styles/global.css';
+import '../styles/ads.css';
 import Header from '../components/Header.astro';
 import Footer from '../components/Footer.astro';
 import AskBot from '../components/AskBot.astro';
@@ -10,6 +11,7 @@ import SpeakButtons from '../components/SpeakButtons.astro';
 import Reveal from '../components/Reveal.astro';
 import CurrencyPrices from '../components/CurrencyPrices.astro';
 import AppInstall from '../components/AppInstall.astro';
+import AdsHead from '../components/monetization/AdsHead.astro';
 import { SITE, SOCIAL } from '../config';
 import { ogPages, ogImagePath } from '../lib/og-pages';
 import { liveExams } from '../data/exams';
@@ -139,6 +141,8 @@ const jsonLd = JSON.stringify({ '@context': 'https://schema.org', '@graph': grap
     <meta name="twitter:image" content={ogImage} />
     <meta name="twitter:image:alt" content={ogAlt} />
     <link rel="alternate" type="text/plain" title="AI-readable site map (llms.txt)" href="/llms.txt" />
+    <!-- Google AdSense: loaded once here. Dashboard: Auto ads ON, vignette OFF (or low), URL exclusions = adFreePaths. See AdsHead.astro. -->
+    <AdsHead />
 
     <script is:inline>
       (() => {

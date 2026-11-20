@@ -1,4 +1,6 @@
 ---
+import SupporterCard from '../components/monetization/SupporterCard.astro';
+import SupportCoffee from '../components/SupportCoffee.astro';
 import Base from '../layouts/Base.astro';
 import Mascot from '../components/Mascot.astro';
 import { getCollection } from 'astro:content';
@@ -26,6 +28,7 @@ const payload = JSON.stringify({ moduleKeys, topics, modules: exam.modules.map((
         <h1 class="mt-2 text-3xl font-bold tracking-tight">My progress</h1>
       </div>
     </div>
+    <SupporterCard />
     <section class="sync-card mt-6" aria-labelledby="sync-h">
       <div class="sync-out">
         <div>
@@ -117,6 +120,7 @@ const payload = JSON.stringify({ moduleKeys, topics, modules: exam.modules.map((
       <a href="/az-900/revision/" class="btn btn-outline">Revision flashcards</a>
       <button type="button" id="pg-reset" class="btn btn-outline">Reset my progress</button>
     </div>
+    <SupportCoffee inPage class="mt-12" />
   </div>
 </Base>
 <script>

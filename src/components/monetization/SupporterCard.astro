@@ -1,0 +1,33 @@
+---
+/**
+ * My Progress: "Go ad-free & support free learning" card + the "Supporter 💙" badge.
+ * The offer only shows once a real checkout URL is set in config.ts (or with ?ads=debug).
+ * Supporting never unlocks lessons: everything stays free; supporters just see no ads.
+ */
+import { MONETIZATION, isPlaceholder } from '../../lib/monetization/config';
+const s = MONETIZATION.supporter;
+const ready = s.enabled && !isPlaceholder(s.checkoutUrl) && !isPlaceholder(s.priceLabel);
+---
+<p class="supporter-badge not-prose" data-supporter-badge hidden><span aria-hidden="true">💙</span> Supporter. Thank you! You won't see ads on this site.</p>
+{s.enabled && (
+  <section class="supporter-card not-prose" data-supporter-offer data-ready={ready ? '' : undefined} hidden aria-labelledby="supporter-h">
+    <div class="min-w-0">
+      <h2 id="supporter-h" class="text-lg font-bold">Go ad-free &amp; support free learning</h2>
+      <p class="mt-1 text-sm text-muted">Every lesson, lab and mock exam stays free for everyone. Supporters help pay for it and get:</p>
+      <ul class="mt-2 flex flex-wrap gap-2 text-sm">{s.perks.map((p) => <li class="chip">{p}</li>)}</ul>
+    </div>
+    <a class="btn btn-accent shrink-0" href={s.checkoutUrl} target="_blank" rel="noopener">Become a supporter · {s.priceLabel}</a>
+  </section>
+)}
+<script>
+  import { isSupporter } from '../../lib/monetization/supporter';
+  const sup = isSupporter();
+  const debug = /[?&]ads=debug\b/.test(location.search);
+  document.querySelectorAll<HTMLElement>('[data-supporter-badge]').forEach((el) => (el.hidden = !sup));
+  document.querySelectorAll<HTMLElement>('[data-supporter-offer]').forEach((el) => (el.hidden = sup || !(el.hasAttribute('data-ready') || debug)));
+</script>
+<style>
+  .supporter-badge { display: inline-flex; align-items: center; gap: 0.4rem; margin-top: 1rem; padding: 0.35rem 0.85rem; border-radius: 999px; background: var(--accent-soft); color: var(--accent-deep); font-weight: 700; font-size: 0.9rem; }
+  .supporter-badge[hidden], .supporter-card[hidden] { display: none; }
+  .supporter-card { margin-top: 1.5rem; display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 1rem; padding: 1.25rem; border-radius: 1rem; border: 1px solid var(--border); background: var(--bg-subtle); }
+</style>

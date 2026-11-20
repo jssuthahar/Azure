@@ -1,4 +1,5 @@
 ---
+import AdSlot from '../../../components/monetization/AdSlot.astro';
 import { SITE } from '../../../config';
 import Base from '../../../layouts/Base.astro';
 import { getExam, examStaticPaths } from '../../../data/exams';
@@ -17,9 +18,13 @@ const itemList = [{ '@type': 'ItemList', name: 'Azure services in 60 seconds', n
     <p class="text-sm font-bold tracking-[0.14em] text-accent uppercase">Reference</p>
     <h1 class="mt-1 text-4xl font-semibold tracking-tight">Azure services in 60 seconds</h1>
     <p class="mt-3 max-w-2xl text-lg text-muted">Look up any Azure service: what it is, when to use it, how much it roughly costs in your currency, and a simulation to feel it.</p>
+    <AdSlot unit="leaderboard" guard="below" />
     <label class="mt-6 block max-w-md"><span class="sr-only">Filter services</span>
       <input id="svc-q" type="search" placeholder="Filter… e.g. storage, firewall, S3" class="w-full rounded-full border border-default bg-[var(--pastel-grey)] px-5 py-2.5 outline-none focus:border-[var(--accent)]" /></label>
-    {SERVICE_CATS.map((cat) => (
+    {SERVICE_CATS.map((cat, i) => (
+      <>
+      {i === 3 && <AdSlot unit="inArticle" />}
+      {i === 6 && <AdSlot unit="inArticle" maxViewport={1023} />}
       <section class="svc-cat mt-10">
         <h2 class="text-2xl font-semibold">{cat}</h2>
         <ul class="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
@@ -33,7 +38,9 @@ const itemList = [{ '@type': 'ItemList', name: 'Azure services in 60 seconds', n
           ))}
         </ul>
       </section>
+      </>
     ))}
+    <AdSlot unit="multiplex" />
   </div>
 </Base>
 <script>

@@ -1,4 +1,5 @@
 ---
+import AdSlot from '../../../components/monetization/AdSlot.astro';
 import GameLayout from '../../../layouts/GameLayout.astro';
 import { getNav } from '../../../lib/learn';
 import { getExam, examStaticPaths } from '../../../data/exams';
@@ -27,7 +28,7 @@ const payload = JSON.stringify(sets).replace(/</g, '\\u003c');
     </div>
   </section>
 
-  <section id="play" class="hidden" aria-live="polite">
+  <section id="play" data-focus-zone class="hidden" aria-live="polite">
     <div class="flex items-center justify-between text-sm">
       <p id="round-title" class="font-semibold"></p>
       <p><span id="card-n"></span> · Score <strong id="score">0</strong> <span id="combo" class="ml-1"></span></p>
@@ -51,6 +52,8 @@ const payload = JSON.stringify(sets).replace(/</g, '\\u003c');
       <a id="revise" class="big-btn big-btn-light hidden">Revise the lesson</a>
     </div>
   </section>
+  <!-- results screen only, never during play -->
+  <AdSlot unit="multiplex" reveal="#done" guard="above" />
 </GameLayout>
 <script>
   import { shuffle, confetti } from '../../../lib/fun';

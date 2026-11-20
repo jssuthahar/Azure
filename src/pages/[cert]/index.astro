@@ -11,6 +11,9 @@ import CertIcon from '../../components/course/CertIcon.astro';
 import Curriculum from '../../components/course/Curriculum.astro';
 import CourseFeatures from '../../components/course/CourseFeatures.astro';
 import CourseDiscussion from '../../components/CourseDiscussion.astro';
+import AdSlot from '../../components/monetization/AdSlot.astro';
+import SponsorStrip from '../../components/monetization/SponsorStrip.astro';
+import Affiliates from '../../components/monetization/Affiliates.astro';
 import { getNav, getQuestionBank, moduleUrl } from '../../lib/learn';
 import { getGlossary } from '../../lib/glossary';
 import { labsForExam } from '../../lib/sim/labs';
@@ -110,6 +113,7 @@ const schema = [
     </ul>
     <p class="cd-by">Updated {updatedText} · Follows the skills outline as of {exam.skillsMeasuredAsOf} · English</p>
     <BrandLine variant="light" class="mt-2" />
+    <SponsorStrip track={exam.slug} class="mt-2" />
   </Fragment>
 
   <Fragment slot="card">
@@ -207,6 +211,9 @@ const schema = [
     </div>
   </section>
 
+  <!-- Ad: below the exam domains, never above Start learning -->
+  <AdSlot unit="inArticle" />
+
   <!-- Roadmap + sequence -->
   <section id="roadmap" class="cd-sec scroll-mt-28" aria-labelledby="road-h">
     <h2 id="road-h" class="cd-h2">Preparation roadmap</h2>
@@ -295,8 +302,11 @@ const schema = [
     </div>
   </section>
 
+  <Affiliates track={exam.slug} class="cd-sec" />
+
   <!-- Discussion (GitHub Gist comments) -->
   <CourseDiscussion exam={exam.slug} code={exam.code} />
+
 
   <!-- Final CTA -->
   <section class="cd-sec" aria-labelledby="ready-h">
@@ -309,6 +319,9 @@ const schema = [
       <a href={`${x}/learn/`} class="btn btn-accent cd-card-btn sm:w-auto" data-start-learning>Start learning</a>
     </div>
   </section>
+
+  <!-- Ad: just above the footer, desktop only, kept clear of Start learning -->
+  <AdSlot unit="leaderboard" guard="above" />
 </CourseDetailsLayout>
 
 <style>

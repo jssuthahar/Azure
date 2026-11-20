@@ -1,0 +1,23 @@
+---
+/** "Sponsor · Supported by [logo] [name]" for one exam track. Renders nothing unless that track's sponsor is enabled in config.ts. */
+import { activeSponsor } from '../../lib/monetization/config';
+interface Props { track: string; class?: string }
+const { track, class: cls = '' } = Astro.props;
+const s = activeSponsor(track);
+---
+{s && (
+  <p class:list={['sponsor-strip not-prose', cls]}>
+    <span class="sponsor-tag">Sponsor</span>
+    <span>Supported by</span>
+    <a href={s.url} target="_blank" rel="sponsored noopener" class="sponsor-link">
+      <img src={s.logo} alt="" width="80" height="24" loading="lazy" />
+      <span>{s.name}</span>
+    </a>
+  </p>
+)}
+<style>
+  .sponsor-strip { display: flex; flex-wrap: wrap; align-items: center; gap: 0.5rem; font-size: 0.85rem; color: var(--text-muted); }
+  .sponsor-tag { border: 1px solid var(--border); border-radius: 999px; padding: 0.05rem 0.55rem; font-size: 0.7rem; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; }
+  .sponsor-link { display: inline-flex; align-items: center; gap: 0.4rem; min-height: 36px; font-weight: 600; color: var(--text); }
+  .sponsor-link img { height: 24px; width: auto; }
+</style>

@@ -1,4 +1,5 @@
 ---
+import Affiliates from '../../components/monetization/Affiliates.astro';
 import Base from '../../layouts/Base.astro';
 import Mascot from '../../components/Mascot.astro';
 import { SITE } from '../../config';
@@ -77,6 +78,8 @@ const crumbs = [{ name: 'Home', url: '/' }, { name: `${exam.code}`, url: `/${exa
 
     <!-- ============ RESULTS ============ -->
     <section id="results" class="hidden" aria-labelledby="sr-title"></section>
+    <!-- Shown with the score report only. Mock exam is ad-free; these are optional resources. -->
+    <div id="results-extra" hidden><Affiliates track={exam.slug} /></div>
   </div>
 
   <!-- ============ EXAM ROOM (full screen) ============ -->
@@ -750,4 +753,14 @@ const crumbs = [{ name: 'Home', url: '/' }, { name: `${exam.code}`, url: `/${exa
       r.addEventListener('click', () => { st = JSON.parse(saved); openRoom(); });
     }
   } catch {}
+</script>
+<script>
+  // Recommended resources follow the score report: visible only while #results is.
+  const res = document.getElementById('results');
+  const extra = document.getElementById('results-extra');
+  if (res && extra) {
+    const sync = () => { extra.hidden = res.classList.contains('hidden') || res.hidden; };
+    new MutationObserver(sync).observe(res, { attributes: true, attributeFilter: ['class', 'hidden'] });
+    sync();
+  }
 </script>

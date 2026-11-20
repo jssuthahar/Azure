@@ -1,0 +1,80 @@
+---
+/**
+ * /sponsor: "Sponsor a learning track". Content numbers are computed from the exam registry
+ * at build time. Audience numbers are placeholders in src/lib/monetization/config.ts and stay
+ * hidden until they're filled in (visible as [X] with ?ads=debug).
+ */
+import Base from '../layouts/Base.astro';
+import BrandLine from '../components/BrandLine.astro';
+import { SITE } from '../config';
+import { liveExams } from '../data/exams';
+import { getNav, getQuestionBank } from '../lib/learn';
+import { MONETIZATION } from '../lib/monetization/config';
+
+const live = liveExams();
+let lessons = 0, questions = 0;
+for (const e of live) {
+  lessons += (await getNav(e.slug)).filter((t) => t.published).length;
+  questions += (await getQuestionBank(e.slug)).length + e.examItems.length;
+}
+const { monthlyLearners, countries } = MONETIZATION.audience;
+const audience = [
+  { n: monthlyLearners, label: 'Monthly learners' },
+  { n: countries, label: 'Countries' },
+];
+const content = [
+  { n: String(lessons), label: 'Lessons with simulations' },
+  { n: String(questions), label: 'Original practice questions' },
+  { n: String(live.length), label: live.length === 1 ? 'Certification track' : 'Certification tracks' },
+];
+const mail = `mailto:${MONETIZATION.sponsorContactEmail}?subject=${encodeURIComponent('Sponsoring a learning track on MSDEVBUILD Azure')}`;
+---
+<Base title="Sponsor a Learning Track | MSDEVBUILD Azure" description={`Sponsor a free certification track on MSDEVBUILD Azure: ${lessons} simulated lessons and ${questions} original practice questions, with a clearly labelled sponsor strip.`} breadcrumbs={[{ name: 'Home', url: '/' }, { name: 'Sponsor', url: '/sponsor/' }]} wide={false}>
+  <div class="lesson">
+    <p class="eyebrow">Sponsorship</p>
+    <h1 class="text-4xl font-bold tracking-tight">Sponsor a learning track</h1>
+    <BrandLine variant="byline" class="not-prose mt-3" />
+    <p>MSDEVBUILD Azure teaches Microsoft certifications for free, with simulations people can try without an Azure account. A sponsor backs one track, such as {live.map((e) => e.code).join(', ')}, and keeps it free for every learner who opens it.</p>
+
+    <ul class="not-prose mt-6 grid gap-3 sm:grid-cols-3" aria-label="The site in numbers">
+      {audience.map((s) => (
+        <li class="sp-stat" data-sp-placeholder={s.n ? undefined : ''} hidden={s.n ? undefined : true}>
+          <span class="sp-n">{s.n ?? '[X]'}</span><span class="sp-l">{s.label}</span>
+        </li>
+      ))}
+      {content.map((s) => <li class="sp-stat"><span class="sp-n">{s.n}</span><span class="sp-l">{s.label}</span></li>)}
+    </ul>
+
+    <h2 id="what-you-get">What a sponsor gets</h2>
+    <ul>
+      <li>A small "Sponsor · Supported by" strip with your logo and name under the track's course page title and in the footer of every lesson in that track.</li>
+      <li>A link to your site, marked as sponsored.</li>
+      <li>A mention when the track is shared on the MSDEVBUILD channels.</li>
+    </ul>
+
+    <h2 id="what-stays">What never changes</h2>
+    <ul>
+      <li>Every lesson, lab and mock exam stays free, with no sign-up needed.</li>
+      <li>Sponsors don't write or approve lessons. Content follows the official Microsoft skills outline.</li>
+      <li>The sponsor strip is always labelled, and it never sits inside a simulation, quiz or game.</li>
+    </ul>
+
+    <div class="not-prose mt-8 flex flex-wrap items-center gap-4 rounded-2xl border border-default bg-[var(--card)] p-6">
+      <div class="min-w-0 flex-1">
+        <p class="text-lg font-bold">Interested in a track?</p>
+        <p class="text-sm text-muted">Tell us which certification and when. We'll reply with the details.</p>
+      </div>
+      <a class="btn btn-accent" href={mail}>Email {MONETIZATION.sponsorContactEmail}</a>
+    </div>
+    <p class="text-sm text-muted">Independent resource, not affiliated with or endorsed by Microsoft. Read more <a href="/about/#advertising">about advertising and sponsorship</a> or see <a href={SITE.profile}>who runs the site</a>.</p>
+  </div>
+</Base>
+<script>
+  if (/[?&]ads=debug\b/.test(location.search)) document.querySelectorAll<HTMLElement>('[data-sp-placeholder]').forEach((el) => (el.hidden = false));
+</script>
+<style>
+  .sp-stat { display: flex; flex-direction: column; gap: 0.15rem; padding: 1rem 1.1rem; border-radius: 0.9rem; border: 1px solid var(--border); background: var(--bg-subtle); }
+  .sp-stat[hidden] { display: none; }
+  .sp-n { font-size: 1.75rem; font-weight: 800; color: var(--accent-deep); }
+  .sp-l { font-size: 0.875rem; color: var(--text-muted); }
+</style>

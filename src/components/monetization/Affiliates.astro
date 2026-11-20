@@ -1,0 +1,44 @@
+---
+/**
+ * "Recommended resources" affiliate cards. Only on course details pages and mock exam results,
+ * never inside lessons. Entries whose url still says PLACEHOLDER stay hidden for learners and
+ * show only with ?ads=debug.
+ */
+import { MONETIZATION, isPlaceholder } from '../../lib/monetization/config';
+interface Props { track: string; class?: string }
+const { track, class: cls = '' } = Astro.props;
+const items = MONETIZATION.affiliates.filter((a) => a.track === track);
+const ready = items.filter((a) => !isPlaceholder(a.url) && !isPlaceholder(a.title));
+const icon = (t: string) => (t === 'book' ? '📘' : t === 'course' ? '🎓' : '🔗');
+---
+{items.length > 0 && (
+  <section class:list={['aff not-prose', cls]} aria-labelledby={`aff-h-${track}`} data-aff-placeholder={ready.length ? undefined : ''} hidden={ready.length ? undefined : true}>
+    <h2 id={`aff-h-${track}`} class="aff-h">Recommended resources</h2>
+    <p class="aff-sub">Extra material some learners like. Everything on this site stays free without it.</p>
+    <ul class="aff-grid">
+      {items.map((a) => {
+        const ph = isPlaceholder(a.url) || isPlaceholder(a.title);
+        return (
+          <li class="aff-card" data-aff-placeholder={ph ? '' : undefined} hidden={ph && ready.length ? true : undefined}>
+            <span class="aff-tag">Affiliate link</span>
+            <a href={a.url} target="_blank" rel="sponsored noopener" class="aff-title"><span aria-hidden="true">{icon(a.type)}</span> {a.title}</a>
+            <span class="aff-note">{a.note}</span>
+          </li>
+        );
+      })}
+    </ul>
+  </section>
+)}
+<script>
+  if (/[?&]ads=debug\b/.test(location.search)) document.querySelectorAll<HTMLElement>('[data-aff-placeholder]').forEach((el) => (el.hidden = false));
+</script>
+<style>
+  .aff { margin-block: 2.5rem; }
+  .aff-h { font-size: 1.35rem; font-weight: 700; }
+  .aff-sub { margin-top: 0.25rem; font-size: 0.9rem; color: var(--text-muted); }
+  .aff-grid { margin-top: 1rem; display: grid; gap: 0.75rem; grid-template-columns: repeat(auto-fill, minmax(min(100%, 16rem), 1fr)); }
+  .aff-card { display: flex; flex-direction: column; gap: 0.35rem; padding: 1rem; border: 1px solid var(--border); border-radius: 0.75rem; background: var(--card); }
+  .aff-tag { align-self: flex-start; font-size: 0.7rem; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; color: var(--text-muted); border: 1px solid var(--border); border-radius: 999px; padding: 0.05rem 0.55rem; }
+  .aff-title { font-weight: 600; color: var(--text); text-decoration: underline; text-underline-offset: 3px; min-height: 36px; display: inline-flex; align-items: center; gap: 0.35rem; }
+  .aff-note { font-size: 0.875rem; color: var(--text-muted); }
+</style>

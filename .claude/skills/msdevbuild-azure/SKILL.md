@@ -25,7 +25,7 @@ Read the reference file for the area you are touching before you start:
 **Product decisions (made by the owner; do not change without asking)**
 - Free, and **no account required**. Progress, XP, streak, certificate, currency and lab state live in the browser (localStorage) and everything works signed out.
 - **Optional Google sign-in** (owner's decision, 17 Nov 2026; Firebase project `msdevbuild-azure`, config `FIREBASE` in `src/config.ts`). `src/lib/cloud/`: `firebase.ts` lazy-loads the SDK (Auth + Firestore Lite, only on sign-in or for a returning signed-in learner); `account.ts` handles sign-in, sign-out and delete-my-data and sets `<html data-auth="in|out">`; `sync.ts` merges local ⇄ `users/<uid>` (union lessons, best scores, newer review card, better certificate), then pushes on `progress-change` / `review-change` / `msdb-data-change`. A new localStorage key that should follow the learner goes in `KEYS` in `sync.ts` with a merge rule, and in `firestore.rules`.
-- **Anonymous usage counts** (`src/lib/cloud/track.ts`): `stats/<day|total>__<event>`, +1 only, no cookies or IDs, skipped for Do Not Track / GPC and on any host except the live site. `npm run stats` prints them. Don't add per-person analytics or Google Analytics without asking.
+- **Anonymous usage counts** (`src/lib/cloud/track.ts`): `stats/<day|total>__<event>`, +1 only, no cookies or IDs, skipped for Do Not Track / GPC and on any host except the live site. `npm run stats` prints them. Don't add per-person analytics or Google Analytics without asking (AdSense, added 20 Nov 2026 at the owner's request, is the only ad tracker).
 - Sign-in runs on our own domain on the live site: `public/__/auth/*` and `public/__/firebase/init.json` are Firebase's self-hosted sign-in helper (refresh with `npm run auth-helper`; never hand-edit). `AUTH_HOST` in `src/config.ts` switches `authDomain` only on azure.msdevbuild.com; the service worker, robots.txt and the SEO audit all skip `/__/`.
 - `firestore.rules` is the security boundary. Change it only with the emulator test, then `firebase deploy --only firestore:rules --project msdevbuild-azure` (outward-facing: ask first).
 - Currency defaults to **INR** and the learner can change it (every picker stays in sync).
@@ -34,7 +34,15 @@ Read the reference file for the area you are touching before you start:
 - The Azure portal simulator and labs are **for education only** and say so; never claim affiliation with Microsoft.
 - Do not run `npm run indexnow` (it pings search engines) and do not commit or push unless the owner asks.
 
-**Every lesson** (enforced by `npm run qa -- lessons`)
+**Monetization (owner's decision, 20 Nov 2026; spec + status in [MONETIZATION_TODO.md](MONETIZATION_TODO.md))**
+- Learning flow always wins over ad revenue. Everything stays free; nothing that teaches is ever gated. Supporters only lose the ads.
+- Google AdSense `ca-pub-3425499927549926`. All settings live in `src/lib/monetization/config.ts` (units, `adFreePaths`, 3-per-page cap, supporter, sponsors, affiliates). `public/ads.txt` must stay exactly as it is.
+- The script is injected once from `<head>` by `src/components/monetization/AdsHead.astro`, only on the live host, never on `adFreePaths`, never for supporters or offline. It sets `<html data-ads="live|debug|off">` before paint.
+- Place ads only with `<AdSlot unit=… />` (`src/components/monetization/AdSlot.astro`); `src/lib/monetization/ads.ts` decides, lazy-loads and reserves space. Never inside a simulation, quiz, game, lab or exam; `guard` keeps 150px from controls. Lessons: in-article after the answer, one mid-explanation if >600 words, multiplex only after the quiz, sidebar ≥1200px. No leaderboard on lessons.
+- Any value containing `PLACEHOLDER` or a `SLOT_ID_` slot never reaches learners. Preview with `?ads=debug` (grey boxes, no request to Google). `npm run qa -- ads` checks the rules. Never click live ads.
+- Sponsor links `rel="sponsored noopener"` with a visible "Sponsor" label; affiliate cards only on course details pages and mock exam results, each tagged "Affiliate link". Buy Me a Coffee: `SUPPORT` in `src/config.ts`, `<SupportCoffee />`.
+
+
 - Fixed flow: **30-second answer → Simulations → Explanation → Exam tip → Quiz → Previous / Next**.
 - One **Simulations** section with tabs **Azure Portal | 3D View | Practice Lab**. Azure Portal is the first, default tab (owner's decision, 18 Nov 2026). Every lesson has all three.
 - The learner never leaves the lesson mid-way: no same-tab links between the answer and the quiz (except `#` anchors, new-tab references).
@@ -58,7 +66,7 @@ Read the reference file for the area you are touching before you start:
 - **Ask Nimbus chatbot** (`src/components/AskBot.astro`, mounted in `Base.astro`): free, in-browser search over `/<exam>/ask-index.json`, built by `src/lib/ask-index.ts` from lesson answers, interview Q&A, quick revision, exam tips, glossary and comparisons; ranked by `src/lib/ask.ts`. A new exam joins automatically once it is live. No AI backend and nothing the learner types leaves the browser (owner's choice, 13 Nov 2026). If answers drift, retune `MIN_SCORE` against real and off-topic questions.
 - **Simulation first** (owner's decision, 17 Nov 2026): every Nimbus answer tied to a lesson shows that lesson's **3D View** card, then the **Azure Portal** walkthrough (plus its Practice Lab), then the text explanation. Cards come from the `sims` map in `ask-index.ts` (`lessonSims` + `sims3d` + `tours` + `labsForTopic`); buttons open `<lesson>#sim-3d | #sim-portal | #sim-lab-<id>`, which `LessonSimulations` handles. `npm run qa -- tools` checks the order.
 
-**Study tools (all free, all in the browser; owner's decision, 13 Nov 2026: no paid tier, nothing labelled premium)**
+**Study tools (all free, all in the browser; owner's decision, 13 Nov 2026: no paid tier, nothing labelled premium. The optional ad-free supporter perk from 20 Nov 2026 removes ads only and never unlocks learning)**
 - **Smart practice** `/<exam>/practice/` + `src/lib/review.ts`: Leitner spaced repetition (`msdb-azure-review-v1`, cards keyed `<exam>:<questionId>`) and the readiness score. Lesson quizzes (`KnowledgeCheck`) and the mock exam record every answer into it, so question ids must stay stable.
 - **Study plan** `/<exam>/study-plan/` + `src/lib/plan.ts`: exam date + minutes/day → schedule rebuilt from today; reminders are an `.ics` download (no push server). My Progress shows today's plan.
 - **Lesson tutor**: Ask Nimbus on a lesson offers "explain it another way" chips from that lesson's own content (`tutor` map in `ask-index.ts`: Eli10, business scenario, mistakes/tips, interview, quick revision, key terms). Opened by any `[data-tutor-open]` button (in `LessonTools`). Still no AI backend. Keep the `## Explain it like I'm 10` and `## Real-world business scenario` headings or the tutor loses text.

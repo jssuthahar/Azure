@@ -15,6 +15,7 @@ import KnowledgeCheck from '../../../components/KnowledgeCheck.astro';
 import InterviewBlock from '../../../components/InterviewBlock.astro';
 import QuickRevision from '../../../components/QuickRevision.astro';
 import LessonActivities from '../../../components/LessonActivities.astro';
+import AdSlot from '../../../components/monetization/AdSlot.astro';
 import { mdxComponents } from '../../../components/mdx';
 import { getNav, getTopicQuestions, moduleUrl, inlineMd } from '../../../lib/learn';
 import { SITE } from '../../../config';
@@ -135,7 +136,7 @@ const schema = [
 ---
 <LearningLayout title={d.seoTitle} description={d.description} type="article" schema={schema} breadcrumbs={crumbs} modified={d.updated.toISOString()}
   nav={nav} currentKey={entry.id} prev={prev} next={next} sections={toc} shareText={shareText}>
-    <article class="mx-auto max-w-[860px]" data-present-root>
+    <article class="mx-auto max-w-[860px]" data-present-root data-ad-mid>
       <nav aria-label="Breadcrumb" class="text-sm text-muted" data-slide-skip>
         <ol class="flex flex-wrap items-center gap-1.5">
           {crumbs.slice(0, -1).map((c) => <li class="flex items-center gap-1.5"><a class="hover:text-[var(--accent-deep)] hover:underline" href={c.url}>{c.name}</a><span aria-hidden="true">›</span></li>)}
@@ -172,6 +173,9 @@ const schema = [
           {me.objectives.map((o) => ` ${o} ${examObjective(exam, o)}.`)} <span class="text-xs">(Skills measured as of {exam.skillsMeasuredAsOf})</span>
         </p>
       )}
+
+      <!-- Ad 1: after the 30-second answer, before the simulations (kept 150px clear of both) -->
+      <AdSlot unit="inArticle" guard />
 
       <LessonActivities exam={exam} topic={topicSlug!} lessonKey={entry.id} />
 
@@ -236,6 +240,9 @@ const schema = [
         <span class="min-w-0 flex-1"><span class="block font-semibold">Lesson done? Make it stick with a quick game</span><span class="block text-sm text-muted">Sort It, Match the Pairs, Lightning Round and Who Am I? Earn XP and badges.</span></span>
         <span class="nav-btn shrink-0">Play ❯</span>
       </a>
+
+      <!-- Ad 3: only after the quiz is checked, below Lesson complete + Next, never on page load -->
+      <AdSlot unit="multiplex" trigger="quiz" guard />
     </article>
     <LessonResume />
     <style is:global>
@@ -268,6 +275,8 @@ const schema = [
           <ul class="space-y-1 text-sm">{lessonWhatIfs.map((w) => <li><a class="text-accent hover:underline" href={`/simulator/${w.slug}/`}>{`${w.emoji} ${w.q}`}</a></li>)}</ul>
         </div>
       )}
+      <!-- Ad 4: desktop ≥1200px, right column below our own links -->
+      <AdSlot unit="sidebar" class="!mt-10" />
     </div>
 </LearningLayout>
 <script>

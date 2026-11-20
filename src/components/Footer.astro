@@ -2,6 +2,7 @@
 import { SITE, SUPPORT } from '../config';
 import SocialLinks from './SocialLinks.astro';
 import SupportCoffee from './SupportCoffee.astro';
+import SponsorStrip from './monetization/SponsorStrip.astro';
 import { examFromPath } from '../data/exams';
 interface Props { /** Learning environment: one quiet row instead of the full site footer. */ compact?: boolean }
 const { compact = false } = Astro.props;
@@ -10,7 +11,7 @@ const year = new Date().getFullYear();
 ---
 {compact ? (
 <footer class="learn-foot mt-16 border-t border-default bg-[var(--bg)]">
-  <div class="mx-auto max-w-7xl px-4 pt-6 sm:px-6"><SupportCoffee variant="strip" /></div>
+  <div class="mx-auto max-w-7xl px-4 pt-6 sm:px-6"><SponsorStrip track={exam.slug} class="mb-3" /><SupportCoffee variant="strip" /></div>
   <div class="mx-auto flex max-w-7xl flex-col gap-3 px-4 py-6 text-sm text-muted sm:px-6 lg:flex-row lg:items-center lg:justify-between">
     <p class="font-semibold text-[var(--text)]">{SITE.brandLine}</p>
     <ul class="flex flex-wrap gap-x-5 gap-y-1">
@@ -62,6 +63,7 @@ const year = new Date().getFullYear();
         <li><a class="hover:text-[var(--accent-deep)]" href="https://www.youtube.com/@MSDEVBUILD?sub_confirmation=1" target="_blank" rel="noopener">YouTube channel</a></li>
         <li><a class="hover:text-[var(--accent-deep)]" href="https://blog.msdevbuild.com/contact/">Contact</a></li>
         <li><a class="font-semibold hover:text-[var(--accent-deep)]" href={SUPPORT.url} target="_blank" rel="noopener">☕ {SUPPORT.label}</a></li>
+        <li><a class="hover:text-[var(--accent-deep)]" href="/sponsor/">Sponsor a learning track</a></li>
       </ul>
     </div>
     <div>
@@ -84,6 +86,7 @@ const year = new Date().getFullYear();
       <p class="mt-4 text-xs leading-relaxed text-muted">
         Independent learning resource. Not affiliated with or endorsed by Microsoft. Practice questions are original and are not actual exam questions.
       </p>
+      <p class="mt-2 text-xs leading-relaxed text-muted">Some links are affiliate links. They help keep this site free. The site also shows ads from Google AdSense; see the <a class="underline" href="/privacy/#ads">Privacy Policy</a>.</p>
     </div>
   </div>
   <div class="border-t border-default py-5 text-center text-xs text-muted">{`© ${year} ${SITE.org}.`} Microsoft, Azure and related marks are trademarks of the Microsoft group of companies.</div>
