@@ -23,6 +23,9 @@ interface Item { label: string; href: string; desc: string; icon: string }
 interface Group { label: string; icon: string; items: Item[] }
 const PUBLIC: (Group | Item)[] = [
   { label: 'Home', href: '/', desc: '', icon: 'home' },
+  { label: 'AI Roadmap', href: '/ai-certifications/', desc: '', icon: 'compass' },
+  { label: 'Security Roadmap', href: '/security-certifications/', desc: '', icon: 'compass' },
+  { label: 'GitHub Roadmap', href: '/github-certifications/', desc: '', icon: 'compass' },
   { label: 'Certifications', href: '/certifications/', desc: '', icon: 'cert' },
   { label: 'About', href: '/about/', desc: '', icon: 'info' },
   { label: 'My Progress', href: '/progress/', desc: '', icon: 'progress' },

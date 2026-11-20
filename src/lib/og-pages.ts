@@ -37,6 +37,9 @@ export async function ogPages(): Promise<Map<string, Card>> {
   hub(`/${exam.slug}/services/`, { eyebrow: 'Reference', title: 'Every Azure service in 60 seconds', text: 'What it is, when to use it, price feel in your currency and a simulation.', accent: '#8fcbf7' });
   hub(`/${exam.slug}/glossary/`, { eyebrow: 'Reference', title: 'Azure glossary', text: 'Every AZ-900 term explained in one line, linked to a lesson and a simulation.', accent: '#8fcbf7' });
   hub(`/${exam.slug}/labs/`, { eyebrow: 'Practice labs', title: 'Click through a simulated Azure portal', text: 'Guided tasks in a simulated portal and Cloud Shell. Education only, no Azure account needed.' });
+  hub('/ai-certifications/', { eyebrow: 'AI certification roadmap', title: 'Which Azure AI certification fits your role?', text: 'AI-103 apps and agents · AI-200 cloud dev · AI-300 MLOps · AB-620 Copilot Studio agents · SC-500 security · AB-100 and AI-500 experts.', accent: '#c9b3ff' });
+  hub('/security-certifications/', { eyebrow: 'Security certification roadmap', title: 'Which Microsoft security certification fits your role?', text: 'SC-200 SecOps · SC-300 identity · SC-401 data and AI security · SC-500 cloud and AI security · SC-100 architect.', accent: '#8fcbf7' });
+  hub('/github-certifications/', { eyebrow: 'GitHub certification roadmap', title: 'Which GitHub or Copilot certification fits your role?', text: 'GH-300 Copilot · GH-200 Actions · GH-500 Advanced Security · GH-100 Enterprise admin · GH-600 coding agents.', accent: '#9fe870' });
   hub('/platform/', { eyebrow: 'The platform', title: 'One learning engine for every Microsoft certification', text: 'Simulation-first lessons, an offline app, browser-side progress and quality gates on every build. Static, serverless and ready for new exams.', accent: '#ffd75e' });
   cache = m;
   return m;

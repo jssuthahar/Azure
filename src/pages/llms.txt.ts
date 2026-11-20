@@ -45,6 +45,9 @@ export const GET: APIRoute = async () => {
   for (const w of exam.whatIfs) lines.push(`- [${w.q}](${u(`/simulator/${w.slug}/`)}): ${plain(w.answer)}`);
   lines.push('', '## Practice and tools', '',
     `- [All certification courses](${u('/certifications/')}): every Microsoft certification course on the site by level, with which ones are live and which are planned.`,
+    `- [Azure AI certification roadmap](${u('/ai-certifications/')}): which Azure AI certification fits which role (AI-103 apps and agents, AI-200 cloud development, AI-300 MLOps, AB-620 Copilot Studio agents, SC-500 security), with the AB-100 and AI-500 expert prerequisites.`,
+    `- [Microsoft security certification roadmap](${u('/security-certifications/')}): role-based Microsoft security paths for SecOps, identity, data and AI security, plus the SC-100 expert route.`,
+    `- [GitHub and Copilot certification roadmap](${u('/github-certifications/')}): role-based GitHub paths for Copilot, Actions, Advanced Security and Enterprise administration, plus GH-600 coding agents.`,
     `- [${exam.code} learning dashboard](${u(`/${exam.slug}/learn/`)}): every lesson in exam order with the learner's progress, plus links to labs, simulations and mock exams.`,
     `- [${exam.code} 3D explorer](${u(`/${exam.slug}/3d-explorer/`)}): all 3D scenes (datacenter, availability zones, regions, storage redundancy, scaling, networking, governance, identity) with written steps.`,
     `- [AZ-900 mock exam](${u(`/${exam.slug}/mock-exam/`)}): timed practice exam in the style of the real Microsoft exam (multiple choice, drag and drop, build list, drop-down, Yes/No), scored 1–1000 with 700 to pass.`,

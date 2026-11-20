@@ -1,0 +1,296 @@
+---
+import PublicLayout from '../../layouts/PublicLayout.astro';
+import BrandLine from '../BrandLine.astro';
+import CertIcon from '../course/CertIcon.astro';
+import { CERTIFICATIONS, type Certification } from '../../data/certifications';
+import { ROADMAPS, type Roadmap } from '../../data/roadmaps';
+import { SITE } from '../../config';
+
+interface Props { roadmap: Roadmap }
+const { roadmap } = Astro.props;
+const cert = (slug: string): Certification => {
+  const item = CERTIFICATIONS.find((x) => x.slug === slug);
+  if (!item) throw new Error(`roadmap: "${slug}" is not in certifications.ts`);
+  return item;
+};
+const entry = roadmap.entry.map(cert);
+const platform = roadmap.platform ? cert(roadmap.platform.slug) : null;
+const live = (c: Certification) => c.status === 'active';
+const checked = new Date(`${roadmap.checked}T12:00:00`).toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' });
+const schema = [
+  {
+    '@type': 'ItemList',
+    name: `${roadmap.name} certifications by role`,
+    itemListElement: roadmap.tracks.map((track, i) => {
+      const c = cert(track.slug);
+      return { '@type': 'ListItem', position: i + 1, name: `${c.code}: ${c.name} (${track.role})`, url: `${SITE.url}/${c.slug}/` };
+    }),
+  },
+  { '@type': 'FAQPage', mainEntity: roadmap.faq.map((f) => ({ '@type': 'Question', name: f.q, acceptedAnswer: { '@type': 'Answer', text: f.a } })) },
+];
+const crumbs = [
+  { name: 'Home', url: '/' },
+  { name: 'Certifications', url: '/certifications/' },
+  { name: `${roadmap.name} roadmap`, url: roadmap.path },
+];
+---
+<PublicLayout title={roadmap.metaTitle} description={roadmap.metaDescription} breadcrumbs={crumbs} schema={schema}>
+  <section class="rm-hero" style={`--rm-glow:${roadmap.glow}`}>
+    <div class="rm-orb rm-orb-a" aria-hidden="true"></div>
+    <div class="rm-orb rm-orb-b" aria-hidden="true"></div>
+    <div class="relative mx-auto max-w-6xl px-4 py-12 sm:px-6">
+      <nav aria-label="Breadcrumb" class="text-sm text-[#d7e5f2]">
+        <a href="/" class="font-semibold text-[#8fcbf7] hover:underline">Home</a> ›
+        <a href="/certifications/" class="font-semibold text-[#8fcbf7] hover:underline">Certifications</a> ›
+        <span>{roadmap.name} roadmap</span>
+      </nav>
+      <h1 class="mt-4 max-w-4xl text-4xl font-extrabold tracking-tight sm:text-5xl">{roadmap.h1}</h1>
+      <p class="rm-rotate mt-5 text-lg text-[#edf4fb] sm:text-xl">
+        <span>{roadmap.rotateLead}</span>
+        <span class="rm-rotate-list" aria-hidden="true">
+          {[...roadmap.rotate, roadmap.rotate[0]].map((word) => <span>{word}</span>)}
+        </span>
+        <span class="sr-only">{roadmap.rotate.join(', ')}.</span>
+        <span> That could be you.</span>
+      </p>
+      <p class="mt-3 max-w-2xl text-[#d7e5f2]">{roadmap.sub}</p>
+      <p class="mt-6 flex flex-wrap gap-3">
+        <a href="#finder" class="btn rm-primary">Find my path <span aria-hidden="true">↓</span></a>
+        <a href="#map" class="btn rm-secondary">See the map</a>
+      </p>
+      <div class="mt-6"><BrandLine variant="light" /></div>
+    </div>
+  </section>
+
+  <div class="mx-auto max-w-6xl px-4 py-10 sm:px-6">
+    <div class="answer-box" data-speakable>
+      <p class="answer-text"><strong>Short answer:</strong> {roadmap.answer}</p>
+    </div>
+
+    <ul class="rm-stats mt-8" aria-label="The roadmap in numbers">
+      {roadmap.stats.map((stat, i) => (
+        <li class="rm-reveal" style={`--rd:${i * 90}ms`}>
+          <strong data-count={stat.n} data-suffix={stat.suffix ?? ''}>{stat.n}{stat.suffix ?? ''}</strong>
+          <span>{stat.label}</span>
+        </li>
+      ))}
+    </ul>
+
+    <section id="finder" class="rm-finder mt-12 scroll-mt-28" aria-labelledby="rm-finder-h">
+      <p class="eyebrow">Find your path in one click</p>
+      <h2 id="rm-finder-h" class="rm-h2">Which of these sounds most like you?</h2>
+      <p class="mt-1 text-muted">I'd rather…</p>
+      <div class="rm-chips mt-4" role="group" aria-label="Choose what you'd rather do">
+        {roadmap.tracks.map((track) => (
+          <button type="button" class="rm-chip" data-pick={track.slug} aria-pressed="false" aria-controls="rm-result">{track.rather}</button>
+        ))}
+      </div>
+      <div id="rm-result" class="rm-result" aria-live="polite" hidden></div>
+    </section>
+
+    <section id="map" class="mt-14 scroll-mt-28" aria-labelledby="rm-map-h">
+      <p class="eyebrow">The map</p>
+      <h2 id="rm-map-h" class="rm-h2">How the {roadmap.name} certifications connect</h2>
+      <div class="rm-map mt-6 rm-reveal">
+        <div class="rm-map-entry">
+          {entry.map((c) => (
+            <a href={`/${c.slug}/`} class="rm-node rm-node-entry" data-entry={c.slug}>
+              <span>{c.code}</span><small>optional start</small>
+            </a>
+          ))}
+        </div>
+        <ol class="rm-map-tracks">
+          {roadmap.tracks.map((track) => {
+            const c = cert(track.slug);
+            return (
+              <li>
+                <span class="rm-node rm-node-role" data-track={track.slug}>
+                  <a href={`#${track.slug}`}><strong>{c.code}</strong><small>{track.short}</small></a>
+                </span>
+              </li>
+            );
+          })}
+        </ol>
+        {platform && (
+          <a href={`/${platform.slug}/`} class="rm-node rm-node-platform">
+            <strong>{platform.code}</strong><small>{roadmap.platform?.label}</small>
+          </a>
+        )}
+        {roadmap.stepThree.length > 0 && (
+          <ol class="rm-map-expert">
+            {roadmap.stepThree.map((step) => (
+              <li class="rm-node rm-node-expert" data-track={step.slug}>
+                <a href={`#${step.slug}`}><small>{step.tag}</small><strong>{cert(step.slug).code}</strong><span>{step.short}</span></a>
+              </li>
+            ))}
+          </ol>
+        )}
+        <p class="rm-map-legend"><span class="rm-line rm-line-suggested"></span> suggested or optional · <span class="rm-line rm-line-required"></span> {roadmap.legend.req ?? 'next step'}</p>
+      </div>
+    </section>
+
+    <section class="mt-14" aria-labelledby="rm-entry-h">
+      <p class="eyebrow">Step 1 · optional</p>
+      <h2 id="rm-entry-h" class="rm-h2">{roadmap.entryTitle}</h2>
+      <p class="mt-1 text-muted">{roadmap.entryNote}</p>
+      <ul class="mt-5 grid gap-4 sm:grid-cols-2">
+        {entry.map((c) => (
+          <li><a href={`/${c.slug}/`} class="rm-entry rm-reveal">
+            <CertIcon icon={c.icon} size={40} />
+            <span><strong class="rm-code">{c.code}</strong><span class="block font-semibold">{c.name}</span><span class="rm-status">{live(c) ? '● Free course available now' : 'Course planned'}</span></span>
+          </a></li>
+        ))}
+      </ul>
+    </section>
+
+    <section class="mt-14" aria-labelledby="rm-roles-h">
+      <p class="eyebrow">Step 2</p>
+      <h2 id="rm-roles-h" class="rm-h2">{roadmap.tracksTitle}</h2>
+      <p class="mt-1 text-muted">{roadmap.tracksNote}</p>
+      <ol class="rm-tracks mt-6">
+        {roadmap.tracks.map((track) => {
+          const c = cert(track.slug);
+          return (
+            <li class="rm-card rm-reveal" id={track.slug}>
+              <div class="rm-card-top"><CertIcon icon={c.icon} size={36} /><span>{track.role}</span></div>
+              <h3 class="rm-card-h"><span class="rm-code">{c.code}</span><span class="block text-base font-semibold">{c.name}</span></h3>
+              <p class="rm-work">{track.work}</p>
+              <p class="mt-2 text-sm text-muted"><strong class="text-[var(--text)]">Pick it if</strong> {track.pickIf}</p>
+              <ul class="rm-tools">{track.tools.map((tool) => <li>{tool}</li>)}</ul>
+              <p class="rm-actions">
+                {live(c)
+                  ? <a href={`/${c.slug}/`} class="btn btn-accent rm-btn">Start {c.code} free <span aria-hidden="true">→</span></a>
+                  : <a href={`/${c.slug}/`} class="btn btn-outline rm-btn">Outline and course plan</a>}
+                {c.studyGuideUrl && <a href={c.studyGuideUrl} target="_blank" rel="noopener" class="rm-ext">Study guide <span aria-hidden="true">↗</span><span class="sr-only"> (opens in a new tab)</span></a>}
+              </p>
+            </li>
+          );
+        })}
+      </ol>
+    </section>
+
+    {platform && roadmap.platform && (
+      <a href={`/${platform.slug}/`} class="rm-platform mt-10 rm-reveal">
+        <CertIcon icon={platform.icon} size={36} />
+        <span><span class="rm-opt">Optional</span><strong class="block text-lg">{platform.code} {platform.name}</strong><span class="block text-sm text-muted">{roadmap.platform.note}</span></span>
+      </a>
+    )}
+
+    {roadmap.stepThree.length > 0 && (
+      <section class="mt-14" aria-labelledby="rm-expert-h">
+        <p class="eyebrow">{roadmap.stepThreeEyebrow}</p>
+        <h2 id="rm-expert-h" class="rm-h2">{roadmap.stepThreeTitle}</h2>
+        <p class="mt-1 text-muted">{roadmap.stepThreeNote}</p>
+        <ul class="mt-6 grid gap-5 md:grid-cols-2">
+          {roadmap.stepThree.map((step) => {
+            const c = cert(step.slug);
+            return (
+              <li class="rm-expert rm-reveal" id={step.slug}>
+                <div class="flex items-center gap-3"><CertIcon icon={c.icon} size={40} /><h3><span class="rm-code">{c.code}</span><span class="block font-semibold">{c.name}</span></h3></div>
+                <p class="mt-3 text-sm">{step.forWho}</p>
+                <p class="rm-needs"><strong>What you need:</strong> {step.needs}</p>
+                {step.alsoNeeds && <p class="rm-needs"><strong>Also needs:</strong> {step.alsoNeeds[0]} — {step.alsoNeeds[1]}</p>}
+              </li>
+            );
+          })}
+        </ul>
+      </section>
+    )}
+
+    <section class="rm-motivation mt-16" aria-labelledby="rm-motivation-h">
+      <p class="eyebrow">Keep going</p>
+      <h2 id="rm-motivation-h" class="rm-h2">Certifications guide the learning. Projects build the skill.</h2>
+      <ol class="rm-milestones mt-7">
+        {[
+          ['Learn', 'Pick one role and study the skills it needs. A few focused weeks beat months of drifting.'],
+          ['Build', 'Make one real thing: an app, an agent, a pipeline or a security plan.'],
+          ['Certify', 'Book the exam once the project works. The exam checks what you already know.'],
+          ['Grow', 'Take the next step when your work asks for it, not because a list says so.'],
+        ].map(([title, text], i) => (
+          <li class="rm-reveal" style={`--rd:${i * 100}ms`}><span>Step {i + 1}</span><h3>{title}</h3><p>{text}</p></li>
+        ))}
+      </ol>
+    </section>
+
+    <section class="mt-14" aria-labelledby="rm-cross-h">
+      <p class="eyebrow">Other role roadmaps</p>
+      <h2 id="rm-cross-h" class="rm-h2">Choose another career map</h2>
+      <div class="rm-cross mt-5">
+        {ROADMAPS.filter((r) => r.path !== roadmap.path).map((r) => <a href={r.path}><span aria-hidden="true">{r.icon}</span><strong>{r.name}</strong><small>View roadmap →</small></a>)}
+      </div>
+    </section>
+
+    <section class="mt-14" aria-labelledby="rm-faq-h">
+      <p class="eyebrow">Quick answers</p>
+      <h2 id="rm-faq-h" class="rm-h2">Frequently asked questions</h2>
+      <div class="rm-faq mt-5">{roadmap.faq.map((f) => <details><summary>{f.q}</summary><p>{f.a}</p></details>)}</div>
+    </section>
+    <p class="mt-8 text-xs text-muted">Prerequisites and outlines checked on Microsoft Learn: {checked}. Certification names and exam outlines can change; use the current study guide before booking.</p>
+  </div>
+</PublicLayout>
+
+<script define:vars={{ tracks: roadmap.tracks, entry: roadmap.entry, storageKey: `msdb-${roadmap.name.toLowerCase()}-path-v1` }}>
+  const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const result = document.querySelector('#rm-result');
+  const buttons = [...document.querySelectorAll('[data-pick]')];
+  const choose = (slug) => {
+    const track = tracks.find((t) => t.slug === slug);
+    if (!track || !result) return;
+    buttons.forEach((b) => b.setAttribute('aria-pressed', b.dataset.pick === slug ? 'true' : 'false'));
+    document.querySelectorAll('[data-track]').forEach((n) => n.classList.toggle('is-lit', n.dataset.track === slug));
+    document.querySelectorAll('[data-entry]').forEach((n) => n.classList.toggle('is-lit', n.dataset.entry === track.entry));
+    const entryCode = track.entry;
+    const next = track.next?.length ? ` Next: ${track.next.map((n) => n.slug.toUpperCase()).join(', ')}.` : '';
+    result.innerHTML = `<strong>Your route:</strong> ${entryCode.toUpperCase()} (optional) <span aria-hidden="true">→</span> ${track.slug.toUpperCase()}${next}<p>${track.cheer}</p><a class="btn btn-accent rm-btn" href="/${track.slug}/">Explore ${track.slug.toUpperCase()} →</a>`;
+    result.hidden = false;
+    try { localStorage.setItem(storageKey, slug); } catch {}
+  };
+  buttons.forEach((b) => b.addEventListener('click', () => choose(b.dataset.pick)));
+  try {
+    const saved = localStorage.getItem(storageKey);
+    if (saved) choose(saved);
+  } catch {}
+  if (!reduce) {
+    const observer = new IntersectionObserver((items) => items.forEach((item) => {
+      if (item.isIntersecting) { item.target.classList.add('is-visible'); observer.unobserve(item.target); }
+    }), { threshold: 0.14 });
+    document.querySelectorAll('.rm-reveal').forEach((el) => observer.observe(el));
+    document.querySelectorAll('[data-count]').forEach((el) => {
+      const end = Number(el.dataset.count);
+      const suffix = el.dataset.suffix ?? '';
+      const countObserver = new IntersectionObserver(([item], obs) => {
+        if (!item.isIntersecting) return;
+        obs.disconnect();
+        if (end === 0) { el.textContent = `0${suffix}`; return; }
+        let value = 0;
+        const step = Math.max(1, Math.ceil(end / 30));
+        const timer = setInterval(() => { value = Math.min(end, value + step); el.textContent = `${value}${suffix}`; if (value >= end) clearInterval(timer); }, 35);
+      }, { threshold: 0.8 });
+      countObserver.observe(el);
+    });
+  } else {
+    document.querySelectorAll('.rm-reveal').forEach((el) => el.classList.add('is-visible'));
+  }
+</script>
+
+<style>
+  .rm-hero{position:relative;overflow:hidden;background:linear-gradient(135deg,rgba(var(--rm-glow)/.72),#071a30 72%);color:#fff}
+  .rm-orb{position:absolute;border-radius:999px;filter:blur(1px);opacity:.22;border:1px solid #fff;animation:rm-float 8s ease-in-out infinite}
+  .rm-orb-a{width:230px;height:230px;right:-70px;top:-110px}.rm-orb-b{width:120px;height:120px;right:24%;bottom:-75px;animation-delay:-3s}
+  @keyframes rm-float{50%{transform:translateY(16px) scale(1.04)}}
+  .rm-primary{background:#fff!important;color:#0b243d!important}.rm-secondary{border:1px solid rgba(255,255,255,.55)!important;color:#fff!important}
+  .rm-rotate{display:flex;flex-wrap:wrap;gap:.35em}.rm-rotate-list{display:inline-grid;height:1.55em;overflow:hidden;color:#ffd75e}
+  .rm-rotate-list>span{height:1.55em;animation:rm-rotate 12s infinite}@keyframes rm-rotate{0%,18%{transform:translateY(0)}25%,43%{transform:translateY(-1.55em)}50%,68%{transform:translateY(-3.1em)}75%,93%{transform:translateY(-4.65em)}100%{transform:translateY(-6.2em)}}
+  .rm-stats{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:.75rem;list-style:none;padding:0}.rm-stats li{min-height:112px;border:1px solid var(--border);border-radius:16px;padding:1rem;background:var(--surface);text-align:center}.rm-stats strong{display:block;font-size:2rem;color:var(--accent-deep)}.rm-stats span{display:block;margin-top:.35rem;color:var(--muted);font-size:.85rem}
+  .rm-finder{border:1px solid var(--border);border-radius:18px;padding:1.25rem;background:linear-gradient(135deg,rgba(var(--rm-glow)/.08),transparent)}
+  .rm-h2{font-size:1.55rem;font-weight:800}.rm-chips{display:flex;flex-wrap:wrap;gap:.6rem}.rm-chip{border:1px solid var(--border);border-radius:999px;padding:.65rem .85rem;background:var(--surface);font-size:.9rem}.rm-chip:hover,.rm-chip[aria-pressed=true]{border-color:var(--accent);background:rgba(var(--rm-glow)/.12);transform:translateY(-1px)}
+  .rm-result{margin-top:1rem;border-left:4px solid var(--accent);border-radius:10px;padding:1rem;background:var(--surface)}.rm-result p{margin:.65rem 0}.rm-map{border:1px solid var(--border);border-radius:18px;padding:1.25rem;background:var(--surface);text-align:center}.rm-map-entry,.rm-map-tracks,.rm-map-expert{display:flex;justify-content:center;gap:.75rem;list-style:none;padding:0}.rm-map-tracks{flex-wrap:wrap}.rm-map-tracks li{flex:1 1 145px}.rm-node{display:flex;flex-direction:column;justify-content:center;align-items:center;border:1px solid var(--border);border-radius:14px;min-height:62px;background:var(--bg)}.rm-node strong{font-size:1rem}.rm-node small{font-size:.72rem;color:var(--muted)}.rm-node-entry{min-width:150px}.rm-node-role{width:100%;min-height:76px}.rm-node-role a,.rm-node-expert a{display:flex;width:100%;height:100%;min-height:inherit;flex-direction:column;align-items:center;justify-content:center}.rm-node-platform{max-width:280px;margin:.75rem auto}.rm-node-expert{width:220px}.rm-node.is-lit,.rm-node-entry.is-lit{border-color:var(--accent);box-shadow:0 0 24px rgba(var(--rm-glow)/.35);transform:translateY(-3px)}
+  .rm-map-legend{display:flex;justify-content:center;flex-wrap:wrap;gap:.5rem;margin-top:1rem;color:var(--muted);font-size:.78rem}.rm-line{width:28px;height:3px;display:inline-block;vertical-align:middle}.rm-line-suggested{background:var(--border)}.rm-line-required{background:var(--accent)}
+  .rm-entry{display:flex;align-items:center;gap:.8rem;height:100%;border:1px solid var(--border);border-radius:14px;padding:.9rem;background:var(--surface)}.rm-entry:hover{border-color:var(--accent)}.rm-code{color:var(--accent-deep);font-weight:850}.rm-status{display:block;margin-top:.25rem;font-size:.78rem;color:var(--muted)}
+  .rm-tracks{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:.9rem;list-style:none;padding:0}.rm-card{border:1px solid var(--border);border-radius:16px;padding:1rem;background:var(--surface);break-inside:avoid}.rm-card-top{display:flex;align-items:center;gap:.6rem;color:var(--accent-deep);font-size:.82rem;font-weight:800}.rm-card-h{margin-top:.8rem}.rm-work{margin-top:.6rem;font-weight:700}.rm-tools{display:flex;flex-wrap:wrap;gap:.35rem;margin:.8rem 0 0;padding:0;list-style:none}.rm-tools li{border-radius:999px;background:rgba(var(--rm-glow)/.10);padding:.28rem .48rem;font-size:.72rem}.rm-actions{display:flex;flex-wrap:wrap;align-items:center;gap:.7rem;margin-top:1rem}.rm-btn{font-size:.85rem}.rm-ext{font-size:.82rem;font-weight:700}.rm-platform{display:flex;align-items:center;gap:.8rem;border:1px solid var(--border);border-radius:14px;padding:.9rem;background:var(--surface)}.rm-opt{display:block;font-size:.68rem;text-transform:uppercase;color:var(--accent-deep)}.rm-expert{border:1px solid var(--border);border-radius:16px;padding:1rem;background:var(--surface)}.rm-needs{margin-top:.7rem;border-radius:10px;padding:.65rem;background:rgba(var(--rm-glow)/.08);font-size:.82rem}
+  .rm-motivation{border:1px solid var(--border);border-radius:18px;padding:1.25rem;background:linear-gradient(135deg,rgba(var(--rm-glow)/.10),transparent)}.rm-milestones{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:.7rem;list-style:none;padding:0}.rm-milestones li{border-radius:12px;padding:.8rem;background:var(--surface)}.rm-milestones li>span{font-size:.68rem;text-transform:uppercase;color:var(--accent-deep)}.rm-milestones h3{margin-top:.25rem;font-weight:800}.rm-milestones p{margin-top:.35rem;font-size:.82rem;color:var(--muted)}
+  .rm-cross{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:.8rem}.rm-cross a{display:grid;grid-template-columns:auto 1fr;column-gap:.7rem;border:1px solid var(--border);border-radius:14px;padding:.9rem;background:var(--surface)}.rm-cross a>span{grid-row:1/3;font-size:1.5rem}.rm-cross small{color:var(--muted)}.rm-faq details{border-top:1px solid var(--border);padding:.85rem 0}.rm-faq summary{cursor:pointer;font-weight:800}.rm-faq details p{margin-top:.55rem;color:var(--muted)}
+  .rm-reveal{opacity:1}.js .rm-reveal{opacity:0;transform:translateY(16px);transition:opacity .55s ease var(--rd,0ms),transform .55s ease var(--rd,0ms)}.js .rm-reveal.is-visible{opacity:1;transform:none}
+  @media(max-width:767px){.rm-stats{grid-template-columns:repeat(2,minmax(0,1fr))}.rm-tracks,.rm-milestones{grid-template-columns:1fr}.rm-map-entry{flex-wrap:wrap}.rm-node-entry{flex:1 1 130px}.rm-map-tracks li{flex-basis:100%}.rm-node-expert{width:100%}.rm-cross{grid-template-columns:1fr}}
+  @media(prefers-reduced-motion:reduce){.rm-orb,.rm-rotate-list>span{animation:none}.rm-reveal{opacity:1!important;transform:none!important}}
+</style>

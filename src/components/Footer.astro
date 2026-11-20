@@ -45,6 +45,9 @@ const year = new Date().getFullYear();
       <p class="text-sm font-semibold">Azure Tutorials</p>
       <ul class="mt-3 space-y-2 text-sm text-muted">
         <li><a class="hover:text-[var(--accent-deep)]" href="/certifications/">All certifications</a></li>
+        <li><a class="hover:text-[var(--accent-deep)]" href="/ai-certifications/">AI certification roadmap</a></li>
+        <li><a class="hover:text-[var(--accent-deep)]" href="/security-certifications/">Security certification roadmap</a></li>
+        <li><a class="hover:text-[var(--accent-deep)]" href="/github-certifications/">GitHub and Copilot roadmap</a></li>
         <li><a class="hover:text-[var(--accent-deep)]" href={`/${exam.slug}/`}>{`${exam.code} ${exam.name.replace(/^Microsoft /, '')}`}</a></li>
         {exam.modules.map((m) => <li><a class="hover:text-[var(--accent-deep)]" href={`/${exam.slug}/#${m.slug}`}>{m.shortTitle}</a></li>)}
         <li><a class="hover:text-[var(--accent-deep)]" href={`/${exam.slug}/mock-exam/`}>{exam.code} mock exam</a></li>

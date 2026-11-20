@@ -44,7 +44,9 @@ const planned: [string, string][] = [
 
 const fullTitle = `${c.code} ${c.name}: Free Course Coming Soon`;
 const title = fullTitle.length <= 62 ? fullTitle : `${c.code}: Free Course Coming Soon, Exam Domains & Weights`;
-const description = `Free ${c.code} ${c.name} course coming soon to MSDEVBUILD. See the official exam domains and weights, and start a live course today.`;
+const descLong = `Free ${c.code} ${c.name} course coming soon to MSDEVBUILD. See the official exam domains and weights, and start a live course today.`;
+// Long official names (AI-300) push past the 165-char limit; drop the brand and the last clause first.
+const description = descLong.length <= 165 ? descLong : `Free ${c.code} ${c.name} course coming soon. See the official exam domains and weights, and start a live course today.`;
 const crumbs = [
   { name: 'Home', url: '/' },
   { name: 'Certifications', url: '/certifications/' },

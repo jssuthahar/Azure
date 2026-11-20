@@ -15,6 +15,7 @@ import { getNav, getQuestionBank, getTutorial, inlineMd } from '../lib/learn';
 import { LABS } from '../lib/sim/labs';
 import { SITE } from '../config';
 import { getExam, liveExams } from '../data/exams';
+import { AI_TRACKS } from '../data/ai-roadmap';
 
 const exam = getExam();
 const x = `/${exam.slug}`;
@@ -36,6 +37,7 @@ const spotlight = (slug: string) => {
   const e = liveExams().find((x) => x.slug === slug)!;
   return { tours: Object.keys(e.tours).length, scenes: Object.keys(e.sims3d).length, domains: e.modules.length, modules: e.modules };
 };
+const aiTracks = AI_TRACKS.map((t) => ({ ...t, cert: CERTIFICATIONS.find((c) => c.slug === t.slug)! }));
 const sample = published[0] ? await getTutorial(published[0].key) : undefined;
 const sampleQ = bank.find((q) => q.id === 'd2-arch-10') ?? bank[0];
 
@@ -68,11 +70,11 @@ const flow = [
 ];
 const faq = [
   { q: 'Is MSDEVBUILD Azure free?', a: 'Yes. Every course, lesson, simulation, lab, quiz, mock exam and the practice certificate is free. There is no paid plan and nothing is locked.' },
-  { q: 'Which certification should I start with?', a: `Start with ${exam.code} (${exam.name}) if you are new to the cloud. It needs no experience and gives you the vocabulary every Associate exam builds on.` },
+  { q: 'Which certification should I start with?', a: `Pick by the work you want to do. For AI roles, our AI certification roadmap maps AI-103, AI-200, AI-300, AB-620 and SC-500 to real jobs. If you are new to the cloud, ${exam.code} (${exam.name}) or AI-901 (Azure AI Fundamentals) needs no experience and gives you the vocabulary the Associate exams build on.` },
   { q: 'Do I need an Azure account to practise?', a: 'No. The Azure portal, Cloud Shell and 3D scenes are simulations that run in your browser, so you can practise without a subscription or a surprise bill.' },
   { q: 'Do I need to sign in?', a: 'No. Everything works without an account and your progress is saved in this browser. Sign in with Google only if you want it synced across your devices.' },
   { q: 'Are the practice questions real exam questions?', a: 'No. Every question is original and written to practise the skills in Microsoft’s official outline. We never publish real or leaked exam questions.' },
-  { q: 'When will AZ-104, AZ-305, SC-500 and GH-300 be ready?', a: 'They are planned. Each course opens once its lessons, questions and mock exam are complete and the exam has been checked on Microsoft Learn.' },
+  { q: 'When will AI-103, AI-300, SC-500 and AZ-104 be ready?', a: 'They are planned. Each course opens once its lessons, questions and mock exam are complete and the exam has been checked on Microsoft Learn.' },
 ];
 
 // Home targets the queries learners type (exam code, free, practice exam, labs), not just the brand name.
@@ -110,6 +112,31 @@ const schema = [
           <button type="button" class="speak-btn text-[#005a9e]" data-say="Imagine your school library lends you any book the moment you ask, and you only pay for the days you keep it. That is cloud computing. Phones, laptops, shops and schools all borrow computers, storage and AI from the cloud over the internet.">🔊 Listen</button>
         </figcaption>
       </figure>
+    </div>
+  </section>
+
+  <!-- AI certification roadmap -->
+  <section class="h-sec ai-band" aria-labelledby="ai-road">
+    <div class="mx-auto max-w-6xl px-4 sm:px-6">
+      <div class="h-head">
+        <div>
+          <p class="eyebrow">Azure AI certifications</p>
+          <h2 id="ai-road" class="h-h2">Which AI certification fits your role?</h2>
+          <p class="h-lead">Start with the work you want to own. AI-901 and AZ-900 are optional first steps, not prerequisites.</p>
+        </div>
+        <a href="/ai-certifications/" class="h-more">See the full AI roadmap <span aria-hidden="true">→</span></a>
+      </div>
+      <ul class="ai-roles mt-8">
+        {aiTracks.map((t) => (
+          <li><a href={`/ai-certifications/#${t.slug}`} class="ai-role">
+            <span class="ai-role-k">{t.role}</span>
+            <strong class="ai-role-c">{t.cert.code}</strong>
+            <span class="ai-role-n">{t.cert.name}</span>
+            <span class={`ai-role-s${t.cert.status === 'active' ? ' is-live' : ''}`}>{t.cert.status === 'active' ? '● Free course live' : 'Course planned'}</span>
+          </a></li>
+        ))}
+      </ul>
+      <p class="mt-5 text-sm text-muted">Moving into architecture? AB-100 and AI-500 are Expert certifications that each need a second credential. <a href="/ai-certifications/#ar-expert" class="font-semibold text-[var(--accent-deep)] hover:underline">See what they need</a>.</p>
     </div>
   </section>
 
@@ -348,6 +375,20 @@ const schema = [
 </PublicLayout>
 
 <style>
+  .ai-band { background: linear-gradient(180deg, var(--you-soft), transparent); }
+  .ai-roles { display: grid; gap: .85rem; grid-template-columns: 1fr; }
+  @media (min-width: 560px) { .ai-roles { grid-template-columns: repeat(2, 1fr); } }
+  @media (min-width: 900px) { .ai-roles { grid-template-columns: repeat(3, 1fr); } }
+  @media (min-width: 1440px) { .ai-roles { grid-template-columns: repeat(5, minmax(0, 1fr)); } }
+  .ai-role { min-width: 0; overflow-wrap: anywhere; }
+  .ai-role { display: flex; flex-direction: column; height: 100%; padding: 1rem; border: 1px solid var(--card-line); border-top: 4px solid var(--you); border-radius: 14px; background: var(--card); transition: border-color .15s, transform .15s; }
+  .ai-role:hover { border-color: var(--you); transform: translateY(-2px); }
+  .ai-role-k { font-size: .75rem; font-weight: 700; text-transform: uppercase; letter-spacing: .04em; color: var(--you); }
+  .ai-role-c { margin-top: .35rem; font-size: 1.5rem; font-weight: 800; color: var(--accent-deep); }
+  .ai-role-n { font-size: .9rem; font-weight: 600; }
+  .ai-role-s { margin-top: auto; padding-top: .6rem; font-size: .8rem; color: var(--text-muted); font-weight: 600; }
+  .ai-role-s.is-live { color: var(--ok); }
+
   .h-hero { color: #fff; background: radial-gradient(60rem 34rem at 100% 0%, rgb(0 120 212 / .55), transparent 65%), radial-gradient(40rem 26rem at 0% 110%, rgb(135 100 184 / .4), transparent 70%), #101c2e; }
   .h-title { font-size: clamp(2.1rem, 5.4vw, 3.6rem); font-weight: 800; line-height: 1.08; letter-spacing: -.025em; }
   .h-title span { display: block; color: #ffd75e; }

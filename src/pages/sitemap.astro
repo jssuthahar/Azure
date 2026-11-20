@@ -13,7 +13,7 @@ const SERVICE_CATS = [...new Set(SERVICES.map((s) => s.cat))];
 
 const nav = (await getNav()).filter((t) => t.published);
 const tools: [string, string][] = [
-  ['All certification courses', '/certifications/'], [`${exam.code} course details and syllabus`, `/${exam.slug}/`], [`${exam.code} learning dashboard`, `/${exam.slug}/learn/`], ['3D explorer', `/${exam.slug}/3d-explorer/`], ['Mock exam', `${x}/mock-exam/`], [`${exam.code} Ready certificate`, '/certificate/'],
+  ['All certification courses', '/certifications/'], ['Azure AI certification roadmap by role', '/ai-certifications/'], ['Microsoft security certification roadmap', '/security-certifications/'], ['GitHub and Copilot certification roadmap', '/github-certifications/'], [`${exam.code} course details and syllabus`, `/${exam.slug}/`], [`${exam.code} learning dashboard`, `/${exam.slug}/learn/`], ['3D explorer', `/${exam.slug}/3d-explorer/`], ['Mock exam', `${x}/mock-exam/`], [`${exam.code} Ready certificate`, '/certificate/'],
   ['Smart practice', `${x}/practice/`], ['Study plan', `${x}/study-plan/`], ['Cheat sheet', `${x}/cheat-sheet/`], ['Exam day guide', `${x}/exam-day/`],
   ['Revision flashcards', `${x}/revision/`], ['Interview questions', `${x}/interview/`], ['Glossary', `${x}/glossary/`],
   ['Play & Learn games', `${x}/games/`], ['Daily Challenge', `${x}/games/daily/`], ['Embed simulations', '/embed/'], ['Install the app (offline)', '/app/'],
