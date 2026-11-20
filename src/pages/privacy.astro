@@ -1,41 +1,97 @@
 ---
 import Base from '../layouts/Base.astro';
+import { SITE, SUPPORT } from '../config';
 ---
-<Base breadcrumbs={[{ name: 'Home', url: '/' }, { name: 'Privacy', url: '/privacy/' }]} title="Privacy Policy | MSDEVBUILD Azure" description="How MSDEVBUILD Azure handles your data: progress stays in your browser, Google sign-in is optional for sync, and usage is counted anonymously without cookies." wide={false}>
+<Base breadcrumbs={[{ name: 'Home', url: '/' }, { name: 'Privacy', url: '/privacy/' }]} title="Privacy Policy | MSDEVBUILD Azure" description="How MSDEVBUILD Azure handles your data: progress stays in your browser, optional Google sign-in syncs it, and Google Analytics and AdSense use cookies." wide={false}>
   <div class="lesson">
     <h1 class="text-4xl font-bold tracking-tight">Privacy Policy</h1>
     <p><em>Last updated: 20 November 2026</em></p>
-    <p>The short version: you can use everything on this site without an account. If you sign in, we keep a copy of your study progress so it follows you between devices. We count how the site is used, but never who uses it.</p>
+    <p>The short version: you can use everything on this site without an account, and your progress stays in your browser. If you sign in, we keep a copy of your progress so it follows you between devices. We use Google Analytics to see which pages help most and Google AdSense to show ads that keep the site free. We never sell your data.</p>
+
+    <h2 id="who">Who is responsible</h2>
+    <p>[EDIT] This site is run by {SITE.author} under the name {SITE.org} ({SITE.orgFull}), based in {SITE.authorLocation}. For anything about your data, <a href="https://blog.msdevbuild.com/contact/">contact us</a>.</p>
+
+    <h2 id="summary">What we collect at a glance</h2>
+    <ul>
+      <li><strong>Without signing in:</strong> nothing that identifies you. Your progress stays on your device. Google Analytics and AdSense set their own cookies (see below), and we keep anonymous daily totals.</li>
+      <li><strong>If you sign in with Google:</strong> your name, email address, profile picture, a user ID, and a copy of your study progress and notes.</li>
+      <li><strong>If you comment:</strong> your comment and GitHub name, stored by GitHub.</li>
+      <li><strong>If you support the site:</strong> the payment is handled by Buy Me a Coffee. We see what they share with creators, such as your name and message.</li>
+    </ul>
 
     <h2 id="what">What stays on your device</h2>
-    <p>Your learning progress (completed lessons, quiz and mock exam scores, XP, streaks, badges, your practice deck, study plan and practice certificate), plus settings like theme and currency, are stored in your browser's <code>localStorage</code>. An unfinished mock exam is kept in <code>sessionStorage</code> so a refresh doesn't lose it. If you don't sign in, none of this is sent to us.</p>
+    <p>These are stored in your browser's <code>localStorage</code> and never leave it unless you sign in:</p>
+    <ul>
+      <li>Learning progress: completed lessons, quiz and mock exam scores, XP, streaks, badges, your practice deck and readiness score, and your study plan.</li>
+      <li>Bookmarks, highlights, notes and flagged questions.</li>
+      <li>Your practice certificate and the name you typed for it.</li>
+      <li>Settings: theme, currency, reading size and font, read-aloud speed, where you stopped reading, lab state, and whether you closed the install banner.</li>
+    </ul>
+    <p>An unfinished mock exam is kept in <code>sessionStorage</code> so a refresh doesn't lose it. The installable app keeps copies of pages you've opened so they work offline. Those copies stay on your device.</p>
+    <p>Ask Nimbus, the site's helper, searches an index inside your browser. Nothing you type into it is sent anywhere. Read-aloud uses your browser's built-in voices.</p>
+
+    <h2 id="certificate">Practice certificate links</h2>
+    <p>When you share your practice certificate, the link itself contains the name you entered, your score and the date. Anyone with the link can see them. Only share it where you're happy for that to be seen. Google Analytics never receives this part of the link.</p>
 
     <h2 id="accounts">Signing in (optional)</h2>
     <p>You can sign in with Google to sync your progress across devices. Sign-in is handled by Google Firebase Authentication. We receive your name, email address, profile picture and a user ID from Google. We don't receive your password.</p>
-    <p>While you're signed in, the progress listed above is copied to a private record in Google Cloud Firestore that only your account can read or write. We use it only to sync your progress. We don't email you, share it or sell it.</p>
+    <p>While you're signed in, your progress, practice deck, study plan, certificate, bookmarks, highlights, notes and flagged questions are copied to a private record in Google Cloud Firestore that only your account can read or write. We use it only to sync your progress. We don't email you, share it or sell it.</p>
 
     <h2 id="discussion">Course discussion (Giscus and GitHub)</h2>
     <p>The discussion on each course page (for example <a href="/az-900/#discussion">AZ-900</a>) runs on <a href="https://giscus.app" target="_blank" rel="noopener">Giscus ↗</a>, which keeps comments in GitHub Discussions. It loads only when you scroll to it. Reading needs no account. To post, reply or react you sign in with GitHub inside the widget. Your comments are public on GitHub under your GitHub name, and GitHub's and Giscus's privacy policies apply (<a href="https://docs.github.com/site-policy/privacy-policies/github-general-privacy-statement" target="_blank" rel="noopener">GitHub ↗</a>, <a href="https://github.com/giscus/giscus/blob/main/PRIVACY-POLICY.md" target="_blank" rel="noopener">Giscus ↗</a>). We don't store comments ourselves.</p>
 
     <h2 id="counts">Anonymous usage counts</h2>
-    <p>To understand how the site is used, we count events: a visit (once per browser per day), a new learner (once per browser), a lesson completed, a quiz taken, a mock exam sat, a lab finished and a new sign-in. Each event only adds 1 to a daily total. There are no cookies, no IDs, and nothing that links a count to you.</p>
-    <p>We don't count anything if your browser sends a Do Not Track or Global Privacy Control signal. We don't use Google Analytics. The ads described below are the only advertising on the site.</p>
+    <p>We also count a few events ourselves: a visit (once per browser per day), a new learner (once per browser), a lesson completed, a quiz taken, a mock exam sat, a lab finished and a new sign-in. Each event only adds 1 to a daily total in Firebase. There are no cookies, no IDs, and nothing that links a count to you. Nothing is counted if your browser sends a Do Not Track or Global Privacy Control signal.</p>
+
+    <h2 id="analytics">Google Analytics</h2>
+    <p>[EDIT] We use Google Analytics 4 to see which pages are read and which devices people use, so we can improve the lessons. It records the page address (without anything after a "?" in the link), the page you came from, your browser, device type, screen size and an approximate location such as your country or city. Google Analytics doesn't log or store IP addresses. We've turned off Google signals and ad personalisation from Analytics.</p>
+    <p>[EDIT] Analytics sets first-party cookies named <code>_ga</code> and <code>_ga_*</code>. Visitors in the European Economic Area, the UK and Switzerland are asked first, and nothing is stored unless they agree. If your browser sends Do Not Track or Global Privacy Control, Analytics doesn't load at all. You can also use <a href="https://tools.google.com/dlpage/gaoptout" target="_blank" rel="noopener">Google's opt-out add-on ↗</a>. Analytics data is kept for [EDIT: 2 / 14] months.</p>
 
     <h2 id="ads">Google AdSense and cookies</h2>
     <p>[EDIT] To keep every lesson, lab and mock exam free, some pages show ads served by Google AdSense. Google and its partners may use cookies or similar technology to show ads based on your visits to this and other websites. You can turn off personalised ads in <a href="https://adssettings.google.com/" target="_blank" rel="noopener">Google's Ad Settings ↗</a>, and read how Google uses data in <a href="https://policies.google.com/technologies/partner-sites" target="_blank" rel="noopener">How Google uses information from sites that use its services ↗</a>.</p>
-    <p>[EDIT] Visitors in the European Economic Area, the UK and Switzerland see a consent message from Google before any ad cookies are set, and can change their choice at any time from the "Privacy and cookie settings" link that Google adds to the page.</p>
-    <p>[EDIT] There are no ads on simulations, labs, the mock exam, interview practice, flashcards, My Progress, the certificate page or these legal pages. Supporters see no ads at all. Ads never appear while you're offline.</p>
-    <p>[EDIT] Some recommended resources are affiliate links, marked "Affiliate link". If you buy through one, the site may earn a small commission at no cost to you. Sponsors of a learning track are shown with a "Sponsor" label.</p>
+    <p>[EDIT] Visitors in the European Economic Area, the UK and Switzerland see a consent message from Google before any ad or analytics cookies are set, and can change their choice at any time from the "Privacy and cookie settings" link that Google adds to the page.</p>
+    <p>There are no ads on simulations, labs, the mock exam, smart practice, interview practice, My Progress, the certificate page or these legal pages. Supporters see no ads at all, and ads never load while you're offline.</p>
+
+    <h2 id="money">Sponsors, affiliate links and support</h2>
+    <ul>
+      <li><strong>Affiliate links</strong> are marked "Affiliate link". If you buy through one, the site may earn a small commission at no cost to you. The shop you land on sees that you came from here.</li>
+      <li><strong>Sponsors</strong> of a learning track are shown with a "Sponsor" label. We don't share any learner data with sponsors.</li>
+      <li><strong>Buy Me a Coffee</strong> (<a href={SUPPORT.url} target="_blank" rel="noopener">our page ↗</a>) processes support payments on its own site under <a href="https://buymeacoffee.com/privacy-policy" target="_blank" rel="noopener">its privacy policy ↗</a>. We never see your card details.</li>
+    </ul>
+
+    <h2 id="cookies">Cookies and similar storage</h2>
+    <ul>
+      <li><strong>Ours:</strong> browser storage for your progress and settings, listed above. No tracking cookies of our own.</li>
+      <li><strong>Google Analytics:</strong> <code>_ga</code>, <code>_ga_*</code>, to tell visits apart.</li>
+      <li><strong>Google AdSense:</strong> Google's advertising cookies, to show and measure ads.</li>
+      <li><strong>Google sign-in (Firebase):</strong> keeps you signed in, only if you sign in.</li>
+      <li><strong>Giscus and GitHub:</strong> only if you open the discussion and sign in there.</li>
+    </ul>
 
     <h2 id="third-party">Third parties</h2>
-    <p>The site is served as static files from GitHub Pages. Sign-in, sync and counts use Google Firebase, which processes data under <a href="https://firebase.google.com/support/privacy" target="_blank" rel="noopener">Google's Firebase privacy terms ↗</a>. Ads are served by Google AdSense under the <a href="https://policies.google.com/privacy" target="_blank" rel="noopener">Google Privacy Policy ↗</a>. Links to Microsoft Learn and other sites are governed by those sites' own privacy policies.</p>
+    <p>The site is served as static files from GitHub Pages. Sign-in, sync and counts use Google Firebase, under <a href="https://firebase.google.com/support/privacy" target="_blank" rel="noopener">Google's Firebase privacy terms ↗</a>. Analytics and ads are provided by Google under the <a href="https://policies.google.com/privacy" target="_blank" rel="noopener">Google Privacy Policy ↗</a>. Links to Microsoft Learn and other sites are governed by those sites' own privacy policies.</p>
 
-    <h2 id="control">Your control</h2>
+    <h2 id="retention">How long we keep data</h2>
+    <ul>
+      <li>Data on your device stays until you reset it or clear this site's data.</li>
+      <li>Your synced record stays until you delete it or ask us to.</li>
+      <li>Anonymous daily totals are kept indefinitely, since they can't be linked to anyone.</li>
+      <li>Google keeps Analytics and AdSense data under its own settings and policies.</li>
+    </ul>
+
+    <h2 id="children">Children</h2>
+    <p>[EDIT] Anyone can read the lessons without an account. Signing in uses a Google account, so Google's own age rules apply. If you believe a child has given us personal data through sign-in, contact us and we'll delete it.</p>
+
+    <h2 id="control">Your control and your rights</h2>
     <ul>
       <li><strong>On this device:</strong> erase everything with “Reset my progress” on the <a href="/progress/">My Progress</a> page, or by clearing this site's data in your browser.</li>
       <li><strong>Synced copy:</strong> when signed in, use “Delete my synced data” on the My Progress page. It removes your cloud record straight away. Signing out keeps your progress on the device you're using.</li>
+      <li><strong>Ads and analytics:</strong> change your choice from Google's consent link, turn on Do Not Track or Global Privacy Control, or use Google's opt-out tools linked above.</li>
       <li><strong>Comments:</strong> edit or delete your own comment from the menu on it in the course discussion, or on GitHub.</li>
-      <li><strong>Questions:</strong> <a href="https://blog.msdevbuild.com/contact/">contact us</a> and we'll help.</li>
+      <li><strong>Your rights:</strong> [EDIT] depending on where you live, you can ask to see, correct, export or delete the personal data we hold about you, or object to how it's used. <a href="https://blog.msdevbuild.com/contact/">Contact us</a> and we'll reply within 30 days.</li>
     </ul>
+
+    <h2 id="changes">Changes to this policy</h2>
+    <p>If we change how data is handled, we'll update this page and the date at the top.</p>
   </div>
 </Base>

@@ -13,6 +13,7 @@
 - `npm run qa -- ads` (part of `npm run verify`) checks every rule in Part 6 with debug boxes only.
 
 ## TODO (owner)
+- [ ] Google Analytics 4: tagged with `G-WE1YPG1387` (`src/config.ts`). In GA, set data retention and confirm Google signals stays off.
 - [ ] AdSense dashboard: Auto ads ON (anchor), vignette OFF or low, URL exclusions = `adFreePaths`, and turn on the GDPR consent message in Privacy & messaging (EEA/UK/CH). Google serves it through the same script, so no code change.
 - [ ] Sidebar unit: create a 300x600 or responsive vertical unit and replace `SLOT_ID_SIDEBAR` in `config.ts`. Until then it shows nothing to learners. The lesson's right column is about 224px wide, so a responsive vertical unit fits better than a fixed 300px one.
 - [ ] Supporter checkout URL and price (`supporter.checkoutUrl`, `priceLabel`). The "Go ad-free" card stays hidden until both are real. Real supporter status needs a payment webhook writing `users/<uid>.isSupporter` (protected in `firestore.rules`); see `src/lib/monetization/supporter.ts`.

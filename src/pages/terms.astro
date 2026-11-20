@@ -1,19 +1,74 @@
 ---
 import Base from '../layouts/Base.astro';
+import { SITE, SUPPORT } from '../config';
 ---
-<Base breadcrumbs={[{ name: 'Home', url: '/' }, { name: 'Terms', url: '/terms/' }]} title="Terms and Conditions | MSDEVBUILD Azure" description="Terms for using MSDEVBUILD Azure tutorials, quizzes and mock exams, including the educational-use disclaimer and trademark notice." wide={false}>
+<Base breadcrumbs={[{ name: 'Home', url: '/' }, { name: 'Terms', url: '/terms/' }]} title="Terms and Conditions | MSDEVBUILD Azure" description="Terms for MSDEVBUILD Azure: free educational use, practice questions and certificates, simulators, ads, affiliate links, supporter payments and trademarks." wide={false}>
   <div class="lesson">
     <h1 class="text-4xl font-bold tracking-tight">Terms and Conditions</h1>
-    <p><em>Last updated: 17 November 2026</em></p>
-    <h2 id="use">Educational use</h2>
-    <p>Content is provided free for personal learning. Please link to lessons rather than copying them wholesale.</p>
+    <p><em>Last updated: 20 November 2026</em></p>
+    <p>By using azure.msdevbuild.com you agree to these terms. They're written to be read, so they're short. How we handle data is explained in the <a href="/privacy/">Privacy Policy</a>.</p>
+
+    <h2 id="who">Who runs the site</h2>
+    <p>[EDIT] MSDEVBUILD Azure is run by {SITE.author} under the name {SITE.org} ({SITE.orgFull}), based in {SITE.authorLocation}. In these terms, "we" means {SITE.org} and "you" means anyone using the site.</p>
+
+    <h2 id="free">Free to use</h2>
+    <p>Every lesson, simulation, lab, quiz, game and mock exam is free, and you don't need an account. Signing in with Google is optional and only syncs your progress between devices. If you sign in, keep your Google account secure; you're responsible for what happens under it here.</p>
+
+    <h2 id="use">Educational use and copying</h2>
+    <p>The lessons, questions, simulations, diagrams and code on this site belong to {SITE.org} unless stated otherwise. You may use them for your own learning and share links to them. Please don't copy lessons or question banks wholesale, republish them, or sell them. Teachers may show the site in class and use the embed code offered on the site to place a simulation on their own page.</p>
+
     <h2 id="accuracy">Accuracy</h2>
-    <p>We work hard to keep lessons accurate and in line with the current exam outline, but cloud services and exams change. Content is provided “as is” without warranty. Always confirm critical details in the official Microsoft documentation.</p>
-    <h2 id="practice">Practice questions</h2>
-    <p>All questions are original practice material. They are not real Microsoft exam questions, and a mock exam score does not guarantee any exam result.</p>
+    <p>We work hard to keep lessons accurate and in line with the current exam outline, but cloud services, prices and exams change. Content is provided “as is” without warranty. Prices shown are rough estimates converted at approximate rates. Always confirm critical details in the official Microsoft documentation and on the official exam page before booking.</p>
+
+    <h2 id="practice">Practice questions and mock exams</h2>
+    <p>All questions are original practice material. They are not real, recalled or leaked Microsoft exam questions. A mock exam score or readiness score shows how you did here; it doesn't guarantee any result in the real exam.</p>
+
+    <h2 id="certificate">Practice certificate</h2>
+    <p>The certificate is a self-assessed practice certificate from {SITE.org}. It is not a Microsoft certification or credential. Don't present it as one, and don't edit a certificate link to show a result you didn't earn. Edited links are detected and marked as unconfirmed.</p>
+
+    <h2 id="simulators">Simulators and labs</h2>
+    <p>The Azure portal simulator, Cloud Shell, labs and 3D scenes are for education only. They imitate how Azure looks and behaves, and they don't connect to Azure or create any real resources. They are not made by, affiliated with or endorsed by Microsoft, and may differ from the real portal.</p>
+
+    <h2 id="acceptable">Fair use of the site</h2>
+    <ul>
+      <li>Don't try to break, overload or get around the site's security, or the security of the services it uses.</li>
+      <li>Don't scrape the site to republish its content.</li>
+      <li>Don't click ads on purpose to generate revenue, or ask others to. That breaks Google's rules and can get the site's ads switched off.</li>
+      <li>Don't use the site to post anything unlawful, abusive or misleading.</li>
+    </ul>
+
     <h2 id="comments">Course discussion</h2>
-    <p>The course discussion runs on Giscus and GitHub Discussions and follows GitHub's own terms. Keep them kind and on topic. Don't post real or remembered exam questions, spam, or anyone's personal details. The site owner may delete comments that break these rules.</p>
+    <p>The course discussion runs on Giscus and GitHub Discussions and follows GitHub's own terms. Keep it kind and on topic. Don't post real or remembered exam questions, spam, or anyone's personal details. We may delete comments that break these rules.</p>
+
+    <h2 id="ads">Advertising and analytics</h2>
+    <p>To keep the site free, some pages show ads from Google AdSense, labelled "Advertisement", and we use Google Analytics to understand which pages help most. Ads are never placed inside simulations, labs, quizzes, games or the mock exam. We don't choose individual ads and don't endorse what they advertise. The <a href="/privacy/#ads">Privacy Policy</a> explains the cookies involved and your choices.</p>
+
+    <h2 id="sponsors">Sponsors and affiliate links</h2>
+    <p>A learning track may have a sponsor, shown with a "Sponsor" label, and some recommended books or courses are affiliate links, marked "Affiliate link". We may earn a commission if you buy through one, at no extra cost to you. Sponsors don't write or approve lessons. Anything you buy from a third party is between you and them, under their terms.</p>
+
+    <h2 id="support">Supporting the site</h2>
+    <p>You can support the site through <a href={SUPPORT.url} target="_blank" rel="noopener">Buy Me a Coffee ↗</a>. Support is voluntary and doesn't unlock any learning content: everything stays free for everyone. Payments are processed by Buy Me a Coffee under its own terms. [EDIT] One-off support isn't refundable except where Buy Me a Coffee's terms or the law say otherwise.</p>
+    <p>[EDIT] If a supporter membership is offered, its price and perks are shown on the <a href="/progress/">My Progress</a> page before you pay. The main perk is browsing without ads. You can cancel at any time from Buy Me a Coffee, and the perks end when the paid period ends. We may change the perks with notice.</p>
+
+    <h2 id="links">Other websites</h2>
+    <p>The site links to Microsoft Learn, GitHub, YouTube and other sites. We aren't responsible for their content, availability or policies.</p>
+
+    <h2 id="availability">Changes and availability</h2>
+    <p>We may add, change or remove lessons, features and exams at any time, and the site may sometimes be unavailable. Progress kept in your browser can be lost if you clear its data; sign in if you want a synced copy.</p>
+
+    <h2 id="liability">Limitation of liability</h2>
+    <p>[EDIT] As far as the law allows, we aren't liable for any loss that comes from using the site, including a failed exam, lost progress, or a decision based on a price estimate or a simulation. Nothing in these terms limits rights you have under the law where you live.</p>
+
+    <h2 id="law">Governing law</h2>
+    <p>[EDIT] These terms are governed by the laws of [country]. Disputes will be handled by the courts of [country], unless the law where you live says otherwise.</p>
+
+    <h2 id="changes">Changes to these terms</h2>
+    <p>We'll update this page and the date at the top when the terms change. If you keep using the site after that, the new terms apply.</p>
+
     <h2 id="trademarks">Trademarks</h2>
-    <p>Microsoft, Azure, Microsoft Entra and related names are trademarks of the Microsoft group of companies. This site is independent and not endorsed by Microsoft.</p>
+    <p>Microsoft, Azure, Microsoft Entra, GitHub and related names are trademarks of the Microsoft group of companies. Google, Google Analytics and AdSense are trademarks of Google LLC. This site is independent and not endorsed by Microsoft or Google.</p>
+
+    <h2 id="contact">Contact</h2>
+    <p>Questions about these terms? <a href="https://blog.msdevbuild.com/contact/">Contact us</a>.</p>
   </div>
 </Base>

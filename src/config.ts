@@ -21,6 +21,14 @@ export const SITE = {
   brandLine: 'MSDEVBUILD · Multi-Stack Dev Build',
 } as const;
 
+/**
+ * Google Analytics 4 (owner's decision, 20 Nov 2026). Paste the Measurement ID (G-XXXXXXXXXX) from
+ * analytics.google.com > Admin > Data streams. Empty = off. Loaded by AnalyticsHead.astro, live site only.
+ */
+export const ANALYTICS = {
+  measurementId: 'G-WE1YPG1387',
+} as const;
+
 /** Buy Me a Coffee: the only way to support the site. Shown by <SupportCoffee /> (footer, About, certificate). Never mid-lesson. */
 export const SUPPORT = {
   url: 'https://buymeacoffee.com/jssuthahar',

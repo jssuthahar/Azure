@@ -1,0 +1,46 @@
+---
+/**
+ * Google Analytics 4. Off until ANALYTICS.measurementId is set in src/config.ts.
+ *
+ * Privacy rules (keep them):
+ *   - live site only (azure.msdevbuild.com); never on localhost, previews or ?ads=debug
+ *   - skipped when the browser sends Do Not Track or Global Privacy Control
+ *   - Consent Mode v2: analytics and ad storage start as "denied" in the EEA, UK and Switzerland
+ *     until the visitor answers Google's consent message (AdSense Privacy & messaging updates it)
+ *   - only the page PATH is sent, never the query string or hash: the certificate link
+ *     carries the learner's name in its URL
+ *   - Google signals and ad personalisation from Analytics are off
+ */
+import { ANALYTICS } from '../config';
+import { LIVE_HOST } from '../lib/monetization/config';
+const id = ANALYTICS.measurementId;
+const liveHost = LIVE_HOST;
+/** Written out in full so Google's "test your website" check finds the tag in the HTML. */
+const gtagSrc = `https://www.googletagmanager.com/gtag/js?id=${id}`;
+---
+{id && (
+  <script is:inline define:vars={{ id, liveHost, gtagSrc }}>
+    (() => {
+      const n = navigator;
+      const dnt = n.doNotTrack === '1' || window.doNotTrack === '1' || n.globalPrivacyControl === true;
+      if (location.hostname !== liveHost || dnt || /[?&]ads=debug\b/.test(location.search)) return;
+      window.dataLayer = window.dataLayer || [];
+      function gtag() { dataLayer.push(arguments); }
+      window.gtag = gtag;
+      const eea = ['AT','BE','BG','HR','CY','CZ','DK','EE','FI','FR','DE','GR','HU','IE','IT','LV','LT','LU','MT','NL','PL','PT','RO','SK','SI','ES','SE','IS','LI','NO','GB','CH'];
+      gtag('consent', 'default', { ad_storage: 'denied', ad_user_data: 'denied', ad_personalization: 'denied', analytics_storage: 'denied', region: eea, wait_for_update: 500 });
+      gtag('consent', 'default', { ad_storage: 'granted', ad_user_data: 'granted', ad_personalization: 'granted', analytics_storage: 'granted' });
+      gtag('js', new Date());
+      gtag('config', id, {
+        page_location: location.origin + location.pathname,
+        page_referrer: document.referrer ? document.referrer.split(/[?#]/)[0] : undefined,
+        allow_google_signals: false,
+        allow_ad_personalization_signals: false,
+      });
+      const s = document.createElement('script');
+      s.async = true;
+      s.src = gtagSrc;
+      document.head.appendChild(s);
+    })();
+  </script>
+)}

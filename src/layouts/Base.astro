@@ -12,6 +12,7 @@ import Reveal from '../components/Reveal.astro';
 import CurrencyPrices from '../components/CurrencyPrices.astro';
 import AppInstall from '../components/AppInstall.astro';
 import AdsHead from '../components/monetization/AdsHead.astro';
+import AnalyticsHead from '../components/AnalyticsHead.astro';
 import { SITE, SOCIAL } from '../config';
 import { ogPages, ogImagePath } from '../lib/og-pages';
 import { liveExams } from '../data/exams';
@@ -143,6 +144,8 @@ const jsonLd = JSON.stringify({ '@context': 'https://schema.org', '@graph': grap
     <link rel="alternate" type="text/plain" title="AI-readable site map (llms.txt)" href="/llms.txt" />
     <!-- Google AdSense: loaded once here. Dashboard: Auto ads ON, vignette OFF (or low), URL exclusions = adFreePaths. See AdsHead.astro. -->
     <AdsHead />
+    <!-- Google Analytics 4: off until ANALYTICS.measurementId is set (src/config.ts). Live site only, path only, no DNT/GPC. -->
+    <AnalyticsHead />
 
     <script is:inline>
       (() => {

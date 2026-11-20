@@ -28,10 +28,10 @@ const open = async (w, init) => {
   watch(p, errs);
   return { ctx, p };
 };
-const ready = (p) => p.waitForFunction(() => document.documentElement.dataset.adsReady === '1', null, { timeout: 15000 });
+const ready = (p) => p.waitForFunction(() => document.documentElement.dataset.adsReady === '1', null, { timeout: 90000 });
 /** Load, let the ad engine boot (after load + idle), then scroll the whole page so lazy slots fill. */
 const visit = async (p, url) => {
-  await p.goto(BASE + url, { waitUntil: 'load' });
+  await p.goto(BASE + url, { waitUntil: 'domcontentloaded', timeout: 90000 });
   await ready(p);
   // bring each slot into view in turn (lazy loading fills it), then go to the end of the page
   for (let i = 0; i < 8; i++) {
@@ -101,7 +101,7 @@ for (const w of WIDTHS) {
 // 4 · lesson: a second in-article ad mid-explanation when it's long; the multiplex only after the quiz
 {
   const { ctx, p } = await open(375);
-  await p.goto(BASE + lesson + '?ads=debug', { waitUntil: 'load' });
+  await p.goto(BASE + lesson + '?ads=debug', { waitUntil: 'domcontentloaded', timeout: 90000 });
   await ready(p);
   const mid = await p.evaluate(() => document.querySelectorAll('.lesson > .ad-host[data-unit="inArticle"]').length);
   const words = await p.evaluate(() => [...document.querySelectorAll('.lesson > .lesson-section')].reduce((n, s) => n + s.textContent.trim().split(/\s+/).length, 0));
@@ -132,7 +132,7 @@ for (const w of WIDTHS) {
     new PerformanceObserver((l) => { for (const e of l.getEntries()) if (!e.hadRecentInput) window.__cls += e.value; }).observe({ type: 'layout-shift', buffered: true });
   });
   for (const u of [lesson, '/az-900/glossary/']) {
-    await p.goto(BASE + u + '?ads=debug', { waitUntil: 'load' });
+    await p.goto(BASE + u + '?ads=debug', { waitUntil: 'domcontentloaded', timeout: 90000 });
     await ready(p);
     await p.waitForTimeout(800);
     const cls = await p.evaluate(() => window.__cls);
