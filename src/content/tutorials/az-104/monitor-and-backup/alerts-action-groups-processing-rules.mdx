@@ -1,0 +1,234 @@
+---
+title: Alert Rules, Action Groups and Alert Processing Rules
+seoTitle: Azure Alert Rules, Action Groups, Processing Rules | AZ-104
+description: Create metric, log search and activity log alert rules, notify people with action groups, and suppress or route alerts with alert processing rules for AZ-104.
+answer: >-
+  An **alert rule** watches a signal (a **metric**, a **log search** query, the **activity log** or Service and Resource Health) on a **scope** and fires when its **condition** is true, with a **severity** from Sev0 to Sev4. When it fires, it calls one or more **action groups**: reusable lists of **notifications** (email, SMS, push, voice, email to an Azure Resource Manager role) and **actions** (webhook, Logic App, Azure Function, Automation runbook, Event Hubs, ITSM). An **alert processing rule** acts on alerts that already fired: it can **suppress notifications** (for example during a recurring maintenance window) or **add action groups** to every alert in a scope.
+updated: 2026-11-24
+readingMinutes: 11
+keyTerms:
+  - term: Alert rule
+    definition: A rule with a scope, a signal and a condition that creates an alert when the condition is met.
+  - term: Metric alert
+    definition: An alert rule on a platform or custom metric, evaluated every minute or more, with static or dynamic thresholds.
+  - term: Log search alert
+    definition: An alert rule that runs a KQL query on a schedule and fires on the number of results or an aggregated value.
+  - term: Activity log alert
+    definition: An alert rule that fires when a matching activity log event occurs, including Service Health and Resource Health events.
+  - term: Action group
+    definition: A reusable, global set of notifications and automated actions that alert rules call when they fire.
+  - term: Alert processing rule
+    definition: A rule that changes fired alerts in a scope, by suppressing their notifications or adding action groups, optionally on a schedule.
+  - term: Severity
+    definition: Sev0 (critical) to Sev4 (verbose), set on the alert rule and used for filtering and routing.
+  - term: Dynamic threshold
+    definition: A metric alert threshold that Azure Monitor learns from the metric's history instead of a fixed number.
+interview:
+  - level: beginner
+    q: What's the difference between an alert rule and an action group?
+    a: >-
+      The alert rule decides when something is wrong, like CPU above 80% for five minutes. The action group decides who hears about it and what happens, like an email to the ops team and a webhook to open a ticket. You build the action group once and reuse it across many rules.
+    followUps: []
+  - level: intermediate
+    q: Patching every Saturday night reboots servers and pages the on-call engineer. How do you stop that without deleting alerts?
+    a: >-
+      An alert processing rule with the suppress notifications type, scoped to the subscription or resource groups, with a recurring weekly schedule for Saturday's window. The alerts still fire and show in the portal, so we have a record, but no action groups are called during the window.
+    followUps: []
+  - level: experienced
+    q: When would you choose a log search alert over a metric alert?
+    a: >-
+      When the condition isn't a single metric: counting failed sign-ins, matching an event ID in Windows logs, or combining tables. Metric alerts are near real time and cheaper per rule, so I use them for CPU, memory, availability and queue length. Log search alerts run on a schedule, usually every 5 or 15 minutes, and cost a bit more.
+    followUps: []
+  - level: scenario
+    q: Security wants every Sev0 and Sev1 alert in the whole subscription to also go to their team. What's the least effort?
+    a: >-
+      One alert processing rule scoped to the subscription with a filter on severity Sev0 and Sev1 and the type apply action group, pointing at the security team's action group. No need to edit hundreds of alert rules.
+    followUps: []
+revision:
+  keyPoints:
+    - Alert rule = scope + signal + condition + severity. Types - metric, log search, activity log (including Service Health and Resource Health), plus smart detection and Prometheus.
+    - Action groups are global and reusable. Notifications - email, SMS, push, voice, ARM role email. Actions - webhook, secure webhook, Logic App, Function, runbook, Event Hubs, ITSM.
+    - The action group display name (short name) is at most 12 characters.
+    - Alert processing rules act after an alert fires - suppress notifications or apply action groups, with filters and an optional schedule (always, once, recurring).
+    - Alert states - condition (Fired, Resolved) and user response (New, Acknowledged, Closed).
+  mistakes:
+    - Editing or disabling dozens of alert rules for a maintenance window instead of one processing rule.
+    - Thinking a suppression rule stops alerts being created. It only stops notifications and actions.
+    - Using a metric alert for something that only appears in logs, or a log search alert for a simple CPU threshold.
+  examTips:
+    - '"Notify people and call a webhook" = **action group**. "Mute notifications during maintenance" = **alert processing rule** with **suppress notifications**.'
+    - '"Alert when someone deletes a VM" or "when Azure reports a service issue in my region" = **activity log alert** (Service Health).'
+    - '"Threshold should adapt to normal patterns" = **dynamic threshold** on a metric alert.'
+  quick:
+    - q: What does an action group's short name appear in?
+      a: SMS and email notifications. It's limited to 12 characters.
+    - q: Which alert type runs a KQL query on a schedule?
+      a: A log search alert.
+    - q: What are the two alert processing rule types?
+      a: Suppress notifications and apply action group.
+    - q: Which severity is the most critical?
+      a: Sev0.
+    - q: Does a suppression rule stop alerts from being created?
+      a: No. Alerts still fire and are listed; only notifications and actions are removed.
+references:
+  - title: Overview of Azure Monitor alerts
+    url: https://learn.microsoft.com/azure/azure-monitor/alerts/alerts-overview
+  - title: Action groups
+    url: https://learn.microsoft.com/azure/azure-monitor/alerts/action-groups
+  - title: Alert processing rules
+    url: https://learn.microsoft.com/azure/azure-monitor/alerts/alerts-processing-rules
+  - title: Create a metric alert rule
+    url: https://learn.microsoft.com/azure/azure-monitor/alerts/alerts-create-metric-alert-rule
+  - title: az monitor alert-processing-rule
+    url: https://learn.microsoft.com/cli/azure/monitor/alert-processing-rule
+related:
+  - monitor-metrics-and-diagnostic-settings
+  - kql-for-azure-admins
+  - backup-restore-reports-and-alerts
+---
+
+## Start with a question
+
+<Story question="Your house has a smoke alarm. Who should it ring, and should it ring while you're making toast?">
+
+The smoke detector decides there's a problem. That's the **alert rule**. What happens next is a separate choice: beep in the hall, text your phone, call the neighbour. That list is the **action group**, and every detector in the house can share it.
+
+And when you know you're about to burn the toast, you press the hush button for ten minutes. The detector still notices the smoke, it just doesn't call anyone. That's an **alert processing rule**.
+
+</Story>
+
+## Explain it like I'm 10
+
+<Eli10>
+
+A teacher watches the class. If it gets too noisy for five minutes, that's the rule, and it **fires**.
+
+The teacher has a list: tell the head teacher, ring the bell, write it on the board. That list is the **action group**.
+
+On sports day everyone is noisy on purpose, so the head says "don't tell me about noise today". That's the **processing rule**. The teacher still notices, but nobody gets called.
+
+</Eli10>
+
+## The technical explanation
+
+Azure Monitor alerts have three building blocks. Keeping them separate is the whole trick.
+
+<Flow
+  caption="From a CPU spike to a phone call"
+  steps={[
+    { title: 'Alert rule', text: 'Average Percentage CPU on vm-app01 > 80% over 5 minutes, checked every minute. Severity 2.' },
+    { title: 'Alert', text: 'The condition holds, so an alert is created in state Fired / New.' },
+    { title: 'Processing rule', text: 'Is any rule active for this scope right now? Suppress, or add another action group.' },
+    { title: 'Action group', text: 'Email ops, SMS the on-call phone, call the ITSM webhook.' },
+  ]}
+/>
+
+### Alert rule types
+
+| Type | Signal | Evaluated | Use it for |
+| --- | --- | --- | --- |
+| **Metric** | Platform or custom metric | Every 1 to 15 minutes over a lookback (window) | CPU, memory, disk, availability, queue length. **Static** or **dynamic** thresholds. One rule can watch many VMs in a resource group |
+| **Log search** | A KQL query on a workspace | On a schedule (1 minute to 24 hours) | Event IDs, failed sign-ins, patterns across tables |
+| **Activity log** | Activity log events | When the event arrives | "Someone deleted a VM", policy events, **Service Health** (Azure incident in your region) and **Resource Health** (your VM became unavailable) |
+| Smart detection, Prometheus | Application Insights, managed Prometheus | Varies | App anomalies, Kubernetes metrics |
+
+Every rule has a **scope** (a resource, resource group or subscription), a **condition**, **action groups**, and **details**: name, **severity** (Sev0 critical to Sev4 verbose), and whether it **automatically resolves**. Metric alerts are **stateful** by default: they fire once, then resolve when the condition clears.
+
+**Portal path:** **Monitor > Alerts > + Create > Alert rule**, or **New alert rule** from Metrics explorer or Logs. Tabs: *Scope, Condition, Actions, Details, Tags, Review + create*.
+
+```bash
+az monitor metrics alert create -g rg-ops-alerts -n alert-cpu-high \
+  --scopes <vm id> --condition "avg Percentage CPU > 80" \
+  --window-size 5m --evaluation-frequency 1m --severity 2 --action ag-ops
+```
+
+### Action groups
+
+An **action group** is a global resource with a **display name** of at most **12 characters** (it shows up in SMS and emails). It holds:
+
+- **Notifications**: email, SMS, Azure mobile app push, voice call, and **email Azure Resource Manager role** (for example every Owner of the subscription).
+- **Actions**: **webhook** and **secure webhook**, **Logic App**, **Azure Function**, **Automation runbook**, **Event Hubs**, **ITSM** connector.
+
+Azure rate-limits some notifications, for example no more than one SMS or voice call every 5 minutes per number and about 100 emails an hour per address, so an alert storm doesn't flood a phone. Many alert rules can share one action group; change the on-call number once and every rule follows.
+
+```bash
+az monitor action-group create -g rg-ops-alerts -n ag-ops --short-name opsteam \
+  --action email ops ops@contoso.com \
+  --action sms oncall 1 5555550100 \
+  --action webhook itsm https://itsm.contoso.com/hooks/azure
+```
+
+```powershell
+$email = New-AzActionGroupEmailReceiverObject -Name ops -EmailAddress ops@contoso.com
+New-AzActionGroup -ResourceGroupName rg-ops-alerts -Name ag-ops -ShortName opsteam `
+  -Location Global -EmailReceiver $email
+```
+
+### Alert processing rules
+
+An **alert processing rule** doesn't create alerts. It changes what happens to alerts that fire within its **scope**:
+
+| Setting | Options |
+| --- | --- |
+| **Rule type** | **Suppress notifications** (removes all action groups) or **Apply action group** (adds one or more) |
+| **Filters** | Alert rule name, severity, monitor service, resource type, alert context and more |
+| **Scheduling** | **Always**, **At a specific time** (one window), or **Recurring** (daily, weekly or monthly with start and end times and a time zone) |
+
+Suppressed alerts still appear in **Monitor > Alerts** with their history, so you keep a record. If a suppression rule and an apply rule both match, suppression wins.
+
+```bash
+az monitor alert-processing-rule create -g rg-ops-alerts -n apr-patch-window \
+  --scopes /subscriptions/<sub>/resourceGroups/rg-ops-alerts \
+  --rule-type RemoveAllActionGroups \
+  --schedule-recurrence-type Weekly --schedule-recurrence Saturday \
+  --schedule-recurrence-start-time 21:00:00 --schedule-recurrence-end-time 23:59:00
+```
+
+<TryIt labs="adm-ops-alerts-insights" text="Build an action group, fire a CPU alert, then mute it with a Saturday processing rule." />
+
+### Working with fired alerts
+
+In **Monitor > Alerts** each alert has a **condition state** set by Azure (*Fired*, *Resolved*) and a **user response** you set (*New*, *Acknowledged*, *Closed*). Acknowledging tells your team someone is on it; it doesn't stop the condition.
+
+<Callout type="exam">
+Separate the three jobs. Questions that ask "**when** should we be told" are about the **alert rule** (and its type: metric for numbers, log search for KQL, activity log for deletes and Service Health). "**Who** gets told and **what** runs" is the **action group**. "**Don't** notify during maintenance" or "also send **all** Sev0 alerts in the subscription to security" is an **alert processing rule**, which is less work than editing every rule. A short name over 12 characters is invalid. Suppression doesn't stop alerts from firing.
+</Callout>
+
+<DeepDive title="Costs, scale and noise">
+
+Metric alerts are charged per monitored time series (about $0.10 a month each, illustrative), so one rule over 50 VMs costs more than one over a single VM. Log search alerts are charged by frequency: a 1-minute query costs more than a 15-minute one. SMS and voice notifications cost per message after a free allowance; email and push are free.
+
+To cut noise, use **dynamic thresholds** for metrics with daily patterns, set a sensible lookback so a 30-second blip doesn't page anyone, and enable **automatically resolve**. Use **Azure Policy** built-in initiatives (Azure Monitor baseline alerts) to create the same alert rules across many subscriptions.
+
+</DeepDive>
+
+## Real-world business scenario
+
+<Scenario
+  company="Northwind Retail (fictional)"
+  industry="Retail"
+  problem="Thirty alert rules each had their own email list, two of them still sent to people who'd left, and every Saturday night patching triggered 40 SMS messages to the on-call engineer."
+  service="One action group (ag-ops) with email, SMS and an ITSM webhook replaced the per-rule email lists. Metric alerts with dynamic thresholds covered CPU and memory, a log search alert covered failed backups, and an activity log alert watched Service Health for their regions. An alert processing rule suppressed notifications every Saturday from 21:00 to 23:59, and a second one applied the security team's action group to all Sev0 and Sev1 alerts."
+  why="Contacts lived in one place, routing changed in one rule, and planned work stopped waking people up while alerts were still recorded."
+  outcome="Saturday pages dropped from about 40 to zero, and when the on-call phone number changed it was updated once."
+/>
+
+## When to use it and when not to
+
+<UseWhen
+  use={[
+    'A number crosses a threshold and someone should act: a metric alert with an action group.',
+    'A pattern in logs matters, such as repeated failed sign-ins: a log search alert.',
+    'Planned maintenance or broad routing changes: an alert processing rule instead of editing many rules.',
+  ]}
+  avoid={[
+    'Alerting on everything at Sev0. People learn to ignore it.',
+    'Disabling alert rules for maintenance and forgetting to turn them back on. Use a scheduled suppression rule.',
+    'Putting personal phone numbers in dozens of rules. Use one shared action group.',
+  ]}
+  alternatives={[
+    '<strong>Budgets and cost alerts</strong> in Cost Management for spending thresholds.',
+    '<strong>Azure Advisor</strong> recommendations for slow-moving issues like underused VMs.',
+    '<strong>Service Health alerts</strong> (activity log alerts) for Azure-side incidents.',
+  ]}
+/>

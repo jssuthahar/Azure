@@ -1,0 +1,199 @@
+---
+title: Azure File Shares, Snapshots and Soft Delete
+seoTitle: Azure File Shares, Snapshots and Soft Delete | AZ-104
+description: Create and configure Azure file shares (SMB or NFS, tiers, quota), take share snapshots and turn on share soft delete to recover deleted files and shares.
+answer: >-
+  An **Azure file share** is a managed SMB (or NFS) share inside a storage account. On a standard general-purpose v2 account you pick an access tier (**Transaction optimized**, **Hot** or **Cool**) and a quota up to **100 TiB**; **premium** (SSD) shares live in a **FileStorage** account and are the only kind that supports **NFS**. A **share snapshot** is a **read-only, incremental**, point-in-time copy of the whole share (up to **200** per share) that you restore files from, including through Windows **Previous Versions**. **Share soft delete** keeps a deleted share, with its snapshots, for **1 to 365 days** (7 by default) so you can **undelete** it.
+updated: 2026-11-24
+readingMinutes: 11
+keyTerms:
+  - term: Azure file share
+    definition: A fully managed file share in a storage account, mounted over SMB or NFS.
+  - term: Access tier (file share)
+    definition: Transaction optimized, Hot or Cool on standard accounts; they trade storage price against transaction price.
+  - term: Premium file share
+    definition: An SSD-backed share in a FileStorage account, with provisioned performance and NFS support.
+  - term: Share snapshot
+    definition: A read-only, incremental copy of a whole file share at a point in time.
+  - term: Share soft delete
+    definition: A setting that keeps deleted file shares for a retention period so they can be restored.
+  - term: Quota
+    definition: The maximum size of a file share, up to 100 TiB.
+interview:
+  - level: beginner
+    q: What's a share snapshot?
+    a: >-
+      A read-only copy of the whole file share at one moment. It's incremental, so it only stores what changed since the previous one. If someone deletes or corrupts a file, you open the snapshot and copy the old version back, or use Previous Versions in Windows.
+    followUps: []
+  - level: intermediate
+    q: Does share soft delete protect a single deleted file?
+    a: >-
+      No. Share soft delete works at the share level: if the whole share is deleted, you can undelete it with its snapshots during the retention period. For a single file you need a snapshot or Azure Backup, which takes snapshots on a schedule.
+    followUps: []
+  - level: experienced
+    q: A team needs NFS 4.1 shares for Linux apps. What do you create?
+    a: >-
+      A premium FileStorage account, because NFS isn't available on standard general-purpose v2 accounts. NFS shares are reached through a virtual network (service endpoint or private endpoint), they don't use identity-based SMB auth, and secure transfer has to be off for NFS on that account because NFS encrypts differently.
+    followUps: []
+  - level: scenario
+    q: Someone deleted the finance share on Friday and the CLI said it had snapshots. How do you get everything back?
+    a: >-
+      If share soft delete was on, I list deleted shares with az storage share-rm list --include-deleted, take the deleted version and run az storage share-rm restore. The share comes back with its snapshots. Then I'd add a delete lock on the storage account and make sure Azure Backup is protecting the share.
+    followUps: []
+revision:
+  keyPoints:
+    - Standard shares - Transaction optimized, Hot, Cool. Premium shares - SSD, FileStorage account.
+    - NFS needs a premium FileStorage account and virtual network access.
+    - Quota up to 100 TiB per share.
+    - Share snapshots - read-only, incremental, up to 200 per share, whole share.
+    - Share soft delete - 1 to 365 days, default 7, restores share and snapshots.
+    - Azure Backup schedules snapshots and can keep more of them in a vault.
+  mistakes:
+    - Expecting share soft delete to restore a single file.
+    - Trying to create an NFS share on a standard account.
+    - Naming a share with fewer than 3 characters or uppercase letters.
+  examTips:
+    - '"Restore a file deleted from a share yesterday" = **share snapshot** (or Azure Backup).'
+    - '"Recover a deleted file share" = **share soft delete**.'
+    - '"NFS share for Linux" = **premium FileStorage** account.'
+  quick:
+    - q: How many snapshots can one file share keep?
+      a: Up to 200.
+    - q: What is the default retention for share soft delete on new accounts?
+      a: Seven days.
+    - q: Which account type supports NFS shares?
+      a: Premium FileStorage.
+    - q: Which CLI command takes a share snapshot?
+      a: az storage share-rm snapshot
+    - q: What is the maximum quota of a file share?
+      a: 100 TiB.
+references:
+  - title: Plan for an Azure Files deployment
+    url: https://learn.microsoft.com/azure/storage/files/storage-files-planning
+  - title: Create an Azure file share
+    url: https://learn.microsoft.com/azure/storage/files/storage-how-to-create-file-share
+  - title: Overview of share snapshots for Azure Files
+    url: https://learn.microsoft.com/azure/storage/files/storage-snapshots-files
+  - title: Enable soft delete on Azure file shares
+    url: https://learn.microsoft.com/azure/storage/files/storage-files-enable-soft-delete
+related:
+  - azure-files-identity-based-access
+  - blob-soft-delete-and-versioning
+  - storage-explorer-and-azcopy
+---
+
+## Start with a question
+
+<Story question="What if your office shared drive had a time machine?">
+
+Every office has had the moment: someone drags the wrong folder to the bin on the shared drive, and the quarterly reports are gone. On a good file server, IT opens last night's copy and puts the folder back.
+
+**Azure Files** gives you shared drives in the cloud, and **share snapshots** are that time machine. **Share soft delete** covers the bigger accident, when someone deletes the whole share.
+
+</Story>
+
+## Explain it like I'm 10
+
+<Eli10>
+
+A file share is a class cupboard everyone can open from their desk.
+
+A snapshot is a photo of the cupboard taken at 2 o'clock. If someone throws away your drawing at 3, you look at the photo and make it again exactly.
+
+Soft delete is a rule that a thrown-away cupboard waits in the corridor for two weeks before it's taken away.
+
+</Eli10>
+
+## The technical explanation
+
+### Create a share
+
+Portal: storage account, **Data storage > File shares > + File share**. You set a name (3 to 63 lowercase letters, numbers and single hyphens), the access tier and the maximum capacity, and on the **Backup** tab you can turn on Azure Backup straight away.
+
+| Choice | Options |
+| --- | --- |
+| Account type | **Standard general-purpose v2** (HDD) or **Premium FileStorage** (SSD) |
+| Tier (standard) | **Transaction optimized** (busy, many operations), **Hot** (general team shares), **Cool** (archive-like, cheaper storage, dearer access) |
+| Protocol | **SMB** 3.x (Windows, Linux, macOS, TCP port 445) or **NFS** 4.1 (Linux, premium only, virtual network access) |
+| Size | Quota up to **100 TiB** per share |
+
+Standard shares cost per GB stored plus transactions; for example, Transaction optimized is around $0.06 per GB-month (illustrative). Premium shares are billed on provisioned size and give predictable IOPS and throughput.
+
+### Share snapshots
+
+A snapshot captures the **entire share** at a point in time. It's **read-only** and **incremental**: only changed data since the last snapshot is stored and billed. Up to **200** snapshots per share.
+
+- Take one by hand before a risky change: share **> Operations > Snapshots > + Add snapshot**.
+- Let **Azure Backup** take them on a schedule and manage retention.
+- Restore a single file or folder from the portal, or on Windows through **Previous Versions** on the mounted drive.
+- A share with snapshots can't be deleted unless you delete the snapshots too (`--include snapshots`).
+
+### Share soft delete
+
+Soft delete for file shares is on **Data management > Data protection**, with retention from **1 to 365 days**. New accounts have it on with **7 days**. When a share is deleted, it waits in a soft-deleted state with its snapshots; **Show deleted shares > Undelete** brings it back. It's share-level only: it doesn't recover a single deleted file inside a live share.
+
+### CLI and PowerShell
+
+```bash
+az storage share-rm create -g rg-storage-prod --storage-account stcontosoprod \
+  -n finance --quota 1024 --access-tier TransactionOptimized --enabled-protocols SMB
+az storage share-rm snapshot -g rg-storage-prod --storage-account stcontosoprod -n finance
+
+az storage account file-service-properties update -g rg-storage-prod -n stcontosoprod \
+  --enable-delete-retention true --delete-retention-days 14
+
+# Recover a deleted share
+az storage share-rm list -g rg-storage-prod --storage-account stcontosoprod --include-deleted -o table
+az storage share-rm restore -g rg-storage-prod --storage-account stcontosoprod \
+  -n finance --deleted-version <version>
+```
+
+```powershell
+New-AzRmStorageShare -ResourceGroupName rg-storage-prod -StorageAccountName stcontosoprod `
+  -Name finance -QuotaGiB 1024 -AccessTier TransactionOptimized
+Update-AzStorageFileServiceProperty -ResourceGroupName rg-storage-prod -StorageAccountName stcontosoprod `
+  -EnableShareDeleteRetentionPolicy $true -ShareRetentionDays 14
+```
+
+<TryIt labs="adm-storage-protect" text="Create a share, take a snapshot, delete the share and restore it from soft delete." />
+
+<Callout type="exam">
+Match the accident to the tool. "A file in the share was deleted or overwritten" is a **share snapshot** or **Azure Backup** restore. "The whole share was deleted" is **share soft delete**. "The storage account must not be deleted" is a **resource lock**. "Linux needs NFS" is a **premium FileStorage** account. Snapshot limits (**200**) and soft delete retention (**1 to 365 days**) show up in answer choices.
+</Callout>
+
+<DeepDive title="Azure File Sync">
+
+If branch offices need fast local access, **Azure File Sync** installs an agent on a Windows Server that caches the Azure file share. Cloud tiering keeps hot files local and leaves cold ones as pointers in Azure. The cloud share is still where snapshots and soft delete protect the data.
+
+</DeepDive>
+
+## Real-world business scenario
+
+<Scenario
+  company="Litware Finance (fictional)"
+  industry="Finance"
+  problem="An admin cleanup script deleted the month-end folder on the finance share, and a week later another admin deleted a share he thought was a test copy."
+  service="Azure Backup now takes daily snapshots of each share, admins take a manual snapshot before scripted changes, and share soft delete is set to 14 days."
+  why="Snapshots bring back files and folders in minutes, and soft delete brings back a whole deleted share with its snapshots."
+  outcome="The month-end folder was restored from the previous night's snapshot, and the deleted share was undeleted the same afternoon."
+/>
+
+## When to use it and when not to
+
+<UseWhen
+  use={[
+    'Replacing a Windows file server or giving teams a shared drive.',
+    'Lift-and-shift apps that read and write a network path.',
+    'Protecting shares from mistakes with snapshots and soft delete.',
+  ]}
+  avoid={[
+    'Huge volumes of web-served objects (Blob Storage is cheaper).',
+    'NFS on a standard account (needs premium FileStorage).',
+    'Relying on share soft delete to bring back one file.',
+  ]}
+  alternatives={[
+    '<strong>Azure Backup for Azure Files</strong> for scheduled snapshots and long retention.',
+    '<strong>Azure File Sync</strong> to cache shares on-premises.',
+    '<strong>Azure NetApp Files</strong> for very high-performance enterprise NAS.',
+  ]}
+/>

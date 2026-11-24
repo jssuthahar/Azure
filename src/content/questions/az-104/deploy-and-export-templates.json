@@ -1,0 +1,27 @@
+{ "cert": "az-104", "domain": 3, "topic": "deploy-and-export-templates", "questions": [
+  { "id": "adm-vm-dep-1", "type": "single", "scenario": "Resource group RG1 contains a storage account named st1 and a virtual network named VNet1. You deploy a template to RG1 that defines only st1. You do not specify a deployment mode.", "question": "What happens to VNet1?", "options": [
+    { "text": "VNet1 is unchanged", "why": "Correct. The default mode is Incremental, which leaves resources that are not in the template alone." },
+    { "text": "VNet1 is deleted", "why": "Resources are deleted only in Complete mode." },
+    { "text": "VNet1 is moved to a new resource group", "why": "Deployments do not move resources." },
+    { "text": "The deployment fails because VNet1 is not in the template", "why": "Incremental deployments succeed even when other resources exist in the group." } ], "answer": [0], "explanation": "Incremental is the default mode. Complete mode deletes resources that are not defined in the template.", "objective": "3.1.4" },
+  { "id": "adm-vm-dep-2", "type": "single", "question": "You need to review the resources that a Bicep deployment will create, modify, or delete in resource group RG1 without making any changes. Which command should you run?", "options": [
+    { "text": "az deployment group what-if --resource-group RG1 --template-file main.bicep", "why": "Correct. what-if previews create, modify, and delete operations without deploying." },
+    { "text": "az deployment group create --resource-group RG1 --template-file main.bicep --mode Complete", "why": "This deploys the template and can delete resources." },
+    { "text": "az bicep build --file main.bicep", "why": "This compiles the file to JSON but does not compare it with the resource group." },
+    { "text": "az group export --name RG1", "why": "This exports the current resources and does not preview the template." } ], "answer": [0], "explanation": "In PowerShell, use New-AzResourceGroupDeployment with the -WhatIf parameter.", "objective": "3.1.4" },
+  { "id": "adm-vm-dep-3", "type": "single", "scenario": "Several resources in RG1 were created manually in the Azure portal. You must create a template that represents the current state of RG1 with the least administrative effort.", "question": "What should you use?", "options": [
+    { "text": "Export template on RG1", "why": "Correct. Export template generates a template from the existing resources in the group." },
+    { "text": "The Deployments blade of RG1", "why": "Deployment history contains only resources that were deployed with templates, not portal-created resources outside deployments." },
+    { "text": "az bicep decompile on RG1", "why": "Decompile converts an existing JSON file. It does not read resources from Azure." },
+    { "text": "A template spec", "why": "A template spec stores a template you already have." } ], "answer": [0], "explanation": "Export template (or az group export) captures current resources. Review it, because names and values are hard-coded and some properties cannot be exported.", "objective": "3.1.5" },
+  { "id": "adm-vm-dep-4", "type": "single", "question": "You have an ARM template named azuredeploy.json. You need to convert it to a Bicep file. Which command should you run?", "options": [
+    { "text": "az bicep decompile --file azuredeploy.json", "why": "Correct. decompile converts ARM JSON to Bicep." },
+    { "text": "az bicep build --file azuredeploy.json", "why": "build compiles a Bicep file to JSON, which is the opposite direction." },
+    { "text": "az deployment group export --file azuredeploy.json", "why": "deployment group export downloads the template of a past deployment and does not convert files." },
+    { "text": "az bicep format --file azuredeploy.json", "why": "format tidies the layout of a Bicep file." } ], "answer": [0], "explanation": "Decompilation is best effort. Review warnings and refactor the generated Bicep before you use it.", "objective": "3.1.5" },
+  { "id": "adm-vm-dep-5", "type": "multi", "scenario": "You must deploy a Bicep file named main.bicep to resource group RG1. Any resources in RG1 that are not defined in main.bicep must be removed.", "question": "Which two commands meet the requirement? Each correct answer presents a complete solution.", "options": [
+    { "text": "az deployment group create --resource-group RG1 --template-file main.bicep --mode Complete", "why": "Correct. Complete mode removes resources that are not defined in the template." },
+    { "text": "New-AzResourceGroupDeployment -ResourceGroupName RG1 -TemplateFile main.bicep -Mode Complete", "why": "Correct. This is the PowerShell equivalent with Complete mode." },
+    { "text": "az deployment group create --resource-group RG1 --template-file main.bicep", "why": "Without --mode the deployment is Incremental and does not remove other resources." },
+    { "text": "az deployment group what-if --resource-group RG1 --template-file main.bicep --mode Complete", "why": "what-if only previews the changes. Nothing is removed." } ], "answer": [0, 1], "explanation": "Run what-if before a Complete-mode deployment to see which resources will be deleted.", "objective": "3.1.4" }
+] }

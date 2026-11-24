@@ -1,0 +1,208 @@
+---
+title: Provision and Scale Azure Container Apps
+seoTitle: Provision and Scale Azure Container Apps | AZ-104
+description: Provision Azure Container Apps in the portal, size each replica with CPU and memory, and set min and max replicas and HTTP scale rules, including scale to zero.
+answer: >-
+  **Azure Container Apps** runs containers in a **Container Apps environment** without you managing Kubernetes. You size each **replica** with an allowed **CPU and memory** pair (on the Consumption profile, from **0.25 vCPU / 0.5 Gi** to **4 vCPU / 8 Gi**, always 2 Gi per vCPU). **Scale rules** (HTTP, TCP or event-based, such as a queue) add replicas between **min replicas** and **max replicas**. With **min replicas 0** the app **scales to zero** when it's idle; CPU and memory rules can't do that. Changing scale settings creates a new **revision**.
+updated: 2026-11-24
+readingMinutes: 10
+keyTerms:
+  - term: Container Apps environment
+    definition: The shared boundary that container apps run in, with its own virtual network and Log Analytics workspace.
+  - term: Replica
+    definition: One running copy of a container app revision. Scaling adds or removes replicas.
+  - term: Revision
+    definition: An immutable snapshot of a container app's template. Changing the image, settings or scale rules creates a new one.
+  - term: Scale rule
+    definition: The trigger that tells Container Apps when to add replicas, such as HTTP concurrency, TCP connections or a KEDA event source.
+  - term: Min replicas
+    definition: The fewest replicas that run. Zero allows scale to zero.
+  - term: Max replicas
+    definition: The most replicas that can run, which caps cost on a busy day. The default is 10.
+  - term: Workload profile
+    definition: The compute an environment offers. Consumption is serverless; dedicated profiles give reserved, larger machines.
+interview:
+  - level: beginner
+    q: What does "scale to zero" mean in Container Apps?
+    a: >-
+      When nobody is using the app, Container Apps can stop every replica, so you pay nothing for compute. You allow it by setting min replicas to 0. The next request starts a replica again, with a short delay the first time.
+    followUps: []
+  - level: intermediate
+    q: An API should add replicas as traffic grows, up to 20. How do you set that up?
+    a: >-
+      I'd add an HTTP scale rule with a concurrent requests value, say 50 per replica, set max replicas to 20 and min replicas to 0 or 1 depending on whether a cold start is acceptable. In the CLI that's az containerapp update with --scale-rule-type http, --scale-rule-http-concurrency 50 and --max-replicas 20.
+    followUps: []
+  - level: experienced
+    q: Why didn't my container app scale to zero with a CPU rule?
+    a: >-
+      CPU and memory rules need at least one replica running to measure anything, so they can't scale to zero. If scale to zero matters, I'd use an HTTP, TCP or event rule, such as an Azure Service Bus queue scaler, and set min replicas to 0.
+    followUps: []
+  - level: scenario
+    q: The create wizard rejects 0.5 vCPU with 4 Gi of memory. Why?
+    a: >-
+      On the Consumption profile CPU and memory come in fixed pairs: memory is twice the vCPU in Gi. 0.5 vCPU goes with 1 Gi. If the app really needs 4 Gi, I'd pick 2 vCPU with 4 Gi, or move it to a dedicated workload profile.
+    followUps: []
+revision:
+  keyPoints:
+    - Container apps run inside a Container Apps environment; several apps share it.
+    - Consumption sizes go from 0.25 vCPU / 0.5 Gi to 4 vCPU / 8 Gi, always 2 Gi per vCPU.
+    - Scale rules can be HTTP, TCP or custom (KEDA event sources). Min and max replicas bound them.
+    - Min replicas 0 allows scale to zero. CPU and memory rules can't scale to zero.
+    - Max replicas defaults to 10. Changing scale settings creates a new revision.
+  mistakes:
+    - Picking a CPU and memory pair that isn't allowed on Consumption.
+    - Using a CPU rule and expecting scale to zero.
+    - Forgetting max replicas, so a traffic spike runs up the bill.
+  examTips:
+    - '"Scale to zero when idle" = **min replicas 0** with an HTTP or event rule.'
+    - '"Add a replica per N concurrent requests" = **HTTP scale rule**.'
+    - '"Limit the maximum cost under load" = set **max replicas**.'
+  quick:
+    - q: What is the default maximum number of replicas?
+      a: '10.'
+    - q: Which memory goes with 1 vCPU on the Consumption profile?
+      a: 2 Gi.
+    - q: Can a CPU scale rule scale an app to zero?
+      a: No.
+    - q: What do scale changes create?
+      a: A new revision.
+    - q: Which CLI flag sets HTTP concurrency for a scale rule?
+      a: --scale-rule-http-concurrency.
+references:
+  - title: Azure Container Apps overview
+    url: https://learn.microsoft.com/azure/container-apps/overview
+  - title: Set scaling rules in Azure Container Apps
+    url: https://learn.microsoft.com/azure/container-apps/scale-app
+  - title: Containers in Azure Container Apps (CPU and memory)
+    url: https://learn.microsoft.com/azure/container-apps/containers
+  - title: Azure Container Apps environments
+    url: https://learn.microsoft.com/azure/container-apps/environment
+  - title: 'Quickstart: Deploy your first container app using the Azure portal'
+    url: https://learn.microsoft.com/azure/container-apps/quickstart-portal
+related:
+  - container-registry-and-instances
+  - app-service-plans-and-scaling
+---
+
+## Start with a question
+
+<Story question="How many tills should a shop open?">
+
+A supermarket on a quiet Tuesday morning opens one till. On Saturday afternoon it opens ten, and at 11 PM it closes them all. Nobody plans the exact number in advance: the manager watches the queue.
+
+**Azure Container Apps** is that manager for your containers. Each open till is a **replica**. A **scale rule** watches the queue (HTTP requests, connections or messages) and opens or closes tills between a **minimum** and **maximum** you set. If the minimum is zero, the shop can close completely when nobody's there.
+
+</Story>
+
+## Explain it like I'm 10
+
+<Eli10>
+
+Imagine a lemonade stand where helpers appear when the line gets long.
+
+You decide how big each helper's table is: that's **CPU and memory**.
+
+You decide the rule: "one helper for every 50 people waiting". That's the **scale rule**.
+
+You decide the most helpers you can afford, like 10. That's **max replicas**.
+
+When nobody's around, all the helpers go home. That's **scale to zero**.
+
+</Eli10>
+
+## The technical explanation
+
+### Provision a container app in the portal
+
+1. Search **Container Apps**, select **+ Create → Container App**.
+2. **Basics**: subscription, resource group, **Container app name**, region and a **Container Apps environment** (create one if needed; it brings a Log Analytics workspace for logs).
+3. **Container**: image source (Azure Container Registry, Docker Hub or another registry), image and tag, **Workload profile** (Consumption) and **CPU and Memory**.
+4. **Ingress**: turn it on for an HTTP app. **Accepting traffic from anywhere** gives a public URL; **Limited to Container Apps Environment** keeps it internal. Set the **target port** your container listens on.
+5. **Review + create**. Then open **Application → Scale** to set replicas and rules.
+
+```bash
+az containerapp env create -g rg-admin-apps -n cae-contoso-adm -l eastus
+az containerapp create -g rg-admin-apps -n ca-orders-api --environment cae-contoso-adm \
+  --image mcr.microsoft.com/k8se/quickstart:latest --ingress external --target-port 80 \
+  --cpu 0.5 --memory 1.0Gi --min-replicas 0 --max-replicas 5
+```
+
+In PowerShell the Az.App module does the same with `New-AzContainerAppManagedEnv` and `New-AzContainerApp`, with scale rules built by `New-AzContainerAppScaleRuleObject`.
+
+### Sizing: CPU and memory per replica
+
+On the **Consumption** profile, CPU goes from 0.25 to 4 vCPU in steps of 0.25, and memory must be **2 Gi per vCPU**:
+
+| CPU | Memory |
+| --- | --- |
+| 0.25 | 0.5Gi |
+| 0.5 | 1.0Gi |
+| 1 | 2.0Gi |
+| 2 | 4.0Gi |
+| 4 | 8.0Gi |
+
+Need an odd shape, more memory or GPUs? Add a **dedicated workload profile** to the environment and run the app there. You pay for those machines whether they're busy or not.
+
+### Scaling: replicas and rules
+
+| Setting | Default | Notes |
+| --- | --- | --- |
+| **Min replicas** | 0 | 0 means the app can scale to zero |
+| **Max replicas** | 10 | Raise it (the platform allows up to 1,000) or lower it to cap cost |
+| **HTTP rule** | 10 concurrent requests per replica when ingress is on and you add no rule | Set your own value, such as 50 |
+| **TCP rule** | | Concurrent TCP connections |
+| **Custom (KEDA)** | | Event sources such as Azure Service Bus, Storage queues or Event Hubs |
+| **CPU / memory** | | Utilisation-based; **can't** scale to zero |
+
+Container Apps checks the rules about every 30 seconds and waits a **cool-down** of 300 seconds with no load before it scales all the way back to zero.
+
+```bash
+az containerapp update -g rg-admin-apps -n ca-orders-api \
+  --scale-rule-name http-scale --scale-rule-type http \
+  --scale-rule-http-concurrency 50 --min-replicas 0 --max-replicas 10
+```
+
+With that rule, 400 concurrent requests give `400 ÷ 50 = 8` replicas. 1,000 requests would want 20 but stop at 10, so requests start to queue. That's the trade-off max replicas gives you: a predictable bill.
+
+<TryIt labs="adm-containers" text="Create the orders API with 0.5 vCPU and 1.0Gi, add an HTTP scale rule, then send 400 concurrent requests and watch the replicas." />
+
+<Callout type="exam">
+"The app must cost nothing when nobody uses it" points to **min replicas 0**, and the rule has to be HTTP, TCP or an event scaler, never CPU or memory. "Handle at most N replicas" is **max replicas**. If an option pairs 0.5 vCPU with 2 Gi on Consumption, it's invalid. And compared with Container Instances, Container Apps is the one that **scales automatically**.
+</Callout>
+
+<DeepDive title="Revisions are how changes roll out">
+
+The scale section is part of the app's **template**, so saving new scale settings creates a new **revision**. In single revision mode the new one takes all the traffic and the old one is deactivated. In multiple revision mode you can split traffic between revisions, for example 90% and 10%, and roll back by moving the traffic. Ingress, secrets and the registry settings are app-level and don't create a revision.
+
+</DeepDive>
+
+## Real-world business scenario
+
+<Scenario
+  company="Contoso Retail (fictional)"
+  industry="Retail"
+  problem="The orders API ran on three always-on VMs. They idled most nights and still fell over during the monthly flash sale."
+  service="Azure Container Apps on the Consumption profile: 0.5 vCPU / 1.0Gi per replica, external ingress, an HTTP scale rule at 50 concurrent requests per replica, min replicas 1 during business hours and 0 overnight through a scheduled update, max replicas 30."
+  why="Replicas follow real traffic within seconds, the night costs almost nothing, and max replicas stops a bot storm from turning into a surprise bill."
+  outcome="The flash sale peaked at 26 replicas with no errors, and the monthly compute bill fell by more than half compared with the VMs."
+/>
+
+## When to use it and when not to
+
+<UseWhen
+  use={[
+    'A container API or worker has traffic that rises and falls.',
+    'You want scale to zero for apps that are idle much of the day.',
+    'Several small services should share one environment, network and log workspace.',
+  ]}
+  avoid={[
+    'A job runs once and stops. Container Instances is simpler.',
+    'You need direct access to the Kubernetes API or custom controllers. Use AKS.',
+    'A classic web app needs deployment slots and backups. App Service has them built in.',
+  ]}
+  alternatives={[
+    '<strong>Azure Container Instances</strong> for run-once jobs with fixed CPU and memory.',
+    '<strong>Azure App Service</strong> for web apps with slots, custom domains and backups.',
+    '<strong>Azure Kubernetes Service</strong> for full control of a Kubernetes cluster.',
+  ]}
+/>

@@ -18,8 +18,14 @@ import { vectordata } from './vectordata';
 import { messaging } from './messaging';
 import { observe } from './observe';
 import { copilotflow, copilotcontext, copilotagent, copilotgov } from './copilot';
+import { adminidentity } from './admin/adminidentity';
+import { adminstorage } from './admin/adminstorage';
+import { admincompute } from './admin/admincompute';
+import { adminapps } from './admin/adminapps';
+import { adminnet } from './admin/adminnet';
+import { adminops } from './admin/adminops';
 
-const BUILDERS: Record<Mode3D, (c: Ctx) => Ctl> = { datacenter, zones, regions, redundancy, scale, network, governance, identity, responsible, genai, foundry, perception, containers, vectordata, messaging, observe, copilotflow, copilotcontext, copilotagent, copilotgov };
+const BUILDERS: Record<Mode3D, (c: Ctx) => Ctl> = { datacenter, zones, regions, redundancy, scale, network, governance, identity, responsible, genai, foundry, perception, containers, vectordata, messaging, observe, copilotflow, copilotcontext, copilotagent, copilotgov, adminidentity, adminstorage, admincompute, adminapps, adminnet, adminops };
 
 export function webglOk() {
   try {

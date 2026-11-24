@@ -1,0 +1,220 @@
+---
+title: VM Disks and Encryption at Host
+seoTitle: Azure VM Disks and Encryption at Host Explained | AZ-104
+description: Manage Azure VM OS, data and temp disks, attach and resize disks, change disk types and caching, and configure encryption at host step by step for AZ-104.
+answer: >-
+  An Azure VM has an **OS disk** and optional **data disks**, both **managed disks** stored in Azure Storage, plus a **temporary disk** on the host that loses its data when the VM is deallocated or moved. Disk types are **Ultra Disk, Premium SSD v2, Premium SSD, Standard SSD and Standard HDD**. You can attach data disks while the VM runs and grow disks (never shrink them), but changing a disk's type needs the VM **deallocated** or the disk detached. Managed disks are always encrypted at rest; **encryption at host** also encrypts the **temp disk** and the **disk caches** on the host. Register the **EncryptionAtHost** feature once, deallocate the VM, then turn it on.
+updated: 2026-11-24
+readingMinutes: 12
+keyTerms:
+  - term: Managed disk
+    definition: A block storage volume for a VM that Azure stores, replicates and encrypts for you, such as an OS or data disk.
+  - term: Temporary disk
+    definition: Local storage on the VM's host (D on Windows, often /mnt on Linux). Data on it is lost after deallocation, redeployment or host maintenance.
+  - term: Host caching
+    definition: A per-disk cache on the host. None, ReadOnly or ReadWrite. Not available for Ultra Disk or Premium SSD v2.
+  - term: Server-side encryption (SSE)
+    definition: Encryption at rest of managed disks in Azure Storage, on by default, with platform-managed or customer-managed keys.
+  - term: Encryption at host
+    definition: Encryption of the temp disk and OS/data disk caches on the VM host, so data is encrypted from the host to Storage.
+  - term: Disk encryption set
+    definition: The resource that links managed disks to a customer-managed key in Azure Key Vault.
+  - term: Azure Disk Encryption (ADE)
+    definition: Older guest-OS encryption with BitLocker or DM-Crypt and Key Vault. It can't be combined with encryption at host on the same VM.
+interview:
+  - level: beginner
+    q: What's the difference between the OS disk, a data disk and the temp disk?
+    a: >-
+      The OS disk holds the operating system. Data disks hold application data, and both are managed disks that survive restarts and deallocation. The temp disk sits on the physical host. It's fast but anything on it can disappear when the VM moves hosts, so it's only for page files and scratch data.
+    followUps: []
+  - level: intermediate
+    q: How do you switch a data disk from Premium SSD to Standard SSD?
+    a: >-
+      Deallocate the VM, or detach the disk, then change the SKU on the disk's Size + performance blade or with az disk update --sku StandardSSD_LRS. Then start the VM again. You can't change the type of an attached disk while the VM is running.
+    followUps: []
+  - level: experienced
+    q: Managed disks are already encrypted. Why would you turn on encryption at host?
+    a: >-
+      Server-side encryption covers the disks at rest in Storage. It doesn't cover the temp disk or the disk cache that live on the host. Encryption at host encrypts those on the host itself and sends data to Storage already encrypted, which is what auditors usually mean by end-to-end. It doesn't use the VM's CPU, unlike Azure Disk Encryption.
+    followUps: []
+  - level: scenario
+    q: You try to enable encryption at host on a VM and the option is greyed out. What do you check?
+    a: >-
+      First whether the EncryptionAtHost feature is registered on the subscription with az feature register and az provider register. Then whether the VM is deallocated, because the setting can't change while it runs. Then whether the VM size supports it and whether the VM uses Azure Disk Encryption, which blocks it.
+    followUps: []
+revision:
+  keyPoints:
+    - OS and data disks are managed disks; the temp disk is on the host and isn't persistent.
+    - Attach and detach data disks while the VM runs. Grow disks, never shrink them.
+    - Changing a disk type needs the VM deallocated or the disk detached.
+    - Host caching - ReadOnly for read-heavy data, None for write-heavy logs, ReadWrite only if the app handles it.
+    - Encryption at host - register EncryptionAtHost, deallocate, enable, start. Covers temp disk and caches.
+  mistakes:
+    - Keeping important data on the temporary disk.
+    - Trying to enable encryption at host on a running VM, or on a VM that uses Azure Disk Encryption.
+  examTips:
+    - '"Encrypt the temp disk and caches" = **encryption at host**.'
+    - '"Use your own key for disk encryption at rest" = **customer-managed key** with a **disk encryption set**.'
+    - '"Data lost after the VM was deallocated" = it was on the **temporary disk**.'
+  quick:
+    - q: Which command attaches a new data disk to a VM?
+      a: az vm disk attach --new --size-gb <n>.
+    - q: Which feature must be registered before using encryption at host?
+      a: Microsoft.Compute/EncryptionAtHost.
+    - q: What VM state is needed to turn on encryption at host for an existing VM?
+      a: Stopped (deallocated).
+    - q: Can you shrink a managed disk?
+      a: No, disks can only grow.
+    - q: Which disk is lost when a VM is redeployed to a new host?
+      a: The temporary disk.
+references:
+  - title: Introduction to Azure managed disks
+    url: https://learn.microsoft.com/azure/virtual-machines/managed-disks-overview
+  - title: Use the Azure portal to enable end-to-end encryption using encryption at host
+    url: https://learn.microsoft.com/azure/virtual-machines/disks-enable-host-based-encryption-portal
+  - title: Use the Azure CLI to enable end-to-end encryption using encryption at host
+    url: https://learn.microsoft.com/azure/virtual-machines/linux/disks-enable-host-based-encryption-cli
+  - title: Change the disk type of an Azure managed disk
+    url: https://learn.microsoft.com/azure/virtual-machines/disks-convert-types
+  - title: Overview of managed disk encryption options
+    url: https://learn.microsoft.com/azure/virtual-machines/disk-encryption-overview
+related:
+  - create-and-size-virtual-machines
+  - move-virtual-machines
+---
+
+## Start with a question
+
+<Story question="If your house is locked, is the post on your doormat safe?">
+
+Your filing cabinet is locked. Great. But the letter you're working on sits on the desk by the window, and the post waits on the doormat. Locking the cabinet didn't protect those.
+
+A VM's **managed disks** are the locked cabinet: encrypted in Azure Storage by default. The **temp disk** and the **disk cache** are the desk and the doormat, on the physical host. **Encryption at host** locks those too.
+
+</Story>
+
+## Explain it like I'm 10
+
+<Eli10>
+
+Your school bag has a few parts.
+
+The big pocket with your books is the **OS disk**. A second bag for sports kit is a **data disk**. You can pick up another one any time.
+
+The scrap paper on your desk is the **temp disk**. When you change classrooms, it gets thrown away.
+
+**Encryption at host** is writing in secret code even on the scrap paper, so nobody passing by can read it.
+
+</Eli10>
+
+## The technical explanation
+
+### The three kinds of disk
+
+| Disk | Where it lives | Survives deallocation? | Use it for |
+| --- | --- | --- | --- |
+| OS disk | Managed disk in Azure Storage | Yes | The operating system |
+| Data disk | Managed disk in Azure Storage | Yes | Databases, app files, logs |
+| Temporary disk | Local storage on the host | **No** | Page file, swap, scratch data |
+
+Managed disk types, fastest first: **Ultra Disk** and **Premium SSD v2** (performance set separately from size, no host caching), **Premium SSD** (production), **Standard SSD** (light production, web servers) and **Standard HDD** (backups, dev/test). Premium and Standard SSD also come in **ZRS** versions that survive a zone failure.
+
+### Add, change and grow disks
+
+Portal: **VM › Settings › Disks › + Create and attach a new disk** (or **Attach existing disks**), set the LUN, type, size and **Host caching**, then **Save**.
+
+```bash
+az vm disk attach -g rg-contoso-prod --vm-name vm-app-01 -n vm-app-01-data1 \
+  --new --size-gb 128 --sku Premium_LRS --caching ReadOnly
+az vm disk detach -g rg-contoso-prod --vm-name vm-app-01 -n vm-app-01-data1
+az disk update -g rg-contoso-prod -n vm-app-01-data1 --sku StandardSSD_LRS --size-gb 256
+```
+
+```powershell
+$vm = Get-AzVM -ResourceGroupName rg-contoso-prod -Name vm-app-01
+$cfg = New-AzDiskConfig -Location eastus -CreateOption Empty -DiskSizeGB 128 -SkuName Premium_LRS
+$disk = New-AzDisk -ResourceGroupName rg-contoso-prod -DiskName vm-app-01-data1 -Disk $cfg
+Add-AzVMDataDisk -VM $vm -Name vm-app-01-data1 -ManagedDiskId $disk.Id -Lun 0 -CreateOption Attach -Caching ReadOnly
+Update-AzVM -VM $vm -ResourceGroupName rg-contoso-prod
+```
+
+| Change | VM running? |
+| --- | --- |
+| Attach or detach a data disk | Yes (unmount it in the OS before detaching) |
+| Grow a data disk | Yes, in most cases, then extend the partition |
+| Grow the OS disk | Deallocate first |
+| Change disk type (Premium ↔ Standard) | Deallocate the VM or detach the disk |
+| Shrink a disk | Not possible |
+| Max data disks | Set by the VM size |
+
+**Host caching**: ReadOnly suits read-heavy data such as database data files, None suits write-heavy logs, and ReadWrite is only safe when the app writes through properly. The OS disk defaults to ReadWrite.
+
+### Encryption options
+
+| Option | Covers | Keys | Notes |
+| --- | --- | --- | --- |
+| Server-side encryption (SSE) | Managed disks at rest in Storage | Platform-managed by default, or customer-managed via a **disk encryption set** | Always on |
+| **Encryption at host** | Temp disk, OS/data disk **caches**, data in flow to Storage | Same keys as SSE | Runs on the host, no VM CPU cost |
+| Azure Disk Encryption (ADE) | Volumes inside the guest OS | Key Vault | BitLocker/DM-Crypt; retires on 15 September 2028, so use encryption at host for new VMs |
+| Confidential disk encryption | OS disk bound to the VM's TPM | Platform or customer key | Confidential VM sizes only |
+
+### Turn on encryption at host
+
+```bash
+# once per subscription
+az feature register --name EncryptionAtHost --namespace Microsoft.Compute
+az feature show --name EncryptionAtHost --namespace Microsoft.Compute --query properties.state
+az provider register --namespace Microsoft.Compute
+
+# new VM
+az vm create ... --encryption-at-host true
+
+# existing VM: must be deallocated
+az vm deallocate -g rg-contoso-prod -n vm-app-01
+az vm update -g rg-contoso-prod -n vm-app-01 --set securityProfile.encryptionAtHost=true
+az vm start -g rg-contoso-prod -n vm-app-01
+```
+
+In the portal: **Disks** tab of the create wizard › **Encryption at host**, or on an existing deallocated VM **Disks › Additional settings › Encryption at host: Yes**. The VM size has to support it, and the VM can't also use ADE.
+
+<TryIt labs="adm-vm-size-disks" text="Attach a data disk while the VM runs, turn on encryption at host, then switch the disk to Standard SSD." />
+
+<Callout type="exam">
+"Encrypt the **temp disk** and **caches**" or "end-to-end encryption without using VM CPU" is **encryption at host**. "Use our own key in Key Vault for disks at rest" is a **customer-managed key** through a **disk encryption set**. If enabling encryption at host fails, the answers are: register **Microsoft.Compute/EncryptionAtHost**, **deallocate** the VM, and don't combine it with **Azure Disk Encryption**. "Data disappeared after a restart on a new host" means it was on the **temporary disk**.
+</Callout>
+
+<DeepDive title="Picking disk performance">
+
+On Premium SSD, performance grows with size tiers (P10 = 128 GiB with about 500 IOPS, P30 = 1 TiB with about 5,000), so people sometimes buy a bigger disk just for IOPS. Premium SSD v2 and Ultra Disk let you set capacity, IOPS and throughput separately, and change performance without a restart. Remember the VM size caps total disk IOPS and throughput too: four fast disks on a small VM are limited by the VM, not the disks. Snapshots (`az snapshot create`) give point-in-time copies of a disk for backups or cloning.
+
+</DeepDive>
+
+## Real-world business scenario
+
+<Scenario
+  company="Woodgrove Bank (fictional)"
+  industry="Financial services"
+  problem="An audit found that the page file and disk caches on payment VMs weren't covered by the bank's encryption policy, and premium disks were paid for on archive servers nobody read."
+  service="The team registered EncryptionAtHost, enabled it on each VM during a maintenance window (deallocate, update, start) with customer-managed keys through a disk encryption set, and switched archive data disks from Premium SSD to Standard HDD."
+  why="Encryption at host covers the temp disk and caches on the host without using VM CPU, and disk types can be changed in place while the VM is deallocated."
+  outcome="The audit finding was closed, and disk costs on the archive servers dropped by more than half."
+/>
+
+## When to use it and when not to
+
+<UseWhen
+  use={[
+    'Separate data disks for application data, so the OS disk can be rebuilt or swapped.',
+    'Encryption at host when policy needs the temp disk and caches encrypted.',
+    'Changing disk types to match how busy each disk really is.',
+  ]}
+  avoid={[
+    'Storing anything you need on the temporary disk.',
+    'Encryption at host on a VM that already uses Azure Disk Encryption. Pick one.',
+  ]}
+  alternatives={[
+    '<strong>Customer-managed keys</strong> through a disk encryption set for your own key control.',
+    '<strong>Azure Files</strong> when several VMs must share the same files.',
+    '<strong>Premium SSD v2</strong> when you need high IOPS without paying for extra capacity.',
+  ]}
+/>

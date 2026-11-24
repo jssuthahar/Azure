@@ -1,0 +1,27 @@
+{ "cert": "az-104", "domain": 3, "topic": "vm-availability-and-scale-sets", "questions": [
+  { "id": "adm-vm-ha-1", "type": "single", "question": "You need to deploy two virtual machines so that the application remains available if an entire datacenter in the Azure region fails. What should you use?", "options": [
+    { "text": "Deploy the VMs to different availability zones", "why": "Correct. Zones are physically separate datacenters within a region." },
+    { "text": "Deploy the VMs to one availability set with two fault domains", "why": "An availability set protects against rack failures within one datacenter." },
+    { "text": "Deploy the VMs to one proximity placement group", "why": "Proximity placement groups keep VMs close together, which increases shared risk." },
+    { "text": "Use Premium SSD disks for both VMs", "why": "Disk type affects the single-instance SLA but not datacenter resilience." } ], "answer": [0], "explanation": "Two or more VMs across two or more zones have a 99.99% SLA. Availability sets provide 99.95%.", "objective": "3.2.6" },
+  { "id": "adm-vm-ha-2", "type": "single", "scenario": "VM1 was created without an availability set. You need VM1 to be part of an existing availability set named AS1.", "question": "What should you do?", "options": [
+    { "text": "Recreate VM1 and specify AS1 during creation", "why": "Correct. A VM can be added to an availability set only when it is created." },
+    { "text": "Run az vm update with --set availabilitySet.id set to AS1", "why": "The availability set property cannot be changed on an existing VM." },
+    { "text": "Move VM1 to the resource group that contains AS1", "why": "Moving resource groups does not change availability set membership." },
+    { "text": "Resize VM1 to a size supported by AS1", "why": "Resizing does not add a VM to an availability set." } ], "answer": [0], "explanation": "You can recreate the VM from its existing disks and specify the availability set.", "objective": "3.2.6" },
+  { "id": "adm-vm-ha-3", "type": "single", "question": "You create an availability set with three fault domains and five update domains, and then deploy six VMs to it. During planned maintenance, what is the maximum number of VMs that are rebooted at the same time?", "options": [
+    { "text": "2", "why": "Correct. Six VMs across five update domains place two VMs in one update domain, and one update domain is rebooted at a time." },
+    { "text": "1", "why": "With six VMs and five update domains, one update domain contains two VMs." },
+    { "text": "3", "why": "Fault domains do not determine how many VMs reboot during planned maintenance." },
+    { "text": "6", "why": "Update domains ensure that not all VMs reboot at once." } ], "answer": [0], "explanation": "VMs are distributed across update domains in order: VM6 shares update domain 0 with VM1.", "objective": "3.2.6" },
+  { "id": "adm-vm-ha-4", "type": "single", "scenario": "You deploy a Virtual Machine Scale Set with autoscale. The minimum is 2, the maximum is 6, and the default is 2. A rule increases the count by 2 when average CPU is greater than 70 percent. CPU stays above 90 percent for one hour.", "question": "How many instances are running at the end of the hour?", "options": [
+    { "text": "6", "why": "Correct. The rule adds instances after each cool down until the maximum of 6 is reached." },
+    { "text": "4", "why": "The rule continues to trigger after the cool down while CPU remains high." },
+    { "text": "8", "why": "Autoscale never exceeds the maximum instance count." },
+    { "text": "2", "why": "The scale-out rule triggers because CPU exceeds the threshold." } ], "answer": [0], "explanation": "Autoscale works within the minimum and maximum limits and waits for the cool down between actions.", "objective": "3.2.7" },
+  { "id": "adm-vm-ha-5", "type": "multi", "scenario": "You need to deploy a Virtual Machine Scale Set that spreads instances across availability zones 1, 2, and 3 and adds instances when average CPU usage is high.", "question": "Which two commands should you run? Each correct answer presents part of the solution.", "options": [
+    { "text": "az vmss create --resource-group RG1 --name VMSS1 --image Ubuntu2404 --orchestration-mode Flexible --zones 1 2 3", "why": "Correct. This creates a Flexible scale set spread across three zones." },
+    { "text": "az monitor autoscale create --resource-group RG1 --resource VMSS1 --resource-type Microsoft.Compute/virtualMachineScaleSets --min-count 3 --max-count 10 --count 3", "why": "Correct. This creates the autoscale setting that rules are added to." },
+    { "text": "az vm availability-set create --resource-group RG1 --name VMSS1 --platform-fault-domain-count 3", "why": "This creates an availability set, not a scale set." },
+    { "text": "az vmss scale --resource-group RG1 --name VMSS1 --new-capacity 10", "why": "This sets the count manually and does not respond to CPU usage." } ], "answer": [0, 1], "explanation": "Add scale-out and scale-in rules with az monitor autoscale rule create.", "objective": "3.2.7" }
+] }

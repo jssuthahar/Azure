@@ -1,0 +1,201 @@
+---
+title: Blob Soft Delete and Versioning
+seoTitle: Azure Blob Soft Delete and Blob Versioning | AZ-104
+description: Turn on blob soft delete, container soft delete and blob versioning, then undelete blobs, restore previous versions and recover deleted containers, for AZ-104.
+answer: >-
+  **Blob soft delete** keeps deleted blobs (and their versions and snapshots) for **1 to 365 days** so you can **undelete** them. **Container soft delete** does the same for whole containers (1 to 365 days) and restores them with their blobs. **Blob versioning** automatically keeps the **previous version** of a blob every time it's overwritten or deleted, so you recover from a bad edit by **copying an older version** back over the current one. Turn them on in **Data management > Data protection**. Microsoft recommends using them together; none of them protects against deleting the **storage account** (use a **resource lock**).
+updated: 2026-11-24
+readingMinutes: 10
+keyTerms:
+  - term: Blob soft delete
+    definition: Keeps deleted blobs, snapshots and versions for a retention period of 1 to 365 days.
+  - term: Container soft delete
+    definition: Keeps deleted containers and their contents for 1 to 365 days so they can be restored.
+  - term: Blob versioning
+    definition: Automatically keeps a previous version of a blob each time it's modified or deleted.
+  - term: Version ID
+    definition: A timestamp that identifies one version of a blob.
+  - term: Undelete
+    definition: Restoring a soft-deleted blob (az storage blob undelete) within the retention period.
+  - term: Point-in-time restore
+    definition: Restores block blobs in containers to an earlier state; needs versioning, change feed and blob soft delete.
+interview:
+  - level: beginner
+    q: What's the difference between soft delete and versioning?
+    a: >-
+      Soft delete is about deletes: a deleted blob waits for a set number of days before it's really gone, and you can undelete it. Versioning is about changes: every time a blob is overwritten, the old content is kept as a version. Together they cover both "I deleted it" and "I saved over it".
+    followUps: []
+  - level: intermediate
+    q: Versioning is on and someone deletes a blob. How do you get it back?
+    a: >-
+      With versioning, a delete turns the current version into a previous version; there's no current blob left. I list versions with --include v, find the one I want and copy it back over the blob name with az storage blob copy start using the version ID in the source URL, or in the portal pick the version and select Make current version.
+    followUps: []
+  - level: experienced
+    q: What does versioning cost, and how do you keep it under control?
+    a: >-
+      Each version is billed for the data it holds, so a blob that's rewritten hourly can pile up versions fast. I add a lifecycle rule that deletes versions older than, say, 90 days, or moves them to a cooler tier. Versioning also isn't supported on accounts with a hierarchical namespace.
+    followUps: []
+  - level: scenario
+    q: A container with a year of reports was deleted this morning. Container soft delete was on with 7 days. What do you do?
+    a: >-
+      List containers with --include-deleted to get its deleted version, then az storage container restore with the name and version, or Show deleted containers and Undelete in the portal. It comes back with its blobs. If a container with the same name was created since, I'd have to remove or rename that first.
+    followUps: []
+revision:
+  keyPoints:
+    - "Portal path: storage account > Data management > Data protection."
+    - Blob soft delete and container soft delete - 1 to 365 days each.
+    - Portal-created accounts get 7-day soft delete by default; the CLI doesn't turn it on.
+    - Versioning keeps a version on every write; restore by copying a version back.
+    - Object replication and point-in-time restore need versioning.
+    - None of these protect against deleting the storage account; use a CanNotDelete lock.
+  mistakes:
+    - Expecting undelete to work when soft delete was off at the time of the delete.
+    - Using undelete for a blob deleted while versioning was on (promote a version instead).
+    - Forgetting that versions are billed.
+  examTips:
+    - '"Recover a blob that was overwritten" = **versioning**.'
+    - '"Recover a deleted container" = **container soft delete**.'
+    - '"Prevent deletion of the storage account" = **resource lock**, not soft delete.'
+  quick:
+    - q: What retention range does blob soft delete allow?
+      a: 1 to 365 days.
+    - q: Which CLI command restores a soft-deleted blob?
+      a: az storage blob undelete
+    - q: Which CLI flag turns on blob versioning?
+      a: --enable-versioning true (az storage account blob-service-properties update)
+    - q: Which three features does point-in-time restore need?
+      a: Versioning, change feed and blob soft delete.
+    - q: Does container soft delete protect against deleting the storage account?
+      a: No.
+references:
+  - title: Soft delete for blobs
+    url: https://learn.microsoft.com/azure/storage/blobs/soft-delete-blob-overview
+  - title: Soft delete for containers
+    url: https://learn.microsoft.com/azure/storage/blobs/soft-delete-container-overview
+  - title: Blob versioning
+    url: https://learn.microsoft.com/azure/storage/blobs/versioning-overview
+  - title: Data protection overview for Azure Blob Storage
+    url: https://learn.microsoft.com/azure/storage/blobs/data-protection-overview
+related:
+  - blob-containers-tiers-and-lifecycle
+  - azure-file-shares-snapshots-soft-delete
+  - storage-redundancy-and-object-replication
+---
+
+## Start with a question
+
+<Story question="Why does your phone's photo app keep deleted photos for 30 days?">
+
+Because people delete the wrong photo all the time. The "Recently deleted" album gives you a month to change your mind. And your document editor keeps a version history, so a bad edit isn't the end of the world either.
+
+Azure Blob Storage has both. **Soft delete** is the recently deleted album. **Versioning** is the version history.
+
+</Story>
+
+## Explain it like I'm 10
+
+<Eli10>
+
+Soft delete is a bin that isn't emptied for two weeks. If you throw away your homework by mistake, you take it back out.
+
+Versioning is like your teacher photocopying your homework every time you change it. If you ruin it, you get yesterday's copy back.
+
+A whole folder thrown away? Container soft delete is a bigger bin for whole folders.
+
+</Eli10>
+
+## The technical explanation
+
+All three settings live in **Data management > Data protection** on the storage account (and on the **Data protection** tab when you create one). The portal turns soft delete on by default for new accounts (7 days); accounts created with the CLI or templates don't get it unless you ask.
+
+### Blob soft delete
+
+When a blob, a snapshot or a version is deleted, it's kept in a soft-deleted state for the retention period (**1 to 365 days**). You can list it (`--include d`, or **Show deleted blobs** in the portal) and **undelete** it. When versioning is off, overwriting a blob also keeps the old data as a soft-deleted snapshot. Soft-deleted data is billed until it's purged.
+
+### Container soft delete
+
+Deleted containers and everything in them are kept for **1 to 365 days**. Restore from **Containers > Show deleted containers > Undelete**, or with `az storage container restore`. You can't restore over a container that has since been recreated with the same name.
+
+### Blob versioning
+
+With versioning on, every write creates a new **current version** and keeps the old one as a **previous version** with a timestamp **version ID**. Deleting a blob turns its current version into a previous version. To recover, **copy** a previous version over the base blob (portal: blob **> Versions > Make current version**). Versions are billed, so pair versioning with a lifecycle rule that deletes old versions. Versioning isn't supported on hierarchical namespace accounts.
+
+### How they fit together
+
+| Accident | With soft delete only | With versioning (and soft delete) |
+| --- | --- | --- |
+| Blob deleted | Undelete it | Make a previous version current |
+| Blob overwritten | Restore the soft-deleted snapshot | Make a previous version current |
+| Version deleted | Undelete the version | Undelete the version |
+| Container deleted | Needs container soft delete | Needs container soft delete |
+| Account deleted | Not covered (use a lock) | Not covered (use a lock) |
+
+**Point-in-time restore** builds on these: it restores block blobs in chosen containers to a moment in the past, and needs **versioning**, the **change feed** and **blob soft delete**, with a restore window shorter than the soft delete retention. **Object replication** also needs versioning.
+
+### CLI and PowerShell
+
+```bash
+az storage account blob-service-properties update -g rg-storage-prod -n stcontosoprod \
+  --enable-delete-retention true --delete-retention-days 14 \
+  --enable-container-delete-retention true --container-delete-retention-days 7 \
+  --enable-versioning true
+
+# Deleted blob (soft delete): list and undelete
+az storage blob list --account-name stcontosoprod -c contracts --include d -o table
+az storage blob undelete --account-name stcontosoprod -c contracts -n contract-88.docx
+
+# Overwritten blob (versioning): copy a previous version back
+az storage blob list --account-name stcontosoprod -c contracts --include v -o table
+az storage blob copy start --account-name stcontosoprod \
+  --destination-container contracts --destination-blob contract-12.docx \
+  --source-uri "https://stcontosoprod.blob.core.windows.net/contracts/contract-12.docx?versionid=<version-id>"
+```
+
+```powershell
+Enable-AzStorageBlobDeleteRetentionPolicy -ResourceGroupName rg-storage-prod -StorageAccountName stcontosoprod -RetentionDays 14
+Enable-AzStorageContainerDeleteRetentionPolicy -ResourceGroupName rg-storage-prod -StorageAccountName stcontosoprod -RetentionDays 7
+Update-AzStorageBlobServiceProperty -ResourceGroupName rg-storage-prod -StorageAccountName stcontosoprod -IsVersioningEnabled $true
+```
+
+<TryIt labs="adm-storage-protect" text="Delete a blob with no protection, then turn on soft delete and versioning and recover a delete and an overwrite." />
+
+<Callout type="exam">
+"Recover a deleted blob" is **blob soft delete** (undelete). "Recover from an overwrite automatically" is **versioning**. "Recover a deleted container" is **container soft delete**. "Prevent the storage account from being deleted" is a **CanNotDelete lock**. Retention for blob and container soft delete is **1 to 365 days**. If a question mentions object replication or point-in-time restore, versioning must be on.
+</Callout>
+
+<DeepDive title="Immutability is a different tool">
+
+Soft delete and versioning help with mistakes, but an admin can still turn them off and purge data. If regulations say data must not be changed or deleted for a period, use **immutable storage**: time-based retention policies or legal holds on a container or on versions. Locked policies can't be shortened, even by the account owner.
+
+</DeepDive>
+
+## Real-world business scenario
+
+<Scenario
+  company="Alpine Ski House (fictional)"
+  industry="Hospitality"
+  problem="A sync tool deleted a season's booking contracts on Monday, and on Tuesday an intern saved a blank template over the master price list."
+  service="Blob soft delete (14 days), container soft delete (7 days) and versioning, with a lifecycle rule that deletes versions older than 90 days."
+  why="Undelete brought back the contracts, and the previous version of the price list was made current again in two clicks."
+  outcome="Both incidents were fixed before lunch. The team later added a delete lock on the account for the one accident these features don't cover."
+/>
+
+## When to use it and when not to
+
+<UseWhen
+  use={[
+    'Any account holding data people or tools can delete or overwrite.',
+    'You plan to use object replication or point-in-time restore (versioning required).',
+    'You want a quick undo without restoring from a backup.',
+  ]}
+  avoid={[
+    'Data that must be legally unchangeable (use immutable storage).',
+    'Hierarchical namespace accounts if you need versioning (not supported).',
+    'Blobs rewritten constantly with no lifecycle rule for versions (cost grows).',
+  ]}
+  alternatives={[
+    '<strong>Immutable storage</strong> for WORM compliance.',
+    '<strong>Azure Backup for blobs</strong> for vaulted, longer-term copies.',
+    '<strong>Resource locks</strong> to stop the account itself being deleted.',
+  ]}
+/>

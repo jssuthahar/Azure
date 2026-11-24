@@ -1,0 +1,148 @@
+{
+ "cert": "az-104",
+ "domain": 1,
+ "topic": "budgets-cost-alerts-and-advisor",
+ "questions": [
+  {
+   "id": "adm-id-cost-1",
+   "type": "single",
+   "question": "The finance team must receive an email when the actual monthly cost of a subscription reaches 80 percent of 5,000 USD. What should you create?",
+   "options": [
+    {
+     "text": "A budget of 5,000 with an Actual alert condition at 80 percent and the finance team as recipients",
+     "why": "Correct. Budgets send alerts when cost reaches thresholds."
+    },
+    {
+     "text": "An Azure Policy assignment that denies resources after 80 percent of spend",
+     "why": "Azure Policy does not evaluate spend."
+    },
+    {
+     "text": "An Azure Advisor alert for cost recommendations",
+     "why": "Advisor alerts notify about recommendations, not spending thresholds."
+    },
+    {
+     "text": "A metric alert on CPU percentage",
+     "why": "Metric alerts monitor resource metrics, not cost."
+    }
+   ],
+   "answer": [
+    0
+   ],
+   "explanation": "Budget alert conditions use Actual or Forecasted cost at a percentage of the budget amount.",
+   "objective": "1.3.6"
+  },
+  {
+   "id": "adm-id-cost-2",
+   "type": "multi",
+   "question": "Virtual machines in a development subscription must be deallocated automatically when spending reaches 90 percent of the monthly budget. Which two components should you configure? Each correct answer presents part of the solution.",
+   "options": [
+    {
+     "text": "A budget alert condition at 90 percent that uses an action group",
+     "why": "Correct. The budget alert triggers the action group."
+    },
+    {
+     "text": "An action group that runs an Azure Automation runbook or a logic app to deallocate the VMs",
+     "why": "Correct. Automation performs the deallocation."
+    },
+    {
+     "text": "A spending limit on the budget that stops resources",
+     "why": "Budgets do not stop resources by themselves."
+    },
+    {
+     "text": "A ReadOnly lock on the subscription",
+     "why": "A ReadOnly lock would also block the deallocation."
+    }
+   ],
+   "answer": [
+    0,
+    1
+   ],
+   "explanation": "Budgets only notify. Action groups connect alerts to automation.",
+   "objective": "1.3.6"
+  },
+  {
+   "id": "adm-id-cost-3",
+   "type": "single",
+   "question": "You need to be notified before month end if spending is projected to exceed the budget. Which alert type should you use?",
+   "options": [
+    {
+     "text": "Forecasted",
+     "why": "Correct. Forecasted alerts fire when projected cost will reach the threshold."
+    },
+    {
+     "text": "Actual",
+     "why": "Actual alerts fire only after cost has been accrued."
+    },
+    {
+     "text": "Anomaly",
+     "why": "Anomaly alerts detect unusual daily spending patterns, not budget projections."
+    },
+    {
+     "text": "Service Health",
+     "why": "Service Health alerts report Azure platform issues."
+    }
+   ],
+   "answer": [
+    0
+   ],
+   "explanation": "Combine Actual alerts at lower thresholds with a Forecasted alert at 100 percent.",
+   "objective": "1.3.6"
+  },
+  {
+   "id": "adm-id-cost-4",
+   "type": "single",
+   "question": "You need to identify virtual machines that are underutilized so you can resize or shut them down. What should you use?",
+   "options": [
+    {
+     "text": "Azure Advisor cost recommendations",
+     "why": "Correct. Advisor identifies low-utilization VMs and estimates savings."
+    },
+    {
+     "text": "Azure Policy compliance",
+     "why": "Policy reports rule compliance, not utilization."
+    },
+    {
+     "text": "Access control (IAM) Check access",
+     "why": "Check access shows permissions, not utilization."
+    },
+    {
+     "text": "Resource locks",
+     "why": "Locks protect resources and provide no recommendations."
+    }
+   ],
+   "answer": [
+    0
+   ],
+   "explanation": "Advisor recommends right-sizing or shutting down underutilized VMs, reservations and removing unused resources.",
+   "objective": "1.3.6"
+  },
+  {
+   "id": "adm-id-cost-5",
+   "type": "single",
+   "question": "Three departments share one subscription. Each department must have its own monthly budget. Resources are tagged with a department tag. What should you do?",
+   "options": [
+    {
+     "text": "Create three budgets at the subscription scope, each filtered on a different department tag value",
+     "why": "Correct. Budget filters can scope spend by tag."
+    },
+    {
+     "text": "Create one budget and divide the amount by three",
+     "why": "A single budget cannot alert each department separately."
+    },
+    {
+     "text": "Create three management groups under the subscription",
+     "why": "Management groups cannot be created under a subscription."
+    },
+    {
+     "text": "Apply a CanNotDelete lock for each department",
+     "why": "Locks do not track cost."
+    }
+   ],
+   "answer": [
+    0
+   ],
+   "explanation": "Enforce the tag with Azure Policy so that the budget filters are accurate.",
+   "objective": "1.3.6"
+  }
+ ]
+}

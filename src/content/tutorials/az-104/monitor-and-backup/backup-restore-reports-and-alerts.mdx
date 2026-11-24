@@ -1,0 +1,231 @@
+---
+title: Back Up and Restore, Backup Reports and Alerts
+seoTitle: Azure Backup Restore Options, Reports and Alerts | AZ-104
+description: Run on-demand backups, restore files, disks or whole VMs, recover from soft delete, and set up Backup reports and Azure Monitor alerts for the AZ-104 exam.
+answer: >-
+  With a VM protected, you can run **Backup now** with a **retain until** date, and every backup or restore shows up in **Backup Jobs**. To restore a VM you pick a **recovery point** and then **Create new virtual machine**, **Restore disks** (then build the VM yourself), or **Replace existing** (swap the disks of the existing VM). **File Recovery** mounts a recovery point through a script so you copy back single files. Deleted backup data stays in **soft delete** for 14 days and can be undeleted. **Backup reports** need the vault's logs sent to a **Log Analytics workspace** in **resource-specific** mode, and **Azure Monitor alerts** (built-in for job failures and security events, or metric alerts on backup health) notify people through **action groups**.
+updated: 2026-11-24
+readingMinutes: 11
+keyTerms:
+  - term: Backup now
+    definition: An on-demand backup outside the policy schedule, kept until the retain-until date you choose.
+  - term: Recovery point
+    definition: One restorable copy, in the snapshot tier (instant restore), the vault tier, or both.
+  - term: Restore disks
+    definition: Restores managed disks and a template to a resource group so you can customise the VM before creating it.
+  - term: Replace existing
+    definition: Swaps the disks of the existing VM for those in the recovery point, keeping the VM's name and network settings.
+  - term: File Recovery
+    definition: Mounts a VM recovery point as drives on a machine through a script, so individual files can be copied back.
+  - term: Cross Region Restore
+    definition: Restoring from the paired region's copy of a GRS vault, on demand.
+  - term: Backup reports
+    definition: Workbook-based reports across vaults and subscriptions, built on vault logs in Log Analytics.
+  - term: Built-in Azure Monitor alerts for backup
+    definition: Alerts Azure Backup raises for job failures and security-sensitive events, routed with alert processing rules and action groups.
+interview:
+  - level: beginner
+    q: A user deleted one folder on a file server VM. Do you restore the whole VM?
+    a: >-
+      No. I'd use File Recovery: pick yesterday's recovery point, download the script, run it on the VM to mount the backup as a drive, copy the folder back and unmount. The VM keeps running the whole time.
+    followUps: []
+  - level: intermediate
+    q: When would you pick Restore disks over Create new virtual machine?
+    a: >-
+      When I need to change something before the VM exists, like a different size, availability set, network or extra settings, or when I want to attach the disks to an existing VM. Restore disks gives me the disks plus a template I can edit and deploy.
+    followUps: []
+  - level: experienced
+    q: How do you get one report of backup health across 40 vaults?
+    a: >-
+      Send each vault's logs to one Log Analytics workspace with a diagnostic setting, using the Addon categories in resource-specific mode. Azure Policy can deploy those settings to every vault. Then Backup reports in Business Continuity Center show summary, items, usage, jobs, policies and optimisation across all of them.
+    followUps: []
+  - level: scenario
+    q: An attacker with admin rights stopped backup and deleted all recovery points for the ERP VM. What now?
+    a: >-
+      If soft delete was on, the data is still there for 14 days, or longer if we set it. I'd undelete the item, resume protection, and restore from a point before the attack. Then I'd make soft delete always on, enable multi-user authorization, and alert on the built-in security alerts so we hear about it the moment it happens.
+    followUps: []
+revision:
+  keyPoints:
+    - Backup now creates an on-demand recovery point with a retain-until date. Backup Jobs shows progress and failures.
+    - VM restore options - Create new VM, Restore disks, Replace existing, plus Cross Region Restore with GRS.
+    - File Recovery mounts a recovery point through a script; unmount when done (it closes itself after 12 hours).
+    - Soft delete keeps deleted backup data 14 days by default; undelete, then resume protection.
+    - Backup reports need vault diagnostic settings to a Log Analytics workspace in resource-specific mode. Alerts use built-in Azure Monitor alerts or metric alerts, plus action groups.
+  mistakes:
+    - Restoring a whole VM to get one file back.
+    - Using Replace existing when you want a side-by-side copy. It overwrites the VM's disks.
+    - Sending vault logs in Azure diagnostics mode and wondering why Backup reports are empty.
+  examTips:
+    - '"Recover one file without affecting the VM" = **File Recovery**. "Change the VM size or network before it starts" = **Restore disks**.'
+    - '"Restore over the existing VM, same name and IP" = **Replace existing**.'
+    - '"Report on backups across vaults" = diagnostic settings to **Log Analytics** (resource-specific) + **Backup reports**.'
+  quick:
+    - q: What do you set when you run Backup now?
+      a: A retain-until date for the on-demand recovery point.
+    - q: Which restore option keeps the VM's name but swaps its disks?
+      a: Replace existing.
+    - q: Where must the staging storage account for a VM restore be?
+      a: In the same region as the vault.
+    - q: Which diagnostic setting mode do Backup reports need?
+      a: Resource-specific.
+    - q: How long can you undelete backup data by default?
+      a: 14 days.
+references:
+  - title: Restore Azure VM data in the Azure portal
+    url: https://learn.microsoft.com/azure/backup/backup-azure-arm-restore-vms
+  - title: Recover files from Azure virtual machine backup
+    url: https://learn.microsoft.com/azure/backup/backup-azure-restore-files-from-vm
+  - title: Configure Azure Backup reports
+    url: https://learn.microsoft.com/azure/backup/configure-reports
+  - title: Azure Monitor alerts for Azure Backup
+    url: https://learn.microsoft.com/azure/backup/backup-azure-monitoring-built-in-monitor
+  - title: Back up and restore Azure VMs with the Azure CLI
+    url: https://learn.microsoft.com/azure/backup/tutorial-restore-disk
+related:
+  - recovery-services-and-backup-vaults
+  - alerts-action-groups-processing-rules
+  - site-recovery-failover
+---
+
+## Start with a question
+
+<Story question="Your phone backs up every night. You lost one photo. Do you wipe the phone and restore everything?">
+
+Of course not. You open the backup, find the photo and save it back. You'd only restore the whole phone if it was broken or stolen, and if you were setting up a new phone you'd restore onto that one instead.
+
+Azure Backup gives you the same choices for a VM: copy back **one file**, build a **new VM** next to the old one, restore **just the disks**, or **replace** the broken VM's disks. And because a backup you never check isn't worth much, **Backup reports** and **alerts** tell you when a night's backup didn't happen.
+
+</Story>
+
+## Explain it like I'm 10
+
+<Eli10>
+
+You built a sandcastle and took a photo of it every evening.
+
+If one tower falls, you look at yesterday's photo and rebuild just that tower. That's **File Recovery**.
+
+If the whole castle is washed away, you build a new one from the photo. That's **Create new VM**.
+
+Your teacher keeps a chart of which evenings you remembered the photo. That's **Backup reports**. If you forget, she sends a note home. That's an **alert**.
+
+</Eli10>
+
+## The technical explanation
+
+### Back up now and watch the jobs
+
+The policy runs backups on schedule, but you can start one any time: vault > **Protected items > Backup items > Azure Virtual Machine** > the VM > **Backup now**, and set **Retain Backup Till**. A VM backup has two phases: a **snapshot** (ready for instant restore in minutes) and the **transfer to vault**. Track both in **Monitoring > Backup Jobs**.
+
+```bash
+az backup protection backup-now -g rg-ops-bk --vault-name rsv-contoso-eus \
+  -c vm-prod01 -i vm-prod01 --backup-management-type AzureIaasVM --retain-until 31-12-2026
+az backup job list -g rg-ops-bk --vault-name rsv-contoso-eus -o table
+```
+
+```powershell
+$item = Get-AzRecoveryServicesBackupItem -VaultId $v.ID -BackupManagementType AzureVM -WorkloadType AzureVM -Name vm-prod01
+Backup-AzRecoveryServicesBackupItem -Item $item -VaultId $v.ID -ExpiryDateTimeUTC (Get-Date).AddDays(30)
+```
+
+### Restore options for a VM
+
+Select **Restore VM**, choose a **restore point** (crash-consistent, app-consistent or file-system consistent; snapshot tier, vault tier or both), then a configuration:
+
+| Option | What happens | Pick it when |
+| --- | --- | --- |
+| **Create new > Create new virtual machine** | A new VM with the name, resource group, VNet and subnet you choose | Fast side-by-side recovery, or a test copy |
+| **Create new > Restore disks** | Managed disks plus a template land in a resource group | You need to change size, availability or network first, or attach disks to another VM |
+| **Replace existing** | The existing VM's disks are replaced; name, NIC and IP stay. Azure snapshots the current disks first | The VM is corrupted but its identity and network should stay the same |
+| **Cross Region Restore** | Any of the above in the paired region | GRS vault with CRR enabled, and the primary region is unavailable or you want a copy there |
+
+Restores need a **staging storage account** in the **same region as the vault**. Restores from the snapshot tier are much faster than from the vault tier.
+
+```bash
+az backup recoverypoint list -g rg-ops-bk --vault-name rsv-contoso-eus \
+  -c vm-prod01 -i vm-prod01 --backup-management-type AzureIaasVM -o table
+az backup restore restore-disks -g rg-ops-bk --vault-name rsv-contoso-eus \
+  -c vm-prod01 -i vm-prod01 --rp-name <rp> --storage-account stopsrestore01 \
+  --target-resource-group rg-ops-bk --target-vm-name vm-prod01-restored \
+  --target-vnet-name vnet-prod --target-subnet-name app
+# --restore-mode OriginalLocation replaces the existing VM's disks
+```
+
+### File Recovery
+
+**File Recovery** > pick a recovery point > **Download Executable** (Windows) or script (Linux), with a password shown once. Run it on the VM or any machine with a compatible OS. It mounts the recovery point's volumes as local drives over iSCSI. Copy what you need, then **Unmount Disks**; the connection closes by itself after 12 hours. CLI: `az backup restore files mount-rp` and `unmount-rp`.
+
+For **Azure Files**, restore the whole share or individual files and folders to the original or an alternate location. For **blobs** in a Backup vault, operational backup restores containers to a point in time; vaulted backup restores from vault copies.
+
+### Stop protection and soft delete
+
+**Stop backup** either **retains backup data** (points stay, nothing new is taken) or **deletes backup data**. With soft delete on, deleted data stays in a **soft-deleted** state for 14 days by default at no charge. **Undelete** brings it back with all recovery points; then **resume backup**.
+
+```bash
+az backup protection disable -g rg-ops-bk --vault-name rsv-contoso-eus -c vm-prod01 -i vm-prod01 \
+  --backup-management-type AzureIaasVM --delete-backup-data true --yes
+az backup protection undelete -g rg-ops-bk --vault-name rsv-contoso-eus -c vm-prod01 -i vm-prod01 \
+  --backup-management-type AzureIaasVM --workload-type VM
+```
+
+A vault can't be deleted while it holds protected **or soft-deleted** items.
+
+<TryIt labs="adm-ops-vm-backup" text="Back up now, restore one file and a new VM, send vault logs for reports, then undelete deleted backups." />
+
+### Backup reports
+
+Backup reports are workbooks that read vault logs from Log Analytics, across vaults, subscriptions and tenants.
+
+1. Create (or reuse) a **Log Analytics workspace**.
+2. On each vault, add a **diagnostic setting** with **CoreAzureBackup** and the **AddonAzureBackup*** categories (Jobs, Alerts, Policy, Storage, ProtectedInstance), destination table **Resource specific**. Azure Policy has built-in definitions to deploy this to every vault.
+3. Open **Business Continuity Center** (or a vault's **Backup Reports** blade), choose the workspaces, and read the tabs: **Summary, Backup Items, Usage, Jobs, Policies, Optimize, Policy adherence**.
+
+Data can take up to 24 hours to appear the first time. You can also query the tables yourself, for example `AddonAzureBackupJobs | where JobStatus == "Failed"`.
+
+### Backup alerts
+
+- **Built-in Azure Monitor alerts**: Azure Backup raises alerts for **security events** (such as stopping backup with delete data, or soft delete being disabled) and **job failures** (backup and restore). They appear in **Monitor > Alerts** and Business Continuity Center. To get emails or SMS, create an **alert processing rule** that applies your **action group** to them.
+- **Metric alerts** on the vault's **Backup Health Events** and **Restore Health Events** metrics for custom conditions.
+- **Log search alerts** on AddonAzureBackupJobs for anything else.
+- The old classic backup alerts are being retired, so build on Azure Monitor alerts.
+
+<Callout type="exam">
+Map each restore need to the option. **One file** = **File Recovery**. **New VM side by side** = **Create new virtual machine**. **Customise before creating** or **attach to another VM** = **Restore disks**. **Keep the same VM name and IP** = **Replace existing**. **Restore in the paired region** = **Cross Region Restore** (GRS). For reports, the answer is always a **diagnostic setting** from the vault to a **Log Analytics workspace** in **resource-specific** mode. For notifications, built-in alerts plus an **alert processing rule** that adds an **action group**. Deleted backups inside the soft delete period are recovered with **undelete**.
+</Callout>
+
+<DeepDive title="Test your restores">
+
+A backup that has never been restored is a guess. Schedule a quarterly restore test: restore a VM to an isolated VNet with **Create new**, check the app starts and the data is current, then delete the test VM. Track restore time against your recovery time objective. Restores from the **snapshot tier** take minutes; from the **vault tier**, longer, depending on disk size. If your RTO is tight, keep more days of instant restore snapshots or look at Site Recovery for that workload.
+
+</DeepDive>
+
+## Real-world business scenario
+
+<Scenario
+  company="Proseware Clinics (fictional)"
+  industry="Healthcare"
+  problem="A receptionist deleted a folder of referral letters on a file server VM, backups had silently failed for a week on another VM because its agent was broken, and nobody found out until a restore was needed."
+  service="File Recovery mounted the previous night's recovery point and the folder was copied back in fifteen minutes with the VM still running. All vaults got diagnostic settings (resource-specific) to one workspace through Azure Policy, Backup reports showed the failing VM, and an alert processing rule applied the infrastructure action group to built-in backup job failure alerts. Soft delete was set to always on."
+  why="Restore granularity matched the problem, and failures now raise an alert the same night instead of being found during an emergency."
+  outcome="The next failed job was fixed the following morning, and the monthly report went to the practice manager automatically."
+/>
+
+## When to use it and when not to
+
+<UseWhen
+  use={[
+    'A few files or folders are lost: File Recovery.',
+    'A VM is broken and must keep its identity: Replace existing. Need a copy alongside: Create new.',
+    'You run more than a couple of vaults: Backup reports through Log Analytics, and alerts through action groups.',
+  ]}
+  avoid={[
+    'Full VM restores for single files. They take longer and risk overwriting good data.',
+    'Replace existing when you\'re unsure which recovery point is good. Restore side by side first.',
+    'Relying on someone opening Backup Jobs every morning instead of alerts.',
+  ]}
+  alternatives={[
+    '<strong>Azure Site Recovery</strong> when the need is minutes of downtime during a region outage.',
+    '<strong>Blob point-in-time restore</strong> or <strong>share snapshots</strong> for quick undo inside storage.',
+    '<strong>Log search alerts</strong> on AddonAzureBackupJobs for custom backup conditions.',
+  ]}
+/>

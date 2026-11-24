@@ -1,0 +1,148 @@
+{
+ "cert": "az-104",
+ "domain": 4,
+ "topic": "azure-dns-zones-and-records",
+ "questions": [
+  {
+   "id": "adm-net-dns-1",
+   "type": "single",
+   "question": "You create a public DNS zone named contoso.com in Azure DNS and add records. Internet users still receive answers from the previous DNS provider. What should you do?",
+   "options": [
+    {
+     "text": "Update the NS records at the domain registrar to the name servers of the Azure DNS zone",
+     "why": "Correct. Delegation tells the internet which name servers answer for the domain."
+    },
+    {
+     "text": "Add an SOA record to the zone",
+     "why": "Azure DNS creates the SOA record automatically."
+    },
+    {
+     "text": "Link the zone to a virtual network",
+     "why": "Virtual network links apply to private DNS zones."
+    },
+    {
+     "text": "Create a CNAME record at the zone apex",
+     "why": "CNAME records are not allowed at the zone apex, and they do not delegate the domain."
+    }
+   ],
+   "answer": [
+    0
+   ],
+   "explanation": "To delegate a domain to Azure DNS, configure the four Azure DNS name servers as the NS records at the registrar or parent zone.",
+   "objective": "4.3.1"
+  },
+  {
+   "id": "adm-net-dns-2",
+   "type": "single",
+   "question": "The zone apex contoso.com must resolve to the public IP address of a load balancer. The record must update automatically if the IP address changes. What should you create?",
+   "options": [
+    {
+     "text": "An alias A record set at @ that references the public IP address resource",
+     "why": "Correct. Alias records reference the Azure resource and can be used at the apex."
+    },
+    {
+     "text": "A CNAME record at @",
+     "why": "CNAME records are not allowed at the zone apex."
+    },
+    {
+     "text": "An A record at @ that contains the current IP address",
+     "why": "A static A record does not update when the IP address changes."
+    },
+    {
+     "text": "A TXT record at @",
+     "why": "TXT records do not resolve to IP addresses."
+    }
+   ],
+   "answer": [
+    0
+   ],
+   "explanation": "Alias records point to Azure resources such as public IPs, Traffic Manager profiles and Front Door, and follow changes to the resource.",
+   "objective": "4.3.1"
+  },
+  {
+   "id": "adm-net-dns-3",
+   "type": "single",
+   "question": "A private DNS zone named contoso.internal is linked to VNet1 with auto-registration enabled. VNet2 is peered with VNet1. VMs in VNet2 cannot resolve names in contoso.internal. What should you do?",
+   "options": [
+    {
+     "text": "Create a virtual network link from contoso.internal to VNet2",
+     "why": "Correct. Each virtual network that resolves the zone needs its own link."
+    },
+    {
+     "text": "Enable gateway transit on the peering",
+     "why": "Gateway transit shares a VPN gateway and does not share DNS zones."
+    },
+    {
+     "text": "Create a public DNS zone named contoso.internal",
+     "why": "A public zone answers internet queries, not private ones."
+    },
+    {
+     "text": "Enable auto-registration on VNet1 again",
+     "why": "Auto-registration is already enabled and does not affect VNet2."
+    }
+   ],
+   "answer": [
+    0
+   ],
+   "explanation": "Peering does not share private DNS zones. Link the zone to every virtual network that needs to resolve it.",
+   "objective": "4.3.1"
+  },
+  {
+   "id": "adm-net-dns-4",
+   "type": "single",
+   "question": "You need the names of VMs in VNet1 to be added to and removed from a private DNS zone automatically. VNet1 already has auto-registration enabled for a private zone named corp.internal. What happens if you link VNet1 to a second private zone named apps.internal with auto-registration enabled?",
+   "options": [
+    {
+     "text": "The operation fails because a virtual network can have only one registration zone",
+     "why": "Correct. VNet1 can be linked to apps.internal for resolution only."
+    },
+    {
+     "text": "VM records are registered in both zones",
+     "why": "A virtual network supports only one registration zone."
+    },
+    {
+     "text": "The registration moves from corp.internal to apps.internal",
+     "why": "Azure does not move registration automatically."
+    },
+    {
+     "text": "The link is created, but VMs are registered only after a restart",
+     "why": "The link with registration enabled cannot be created."
+    }
+   ],
+   "answer": [
+    0
+   ],
+   "explanation": "Each virtual network can have one private DNS zone with auto-registration, and resolution links to additional zones.",
+   "objective": "4.3.1"
+  },
+  {
+   "id": "adm-net-dns-5",
+   "type": "multi",
+   "question": "Which two record types can you create as alias record sets in an Azure public DNS zone? Each correct answer presents a complete solution.",
+   "options": [
+    {
+     "text": "A",
+     "why": "Correct. Alias A records can reference public IP addresses and other resources."
+    },
+    {
+     "text": "CNAME",
+     "why": "Correct. Alias CNAME records can reference resources such as Traffic Manager."
+    },
+    {
+     "text": "MX",
+     "why": "MX records cannot be alias records."
+    },
+    {
+     "text": "SRV",
+     "why": "SRV records cannot be alias records."
+    }
+   ],
+   "answer": [
+    0,
+    1
+   ],
+   "explanation": "Azure DNS supports alias record sets for A, AAAA and CNAME records.",
+   "objective": "4.3.1"
+  }
+ ]
+}

@@ -1,0 +1,205 @@
+---
+title: "Manage Costs with Budgets, Alerts and Azure Advisor"
+seoTitle: Azure Budgets, Cost Alerts and Advisor for Admins | AZ-104
+description: Create Azure budgets with actual and forecasted alerts, connect action groups, read cost alerts and act on Azure Advisor cost recommendations, step by step.
+answer: >-
+  In **Microsoft Cost Management** a **budget** sets a spending limit for a scope (management group, subscription, resource group, optionally filtered by tag) over a **reset period** (monthly, quarterly or annually). Its **alert conditions** fire on **Actual** or **Forecasted** cost at a percentage you choose, emailing recipients and optionally calling an **action group**. A budget **doesn't stop** resources by itself; automation behind the action group can. **Cost alerts** collect budget, credit and anomaly alerts. **Azure Advisor** gives free **cost recommendations**, such as right-sizing or shutting down idle VMs and buying reservations. Cost data refreshes a few times a day, so alerts aren't instant.
+updated: 2026-11-24
+readingMinutes: 10
+keyTerms:
+  - term: Budget
+    definition: A spending target for a scope and reset period, with alert conditions at percentages of the amount.
+  - term: Actual alert
+    definition: A budget alert that fires when accrued cost reaches the threshold.
+  - term: Forecasted alert
+    definition: A budget alert that fires when Azure predicts cost will reach the threshold by the end of the period.
+  - term: Action group
+    definition: An Azure Monitor list of notifications and actions (email, SMS, webhook, runbook, Logic App) that alerts can call.
+  - term: Anomaly alert
+    definition: A Cost Management alert when daily spend is unusually high or low compared with the usual pattern.
+  - term: Azure Advisor
+    definition: A free service that recommends improvements in cost, security, reliability, operational excellence and performance.
+  - term: Advisor score
+    definition: A percentage that shows how closely your resources follow Advisor's recommendations.
+interview:
+  - level: beginner
+    q: Does an Azure budget stop spending when you hit it?
+    a: >-
+      No. A budget only alerts. If you want something to happen, like shutting down dev VMs, you connect an action group that runs an automation runbook or a Logic App. Spending limits that actually stop services exist only on some credit-based offers.
+    followUps: []
+  - level: intermediate
+    q: Actual or forecasted alerts?
+    a: >-
+      Both. Actual at 50 and 80 percent tells you where you are. Forecasted at 100 percent warns you mid-month that you're on track to overspend, which gives you time to act instead of finding out on the last day.
+    followUps: []
+  - level: experienced
+    q: How would you give each department its own budget in one subscription?
+    a: >-
+      Tag resources with costcenter, enforce the tag with policy, then create a budget per department at the subscription scope with a filter on that tag value. Each budget's alerts go to that department's distribution list and action group.
+    followUps: []
+  - level: scenario
+    q: Finance wants dev/test VMs shut down automatically if the dev subscription hits 90% of budget. How?
+    a: >-
+      A budget on the dev subscription with an Actual alert at 90% that calls an action group. The action group triggers an Automation runbook or Logic App with a managed identity that has Virtual Machine Contributor, which deallocates the tagged dev VMs.
+    followUps: []
+revision:
+  keyPoints:
+    - Budgets have a scope, amount, reset period, start and expiry dates, and optional filters such as tags.
+    - Alert conditions are Actual or Forecasted at a percentage, sent to emails and optionally an action group.
+    - Budgets don't stop resources. Use an action group with automation to act.
+    - Cost data refreshes a few times a day, so alerts lag spending.
+    - Advisor cost recommendations - right-size or shut down idle VMs, reservations, delete unused public IPs and disks.
+  mistakes:
+    - Expecting a budget to cap spending on a pay-as-you-go subscription.
+    - Relying only on Actual alerts and finding out about overspend at the end of the month.
+  examTips:
+    - '"Email the team when spend reaches 80%" = **budget** with an **Actual 80%** alert.'
+    - '"Shut down resources automatically when the budget is reached" = budget alert + **action group** + **runbook or Logic App**.'
+    - '"Identify underused VMs" = **Azure Advisor** cost recommendations.'
+  quick:
+    - q: What are the two alert types on a budget?
+      a: Actual and Forecasted.
+    - q: Does a budget stop resources when it's exceeded?
+      a: No. It sends alerts; automation must do the stopping.
+    - q: Which service recommends right-sizing idle VMs?
+      a: Azure Advisor.
+    - q: What can a budget alert call besides email?
+      a: An action group (SMS, webhook, runbook, Logic App and more).
+    - q: Which CLI command lists Advisor cost recommendations?
+      a: az advisor recommendation list --category Cost
+references:
+  - title: Tutorial - Create and manage budgets
+    url: https://learn.microsoft.com/azure/cost-management-billing/costs/tutorial-acm-create-budgets
+  - title: Use cost alerts to monitor usage and spending
+    url: https://learn.microsoft.com/azure/cost-management-billing/costs/cost-mgt-alerts-monitor-usage-spending
+  - title: Manage costs with budgets and action groups
+    url: https://learn.microsoft.com/azure/cost-management-billing/manage/cost-management-budget-scenario
+  - title: Reduce service costs by using Azure Advisor
+    url: https://learn.microsoft.com/azure/advisor/advisor-reference-cost-recommendations
+related:
+  - locks-and-tags-at-scale
+  - resource-groups-subscriptions-management-groups
+  - azure-policy-for-admins
+---
+
+## Start with a question
+
+<Story question="How do you stop your phone bill from shocking you at the end of the month?">
+
+Most phone apps let you set a data warning: a text at 50% of your allowance, another at 80%. Some even tell you "at this rate you'll run out by the 20th". The warning doesn't cut you off, it just gives you time to switch to Wi-Fi. And now and then the app suggests a cheaper plan because you never use half of what you pay for.
+
+In Azure the warnings are **budget alerts** (actual and forecasted), and the "cheaper plan" tip is **Azure Advisor**.
+
+</Story>
+
+## Explain it like I'm 10
+
+<Eli10>
+
+You get pocket money each month. Your parent says, "Tell me when you've spent half, and again when you've spent most of it."
+
+That's a **budget** with **alerts**.
+
+Your parent doesn't take your wallet away when you hit the limit. They just tell you. And they might say, "You never play that game you pay for. Cancel it." That's **Advisor**.
+
+</Eli10>
+
+## The technical explanation
+
+### Budgets
+
+Portal: **Cost Management → Budgets → + Add** (pick the scope first). Two tabs:
+
+**Create a budget**
+- **Scope**: management group, subscription, resource group (or a billing scope). **Filters** narrow it, for example *Tag: costcenter = FIN-042* or one resource type.
+- **Budget details**: name, **reset period** (Monthly, Quarterly, Annually, or billing month/quarter/year), **creation date** and **expiration date**.
+- **Budget amount**, with a suggested figure based on past spend.
+
+**Set alerts**
+- **Alert conditions**: **Type** (**Actual** or **Forecasted**), **% of budget**, and an optional **action group**.
+- **Alert recipients (email)** and language.
+
+```bash
+az consumption budget create --budget-name fin-monthly --amount 500 \
+  --category cost --time-grain monthly \
+  --start-date 2026-12-01 --end-date 2027-11-30 --resource-group rg-finance
+az consumption budget list -o table
+```
+
+```powershell
+New-AzConsumptionBudget -Name fin-monthly -Amount 500 -Category Cost -TimeGrain Monthly `
+  -StartDate 2026-12-01 -EndDate 2027-11-30 -ContactEmail finance-ops@contoso.com -NotificationKey a80 -NotificationThreshold 80 -NotificationEnabled
+```
+
+Budgets **don't stop** anything. To act, point an alert at an **action group** that runs an **Automation runbook**, **Logic App**, **Azure Function** or webhook, for example to deallocate dev VMs. Cost data is refreshed several times a day (up to about every 4 hours for most scopes), so alerts can lag real spending.
+
+### Cost alerts
+
+**Cost Management → Cost alerts** lists **budget** alerts, **credit** alerts (for prepaid commitments) and **department spending quota** alerts for EA, plus **anomaly** alerts, which you subscribe to from Cost analysis's smart views to get an email when daily spend jumps or drops unexpectedly.
+
+### Azure Advisor
+
+Advisor is free and studies your usage. Its **Cost** recommendations include:
+
+- Right-size or shut down **underutilised VMs** (based on CPU and network over a lookback period you can configure).
+- Buy **reservations** or **savings plans** for steady workloads.
+- Delete unattached **public IP addresses** and idle resources.
+- Use **lifecycle management** or cheaper tiers for storage.
+
+Each recommendation shows impact, affected resources and estimated savings, and you can **postpone** or **dismiss** it. Advisor also covers **Security**, **Reliability**, **Operational excellence** and **Performance**, and an **Advisor score** shows progress. You can set up **Advisor alerts** and weekly **recommendation digests** to an action group.
+
+```bash
+az advisor recommendation list --category Cost -o table
+az advisor configuration update --low-cpu-threshold 10    # VM utilisation rule
+```
+
+<Flow
+  caption="A month for the finance team's budget"
+  steps={[
+    { title: 'Set', text: '$500 monthly budget filtered to costcenter = FIN-042.' },
+    { title: 'Day 14', text: 'Forecasted 100% alert: on track to spend $560. Finance gets an email.' },
+    { title: 'Act', text: 'Advisor flags two idle VMs; the team deallocates them.' },
+    { title: 'Day 30', text: 'Actual spend lands at $470: the 80% alert fired, 100% never did.' },
+  ]}
+/>
+
+<TryIt labs="adm-policy-locks-cost" text="Add a VM, create a small monthly budget and watch the alerts fire, then read Advisor's recommendations." />
+
+<Callout type="exam">
+"Notify when cost reaches X%" = **budget** alert. "Before it happens" = **Forecasted**. "Automatically stop resources" = budget + **action group** + automation, because budgets alone never stop anything. "Recommend cheaper VM sizes" or "find idle resources" = **Azure Advisor**. A budget can be scoped by **tag** with a filter, which is how departments share a subscription.
+</Callout>
+
+<DeepDive title="Budgets at scale">
+
+Budgets can be deployed with ARM, Bicep or the Consumption REST API, so a subscription-vending pipeline can create one for every new subscription. Management group budgets work for most offer types but not every billing setup; check the scope support for your agreement. For chargeback, combine **tag policies** (so the data is right), **cost allocation rules** (to split shared costs like a hub network) and scheduled **exports** to a storage account for Power BI.
+
+</DeepDive>
+
+## Real-world business scenario
+
+<Scenario
+  company="Wide World Importers (fictional)"
+  industry="Import and distribution"
+  problem="A load test left 40 large VMs running over a long weekend, and the bill arrived three weeks later, triple the usual amount."
+  service="Monthly budgets on each subscription with Actual alerts at 50% and 80% and a Forecasted alert at 100%. The dev subscription's 90% alert calls an action group that runs an Automation runbook to deallocate VMs tagged env=dev. Anomaly alerts and Advisor's weekly digest go to the platform team."
+  why="Overspend shows up within hours instead of weeks, and dev environments switch themselves off before the budget is gone."
+  outcome="Monthly spend became predictable, and acting on Advisor's right-size tips saved about 18% on compute."
+/>
+
+## When to use it and when not to
+
+<UseWhen
+  use={[
+    'A budget on every subscription, with Actual and Forecasted alerts.',
+    'Tag-filtered budgets when several departments share a subscription.',
+    'Action groups with automation for non-production shutdowns.',
+  ]}
+  avoid={[
+    'Treating a budget as a hard spending cap.',
+    'Acting on Advisor right-size tips for workloads with rare but important peaks without checking first.',
+  ]}
+  alternatives={[
+    '<strong>Reservations and savings plans</strong> for steady workloads, which Advisor recommends.',
+    '<strong>Auto-shutdown</strong> on dev VMs, which needs no budget at all.',
+  ]}
+/>

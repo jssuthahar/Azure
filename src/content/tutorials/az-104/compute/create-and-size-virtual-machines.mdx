@@ -1,0 +1,214 @@
+---
+title: Create Virtual Machines and Manage VM Sizes
+seoTitle: Create Azure Virtual Machines and Manage VM Sizes | AZ-104
+description: Create an Azure VM in the portal, CLI and PowerShell, read VM size names, and resize a VM, including when you must deallocate it first, for AZ-104.
+answer: >-
+  You create a VM in the portal (**Virtual machines › + Create**), with **az vm create** or with **New-AzVM**, choosing the **region**, **availability options**, **image**, **size**, admin account and inbound ports. The **size** sets vCPUs, memory, maximum data disks and price; the name tells you the family, such as **D** for general purpose, **E** for memory optimised and **F** for compute optimised. Resizing **restarts** the VM. If the new size isn't available on the hardware cluster hosting the VM, **deallocate** it first and every size in the region becomes available.
+updated: 2026-11-24
+readingMinutes: 11
+keyTerms:
+  - term: VM size
+    definition: The hardware profile of a VM, such as Standard_D2s_v5, setting vCPUs, memory, temp storage, data disk limits and price.
+  - term: VM family
+    definition: A group of sizes for one kind of work, such as B (burstable), D (general purpose), E (memory optimised), F (compute optimised), L (storage) and N (GPU).
+  - term: Deallocate
+    definition: Stopping a VM so it's released from its host. Compute billing stops and the VM can restart on different hardware.
+  - term: Stopped (allocated)
+    definition: The state after shutting down from inside the OS or az vm stop. The VM keeps its host and is still billed for compute.
+  - term: Hardware cluster
+    definition: The group of hosts a running VM is placed on. Only sizes that cluster supports can be chosen without deallocating.
+  - term: Trusted launch
+    definition: The default security type for new Gen2 VMs, adding Secure Boot and a virtual TPM.
+interview:
+  - level: beginner
+    q: What does Standard_D4s_v5 tell you?
+    a: >-
+      D is the general-purpose family, 4 is the number of vCPUs, the s means it can use Premium SSD disks, and v5 is the generation. Other letters you'll see are a for AMD, d for a local temp disk, and p for Arm.
+    followUps: []
+  - level: intermediate
+    q: A size you want is greyed out on a running VM. Why, and what do you do?
+    a: >-
+      The VM's current hardware cluster doesn't offer that size. I'd plan a short window, stop the VM from the portal so it's deallocated, then resize. Once it's deallocated every size in the region is available, and it starts on a host that has it.
+    followUps: []
+  - level: experienced
+    q: What's the difference between stopping a VM from inside Windows and stopping it in the portal?
+    a: >-
+      Shutting down inside the OS, or az vm stop, leaves the VM Stopped but still allocated, so we keep paying for compute. Stop in the portal, or az vm deallocate, releases the host and compute billing stops. Disks are billed either way, and a dynamic public IP can change after a deallocation.
+    followUps: []
+  - level: scenario
+    q: A reporting VM runs out of memory every month-end but is idle the rest of the time. What would you suggest?
+    a: >-
+      Resize it to a memory-optimised E-series size for the busy days, or move it to a larger size permanently if the window is short anyway. If the workload is really bursty, a B-series burstable size or a scheduled resize with automation could save money. Either way, it's a restart, so I'd schedule it.
+    followUps: []
+revision:
+  keyPoints:
+    - Create with the portal wizard, az vm create or New-AzVM. Basics holds region, availability, image, size and admin account.
+    - Size names show family, vCPUs, features and generation (Standard_D4s_v5).
+    - Resizing restarts the VM. Sizes not on the current cluster need the VM deallocated first.
+    - In an availability set, a size not on the cluster can mean deallocating every VM in the set.
+    - Deallocated VMs aren't billed for compute; stopped-but-allocated VMs are.
+  mistakes:
+    - Shutting down from inside the OS and expecting billing to stop.
+    - Expecting a resize to happen with no restart.
+  examTips:
+    - '"Size is greyed out / not available" = **deallocate** the VM, then resize.'
+    - '"More memory for a database server" = **E-series**; "CPU-heavy batch" = **F-series**; "GPU" = **N-series**.'
+    - '"Stop paying for compute" = **Stop (deallocate)**, not shutdown from the OS.'
+  quick:
+    - q: Which command lists the sizes a VM can be resized to?
+      a: az vm list-vm-resize-options.
+    - q: Which command resizes a VM?
+      a: az vm resize --size <size>.
+    - q: What happens to a running VM when it's resized?
+      a: It restarts.
+    - q: Which VM family is memory optimised?
+      a: E-series.
+    - q: Which power state stops compute billing?
+      a: Stopped (deallocated).
+references:
+  - title: Quickstart - Create a Linux virtual machine in the Azure portal
+    url: https://learn.microsoft.com/azure/virtual-machines/linux/quick-create-portal
+  - title: Sizes for virtual machines in Azure
+    url: https://learn.microsoft.com/azure/virtual-machines/sizes/overview
+  - title: Change the size of a virtual machine
+    url: https://learn.microsoft.com/azure/virtual-machines/sizes/resize-vm
+  - title: States and billing status of Azure Virtual Machines
+    url: https://learn.microsoft.com/azure/virtual-machines/states-billing
+related:
+  - vm-disks-and-encryption-at-host
+  - vm-availability-and-scale-sets
+---
+
+## Start with a question
+
+<Story question="What if your laptop could get more memory just by restarting it?">
+
+Your laptop's memory is soldered in. To get more, you buy a new laptop and copy everything across.
+
+An Azure VM doesn't work like that. Its **size** is a setting. Pick a bigger one, the VM **restarts**, and it comes back with more CPU and memory, same disks, same name. The catch: sometimes the size you want isn't on the hardware your VM sits on, and then you have to **deallocate** it first so Azure can start it somewhere else.
+
+</Story>
+
+## Explain it like I'm 10
+
+<Eli10>
+
+Think of a hotel.
+
+Your VM is a guest. The **size** is the room: single, double or suite.
+
+Moving to a bigger room on the same floor is quick. You just pop out and back in. That's a **resize with a restart**.
+
+If the suite is on another floor, you have to check out first and check in again. That's **deallocate, then resize**.
+
+Your suitcase (the disks) comes with you either way.
+
+</Eli10>
+
+## The technical explanation
+
+### Creating a VM
+
+**Virtual machines › + Create › Azure virtual machine** opens a wizard with tabs **Basics, Disks, Networking, Management, Monitoring, Advanced, Tags, Review + create**. The **Basics** tab is where most exam questions live:
+
+| Field | What to choose |
+| --- | --- |
+| Subscription, Resource group | Where it's billed and managed |
+| Virtual machine name, Region | Name (15 characters max for Windows), region close to users |
+| Availability options | No infrastructure redundancy, Availability zone, Virtual machine scale set or Availability set |
+| Security type | Trusted launch (default), Standard or Confidential |
+| Image | Ubuntu, Windows Server, RHEL and so on |
+| Size | Family, vCPUs, memory and price |
+| Administrator account | SSH public key or password |
+| Inbound port rules | None, or selected ports such as SSH (22), RDP (3389), HTTP (80) |
+
+Creating the VM also creates an OS disk, a network interface, usually a public IP and an NSG, and a virtual network if you don't pick one.
+
+```bash
+az vm create -g rg-contoso-prod -n vm-app-01 --image Ubuntu2404 \
+  --size Standard_D2s_v5 --zone 1 --admin-username azureuser --generate-ssh-keys
+```
+
+```powershell
+New-AzVM -ResourceGroupName rg-contoso-prod -Name vm-app-01 -Location eastus `
+  -Image Ubuntu2204 -Size Standard_D2s_v5 -Zone 1 -Credential (Get-Credential)
+```
+
+### Reading a size name
+
+`Standard_D4ds_v5` breaks down as family **D**, **4** vCPUs, **d** (local temp disk), **s** (Premium SSD capable), version **v5**. Common families:
+
+| Family | Built for | Example |
+| --- | --- | --- |
+| B | Burstable, mostly idle with short spikes | Standard_B2s |
+| D | General purpose | Standard_D4s_v5 |
+| E | Memory optimised (databases, caches) | Standard_E8s_v5 |
+| F | Compute optimised (batch, gaming servers) | Standard_F8s_v2 |
+| L | Storage optimised (high local disk throughput) | Standard_L8s_v3 |
+| N | GPU | Standard_NC6s_v3 |
+
+The size also caps the number of **data disks** and the disk IOPS a VM can push, so a bigger disk on a small VM can still be slow.
+
+### Resizing
+
+Portal: **VM › Availability + scale › Size**, pick a size, **Resize**. CLI and PowerShell:
+
+```bash
+az vm list-vm-resize-options -g rg-contoso-prod -n vm-app-01 -o table
+az vm resize -g rg-contoso-prod -n vm-app-01 --size Standard_D4s_v5
+```
+
+```powershell
+$vm = Get-AzVM -ResourceGroupName rg-contoso-prod -Name vm-app-01
+$vm.HardwareProfile.VmSize = 'Standard_D4s_v5'
+Update-AzVM -VM $vm -ResourceGroupName rg-contoso-prod
+```
+
+The rules to remember:
+
+1. A resize on a running VM **restarts** it.
+2. If the size isn't offered on the VM's current **hardware cluster**, it's greyed out (or the command fails). **Deallocate** the VM and every size in the region becomes available.
+3. In an **availability set**, a size that isn't on the cluster means deallocating **all** VMs in the set before resizing any of them.
+4. The new size must support what the VM uses: enough data disk slots, Premium storage if its disks are Premium, and the same VM generation.
+
+<TryIt labs="adm-vm-size-disks" text="Create a VM, get refused when you resize to another family while it runs, then deallocate and resize." />
+
+<Callout type="exam">
+"The size you need isn't listed" or "is greyed out" means the VM's cluster doesn't have it: **stop (deallocate)** the VM, then resize. A resize always means a **restart**, so it isn't zero downtime. Match workloads to families: **E** for memory, **F** for compute, **N** for GPU, **B** for bursty and cheap. And "stop paying for compute" is **deallocate**, not shutting down from inside the guest.
+</Callout>
+
+<DeepDive title="Sizes, quotas and policy">
+
+Every subscription has **vCPU quotas** per region and per family. A resize or a create that would go over fails with a quota error; request more under **Subscriptions › Usage + quotas**. Azure Policy's **Allowed virtual machine size SKUs** definition can deny sizes your company doesn't want, and it applies to resizes too. Azure Advisor flags VMs with low CPU use and suggests a smaller size, which is often the easiest saving on an AZ-104 cost question.
+
+</DeepDive>
+
+## Real-world business scenario
+
+<Scenario
+  company="Northwind Traders (fictional)"
+  industry="Wholesale"
+  problem="The SQL reporting VM on Standard_D4s_v5 ran out of memory during month-end close, and the E-series size the team wanted was greyed out in the portal."
+  service="They scheduled a 15-minute window, stopped the VM from the portal (deallocated), resized it to Standard_E8s_v5 and started it again. A policy now limits the subscription to approved D and E sizes."
+  why="Deallocating released the VM from its cluster, so the memory-optimised size became available, and the disks and IP configuration stayed the same."
+  outcome="Month-end reports finish overnight again, and the cost went up only for the one VM that needed it."
+/>
+
+## When to use it and when not to
+
+<UseWhen
+  use={[
+    'You need full control of the OS, such as legacy apps, agents or custom software.',
+    'A workload outgrows its VM and a short restart is acceptable.',
+    'You want to cut cost by moving an underused VM to a smaller size.',
+  ]}
+  avoid={[
+    'A web app or API that App Service or Container Apps could run with less admin work.',
+    'Load that changes hour to hour. Scale out with a scale set instead of resizing up and down.',
+  ]}
+  alternatives={[
+    '<strong>Virtual Machine Scale Sets</strong> to add VMs instead of making one bigger.',
+    '<strong>App Service</strong> for web apps without OS management.',
+    '<strong>Azure Advisor</strong> to find VMs that are bigger than they need to be.',
+  ]}
+/>

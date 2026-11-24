@@ -1,0 +1,27 @@
+{ "cert": "az-104", "domain": 3, "topic": "move-virtual-machines", "questions": [
+  { "id": "adm-vm-move-1", "type": "single", "scenario": "VM1 is in resource group RG1 in East US. You move VM1 and its dependent resources to resource group RG2, which is located in West Europe.", "question": "In which region is VM1 located after the move?", "options": [
+    { "text": "East US", "why": "Correct. Moving resources between resource groups does not change their region." },
+    { "text": "West Europe", "why": "The resource group location stores metadata only. Resources keep their own location." },
+    { "text": "The paired region of East US", "why": "A move does not use region pairs." },
+    { "text": "The move fails because the regions differ", "why": "Resources in a resource group can be in any region." } ], "answer": [0], "explanation": "To change the region, use Azure Resource Mover.", "objective": "3.2.3" },
+  { "id": "adm-vm-move-2", "type": "single", "question": "You need to move VM1 from East US to West Europe, including its disks and network resources, by using a process that lets you test the target before you finalize the move. What should you use?", "options": [
+    { "text": "Azure Resource Mover", "why": "Correct. Resource Mover validates dependencies, prepares, initiates, and then commits or discards the move." },
+    { "text": "az resource move", "why": "az resource move changes the resource group or subscription, not the region." },
+    { "text": "Export template and Complete-mode deployment", "why": "This recreates resources but does not move disk data or provide a commit step." },
+    { "text": "A resource lock", "why": "Locks prevent changes and do not move resources." } ], "answer": [0], "explanation": "Delete the source resources after you commit the move.", "objective": "3.2.3" },
+  { "id": "adm-vm-move-3", "type": "multi", "scenario": "You plan to move VM1 from resource group RG1 to RG2 in the same subscription. VM1 has an OS disk, one data disk, a network interface, a public IP address, and a network security group.", "question": "Which two resources must be included in the move together with VM1 at a minimum? Each correct answer presents part of the solution.", "options": [
+    { "text": "The OS disk and the data disk", "why": "Correct. Disks attached to the VM must move with it." },
+    { "text": "The network interface", "why": "Correct. The VM's network interface must move with the VM." },
+    { "text": "The Recovery Services vault", "why": "Vaults are separate resources and are not dependencies of the VM." },
+    { "text": "The resource group RG1", "why": "Resource groups are not moved." } ], "answer": [0, 1], "explanation": "Moving the public IP address and NSG with the VM is also recommended. For a subscription move, the virtual network must move as well.", "objective": "3.2.3" },
+  { "id": "adm-vm-move-4", "type": "single", "question": "After you move VM1 from RG1 to RG2, an automation script that manages VM1 fails with a ResourceNotFound error. What is the most likely cause?", "options": [
+    { "text": "The resource ID of VM1 changed because it includes the resource group name", "why": "Correct. Scripts that use the old resource ID must be updated." },
+    { "text": "VM1 was moved to a different region", "why": "Resource group moves do not change the region." },
+    { "text": "VM1 was deallocated during the move", "why": "VMs keep running during a resource group move." },
+    { "text": "The private IP address of VM1 changed", "why": "A move does not change the IP configuration." } ], "answer": [0], "explanation": "Resource IDs contain the subscription and resource group, so they change when either changes.", "objective": "3.2.3" },
+  { "id": "adm-vm-move-5", "type": "single", "scenario": "You need to move VM1 and its dependent resources from Subscription1 to Subscription2. Subscription1 is associated with tenant A. Subscription2 is associated with tenant B.", "question": "What prevents the move?", "options": [
+    { "text": "The subscriptions are associated with different Microsoft Entra tenants", "why": "Correct. Both subscriptions must be in the same tenant for a resource move." },
+    { "text": "VM1 is running", "why": "VMs can keep running during a move." },
+    { "text": "The resource groups have different names", "why": "Resource group names do not need to match." },
+    { "text": "VM1 uses managed disks", "why": "VMs with managed disks can be moved." } ], "answer": [0], "explanation": "Before moving between subscriptions, also confirm that the target subscription has the required resource providers registered and enough quota.", "objective": "3.2.3" }
+] }

@@ -1,0 +1,219 @@
+---
+title: "Azure Site Recovery: Replicate and Fail Over to Another Region"
+seoTitle: Azure Site Recovery Replication and Failover | AZ-104
+description: Enable Azure-to-Azure replication with Site Recovery, run a test failover, then fail over, commit, re-protect and fail back to a secondary region for AZ-104.
+answer: >-
+  **Azure Site Recovery (ASR)** continuously replicates an Azure VM's disks to **another region**, so you can run the VM there within minutes if the primary region fails. You enable it from the VM's **Disaster recovery** blade, and the **Recovery Services vault** must be in the **target region**. A **replication policy** sets how long **recovery points** are kept (up to 15 days) and how often **app-consistent** snapshots are taken; crash-consistent points come every 5 minutes. You rehearse with a **test failover** into an isolated virtual network and then **clean it up**. In a real outage you **fail over** (choosing a recovery point such as **Latest processed** for the lowest RTO), **commit**, then **re-protect** to replicate back, and later **fail back** the same way.
+updated: 2026-11-24
+readingMinutes: 12
+keyTerms:
+  - term: Azure Site Recovery
+    definition: The Azure service that replicates VMs to a secondary location and orchestrates failover and failback.
+  - term: Azure-to-Azure replication
+    definition: Site Recovery replicating Azure VMs from one Azure region to another.
+  - term: Replication policy
+    definition: Recovery point retention (up to 15 days) and app-consistent snapshot frequency for replicated VMs.
+  - term: Recovery point
+    definition: A point the VM can be failed over to. Crash-consistent every 5 minutes; app-consistent on the policy's schedule.
+  - term: Test failover
+    definition: Creates a copy of the replicated VM in an isolated network without affecting production or replication.
+  - term: Commit
+    definition: Confirms a failover, after which you can no longer switch to a different recovery point.
+  - term: Re-protect
+    definition: Starts replicating the failed-over VM back to the original region so you can fail back.
+  - term: Recovery plan
+    definition: A group of replicated VMs that fail over together in a defined order, with optional scripts, runbooks and manual steps.
+interview:
+  - level: beginner
+    q: What's the difference between Azure Backup and Site Recovery?
+    a: >-
+      Backup keeps copies from points in time so you can go back after a deletion or ransomware, but restoring takes hours. Site Recovery keeps a constantly updated replica in another region so a VM can be running there in minutes if the region fails. Most production VMs have both.
+    followUps: []
+  - level: intermediate
+    q: Where does the Recovery Services vault go for Azure-to-Azure disaster recovery, and why?
+    a: >-
+      In the target region. If the source region goes down, the vault and its replication metadata have to survive and be usable to run the failover, so they live where you're failing over to. A cache storage account sits in the source region to buffer changes before they're sent.
+    followUps: []
+  - level: experienced
+    q: Which recovery point would you pick in a real failover?
+    a: >-
+      Latest processed if I want the VM up fastest, because the data is already processed. Latest gives the lowest data loss but processes pending data first, which takes longer. Latest app-consistent if the app needs a clean, application-consistent state, like a database server, at the cost of losing up to the snapshot interval.
+    followUps: []
+  - level: scenario
+    q: The board wants proof every quarter that the ERP system can run in West US 2, without downtime. How?
+    a: >-
+      A recovery plan for the ERP VMs with the database group first and the app group second, and a test failover of the plan into an isolated VNet in West US 2 each quarter. We check the app, record the results, then run cleanup test failover. Production keeps running and replicating the whole time.
+    followUps: []
+revision:
+  keyPoints:
+    - ASR replicates Azure VMs to another region continuously. Enable it on the VM's Disaster recovery blade or from the vault.
+    - The Recovery Services vault is in the target region. A cache storage account is in the source region. The Mobility service extension is installed for you.
+    - Replication policy - recovery point retention up to 15 days, app-consistent snapshot frequency. Crash-consistent points every 5 minutes.
+    - Test failover goes to an isolated VNet and doesn't affect replication; always clean it up.
+    - Real failover - choose a recovery point, fail over, commit, re-protect, then fail back and re-protect again. Recovery plans fail over groups of VMs in order.
+  mistakes:
+    - Putting the vault in the same region as the source VM.
+    - Running a test failover into the production VNet in the target region, causing IP conflicts.
+    - Forgetting to re-protect after failover, leaving the VM with no disaster recovery.
+  examTips:
+    - '"Validate the DR plan without affecting production" = **test failover** to an **isolated VNet**, then **cleanup**.'
+    - '"Lowest RTO" recovery point = **Latest processed**. "Lowest RPO" = **Latest**.'
+    - Order after an outage - **failover → commit → re-protect → (fail back → re-protect)**.
+  quick:
+    - q: Which region must the Recovery Services vault be in for Azure-to-Azure replication?
+      a: The target (secondary) region.
+    - q: How often are crash-consistent recovery points created?
+      a: About every 5 minutes.
+    - q: What's the maximum recovery point retention in a replication policy?
+      a: 15 days.
+    - q: What do you run after a test failover?
+      a: Cleanup test failover.
+    - q: What makes the failed-over VM replicate back to the original region?
+      a: Re-protect.
+references:
+  - title: About Azure VM disaster recovery
+    url: https://learn.microsoft.com/azure/site-recovery/azure-to-azure-architecture
+  - title: Set up disaster recovery for Azure VMs
+    url: https://learn.microsoft.com/azure/site-recovery/azure-to-azure-tutorial-enable-replication
+  - title: Run a disaster recovery drill to a secondary region
+    url: https://learn.microsoft.com/azure/site-recovery/azure-to-azure-tutorial-dr-drill
+  - title: Fail over and reprotect Azure VMs between regions
+    url: https://learn.microsoft.com/azure/site-recovery/azure-to-azure-tutorial-failover-failback
+  - title: About recovery plans
+    url: https://learn.microsoft.com/azure/site-recovery/recovery-plan-overview
+related:
+  - recovery-services-and-backup-vaults
+  - backup-restore-reports-and-alerts
+  - monitor-metrics-and-diagnostic-settings
+---
+
+## Start with a question
+
+<Story question="If your office building flooded tonight, where would everyone work tomorrow?">
+
+A sensible company has a second office in another city with desks ready and copies of every file synced overnight, or better, every few minutes. Twice a year they send a small team there for a day to prove the laptops log in, without closing the main office.
+
+**Azure Site Recovery** is that second office for your VMs. It keeps copying every change to **another region**. A **test failover** is the practice day. A real **failover** is moving everyone when the main office floods, and **re-protect** is setting up the sync in the other direction so you can move back later.
+
+</Story>
+
+## Explain it like I'm 10
+
+<Eli10>
+
+You're writing a story in your notebook. Every few minutes your friend copies what you wrote into her notebook at her house.
+
+If your notebook falls in a puddle, you carry on in her notebook. That's **failover**.
+
+Before that ever happens, you practise once by writing a page in a spare notebook, then throwing the spare away. That's a **test failover** and **cleanup**.
+
+When your notebook dries, she starts copying back to yours. That's **re-protect**.
+
+</Eli10>
+
+## The technical explanation
+
+### How Azure-to-Azure replication works
+
+<Flow
+  caption="vm-erp01 protected from East US to West US 2"
+  steps={[
+    { title: 'Enable', text: 'From the VM, choose the target region. Site Recovery installs the Mobility service extension.' },
+    { title: 'Cache', text: 'Disk writes are captured and buffered in a cache storage account in East US.' },
+    { title: 'Replicate', text: 'Changes are sent to replica managed disks in West US 2. No VM runs there yet.' },
+    { title: 'Recover', text: 'Crash-consistent points every 5 minutes, app-consistent on the policy schedule, kept up to 15 days.' },
+  ]}
+/>
+
+What lives where:
+
+| Component | Region | Notes |
+| --- | --- | --- |
+| Source VM, cache storage account | **Source** (East US) | The cache buffers changes before they're sent |
+| **Recovery Services vault** | **Target** (West US 2) | Must be in a different region from the VM |
+| Replica disks, target resource group, target VNet | **Target** | Created at enable time or chosen by you. The target VM itself is created only at failover |
+
+You can replicate to any region in the same geographic cluster (often the paired region), and into an availability zone. You pay a Site Recovery fee per protected VM (about $25 a month, illustrative, first 31 days free) plus storage, and compute in the target region only while a failed-over or test VM runs.
+
+### Enable replication
+
+**Portal path:** VM > **Backup + disaster recovery > Disaster recovery**. Tabs: *Basics* (target region, replicate to availability zones), *Advanced settings* (target subscription, VM resource group, virtual network, availability, capacity reservation, cache storage, **replication policy**, Recovery Services vault), *Review + Start replication*. You can also start from the vault: **Site Recovery > Azure virtual machines > Enable replication**.
+
+The default **replication policy** keeps recovery points for 24 hours and takes app-consistent snapshots every 4 hours; you can keep points up to **15 days**. **Multi-VM consistency** groups VMs that must share consistent recovery points, such as an app tier and its database.
+
+Most admins enable replication in the portal. From the command line it's PowerShell (`New-AzRecoveryServicesAsrReplicationProtectedItem` with fabrics, containers and mappings) or the `az site-recovery` extension, which needs fabric, protection container and provider JSON. The practice lab below uses a simplified version of those commands.
+
+### Test failover: rehearse without risk
+
+Vault > **Protected items > Replicated items** > the VM > **Test failover**. Pick a **recovery point** and an **Azure virtual network** that's **isolated** from production (a separate test VNet in the target region, so IP addresses don't clash). Site Recovery creates a VM from the recovery point; production keeps running and replicating. Check the app, then run **Cleanup test failover** with notes, which deletes the test VM.
+
+```powershell
+$item = Get-AzRecoveryServicesAsrReplicationProtectedItem -ProtectionContainer $container -FriendlyName vm-erp01
+$job = Start-AzRecoveryServicesAsrTestFailoverJob -ReplicationProtectedItem $item -Direction PrimaryToRecovery -AzureVMNetworkId $testVnetId
+Start-AzRecoveryServicesAsrTestFailoverCleanupJob -ReplicationProtectedItem $item -Comment "Drill passed"
+```
+
+### Real failover, commit, re-protect, fail back
+
+| Step | What it does |
+| --- | --- |
+| **Failover** | Choose a recovery point and create the VM in the target region. Tick **Shut down machine before beginning failover** if the source is still reachable, to avoid data loss |
+| **Commit** | Makes the chosen recovery point final and removes the others. Until you commit, you can **change recovery point** |
+| **Re-protect** | Starts replication from the target region back to the original region (uses the original disks where possible) |
+| **Fail back** | A planned failover back to the original region when it's healthy, then commit and re-protect again |
+
+Recovery point choices: **Latest** (lowest RPO, processes all pending data first, slower), **Latest processed** (lowest RTO, default), **Latest app-consistent**, **Latest multi-VM processed** or **app-consistent** for multi-VM groups, and **Custom**.
+
+```powershell
+Start-AzRecoveryServicesAsrUnplannedFailoverJob -ReplicationProtectedItem $item -Direction PrimaryToRecovery
+Start-AzRecoveryServicesAsrCommitFailoverJob -ReplicationProtectedItem $item
+Update-AzRecoveryServicesAsrProtectionDirection -ReplicationProtectedItem $item -AzureToAzure `
+  -ProtectionContainerMapping $reverseMapping -LogStorageAccountId $cacheId -RecoveryResourceGroupId $rgId
+```
+
+<TryIt labs="adm-ops-bcdr" text="Enable replication to West US 2, run a DR drill, then fail over, commit and re-protect." />
+
+### Recovery plans
+
+A **recovery plan** groups replicated VMs into ordered **groups** (database first, then app, then web), with **pre and post actions**: Azure Automation runbooks (for example to update DNS or a load balancer) and manual steps. You run test failover, failover and failback on the plan as a whole, which turns a 40-step runbook into one button.
+
+<Callout type="exam">
+Three things come up again and again. **Vault location**: in the **target** region, never next to the source VM. **Drills**: "test DR without affecting production or replication" is a **test failover** into an **isolated** VNet, followed by **cleanup test failover**. **Order**: after a real outage it's **failover**, **commit**, **re-protect**; failing back is another failover plus commit and re-protect. Recovery point wording: "**minimise downtime**" = **Latest processed**; "**minimise data loss**" = **Latest**; "**application-consistent**" = **Latest app-consistent**. If several VMs must fail over together in order, the answer is a **recovery plan**.
+</Callout>
+
+<DeepDive title="Things that break a real failover">
+
+Capacity: in a big regional outage, many customers fail over to the same region. **Capacity reservation** in the target region guarantees the VM sizes you need. Networking: map the target VNet, subnets, NSGs and public IPs in advance, and plan DNS changes (Traffic Manager or a runbook in the recovery plan). Identity: make sure domain controllers or Microsoft Entra Domain Services are reachable from the target region. And remember that replication copies everything, including ransomware encryption, within minutes. That's why Site Recovery sits next to Azure Backup, not instead of it.
+
+</DeepDive>
+
+## Real-world business scenario
+
+<Scenario
+  company="Woodgrove Distribution (fictional)"
+  industry="Wholesale"
+  problem="The order management system ran on four VMs in East US. A regional outage would stop order intake for the hours it took to restore from backup, which the contract with their largest customer didn't allow."
+  service="Site Recovery replicated the four VMs to West US 2 into a vault there, with multi-VM consistency for the app and database tiers and capacity reservation for their sizes. A recovery plan failed over the database group first, then the app group, with a runbook updating the Traffic Manager endpoint. Every quarter they ran a test failover of the plan into an isolated VNet and cleaned it up."
+  why="Replication kept data loss to minutes, the recovery plan made failover one action, and quarterly drills proved it worked without touching production."
+  outcome="During a later East US networking incident they failed over in 22 minutes, committed, re-protected, and failed back the next weekend."
+/>
+
+## When to use it and when not to
+
+<UseWhen
+  use={[
+    'A VM must run again within minutes if its region fails.',
+    'Several VMs must come back together in a set order: use a recovery plan.',
+    'You need to prove DR regularly without downtime: test failover.',
+  ]}
+  avoid={[
+    'Recovering from deletion, corruption or ransomware. Replication copies the damage; use Azure Backup.',
+    'PaaS services with their own geo-replication (Azure SQL Database, Cosmos DB, storage GRS). Use their native options.',
+    'Workloads that can wait hours for a restore. Backup with Cross Region Restore costs less.',
+  ]}
+  alternatives={[
+    '<strong>Azure Backup with Cross Region Restore</strong> when hours of RTO are acceptable.',
+    '<strong>Availability zones</strong> for datacenter-level failures within one region.',
+    '<strong>Active-active deployments</strong> across regions behind Front Door or Traffic Manager for near-zero downtime.',
+  ]}
+/>

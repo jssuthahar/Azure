@@ -1,0 +1,209 @@
+---
+title: SAS Tokens and Stored Access Policies
+seoTitle: Azure SAS Tokens and Stored Access Policies | AZ-104
+description: Create user delegation, service and account SAS tokens for Azure Storage, tie them to stored access policies and revoke them early, with portal and CLI steps.
+answer: >-
+  A **shared access signature (SAS)** is a signed URL token that grants limited permissions (such as read and list) on specific storage resources until an **expiry** time. There are three kinds: a **user delegation SAS** (signed with Microsoft Entra credentials, Blob Storage, at most **7 days**, the recommended one), a **service SAS** (signed with an account key, one service) and an **account SAS** (signed with an account key, one or more services). A **stored access policy** on a container, share, queue or table (up to **5** each) holds the permissions and expiry for **service SAS** tokens that reference it, so **deleting or changing the policy revokes them** without rotating the keys.
+updated: 2026-11-24
+readingMinutes: 12
+keyTerms:
+  - term: Shared access signature (SAS)
+    definition: A token appended to a storage URL that grants specific permissions on specific resources for a limited time.
+  - term: User delegation SAS
+    definition: A SAS signed with a user delegation key that Microsoft Entra ID issues, so no account key is involved. Valid for up to 7 days.
+  - term: Service SAS
+    definition: A SAS signed with an account key that grants access to resources in one service, such as one blob container.
+  - term: Account SAS
+    definition: A SAS signed with an account key that can cover one or more services and service-level operations.
+  - term: Stored access policy
+    definition: A named set of permissions, start and expiry time saved on a container, share, queue or table, which service SAS tokens can reference.
+  - term: Signed identifier (si)
+    definition: The SAS parameter that names the stored access policy the token uses.
+interview:
+  - level: beginner
+    q: Why would you give someone a SAS instead of the storage account key?
+    a: >-
+      The key gives full control of everything in the account, forever. A SAS gives only the permissions I choose, on the container or blob I choose, until a time I choose, and I can require HTTPS or a specific IP range. If it leaks, the damage is limited.
+    followUps: []
+  - level: intermediate
+    q: You gave a partner an ad hoc service SAS valid for six months and now need to cut them off. What can you do?
+    a: >-
+      An ad hoc SAS carries its own permissions and expiry, so the only way to revoke it early is to regenerate the account key that signed it. That also breaks anything else using that key, so I'd move other apps to the second key first. Next time I'd tie the SAS to a stored access policy so I can just delete the policy.
+    followUps: []
+  - level: experienced
+    q: When would you choose a user delegation SAS?
+    a: >-
+      Whenever the data is in Blob Storage and the person creating the SAS has a Microsoft Entra identity. It's signed with a key Entra ID issues, not the account key, so it still works when Shared Key access is disabled, it's capped at seven days and its rights can never exceed what the signer's RBAC role allows. I can revoke all of them with az storage account revoke-delegation-keys.
+    followUps: []
+  - level: scenario
+    q: Auditors need read access to the invoices container for 30 days, and you might have to end it early. How do you set it up?
+    a: >-
+      Create a stored access policy called auditors-read on the invoices container with read and list and a 30-day expiry. Then generate a service SAS with --policy-name auditors-read, HTTPS only. To end access I delete the policy, or change its expiry to the past. The account keys don't change.
+    followUps: []
+revision:
+  keyPoints:
+    - User delegation SAS = Microsoft Entra ID, Blob Storage, max 7 days, recommended.
+    - Service SAS = account key, one service. Account SAS = account key, several services.
+    - Stored access policies (max 5 per container) work only with service SAS tokens.
+    - Revoke a policy-based SAS by deleting or editing the policy. Revoke an ad hoc SAS by regenerating its signing key.
+    - Policy changes can take up to 30 seconds to apply.
+    - Use HTTPS only, short expiry and the least permissions.
+  mistakes:
+    - Trying to attach a stored access policy to an account SAS or a user delegation SAS.
+    - Setting the same field (permissions or expiry) in both the policy and the SAS.
+    - Forgetting that disabling Shared Key access also kills service and account SAS tokens.
+  examTips:
+    - '"Revoke access without regenerating keys" = **stored access policy**.'
+    - '"SAS secured with Microsoft Entra credentials" = **user delegation SAS**.'
+    - '"One SAS for blobs and queues" = **account SAS**.'
+  quick:
+    - q: How many stored access policies can one container have?
+      a: Five.
+    - q: What is the maximum validity of a user delegation SAS?
+      a: Seven days.
+    - q: Which SAS types can reference a stored access policy?
+      a: Service SAS only.
+    - q: How do you revoke an ad hoc service SAS early?
+      a: Regenerate the account key that signed it.
+    - q: Which SAS parameter names the stored access policy?
+      a: si (signed identifier).
+references:
+  - title: Grant limited access to Azure Storage resources using SAS
+    url: https://learn.microsoft.com/azure/storage/common/storage-sas-overview
+  - title: Create a user delegation SAS
+    url: https://learn.microsoft.com/rest/api/storageservices/create-user-delegation-sas
+  - title: Define a stored access policy
+    url: https://learn.microsoft.com/rest/api/storageservices/define-stored-access-policy
+  - title: az storage container generate-sas
+    url: https://learn.microsoft.com/cli/azure/storage/container
+related:
+  - storage-access-keys
+  - storage-firewalls-and-virtual-networks
+  - storage-explorer-and-azcopy
+---
+
+## Start with a question
+
+<Story question="How do you let a plumber into your flat on Tuesday without giving them your house key forever?">
+
+You don't hand over your own key. You give the building guard a note: "Let the plumber into flat 4B, kitchen only, Tuesday 10 to 12." The plumber shows the note, the guard checks it, and on Wednesday the note is worthless.
+
+Better still, the guard keeps a clipboard with rules like "plumbers: kitchen only, until Friday". The note just says "see clipboard, plumbers". If you change your mind, you cross out the line on the clipboard and every plumber note stops working at once.
+
+The note is a **SAS**. The clipboard line is a **stored access policy**.
+
+</Story>
+
+## Explain it like I'm 10
+
+<Eli10>
+
+A SAS is a permission slip.
+
+It says what you may do (look, but don't touch), where (only the red toy box) and until when (home time).
+
+A stored access policy is the teacher's list on the wall. Your slip just says "see the list".
+
+If the teacher rubs a line off the list, every slip that pointed at it stops working.
+
+</Eli10>
+
+## The technical explanation
+
+A SAS is a query string you append to a storage URL. It carries the permissions (`sp`), expiry (`se`), optional start (`st`), allowed IPs (`sip`), protocol (`spr=https`), the resource type and a **signature** (`sig`). Storage recomputes the signature with the same key; if anything was changed, the request fails.
+
+### Three kinds of SAS
+
+| | User delegation SAS | Service SAS | Account SAS |
+| --- | --- | --- | --- |
+| Signed with | User delegation key from **Microsoft Entra ID** | Account key | Account key |
+| Covers | Blob Storage (containers and blobs) | One service (blob, file, queue or table) | One or more services, service-level operations too |
+| Max lifetime | **7 days** | Whatever you set | Whatever you set |
+| Stored access policy | No | **Yes** | No |
+| Works with key access disabled | **Yes** | No | No |
+| Revoke early | Revoke delegation keys or the signer's role | Delete the policy, or regenerate the key | Regenerate the key |
+
+Microsoft recommends the **user delegation SAS** wherever it fits. The signer needs permission to get a user delegation key, and at use time the SAS can't do more than the signer's own data role allows.
+
+### Stored access policies
+
+A stored access policy lives on a **container**, **file share**, **queue** or **table**, and each can hold up to **five**. It holds any of: permissions, start time, expiry time. A service SAS names it with `si=<policy>` and takes the missing fields from the policy. Don't set the same field in both places; storage rejects that.
+
+To revoke every SAS tied to a policy, **delete the policy**, rename it, or set its expiry in the past. Changes can take up to 30 seconds to apply. An **ad hoc** SAS (no policy) can only be revoked by **regenerating the key** that signed it.
+
+### Portal steps
+
+1. Open the container, then **Settings > Access policy > + Add policy**. Enter the identifier, tick the permissions, set start and expiry, then **Save**.
+2. Open **Settings > Shared access tokens**. Choose **Signing method** (*Account key* or *User delegation key*), the signing key, the **Stored access policy**, allowed IPs and **HTTPS only**.
+3. Select **Generate SAS token and URL** and copy it straight away. Azure doesn't keep a copy.
+
+The account-wide **Shared access signature** blade (under Security + networking) creates **account SAS** tokens.
+
+### CLI and PowerShell
+
+```bash
+EXP=$(date -u -d "+30 days" '+%Y-%m-%dT%H:%MZ')
+
+# Stored access policy + service SAS that uses it
+az storage container policy create --account-name stcontosoprod -c invoices \
+  -n auditors-read --permissions rl --expiry $EXP
+az storage container generate-sas --account-name stcontosoprod -n invoices \
+  --policy-name auditors-read --https-only -o tsv
+
+# Revoke every SAS tied to the policy
+az storage container policy delete --account-name stcontosoprod -c invoices -n auditors-read
+
+# User delegation SAS for one blob (max 7 days, no account key)
+az storage blob generate-sas --account-name stcontosoprod -c invoices -n invoice-1001.pdf \
+  --permissions r --expiry 2026-11-30T18:00Z --auth-mode login --as-user --https-only --full-uri
+```
+
+```powershell
+$ctx = (Get-AzStorageAccount -ResourceGroupName rg-storage-prod -Name stcontosoprod).Context
+New-AzStorageContainerStoredAccessPolicy -Container invoices -Policy auditors-read `
+  -Permission rl -ExpiryTime (Get-Date).AddDays(30) -Context $ctx
+New-AzStorageContainerSASToken -Name invoices -Policy auditors-read -Protocol HttpsOnly -Context $ctx
+```
+
+<TryIt labs="adm-storage-lockdown" text="Create a stored access policy, download with a SAS that uses it, then delete the policy and watch the SAS fail." />
+
+<Callout type="exam">
+Key phrases. "Revoke without regenerating keys" means a **stored access policy** with a **service SAS**. "Secured with Microsoft Entra credentials" or "doesn't use the account key" means a **user delegation SAS**. "Grant access to blobs and queues with one token" means an **account SAS**. If a question has six policies on one container, something is wrong: the limit is **five**. And remember that disabling **Allow storage account key access** stops service and account SAS tokens but not user delegation SAS.
+</Callout>
+
+<DeepDive title="SAS expiration policies and good hygiene">
+
+You can set a **SAS expiration policy** on the account (for example, one day). Azure then logs any SAS signed with an account key whose validity is longer, so you can find bad habits. Other habits that pay off: keep expiry short, use HTTPS only, restrict `sip` to known ranges, give only the letters you need (`r` and `l`, not `racwdl`), and prefer user delegation SAS so a leaked account key isn't part of the story at all.
+
+</DeepDive>
+
+## Real-world business scenario
+
+<Scenario
+  company="Fabrikam Accounting (fictional)"
+  industry="Professional services"
+  problem="External auditors were emailed the storage account key every year, and nobody remembered to rotate it afterwards."
+  service="A stored access policy auditors-read on the invoices container (read and list, 30 days), and a service SAS with HTTPS only and the auditors' office IP range."
+  why="Auditors only see one container, only read, only from their office, and the team can end access in seconds by deleting the policy."
+  outcome="When the audit finished a week early, the admin deleted the policy and confirmed the SAS returned 403. The account keys never left the team."
+/>
+
+## When to use it and when not to
+
+<UseWhen
+  use={[
+    'Someone outside your tenant needs time-limited access to specific containers or blobs.',
+    'A client app uploads directly to storage and you hand it a short-lived token.',
+    'You need to be able to revoke a group of tokens in one move (use a stored access policy).',
+  ]}
+  avoid={[
+    'The caller is your own app or user with a Microsoft Entra identity (use RBAC data roles).',
+    'You need long-lived access with no expiry (rethink the design).',
+    'You want to revoke an ad hoc SAS without touching the keys (you can\'t).',
+  ]}
+  alternatives={[
+    '<strong>Microsoft Entra ID with Storage Blob Data roles</strong> for your own apps and staff.',
+    '<strong>User delegation SAS</strong> instead of key-signed SAS where Blob Storage is used.',
+    '<strong>Storage firewall</strong> to limit where a SAS can be used from.',
+  ]}
+/>

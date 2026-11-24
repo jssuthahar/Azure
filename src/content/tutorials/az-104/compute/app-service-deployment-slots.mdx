@@ -1,0 +1,213 @@
+---
+title: App Service Deployment Slots and Swaps
+seoTitle: App Service Deployment Slots and Swaps | AZ-104
+description: Configure App Service deployment slots, mark slot settings, swap staging into production with warm-up or preview, route test traffic and roll back fast.
+answer: >-
+  A **deployment slot** is a live copy of your web app with its own hostname (`<app>-staging.azurewebsites.net`), running on the same **App Service plan**. Slots need **Standard** (5 slots) or **Premium v3** (20 slots). You deploy to **staging**, test it, then **swap**: App Service applies production's settings to staging, **warms up** its instances and only then switches traffic, so there's no cold start, and swapping again **rolls back**. App settings and connection strings marked **Deployment slot setting** stay with their slot. Custom domains, certificates and TLS settings, scale settings, IP restrictions and managed identities never swap. **Swap with preview** pauses after warm-up, and **traffic routing** can send a percentage of users to a slot.
+updated: 2026-11-24
+readingMinutes: 10
+keyTerms:
+  - term: Deployment slot
+    definition: A separate live app with its own hostname that belongs to a web app and runs on the same App Service plan.
+  - term: Swap
+    definition: Exchanging the content and swappable settings of two slots after warming up the source, so the switch has no downtime.
+  - term: Slot setting
+    definition: An app setting or connection string marked Deployment slot setting, which stays with its slot during a swap.
+  - term: Swap with preview
+    definition: A two-phase swap that applies the target's settings to the source and stops, so you can check before completing or cancelling.
+  - term: Auto swap
+    definition: A slot option that swaps the slot into a target automatically after each deployment. Not supported on Linux apps or Web App for Containers.
+  - term: Traffic routing
+    definition: Sending a percentage of production traffic to another slot for testing in production. A cookie keeps each user on one slot.
+interview:
+  - level: beginner
+    q: Why would you deploy to a staging slot instead of straight to production?
+    a: >-
+      So I can test the new version on its own URL first, and so the release doesn't cause downtime. When I swap, App Service warms the staging instances up before switching traffic. If something's wrong after the swap, I swap back and the old version is live again in seconds.
+    followUps: []
+  - level: intermediate
+    q: Which settings stay put during a swap?
+    a: >-
+      Anything I mark as a deployment slot setting, plus things that never swap: custom domain names, non-public certificates and TLS settings, scale settings, IP restrictions, Always On, CORS, diagnostic settings, VNet integration and managed identities. App settings and connection strings that aren't slot settings, handler mappings and the code itself all move with the swap.
+    followUps: []
+  - level: experienced
+    q: What actually happens during a swap?
+    a: >-
+      App Service applies the target slot's slot settings, connection strings and some config to the source slot's instances, which restarts them. It waits until every instance has restarted and warmed up, including any applicationInitialization paths I've configured. If that all succeeds, it switches the routing rules, so the source becomes production. If warm-up fails, the swap is cancelled and production never changed.
+    followUps: []
+  - level: scenario
+    q: You need to try a new checkout on 10% of real users before a full release. How?
+    a: >-
+      Deploy it to the staging slot, then set traffic routing on production to send 10% to staging, either in the Deployment slots blade or with az webapp traffic-routing set --distribution staging=10. Users get a cookie that keeps them on the same slot. If the numbers look good I swap; if not, I set staging back to 0%.
+    followUps: []
+revision:
+  keyPoints:
+    - Slots need Standard (5 per app) or Premium v3 (20 per app). Basic and Free have none.
+    - Slots run on the same plan, so they share its instances and scale settings.
+    - A swap warms up the source first, then switches routing. Swap again to roll back.
+    - Slot settings (sticky) stay with their slot. Domains, certificates, scale and IP restrictions never swap.
+    - Swap with preview pauses after warm-up; traffic routing sends a percentage of users to a slot.
+  mistakes:
+    - Forgetting to mark production-only values (database, payment endpoint) as slot settings, so staging values reach production.
+    - Trying to add slots on a Basic plan.
+    - Expecting a slot to scale separately from production.
+  examTips:
+    - '"No downtime when releasing" = deploy to a **slot** and **swap**.'
+    - '"Setting must not move during a swap" = mark it as a **deployment slot setting**.'
+    - '"Validate with production settings before completing the swap" = **swap with preview**.'
+  quick:
+    - q: How many slots does Standard allow per app?
+      a: Five (plus production).
+    - q: Which tier is the lowest that supports slots?
+      a: Standard.
+    - q: Do custom domains swap?
+      a: No, they stay with their slot.
+    - q: How do you roll back a bad swap?
+      a: Swap the slots again.
+    - q: Which command swaps slots?
+      a: az webapp deployment slot swap --slot staging --target-slot production.
+references:
+  - title: Set up staging environments in Azure App Service
+    url: https://learn.microsoft.com/azure/app-service/deploy-staging-slots
+  - title: What happens during a swap
+    url: https://learn.microsoft.com/azure/app-service/deploy-staging-slots#what-happens-during-a-swap
+  - title: Route production traffic automatically
+    url: https://learn.microsoft.com/azure/app-service/deploy-staging-slots#route-production-traffic-automatically
+  - title: az webapp deployment slot
+    url: https://learn.microsoft.com/cli/azure/webapp/deployment/slot
+related:
+  - app-service-plans-and-scaling
+  - app-service-backup-and-networking
+---
+
+## Start with a question
+
+<Story question="How does a theatre change the set without closing the curtain?">
+
+Big theatres have a second stage behind the main one. While the audience watches act one, the crew builds act two back there, lights it, and checks every prop. Then the stages swap, and the audience sees the new scene with no wait. If something's wrong, they can roll the old set straight back.
+
+A **deployment slot** is that second stage. You deploy the new version to **staging**, check it on its own URL, then **swap** it with production. App Service warms it up first, so users never see a half-built set.
+
+</Story>
+
+## Explain it like I'm 10
+
+<Eli10>
+
+You have a toy shop window that people walk past.
+
+Behind it is a second window where you set up the new toys.
+
+When it looks perfect, you **swap** the windows. People see the new toys straight away, with no empty window in between.
+
+Some things stay with each window, like its name card. Those are **slot settings**.
+
+Don't like the new toys? Swap back.
+
+</Eli10>
+
+## The technical explanation
+
+### Create a slot
+
+Slots need a **Standard** plan (5 slots per app) or **Premium v3** (20). Each slot is a real app with its own hostname, settings and deployments, running on the **same plan's instances**.
+
+**Portal:** web app → **Deployment → Deployment slots** → **+ Add slot**, enter a **Name** and choose **Clone settings from** (production, another slot or none).
+
+```bash
+az webapp deployment slot create -g rg-admin-web -n app-contoso-shop01 --slot staging --configuration-source app-contoso-shop01
+az webapp deploy -g rg-admin-web -n app-contoso-shop01 --slot staging --src-path shop-v2.zip --type zip
+```
+
+```powershell
+New-AzWebAppSlot -ResourceGroupName rg-admin-web -Name app-contoso-shop01 -Slot staging
+```
+
+### Slot settings: what stays and what moves
+
+In **Settings → Environment variables**, tick **Deployment slot setting** on values that describe the environment rather than the code: the production database, the payment gateway, `ENVIRONMENT=Production`.
+
+| Swapped (moves with the code) | Not swapped (stays with the slot) |
+| --- | --- |
+| App settings and connection strings **not** marked as slot settings | App settings and connection strings marked **Deployment slot setting** |
+| General settings such as framework version, 32/64-bit, web sockets | Custom domain names, non-public certificates and TLS settings |
+| Handler mappings, path mappings | Scale settings, Always On |
+| Public certificates, WebJobs content | IP restrictions (access restrictions), CORS |
+| | VNet integration, managed identities, diagnostic settings |
+| | Publishing endpoints and settings ending in `_EXTENSION_VERSION` |
+
+```bash
+az webapp config appsettings set -g rg-admin-web -n app-contoso-shop01 --slot-settings ENVIRONMENT=Production
+az webapp config appsettings set -g rg-admin-web -n app-contoso-shop01 --slot staging --slot-settings ENVIRONMENT=Staging
+```
+
+### Swap
+
+What happens, in order:
+
+1. App Service applies the **target's** slot settings, connection strings and related config to the **source** instances, which restart.
+2. It waits for every instance to start and **warm up** (it calls the site root, or the paths in `applicationInitialization`).
+3. If everything's healthy, it **switches the routing**, so the source's warm instances now serve production. If not, the swap stops and production is untouched.
+
+**Portal:** **Deployment slots** → **Swap**, pick **Source** and **Target**, look at **Config changes**, optionally tick **Perform swap with preview**, then **Start Swap**.
+
+```bash
+az webapp deployment slot swap -g rg-admin-web -n app-contoso-shop01 --slot staging --target-slot production
+# two-phase: preview, check, then complete (or reset)
+az webapp deployment slot swap -g rg-admin-web -n app-contoso-shop01 --slot staging --action preview
+az webapp deployment slot swap -g rg-admin-web -n app-contoso-shop01 --slot staging --action swap
+```
+
+```powershell
+Switch-AzWebAppSlot -ResourceGroupName rg-admin-web -Name app-contoso-shop01 -SourceSlotName staging -DestinationSlotName production
+```
+
+**Roll back** by swapping again: the previous version is still warm in staging.
+
+### Auto swap and traffic routing
+
+- **Auto swap** (in the slot's **Configuration → General settings**) swaps a slot into production after every deployment to it. It isn't supported on Linux apps or Web App for Containers.
+- **Traffic routing** (the **Traffic %** column) sends a share of production users to another slot. A cookie (`x-ms-routing-name`) keeps each user on one slot. `az webapp traffic-routing set --distribution staging=10`.
+
+<TryIt labs="adm-app-service-plan" text="Get refused a slot on Basic, scale up to S1, create staging, mark ENVIRONMENT as a slot setting, deploy v2 and swap." />
+
+<Callout type="exam">
+"Release with no downtime" and "roll back quickly" both point to **slots and swap**. "A connection string must stay with production" means **Deployment slot setting**. "Check the app with production settings before it goes live" is **swap with preview**. "Send 10% of users to the new version" is **traffic routing**. If the plan is **Basic**, the answer starts with **scale up to Standard**. And remember custom domains and TLS bindings **don't** swap.
+</Callout>
+
+<DeepDive title="Slots share the plan, so watch the load">
+
+Every slot runs on the plan's instances. A staging slot under a heavy load test competes with production for CPU and memory. Keep load tests short, scale the plan out while you test, or run heavy tests against a copy on a separate plan. Also stop slots you aren't using; a stopped slot doesn't serve traffic but still exists on the plan.
+
+</DeepDive>
+
+## Real-world business scenario
+
+<Scenario
+  company="Contoso Shop (fictional)"
+  industry="E-commerce"
+  problem="Each release restarted the shop and threw errors for about a minute. Once, a test payment endpoint went live because it was copied along with the code."
+  service="A staging slot on the Standard S1 plan, cloned from production. PAYMENT_API_URL, the order database connection string and ENVIRONMENT were marked as deployment slot settings. GitHub Actions deploys to staging, a smoke test runs against the staging URL, 10% of traffic goes there for an hour, then the pipeline swaps."
+  why="The swap warms up the new version before it takes traffic, slot settings keep test and production endpoints apart, and a second swap is the rollback plan."
+  outcome="Releases moved from monthly to twice a week with no visible downtime, and one bad release was rolled back in under a minute."
+/>
+
+## When to use it and when not to
+
+<UseWhen
+  use={[
+    'You release often and can\'t afford restart errors.',
+    'You want to test a build on real infrastructure with production-like settings first.',
+    'You want a one-click rollback for every release.',
+  ]}
+  avoid={[
+    'The plan is Basic or Free. Scale up to Standard first.',
+    'Staging needs its own capacity for heavy load tests. Use a separate plan.',
+    'You need separate subscriptions or regions per environment. Use separate apps.',
+  ]}
+  alternatives={[
+    '<strong>Container Apps revisions</strong> with traffic splitting for container workloads.',
+    '<strong>Separate web apps per environment</strong> when dev, test and production must be fully isolated.',
+    '<strong>Azure Front Door</strong> to shift traffic between apps in different regions.',
+  ]}
+/>

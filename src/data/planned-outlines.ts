@@ -39,16 +39,6 @@ export const PLANNED_OUTLINES: Record<string, PlannedOutline> = {
       { title: 'Describe an analytics workload on Azure', weight: '25–30%' },
     ],
   },
-  'az-104': {
-    asOf: 'October 26, 2023', verifiedOn: CHECKED, passingScore: 700, owner: 'Microsoft',
-    domains: [
-      { title: 'Manage Azure identities and governance', weight: '20–25%' },
-      { title: 'Implement and manage storage', weight: '15–20%' },
-      { title: 'Deploy and manage Azure compute resources', weight: '20–25%' },
-      { title: 'Implement and manage virtual networking', weight: '15–20%' },
-      { title: 'Monitor and maintain Azure resources', weight: '10–15%' },
-    ],
-  },
   'sc-500': {
     asOf: '', verifiedOn: CHECKED, passingScore: 700, owner: 'Microsoft',
     domains: [

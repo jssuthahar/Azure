@@ -1,0 +1,27 @@
+{ "cert": "az-104", "domain": 3, "topic": "container-apps-for-admins", "questions": [
+  { "id": "adm-app-aca-1", "type": "single", "scenario": "You deploy an API to Azure Container Apps. The API must incur no compute charges when it receives no requests and must start automatically when requests arrive.", "question": "Which configuration should you use?", "options": [
+    { "text": "Set the minimum replicas to 0 and use an HTTP scale rule", "why": "Correct. A minimum of 0 allows scale to zero, and an HTTP rule starts replicas when requests arrive." },
+    { "text": "Set the minimum replicas to 1 and use a CPU scale rule", "why": "A minimum of 1 keeps a replica running, and CPU rules cannot scale to zero." },
+    { "text": "Set the maximum replicas to 0", "why": "A maximum of 0 would prevent the app from running at all." },
+    { "text": "Deploy the API to Azure Container Instances with restart policy Never", "why": "Container Instances does not start automatically when HTTP requests arrive." } ], "answer": [0], "explanation": "Scale to zero requires min replicas 0 and a rule that can wake the app, such as HTTP, TCP or an event scaler.", "objective": "3.3.4" },
+  { "id": "adm-app-aca-2", "type": "single", "question": "You create a container app on the Consumption workload profile. Which CPU and memory combination is valid for each replica?", "options": [
+    { "text": "0.5 vCPU and 1.0 Gi", "why": "Correct. On Consumption, memory is 2 Gi for each vCPU." },
+    { "text": "0.5 vCPU and 4.0 Gi", "why": "The memory does not match the required ratio for 0.5 vCPU." },
+    { "text": "3 vCPU and 3.0 Gi", "why": "3 vCPU requires 6.0 Gi of memory." },
+    { "text": "8 vCPU and 16.0 Gi", "why": "The Consumption profile allows up to 4 vCPU per replica." } ], "answer": [0], "explanation": "Consumption allows 0.25 to 4 vCPU in steps of 0.25, with memory equal to twice the vCPU value in Gi.", "objective": "3.3.4" },
+  { "id": "adm-app-aca-3", "type": "single", "scenario": "A container app has an HTTP scale rule of 50 concurrent requests per replica, a minimum of 0 replicas and a maximum of 6 replicas. The app receives 500 concurrent requests.", "question": "How many replicas will run?", "options": [
+    { "text": "6", "why": "Correct. 500 divided by 50 is 10, but the maximum replicas setting caps the app at 6." },
+    { "text": "10", "why": "This ignores the maximum replicas setting." },
+    { "text": "1", "why": "The rule adds replicas as concurrent requests increase." },
+    { "text": "50", "why": "50 is the concurrency value per replica, not the replica count." } ], "answer": [0], "explanation": "Container Apps calculates the desired replicas from the rule and keeps the value between min and max replicas.", "objective": "3.3.4" },
+  { "id": "adm-app-aca-4", "type": "single", "question": "You need to provision a container app by using the Azure portal. Which resource must exist or be created before the container app can run?", "options": [
+    { "text": "A Container Apps environment", "why": "Correct. Every container app runs in a Container Apps environment." },
+    { "text": "An App Service plan", "why": "App Service plans host App Service apps, not container apps." },
+    { "text": "An Azure Kubernetes Service cluster", "why": "Container Apps runs on a managed platform; you do not create an AKS cluster." },
+    { "text": "A virtual machine scale set", "why": "Container Apps does not require you to manage virtual machines." } ], "answer": [0], "explanation": "The create wizard lets you select an existing environment or create a new one, with a Log Analytics workspace for logs.", "objective": "3.3.3" },
+  { "id": "adm-app-aca-5", "type": "multi", "question": "Which two changes to a container app create a new revision? Each correct answer presents a complete solution.", "options": [
+    { "text": "Changing the container image tag", "why": "Correct. The image is part of the revision template." },
+    { "text": "Changing the minimum and maximum replicas", "why": "Correct. Scale settings are part of the revision template." },
+    { "text": "Adding a secret", "why": "Secrets are application-scope settings and do not create a revision." },
+    { "text": "Changing ingress settings", "why": "Ingress is an application-scope setting and does not create a revision." } ], "answer": [0, 1], "explanation": "Revision-scope changes include the container image, environment variables, resources and scale rules.", "objective": "3.3.3" }
+] }

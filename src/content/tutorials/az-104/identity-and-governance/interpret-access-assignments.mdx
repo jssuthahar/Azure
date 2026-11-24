@@ -1,0 +1,209 @@
+---
+title: "Interpret Access Assignments and Effective Access"
+seoTitle: Interpret Azure Role Assignments and Access | AZ-104
+description: Work out what a user can really do in Azure. Read inherited and group role assignments, Actions and NotActions, deny assignments and Check access for AZ-104.
+answer: >-
+  A user's **effective access** at a scope is the **sum** of every role assigned to them **and their groups**, at that scope **and every scope above it**. Inside a role, permissions are **Actions** minus **NotActions** (and **DataActions** minus **NotDataActions** for data). **NotActions is not a deny**: another role can still grant the action. Only a **deny assignment** blocks an action regardless of roles, and you can't create those directly. Use **Access control (IAM) → Check access** in the portal, or `az role assignment list --assignee <user> --include-inherited --all`, to see the full picture. Locks still apply on top.
+updated: 2026-11-24
+readingMinutes: 10
+keyTerms:
+  - term: Effective access
+    definition: Everything a principal can actually do at a scope, after adding up all its role assignments and applying deny assignments.
+  - term: Inherited assignment
+    definition: A role assignment made at a higher scope that applies here, shown with Inherited in the Scope column.
+  - term: Actions and NotActions
+    definition: Control-plane permissions a role grants, and the ones subtracted from that same role.
+  - term: DataActions
+    definition: Data-plane permissions, such as reading blob contents or sending messages, granted separately from management actions.
+  - term: Deny assignment
+    definition: A rule that blocks listed actions for principals at a scope even if a role grants them. Created by Azure, not by you.
+  - term: Check access
+    definition: The IAM tab that shows a principal's role assignments, group-based assignments and deny assignments at a scope.
+interview:
+  - level: beginner
+    q: If someone has Reader on a subscription and Contributor on one resource group, what can they do in that resource group?
+    a: >-
+      Contributor things. Roles add up, so in that resource group they can read and change resources. Everywhere else in the subscription they can only read.
+    followUps: []
+  - level: intermediate
+    q: Does NotActions deny an action?
+    a: >-
+      No. NotActions only removes permissions from that one role. If the user has a second role that grants the action, they can do it. The only thing that truly denies is a deny assignment.
+    followUps: []
+  - level: experienced
+    q: A user says they're only a Reader but they deleted a VM. How do you investigate?
+    a: >-
+      I'd open Check access on the VM or its resource group and look at every assignment, including inherited ones from the subscription or management group and anything through group memberships. Then the activity log to confirm who did the delete and when. Nine times out of ten there's a group with Contributor they'd forgotten about.
+    followUps: []
+  - level: scenario
+    q: An Owner can't delete resources in a resource group managed by a deployment stack. Why?
+    a: >-
+      The deployment stack has deny settings, which Azure enforces as a deny assignment. Deny assignments win over role assignments, Owner included. They'd need to change the stack's deny settings or be in its excluded principals.
+    followUps: []
+revision:
+  keyPoints:
+    - Effective access = all roles of the user and their groups, at this scope and above.
+    - Role permissions = Actions minus NotActions; data permissions = DataActions minus NotDataActions.
+    - NotActions isn't a deny. Another role can grant the same action.
+    - Deny assignments override role assignments. Azure creates them (deployment stacks, managed apps).
+    - Check access and az role assignment list --include-inherited show the full picture.
+  mistakes:
+    - Ignoring assignments that come through groups or from a management group.
+    - Assuming management roles (Contributor) can read data in storage. Data access needs DataActions roles.
+  examTips:
+    - '"Which roles does User1 have on RG1?" = add **direct**, **group** and **inherited** assignments.'
+    - '"Owner can''t delete a resource" = look for a **lock** or a **deny assignment**.'
+    - '"Contributor can''t read blobs with Entra ID auth" = needs **Storage Blob Data Reader** (DataActions).'
+  quick:
+    - q: Do role assignments add up or does the most restrictive win?
+      a: They add up (union).
+    - q: What's the only thing that blocks an action a role grants?
+      a: A deny assignment (or a resource lock, for write and delete).
+    - q: Where in the portal do you see someone's effective access?
+      a: Access control (IAM), Check access.
+    - q: Which flag includes assignments from parent scopes in the CLI?
+      a: '--include-inherited'
+    - q: Can you create a deny assignment directly?
+      a: No. Azure creates them for features such as deployment stacks and managed applications.
+references:
+  - title: Check access for a user to Azure resources
+    url: https://learn.microsoft.com/azure/role-based-access-control/check-access
+  - title: Understand Azure role definitions
+    url: https://learn.microsoft.com/azure/role-based-access-control/role-definitions
+  - title: Understand Azure deny assignments
+    url: https://learn.microsoft.com/azure/role-based-access-control/deny-assignments
+  - title: List Azure role assignments using Azure CLI
+    url: https://learn.microsoft.com/azure/role-based-access-control/role-assignments-list-cli
+related:
+  - rbac-roles-and-scopes
+  - locks-and-tags-at-scale
+  - resource-groups-subscriptions-management-groups
+---
+
+## Start with a question
+
+<Story question="If you have a library card and a museum pass, what are you allowed to do?">
+
+Both. A library card lets you borrow books, a museum pass gets you into the galleries, and having both doesn't cancel either one. The only thing that stops you is a sign on a door that says "closed to everyone today", whatever pass you hold.
+
+Azure access works the same way. Every role a user has, directly or through groups, at this level or above, **adds up**. The "closed to everyone" sign is a **deny assignment**.
+
+</Story>
+
+## Explain it like I'm 10
+
+<Eli10>
+
+You have a sticker that says "can use the art room" and another that says "can use the music room".
+
+You can use both rooms. Stickers add up.
+
+If the head teacher hangs a "closed" sign on the art room, nobody goes in, not even teachers. That sign is a **deny assignment**.
+
+</Eli10>
+
+## The technical explanation
+
+### Four sources of access
+
+To answer "what can User1 do on RG1?", collect assignments from:
+
+1. **Directly on RG1** to User1.
+2. **Through groups** User1 belongs to (including nested groups).
+3. **Inherited** from the subscription and every management group above it.
+4. Anything on a **specific resource** inside RG1 applies to that resource only.
+
+Add all the roles together. That union is the effective access. Then check two things that can only take away: **deny assignments** and **resource locks**.
+
+### Reading a role definition
+
+```json
+{
+  "roleName": "Contributor",
+  "actions": [ "*" ],
+  "notActions": [
+    "Microsoft.Authorization/*/Delete",
+    "Microsoft.Authorization/*/Write",
+    "Microsoft.Authorization/elevateAccess/Action",
+    "Microsoft.Blueprint/blueprintAssignments/write",
+    "Microsoft.Blueprint/blueprintAssignments/delete",
+    "Microsoft.Compute/galleries/share/action"
+  ],
+  "dataActions": [],
+  "notDataActions": []
+}
+```
+
+- **Actions** `*` = every management operation.
+- **NotActions** removes role assignment and lock writes. That's why Contributor can't grant access or delete locks.
+- **DataActions** is empty, so Contributor doesn't get blob or queue **data** access through Entra ID. For that you need roles like **Storage Blob Data Contributor**.
+
+NotActions only subtracts from **this role**. If the same person is also User Access Administrator, they can write role assignments.
+
+### Tools
+
+| Tool | Shows |
+| --- | --- |
+| IAM → **Check access** → select a user | Current role assignments (direct and via groups, with scope), deny assignments, eligible PIM assignments |
+| IAM → **Role assignments** | Every assignment at this scope; the **Scope** column says *This resource* or *(Inherited)* |
+| IAM → **Roles** → View | The role's JSON permissions |
+| IAM → **Deny assignments** | Deny assignments that apply here |
+| `az role assignment list --assignee <upn> --all --include-inherited -o table` | All of a user's assignments across scopes |
+| `Get-AzRoleAssignment -SignInName <upn> -ExpandPrincipalGroups` | Includes assignments through groups |
+
+An inherited assignment can't be removed at the child scope. Go to the scope where it was made.
+
+### Deny assignments
+
+A **deny assignment** lists actions that are blocked for some principals at a scope, with optional **excluded principals**. They beat role assignments, Owner included. You can't create them in IAM; Azure adds them for **deployment stacks** (deny settings) and **Azure managed applications**.
+
+<Flow
+  caption="Can User1 restart vm-app01 in RG2?"
+  steps={[
+    { title: 'Direct', text: 'User1 has Reader at the management group: read only.' },
+    { title: 'Group', text: 'Group1 has Virtual Machine Contributor on RG2, and User1 is a member.' },
+    { title: 'Union', text: 'Reader + Virtual Machine Contributor includes virtualMachines/restart/action.' },
+    { title: 'Blockers', text: 'No deny assignment, no ReadOnly lock: the restart works.' },
+  ]}
+/>
+
+<TryIt labs="adm-rbac-hierarchy" text="List a user's assignments with --include-inherited, read Contributor's NotActions, then see Contributor blocked from granting access." />
+
+<Callout type="exam">
+These questions give you a table of assignments and ask Yes/No for several actions. Work it like this: list every role from **direct**, **group** and **inherited** assignments, combine them, then check for **locks** (ReadOnly blocks writes, CanNotDelete blocks deletes) and **deny assignments**. Remember **NotActions isn't a deny**, Contributor **can't** assign roles, and management roles don't include **data** access to blobs.
+</Callout>
+
+<DeepDive title="Why a role change didn't take effect">
+
+Azure Resource Manager caches some permission data, and tokens hold group claims, so a new assignment can take a few minutes to apply. Signing out and back in (or `az logout` / `az login`) refreshes the token. Very large group memberships can overflow token claims, in which case Azure looks them up instead, which is slower. If a removed role still seems to work, wait, refresh the token, and check for a second path through a group.
+
+</DeepDive>
+
+## Real-world business scenario
+
+<Scenario
+  company="Adatum Corporation (fictional)"
+  industry="Manufacturing"
+  problem="A contractor with only the Reader role deleted a production database, and nobody could explain how."
+  service="Check access on the database's resource group showed Reader inherited from the management group, plus Contributor through a 'Legacy-Admins' group the contractor had been added to two years earlier. The activity log confirmed the delete."
+  why="The effective access view put every path in one list, so the team found the forgotten group in minutes instead of guessing."
+  outcome="Legacy-Admins was removed, quarterly access reviews were set up for privileged groups, and production got CanNotDelete locks."
+/>
+
+## When to use it and when not to
+
+<UseWhen
+  use={[
+    'Answering "what can this person do here?" before an audit or after an incident.',
+    'Troubleshooting access denied errors or unexpected access.',
+    'Reviewing whether a team still needs a role.',
+  ]}
+  avoid={[
+    'Relying on one IAM list at one scope. Inherited and group assignments live elsewhere.',
+    'Treating NotActions as a way to block someone who has other roles.',
+  ]}
+  alternatives={[
+    '<strong>Access reviews</strong> (Entra ID P2) for recurring checks of Azure role assignments.',
+    '<strong>Azure Resource Graph</strong> queries over authorizationresources to report on assignments at scale.',
+  ]}
+/>

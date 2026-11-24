@@ -1,0 +1,148 @@
+{
+ "cert": "az-104",
+ "domain": 4,
+ "topic": "vnets-subnets-and-public-ips",
+ "questions": [
+  {
+   "id": "adm-net-vnet-1",
+   "type": "single",
+   "question": "You create a subnet that uses the address range 10.10.4.0/27. How many IP addresses in the subnet can be assigned to virtual machines?",
+   "options": [
+    {
+     "text": "27",
+     "why": "Correct. A /27 contains 32 addresses, and Azure reserves 5 addresses in every subnet."
+    },
+    {
+     "text": "30",
+     "why": "This assumes only the network and broadcast addresses are reserved. Azure reserves 5 addresses."
+    },
+    {
+     "text": "32",
+     "why": "Azure reserves 5 of the 32 addresses for the network, default gateway, Azure DNS and broadcast."
+    },
+    {
+     "text": "29",
+     "why": "Azure reserves 5 addresses, not 3."
+    }
+   ],
+   "answer": [
+    0
+   ],
+   "explanation": "Azure reserves the network address, the default gateway (.1), two addresses for Azure DNS (.2 and .3) and the broadcast address in each subnet.",
+   "objective": "4.1.1"
+  },
+  {
+   "id": "adm-net-vnet-2",
+   "type": "single",
+   "question": "You plan to peer VNet1 and VNet2 and to connect both to an on-premises network that uses 192.168.0.0/16. VNet1 uses 10.1.0.0/16. Which address space can you use for VNet2?",
+   "options": [
+    {
+     "text": "10.2.0.0/16",
+     "why": "Correct. It does not overlap VNet1 or the on-premises network."
+    },
+    {
+     "text": "10.1.128.0/17",
+     "why": "This range is inside 10.1.0.0/16 and overlaps VNet1, so the peering would fail."
+    },
+    {
+     "text": "192.168.10.0/24",
+     "why": "This range overlaps the on-premises network."
+    },
+    {
+     "text": "10.0.0.0/8",
+     "why": "This range contains 10.1.0.0/16 and overlaps VNet1."
+    }
+   ],
+   "answer": [
+    0
+   ],
+   "explanation": "Peered virtual networks and connected on-premises networks must use address spaces that do not overlap.",
+   "objective": "4.1.1"
+  },
+  {
+   "id": "adm-net-vnet-3",
+   "type": "single",
+   "question": "You need to create a public IP address for a VPN gateway. The address must not change and must remain available if one availability zone fails. Which configuration should you use?",
+   "options": [
+    {
+     "text": "Standard SKU, static assignment, zone-redundant",
+     "why": "Correct. Standard public IP addresses are static and can be zone-redundant."
+    },
+    {
+     "text": "Basic SKU, dynamic assignment",
+     "why": "Basic SKU public IP addresses are retired, and a dynamic address can change."
+    },
+    {
+     "text": "Standard SKU, dynamic assignment, zone 1",
+     "why": "Standard public IP addresses support only static assignment, and a single zone does not survive a zone failure."
+    },
+    {
+     "text": "Basic SKU, static assignment, zone-redundant",
+     "why": "Basic SKU public IP addresses are retired and did not support availability zones."
+    }
+   ],
+   "answer": [
+    0
+   ],
+   "explanation": "Standard SKU public IP addresses are always static and are zone-redundant by default in regions that have availability zones.",
+   "objective": "4.1.3"
+  },
+  {
+   "id": "adm-net-vnet-4",
+   "type": "single",
+   "question": "A virtual machine has a Standard SKU public IP address associated with its network interface. Neither the network interface nor its subnet has a network security group. Users cannot connect to the VM on TCP port 443. What should you do?",
+   "options": [
+    {
+     "text": "Associate a network security group that allows inbound TCP 443 with the subnet or the network interface",
+     "why": "Correct. Standard public IP addresses are secure by default and block inbound traffic until an NSG allows it."
+    },
+    {
+     "text": "Change the public IP address assignment to dynamic",
+     "why": "Standard public IP addresses support only static assignment, and the assignment does not affect filtering."
+    },
+    {
+     "text": "Add a DNS name label to the public IP address",
+     "why": "A DNS name label provides a name. It does not allow inbound traffic."
+    },
+    {
+     "text": "Change the routing preference to Internet",
+     "why": "Routing preference affects how traffic travels, not whether inbound traffic is allowed."
+    }
+   ],
+   "answer": [
+    0
+   ],
+   "explanation": "Standard SKU public IP addresses are closed to inbound traffic by default. An NSG on the subnet or NIC must explicitly allow the traffic.",
+   "objective": "4.1.3"
+  },
+  {
+   "id": "adm-net-vnet-5",
+   "type": "multi",
+   "question": "Which two statements about Azure virtual networks are true? Each correct answer presents a complete solution.",
+   "options": [
+    {
+     "text": "A virtual network is created in a single Azure region.",
+     "why": "Correct. Use peering to connect virtual networks in different regions."
+    },
+    {
+     "text": "A subnet can span all availability zones in its region.",
+     "why": "Correct. Subnets are regional, so zone-redundant resources can share one subnet."
+    },
+    {
+     "text": "The smallest supported IPv4 subnet is /30.",
+     "why": "The smallest supported IPv4 subnet is /29."
+    },
+    {
+     "text": "A virtual network can span two subscriptions.",
+     "why": "A virtual network belongs to one subscription. Use peering to connect subscriptions."
+    }
+   ],
+   "answer": [
+    0,
+    1
+   ],
+   "explanation": "A virtual network is scoped to one region and one subscription, while its subnets span the availability zones of that region.",
+   "objective": "4.1.1"
+  }
+ ]
+}

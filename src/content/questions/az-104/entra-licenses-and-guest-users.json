@@ -1,0 +1,148 @@
+{
+ "cert": "az-104",
+ "domain": 1,
+ "topic": "entra-licenses-and-guest-users",
+ "questions": [
+  {
+   "id": "adm-id-lic-1",
+   "type": "single",
+   "question": "You create a new user named User1 and attempt to assign a Microsoft 365 E3 license directly. The assignment fails. What should you configure first?",
+   "options": [
+    {
+     "text": "The Usage location property of User1",
+     "why": "Correct. Direct license assignment requires a usage location."
+    },
+    {
+     "text": "The Job title property of User1",
+     "why": "Job title is optional and does not affect licensing."
+    },
+    {
+     "text": "A Microsoft Entra ID P2 license for User1",
+     "why": "P2 is not required to assign other licenses."
+    },
+    {
+     "text": "The User Access Administrator role for User1",
+     "why": "Azure RBAC roles do not affect license assignment."
+    }
+   ],
+   "answer": [
+    0
+   ],
+   "explanation": "Licenses depend on the country in which services are used, so usage location must be set before a license is assigned directly.",
+   "objective": "1.1.3"
+  },
+  {
+   "id": "adm-id-lic-2",
+   "type": "multi",
+   "question": "Licenses must be assigned automatically to users when they join the Sales department and removed when they leave. User accounts already have the Department attribute populated. Which two actions should you perform? Each correct answer presents part of the solution.",
+   "options": [
+    {
+     "text": "Create a dynamic user group with the rule (user.department -eq \"Sales\")",
+     "why": "Correct. The group membership follows the Department attribute."
+    },
+    {
+     "text": "Assign the license to the group",
+     "why": "Correct. Group-based licensing assigns and removes licenses as membership changes."
+    },
+    {
+     "text": "Assign the license directly to each Sales user",
+     "why": "Direct assignments are not removed automatically when users change departments."
+    },
+    {
+     "text": "Create an Azure Policy assignment that requires a Department tag",
+     "why": "Azure Policy tags apply to Azure resources, not to user licenses."
+    }
+   ],
+   "answer": [
+    0,
+    1
+   ],
+   "explanation": "Combining a dynamic group with group-based licensing keeps licenses aligned with HR data. Group-based licensing requires Microsoft Entra ID P1.",
+   "objective": "1.1.3"
+  },
+  {
+   "id": "adm-id-lic-3",
+   "type": "single",
+   "question": "Several members of a group that has a license assignment show an error state. The license has no available seats. After you purchase additional seats, what should you do?",
+   "options": [
+    {
+     "text": "Select Reprocess on the Licenses blade of the group",
+     "why": "Correct. Reprocessing retries the license assignment for members in an error state."
+    },
+    {
+     "text": "Delete and re-create the group",
+     "why": "This is unnecessary and removes other assignments that depend on the group."
+    },
+    {
+     "text": "Set the usage location of each user",
+     "why": "The error is caused by the seat count, not by usage location."
+    },
+    {
+     "text": "Convert the group to the Assigned membership type",
+     "why": "The membership type does not cause a seat count violation."
+    }
+   ],
+   "answer": [
+    0
+   ],
+   "explanation": "Group-based licensing places users in an error state when it cannot assign a license. Reprocess retries the assignment.",
+   "objective": "1.1.3"
+  },
+  {
+   "id": "adm-id-lic-4",
+   "type": "single",
+   "question": "Consultants from a partner company must access an internal app by using their existing work accounts. You must not manage passwords for them. What should you do?",
+   "options": [
+    {
+     "text": "Invite the consultants as guest users by using B2B collaboration",
+     "why": "Correct. Guests authenticate with their own identity provider."
+    },
+    {
+     "text": "Create member users with temporary passwords for each consultant",
+     "why": "This creates and requires you to manage new credentials."
+    },
+    {
+     "text": "Create a new Microsoft Entra tenant for the partner",
+     "why": "A separate tenant does not give the consultants access to your app."
+    },
+    {
+     "text": "Synchronize the partner directory by using Microsoft Entra Connect",
+     "why": "Entra Connect synchronizes your own on-premises directory, not a partner tenant."
+    }
+   ],
+   "answer": [
+    0
+   ],
+   "explanation": "B2B guests appear in your tenant with the user type Guest and sign in with their home identity.",
+   "objective": "1.1.4"
+  },
+  {
+   "id": "adm-id-lic-5",
+   "type": "single",
+   "question": "Your company must allow guest invitations only to users in fabrikam.com and litware.com. Which setting should you configure?",
+   "options": [
+    {
+     "text": "Collaboration restrictions in External collaboration settings, set to allow invitations only to the specified domains",
+     "why": "Correct. An allow list limits invitations to the listed domains."
+    },
+    {
+     "text": "Guest user access restrictions set to the most restrictive option",
+     "why": "This limits what guests can see, not which domains can be invited."
+    },
+    {
+     "text": "A Conditional Access policy that requires MFA for guests",
+     "why": "Conditional Access controls sign-in requirements, not invitation domains."
+    },
+    {
+     "text": "Guest invite restrictions set to Only users assigned to specific admin roles",
+     "why": "This controls who can invite, not which domains can be invited."
+    }
+   ],
+   "answer": [
+    0
+   ],
+   "explanation": "External collaboration settings include guest access, guest invite settings and collaboration restrictions for domains.",
+   "objective": "1.1.4"
+  }
+ ]
+}

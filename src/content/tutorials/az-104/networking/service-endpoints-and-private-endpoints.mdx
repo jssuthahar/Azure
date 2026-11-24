@@ -1,0 +1,202 @@
+---
+title: Service Endpoints vs Private Endpoints for PaaS
+seoTitle: Azure Service Endpoints vs Private Endpoints | AZ-104
+description: Configure service endpoints and private endpoints for Azure Storage and other PaaS, set the private DNS zone, and pick the right one for AZ-104 exam scenarios.
+answer: >-
+  A **service endpoint** is switched on per **subnet** (for example **Microsoft.Storage**). Traffic from that subnet reaches the service's **public IP** over the **Microsoft backbone** with the subnet as its identity, so the service firewall can allow **just that subnet**. It's free, but the service keeps a public endpoint and on-premises can't use it. A **private endpoint** is a **NIC with a private IP** in your subnet that maps to **one resource and sub-resource** (such as the blob service of one storage account) through **Azure Private Link**. It works from **peered VNets and on-premises**, lets you **disable public access**, and needs a **privatelink private DNS zone** (privatelink.blob.core.windows.net) linked to the VNet.
+updated: 2026-11-24
+readingMinutes: 12
+keyTerms:
+  - term: Service endpoint
+    definition: A subnet setting that sends traffic for an Azure service over the Microsoft backbone and identifies the subnet to the service's firewall.
+  - term: Virtual network rule
+    definition: A storage account (or SQL, Key Vault…) firewall entry that allows traffic from a specific subnet with a service endpoint.
+  - term: Service endpoint policy
+    definition: A policy on a subnet that limits a Microsoft.Storage service endpoint to specific storage accounts, to reduce data exfiltration.
+  - term: Private endpoint
+    definition: A network interface with a private IP in your VNet that connects privately to one Azure resource through Private Link.
+  - term: Target sub-resource
+    definition: The part of a service a private endpoint maps to, such as blob, file, queue, table, dfs or web for a storage account.
+  - term: privatelink DNS zone
+    definition: A private DNS zone such as privatelink.blob.core.windows.net that resolves the resource's name to the private endpoint's IP.
+interview:
+  - level: beginner
+    q: What's the main difference between a service endpoint and a private endpoint?
+    a: >-
+      With a service endpoint the storage account still has its public IP; my subnet just reaches it over Microsoft's network and the account's firewall can allow my subnet. With a private endpoint the storage account gets a private IP inside my VNet, so traffic never goes to a public address and I can turn public access off.
+    followUps: []
+  - level: intermediate
+    q: You created a private endpoint but the app still connects to the public IP. Why?
+    a: >-
+      DNS. The storage name has to resolve to the private IP, which needs the privatelink.blob.core.windows.net private DNS zone with an A record for the account, linked to the VNet the app runs in. Usually you let the portal integrate the zone, or add a DNS zone group to the endpoint.
+    followUps: []
+  - level: experienced
+    q: On-premises servers must reach a storage account over ExpressRoute without the internet. Which option and what else is needed?
+    a: >-
+      A private endpoint, because service endpoints only work from Azure subnets. On-premises DNS must resolve the account name to the private IP, typically by forwarding the zone to Azure DNS Private Resolver in the hub, which uses the linked privatelink zone.
+    followUps: []
+  - level: scenario
+    q: Security wants the app subnet to reach only the company's storage accounts, not any storage account in Azure. What can you do?
+    a: >-
+      With service endpoints, add a service endpoint policy on the subnet that lists the allowed accounts. With private endpoints it's naturally scoped, because each endpoint maps to one specific account, and I can block outbound to the Storage service tag in the NSG.
+    followUps: []
+revision:
+  keyPoints:
+    - Service endpoint - per subnet, free, service keeps its public IP, firewall allows the subnet.
+    - Service endpoints don't work from on-premises.
+    - Private endpoint - private IP NIC for one resource + sub-resource, through Private Link.
+    - Private endpoints work from peered VNets and on-premises, and allow public access to be disabled.
+    - Private endpoints need a privatelink private DNS zone linked to the VNet.
+  mistakes:
+    - Creating a private endpoint without private DNS, so names still resolve publicly.
+    - Expecting a blob private endpoint to cover Azure Files too.
+    - Choosing a service endpoint when on-premises clients need access.
+  examTips:
+    - '"From on-premises without the internet" = **private endpoint**.'
+    - '"Allow only Subnet1 through the storage firewall" = **service endpoint + virtual network rule**.'
+    - '"Resolves to a public IP after creating a private endpoint" = fix the **private DNS zone / VNet link**.'
+  quick:
+    - q: Where do you enable a service endpoint?
+      a: On the subnet.
+    - q: What does a private endpoint create in your subnet?
+      a: A network interface with a private IP.
+    - q: Which DNS zone does a blob private endpoint use?
+      a: privatelink.blob.core.windows.net.
+    - q: Do service endpoints cost extra?
+      a: No, they're free.
+    - q: Can a private endpoint be used from a peered VNet?
+      a: Yes, if that VNet resolves the privatelink zone.
+references:
+  - title: Virtual network service endpoints
+    url: https://learn.microsoft.com/azure/virtual-network/virtual-network-service-endpoints-overview
+  - title: What is a private endpoint?
+    url: https://learn.microsoft.com/azure/private-link/private-endpoint-overview
+  - title: Azure private endpoint DNS configuration
+    url: https://learn.microsoft.com/azure/private-link/private-endpoint-dns
+  - title: Configure Azure Storage firewalls and virtual networks
+    url: https://learn.microsoft.com/azure/storage/common/storage-network-security
+related:
+  - azure-dns-zones-and-records
+  - vnets-subnets-and-public-ips
+  - troubleshoot-network-connectivity
+---
+
+## Start with a question
+
+<Story question="Is a staff-only lane at the airport the same as having your own gate inside the building?">
+
+A staff lane still leads to the public terminal, but only people with a staff badge get through it. Your own gate is a door inside your office that opens straight onto the plane.
+
+A **service endpoint** is the staff lane: your subnet reaches the storage account's **public** address, and the account's firewall lets in only your subnet. A **private endpoint** is your own gate: the account gets a **private address inside your network**, so you can close the public terminal completely.
+
+</Story>
+
+## Explain it like I'm 10
+
+<Eli10>
+
+The library is across town. A service endpoint is a special bus lane that only your school's bus can use to get there.
+
+A private endpoint is the library opening a little room inside your school. You walk down the corridor and you're in.
+
+But everyone needs the new room number in the school directory, or they'll still catch the bus. That directory is private DNS.
+
+</Eli10>
+
+## The technical explanation
+
+### Service endpoints
+
+Enable a service endpoint on a **subnet** for a service such as **Microsoft.Storage**, **Microsoft.Sql**, **Microsoft.KeyVault** or **Microsoft.Web**. Then:
+
+- Traffic from the subnet to that service takes the **Microsoft backbone**, and Azure adds a route with next hop **VirtualNetworkServiceEndpoint**.
+- The service sees the traffic coming from your **subnet** (private source IP), so you add a **virtual network rule** in its firewall and set the default action to deny.
+- The service's endpoint is still **public**, and **on-premises traffic can't use** the endpoint.
+- It's **free**. A **service endpoint policy** can limit Microsoft.Storage to named storage accounts.
+
+```bash
+az network vnet subnet update -g rg-net-paas --vnet-name vnet-paas -n snet-app --service-endpoints Microsoft.Storage
+az storage account network-rule add -g rg-net-paas --account-name stfabrikampaas01 --vnet-name vnet-paas --subnet snet-app
+az storage account update -g rg-net-paas -n stfabrikampaas01 --default-action Deny
+```
+
+Portal: storage account → **Networking → Firewalls and virtual networks → Enabled from selected virtual networks and IP addresses → + Add existing virtual network**. The portal enables the endpoint on the subnet for you.
+
+### Private endpoints
+
+A private endpoint is a **NIC** in your subnet with a private IP (for example 10.30.2.4) that connects through **Azure Private Link** to **one resource and one target sub-resource** (blob, file, queue, table, dfs, web for storage; sqlServer for SQL; vault for Key Vault). Then:
+
+- Clients in the VNet, **peered VNets** and **on-premises** (over VPN or ExpressRoute) reach the resource on that private IP.
+- You can set the resource's **public network access** to **Disabled**.
+- Cost is about $0.01 an hour per endpoint plus per GB processed (illustrative).
+
+### DNS makes or breaks it
+
+When a private endpoint exists, public DNS answers `stfabrikampaas01.blob.core.windows.net` with a CNAME to `stfabrikampaas01.privatelink.blob.core.windows.net`. If your VNet has a **private DNS zone** `privatelink.blob.core.windows.net` **linked** to it, with an A record for the account, the name resolves to the private IP. Without that zone or link, it resolves to the **public IP**, and if public access is off, connections fail.
+
+The portal's **Integrate with private DNS zone: Yes** creates the zone, the VNet link and a **DNS zone group** that keeps the A record updated.
+
+```bash
+az network private-endpoint create -g rg-net-paas -n pe-stfabrikam-blob --vnet-name vnet-paas --subnet snet-pe \
+  --private-connection-resource-id <storage-account-id> --group-id blob --connection-name stfabrikam-blob
+az network private-dns zone create -g rg-net-paas -n privatelink.blob.core.windows.net
+az network private-dns link vnet create -g rg-net-paas -n link-vnet-paas \
+  --zone-name privatelink.blob.core.windows.net --virtual-network vnet-paas --registration-enabled false
+az network private-endpoint dns-zone-group create -g rg-net-paas --endpoint-name pe-stfabrikam-blob \
+  -n default --private-dns-zone privatelink.blob.core.windows.net --zone-name blob
+nslookup stfabrikampaas01.blob.core.windows.net
+```
+
+### Side by side
+
+| | Service endpoint | Private endpoint |
+| --- | --- | --- |
+| Service address | Public | Private IP in your subnet |
+| Works from on-premises | No | Yes |
+| Scope | Whole service (policy can narrow storage) | One resource and sub-resource |
+| DNS change | None | privatelink zone |
+| Disable public access | No | Yes |
+| Cost | Free | Per hour + per GB |
+
+<TryIt labs="adm-net-private-access" text="Add a service endpoint, then a private endpoint that resolves publicly until you add private DNS." />
+
+<Callout type="exam">
+Pick on three clues. **On-premises** or **peered VNet** access, or "no public endpoint at all" means **private endpoint**. "Restrict the storage account to Subnet1" with nothing about on-premises usually means **service endpoint plus a virtual network rule**. And if a private endpoint exists but clients still hit the public IP, the answer is the **private DNS zone or its virtual network link**, not another endpoint. Remember a **blob** endpoint doesn't cover **file**.
+</Callout>
+
+<DeepDive title="Network policies for private endpoints">
+
+By default, NSGs and UDRs on a subnet don't apply to private endpoints in it. You can turn on **private endpoint network policies** on the subnet (`--private-endpoint-network-policies Enabled`), after which NSG rules and route tables affect traffic to the endpoints. That's how you force private endpoint traffic through a firewall.
+
+</DeepDive>
+
+## Real-world business scenario
+
+<Scenario
+  company="Tailwind Traders (fictional)"
+  industry="E-commerce"
+  problem="Order exports sat in a storage account open to the internet so both the Azure app and the on-premises ERP could reach it. A misconfigured SAS token was found on a public forum."
+  service="A blob private endpoint in the hub, the privatelink.blob.core.windows.net zone linked to the hub and spokes, on-premises DNS forwarding to Azure DNS Private Resolver, and public network access set to Disabled on the account."
+  why="Both the app and the ERP reach the account on a private IP over peering and ExpressRoute, and nothing on the internet can reach it, token or not."
+  outcome="The account disappeared from the internet, and the leaked token was useless from outside the network."
+/>
+
+## When to use it and when not to
+
+<UseWhen
+  use={[
+    'Service endpoints for a quick, free lock-down of PaaS to specific Azure subnets.',
+    'Private endpoints when on-premises or peered networks need private access.',
+    'Private endpoints when public network access must be disabled completely.',
+  ]}
+  avoid={[
+    'Private endpoints without a plan for DNS.',
+    'Service endpoints when traffic comes from on-premises.',
+    'Assuming one private endpoint covers every sub-resource of a storage account.',
+  ]}
+  alternatives={[
+    '<strong>Storage firewall IP rules</strong> for a few known public client IPs.',
+    '<strong>Azure DNS Private Resolver</strong> so on-premises DNS can resolve privatelink zones.',
+    '<strong>Service endpoint policies</strong> to stop data going to storage accounts you don\'t own.',
+  ]}
+/>

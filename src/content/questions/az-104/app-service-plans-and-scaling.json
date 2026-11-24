@@ -1,0 +1,27 @@
+{ "cert": "az-104", "domain": 3, "topic": "app-service-plans-and-scaling", "questions": [
+  { "id": "adm-app-asp-1", "type": "single", "scenario": "A web app runs on an App Service plan in the Basic B1 tier. You need the plan to add instances automatically when average CPU usage exceeds 70 percent.", "question": "What should you do first?", "options": [
+    { "text": "Scale up the App Service plan to the Standard tier", "why": "Correct. Rules-based autoscale requires the Standard tier or higher." },
+    { "text": "Increase the instance count of the plan to 3", "why": "Manual scale out does not add instances automatically based on CPU." },
+    { "text": "Create an autoscale rule on the web app resource", "why": "Autoscale targets the App Service plan, and Basic does not support it." },
+    { "text": "Enable Always On", "why": "Always On keeps the app loaded. It does not scale instances." } ], "answer": [0], "explanation": "After scaling up to Standard, create an autoscale setting on the plan with scale-out and scale-in rules.", "objective": "3.4.2" },
+  { "id": "adm-app-asp-2", "type": "single", "question": "An App Service plan hosts three web apps. You scale the plan out from two instances to four instances. Which statement is true?", "options": [
+    { "text": "All three web apps run on all four instances", "why": "Correct. Every app in a plan runs on every instance of the plan." },
+    { "text": "Only the web app that you scaled from runs on four instances", "why": "Scaling applies to the plan, not to an individual app." },
+    { "text": "Each web app runs on its own dedicated instance", "why": "Apps in a plan share all instances." },
+    { "text": "The plan tier changes to Premium v3", "why": "Scaling out changes the instance count, not the tier." } ], "answer": [0], "explanation": "To scale one app independently, move it to its own App Service plan.", "objective": "3.4.2" },
+  { "id": "adm-app-asp-3", "type": "single", "question": "You need to create a web app by using the Azure portal. The App Service plan named asp-west does not appear in the plan list. The plan uses Linux in West US. The web app is configured for Windows in West US. What should you change?", "options": [
+    { "text": "Set the operating system of the web app to Linux", "why": "Correct. The plan list shows only plans that match the selected operating system and region." },
+    { "text": "Change the region of the web app to East US", "why": "The plan is in West US, so changing the region would still not show it." },
+    { "text": "Scale up the plan to Premium v3", "why": "The tier does not affect whether the plan appears for a different operating system." },
+    { "text": "Enable zone redundancy on the plan", "why": "Zone redundancy does not affect which plans are listed." } ], "answer": [0], "explanation": "A web app must use a plan in the same region and with the same operating system.", "objective": "3.4.3" },
+  { "id": "adm-app-asp-4", "type": "single", "scenario": "A company needs an App Service plan that supports up to 25 instances and 15 deployment slots for one app. Costs must be minimized.", "question": "Which pricing tier should you choose?", "options": [
+    { "text": "Premium v3", "why": "Correct. Premium v3 supports up to 30 instances and 20 deployment slots." },
+    { "text": "Standard", "why": "Standard supports up to 10 instances and 5 deployment slots." },
+    { "text": "Basic", "why": "Basic supports up to 3 instances and no deployment slots." },
+    { "text": "Isolated v2", "why": "Isolated v2 meets the requirements but costs more than Premium v3." } ], "answer": [0], "explanation": "Choose the lowest tier that meets the instance and slot requirements.", "objective": "3.4.1" },
+  { "id": "adm-app-asp-5", "type": "multi", "question": "You configure rules-based autoscale for an App Service plan. Which two settings should you configure so that the plan grows under load and shrinks when the load ends? Each correct answer presents part of the solution.", "options": [
+    { "text": "A scale-out rule, such as CPU percentage greater than 70 increase count by 1", "why": "Correct. A scale-out rule adds instances when the metric is high." },
+    { "text": "A scale-in rule, such as CPU percentage less than 30 decrease count by 1", "why": "Correct. Without a scale-in rule the instance count does not decrease." },
+    { "text": "A deployment slot for each instance", "why": "Deployment slots are not related to autoscale." },
+    { "text": "A minimum instance count that is greater than the maximum instance count", "why": "The minimum must be less than or equal to the maximum." } ], "answer": [0, 1], "explanation": "Pair scale-out and scale-in rules, and set minimum, maximum and default instance limits.", "objective": "3.4.2" }
+] }

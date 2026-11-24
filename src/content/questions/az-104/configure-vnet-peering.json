@@ -1,0 +1,148 @@
+{
+ "cert": "az-104",
+ "domain": 4,
+ "topic": "configure-vnet-peering",
+ "questions": [
+  {
+   "id": "adm-net-peer-1",
+   "type": "single",
+   "question": "VNet1 is peered with VNet2. VNet2 is peered with VNet3. No other peerings or routes exist. Which statement is true?",
+   "options": [
+    {
+     "text": "Virtual machines in VNet1 cannot communicate with virtual machines in VNet3.",
+     "why": "Correct. Virtual network peering is not transitive."
+    },
+    {
+     "text": "Virtual machines in VNet1 can communicate with virtual machines in VNet3 through VNet2.",
+     "why": "Peering is not transitive, so VNet2 does not forward traffic between its peers without additional configuration."
+    },
+    {
+     "text": "VNet1 and VNet3 can communicate only if they are in the same region.",
+     "why": "Region does not change the behavior. Peering is not transitive in any region."
+    },
+    {
+     "text": "VNet1 and VNet3 can communicate if the peerings use the Allow virtual network access setting.",
+     "why": "That setting allows traffic between the two peered networks only."
+    }
+   ],
+   "answer": [
+    0
+   ],
+   "explanation": "To connect VNet1 and VNet3, peer them directly or route traffic through a network virtual appliance in VNet2 by using user-defined routes.",
+   "objective": "4.1.2"
+  },
+  {
+   "id": "adm-net-peer-2",
+   "type": "single",
+   "question": "You create a peering from VNet1 to VNet2. The peering status shows Initiated. What should you do?",
+   "options": [
+    {
+     "text": "Create a peering from VNet2 to VNet1",
+     "why": "Correct. A peering requires a link from each virtual network before it shows Connected."
+    },
+    {
+     "text": "Enable gateway transit on the peering",
+     "why": "Gateway transit shares a gateway. It does not complete the peering."
+    },
+    {
+     "text": "Restart the virtual machines in both virtual networks",
+     "why": "Restarting VMs does not change the peering status."
+    },
+    {
+     "text": "Add a route table to both virtual networks",
+     "why": "Routes are not required for a peering to connect."
+    }
+   ],
+   "answer": [
+    0
+   ],
+   "explanation": "The status changes to Connected when both peering links exist.",
+   "objective": "4.1.2"
+  },
+  {
+   "id": "adm-net-peer-3",
+   "type": "multi",
+   "question": "A hub virtual network contains a VPN gateway that connects to the on-premises network. A spoke virtual network is peered with the hub. Resources in the spoke must reach the on-premises network through the hub gateway. Which two settings should you configure? Each correct answer presents part of the solution.",
+   "options": [
+    {
+     "text": "Allow gateway transit on the hub peering to the spoke",
+     "why": "Correct. The virtual network that has the gateway allows peers to use it."
+    },
+    {
+     "text": "Use remote gateways on the spoke peering to the hub",
+     "why": "Correct. The spoke uses the gateway in the remote hub."
+    },
+    {
+     "text": "Use remote gateways on the hub peering to the spoke",
+     "why": "The hub has its own gateway and does not use a remote gateway."
+    },
+    {
+     "text": "Deploy a second VPN gateway in the spoke",
+     "why": "A spoke that uses remote gateways cannot have its own gateway."
+    }
+   ],
+   "answer": [
+    0,
+    1
+   ],
+   "explanation": "Gateway transit requires Allow gateway transit on the side that has the gateway and Use remote gateways on the side that does not.",
+   "objective": "4.1.2"
+  },
+  {
+   "id": "adm-net-peer-4",
+   "type": "single",
+   "question": "You attempt to create a peering between VNet1 (10.0.0.0/16) and VNet2 (10.0.128.0/17). The operation fails. What is the cause?",
+   "options": [
+    {
+     "text": "The address spaces of the virtual networks overlap.",
+     "why": "Correct. 10.0.128.0/17 is inside 10.0.0.0/16."
+    },
+    {
+     "text": "The virtual networks are in different resource groups.",
+     "why": "Peering is supported across resource groups, subscriptions and tenants."
+    },
+    {
+     "text": "Gateway transit is not enabled.",
+     "why": "Gateway transit is optional and does not affect whether a peering can be created."
+    },
+    {
+     "text": "The virtual networks use different DNS servers.",
+     "why": "DNS settings do not prevent peering."
+    }
+   ],
+   "answer": [
+    0
+   ],
+   "explanation": "Virtual networks with overlapping address spaces cannot be peered.",
+   "objective": "4.1.2"
+  },
+  {
+   "id": "adm-net-peer-5",
+   "type": "single",
+   "question": "A network virtual appliance (NVA) in a hub virtual network forwards traffic from Spoke1 to Spoke2. Spoke2 drops the forwarded traffic. Routes and IP forwarding are configured correctly. What should you configure?",
+   "options": [
+    {
+     "text": "Allow forwarded traffic on the Spoke2 peering to the hub",
+     "why": "Correct. This setting accepts traffic that did not originate in the hub."
+    },
+    {
+     "text": "Use remote gateways on the Spoke2 peering",
+     "why": "This setting shares a VPN gateway. It does not accept forwarded traffic."
+    },
+    {
+     "text": "Allow gateway transit on the Spoke1 peering",
+     "why": "Gateway transit is set on the virtual network that has the gateway."
+    },
+    {
+     "text": "A service endpoint on the Spoke2 subnet",
+     "why": "Service endpoints apply to Azure PaaS services, not traffic between virtual networks."
+    }
+   ],
+   "answer": [
+    0
+   ],
+   "explanation": "Traffic that an NVA forwards did not originate in the hub, so the receiving peering must allow forwarded traffic.",
+   "objective": "4.1.2"
+  }
+ ]
+}

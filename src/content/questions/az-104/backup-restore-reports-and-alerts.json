@@ -1,0 +1,152 @@
+{
+ "cert": "az-104",
+ "domain": 5,
+ "topic": "backup-restore-reports-and-alerts",
+ "questions": [
+  {
+   "id": "adm-ops-rst-1",
+   "type": "single",
+   "question": "A user deleted a folder on an Azure virtual machine that is backed up by Azure Backup. You must recover the folder without affecting the running virtual machine. What should you use?",
+   "options": [
+    {
+     "text": "File Recovery",
+     "why": "Correct. File Recovery mounts a recovery point as drives through a script so that files can be copied back."
+    },
+    {
+     "text": "Restore VM with Replace existing",
+     "why": "Replace existing overwrites the disks of the virtual machine."
+    },
+    {
+     "text": "Restore VM with Create new virtual machine",
+     "why": "This creates a full virtual machine, which is more effort than needed for one folder."
+    },
+    {
+     "text": "Cross Region Restore",
+     "why": "Cross Region Restore restores in the paired region and is not required here."
+    }
+   ],
+   "answer": [
+    0
+   ],
+   "explanation": "Unmount the disks when the files are copied. The mount closes automatically after 12 hours.",
+   "objective": "5.2.4"
+  },
+  {
+   "id": "adm-ops-rst-2",
+   "type": "single",
+   "question": "A virtual machine named VM1 is corrupted. You must restore VM1 from last night's recovery point and keep its name, network interface and IP address. Which restore option should you use?",
+   "options": [
+    {
+     "text": "Replace existing",
+     "why": "Correct. Replace existing swaps the disks of the existing virtual machine and keeps its configuration."
+    },
+    {
+     "text": "Create new virtual machine",
+     "why": "This creates a different virtual machine with a new name and network interface."
+    },
+    {
+     "text": "Restore disks",
+     "why": "Restore disks creates disks and a template, and you must build or attach them yourself."
+    },
+    {
+     "text": "File Recovery",
+     "why": "File Recovery restores individual files, not the whole virtual machine."
+    }
+   ],
+   "answer": [
+    0
+   ],
+   "explanation": "Azure Backup takes a snapshot of the current disks before it replaces them.",
+   "objective": "5.2.4"
+  },
+  {
+   "id": "adm-ops-rst-3",
+   "type": "single",
+   "question": "An administrator stopped backup for a virtual machine and deleted the backup data three days ago. Soft delete is enabled with default settings. What should you do to recover the backups?",
+   "options": [
+    {
+     "text": "Undelete the backup item, and then resume protection",
+     "why": "Correct. Soft-deleted backup data is retained for 14 days by default and can be undeleted."
+    },
+    {
+     "text": "Restore the vault from the activity log",
+     "why": "The activity log records operations but cannot restore data."
+    },
+    {
+     "text": "Enable Cross Region Restore",
+     "why": "Cross Region Restore does not recover deleted backup data."
+    },
+    {
+     "text": "The backups cannot be recovered",
+     "why": "Soft delete retains the data for 14 days, so it can still be recovered."
+    }
+   ],
+   "answer": [
+    0
+   ],
+   "explanation": "After undelete, the item is in the stopped state with its recovery points, and protection can be resumed with a policy.",
+   "objective": "5.2.4"
+  },
+  {
+   "id": "adm-ops-rst-4",
+   "type": "multi",
+   "question": "You need to view Backup reports for 15 Recovery Services vaults. Which two actions should you perform? Each correct answer presents part of the solution.",
+   "options": [
+    {
+     "text": "Create a diagnostic setting on each vault that sends the Azure Backup log categories to a Log Analytics workspace",
+     "why": "Correct. Backup reports read vault data from Log Analytics."
+    },
+    {
+     "text": "Select the Resource specific destination table in the diagnostic settings",
+     "why": "Correct. Backup reports require resource-specific tables such as AddonAzureBackupJobs."
+    },
+    {
+     "text": "Enable Cross Region Restore on each vault",
+     "why": "Cross Region Restore is unrelated to reporting."
+    },
+    {
+     "text": "Send the vault logs to an event hub only",
+     "why": "Backup reports cannot read data from Event Hubs."
+    },
+    {
+     "text": "Install the Azure Monitor Agent on each protected virtual machine",
+     "why": "Backup reporting data comes from the vaults, not from agents on the virtual machines."
+    }
+   ],
+   "answer": [
+    0,
+    1
+   ],
+   "explanation": "Azure Policy can deploy the diagnostic settings to all vaults. Reports are opened from Business Continuity Center or the vault Backup Reports blade.",
+   "objective": "5.2.7"
+  },
+  {
+   "id": "adm-ops-rst-5",
+   "type": "single",
+   "question": "The operations team must receive an email whenever a backup job fails in any Recovery Services vault in a subscription. The built-in Azure Monitor alerts for Azure Backup are enabled. What should you configure to send the email?",
+   "options": [
+    {
+     "text": "An alert processing rule that applies an action group with the email notification to the backup alerts",
+     "why": "Correct. Built-in backup alerts appear in Azure Monitor, and an alert processing rule can route them to an action group."
+    },
+    {
+     "text": "A diagnostic setting that sends the vault logs to a storage account",
+     "why": "This archives logs but does not send notifications."
+    },
+    {
+     "text": "A backup policy with a shorter retention period",
+     "why": "Retention does not affect notifications."
+    },
+    {
+     "text": "An activity log alert for the Create or Update Vault operation",
+     "why": "This alert fires on vault configuration changes, not on failed backup jobs."
+    }
+   ],
+   "answer": [
+    0
+   ],
+   "explanation": "You can also create metric alerts on the Backup Health Events metric or log search alerts on AddonAzureBackupJobs.",
+   "objective": "5.2.7"
+  }
+ ]
+}

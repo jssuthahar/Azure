@@ -1,0 +1,220 @@
+---
+title: "Microsoft Entra Users and Groups: Create and Manage"
+seoTitle: Create and Manage Microsoft Entra Users and Groups | AZ-104
+description: Create Microsoft Entra users and groups, edit user properties, and choose assigned or dynamic membership with real rules, portal steps and CLI for AZ-104.
+answer: >-
+  In **Microsoft Entra ID** you create **users** (members of your tenant, identified by a **user principal name** such as sam@contoso.com) and **groups** that collect them. A group is either a **Security** group (for access) or a **Microsoft 365** group (for collaboration), and its **membership type** is **Assigned** (you add people), **Dynamic User** or **Dynamic Device** (a **rule** like `user.department -eq "Sales"` adds and removes members). Dynamic groups need **Microsoft Entra ID P1**. You edit user properties such as department, job title and usage location on the user's blade, in bulk from a CSV, or with Microsoft Graph PowerShell.
+updated: 2026-11-24
+readingMinutes: 11
+keyTerms:
+  - term: Tenant
+    definition: Your organisation's dedicated instance of Microsoft Entra ID, with its own users, groups and domains.
+  - term: User principal name (UPN)
+    definition: The sign-in name of a user, in the form name@domain, such as sam@contoso.onmicrosoft.com.
+  - term: Member user
+    definition: A user who belongs to your organisation, as opposed to a guest from another organisation.
+  - term: Security group
+    definition: A group used to give access to resources, apps and Azure roles.
+  - term: Microsoft 365 group
+    definition: A group that also gets a shared mailbox, calendar, SharePoint site and Teams team.
+  - term: Assigned membership
+    definition: Group membership that an owner or admin manages by adding and removing members by hand.
+  - term: Dynamic membership
+    definition: Group membership calculated from a rule on user or device properties, kept up to date by Entra ID.
+  - term: Bulk operations
+    definition: Creating, inviting or deleting many users at once from a CSV template in the portal.
+interview:
+  - level: beginner
+    q: What's the difference between a security group and a Microsoft 365 group?
+    a: >-
+      A security group is for access: you give it Azure roles, app access or file permissions. A Microsoft 365 group is for teamwork: it comes with a shared mailbox, calendar, SharePoint site and can back a Teams team. Both can hold users, and either can have assigned or dynamic membership.
+    followUps: []
+  - level: intermediate
+    q: When would you use a dynamic group instead of an assigned one?
+    a: >-
+      When membership follows a property that HR already keeps up to date, like department or location. With a rule such as user.department -eq "Sales", new sales hires join on day one and people who move teams drop out automatically. I'd keep assigned groups for small, hand-picked sets like a project team or an approvers list.
+    followUps: []
+  - level: experienced
+    q: A user's department was changed but they still aren't in the dynamic group. What would you check?
+    a: >-
+      First the rule itself, on the group's Dynamic membership rules blade, using Validate rules against that user. Then the processing state: it must be On, not Paused. Then time: dynamic membership is evaluated in the background and can take a while in a big tenant. And the licence: dynamic groups need Entra ID P1 for the users in scope.
+    followUps: []
+  - level: scenario
+    q: Forty new hires start on Monday. How would you set them up?
+    a: >-
+      I'd use Bulk operations, Bulk create, with the CSV template filled from HR's list, including department, job title and usage location. A dynamic group per department then picks them up, and group-based licensing on those groups gives them Microsoft 365. If HR sync is available, I'd use API-driven or HR inbound provisioning instead of CSVs.
+    followUps: []
+revision:
+  keyPoints:
+    - Users are members or guests. Create them in the portal, the Entra admin center, in bulk from CSV, or with az ad user create.
+    - Group type is Security or Microsoft 365. Membership type is Assigned, Dynamic User or Dynamic Device.
+    - Dynamic rules use user properties, for example (user.department -eq "Sales"), and need Microsoft Entra ID P1.
+    - You can't add or remove members of a dynamic group by hand.
+    - Edit properties (department, job title, usage location, manager) on the user's Properties tab or with Update-MgUser.
+  mistakes:
+    - Trying to add someone to a dynamic group manually. Change the property the rule reads instead.
+    - Forgetting usage location when you create users who'll need licenses.
+  examTips:
+    - '"Membership must update automatically when department changes" = **Dynamic User** group.'
+    - '"Create 500 users from a spreadsheet" = **Bulk create** with the CSV template.'
+    - '"A group must be able to hold Entra roles" = turn on **Microsoft Entra roles can be assigned to the group** when you create it (you can''t change it later).'
+  quick:
+    - q: Which license do dynamic groups need?
+      a: Microsoft Entra ID P1 (or higher).
+    - q: What are the three membership types?
+      a: Assigned, Dynamic User and Dynamic Device.
+    - q: What's the rule for everyone in the Sales department?
+      a: (user.department -eq "Sales")
+    - q: Which CLI command creates a user?
+      a: az ad user create --display-name ... --user-principal-name ... --password ...
+    - q: Can you add a user to a dynamic group by hand?
+      a: No. Only the rule controls membership.
+references:
+  - title: How to create, invite, and delete users
+    url: https://learn.microsoft.com/entra/fundamentals/how-to-create-delete-users
+  - title: Manage Microsoft Entra groups and group membership
+    url: https://learn.microsoft.com/entra/fundamentals/how-to-manage-groups
+  - title: Dynamic membership rules for groups in Microsoft Entra ID
+    url: https://learn.microsoft.com/entra/identity/users/groups-dynamic-membership
+  - title: Bulk create users in Microsoft Entra ID
+    url: https://learn.microsoft.com/entra/identity/users/users-bulk-add
+  - title: az ad user
+    url: https://learn.microsoft.com/cli/azure/ad/user
+related:
+  - entra-licenses-and-guest-users
+  - self-service-password-reset
+  - rbac-roles-and-scopes
+---
+
+## Start with a question
+
+<Story question="How does a company with 3,000 staff keep track of who belongs to which team?">
+
+Think of a school office. Every pupil has a record card with their name, class and house. The office doesn't write "Year 7 football team" on each card by hand every term. It keeps one list per club, and some lists are just "everyone in Year 7", which updates itself when a new pupil arrives.
+
+**Microsoft Entra ID** is that office for a company. Each person has a **user** account with properties like department and job title. **Groups** are the lists. Some you keep by hand (**assigned**), and some fill themselves from a rule on those properties (**dynamic**).
+
+</Story>
+
+## Explain it like I'm 10
+
+<Eli10>
+
+Everyone at your school has a name badge. That's a **user**.
+
+Clubs are **groups**. The chess club teacher writes names on the list herself. That's an **assigned** group.
+
+The "all Year 5 kids" list never needs anyone to write on it. If you're in Year 5, you're on it. Move up a year, you're off. That's a **dynamic** group.
+
+</Eli10>
+
+## The technical explanation
+
+### Users
+
+A user lives in your **tenant** and signs in with a **user principal name (UPN)**, such as `sam@contoso.onmicrosoft.com` or `sam@contoso.com` once you've added a custom domain. Users are either **Members** (your staff) or **Guests** (people from other organisations, covered in the next lesson). They're created in one of three ways:
+
+- **Cloud-only**: you create them in the Azure portal (**Microsoft Entra ID → Users → + New user → Create new user**) or the Microsoft Entra admin center.
+- **Synced**: Microsoft Entra Connect or Cloud Sync copies them from on-premises Active Directory. You edit those in AD, not in the cloud.
+- **Bulk**: **Bulk operations → Bulk create** takes a CSV template, which suits a big intake.
+
+The **Create new user** wizard has four tabs: **Basics** (UPN, mail nickname, display name, password, account enabled), **Properties** (first and last name, user type, job title, department, company, manager, **usage location**), **Assignments** (groups, roles, administrative units) and **Review + create**.
+
+```bash
+# Azure CLI
+az ad user create --display-name "Sam Rivera" \
+  --user-principal-name sam@contoso.onmicrosoft.com \
+  --password "<temporary-password>" --force-change-password-next-sign-in true
+
+az ad user update --id sam@contoso.onmicrosoft.com --account-enabled false   # block sign-in
+az ad user list --query "[].{name:displayName, upn:userPrincipalName}" -o table
+```
+
+```powershell
+# Microsoft Graph PowerShell: properties the CLI doesn't expose
+Update-MgUser -UserId sam@contoso.onmicrosoft.com -Department "Sales" -JobTitle "Account Executive" -UsageLocation "IN"
+```
+
+Deleted users go to **Deleted users** for **30 days**, and you can restore them in that window with their group memberships.
+
+### Groups
+
+When you select **+ New group** you choose:
+
+| Setting | Options | Why it matters |
+| --- | --- | --- |
+| Group type | **Security** or **Microsoft 365** | Security for access; Microsoft 365 adds a mailbox, calendar and SharePoint site |
+| Microsoft Entra roles can be assigned to the group | Yes / No | Must be set at creation if the group will hold Entra roles. It can't be changed later |
+| Membership type | **Assigned**, **Dynamic User**, **Dynamic Device** | Who manages the member list: you or a rule |
+| Owners | Users | Owners can manage the group without being admins |
+
+```bash
+az ad group create --display-name App-Ops --mail-nickname app-ops
+az ad group member add --group App-Ops --member-id <user-object-id>
+az ad group member list --group App-Ops -o table
+```
+
+### Dynamic membership rules
+
+A dynamic group uses a rule built from **property, operator, value**. The rule builder writes the syntax for you, or you type it:
+
+```text
+(user.department -eq "Sales")
+(user.department -eq "Sales") -and (user.usageLocation -eq "IN")
+(user.jobTitle -startsWith "Engineer")
+(device.deviceOSType -eq "Windows")
+```
+
+A group is **Dynamic User** or **Dynamic Device**, never both. Rules are evaluated in the background, so changes can take a while to show. You **can't** add or remove members by hand; you change the property instead. Dynamic groups need a **Microsoft Entra ID P1** license for each user in scope.
+
+<Flow
+  caption="Sam moves to the sales team"
+  steps={[
+    { title: 'HR updates', text: 'Sam\'s department changes from Marketing to Sales.' },
+    { title: 'Rule runs', text: 'Entra ID re-evaluates (user.department -eq "Sales").' },
+    { title: 'Membership', text: 'Sam joins Sales-Team and leaves the Marketing dynamic group.' },
+    { title: 'Access follows', text: 'Roles, apps and licenses tied to the group now apply to Sam.' },
+  ]}
+/>
+
+<TryIt labs="adm-entra-users-licenses" text="Create a user, set their department, and watch a dynamic group pick them up. Then try to add someone by hand." />
+
+<Callout type="exam">
+Watch for "membership must change automatically when a user's department or job title changes": that's a **Dynamic User** group, and it needs **Entra ID P1**. "Add a device group for all Windows laptops" is **Dynamic Device**. If a question says an admin can't add a user to a group, check whether the group is dynamic. And a group that must hold **Entra roles** needs that option set when it's **created**.
+</Callout>
+
+<DeepDive title="Who can manage users and groups?">
+
+You don't need Global Administrator for daily work. **User Administrator** creates and edits users and groups and resets passwords for non-admins. **Groups Administrator** manages groups only. **Helpdesk Administrator** resets passwords for non-admins. Group **owners** manage their own group's members. Use **administrative units** to limit an admin to one region or department's users. These are **Microsoft Entra roles**, separate from the Azure roles you'll meet in the RBAC lessons.
+
+</DeepDive>
+
+## Real-world business scenario
+
+<Scenario
+  company="Contoso Retail (fictional)"
+  industry="Retail"
+  problem="Every month IT created 60 store and office accounts by hand and forgot to add half of them to the right groups, so new staff waited days for app access."
+  service="Bulk create from HR's CSV with department, job title and usage location filled in, plus a dynamic security group per department (for example user.department -eq 'Stores') that grants app access and licenses."
+  why="New hires land in the right groups the moment their account exists, and transfers fix themselves when HR changes the department."
+  outcome="Day-one access went from a 3-day wait to under an hour, and access reviews found far fewer leftover memberships."
+/>
+
+## When to use it and when not to
+
+<UseWhen
+  use={[
+    'Membership follows a property HR maintains, such as department, office or job title (dynamic).',
+    'A small, hand-picked team or approver list (assigned).',
+    'Many users arriving at once (Bulk create from CSV).',
+  ]}
+  avoid={[
+    'Dynamic groups when the property data is messy or empty. Fix the data first.',
+    'Editing synced users in the cloud. Change them in on-premises Active Directory.',
+    'Giving every admin Global Administrator. Use User Administrator or Groups Administrator.',
+  ]}
+  alternatives={[
+    '<strong>Microsoft Entra Connect or Cloud Sync</strong> when users already live in Active Directory.',
+    '<strong>HR-driven provisioning</strong> (Workday, SuccessFactors or the inbound provisioning API) for joiner-mover-leaver automation.',
+  ]}
+/>

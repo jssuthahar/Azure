@@ -42,6 +42,19 @@
   --card: #ffffff;
   --card-line: #dde3ea;
 
+  /* Premium glass, the same as the MSDEVBUILD blog (github.com/jssuthahar/blog):
+     strong light fill, a lit edge and a real lift. Used on the home page. */
+  --gp-fill: linear-gradient(145deg, rgb(255 255 255 / 0.86), rgb(255 255 255 / 0.68));
+  --gp-edge: linear-gradient(145deg, rgb(255 255 255 / 1), rgb(255 255 255 / 0.25) 45%, rgb(0 120 212 / 0.4));
+  --gp-shadow:
+    0 28px 64px -20px rgb(0 72 130 / 0.36), 0 6px 16px -8px rgb(0 72 130 / 0.16),
+    inset 0 1px 0 rgb(255 255 255 / 0.85);
+  --gp-tile-line: rgb(255 255 255 / 0.85);
+  --gp-blob-a: rgb(0 120 212 / 0.5);
+  --gp-blob-b: rgb(120 190 245 / 0.6);
+  --gp-text: linear-gradient(100deg, #006abc, #004f8c);
+  --band-subtle: rgb(222 236 249 / 0.4);
+
   /* W3-style friendly surfaces */
   --header-h: 100px;
   --topbar: #1b2a3d;
@@ -93,6 +106,17 @@
   --glass-shadow: 0 10px 32px -6px rgb(0 0 0 / 0.45);
   --card: #111d30;
   --card-line: #263a55;
+
+  --gp-fill: linear-gradient(145deg, rgb(24 44 74 / 0.86), rgb(12 24 44 / 0.8));
+  --gp-edge: linear-gradient(145deg, rgb(160 205 245 / 0.55), rgb(120 170 220 / 0.1) 45%, rgb(0 120 212 / 0.5));
+  --gp-shadow:
+    0 28px 64px -20px rgb(0 0 0 / 0.7), 0 6px 16px -8px rgb(0 0 0 / 0.4),
+    inset 0 1px 0 rgb(255 255 255 / 0.1);
+  --gp-tile-line: rgb(160 205 245 / 0.18);
+  --gp-blob-a: rgb(0 120 212 / 0.55);
+  --gp-blob-b: rgb(0 90 158 / 0.55);
+  --gp-text: linear-gradient(100deg, #8fcbf7, #63b1ee);
+  --band-subtle: rgb(18 32 54 / 0.5);
 
   --topbar: #08111e;
   --topbar-text: #dfe8f2;
@@ -258,6 +282,87 @@
     margin-inline-end: 0.75rem;
     vertical-align: 0.2em;
     background: var(--accent);
+  }
+
+  /* ---------- Blog glass system (github.com/jssuthahar/blog) ---------- */
+  .display {
+    @apply font-bold text-balance;
+    letter-spacing: -0.025em;
+    line-height: 1.1;
+  }
+  .section-head {
+    @apply flex flex-wrap items-end justify-between gap-4 border-b pb-4;
+    border-color: var(--border);
+  }
+  .glass {
+    background: var(--glass);
+    border: 1px solid var(--glass-line);
+    box-shadow: var(--glass-shadow);
+  }
+  /* No backdrop-filter: the page behind is already soft blobs. The lit edge is
+     a masked ring so it doesn't show through the translucent fill. */
+  .glass-premium {
+    position: relative;
+    background: var(--gp-fill);
+    box-shadow: var(--gp-shadow);
+  }
+  .glass-premium::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    padding: 1px;
+    background: var(--gp-edge);
+    mask: linear-gradient(#000 0 0) content-box exclude, linear-gradient(#000 0 0);
+    pointer-events: none;
+  }
+  .tile {
+    position: relative;
+    border: 1px solid var(--gp-tile-line);
+    border-radius: 1.25rem;
+    background: var(--gp-fill);
+    box-shadow: 0 14px 32px -18px rgb(0 72 130 / 0.32), 0 2px 6px -3px rgb(0 72 130 / 0.1);
+    transition: transform 0.25s cubic-bezier(0.22, 0.8, 0.3, 1), box-shadow 0.25s, border-color 0.25s;
+  }
+  a.tile:hover,
+  .tile:has(a:hover) {
+    border-color: var(--accent);
+    box-shadow: 0 26px 48px -20px rgb(0 72 130 / 0.5), 0 4px 10px -4px rgb(0 72 130 / 0.16);
+    transform: translateY(-4px);
+  }
+  .tile-mark {
+    display: grid;
+    flex: none;
+    place-items: center;
+    width: 2.75rem;
+    height: 2.75rem;
+    border-radius: 0.75rem;
+    background: linear-gradient(135deg, #0078d4, #005a9e);
+    box-shadow: 0 8px 16px -8px rgb(0 90 158 / 0.7);
+    font-size: 1.3rem;
+    color: #fff;
+  }
+  .gp-text {
+    background: var(--gp-text);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+  }
+  .band-glass {
+    background: var(--band-subtle);
+    border-block: 1px solid var(--border);
+  }
+  @media (prefers-reduced-motion: no-preference) {
+    @supports (animation-timeline: view()) {
+      .reveal-in {
+        animation: reveal-rise linear both;
+        animation-timeline: view();
+        animation-range: entry 0% entry 28%;
+      }
+      @keyframes reveal-rise {
+        from { opacity: 0; translate: 0 22px; }
+      }
+    }
   }
 
   .card {

@@ -1,0 +1,231 @@
+---
+title: "Resource Groups, Subscriptions and Management Groups"
+seoTitle: Resource Groups, Subscriptions, Management Groups | AZ-104
+description: Manage resource groups, move resources, organise subscriptions and build a management group hierarchy so policy and access flow down, with portal and CLI steps.
+answer: >-
+  Azure organises everything in a ladder: **management groups** → **subscriptions** → **resource groups** → **resources**. A **resource group** holds resources that share a lifecycle; each resource is in exactly one group, and you can **move** resources between groups or subscriptions (the **resource ID changes**, the **region doesn't**). A **subscription** is a billing, quota and access boundary that trusts one Microsoft Entra tenant. **Management groups** sit above subscriptions, up to **six levels** below the **Tenant Root Group**, so a policy or role assigned once flows to every subscription below. Each subscription and management group has exactly one parent.
+updated: 2026-11-24
+readingMinutes: 11
+keyTerms:
+  - term: Resource group
+    definition: A container for resources that share a lifecycle. Its location stores metadata only; resources inside can be in any region.
+  - term: Subscription
+    definition: A billing and access boundary with its own quotas, linked to one Microsoft Entra tenant.
+  - term: Management group
+    definition: A container above subscriptions used to apply policy and access to many subscriptions at once.
+  - term: Tenant Root Group
+    definition: The top management group every tenant has. Everything sits beneath it.
+  - term: Resource move
+    definition: Moving resources to another resource group or subscription. The resource ID changes; the region stays the same.
+  - term: Resource Mover
+    definition: The Azure service for moving supported resources to another region, which a normal move can't do.
+interview:
+  - level: beginner
+    q: What's the difference between a resource group and a subscription?
+    a: >-
+      A resource group is a folder for resources that belong together, like one app's VM, database and network. A subscription is bigger: it's where the bill, quotas and access boundary live, and it holds many resource groups.
+    followUps: []
+  - level: intermediate
+    q: What happens when you move a resource to another resource group?
+    a: >-
+      Its resource ID changes because the group name is part of it, so scripts and anything referencing the old ID need updating. The region doesn't change. Both the source and target groups are locked for writes during the move, and the move is validated first.
+    followUps: []
+  - level: experienced
+    q: Why put subscriptions under management groups?
+    a: >-
+      So governance is set once. An Allowed locations policy or a Reader role for the security team assigned at a management group applies to every subscription beneath it, including new ones. Typically I'd have Platform, Landing zones split into Corp and Online, and Sandbox, following the Cloud Adoption Framework.
+    followUps: []
+  - level: scenario
+    q: A team wants to move a VM to another region. Can they use Move?
+    a: >-
+      Not the resource-group or subscription move. That keeps the region. For a region change I'd use Azure Resource Mover, or rebuild from a backup or image in the new region, then switch traffic and clean up the old one.
+    followUps: []
+revision:
+  keyPoints:
+    - Management groups → subscriptions → resource groups → resources. Everything inherits from above.
+    - Up to six levels of management groups below the Tenant Root Group; each item has one parent.
+    - A resource is in exactly one resource group. Deleting the group deletes everything inside.
+    - Moving a resource changes its ID, not its region. Both groups are locked during the move.
+    - A subscription is a billing, quota and access boundary that trusts one Entra tenant.
+  mistakes:
+    - Thinking a resource group's location limits where its resources can be. It only stores metadata.
+    - Using Move to change regions. Use Azure Resource Mover or redeploy.
+  examTips:
+    - '"Apply a policy to all current and future subscriptions" = assign it at a **management group**.'
+    - '"Move a VM to another resource group" = **Move**, then update anything using the old **resource ID**.'
+    - '"Move a VM to another region" = **Azure Resource Mover**, not Move.'
+  quick:
+    - q: How many management group levels can sit below the root?
+      a: Six (not counting the root or subscriptions).
+    - q: Does moving a resource change its region?
+      a: No. Only its resource group or subscription and its resource ID.
+    - q: Which CLI command moves resources?
+      a: az resource move --destination-group ... --ids ...
+    - q: Which CLI command moves a subscription under a management group?
+      a: az account management-group subscription add --name <mg> --subscription <sub>
+    - q: Can a resource be in two resource groups?
+      a: No. Each resource is in exactly one.
+references:
+  - title: What are Azure management groups?
+    url: https://learn.microsoft.com/azure/governance/management-groups/overview
+  - title: Manage Azure resource groups by using the Azure portal
+    url: https://learn.microsoft.com/azure/azure-resource-manager/management/manage-resource-groups-portal
+  - title: Move Azure resources to a new resource group or subscription
+    url: https://learn.microsoft.com/azure/azure-resource-manager/management/move-resource-group-and-subscription
+  - title: Move resources across regions with Azure Resource Mover
+    url: https://learn.microsoft.com/azure/resource-mover/overview
+  - title: Associate or add an Azure subscription to your Microsoft Entra tenant
+    url: https://learn.microsoft.com/entra/fundamentals/how-subscriptions-associated-directory
+related:
+  - rbac-roles-and-scopes
+  - azure-policy-for-admins
+  - budgets-cost-alerts-and-advisor
+---
+
+## Start with a question
+
+<Story question="How does a supermarket chain run the same rules in 300 stores?">
+
+Head office doesn't phone every store when a rule changes. It sets rules for regions, regions pass them to stores, and stores apply them to each aisle. Each store has its own budget and books. Inside a store, things that belong together sit in one aisle, and you can move a product from aisle 4 to aisle 9 without moving it to another town.
+
+In Azure, head office and regions are **management groups**, each store is a **subscription** with its own bill, the aisles are **resource groups**, and the products are **resources**.
+
+</Story>
+
+## Explain it like I'm 10
+
+<Eli10>
+
+Think of folders on a computer.
+
+The big folder is a **management group**. Inside it are **subscription** folders, each with its own pocket money. Inside those are **resource group** folders. Inside those are your files, the **resources**.
+
+If you set a rule on the big folder, every folder inside follows it.
+
+</Eli10>
+
+## The technical explanation
+
+### The ladder
+
+```text
+Tenant Root Group
+└── mg-contoso
+    ├── mg-prod
+    │   └── Contoso Production (subscription)
+    │       ├── rg-app   → vm-app01, stapp0424
+    │       └── rg-data  → sql-contoso
+    └── mg-nonprod
+        └── Contoso Dev/Test (subscription)
+```
+
+| Level | Limits and rules |
+| --- | --- |
+| Management group | Up to **10,000** per tenant, **six levels** deep below the root, one parent each |
+| Subscription | One parent management group; trusts **one** Entra tenant; its own billing, quotas and RBAC boundary |
+| Resource group | Each resource in exactly **one** group; the group's region holds metadata only; deleting it deletes everything inside |
+| Resource | Can be in a different region from its resource group |
+
+Policy, role assignments and budgets set at any level apply below it.
+
+### Resource groups
+
+```bash
+az group create -n rg-app -l westeurope --tags env=prod costcenter=APP-11
+az group list -o table
+az resource list -g rg-app -o table
+az group delete -n rg-old --yes        # deletes everything inside (locks permitting)
+```
+
+Group things by lifecycle: what you create, update and delete together. An app's VMs, disks and NICs in one group; a shared hub network in another.
+
+### Moving resources
+
+Portal: resource group → **Move** → *Move to another resource group*, *Move to another subscription* or *Move to another region*. The first two run validation, then move.
+
+```bash
+az resource move --destination-group rg-archive \
+  --ids /subscriptions/<sub-id>/resourceGroups/rg-app/providers/Microsoft.Storage/storageAccounts/stapp0424
+# another subscription: add --destination-subscription-id <id>
+```
+
+What to remember:
+
+- The **resource ID changes**; the **region doesn't**. Update scripts, alerts and role assignments that point at the old ID. Role assignments on the resource itself don't move with it.
+- Source and target groups are **locked for writes** during the move (reads still work).
+- Not every resource type can move, and some have rules (for example, dependent resources moving together). Check the move support list.
+- You need write and move rights on the source group and write on the target.
+- To change **region**, use **Azure Resource Mover** or redeploy.
+
+### Subscriptions
+
+A subscription is how Azure bills and limits you. Common reasons to have several: separate production from dev/test, separate billing for departments, hit quota limits, or isolate access. A subscription trusts one Entra tenant; you can **change the directory** (transfer it to another tenant), but RBAC assignments in it are removed when you do. **Rename**, **cancel** and **transfer billing ownership** are on the subscription's blade.
+
+```bash
+az account list -o table
+az account set --subscription "Contoso Production"
+```
+
+### Management groups
+
+Portal: search **Management groups** → **+ Create** (Management group ID, display name). Then move subscriptions or groups under it with **… → Move**.
+
+```bash
+az account management-group create --name mg-nonprod --display-name "Non-production" --parent mg-contoso
+az account management-group subscription add --name mg-nonprod --subscription "Contoso Dev/Test"
+az account management-group list -o table
+```
+
+The **ID** can't change; the display name can. New subscriptions land under the root (or a default management group you set in **Settings**). Moving a subscription needs write access on the subscription and on the source and target management groups. By default, the root's access is controlled by elevated Global Administrators.
+
+<Flow
+  caption="Moving Dev/Test under mg-nonprod"
+  steps={[
+    { title: 'Before', text: 'Dev/Test is under mg-contoso and inherits its Deny policies.' },
+    { title: 'Move', text: 'az account management-group subscription add --name mg-nonprod ...' },
+    { title: 'After', text: 'It now inherits mg-nonprod\'s looser policies and roles instead.' },
+    { title: 'Check', text: 'Compliance and Check access show the new inherited settings.' },
+  ]}
+/>
+
+<TryIt labs="adm-rbac-hierarchy" text="Create a management group, move the subscription under it, then move a storage account between resource groups." />
+
+<Callout type="exam">
+"All current and future subscriptions" = **management group**. "Resources that are deployed, updated and deleted together" = one **resource group**. "Move a resource to another group" changes the **resource ID**, not the region; "to another region" needs **Azure Resource Mover**. A **resource group's location** doesn't restrict its resources. Expect questions on the **six-level** limit and **one parent** rule.
+</Callout>
+
+<DeepDive title="Landing zones">
+
+Microsoft's Cloud Adoption Framework suggests a management group layout: **Platform** (identity, management, connectivity subscriptions), **Landing zones** (split into **Corp** for internal apps and **Online** for internet-facing ones), **Sandbox** and **Decommissioned**. Policies get stricter as you go down, and workloads get their own subscriptions. Even if you don't build the full design, separating production and non-production management groups early saves painful moves later.
+
+</DeepDive>
+
+## Real-world business scenario
+
+<Scenario
+  company="Proseware Inc. (fictional)"
+  industry="Software"
+  problem="Proseware had 28 subscriptions hanging directly off the root, so every policy and Reader role for the security team was assigned 28 times and new subscriptions were missed."
+  service="A management group tree: mg-proseware with mg-platform, mg-prod and mg-nonprod beneath it. Allowed locations and tag policies at mg-proseware, stricter policies at mg-prod, the security team's Reader at the top, and a default management group so new subscriptions land under mg-nonprod."
+  why="Each rule is assigned once and every subscription, old or new, inherits the right set."
+  outcome="Policy assignments dropped from over 150 to 14, and a new subscription is governed from the minute it's created."
+/>
+
+## When to use it and when not to
+
+<UseWhen
+  use={[
+    'Management groups when you have more than a couple of subscriptions to govern.',
+    'Separate subscriptions for production, dev/test or departments with their own budgets.',
+    'Resource groups per workload or lifecycle.',
+  ]}
+  avoid={[
+    'One giant resource group for unrelated things. Deleting or locking it hits everything.',
+    'Deep management group trees nobody understands. Keep it to three or four levels.',
+    'Move to change regions.',
+  ]}
+  alternatives={[
+    '<strong>Azure Resource Mover</strong> for moves across regions.',
+    '<strong>Tags</strong> for cross-cutting labels such as cost center that don\'t fit the hierarchy.',
+  ]}
+/>

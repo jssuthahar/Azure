@@ -1,0 +1,147 @@
+{
+ "cert": "az-104",
+ "domain": 5,
+ "topic": "site-recovery-failover",
+ "questions": [
+  {
+   "id": "adm-ops-asr-1",
+   "type": "single",
+   "question": "You plan to replicate an Azure virtual machine in East US to West US 2 by using Azure Site Recovery. Where should you create the Recovery Services vault?",
+   "options": [
+    {
+     "text": "West US 2",
+     "why": "Correct. For Azure-to-Azure disaster recovery, the vault is created in the target region."
+    },
+    {
+     "text": "East US",
+     "why": "The vault must be in a different region from the source virtual machine."
+    },
+    {
+     "text": "Any region outside the United States",
+     "why": "The vault is placed in the target region that you replicate to."
+    },
+    {
+     "text": "The vault location does not matter",
+     "why": "Site Recovery requires the vault in the target region so that it is available if the source region fails."
+    }
+   ],
+   "answer": [
+    0
+   ],
+   "explanation": "A cache storage account in the source region buffers changes before they are replicated.",
+   "objective": "5.2.5"
+  },
+  {
+   "id": "adm-ops-asr-2",
+   "type": "single",
+   "question": "You must validate the disaster recovery plan for a replicated virtual machine every quarter. The validation must not affect production workloads or ongoing replication. What should you do?",
+   "options": [
+    {
+     "text": "Run a test failover to an isolated virtual network in the target region, and then run cleanup test failover",
+     "why": "Correct. A test failover creates a copy of the virtual machine without affecting replication or production."
+    },
+    {
+     "text": "Run an unplanned failover and then fail back",
+     "why": "A real failover affects production."
+    },
+    {
+     "text": "Disable replication and enable it again",
+     "why": "This removes protection and requires initial replication again."
+    },
+    {
+     "text": "Run a test failover to the production virtual network in the target region",
+     "why": "Using a production network can cause IP address conflicts. Use an isolated network."
+    }
+   ],
+   "answer": [
+    0
+   ],
+   "explanation": "Test failovers can be run on single virtual machines or on recovery plans.",
+   "objective": "5.2.5"
+  },
+  {
+   "id": "adm-ops-asr-3",
+   "type": "single",
+   "question": "A replicated virtual machine must be failed over to the secondary region during a regional outage. You must minimize the recovery time objective (RTO). Which recovery point should you select?",
+   "options": [
+    {
+     "text": "Latest processed",
+     "why": "Correct. Latest processed uses a recovery point that has already been processed, so the failover is fastest."
+    },
+    {
+     "text": "Latest",
+     "why": "Latest gives the lowest RPO but processes all pending data first, which increases RTO."
+    },
+    {
+     "text": "Latest app-consistent",
+     "why": "This provides application consistency but may lose more data and is not chosen for the lowest RTO."
+    },
+    {
+     "text": "Custom",
+     "why": "A custom point is used to go back to a specific time, not to minimize RTO."
+    }
+   ],
+   "answer": [
+    0
+   ],
+   "explanation": "Latest gives the lowest RPO, Latest processed the lowest RTO, and Latest app-consistent an application-consistent state.",
+   "objective": "5.2.6"
+  },
+  {
+   "id": "adm-ops-asr-4",
+   "type": "single",
+   "question": "You failed over a virtual machine from East US to West US 2 by using Azure Site Recovery. You must protect the virtual machine so that it can later be failed back to East US. Which three actions should you perform in sequence?",
+   "options": [
+    {
+     "text": "Commit the failover, run re-protect, and then fail back when East US is available",
+     "why": "Correct. Commit finalizes the failover, re-protect replicates back to East US, and a failover back returns the workload."
+    },
+    {
+     "text": "Run re-protect, commit the failover, and then disable replication",
+     "why": "Commit must happen before re-protect, and disabling replication removes protection."
+    },
+    {
+     "text": "Run cleanup test failover, commit the failover, and then re-protect",
+     "why": "Cleanup applies only to test failovers."
+    },
+    {
+     "text": "Fail back immediately, commit the failover, and then re-protect",
+     "why": "Fail back requires reverse replication, which re-protect provides."
+    }
+   ],
+   "answer": [
+    0
+   ],
+   "explanation": "After failing back, commit and re-protect again to return to the original replication direction.",
+   "objective": "5.2.6"
+  },
+  {
+   "id": "adm-ops-asr-5",
+   "type": "single",
+   "question": "A three-tier application runs on six virtual machines that replicate with Azure Site Recovery. During failover, the database virtual machines must start before the application servers, and a script must update a DNS record. What should you create?",
+   "options": [
+    {
+     "text": "A recovery plan with ordered groups and an Azure Automation runbook as a post action",
+     "why": "Correct. Recovery plans fail over groups in order and can run scripts, runbooks and manual actions."
+    },
+    {
+     "text": "A replication policy with a shorter app-consistent snapshot frequency",
+     "why": "The replication policy controls recovery points, not failover order."
+    },
+    {
+     "text": "Six separate test failovers",
+     "why": "Test failovers validate the plan but do not define the order of a real failover."
+    },
+    {
+     "text": "An alert processing rule",
+     "why": "Alert processing rules modify alerts, not failover steps."
+    }
+   ],
+   "answer": [
+    0
+   ],
+   "explanation": "Run test failovers on the recovery plan to validate the order and the scripts.",
+   "objective": "5.2.6"
+  }
+ ]
+}

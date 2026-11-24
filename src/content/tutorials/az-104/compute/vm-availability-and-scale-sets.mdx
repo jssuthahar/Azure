@@ -1,0 +1,214 @@
+---
+title: Availability Zones, Availability Sets and VM Scale Sets
+seoTitle: Availability Zones, Sets and VM Scale Sets | AZ-104
+description: Deploy Azure VMs to availability zones and availability sets, then create a Flexible scale set with autoscale rules. SLAs, domains and commands for AZ-104.
+answer: >-
+  An **availability set** spreads VMs across **fault domains** (racks with their own power and network, up to 3) and **update domains** (rebooted one at a time, up to 20) inside one datacenter: **99.95%** SLA with two or more VMs. **Availability zones** put VMs in separate datacenters in a region: **99.99%**. A VM uses one or the other and you choose at creation. A **Virtual Machine Scale Set** runs identical VMs (use **Flexible** orchestration) across zones or fault domains, and **autoscale** rules add or remove instances on metrics such as **Percentage CPU**, between a minimum and maximum.
+updated: 2026-11-24
+readingMinutes: 12
+keyTerms:
+  - term: Availability set
+    definition: A logical grouping that spreads VMs across fault domains and update domains in one datacenter.
+  - term: Fault domain
+    definition: A group of hardware that shares power and a network switch, like a rack. Up to 3 per availability set.
+  - term: Update domain
+    definition: A group of VMs that Azure reboots together during planned maintenance. 5 by default, up to 20.
+  - term: Availability zone
+    definition: A physically separate datacenter (or group of them) within a region, with its own power, cooling and networking.
+  - term: Virtual Machine Scale Set
+    definition: A group of VMs managed together that can scale out and in automatically.
+  - term: Flexible orchestration
+    definition: The recommended scale set mode. Instances are standard VMs, can mix sizes and are spread across zones or fault domains.
+  - term: Autoscale
+    definition: Azure Monitor rules that change the instance count based on metrics or a schedule, within minimum and maximum limits.
+  - term: Scale-in policy
+    definition: The rule that decides which instance is removed first when a scale set scales in.
+interview:
+  - level: beginner
+    q: What's the difference between a fault domain and an update domain?
+    a: >-
+      A fault domain is about unplanned failures: VMs in different fault domains don't share a rack's power or switch. An update domain is about planned maintenance: Azure reboots one update domain at a time, so not all VMs go down together.
+    followUps: []
+  - level: intermediate
+    q: Can you add an existing VM to an availability set or move it into a zone?
+    a: >-
+      Not by editing it. Both are chosen when the VM is created. To change them you recreate the VM from its disks with the set or zone selected, or use a zone move tool. And one VM can't be in an availability set and a zone at the same time.
+    followUps: []
+  - level: experienced
+    q: Why would you choose a Flexible scale set over Uniform?
+    a: >-
+      Flexible is the recommended mode for new deployments. Instances are normal VMs you can manage with the usual VM commands, you can mix sizes and Spot with regular VMs, and it spreads across zones and fault domains for availability. Uniform suits huge fleets of identical instances and some older features, but most new work starts with Flexible.
+    followUps: []
+  - level: scenario
+    q: Your web tier must survive a datacenter outage and handle Monday-morning peaks. What would you build?
+    a: >-
+      A Flexible scale set across zones 1, 2 and 3 behind a zone-redundant load balancer, with autoscale on average CPU, say plus two instances above 70% and minus one below 30%, minimum three so there's one per zone. I might add a scheduled profile to scale out before Monday 8 AM.
+    followUps: []
+revision:
+  keyPoints:
+    - Availability set - fault domains (up to 3) and update domains (default 5, up to 20) in one datacenter, 99.95%.
+    - Availability zones - separate datacenters in a region, 99.99% with VMs in two or more zones.
+    - Single VM with Premium SSD or better on all disks - 99.9%.
+    - Set and zone are chosen at creation; one VM can't use both.
+    - Scale sets - Flexible orchestration, zones, autoscale with min, max, default, scale-out and scale-in rules.
+  mistakes:
+    - Thinking an availability set protects against a whole datacenter failing.
+    - Creating a scale-out rule without a scale-in rule.
+  examTips:
+    - '"Survive a datacenter failure" = **availability zones**.'
+    - '"Survive a rack failure or host maintenance" = **availability set**.'
+    - '"Add VMs automatically when CPU is high" = **scale set** with **autoscale**.'
+  quick:
+    - q: What is the maximum number of fault domains in an availability set?
+      a: '3 (depends on the region).'
+    - q: What is the default number of update domains?
+      a: '5.'
+    - q: What SLA do two or more VMs across availability zones get?
+      a: 99.99%.
+    - q: Which scale set orchestration mode is recommended for new deployments?
+      a: Flexible.
+    - q: Which command creates an autoscale setting for a scale set?
+      a: az monitor autoscale create.
+references:
+  - title: Availability options for Azure Virtual Machines
+    url: https://learn.microsoft.com/azure/virtual-machines/availability
+  - title: Availability sets overview
+    url: https://learn.microsoft.com/azure/virtual-machines/availability-set-overview
+  - title: Create virtual machines in an availability zone
+    url: https://learn.microsoft.com/azure/virtual-machines/create-portal-availability-zone
+  - title: Orchestration modes for Virtual Machine Scale Sets
+    url: https://learn.microsoft.com/azure/virtual-machine-scale-sets/virtual-machine-scale-sets-orchestration-modes
+  - title: Overview of autoscale with Azure Virtual Machine Scale Sets
+    url: https://learn.microsoft.com/azure/virtual-machine-scale-sets/virtual-machine-scale-sets-autoscale-overview
+related:
+  - create-and-size-virtual-machines
+  - move-virtual-machines
+---
+
+## Start with a question
+
+<Story question="Why do airlines put the pilot and co-pilot on different meals?">
+
+If both pilots eat the same fish and it's bad, nobody flies the plane. So they eat different meals. One bad meal can't take out both.
+
+Azure does the same with your VMs. An **availability set** keeps them on different racks, so one power failure can't take out both. **Availability zones** keep them in different buildings. And a **scale set** brings in extra crew when the plane gets busy.
+
+</Story>
+
+## Explain it like I'm 10
+
+<Eli10>
+
+You've got two goldfish and you're scared one tank might crack.
+
+Putting them in two tanks on different shelves is an **availability set**. If one shelf falls, one fish is fine.
+
+Putting one tank at your house and one at your friend's house is **availability zones**. Even if your house floods, one fish is fine.
+
+A **scale set** is a pet shop that adds more tanks when lots of fish arrive, and takes them away when it's quiet.
+
+</Eli10>
+
+## The technical explanation
+
+### Pick an availability option
+
+| Option | Protects against | SLA (VM connectivity) | Set when |
+| --- | --- | --- | --- |
+| Single VM, Premium SSD or better on all disks | Little: one host | 99.9% | Any time |
+| **Availability set** | Rack failure, host maintenance | **99.95%** (2+ VMs) | VM creation only |
+| **Availability zones** | A whole datacenter failing | **99.99%** (2+ VMs in 2+ zones) | VM creation only |
+| **Scale set** (zones or fault domains) | Same as the spread it uses, plus load | Same as above | Creation; instances added any time |
+
+In the create wizard, **Basics › Availability options** offers *No infrastructure redundancy required*, *Availability zone*, *Virtual machine scale set* and *Availability set*. Selecting several zones creates one VM per zone.
+
+### Availability sets
+
+An availability set spreads its VMs across **fault domains** (up to 3, region-dependent, default 2) and **update domains** (default 5, up to 20). VM 1 lands in FD0/UD0, VM 2 in FD1/UD1, and so on. The set is free; you pay for the VMs. A VM joins a set only when it's created, and a VM can't be in a set and a zone.
+
+```bash
+az vm availability-set create -g rg-contoso-prod -n avset-web \
+  --platform-fault-domain-count 2 --platform-update-domain-count 5
+az vm create -g rg-contoso-prod -n vm-web-01 --image Ubuntu2404 --availability-set avset-web --generate-ssh-keys
+```
+
+```powershell
+New-AzAvailabilitySet -ResourceGroupName rg-contoso-prod -Name avset-web -Location eastus `
+  -PlatformFaultDomainCount 2 -PlatformUpdateDomainCount 5 -Sku Aligned
+```
+
+The `Aligned` SKU is needed for managed disks, so each VM's disks sit in the same fault domain as the VM.
+
+### Availability zones
+
+```bash
+az vm create -g rg-contoso-prod -n vm-api-z1 --image Ubuntu2404 --zone 1 --generate-ssh-keys
+az vm create -g rg-contoso-prod -n vm-api-z2 --image Ubuntu2404 --zone 2 --generate-ssh-keys
+```
+
+Zone numbers are per subscription, so your zone 1 may not be another subscription's zone 1. Use zone-redundant (Standard SKU) public IPs and load balancers so the front door survives a zone too.
+
+### Virtual Machine Scale Sets
+
+A scale set runs identical VMs and can grow and shrink. **Flexible** orchestration is the recommended mode: instances are normal VMs, sizes can be mixed and instances spread across zones or fault domains. **Uniform** is the older mode for large fleets of identical instances, with an **upgrade policy** (Manual, Automatic or Rolling) for model changes.
+
+```bash
+az vmss create -g rg-contoso-prod -n vmss-web --image Ubuntu2404 \
+  --orchestration-mode Flexible --zones 1 2 3 --instance-count 3 --vm-sku Standard_B2s --generate-ssh-keys
+```
+
+**Autoscale** (Azure Monitor) holds a **default instance count**, a **minimum** and a **maximum**, and rules. Portal: **scale set › Scaling › Custom autoscale**. CLI:
+
+```bash
+az monitor autoscale create -g rg-contoso-prod --resource vmss-web \
+  --resource-type Microsoft.Compute/virtualMachineScaleSets --name as-vmss-web \
+  --min-count 3 --max-count 10 --count 3
+az monitor autoscale rule create -g rg-contoso-prod --autoscale-name as-vmss-web \
+  --condition "Percentage CPU > 70 avg 5m" --scale out 2
+az monitor autoscale rule create -g rg-contoso-prod --autoscale-name as-vmss-web \
+  --condition "Percentage CPU < 30 avg 5m" --scale in 1
+```
+
+Rules have a **cool down** (5 minutes by default) so the set doesn't react again before new instances settle. Always pair a scale-out rule with a scale-in rule, or the extra instances never leave. You can also add **schedule-based** profiles ("10 instances on weekdays 8 AM to 6 PM") and a **scale-in policy** (Default, NewestVM or OldestVM). Manual scaling is `az vmss scale --new-capacity 5`.
+
+<TryIt labs="adm-vm-availability" text="Build an availability set, get blocked mixing a set and a zone, create zonal VMs and a Flexible scale set with autoscale." />
+
+<Callout type="exam">
+Map the failure to the feature. **Rack or maintenance** = availability set (fault and update domains). **Datacenter** = availability zones. **Changing load** = scale set with autoscale. Numbers to know: up to **3 fault domains**, **5 update domains** by default (max **20**), SLAs **99.9 / 99.95 / 99.99**. A VM is placed in a set or zone **only at creation**, never both. In autoscale questions, check min, max and the cool down: a rule can't take the count past the maximum.
+</Callout>
+
+<DeepDive title="Counting instances in an autoscale question">
+
+Say min 2, max 6, default 2, scale out by 2 when CPU is above 70% for 10 minutes, scale in by 1 below 30%, cool down 5 minutes. CPU sits at 85% for 30 minutes: the set goes 2 → 4, waits out the cool down, checks again, goes 4 → 6, then stops at the maximum. When CPU drops to 20%, it removes one at a time, each after a cool down, down to 2. If both a scale-out and a scale-in rule match at once, autoscale scales out, because availability wins over cost.
+
+</DeepDive>
+
+## Real-world business scenario
+
+<Scenario
+  company="Litware Media (fictional)"
+  industry="Media streaming"
+  problem="The web tier ran on four VMs in one rack. A switch failure took the site down for an hour, and Friday-night traffic doubled the CPU while weekday mornings sat idle."
+  service="A Flexible scale set across zones 1, 2 and 3 with a zone-redundant load balancer, autoscale from 3 to 12 instances (+2 above 70% CPU, -1 below 30%), and a schedule profile that starts at 6 instances every Friday at 6 PM. The two licensing servers that can't scale went into an availability set."
+  why="Zones protect against a datacenter failure, autoscale matches instances to load, and the availability set keeps the two fixed servers on different racks and update domains."
+  outcome="The site rode through a later zone incident with no outage, and compute cost fell by about a third because quiet hours run only three instances."
+/>
+
+## When to use it and when not to
+
+<UseWhen
+  use={[
+    'Availability zones for production VMs that must survive a datacenter outage.',
+    'Availability sets in regions without zones, or for apps that need very low latency in one datacenter.',
+    'Scale sets with autoscale for stateless tiers whose load changes.',
+  ]}
+  avoid={[
+    'A single VM for anything with an uptime target. Two is the minimum for these SLAs.',
+    'Autoscaling stateful servers that keep data on the instance.',
+  ]}
+  alternatives={[
+    '<strong>App Service</strong> or <strong>Container Apps</strong> for web workloads that scale without VM management.',
+    '<strong>Azure Site Recovery</strong> for protection against a whole region failing.',
+    '<strong>Proximity placement groups</strong> when VMs must sit physically close for low latency.',
+  ]}
+/>

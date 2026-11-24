@@ -1,0 +1,200 @@
+---
+title: Deploy, Export and Convert Templates to Bicep
+seoTitle: Deploy, Export and Convert ARM Templates to Bicep | AZ-104
+description: Deploy ARM templates and Bicep files with the portal, CLI and PowerShell, preview with what-if, pick Incremental or Complete mode, export and decompile.
+answer: >-
+  Deploy a template to a resource group with **az deployment group create --template-file main.bicep** (or **New-AzResourceGroupDeployment**, or **Deploy a custom template** in the portal). Preview first with **what-if**. The default mode is **Incremental**, which adds and updates resources; **Complete** also **deletes** resources in the group that the template doesn't define. To get a template from what already exists, use **Export template** on a resource group or resource (or **az group export**), or download one from **Deployments** history. Convert ARM JSON to Bicep with **az bicep decompile**.
+updated: 2026-11-24
+readingMinutes: 11
+keyTerms:
+  - term: Deployment
+    definition: One run of a template against a scope. It's recorded in the scope's deployment history with its template, parameters and outputs.
+  - term: Incremental mode
+    definition: The default deployment mode. Resources in the template are created or updated; others in the resource group are left alone.
+  - term: Complete mode
+    definition: A deployment mode that also deletes resources in the resource group that aren't in the template.
+  - term: what-if
+    definition: A preview of the changes a deployment would make (create, modify, delete, no change) without making them.
+  - term: Export template
+    definition: A portal and CLI feature that generates an ARM template (and a Bicep view) from existing resources.
+  - term: az bicep decompile
+    definition: The command that converts an ARM JSON template into a Bicep file, on a best-effort basis.
+  - term: Parameters file
+    definition: A JSON or .bicepparam file that supplies parameter values so they don't have to be typed on the command line.
+interview:
+  - level: beginner
+    q: Which command deploys a Bicep file to a resource group?
+    a: >-
+      az deployment group create --resource-group rg-name --template-file main.bicep, with --parameters for the inputs. In PowerShell it's New-AzResourceGroupDeployment with -TemplateFile. There are matching sub, mg and tenant commands for other scopes.
+    followUps: []
+  - level: intermediate
+    q: What's the difference between Incremental and Complete mode?
+    a: >-
+      Incremental is the default. It creates or updates whatever is in the template and doesn't touch anything else in the resource group. Complete makes the group match the template exactly, so anything not in the template gets deleted. I'd only use Complete with what-if first and probably a delete lock on anything precious.
+    followUps: []
+  - level: experienced
+    q: Why shouldn't you redeploy an exported template as it is?
+    a: >-
+      Export captures what exists now with names, IDs and values hard-coded. Some resource types and properties can't be exported, and it's capped at a number of resources. So I treat it as a starting point: decompile to Bicep, turn the hard-coded values into parameters, remove read-only properties, then test it with what-if.
+    followUps: []
+  - level: scenario
+    q: A teammate wants to run a Complete-mode deployment on the production resource group to tidy it up. What do you do?
+    a: >-
+      I'd run what-if with --mode Complete first and read every line starting with a minus sign, because those get deleted. If anything there is in use, either it goes into the template or we stay in Incremental mode and remove leftovers deliberately.
+    followUps: []
+revision:
+  keyPoints:
+    - CLI az deployment group create, PowerShell New-AzResourceGroupDeployment, portal Deploy a custom template.
+    - Default mode is Incremental. Complete deletes resources not in the template.
+    - what-if previews - + create, ~ modify, - delete, = no change.
+    - Export template from a resource group or resource, or az group export. Deployment history keeps each template used.
+    - az bicep decompile converts JSON to Bicep; az bicep build compiles Bicep to JSON.
+  mistakes:
+    - Running Complete mode without what-if and deleting resources someone else added.
+    - Assuming an exported template captures every property and can be redeployed unchanged.
+  examTips:
+    - '"Delete resources not in the template" = **Complete** mode.'
+    - '"Preview changes without deploying" = **what-if**.'
+    - '"Convert an ARM template to Bicep" = **az bicep decompile**.'
+  quick:
+    - q: What is the default deployment mode?
+      a: Incremental.
+    - q: Which command previews a deployment's changes?
+      a: az deployment group what-if.
+    - q: Which command exports a resource group as an ARM template?
+      a: az group export.
+    - q: Which PowerShell cmdlet deploys a template to a resource group?
+      a: New-AzResourceGroupDeployment.
+    - q: Where in the portal do you see the templates used for past deployments?
+      a: The resource group's Deployments blade.
+references:
+  - title: Deploy resources with Bicep and Azure CLI
+    url: https://learn.microsoft.com/azure/azure-resource-manager/bicep/deploy-cli
+  - title: Azure Resource Manager deployment modes
+    url: https://learn.microsoft.com/azure/azure-resource-manager/templates/deployment-modes
+  - title: Bicep deployment what-if operation
+    url: https://learn.microsoft.com/azure/azure-resource-manager/bicep/deploy-what-if
+  - title: Use Azure portal to export a template
+    url: https://learn.microsoft.com/azure/azure-resource-manager/templates/export-template-portal
+  - title: Decompile ARM template JSON to Bicep
+    url: https://learn.microsoft.com/azure/azure-resource-manager/bicep/decompile
+related:
+  - interpret-and-modify-arm-and-bicep
+  - move-virtual-machines
+---
+
+## Start with a question
+
+<Story question="How do you rebuild a room exactly as it was, without throwing out what someone else put there?">
+
+You've got the floor plan for an office. Put the furniture back where the plan says and leave everything else alone: that's one way. Make the room match the plan exactly, so anything not on the plan goes in the skip: that's another.
+
+Template deployments work the same. **Incremental** mode adds and fixes what's on the plan. **Complete** mode also throws out what isn't. And when you only have the room and no plan, **Export template** draws one for you.
+
+</Story>
+
+## Explain it like I'm 10
+
+<Eli10>
+
+You and your sister share a toy shelf, and you have a list of your toys.
+
+"Put my toys back on the shelf" is **Incremental**. Her toys stay.
+
+"Make the shelf match my list" is **Complete**. Her toys get taken off, because they aren't on your list.
+
+Reading the list out loud first, so everyone hears what will happen, is **what-if**.
+
+</Eli10>
+
+## The technical explanation
+
+### Deploy
+
+| Tool | Command or path |
+| --- | --- |
+| Azure CLI | `az deployment group create -g rg-contoso-prod --template-file main.bicep --parameters storageName=stcontosologs` |
+| PowerShell | `New-AzResourceGroupDeployment -ResourceGroupName rg-contoso-prod -TemplateFile main.bicep -storageName stcontosologs` |
+| Portal | Search **Deploy a custom template** › Build your own template in the editor (ARM JSON) |
+| Other scopes | `az deployment sub create`, `az deployment mg create`, `az deployment tenant create` (they need `--location`) |
+
+The CLI compiles Bicep for you. PowerShell needs the Bicep CLI installed. Parameters can come from the command line (`key=value`), a JSON parameters file (`--parameters @main.parameters.json`) or a `.bicepparam` file. The deployment name defaults to the template file name, and each one is kept in the resource group's **Deployments** history (up to 800 per group; older entries are removed automatically).
+
+### Preview with what-if
+
+```bash
+az deployment group what-if -g rg-contoso-prod --template-file main.bicep --parameters storageName=stcontosologs
+#  ~ Microsoft.Storage/storageAccounts/stcontosologs
+#    ~ sku.name: "Standard_LRS" => "Standard_ZRS"
+# Resource changes: 1 to modify.
+```
+
+The symbols are `+` create, `~` modify, `-` delete, `=` no change, `*` ignore. PowerShell uses `-WhatIf` on the same cmdlet. `az deployment group create --confirm-with-what-if` shows the preview and asks before deploying.
+
+### Incremental vs Complete
+
+| | Incremental (default) | Complete |
+| --- | --- | --- |
+| Resources in the template | Created or updated | Created or updated |
+| Resources in the group but not in the template | Left alone | **Deleted** |
+| How to choose | Nothing to add | `--mode Complete` / `-Mode Complete` |
+| Use it for | Almost everything | A group that only this template owns |
+
+Two details catch people out. In both modes a resource that **is** in the template gets the template's properties, so a setting someone changed in the portal is reverted. And the portal's custom deployment always runs Incremental. A **CanNotDelete** lock on a resource stops Complete mode from removing it.
+
+### Export what already exists
+
+- **Resource group or resource › Automation › Export template**: generates a template from the current state, with **ARM Template** and **Bicep** tabs and an **Include parameters** option. Download it or select **Deploy**.
+- **Deployments history**: open a past deployment and view or download the exact template and inputs it used.
+- **CLI / PowerShell**: `az group export -n rg-contoso-prod > exported.json`, `az deployment group export -g rg-contoso-prod -n storage` (one deployment's template), `Export-AzResourceGroup`, `Save-AzResourceGroupDeploymentTemplate`.
+
+Exported templates hard-code names and values, can't include every resource type or property, and are limited to a few hundred resources per export. Treat them as a draft.
+
+### Convert to Bicep
+
+```bash
+az bicep decompile --file exported.json   # creates exported.bicep (best effort, read the warnings)
+az bicep build --file main.bicep          # creates main.json (what Resource Manager deploys)
+```
+
+<TryIt labs="adm-vm-bicep" text="Preview with what-if, deploy in Incremental mode, see what Complete mode would delete, then export and decompile." />
+
+<Callout type="exam">
+"Delete resources in the group that aren't in the template" is **Complete** mode; the default is **Incremental**. "See what will change before deploying" is **what-if**. "Get a template for resources that were created in the portal" is **Export template** (or the **Deployments** history if they came from a deployment). "Convert an ARM template to Bicep" is **az bicep decompile**, not `az bicep build`. Know both `az deployment group create` and `New-AzResourceGroupDeployment`.
+</Callout>
+
+<DeepDive title="Deployment stacks and the end of Complete mode">
+
+Microsoft recommends **deployment stacks** over Complete mode for managing a set of resources as a unit. A stack (`az stack group create`) remembers which resources it created. When you remove one from the template, the stack can delete or detach it (`--action-on-unmanage`), and **deny settings** can stop people changing managed resources outside the stack. That gives you Complete mode's clean-up without deleting things the template never owned. The exam still asks about Incremental and Complete, so learn those first.
+
+</DeepDive>
+
+## Real-world business scenario
+
+<Scenario
+  company="Fabrikam Health (fictional)"
+  industry="Healthcare"
+  problem="Years of portal clicks left a production resource group nobody could rebuild, and a test of Complete mode in staging deleted a shared Key Vault."
+  service="The team exported the production group, decompiled it with az bicep decompile, turned names into parameters and checked every deployment with what-if. They kept Incremental mode and put CanNotDelete locks on shared resources."
+  why="Export gave them a starting template for resources that were never scripted, and what-if showed every change before it happened."
+  outcome="Production can be rebuilt from a reviewed Bicep file, and no deployment has deleted anything by surprise since."
+/>
+
+## When to use it and when not to
+
+<UseWhen
+  use={[
+    'Incremental mode for routine deployments into shared resource groups.',
+    'what-if before every production deployment, and always before Complete mode.',
+    'Export template to capture resources that were built by hand.',
+  ]}
+  avoid={[
+    'Complete mode in a resource group that other people or templates also use.',
+    'Redeploying an exported template without cleaning it up first.',
+  ]}
+  alternatives={[
+    '<strong>Deployment stacks</strong> to manage and clean up a set of resources safely.',
+    '<strong>Template specs</strong> to store versioned templates in Azure for others to deploy.',
+    '<strong>GitHub Actions or Azure Pipelines</strong> to run what-if and deploy on every merge.',
+  ]}
+/>

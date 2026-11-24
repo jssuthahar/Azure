@@ -1,0 +1,153 @@
+{
+ "cert": "az-104",
+ "domain": 5,
+ "topic": "monitor-insights-and-network-watcher",
+ "questions": [
+  {
+   "id": "adm-ops-nw-1",
+   "type": "single",
+   "question": "You need to view the available memory and logical disk free space of 30 Azure virtual machines, and a map of the processes that connect to other servers. What should you enable?",
+   "options": [
+    {
+     "text": "VM insights with processes and dependencies (Map)",
+     "why": "Correct. VM insights collects guest performance data through the Azure Monitor Agent and can collect dependency data for the Map."
+    },
+    {
+     "text": "Storage insights",
+     "why": "Storage insights reports on storage accounts, not virtual machines."
+    },
+    {
+     "text": "Boot diagnostics",
+     "why": "Boot diagnostics captures console output for troubleshooting startup."
+    },
+    {
+     "text": "A diagnostic setting on each virtual machine",
+     "why": "Virtual machine diagnostic settings send only host platform metrics, which do not include guest memory or process connections."
+    }
+   ],
+   "answer": [
+    0
+   ],
+   "explanation": "VM insights uses a data collection rule and the Azure Monitor Agent, and stores data in InsightsMetrics and, for Map, VMProcess and VMConnection.",
+   "objective": "5.1.5"
+  },
+  {
+   "id": "adm-ops-nw-2",
+   "type": "single",
+   "question": "You need a view of capacity, transactions, latency and availability across all storage accounts in a subscription. The solution must require no configuration. What should you use?",
+   "options": [
+    {
+     "text": "Storage insights in Azure Monitor",
+     "why": "Correct. Storage insights is built on platform metrics and is available without setup."
+    },
+    {
+     "text": "VM insights",
+     "why": "VM insights monitors virtual machines."
+    },
+    {
+     "text": "A diagnostic setting on each storage account",
+     "why": "Diagnostic settings require configuration on every account."
+    },
+    {
+     "text": "Connection monitor",
+     "why": "Connection monitor tests network connectivity between endpoints."
+    }
+   ],
+   "answer": [
+    0
+   ],
+   "explanation": "Storage insights and Network insights are curated workbooks over platform metrics and resource health.",
+   "objective": "5.1.5"
+  },
+  {
+   "id": "adm-ops-nw-3",
+   "type": "single",
+   "question": "An application on VM1 intermittently fails to connect to a SQL Server instance on VM2 on TCP port 1433. You must continuously test the connection, record the round-trip time and be alerted when checks fail. What should you configure?",
+   "options": [
+    {
+     "text": "A Connection monitor test group with VM1 as the source, VM2 as the destination and a TCP test on port 1433",
+     "why": "Correct. Connection monitor runs tests at a set frequency, stores results in Log Analytics and can create alerts."
+    },
+    {
+     "text": "IP flow verify for VM1",
+     "why": "IP flow verify checks a single flow at one point in time."
+    },
+    {
+     "text": "Next hop for VM1",
+     "why": "Next hop shows the route that a packet takes. It does not test continuously."
+    },
+    {
+     "text": "Packet capture on VM2",
+     "why": "Packet capture records traffic for analysis but does not alert on failed checks."
+    }
+   ],
+   "answer": [
+    0
+   ],
+   "explanation": "Connection monitor test configurations define the protocol, port, frequency and success thresholds such as checks failed (%) and round-trip time.",
+   "objective": "5.1.6"
+  },
+  {
+   "id": "adm-ops-nw-4",
+   "type": "single",
+   "question": "You need to determine whether inbound TCP traffic on port 3389 from 203.0.113.10 to a virtual machine is allowed, and which network security group rule applies. Which Network Watcher tool should you use?",
+   "options": [
+    {
+     "text": "IP flow verify",
+     "why": "Correct. IP flow verify returns Allow or Deny for a flow and names the security rule that made the decision."
+    },
+    {
+     "text": "Next hop",
+     "why": "Next hop identifies the next hop type and route table, not NSG decisions."
+    },
+    {
+     "text": "Connection monitor",
+     "why": "Connection monitor runs ongoing tests but is not the quickest way to name a single blocking rule."
+    },
+    {
+     "text": "VPN troubleshoot",
+     "why": "VPN troubleshoot diagnoses VPN gateways and connections."
+    }
+   ],
+   "answer": [
+    0
+   ],
+   "explanation": "NSG diagnostics provides a similar check for wider source and destination inputs.",
+   "objective": "5.1.6"
+  },
+  {
+   "id": "adm-ops-nw-5",
+   "type": "multi",
+   "question": "You plan to use an Azure virtual machine named VM1 as a source in Connection monitor. Which statements are true? Select all that apply.",
+   "options": [
+    {
+     "text": "VM1 requires the Network Watcher Agent virtual machine extension",
+     "why": "Correct. Azure virtual machine sources run tests through the Network Watcher Agent extension, which the portal can install."
+    },
+    {
+     "text": "Network Watcher must be enabled in the region of VM1",
+     "why": "Correct. Network Watcher is regional and is enabled automatically when a virtual network is created in the region."
+    },
+    {
+     "text": "VM1 must have a public IP address",
+     "why": "Connection monitor tests can run between private addresses."
+    },
+    {
+     "text": "Test results can be stored in a Log Analytics workspace",
+     "why": "Correct. Results are written to tables such as NWConnectionMonitorTestResult."
+    },
+    {
+     "text": "VM1 must run Windows Server",
+     "why": "The Network Watcher Agent is available for Windows and Linux."
+    }
+   ],
+   "answer": [
+    0,
+    1,
+    3
+   ],
+   "explanation": "Connection monitor combines sources, destinations and test configurations in test groups and stores results in Log Analytics.",
+   "objective": "5.1.6"
+  }
+ ]
+}

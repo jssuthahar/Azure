@@ -1,0 +1,221 @@
+---
+title: Azure Monitor Insights, Network Watcher and Connection Monitor
+seoTitle: Insights, Network Watcher and Connection Monitor | AZ-104
+description: Use VM, storage and network insights in Azure Monitor, then Network Watcher tools and Connection monitor to find where traffic breaks, for the AZ-104 exam.
+answer: >-
+  **Azure Monitor Insights** are ready-made monitoring views per service. **VM insights** uses the **Azure Monitor Agent** and a **data collection rule** to show performance trends and a dependency **Map**. **Storage insights** and **Network insights** are built on platform metrics and need no setup. **Network Watcher** is the regional network toolbox: **Topology**, **Connection monitor**, **IP flow verify**, **NSG diagnostics**, **Next hop**, **Effective security rules**, **Connection troubleshoot**, **Packet capture**, **VPN troubleshoot** and **flow logs**. **Connection monitor** runs TCP, HTTP or ICMP tests from an agent on a source VM to a destination, records **checks failed (%)** and **round-trip time**, and can raise an alert.
+updated: 2026-11-24
+readingMinutes: 11
+keyTerms:
+  - term: VM insights
+    definition: Azure Monitor's view of VM performance and dependencies, collected by the Azure Monitor Agent through a data collection rule.
+  - term: Storage insights
+    definition: A built-in workbook that shows capacity, transactions, latency and availability across storage accounts from platform metrics.
+  - term: Network insights
+    definition: A built-in view of network resource health, topology and metrics across subscriptions.
+  - term: Network Watcher
+    definition: A regional service, enabled automatically when you create a virtual network, that provides network monitoring and diagnostic tools.
+  - term: Connection monitor
+    definition: A Network Watcher feature that continuously tests connectivity from sources to destinations and records failures and latency.
+  - term: Test group
+    definition: The part of a connection monitor that ties sources, destinations and test configurations together.
+  - term: Network Watcher Agent
+    definition: The VM extension that lets Azure VMs act as Connection monitor sources and run connection troubleshoot and packet capture.
+  - term: VNet flow logs
+    definition: Network Watcher logs of IP traffic through a virtual network, replacing NSG flow logs, optionally analysed by Traffic analytics.
+interview:
+  - level: beginner
+    q: What does VM insights give you that the VM's Metrics blade doesn't?
+    a: >-
+      Guest-level data. Host metrics show CPU, disk and network from outside, but VM insights uses the Azure Monitor Agent inside the VM, so you get available memory, logical disk free space, and a map of which processes connect to which servers. It also compares many VMs at once.
+    followUps: []
+  - level: intermediate
+    q: The app server sometimes can't reach the database and nobody can catch it happening. What would you set up?
+    a: >-
+      A Connection monitor with the app VM as the source and the database VM as the destination, a TCP test on 1433 every 30 seconds, thresholds on checks failed and round-trip time, and an alert to the ops action group. The history goes to Log Analytics, so I can see exactly when it failed and which hop dropped it.
+    followUps: []
+  - level: experienced
+    q: Connection monitor says a path is failing at the NSG hop. How do you confirm the rule?
+    a: >-
+      IP flow verify with the VM, direction, protocol, local and remote IP and port tells me allowed or denied and names the rule. NSG diagnostics does the same for a wider set of inputs and also checks the subnet NSG. Effective security rules shows the merged rules on the NIC.
+    followUps: []
+  - level: scenario
+    q: Security wants a record of which IPs talk to the payment subnet. What do you turn on?
+    a: >-
+      VNet flow logs on the virtual network, stored in a storage account, with Traffic analytics into a Log Analytics workspace so we can query and chart flows. New NSG flow logs can't be created any more, so VNet flow logs are the current choice.
+    followUps: []
+revision:
+  keyPoints:
+    - VM insights needs the Azure Monitor Agent and a data collection rule; it shows Performance and an optional dependency Map.
+    - Storage insights and Network insights come from platform metrics, so there's nothing to install.
+    - Network Watcher is regional and enabled automatically with your first virtual network in a region (resource group NetworkWatcherRG).
+    - Connection monitor tests TCP, HTTP or ICMP from sources (Azure VMs with the Network Watcher Agent, or Arc machines with the Azure Monitor Agent) to VMs, FQDNs, URLs or IPs.
+    - Diagnostic tools - IP flow verify (allowed or denied, which rule), Next hop (which route), Effective security rules, NSG diagnostics, Connection troubleshoot, Packet capture, VPN troubleshoot.
+  mistakes:
+    - Expecting VM insights data without an agent or a data collection rule.
+    - Using IP flow verify for continuous monitoring. It's a one-off check; Connection monitor is continuous.
+    - Planning new NSG flow logs. Use VNet flow logs.
+  examTips:
+    - '"Continuously monitor latency and packet loss between a VM and an endpoint" = **Connection monitor**.'
+    - '"Why is this packet blocked, and by which rule?" = **IP flow verify** or **NSG diagnostics**. "Where does this packet go?" = **Next hop**.'
+    - '"Capture traffic on a VM for analysis" = **Packet capture** (needs the Network Watcher Agent).'
+  quick:
+    - q: Which agent does VM insights use?
+      a: The Azure Monitor Agent, configured by a data collection rule.
+    - q: Which VM extension does Connection monitor need on an Azure VM source?
+      a: The Network Watcher Agent extension.
+    - q: Name the three Connection monitor test protocols.
+      a: TCP, HTTP and ICMP.
+    - q: Which Network Watcher tool tells you the next hop type for a packet?
+      a: Next hop.
+    - q: Which insight needs no setup and shows capacity and transactions across storage accounts?
+      a: Storage insights.
+references:
+  - title: Overview of VM insights
+    url: https://learn.microsoft.com/azure/azure-monitor/vm/vminsights-overview
+  - title: Monitor storage with Azure Monitor Storage insights
+    url: https://learn.microsoft.com/azure/storage/common/storage-insights-overview
+  - title: Azure Monitor Network insights
+    url: https://learn.microsoft.com/azure/network-watcher/network-insights-overview
+  - title: What is Azure Network Watcher?
+    url: https://learn.microsoft.com/azure/network-watcher/network-watcher-overview
+  - title: Connection monitor overview
+    url: https://learn.microsoft.com/azure/network-watcher/connection-monitor-overview
+related:
+  - monitor-metrics-and-diagnostic-settings
+  - alerts-action-groups-processing-rules
+  - kql-for-azure-admins
+---
+
+## Start with a question
+
+<Story question="Your water pressure is low. Is it your tap, your pipes or the street?">
+
+A plumber doesn't guess. First they look at the meter by the door (that's the overview). Then they test water at the tap every few minutes for a day to catch the drop when it happens. When it drops, they walk the pipe and find the valve someone half closed.
+
+**Azure Monitor Insights** are the meters: ready-made views of your VMs, storage accounts and networks. **Network Watcher** is the plumber's kit. Its **Connection monitor** keeps testing the path from your app to its database, and its diagnostic tools find the exact valve, usually an NSG rule or a route, that closed.
+
+</Story>
+
+## Explain it like I'm 10
+
+<Eli10>
+
+Every few seconds, your friend throws a ball to you across the playground. If you catch it, all good.
+
+One day a fence appears and the ball bounces back. Your friend writes down the time and shouts "it's the fence by the swings".
+
+The friend throwing balls is **Connection monitor**. The notebook is **Log Analytics**. Finding the fence is **IP flow verify**.
+
+</Eli10>
+
+## The technical explanation
+
+### Azure Monitor Insights
+
+Insights are curated monitoring experiences under **Monitor > Insights** (and on each resource's **Monitoring > Insights** blade).
+
+| Insight | What you see | What it needs |
+| --- | --- | --- |
+| **VM insights** | **Performance**: CPU, available memory, logical disk space, network, compared across VMs. **Map** (optional): processes and their connections to other servers | **Azure Monitor Agent** + a VM insights **data collection rule** sending to a Log Analytics workspace (data in **InsightsMetrics**, and VMProcess/VMConnection for Map) |
+| **Storage insights** | Capacity, transactions, latency, availability and failures across all storage accounts | Nothing: built on platform metrics |
+| **Network insights** | Health and metrics of virtual networks, load balancers, gateways, Application Gateways, a topology view, and links to Network Watcher tools | Nothing: built on platform metrics and resource health |
+| Container insights, Application Insights | AKS clusters, apps | Agents or SDKs (covered elsewhere) |
+
+**Enable VM insights:** VM > **Monitoring > Insights > Enable**, or **Monitor > Insights > Virtual Machines > Not monitored > Enable**. Choose the data collection rule (or create one), whether to collect **processes and dependencies (Map)**, and the workspace. The portal installs the Azure Monitor Agent for you.
+
+```bash
+# The CLI path: a VMInsights data collection rule plus an association per VM
+az monitor data-collection rule create -g rg-ops -n MSVMI-law-contoso-ops \
+  --location eastus --rule-file vminsights-dcr.json
+az monitor data-collection rule association create --name vmi-vm-app01 \
+  --rule-id <dcr id> --resource <vm id>
+az vm extension set -g rg-ops --vm-name vm-app01 \
+  --name AzureMonitorLinuxAgent --publisher Microsoft.Azure.Monitor --enable-auto-upgrade true
+```
+
+Interpreting VM insights: look at the **P95** line, not just the average, to see the busy moments; sort the **Top N** lists to find the VM that's short of memory; and use **Map** to see which servers a VM talks to before you change a firewall rule.
+
+### Network Watcher
+
+Network Watcher is a regional service. Azure turns it on automatically in a region when you create or update a virtual network there, and puts it in the **NetworkWatcherRG** resource group. Its tools:
+
+| Group | Tool | Answers |
+| --- | --- | --- |
+| Monitoring | **Topology** | What's connected to what in this VNet? |
+| | **Connection monitor** | Is the path from A to B healthy right now, and when did it last fail? |
+| Diagnostics | **IP flow verify** | Is this 5-tuple allowed or denied on this VM, and by which NSG rule? |
+| | **NSG diagnostics** | Same idea, for any source and destination, across NIC and subnet NSGs |
+| | **Next hop** | Where does a packet from this VM go next (Internet, VirtualAppliance, VNet peering, None) and which route table decided? |
+| | **Effective security rules** | The merged NSG rules that apply to a NIC |
+| | **Connection troubleshoot** | A one-off connectivity test between a VM and an endpoint, with hops |
+| | **Packet capture** | A capture file of traffic on a VM |
+| | **VPN troubleshoot** | Why a VPN gateway or connection is unhealthy |
+| Logs | **Flow logs** (VNet flow logs) and **Traffic analytics** | Who talked to whom, how much, allowed or denied |
+
+New NSG flow logs can no longer be created and NSG flow logs retire in September 2027, so use **VNet flow logs**.
+
+### Connection monitor
+
+A connection monitor contains one or more **test groups**. Each test group has:
+
+- **Sources**: Azure VMs or scale sets with the **Network Watcher Agent** extension (the portal installs it), or on-premises and other-cloud machines through Azure Arc with the Azure Monitor Agent.
+- **Destinations**: Azure VMs, or external addresses (FQDN, URL or IP), including Microsoft 365 endpoints.
+- **Test configurations**: protocol **TCP**, **HTTP** or **ICMP**, port, **test frequency** (for example every 30 seconds), and **success thresholds**: **checks failed (%)** and **round-trip time (ms)**.
+
+Results go to a Log Analytics workspace (tables **NWConnectionMonitorTestResult** and **NWConnectionMonitorPathResult**). You can **create an alert** in the wizard, which uses a metric alert on *Checks failed percent* or *Round-trip time* and calls an action group. The **topology** view in the results shows each hop and flags the one with issues.
+
+**Portal path:** **Network Watcher > Monitoring > Connection monitor > + Create**. Tabs: *Basics, Test groups, Create alert, Review + create*.
+
+```bash
+az network watcher connection-monitor create --name cm-app-to-sql --location eastus \
+  --endpoint-source-name vm-app01 --endpoint-source-resource-id <vm-app01 id> \
+  --endpoint-dest-name vm-sql01 --endpoint-dest-resource-id <vm-sql01 id> \
+  --test-config-name tcp-1433 --protocol Tcp --tcp-port 1433 --frequency 30 \
+  --workspace-ids <workspace id>
+```
+
+<TryIt labs="adm-ops-alerts-insights" text="Enable VM insights, create a Connection monitor on TCP 1433, then break the path with an NSG rule." />
+
+<Callout type="exam">
+Match the tool to the question. "**Continuously** monitor reachability or latency between a VM and an endpoint, and alert" is **Connection monitor**. "**Is traffic allowed** to this VM on port X, and which rule decides?" is **IP flow verify** (or NSG diagnostics). "**Which route** sends traffic to the firewall?" is **Next hop**. "Capture traffic for Wireshark" is **Packet capture**. "See memory and disk inside VMs and their dependencies" is **VM insights**, which needs the **Azure Monitor Agent**. "Capacity and transactions across storage accounts with no setup" is **Storage insights**.
+</Callout>
+
+<DeepDive title="Connection monitor versus the one-off tools">
+
+Connection troubleshoot and IP flow verify answer a question once, from the state at that moment. Connection monitor runs the same kind of check every few seconds and keeps history, which is what you need for problems that come and go. A common workflow: Connection monitor alerts you, its topology points at a hop, and IP flow verify or Next hop names the rule or route.
+
+Cost is per test: the first 10 tests a month are free, then roughly $0.30 per test a month (illustrative), plus Log Analytics ingestion for the results. A "test" is one source, destination and configuration combination, so a mesh of 10 sources and 10 destinations is 100 tests.
+
+</DeepDive>
+
+## Real-world business scenario
+
+<Scenario
+  company="Tailwind Traders (fictional)"
+  industry="E-commerce"
+  problem="Checkout failed for a few minutes at random times. The app team blamed the network, the network team blamed SQL, and by the time anyone looked, it worked again."
+  service="VM insights on the web and SQL VMs showed memory was fine and the Map confirmed the app only talked to vm-sql01 on 1433. A Connection monitor tested TCP 1433 from both web VMs every 30 seconds with an alert to the ops action group. The next failure showed 100% checks failed at the NSG hop for two minutes. IP flow verify named a deny rule pushed by a nightly automation script."
+  why="Continuous tests caught the short outage, the topology pointed at the hop, and a one-off diagnostic named the exact rule."
+  outcome="The script was fixed the same day and checkout failures stopped. The monitor stayed in place and has alerted twice since, both within a minute."
+/>
+
+## When to use it and when not to
+
+<UseWhen
+  use={[
+    'You need guest memory, disk and dependency data from VMs: VM insights.',
+    'You want a no-setup view across storage accounts or network resources: Storage or Network insights.',
+    'A connection fails now and then and you need history and an alert: Connection monitor.',
+  ]}
+  avoid={[
+    'Using Connection monitor to answer a one-time "is port 443 allowed" question. IP flow verify is quicker.',
+    'Expecting VM insights to work on a VM with no agent or data collection rule.',
+    'Creating new NSG flow logs. Use VNet flow logs.',
+  ]}
+  alternatives={[
+    '<strong>IP flow verify, Next hop, NSG diagnostics</strong> for one-off troubleshooting.',
+    '<strong>Application Insights availability tests</strong> to test a public website from around the world.',
+    '<strong>Metric alerts</strong> on load balancer health probe status for back-end health.',
+  ]}
+/>

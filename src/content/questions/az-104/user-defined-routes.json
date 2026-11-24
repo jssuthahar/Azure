@@ -1,0 +1,148 @@
+{
+ "cert": "az-104",
+ "domain": 4,
+ "topic": "user-defined-routes",
+ "questions": [
+  {
+   "id": "adm-net-udr-1",
+   "type": "single",
+   "question": "You must ensure that all internet-bound traffic from Subnet1 passes through a firewall appliance that has the private IP address 10.0.2.4. What should you create and associate with Subnet1?",
+   "options": [
+    {
+     "text": "A route table that contains a route for 0.0.0.0/0 with the next hop type Virtual appliance and the next hop address 10.0.2.4",
+     "why": "Correct. The user-defined route overrides the default system route to the internet."
+    },
+    {
+     "text": "A route table that contains a route for 0.0.0.0/0 with the next hop type Internet",
+     "why": "This matches the default system route and does not send traffic to the firewall."
+    },
+    {
+     "text": "A network security group that denies outbound Internet traffic",
+     "why": "An NSG can block traffic but cannot redirect it to the firewall."
+    },
+    {
+     "text": "A service endpoint for Microsoft.Network",
+     "why": "Service endpoints apply to Azure PaaS services and do not redirect internet traffic."
+    }
+   ],
+   "answer": [
+    0
+   ],
+   "explanation": "Associate a route table with the subnet and use the Virtual appliance next hop type with the private IP address of the appliance.",
+   "objective": "4.1.4"
+  },
+  {
+   "id": "adm-net-udr-2",
+   "type": "single",
+   "question": "A subnet has the following effective routes: 10.0.0.0/8 next hop None, 10.2.0.0/16 next hop Virtual appliance 10.0.2.4, and 0.0.0.0/0 next hop Internet. Where is a packet to 10.2.5.9 sent?",
+   "options": [
+    {
+     "text": "To the virtual appliance at 10.0.2.4",
+     "why": "Correct. 10.2.0.0/16 is the longest prefix that matches."
+    },
+    {
+     "text": "It is dropped",
+     "why": "The 10.0.0.0/8 route also matches, but the /16 route is more specific."
+    },
+    {
+     "text": "To the internet",
+     "why": "0.0.0.0/0 matches every address but has the shortest prefix."
+    },
+    {
+     "text": "To the virtual network gateway",
+     "why": "No route with that next hop matches the destination."
+    }
+   ],
+   "answer": [
+    0
+   ],
+   "explanation": "Azure selects the route with the longest prefix match. On an identical prefix, a user-defined route is preferred over BGP and system routes.",
+   "objective": "4.1.4"
+  },
+  {
+   "id": "adm-net-udr-3",
+   "type": "single",
+   "question": "You create a route table that contains a route to a network virtual appliance (NVA). Traffic from the subnet reaches the NVA, but the NVA does not forward it. What should you configure?",
+   "options": [
+    {
+     "text": "Enable IP forwarding on the network interface of the NVA",
+     "why": "Correct. Without IP forwarding, Azure drops traffic that is not addressed to the NVA."
+    },
+    {
+     "text": "Disable gateway route propagation on the route table",
+     "why": "Route propagation affects BGP routes from a gateway, not forwarding by the NVA."
+    },
+    {
+     "text": "Associate the route table with the network interface of the NVA",
+     "why": "Route tables are associated with subnets, not network interfaces."
+    },
+    {
+     "text": "Add an inbound NAT rule",
+     "why": "Inbound NAT rules belong to load balancers and do not enable forwarding."
+    }
+   ],
+   "answer": [
+    0
+   ],
+   "explanation": "An NVA requires IP forwarding on its Azure network interface and in its operating system.",
+   "objective": "4.1.4"
+  },
+  {
+   "id": "adm-net-udr-4",
+   "type": "multi",
+   "question": "Which two statements about route tables are true? Each correct answer presents a complete solution.",
+   "options": [
+    {
+     "text": "A route table can be associated with multiple subnets.",
+     "why": "Correct. One route table can serve many subnets."
+    },
+    {
+     "text": "A subnet can be associated with only one route table.",
+     "why": "Correct. Each subnet has zero or one route table."
+    },
+    {
+     "text": "A route table can be associated directly with a network interface.",
+     "why": "Route tables are associated with subnets."
+    },
+    {
+     "text": "A route table can be associated with a subnet in a different region.",
+     "why": "The route table must be in the same region and subscription as the virtual network."
+    }
+   ],
+   "answer": [
+    0,
+    1
+   ],
+   "explanation": "Route tables are associated with subnets in the same region and subscription.",
+   "objective": "4.1.4"
+  },
+  {
+   "id": "adm-net-udr-5",
+   "type": "single",
+   "question": "Subnet1 must not be able to send any traffic to the address range 172.16.50.0/24. You must use routing to meet the requirement. Which next hop type should you use in the user-defined route?",
+   "options": [
+    {
+     "text": "None",
+     "why": "Correct. Traffic that matches a route with the next hop type None is dropped."
+    },
+    {
+     "text": "Virtual network",
+     "why": "This keeps traffic inside the virtual network."
+    },
+    {
+     "text": "Internet",
+     "why": "This sends traffic to the internet."
+    },
+    {
+     "text": "Virtual network gateway",
+     "why": "This sends traffic to the VPN or ExpressRoute gateway."
+    }
+   ],
+   "answer": [
+    0
+   ],
+   "explanation": "The None next hop type drops traffic to the destination prefix.",
+   "objective": "4.1.4"
+  }
+ ]
+}

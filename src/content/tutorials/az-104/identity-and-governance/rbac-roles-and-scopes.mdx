@@ -1,0 +1,216 @@
+---
+title: "Azure RBAC: Built-in Roles and Scopes"
+seoTitle: Azure RBAC Built-in Roles and Scopes Explained | AZ-104
+description: Assign Azure built-in roles like Owner, Contributor, Reader and User Access Administrator at management group, subscription, resource group or resource scope.
+answer: >-
+  **Azure role-based access control (RBAC)** grants access with a **role assignment**: a **security principal** (user, group, service principal or managed identity) + a **role definition** (a set of allowed **Actions**) + a **scope**. Scopes are **management group**, **subscription**, **resource group** and **resource**, and assignments **inherit downward**. The four general built-in roles are **Owner** (everything, including granting access), **Contributor** (everything except granting access), **Reader** (view only) and **User Access Administrator** (manage access only); **Role Based Access Control Administrator** can assign roles with conditions. Service roles such as **Virtual Machine Contributor** give narrower rights. Assign in **Access control (IAM)** or with `az role assignment create`.
+updated: 2026-11-24
+readingMinutes: 12
+keyTerms:
+  - term: Security principal
+    definition: Who gets access - a user, group, service principal or managed identity.
+  - term: Role definition
+    definition: A named list of allowed Actions, NotActions, DataActions and NotDataActions, such as Contributor.
+  - term: Scope
+    definition: Where an assignment applies - a management group, subscription, resource group or single resource.
+  - term: Role assignment
+    definition: The link of a principal, a role definition and a scope. It's what actually grants access.
+  - term: User Access Administrator
+    definition: A built-in role that manages access to Azure resources but can't manage the resources themselves.
+  - term: Role Based Access Control Administrator
+    definition: A built-in role that can assign roles, usually limited by a condition on which roles and principals.
+  - term: Custom role
+    definition: A role you define in JSON when no built-in role fits, with assignable scopes you choose.
+interview:
+  - level: beginner
+    q: What are the three parts of an Azure role assignment?
+    a: >-
+      Who, what and where. Who is the security principal, such as a user or group. What is the role definition, like Reader. Where is the scope, such as one resource group. Put them together and that person can do that set of things in that place and everything below it.
+    followUps: []
+  - level: intermediate
+    q: Contributor or Owner for an app team?
+    a: >-
+      Contributor on their own resource group in most cases. They can build and change everything they need, but they can't give access to anyone else or remove locks. I'd keep Owner for a few platform admins, ideally through PIM so it's only active when needed.
+    followUps: []
+  - level: experienced
+    q: How would you let a team lead grant access without letting them create new Owners?
+    a: >-
+      Assign Role Based Access Control Administrator with a condition, either limited to specific roles and principals or the option that blocks assigning Owner, User Access Administrator and RBAC Administrator. That delegates day-to-day access without handing over the keys to the subscription.
+    followUps: []
+  - level: scenario
+    q: The VM team needs to start and stop VMs in rg-app but must not change the network. Which role and scope?
+    a: >-
+      Virtual Machine Contributor at the rg-app resource group, assigned to the VM team's group. It manages VMs and their disks but doesn't give rights over the virtual network or let them sign in to the VMs. If even that's too much I'd write a custom role with just start, deallocate and read.
+    followUps: []
+revision:
+  keyPoints:
+    - Role assignment = security principal + role definition + scope.
+    - Scopes - management group, subscription, resource group, resource. Assignments inherit downward.
+    - Owner = all + grant access. Contributor = all except grant access. Reader = view. User Access Administrator = access only.
+    - Prefer job-function roles (Virtual Machine Contributor, Network Contributor) at the smallest scope, assigned to groups.
+    - Azure roles are separate from Microsoft Entra roles like Global Administrator.
+  mistakes:
+    - Giving Contributor when someone also needs to grant access. Contributor can't create role assignments.
+    - Assigning roles to individuals instead of groups, which leaves access behind when people move.
+  examTips:
+    - '"Manage VMs but not the virtual network" = **Virtual Machine Contributor**.'
+    - '"Grant access to others without managing resources" = **User Access Administrator**.'
+    - '"Apply to every subscription in the company with one assignment" = assign at a **management group**.'
+  quick:
+    - q: Which role can manage resources but not grant access?
+      a: Contributor.
+    - q: What are the four Azure RBAC scope levels?
+      a: Management group, subscription, resource group, resource.
+    - q: Which command assigns a role?
+      a: az role assignment create --assignee ... --role ... --scope ...
+    - q: Which role manages access but not resources?
+      a: User Access Administrator.
+    - q: Do Azure role assignments inherit to child scopes?
+      a: Yes. An assignment applies at its scope and every scope below it.
+references:
+  - title: What is Azure role-based access control (Azure RBAC)?
+    url: https://learn.microsoft.com/azure/role-based-access-control/overview
+  - title: Azure built-in roles
+    url: https://learn.microsoft.com/azure/role-based-access-control/built-in-roles
+  - title: Understand scope for Azure RBAC
+    url: https://learn.microsoft.com/azure/role-based-access-control/scope-overview
+  - title: Assign Azure roles using the Azure portal
+    url: https://learn.microsoft.com/azure/role-based-access-control/role-assignments-portal
+  - title: Delegate Azure role assignment management to others with conditions
+    url: https://learn.microsoft.com/azure/role-based-access-control/delegate-role-assignments-overview
+related:
+  - interpret-access-assignments
+  - resource-groups-subscriptions-management-groups
+  - azure-policy-for-admins
+---
+
+## Start with a question
+
+<Story question="How does a hotel make sure cleaners can open every room on their floor, but not the safe?">
+
+A hotel doesn't give everyone a master key. Cleaners get a card that opens every room on floor 3. The manager's card opens every floor. The night auditor's card opens the office but no guest rooms. Each card is a **role**, and the floor or building it works on is the **scope**.
+
+**Azure RBAC** works the same way. You give a person or group a **role** (what they can do) at a **scope** (where), and it works there and everywhere underneath.
+
+</Story>
+
+## Explain it like I'm 10
+
+<Eli10>
+
+Your school gives out badges.
+
+A **Reader** badge lets you look into any classroom. A **Contributor** badge lets you move the desks. An **Owner** badge lets you move desks and hand badges to other people.
+
+If your badge works for the whole building, it works in every classroom too. That's the **scope**.
+
+</Eli10>
+
+## The technical explanation
+
+### Who, what, where
+
+A **role assignment** has three parts:
+
+1. **Security principal**: a **user**, **group**, **service principal** (an app) or **managed identity**.
+2. **Role definition**: a list of permissions written as **Actions** (control plane, like `Microsoft.Compute/virtualMachines/start/action`), **NotActions** (taken out), **DataActions** and **NotDataActions** (data plane, like reading blobs).
+3. **Scope**: one of four levels, each inheriting from the one above.
+
+```text
+Management group   /providers/Microsoft.Management/managementGroups/mg-contoso
+  Subscription     /subscriptions/<id>
+    Resource group /subscriptions/<id>/resourceGroups/rg-app
+      Resource     /subscriptions/<id>/resourceGroups/rg-app/providers/Microsoft.Compute/virtualMachines/vm-app01
+```
+
+### Built-in roles you must know
+
+| Role | Can do | Can't do | Portal tab |
+| --- | --- | --- | --- |
+| **Owner** | Everything, including role assignments | Bypass locks or deny assignments | Privileged administrator roles |
+| **Contributor** | Create, change and delete any resource | Assign roles, delete locks, manage Blueprints assignments | Privileged administrator roles |
+| **Reader** | View everything | Change anything | Job function roles |
+| **User Access Administrator** | Manage role assignments | Create or change resources | Privileged administrator roles |
+| **Role Based Access Control Administrator** | Assign roles (optionally limited by a condition) | Manage access through other routes like Azure Policy | Privileged administrator roles |
+| **Virtual Machine Contributor** | Manage VMs, disks, NICs | Manage the VNet or storage, sign in to the VM | Job function roles |
+| **Network Contributor** | Manage networks | Manage VMs | Job function roles |
+| **Storage Blob Data Reader** | Read blob data (DataActions) | Manage the storage account | Job function roles |
+
+Use the smallest role at the smallest scope, and assign it to a **group**. When nothing fits, write a **custom role** in JSON with your own Actions and **AssignableScopes**.
+
+### Assigning roles
+
+Portal: open the scope → **Access control (IAM)** → **+ Add → Add role assignment** → **Role** tab (Job function roles or Privileged administrator roles) → **Members** tab (user, group, or service principal / managed identity) → **Conditions** (privileged roles only) → **Review + assign**.
+
+```bash
+# Resource group scope
+az role assignment create --assignee app-ops@contoso.com --role "Virtual Machine Contributor" --resource-group rg-app
+
+# Management group scope: every subscription below inherits it
+az role assignment create --assignee ben@contoso.com --role Reader \
+  --scope /providers/Microsoft.Management/managementGroups/mg-contoso
+
+az role definition list --name "Virtual Machine Contributor"   # read the permissions
+```
+
+```powershell
+New-AzRoleAssignment -SignInName ben@contoso.com -RoleDefinitionName Reader -Scope "/providers/Microsoft.Management/managementGroups/mg-contoso"
+```
+
+Changes usually apply within minutes, though they can take longer to reach every service. A subscription can hold up to **4,000** role assignments.
+
+### Azure roles vs Microsoft Entra roles
+
+**Azure roles** control Azure resources. **Microsoft Entra roles** (Global Administrator, User Administrator, License Administrator) control the directory. A Global Administrator has no Azure resource access by default; they can **elevate access** (Entra ID → Properties → Access management for Azure resources) to get User Access Administrator at root scope `/`, and should turn it off afterwards.
+
+<Flow
+  caption="Ben's access in rg-app"
+  steps={[
+    { title: 'High up', text: 'Reader at mg-contoso: Ben can read every subscription below.' },
+    { title: 'Low down', text: 'Contributor on rg-app: he can also change things there.' },
+    { title: 'Add up', text: 'In rg-app he has Reader + Contributor. Everywhere else, Reader.' },
+    { title: 'Limit', text: 'He still can\'t grant access: Contributor excludes Microsoft.Authorization writes.' },
+  ]}
+/>
+
+<TryIt labs="adm-rbac-hierarchy" text="Assign Reader at a management group and Contributor on a resource group, then try to promote yourself." />
+
+<Callout type="exam">
+Map the verbs. "Manage resources but not access" = **Contributor**. "Manage access but not resources" = **User Access Administrator**. "Do everything" = **Owner**. "View only" = **Reader**. "Start and stop VMs only" points to **Virtual Machine Contributor** or a **custom role**. "Apply to all current and future subscriptions" = assign at a **management group**. If the requirement says "least privilege", the widest role is almost never the answer.
+</Callout>
+
+<DeepDive title="PIM and conditions">
+
+**Privileged Identity Management (PIM)**, part of Entra ID P2, makes Azure and Entra roles **eligible** instead of permanent: people activate them for a few hours with a justification and MFA. **Role assignment conditions** (ABAC) narrow an assignment further, for example Storage Blob Data Reader only on blobs tagged `project=alpine`, or RBAC Administrator only for specific roles. Both show up on the **Assignment type** and **Conditions** tabs of Add role assignment.
+
+</DeepDive>
+
+## Real-world business scenario
+
+<Scenario
+  company="Litware Insurance (fictional)"
+  industry="Insurance"
+  problem="Twenty-two people were Owner on the production subscription, so anyone could delete anything or hand out access, and auditors flagged it every quarter."
+  service="Owner cut to two platform admins (eligible through PIM). App teams got Contributor on their own resource groups through groups, the network team got Network Contributor at the subscription, the helpdesk got Reader at the management group, and team leads got RBAC Administrator with a condition that blocks privileged roles."
+  why="Each team can still do its job, but only the platform admins can change access across the subscription."
+  outcome="Permanent Owner assignments went from 22 to 0, and the next audit passed without access findings."
+/>
+
+## When to use it and when not to
+
+<UseWhen
+  use={[
+    'Deciding who can create, change, read or delete Azure resources.',
+    'Delegating a resource group to an app team (Contributor or a job-function role).',
+    'Giving apps and automation access through managed identities.',
+  ]}
+  avoid={[
+    'Controlling what can be deployed, such as allowed regions. Use Azure Policy.',
+    'Protecting a resource from deletion by everyone. Use a resource lock.',
+    'Managing users and licenses. Use Microsoft Entra roles.',
+  ]}
+  alternatives={[
+    '<strong>Custom roles</strong> when no built-in role is narrow enough.',
+    '<strong>PIM</strong> for just-in-time privileged access.',
+  ]}
+/>

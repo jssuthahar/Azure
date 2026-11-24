@@ -1,0 +1,27 @@
+{ "cert": "az-104", "domain": 3, "topic": "app-service-deployment-slots", "questions": [
+  { "id": "adm-app-slot-1", "type": "single", "scenario": "A web app has a production slot and a staging slot. The connection string named OrdersDb must always point to the production database in the production slot, even after a swap.", "question": "What should you do?", "options": [
+    { "text": "Mark the OrdersDb connection string as a deployment slot setting in both slots", "why": "Correct. Slot settings stay with their slot during a swap." },
+    { "text": "Enable auto swap on the staging slot", "why": "Auto swap automates the swap. It does not keep the setting in place." },
+    { "text": "Configure traffic routing to send 0 percent of traffic to staging", "why": "Traffic routing controls user traffic, not which settings move during a swap." },
+    { "text": "Store the connection string in the web app code", "why": "Values in code move with the code during a swap." } ], "answer": [0], "explanation": "Mark environment-specific values, such as databases and endpoints, as deployment slot settings.", "objective": "3.4.8" },
+  { "id": "adm-app-slot-2", "type": "single", "question": "A web app runs on an App Service plan in the Basic tier. You need to create a staging slot. What should you do first?", "options": [
+    { "text": "Scale up the App Service plan to the Standard tier or higher", "why": "Correct. Deployment slots require Standard, Premium or Isolated tiers." },
+    { "text": "Scale out the plan to three instances", "why": "Adding instances does not enable deployment slots." },
+    { "text": "Create a second App Service plan", "why": "A slot runs on the same plan as the app." },
+    { "text": "Enable Always On", "why": "Always On does not enable deployment slots." } ], "answer": [0], "explanation": "Standard allows 5 slots per app and Premium v3 allows 20.", "objective": "3.4.8" },
+  { "id": "adm-app-slot-3", "type": "single", "question": "You plan to swap a staging slot into production. You need to validate the staging slot while it uses the production slot settings, before traffic is switched. What should you use?", "options": [
+    { "text": "Swap with preview", "why": "Correct. Swap with preview applies the target settings and pauses so you can validate before you complete the swap." },
+    { "text": "Auto swap", "why": "Auto swap completes the swap automatically after deployment, without a pause." },
+    { "text": "A custom backup", "why": "A backup does not validate a slot with production settings." },
+    { "text": "Clone settings from production when creating the slot", "why": "Cloning copies settings once at creation and does not pause a swap." } ], "answer": [0], "explanation": "After validating, complete the swap or reset it to cancel.", "objective": "3.4.8" },
+  { "id": "adm-app-slot-4", "type": "multi", "question": "Which two items remain with the production slot after you swap a staging slot into production? Each correct answer presents a complete solution.", "options": [
+    { "text": "The custom domain names bound to production", "why": "Correct. Custom domain names are not swapped." },
+    { "text": "The scale settings of production", "why": "Correct. Scale settings are not swapped." },
+    { "text": "The application code deployed to staging", "why": "The code is swapped and becomes production." },
+    { "text": "App settings that are not marked as deployment slot settings", "why": "Non-sticky app settings move with the swap." } ], "answer": [0, 1], "explanation": "Custom domains, non-public certificates and TLS settings, scale settings, IP restrictions and managed identities stay with their slot.", "objective": "3.4.8" },
+  { "id": "adm-app-slot-5", "type": "single", "scenario": "You need to send 10 percent of production users to a staging slot to test a new feature. Users must stay on the same slot for the rest of their session.", "question": "What should you configure?", "options": [
+    { "text": "Traffic routing with 10 percent assigned to the staging slot", "why": "Correct. Traffic routing sends a percentage of users to a slot, and a cookie keeps them on that slot." },
+    { "text": "An autoscale rule on the App Service plan", "why": "Autoscale changes the instance count. It does not split traffic between slots." },
+    { "text": "Two access restriction rules with different priorities", "why": "Access restrictions allow or deny traffic. They do not route a percentage to a slot." },
+    { "text": "Swap with preview", "why": "Swap with preview validates a swap. It does not split production traffic." } ], "answer": [0], "explanation": "The x-ms-routing-name cookie keeps each user on the slot they were routed to.", "objective": "3.4.8" }
+] }

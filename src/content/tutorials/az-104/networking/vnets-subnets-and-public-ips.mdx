@@ -1,0 +1,211 @@
+---
+title: Virtual Networks, Subnets and Public IP Addresses
+seoTitle: Azure VNets, Subnets and Public IP Addresses | AZ-104
+description: Plan Azure virtual networks and subnets, remember the 5 reserved IPs, and create Standard static public IPs in the portal and Azure CLI for AZ-104.
+answer: >-
+  An Azure **virtual network (VNet)** is a private IP address space (for example **10.0.0.0/16**) in one region and subscription, split into **subnets**. Azure **reserves 5 addresses in every subnet** (network, default gateway, two for Azure DNS and broadcast), so a /29 leaves 3 usable and a /24 leaves 251. Address spaces must not overlap anything you'll connect to. A **public IP address** today is the **Standard SKU**: always **static**, **zone-redundant** where the region has zones, and **closed to inbound traffic until an NSG allows it**. Basic SKU public IPs were retired on 30 September 2025.
+updated: 2026-11-24
+readingMinutes: 11
+keyTerms:
+  - term: Virtual network (VNet)
+    definition: A private, isolated network in one Azure region and subscription, defined by one or more address ranges in CIDR notation.
+  - term: Subnet
+    definition: A range inside a VNet's address space where you place resources. NSGs, route tables and service endpoints attach to subnets.
+  - term: Reserved addresses
+    definition: The 5 IPs Azure keeps in every subnet - the network address, .1 for the default gateway, .2 and .3 for Azure DNS, and the broadcast address.
+  - term: Standard public IP
+    definition: The current public IP SKU. Static only, zone-redundant by default in zone regions, secure by default (inbound needs an NSG).
+  - term: Routing preference
+    definition: A public IP setting that picks Microsoft network (traffic stays on Microsoft's backbone as long as possible) or Internet (cheaper, hands off to ISPs sooner).
+  - term: Delegated subnet
+    definition: A subnet handed to one Azure service, such as Azure Container Instances or App Service VNet integration, which then manages it.
+interview:
+  - level: beginner
+    q: Why can't I use all 256 addresses in a /24 subnet?
+    a: >-
+      Azure keeps five of them in every subnet. The first is the network address, .1 is the default gateway, .2 and .3 map to Azure DNS, and the last one is the broadcast address. So a /24 gives me 251 usable addresses and a /29 gives me just 3.
+    followUps: []
+  - level: intermediate
+    q: What changes when you pick a Standard public IP instead of the old Basic one?
+    a: >-
+      Standard is always static, it's zone-redundant by default in regions with availability zones, and it's secure by default: nothing comes in until an NSG allows it. It also works with Standard Load Balancer, NAT gateway and Bastion. Basic was retired in September 2025, so in practice every new public IP is Standard.
+    followUps: []
+  - level: experienced
+    q: How do you plan address spaces for a hub and spoke design?
+    a: >-
+      I get the on-premises ranges first, then give the hub and each spoke its own block that doesn't overlap anything, for example 10.0.0.0/16 for the hub and 10.1.0.0/16, 10.2.0.0/16 for spokes. I leave room for growth, because peered VNets can't overlap and resizing later means coordinating peerings. Inside each VNet I size subnets for the biggest thing that'll live there, remembering services like Bastion need a /26 and the gateway subnet should be /27 or bigger.
+    followUps: []
+  - level: scenario
+    q: A team created a subnet of 10.5.1.0/28 for a VM scale set that needs 14 instances. What happens?
+    a: >-
+      A /28 has 16 addresses, minus 5 reserved, so only 11 are usable. The scale set will fail to place the last instances. I'd move to a bigger subnet, such as a /27 (27 usable) or a /26, and I'd check nothing else shares it.
+    followUps: []
+revision:
+  keyPoints:
+    - A VNet is one region, one subscription, one or more CIDR ranges. VNets are free.
+    - Every subnet loses 5 addresses. /29 is the smallest IPv4 subnet (3 usable).
+    - Address spaces must not overlap VNets or on-premises networks you'll connect to.
+    - Standard public IP = static, zone-redundant in zone regions, closed until an NSG allows traffic.
+    - Basic SKU public IPs were retired on 30 September 2025.
+  mistakes:
+    - Forgetting the 5 reserved addresses when sizing a subnet.
+    - Expecting a Standard public IP to accept traffic with no NSG.
+    - Choosing overlapping ranges and discovering it only when peering fails.
+  examTips:
+    - '"How many VMs fit in a /27?" = 32 - 5 = **27**.'
+    - '"Public IP must never change" = **Static** (Standard is always static).'
+    - '"Public IP must survive a zone failure" = **Standard, zone-redundant**.'
+  quick:
+    - q: How many addresses does Azure reserve per subnet?
+      a: Five.
+    - q: What is the smallest IPv4 subnet Azure allows?
+      a: A /29, with 3 usable addresses.
+    - q: Which allocation methods does a Standard public IP support?
+      a: Static only.
+    - q: Can a VNet span two regions?
+      a: No. A VNet lives in one region; connect regions with global peering.
+    - q: Which CLI command creates a public IP?
+      a: az network public-ip create --sku Standard --allocation-method Static.
+references:
+  - title: What is Azure Virtual Network?
+    url: https://learn.microsoft.com/azure/virtual-network/virtual-networks-overview
+  - title: Azure Virtual Network frequently asked questions (reserved addresses)
+    url: https://learn.microsoft.com/azure/virtual-network/virtual-networks-faq
+  - title: Public IP addresses in Azure
+    url: https://learn.microsoft.com/azure/virtual-network/ip-services/public-ip-addresses
+  - title: Add, change, or delete a virtual network subnet
+    url: https://learn.microsoft.com/azure/virtual-network/virtual-network-manage-subnet
+related:
+  - configure-vnet-peering
+  - nsgs-asgs-and-effective-rules
+  - user-defined-routes
+---
+
+## Start with a question
+
+<Story question="Why does a new office building get its floor plan before anyone moves in?">
+
+Before the furniture arrives, someone decides which floor is sales, which is finance, and how many desks each gets. Move in first and plan later, and you end up knocking down walls.
+
+An Azure **virtual network** is that building and its **subnets** are the floors. You pick the address ranges up front, size each subnet for what will live there, and keep the ranges clear of every other building you'll ever connect to. The **public IP address** is the street address on the front door: fixed, so visitors and firewalls can find you.
+
+</Story>
+
+## Explain it like I'm 10
+
+<Eli10>
+
+Your street has house numbers from 1 to 8.
+
+The council keeps a few numbers for itself: one for the street sign, one for the postbox, two for the post office and one for the end of the road. That leaves only 3 houses.
+
+A VNet is your street, a subnet is a short row of houses, and Azure always keeps 5 numbers in every row. A public IP is the one address the whole world can send letters to.
+
+</Eli10>
+
+## The technical explanation
+
+### Virtual networks
+
+A VNet has one or more **address spaces** in CIDR notation, usually private ranges from RFC 1918 (10.0.0.0/8, 172.16.0.0/12, 192.168.0.0/16). It belongs to **one region and one subscription**, and it's free. Resources inside it talk to each other privately by default, and they can reach the internet outbound.
+
+Plan the ranges first. Peered VNets and on-premises networks you connect over VPN or ExpressRoute **can't overlap**, and fixing an overlap later means rebuilding peerings and gateways.
+
+### Subnets and the 5 reserved addresses
+
+Each subnet takes a slice of the address space. Azure keeps 5 addresses in every one:
+
+| Address in 10.0.1.0/24 | Used for |
+| --- | --- |
+| 10.0.1.0 | Network address |
+| 10.0.1.1 | Default gateway |
+| 10.0.1.2 and 10.0.1.3 | Azure DNS mapping |
+| 10.0.1.255 | Broadcast |
+
+| Prefix | Addresses | Usable |
+| --- | --- | --- |
+| /29 (smallest) | 8 | 3 |
+| /28 | 16 | 11 |
+| /27 | 32 | 27 |
+| /26 | 64 | 59 |
+| /24 | 256 | 251 |
+
+Some services need their own subnet with a fixed name or size: **GatewaySubnet** for VPN and ExpressRoute gateways (/27 or bigger recommended), **AzureBastionSubnet** (/26 or bigger), **AzureFirewallSubnet** (/26). Others **delegate** a subnet, such as App Service VNet integration or Container Instances. Subnets are where you attach **NSGs**, **route tables** and **service endpoints**.
+
+You can change a subnet's range only when nothing is using the addresses being removed. You can add address spaces to a VNet later, and peerings then need a **sync**.
+
+### Public IP addresses
+
+| Setting | What to pick |
+| --- | --- |
+| **SKU** | Standard. Basic was retired on 30 September 2025. |
+| **Assignment** | Static (the only option for Standard). The address stays until you delete the resource. |
+| **Availability zone** | Zone-redundant (default in zone regions), a single zone, or no zone. |
+| **Tier** | Regional, or Global for a cross-region load balancer. |
+| **Routing preference** | Microsoft network (default) or Internet. |
+| **DNS name label** | Optional, gives `label.region.cloudapp.azure.com`. |
+
+A Standard public IP is **secure by default**: inbound traffic is blocked until an NSG on the subnet or NIC allows it. You attach it to a VM's NIC, a Standard load balancer frontend, a VPN gateway, Bastion, NAT gateway or Azure Firewall. Price feel: about $3.65 a month (illustrative).
+
+### Portal and CLI
+
+Portal: **Virtual networks → + Create → Basics → Security → IP addresses** (address space and subnets) **→ Review + create**. Then **Public IP addresses → + Create**.
+
+```bash
+az network vnet create -g rg-net-hub -n vnet-hub \
+  --address-prefixes 10.0.0.0/16 --subnet-name snet-shared --subnet-prefixes 10.0.1.0/24
+az network vnet subnet create -g rg-net-hub --vnet-name vnet-hub -n snet-tiny --address-prefixes 10.0.9.0/29
+az network vnet subnet list-available-ips -g rg-net-hub --vnet-name vnet-hub -n snet-tiny
+
+az network public-ip create -g rg-net-hub -n pip-hub-vpn \
+  --sku Standard --allocation-method Static --zone 1 2 3
+```
+
+```powershell
+$sub = New-AzVirtualNetworkSubnetConfig -Name snet-shared -AddressPrefix 10.0.1.0/24
+New-AzVirtualNetwork -Name vnet-hub -ResourceGroupName rg-net-hub -Location eastus -AddressPrefix 10.0.0.0/16 -Subnet $sub
+New-AzPublicIpAddress -Name pip-hub-vpn -ResourceGroupName rg-net-hub -Location eastus -Sku Standard -AllocationMethod Static -Zone 1,2,3
+```
+
+<TryIt labs="adm-net-hub-spoke" text="Build a hub and two spokes, count the usable IPs in a /29 and watch a Basic public IP get refused." />
+
+<Callout type="exam">
+Do the subtraction: usable = addresses minus 5. A question that says "the IP must not change after a restart" wants a **static** public IP, and every Standard IP is static. "Survive a zone failure" means **zone-redundant Standard**. If a VM with a Standard public IP can't be reached and there's no NSG, that's the **secure by default** rule, not a broken IP.
+</Callout>
+
+<DeepDive title="Why a VNet can't span regions">
+
+A VNet is tied to one region's network fabric. To join regions you use **global VNet peering**, which still keeps traffic on Microsoft's backbone. Subnets, though, span every availability zone in their region, so zone-redundant designs don't need one subnet per zone.
+
+</DeepDive>
+
+## Real-world business scenario
+
+<Scenario
+  company="Contoso Retail (fictional)"
+  industry="Retail"
+  problem="Teams created VNets on the fly with 10.0.0.0/16 everywhere. When the company tried to peer them and connect the stores' VPN, every range collided, and a /28 subnet for checkout VMs ran out of addresses on a busy weekend."
+  service="A central address plan: hub 10.0.0.0/16, spokes 10.1.0.0/16 to 10.9.0.0/16, stores in 192.168.0.0/16. Subnets sized as /24 for app tiers, GatewaySubnet /27, AzureBastionSubnet /26. A zone-redundant Standard static public IP for the VPN gateway."
+  why="No overlaps means peering and VPN just work, and sizing with the 5 reserved addresses in mind stops scale-out failures."
+  outcome="The network team connected 9 spokes and 140 stores with no re-addressing, and checkout scaled to 40 VMs without hitting the subnet limit."
+/>
+
+## When to use it and when not to
+
+<UseWhen
+  use={[
+    'Any Azure workload that needs private addresses, from a single VM to a hub and spoke estate.',
+    'A Standard static public IP whenever partners or firewalls must allow a fixed address.',
+    'Separate subnets per tier so NSGs and route tables can treat them differently.',
+  ]}
+  avoid={[
+    'Address spaces that overlap on-premises or other VNets you might peer later.',
+    'Tiny subnets for anything that scales out.',
+    'Public IPs on every VM. Use a load balancer, NAT gateway or Bastion instead.',
+  ]}
+  alternatives={[
+    '<strong>NAT gateway</strong> for outbound internet from a subnet with a few fixed IPs.',
+    '<strong>Azure Bastion</strong> for admin access without public IPs on VMs.',
+    '<strong>Azure Virtual Network Manager</strong> to manage many VNets and their connectivity centrally.',
+  ]}
+/>

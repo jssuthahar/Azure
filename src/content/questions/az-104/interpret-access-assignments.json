@@ -1,0 +1,149 @@
+{
+ "cert": "az-104",
+ "domain": 1,
+ "topic": "interpret-access-assignments",
+ "questions": [
+  {
+   "id": "adm-id-acc-1",
+   "type": "single",
+   "scenario": "User1 has the Reader role at the subscription scope and the Contributor role on resource group RG1. A CanNotDelete lock exists at the subscription scope.",
+   "question": "Which actions can User1 perform in RG1?",
+   "options": [
+    {
+     "text": "Create a storage account in RG1",
+     "why": "Correct. Contributor on RG1 allows creating resources."
+    },
+    {
+     "text": "Assign the Reader role to User2 on RG1",
+     "why": "Contributor cannot create role assignments, and Reader adds no write permissions."
+    },
+    {
+     "text": "Delete the subscription-level resource lock",
+     "why": "Contributor cannot delete locks, and the lock is outside RG1."
+    },
+    {
+     "text": "Assign the Contributor role to User1 at the subscription scope",
+     "why": "User1 has no permission to write role assignments."
+    }
+   ],
+   "answer": [
+    0
+   ],
+   "explanation": "Effective access is the union of Reader inherited from the subscription and Contributor on RG1. Contributor NotActions exclude Microsoft.Authorization writes.",
+   "objective": "1.2.3"
+  },
+  {
+   "id": "adm-id-acc-2",
+   "type": "single",
+   "question": "User1 is assigned the Reader role on RG1. User1 is also a member of Group1, which is assigned the Contributor role on RG1. What is the effective access of User1 on RG1?",
+   "options": [
+    {
+     "text": "Contributor permissions, because role assignments are additive",
+     "why": "Correct. Azure RBAC grants the union of all assigned roles."
+    },
+    {
+     "text": "Reader permissions, because the most restrictive role applies",
+     "why": "Azure RBAC does not apply the most restrictive role."
+    },
+    {
+     "text": "No access, because the roles conflict",
+     "why": "Role assignments do not conflict; they add together."
+    },
+    {
+     "text": "Reader permissions, because direct assignments override group assignments",
+     "why": "Direct and group assignments are combined."
+    }
+   ],
+   "answer": [
+    0
+   ],
+   "explanation": "Only deny assignments block actions that a role grants.",
+   "objective": "1.2.3"
+  },
+  {
+   "id": "adm-id-acc-3",
+   "type": "single",
+   "question": "A custom role includes \"Microsoft.Compute/*\" in Actions and \"Microsoft.Compute/virtualMachines/delete\" in NotActions. User1 is assigned this custom role and the Virtual Machine Contributor role on the same resource group. Can User1 delete a virtual machine in the resource group?",
+   "options": [
+    {
+     "text": "Yes, because Virtual Machine Contributor grants the delete action and NotActions is not a deny",
+     "why": "Correct. NotActions only removes permissions from the role that defines it."
+    },
+    {
+     "text": "No, because NotActions in any role blocks the action",
+     "why": "NotActions is not a deny assignment."
+    },
+    {
+     "text": "No, because custom roles take precedence over built-in roles",
+     "why": "Custom and built-in roles are combined equally."
+    },
+    {
+     "text": "Yes, but only after a deny assignment is removed",
+     "why": "No deny assignment is described."
+    }
+   ],
+   "answer": [
+    0
+   ],
+   "explanation": "Effective permissions are the union of each role’s Actions minus its own NotActions.",
+   "objective": "1.2.3"
+  },
+  {
+   "id": "adm-id-acc-4",
+   "type": "multi",
+   "question": "A user who has the Owner role on a resource group cannot delete a storage account in that resource group. Which two configurations could cause this? Each correct answer presents a complete solution.",
+   "options": [
+    {
+     "text": "A CanNotDelete lock on the resource group",
+     "why": "Correct. Locks apply to all users, including Owners."
+    },
+    {
+     "text": "A deny assignment created by a deployment stack that covers the resource group",
+     "why": "Correct. Deny assignments take precedence over role assignments."
+    },
+    {
+     "text": "A Reader role assigned to the user at the subscription scope",
+     "why": "An additional Reader role does not remove Owner permissions."
+    },
+    {
+     "text": "An Azure Policy assignment with the Audit effect",
+     "why": "Audit marks resources as non-compliant but does not block deletion."
+    }
+   ],
+   "answer": [
+    0,
+    1
+   ],
+   "explanation": "Locks and deny assignments can block actions that role assignments allow.",
+   "objective": "1.2.3"
+  },
+  {
+   "id": "adm-id-acc-5",
+   "type": "single",
+   "question": "You need to view all role assignments for User1, including assignments inherited from parent scopes and assignments in every scope of the subscription, by using Azure CLI. Which command should you run?",
+   "options": [
+    {
+     "text": "az role assignment list --assignee user1@contoso.com --all --include-inherited",
+     "why": "Correct. --all lists assignments at all scopes and --include-inherited adds parent scope assignments."
+    },
+    {
+     "text": "az role definition list --name User1",
+     "why": "This lists role definitions, not assignments."
+    },
+    {
+     "text": "az ad user show --id user1@contoso.com",
+     "why": "This shows directory properties, not Azure role assignments."
+    },
+    {
+     "text": "az role assignment list --resource-group RG1",
+     "why": "This lists assignments at one resource group only."
+    }
+   ],
+   "answer": [
+    0
+   ],
+   "explanation": "In the portal, use Access control (IAM) > Check access for the same view at a scope.",
+   "objective": "1.2.3"
+  }
+ ]
+}

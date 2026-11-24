@@ -1,0 +1,235 @@
+---
+title: Recovery Services Vaults, Backup Vaults and Backup Policies
+seoTitle: Recovery Services Vault, Backup Vault, Policies | AZ-104
+description: Create a Recovery Services vault and a Backup vault, choose storage redundancy and soft delete, and build VM, blob and disk backup policies for AZ-104.
+answer: >-
+  Azure Backup stores data in two kinds of vault. A **Recovery Services vault** protects **Azure VMs**, **SQL Server and SAP HANA in VMs**, **Azure Files**, on-premises files through the **MARS agent**, and also hosts **Azure Site Recovery**. A **Backup vault** protects **Azure Blobs**, **managed disks**, **Azure Database for PostgreSQL flexible server** and **AKS**. For VM backup the vault must be in the **same region** as the VM, and you pick **storage redundancy** (geo-redundant by default, locally or zone-redundant) **before** protecting anything. A **backup policy** sets the **schedule** (Standard: daily; Enhanced: every few hours), **instant restore** snapshot retention and **daily, weekly, monthly and yearly retention**.
+updated: 2026-11-24
+readingMinutes: 12
+keyTerms:
+  - term: Recovery Services vault
+    definition: The Azure Backup and Site Recovery vault for Azure VMs, SQL and SAP HANA in VMs, Azure Files, MARS and MABS/DPM backups.
+  - term: Backup vault
+    definition: The Azure Backup vault (Microsoft.DataProtection) for Azure Blobs, managed disks, PostgreSQL flexible server and AKS.
+  - term: Backup policy
+    definition: The schedule and retention rules that one or more protected items follow.
+  - term: Standard and Enhanced policy
+    definition: VM backup policy types. Standard backs up once a day; Enhanced can back up every 4, 6, 8 or 12 hours and is needed for Trusted Launch VMs.
+  - term: Instant restore
+    definition: Snapshots kept next to the VM's disks for fast restores, 1 to 5 days on Standard and up to 30 days on Enhanced.
+  - term: Backup storage redundancy
+    definition: How the vault stores backup data (LRS, ZRS or GRS). It can only be changed before items are protected.
+  - term: Cross Region Restore
+    definition: A GRS vault option that lets you restore in the paired region at any time.
+  - term: Soft delete
+    definition: Keeps deleted backup data for 14 days by default (configurable up to 180) so it can be recovered.
+interview:
+  - level: beginner
+    q: Which vault do you use for an Azure VM, and which for blob storage?
+    a: >-
+      A Recovery Services vault for the VM, and a Backup vault for blobs. Managed disks on their own, PostgreSQL flexible servers and AKS clusters also go to a Backup vault. Recovery Services vaults also host Site Recovery for disaster recovery.
+    followUps: []
+  - level: intermediate
+    q: You created a vault in West US 2 and it doesn't appear when you configure backup for an East US VM. Why?
+    a: >-
+      For Azure VM backup the Recovery Services vault has to be in the same region as the VM. I'd create a vault in East US. If the business wants copies in another region, I'd use geo-redundant storage with Cross Region Restore on that East US vault.
+    followUps: []
+  - level: experienced
+    q: What would you decide before protecting the first item in a new vault?
+    a: >-
+      Storage redundancy, because it's locked once items are protected: GRS if we need Cross Region Restore, LRS or ZRS if not and cost matters. Also soft delete and its retention, whether to make soft delete always on, immutability, and multi-user authorization with a Resource Guard for the security-critical settings.
+    followUps: []
+  - level: scenario
+    q: Finance wants daily VM backups kept 30 days, month-end kept a year, and year-end kept seven years. How do you set the policy?
+    a: >-
+      A Standard VM policy with a daily backup at a quiet hour, daily retention 30 days, monthly retention on the last day for 12 months and yearly retention on the last day of December for 7 years. Instant restore at 2 days keeps quick restores fast without paying for long snapshot retention.
+    followUps: []
+revision:
+  keyPoints:
+    - Recovery Services vault - Azure VMs, SQL/SAP HANA in VMs, Azure Files, MARS, MABS/DPM, and Site Recovery.
+    - Backup vault - Azure Blobs, managed disks, PostgreSQL flexible server, AKS. Its managed identity needs a role on each data source.
+    - VM backup needs the vault in the VM's region. Redundancy (GRS default, LRS, ZRS) is set before protecting items; Cross Region Restore needs GRS.
+    - VM policies - Standard (daily) or Enhanced (every few hours, Trusted Launch). Instant restore 1-5 days (Standard) or up to 30 (Enhanced). Daily retention 7 to 9999 days, plus weekly, monthly, yearly.
+    - Soft delete is on by default for 14 days (up to 180). Always-on soft delete, immutable vaults and multi-user authorization add protection.
+  mistakes:
+    - Creating one vault for VMs in several regions.
+    - Trying to change storage redundancy after backups are configured.
+    - Putting blob or standalone disk backups in a Recovery Services vault.
+  examTips:
+    - '"Back up blob containers" or "managed disk snapshots on a schedule" = **Backup vault**. "Back up a VM", "Azure Files" or "Site Recovery" = **Recovery Services vault**.'
+    - '"Restore in the secondary region whenever we want" = **GRS** + **Cross Region Restore**.'
+    - '"Back up every 4 hours" or "Trusted Launch VM" = **Enhanced** policy.'
+  quick:
+    - q: Which vault type hosts Azure Site Recovery?
+      a: The Recovery Services vault.
+    - q: What's the default backup storage redundancy of a new Recovery Services vault?
+      a: Geo-redundant storage (GRS).
+    - q: How long does soft delete keep deleted backup data by default?
+      a: 14 days.
+    - q: What's the minimum daily retention for an Azure VM backup policy?
+      a: 7 days.
+    - q: Which role does a Backup vault's identity need to back up blobs?
+      a: Storage Account Backup Contributor on the storage account.
+references:
+  - title: What is the Azure Backup service?
+    url: https://learn.microsoft.com/azure/backup/backup-overview
+  - title: Create and configure a Recovery Services vault
+    url: https://learn.microsoft.com/azure/backup/backup-create-recovery-services-vault
+  - title: Create and delete a Backup vault
+    url: https://learn.microsoft.com/azure/backup/create-manage-backup-vault
+  - title: Back up an Azure VM from the VM settings
+    url: https://learn.microsoft.com/azure/backup/backup-azure-vms-first-look-arm
+  - title: Soft delete for Azure Backup
+    url: https://learn.microsoft.com/azure/backup/backup-azure-security-feature-cloud
+related:
+  - backup-restore-reports-and-alerts
+  - site-recovery-failover
+  - monitor-metrics-and-diagnostic-settings
+---
+
+## Start with a question
+
+<Story question="Where do you keep copies of the house keys, and how often do you check they're still there?">
+
+You don't keep the spare keys inside the house; a fire would take both. You leave them with a neighbour on the same street so you can get them quickly, or with family in another town in case the whole street floods. And you agree a routine: check every Sunday, replace them when the locks change.
+
+Azure Backup is that arrangement. The **vault** is the neighbour holding the copies, in the **same region** as your VM, with **redundancy** deciding whether a copy also sits in another region. The **backup policy** is the routine: when to copy and how long to keep each copy.
+
+</Story>
+
+## Explain it like I'm 10
+
+<Eli10>
+
+Every night at bedtime you take a photo of your Lego castle and put it in a safe box. That's a **backup** on a **schedule**.
+
+You keep the last 30 photos, plus one from the end of each month for a year. That's **retention**.
+
+There are two safe boxes: a big one for whole castles (**Recovery Services vault**) and a newer one for loose bricks and baseplates (**Backup vault**).
+
+If your little brother throws photos in the bin, the box keeps them in a drawer for two weeks. That's **soft delete**.
+
+</Eli10>
+
+## The technical explanation
+
+### Two vault types
+
+| | Recovery Services vault | Backup vault |
+| --- | --- | --- |
+| Protects | **Azure VMs**, SQL Server in Azure VMs, SAP HANA in Azure VMs, **Azure Files**, on-premises files and folders (**MARS agent**), MABS and DPM | **Azure Blobs** (operational and vaulted backup), **managed disks**, **Azure Database for PostgreSQL flexible server**, **AKS** |
+| Also does | **Azure Site Recovery** replication | — |
+| Resource type | Microsoft.RecoveryServices/vaults | Microsoft.DataProtection/backupVaults |
+| CLI | `az backup …` | `az dataprotection …` |
+| Access to the data | Azure Backup service handles VM snapshots | The vault's **system-assigned managed identity** needs roles on each data source |
+
+Both appear in **Business Continuity Center** (which brings together the older Backup center views), so you can manage all of them from one place.
+
+### Create a Recovery Services vault
+
+**Portal path:** search **Recovery Services vaults > + Create**. Tabs: *Basics, Redundancy, Vault properties, Networking, Tags, Review + create*.
+
+- **Region**: for Azure VM backup, the vault must be in the **same region as the VMs**. You need one vault per region you protect.
+- **Backup Storage Redundancy**: **Geo-redundant** (default), **Locally-redundant** or **Zone-redundant**. You can change it only **before** any item is protected.
+- **Cross Region Restore**: needs GRS. Lets you restore into the paired region at any time, not only during a Microsoft-declared outage.
+- **Soft delete** is on by default (14 days, configurable to 180). You can make it **always on**, which can't be undone. **Immutability** and **multi-user authorization** (a Resource Guard in another tenant or subscription) protect the vault from someone with admin rights.
+
+```bash
+az backup vault create -g rg-ops-bk -n rsv-contoso-eus -l eastus
+az backup vault backup-properties set -g rg-ops-bk -n rsv-contoso-eus \
+  --backup-storage-redundancy LocallyRedundant
+```
+
+```powershell
+New-AzRecoveryServicesVault -ResourceGroupName rg-ops-bk -Name rsv-contoso-eus -Location eastus
+$v = Get-AzRecoveryServicesVault -Name rsv-contoso-eus
+Set-AzRecoveryServicesBackupProperty -Vault $v -BackupStorageRedundancy LocallyRedundant
+```
+
+### Create a Backup vault
+
+**Portal path:** search **Backup vaults > + Create**. Tabs: *Basics* (name, region, **Backup Storage Redundancy**), *Vault Properties* (soft delete, immutability), *Tags, Review + create*. A system-assigned managed identity is created with it.
+
+```bash
+az dataprotection backup-vault create -g rg-ops-blob --vault-name bv-contoso-eus -l eastus \
+  --type SystemAssigned \
+  --storage-setting "[{type:LocallyRedundant,datastore-type:VaultStore}]"
+```
+
+Before a Backup vault can protect a data source, its identity needs a role there: **Storage Account Backup Contributor** on a storage account for blobs; **Disk Backup Reader** on a disk and **Disk Snapshot Contributor** on the resource group where snapshots go. The portal offers to grant these; from the CLI, `az dataprotection backup-instance update-msi-permissions` does it.
+
+### Backup policies for VMs
+
+**Portal path:** vault > **Manage > Backup policies > + Add > Azure Virtual Machine**.
+
+| Setting | Standard | Enhanced |
+| --- | --- | --- |
+| Frequency | Daily (or weekly) | Every 4, 6, 8 or 12 hours, or daily |
+| Instant restore snapshots | 1 to 5 days (default 2) | 1 to 30 days (default 7) |
+| Needed for | Most VMs | **Trusted Launch** VMs, Premium SSD v2 and Ultra disks, more frequent backups |
+
+**Retention range**: daily points 7 to 9999 days; weekly points on chosen days; monthly and yearly points on a chosen day or week. A vault starts with a **DefaultPolicy** (daily, 30 days, 2 days of instant restore) and an **EnhancedPolicy**. Each protected item follows exactly **one** policy, and changing a policy changes every item that uses it.
+
+```bash
+az backup policy show -g rg-ops-bk --vault-name rsv-contoso-eus -n DefaultPolicy > policy.json
+# edit name, scheduleRunTimes, retention counts, instantRpRetentionRangeInDays
+az backup policy create -g rg-ops-bk --vault-name rsv-contoso-eus -n DailyAt23-Keep60 \
+  --backup-management-type AzureIaasVM --policy policy.json
+az backup protection enable-for-vm -g rg-ops-bk --vault-name rsv-contoso-eus \
+  --vm vm-prod01 --policy-name DailyAt23-Keep60
+```
+
+### Backup policies in a Backup vault
+
+Backup vault policies are per data source type. **Blobs**: **operational backup** keeps continuous, local point-in-time restore (up to 360 days) inside the storage account; **vaulted backup** copies data to the vault on a daily or weekly schedule. **Disks**: incremental snapshots every few hours or daily, kept in a snapshot resource group. Start from the default template:
+
+```bash
+az dataprotection backup-policy get-default-policy-template --datasource-type AzureBlob > blob-policy.json
+az dataprotection backup-policy create -g rg-ops-blob --vault-name bv-contoso-eus \
+  -n blob-policy --policy blob-policy.json
+```
+
+<TryIt labs="adm-ops-vm-backup" text="Create a vault, get blocked by the wrong region, build a 60-day policy and protect a VM." />
+
+<Callout type="exam">
+First pick the vault from the data source: **VMs, Azure Files, SQL in a VM, MARS, Site Recovery** go to a **Recovery Services vault**; **blobs, managed disks, PostgreSQL flexible server, AKS** go to a **Backup vault**. Then the region: the vault is in the **same region** as the VM, so three regions means three vaults. Redundancy is chosen **before** protecting items; "restore in the secondary region on demand" needs **GRS + Cross Region Restore**. A backup every few hours, or a **Trusted Launch** VM, means an **Enhanced** policy. If a Backup vault can't protect a storage account, the missing piece is the **Storage Account Backup Contributor** role for the vault's identity.
+</Callout>
+
+<DeepDive title="Protecting the backups themselves">
+
+Ransomware crews go after backups first. Layer the defences: **soft delete** (14 to 180 days, set it to **always on** so nobody can switch it off), **immutable vaults** (recovery points can't be deleted before they expire; lock immutability to make it permanent), and **multi-user authorization**, which puts critical operations such as disabling soft delete or reducing retention behind a **Resource Guard** owned by a different team. Add a **CanNotDelete lock** on the vault's resource group and alerts on security events.
+
+Cost has two parts: a **protected instance** fee per VM (about $10 a month for a VM up to 50 GB, illustrative) and **backup storage** per GB, which is higher for GRS than LRS. Instant restore snapshots are billed as managed disk snapshots, so long snapshot retention adds up.
+
+</DeepDive>
+
+## Real-world business scenario
+
+<Scenario
+  company="Litware Accounting (fictional)"
+  industry="Professional services"
+  problem="Twelve VMs across East US and West Europe had no backups, client documents sat in blob storage with only soft delete on the containers, and the auditor wanted seven years of year-end copies."
+  service="One Recovery Services vault per region (GRS with Cross Region Restore), a Standard VM policy with daily backups at 23:00, 30 daily points, 12 monthly and 7 yearly, and an Enhanced policy for the two Trusted Launch VMs. A Backup vault protected the document storage account with operational and vaulted blob backup after its identity got Storage Account Backup Contributor. Soft delete was set to always on and a Resource Guard owned by the security team protected retention changes."
+  why="Each data source went to the vault type built for it, the region rule was respected, and nobody, including a compromised admin account, could quietly shorten retention."
+  outcome="The auditor signed off the retention plan, and a test restore of a year-old spreadsheet took under ten minutes."
+/>
+
+## When to use it and when not to
+
+<UseWhen
+  use={[
+    'Azure VMs, Azure Files or SQL in a VM need point-in-time copies: a Recovery Services vault in the same region.',
+    'Blobs, managed disks, PostgreSQL flexible servers or AKS need backup: a Backup vault.',
+    'You need different schedules or retention for different workloads: one policy per pattern, many items per policy.',
+  ]}
+  avoid={[
+    'One vault for VMs in several regions. It won\'t work for VM backup.',
+    'Choosing redundancy later. Decide before the first item is protected.',
+    'Treating backups as disaster recovery for a region outage. Restores take hours; use Site Recovery for minutes.',
+  ]}
+  alternatives={[
+    '<strong>Azure Site Recovery</strong> for region-level failover in minutes.',
+    '<strong>Blob soft delete and versioning</strong> for quick undo inside a storage account.',
+    '<strong>Azure Files share snapshots</strong> for quick file-level undo, alongside vault backup.',
+  ]}
+/>

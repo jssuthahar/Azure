@@ -1,0 +1,198 @@
+---
+title: Move a VM to Another Resource Group, Subscription or Region
+seoTitle: Move an Azure VM to Another Group or Region | AZ-104
+description: Move an Azure VM between resource groups and subscriptions with its dependent resources, and to another region with Azure Resource Mover, for AZ-104.
+answer: >-
+  To move a VM to another **resource group** or **subscription**, use **Move** in the portal, **az resource move** or **Move-AzResource**. The region doesn't change and the VM keeps running, but every **resource ID changes**, and the VM must move with its **dependent resources** (OS and data disks, network interface, and usually its public IP and NSG; across subscriptions the virtual network too). Both subscriptions must be in the same **Microsoft Entra tenant**. To move a VM to another **region**, use **Azure Resource Mover**: add resources, validate dependencies, **prepare**, **initiate move**, **commit**, then delete the source.
+updated: 2026-11-24
+readingMinutes: 11
+keyTerms:
+  - term: Resource move
+    definition: Moving resources to another resource group or subscription. The resources keep their region and keep running.
+  - term: Resource ID
+    definition: The full path of a resource, which includes the subscription and resource group, so it changes after a move.
+  - term: Dependent resources
+    definition: Resources a VM needs, such as its disks and network interface, that must move with it.
+  - term: Azure Resource Mover
+    definition: The service that moves VMs and related resources to another Azure region through prepare, initiate and commit steps.
+  - term: Move collection
+    definition: The Resource Mover object that groups the resources moving from one source region to one target region.
+  - term: Commit
+    definition: The Resource Mover step that makes the copied resources in the target region final. Discard throws them away instead.
+interview:
+  - level: beginner
+    q: Does moving a VM to another resource group change its region?
+    a: >-
+      No. Moving between resource groups or subscriptions only changes where it's managed and billed. The VM stays in the same region and keeps running. Changing region needs Azure Resource Mover or a rebuild.
+    followUps: []
+  - level: intermediate
+    q: Your VM move fails validation. What's the usual reason?
+    a: >-
+      The VM was selected without its dependent resources. Its OS and data disks and network interface have to move together, and for a subscription move the virtual network as well. I'd select the whole set, or check the error, which lists what's missing.
+    followUps: []
+  - level: experienced
+    q: What breaks after you move a VM to another subscription?
+    a: >-
+      Anything that uses the old resource ID: scripts, alerts, dashboards, automation and role assignments made directly on the VM, which don't move. I'd also check that the target subscription has the Microsoft.Compute provider registered and enough quota, and that both subscriptions are in the same tenant.
+    followUps: []
+  - level: scenario
+    q: A VM in East US must run in West Europe with as little rework as possible. How do you do it?
+    a: >-
+      Azure Resource Mover. I'd create the move from the VM's Move menu, let it add the dependencies, prepare and initiate the move, test the copy in West Europe, commit, update DNS, then delete the source. Until I commit I can discard and nothing changes in the source.
+    followUps: []
+revision:
+  keyPoints:
+    - Resource group and subscription moves keep the region and the VM keeps running.
+    - Resource IDs change. Update scripts, alerts and role assignments on the resource.
+    - Move a VM with its disks and NIC; across subscriptions the VNet goes too.
+    - Subscription moves need the same Microsoft Entra tenant and the provider registered in the target.
+    - Region moves use Azure Resource Mover - validate, prepare, initiate, commit, delete source.
+  mistakes:
+    - Expecting a resource group move to change the region.
+    - Moving the VM without its disks or NIC.
+  examTips:
+    - '"Move to another region" = **Azure Resource Mover**.'
+    - '"Move to another resource group or subscription" = **Move** / **az resource move**.'
+    - '"What changes after a move?" = the **resource ID**, not the region or the IP configuration.'
+  quick:
+    - q: Which command moves resources to another resource group?
+      a: az resource move --destination-group <rg> --ids <ids>.
+    - q: Does a resource group move change the VM's location?
+      a: No.
+    - q: Which service moves a VM to another region?
+      a: Azure Resource Mover.
+    - q: What must both subscriptions share for a move between them?
+      a: The same Microsoft Entra tenant.
+    - q: Which Resource Mover step makes the target resources final?
+      a: Commit.
+references:
+  - title: Move Azure resources to a new resource group or subscription
+    url: https://learn.microsoft.com/azure/azure-resource-manager/management/move-resource-group-and-subscription
+  - title: Move guidance for virtual machines
+    url: https://learn.microsoft.com/azure/azure-resource-manager/management/move-limitations/virtual-machines-move-limitations
+  - title: What is Azure Resource Mover?
+    url: https://learn.microsoft.com/azure/resource-mover/overview
+  - title: Move Azure VMs across regions with Azure Resource Mover
+    url: https://learn.microsoft.com/azure/resource-mover/tutorial-move-region-virtual-machines
+related:
+  - deploy-and-export-templates
+  - vm-availability-and-scale-sets
+---
+
+## Start with a question
+
+<Story question="Is moving to another department the same as moving to another city?">
+
+If you switch department, you keep your desk, your building and your commute. Only your badge and your manager change.
+
+If you move to another city, you pack everything, set up a new desk, check it all works, then hand back the old keys.
+
+A VM moving to another **resource group** or **subscription** is the department change: same region, still running, new ID badge. A move to another **region** is the city move, and **Azure Resource Mover** is the removal company.
+
+</Story>
+
+## Explain it like I'm 10
+
+<Eli10>
+
+Your toys live in labelled boxes.
+
+Moving a toy car to another box is easy. But the car has wheels and a remote. If you move the car and leave the remote behind, it won't work. Those are **dependent resources**.
+
+The car also gets a new label because it's in a new box. That's the **resource ID** changing.
+
+Sending the car to grandma's house in another city means packing a copy, checking it arrived, and then clearing the old shelf. That's a **region move**.
+
+</Eli10>
+
+## The technical explanation
+
+### Resource group and subscription moves
+
+Portal: select the VM and its related resources in the resource group, then **Move › Move to another resource group** (or **subscription**). The wizard has **Source + target**, **Resources to move** (validation) and **Review**, where you confirm that scripts using the old IDs will need updating.
+
+```bash
+az resource move --destination-group rg-finance \
+  --ids $(az resource list -g rg-contoso-prod --query "[?contains(name,'vm-rpt-01')].id" -o tsv)
+# to another subscription:
+az resource move --destination-group rg-finance --destination-subscription-id <sub-id> --ids <ids>
+```
+
+```powershell
+$ids = (Get-AzResource -ResourceGroupName rg-contoso-prod | Where-Object Name -like 'vm-rpt-01*').ResourceId
+Move-AzResource -DestinationResourceGroupName rg-finance -ResourceId $ids
+```
+
+What you need to know:
+
+| Topic | Rule |
+| --- | --- |
+| Region | Doesn't change |
+| VM state | Keeps running; source and target groups are locked for writes during the move |
+| Resource IDs | Change (they contain the resource group and subscription) |
+| Dependencies | VM + OS and data disks + NIC; public IP and NSG with them. Across subscriptions, the VNet and everything on it too |
+| Subscriptions | Same Microsoft Entra tenant; resource provider registered in the target; enough quota |
+| Permissions | `moveResources/action` on the source group and write on the target (Contributor on both works) |
+| Role assignments | Ones made directly on the moved resource don't come along |
+| Limits | Some VMs can't move, for example ones with Marketplace plans across subscriptions or with certain backup setups. Check the move guidance for VMs |
+
+Moving a VM doesn't move its resource group's locks, tags or policies. Policies at the target apply from then on.
+
+### Region moves with Azure Resource Mover
+
+From the VM: **Move › Move to another region**, or open **Azure Resource Mover › Across regions**. The flow:
+
+<Flow
+  caption="Moving vm-rpt-01 from East US to West US 2"
+  steps={[
+    { title: 'Add', text: 'Pick the source and target regions and the VM. This creates a move collection.' },
+    { title: 'Validate', text: 'Validate dependencies adds the disks, NIC, VNet, NSG and resource group it needs.' },
+    { title: 'Prepare', text: 'The resource group is prepared first, then VM disk replication starts (it uses Azure Site Recovery).' },
+    { title: 'Initiate', text: 'Target resources are created in West US 2. Test them.' },
+    { title: 'Commit', text: 'Commit keeps the copy, or Discard throws it away. Then Delete source.' },
+  ]}
+/>
+
+The CLI has the same steps under `az resource-mover move-collection` (`create`, `resolve-dependency`, `prepare`, `initiate-move`, `commit`, `discard`) and `az resource-mover move-resource add`. A region move is really a copy: until you delete the source, you're paying for both.
+
+<TryIt labs="adm-vm-move" text="Move a VM with its dependencies to another resource group, then copy it to West US 2 with Resource Mover." />
+
+<Callout type="exam">
+"Move VM1 to another **region**" is **Azure Resource Mover** (not az resource move). "Move to another resource group or subscription" is **Move** / **az resource move** / **Move-AzResource**. After a move the **resource ID changes** but the **location doesn't**. A move fails if the VM leaves behind its **disks or NIC**, if the subscriptions are in **different tenants**, or if the target subscription hasn't registered the **resource provider**.
+</Callout>
+
+<DeepDive title="Zones, not regions">
+
+Moving a VM into an **availability zone** in the same region is a separate job. Resource Mover has an **Across zones** option, and Azure Site Recovery can also do a zone-to-zone move. You can't simply edit the zone of an existing VM, just as you can't add an existing VM to an availability set. When a question says "with minimal downtime" and "another region", think about Site Recovery replication under Resource Mover and testing before commit.
+
+</DeepDive>
+
+## Real-world business scenario
+
+<Scenario
+  company="Tailwind Traders (fictional)"
+  industry="E-commerce"
+  problem="After a reorganisation, the reporting VMs had to be billed to the finance subscription, and the European team needed a copy closer to them in West Europe."
+  service="Admins used Move to send each VM with its disks, NIC, public IP, NSG and VNet to a resource group in the finance subscription in the same tenant, then updated alert rules with the new IDs. For Europe they ran Azure Resource Mover: validate, prepare, initiate, test, commit and delete the source."
+  why="Subscription moves don't stop the VMs or change the region, and Resource Mover copies the VM and its dependencies to the new region with a test step before anything is final."
+  outcome="Finance sees the costs on its own bill, European reports run 120 ms faster, and nothing was rebuilt by hand."
+/>
+
+## When to use it and when not to
+
+<UseWhen
+  use={[
+    'A VM was created in the wrong resource group or must be billed to another subscription.',
+    'A workload needs to run in another region and you want the dependencies moved with it.',
+    'Tidying ownership after a reorganisation, with no downtime for group or subscription moves.',
+  ]}
+  avoid={[
+    'Expecting a resource group move to change region or improve latency.',
+    'Moving into a subscription in a different Microsoft Entra tenant. Transfer the subscription or rebuild instead.',
+  ]}
+  alternatives={[
+    '<strong>Azure Site Recovery</strong> for ongoing disaster recovery replication to another region.',
+    '<strong>Redeploy from a template</strong> when the VM is easy to rebuild.',
+    '<strong>Azure Migrate</strong> for servers coming from outside Azure.',
+  ]}
+/>

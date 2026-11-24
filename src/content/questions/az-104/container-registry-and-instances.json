@@ -1,0 +1,27 @@
+{ "cert": "az-104", "domain": 3, "topic": "container-registry-and-instances", "questions": [
+  { "id": "adm-app-acr-1", "type": "single", "scenario": "Contoso has an Azure container registry named acrcontoso in the East US region. The registry uses the Standard service tier. Developers in West Europe report slow image pulls.", "question": "You need to provide a copy of the registry in West Europe while keeping a single registry name. What should you do first?", "options": [
+    { "text": "Change the registry service tier to Premium", "why": "Correct. Geo-replication is available only in the Premium tier, and the tier can be changed in place." },
+    { "text": "Create a second Standard registry in West Europe and import the images", "why": "This creates a separate registry with a different login server, so the single registry name is not kept." },
+    { "text": "Enable the admin user on the registry", "why": "The admin user controls authentication. It does not add a regional copy." },
+    { "text": "Create a private endpoint in West Europe", "why": "Private endpoints also require Premium and provide private access, not a regional replica." } ], "answer": [0], "explanation": "Upgrade the registry to Premium, then add a replication in West Europe. Pulls are served from the nearest replica.", "objective": "3.3.1" },
+  { "id": "adm-app-acr-2", "type": "single", "question": "An Azure container app must pull images from an Azure container registry without storing a password. Which configuration should you use?", "options": [
+    { "text": "Assign the AcrPull role on the registry to the managed identity of the container app", "why": "Correct. A managed identity with AcrPull authenticates with Microsoft Entra ID and needs no stored password." },
+    { "text": "Enable the admin user and store its password as a secret", "why": "This stores a shared password, which the requirement prohibits." },
+    { "text": "Assign the Owner role on the resource group to all developers", "why": "This grants excessive permissions to people and does not configure the app's access." },
+    { "text": "Change the registry tier to Basic", "why": "The tier does not affect how the app authenticates." } ], "answer": [0], "explanation": "Use Microsoft Entra identities with the AcrPull role. Keep the registry admin user disabled.", "objective": "3.3.1" },
+  { "id": "adm-app-aci-3", "type": "single", "scenario": "A container in Azure Container Instances processes invoices once each night. It must stop after it completes successfully and must start again only if it exits with an error.", "question": "Which restart policy should you configure?", "options": [
+    { "text": "OnFailure", "why": "Correct. OnFailure restarts the container only when it exits with a non-zero exit code." },
+    { "text": "Always", "why": "Always restarts the container after every exit, so the job would run repeatedly and continue to incur charges." },
+    { "text": "Never", "why": "Never does not restart the container after a failure." },
+    { "text": "Unless-stopped", "why": "This is not a restart policy supported by Azure Container Instances." } ], "answer": [0], "explanation": "Container Instances supports Always (default), OnFailure and Never.", "objective": "3.3.2" },
+  { "id": "adm-app-aci-4", "type": "single", "question": "A Linux container group in Azure Container Instances was created with 1 vCPU and 1.5 GB of memory. The workload now requires 4 GB of memory. What should you do?", "options": [
+    { "text": "Delete the container group and redeploy it with 4 GB of memory", "why": "Correct. CPU and memory are fixed properties of a container group, so a change requires a redeployment." },
+    { "text": "Configure an autoscale rule for the container group", "why": "Container Instances does not support autoscale rules." },
+    { "text": "Run az container update with the --memory parameter", "why": "There is no in-place update of memory for an existing container group." },
+    { "text": "Change the restart policy to Always", "why": "The restart policy does not change the allocated memory." } ], "answer": [0], "explanation": "Properties such as CPU, memory, OS type and restart policy require deleting and recreating the container group.", "objective": "3.3.4" },
+  { "id": "adm-app-aci-5", "type": "multi", "question": "Which two statements about Azure Container Instances are true? Each correct answer presents a complete solution.", "options": [
+    { "text": "Containers in a container group share a lifecycle, network and storage volumes", "why": "Correct. A container group is scheduled on one host and shares these resources." },
+    { "text": "Charges are based on the vCPU and memory allocated, per second, while the group runs", "why": "Correct. Container Instances bills per second for allocated resources." },
+    { "text": "Container groups automatically add instances when CPU usage is high", "why": "Container Instances has no built-in autoscaling." },
+    { "text": "Container groups support deployment slots", "why": "Deployment slots are an App Service feature." } ], "answer": [0, 1], "explanation": "For automatic scaling of containers, use Azure Container Apps or AKS.", "objective": "3.3.2" }
+] }

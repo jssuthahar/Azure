@@ -1,0 +1,28 @@
+{ "cert": "az-104", "domain": 3, "topic": "vm-disks-and-encryption-at-host", "questions": [
+  { "id": "adm-vm-disk-1", "type": "single", "scenario": "Company policy requires that the temporary disk and the OS and data disk caches of VM1 are encrypted. VM1 uses managed disks with server-side encryption and platform-managed keys.", "question": "What should you enable?", "options": [
+    { "text": "Encryption at host", "why": "Correct. Encryption at host encrypts the temporary disk and disk caches on the host." },
+    { "text": "Customer-managed keys by using a disk encryption set", "why": "This changes the key used for managed disks at rest but does not cover the temporary disk or caches." },
+    { "text": "Storage account infrastructure encryption", "why": "This applies to storage accounts, not VM temporary disks." },
+    { "text": "Trusted launch", "why": "Trusted launch adds Secure Boot and vTPM. It does not encrypt the temporary disk." } ], "answer": [0], "explanation": "Server-side encryption covers managed disks at rest. Encryption at host extends encryption to the temp disk and caches.", "objective": "3.2.2" },
+  { "id": "adm-vm-disk-2", "type": "multi", "scenario": "You plan to enable encryption at host on an existing running virtual machine named VM1. The feature has never been used in the subscription.", "question": "Which two actions must you perform before you can enable encryption at host on VM1? Each correct answer presents part of the solution.", "options": [
+    { "text": "Register the EncryptionAtHost feature for the Microsoft.Compute namespace", "why": "Correct. The feature must be registered for the subscription." },
+    { "text": "Deallocate VM1", "why": "Correct. Encryption at host can be changed only while the VM is deallocated." },
+    { "text": "Enable Azure Disk Encryption on VM1", "why": "Azure Disk Encryption cannot be combined with encryption at host on the same VM." },
+    { "text": "Convert all disks to Standard HDD", "why": "Disk type changes are not required." },
+    { "text": "Create a Recovery Services vault", "why": "A vault is used for backup and is not required." } ], "answer": [0, 1], "explanation": "Register the feature, then deallocate the VM, set securityProfile.encryptionAtHost to true, and start the VM.", "objective": "3.2.2" },
+  { "id": "adm-vm-disk-3", "type": "single", "scenario": "VM1 is running and has a 128 GiB Premium SSD data disk named Disk1. You need to change Disk1 to Standard SSD.", "question": "What should you do first?", "options": [
+    { "text": "Deallocate VM1 or detach Disk1", "why": "Correct. The disk type of an attached disk can be changed only when the VM is deallocated or the disk is detached." },
+    { "text": "Create a snapshot of Disk1", "why": "A snapshot is a good precaution but is not required to change the type." },
+    { "text": "Resize Disk1 to 64 GiB", "why": "Managed disks cannot be shrunk." },
+    { "text": "Enable host caching on Disk1", "why": "Host caching does not affect the ability to change the disk type." } ], "answer": [0], "explanation": "After the change, start the VM or reattach the disk. Disk sizes can only be increased.", "objective": "3.2.5" },
+  { "id": "adm-vm-disk-4", "type": "single", "question": "A VM was deallocated and then started. Files that an application saved to drive D: are missing, but files on drive C: and on a data disk mounted as F: are intact. What is the most likely cause?", "options": [
+    { "text": "Drive D: is the temporary disk, which does not persist when the VM moves to another host", "why": "Correct. The temporary disk is local to the host and its data can be lost after deallocation." },
+    { "text": "Drive D: was encrypted by using encryption at host", "why": "Encryption does not delete data." },
+    { "text": "The data disk was detached", "why": "The data disk F: is intact." },
+    { "text": "The OS disk was reimaged", "why": "Drive C: is intact." } ], "answer": [0], "explanation": "Use the temporary disk only for page files, swap, and scratch data.", "objective": "3.2.5" },
+  { "id": "adm-vm-disk-5", "type": "single", "question": "You need to add a new 256 GiB Premium SSD data disk to a running Linux VM named VM1 without restarting it. Which command should you run?", "options": [
+    { "text": "az vm disk attach --resource-group RG1 --vm-name VM1 --name Data1 --new --size-gb 256 --sku Premium_LRS", "why": "Correct. Data disks can be created and attached to a running VM." },
+    { "text": "az disk update --resource-group RG1 --name VM1 --size-gb 256", "why": "This resizes an existing disk named VM1 and does not attach a new disk." },
+    { "text": "az vm resize --resource-group RG1 --name VM1 --size Standard_D4s_v5", "why": "Resizing changes the VM size and restarts the VM." },
+    { "text": "az vm update --resource-group RG1 --name VM1 --set securityProfile.encryptionAtHost=true", "why": "This configures encryption at host and requires the VM to be deallocated." } ], "answer": [0], "explanation": "After attaching, partition, format, and mount the disk inside the operating system.", "objective": "3.2.5" }
+] }

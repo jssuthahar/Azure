@@ -1,0 +1,201 @@
+---
+title: "Azure DNS: Public and Private Zones and Records"
+seoTitle: "Azure DNS Public and Private Zones, Records | AZ-104"
+description: Host public DNS zones in Azure DNS, delegate a domain, add A, CNAME and alias records, and link private DNS zones with auto-registration to VNets for AZ-104.
+answer: >-
+  **Azure DNS** hosts **public DNS zones** on Microsoft's global name servers. You **delegate** your domain by setting the zone's **four name servers** as NS records at your registrar (Azure DNS doesn't sell domains). You add **record sets** (A, AAAA, **CNAME**, MX, TXT, SRV, CAA, NS, PTR). A **CNAME can't sit at the zone apex**, so use an **alias record**, which points an A, AAAA or CNAME at an Azure resource such as a **public IP**, Traffic Manager or Front Door and follows it when it changes. **Private DNS zones** answer only **virtual networks linked** to them; a link with **auto-registration** creates A records for VMs in that VNet, and a VNet can have only one registration zone. VMs query Azure DNS at **168.63.129.16**.
+updated: 2026-11-24
+readingMinutes: 11
+keyTerms:
+  - term: DNS zone
+    definition: The DNS records for one domain, such as contoso.com, hosted as an Azure resource.
+  - term: Delegation
+    definition: Pointing a domain at Azure DNS by setting the zone's name servers as NS records at the domain registrar or parent zone.
+  - term: Record set
+    definition: All records of one type with the same name in a zone, such as every A record for www.
+  - term: Alias record
+    definition: An A, AAAA or CNAME record that references an Azure resource (public IP, Traffic Manager, Front Door, CDN) or another record set, and updates automatically.
+  - term: Private DNS zone
+    definition: A zone that resolves only from virtual networks linked to it, for internal names and private endpoints.
+  - term: Auto-registration
+    definition: A virtual network link setting that creates and removes A records for VMs in that VNet automatically.
+interview:
+  - level: beginner
+    q: You created contoso-shop.com in Azure DNS but nobody can resolve it. What did you forget?
+    a: >-
+      Delegation. Azure gives the zone four name servers, and I have to set those as the domain's NS records at the registrar. Until then the internet keeps asking the old name servers.
+    followUps: []
+  - level: intermediate
+    q: Why can't you put a CNAME on contoso.com itself, and what do you do instead?
+    a: >-
+      The apex already holds the SOA and NS records, and a CNAME can't share its name with other records. In Azure DNS I create an alias A record at @ that points to the public IP or Front Door resource. It resolves like an A record and follows the resource if its IP changes.
+    followUps: []
+  - level: experienced
+    q: How do private DNS zones and auto-registration work across a hub and spoke?
+    a: >-
+      I create the private zone once, for example contoso.internal, and add a virtual network link from each VNet that needs to resolve it. On the spokes where VMs should register their names I turn auto-registration on. Each VNet can have only one registration zone, but it can be linked to many zones for resolution. Queries go to 168.63.129.16, which knows the linked zones.
+    followUps: []
+  - level: scenario
+    q: VMs in spoke 2 can't resolve db.contoso.internal, but VMs in spoke 1 can. Fix it.
+    a: >-
+      The private zone probably has a link to spoke 1 only. I add a virtual network link from contoso.internal to spoke 2, with registration off if those VMs only need to resolve. Peering alone doesn't share private DNS zones.
+    followUps: []
+revision:
+  keyPoints:
+    - Public zones are hosted on 4 Azure name servers. Delegate at the registrar with NS records.
+    - Azure DNS hosts zones; it doesn't register domains.
+    - CNAME not allowed at the apex. Use an alias A record to a public IP, Front Door or Traffic Manager.
+    - Private zones resolve only from linked VNets. Peering doesn't share them.
+    - Auto-registration creates VM A records; one registration zone per VNet.
+  mistakes:
+    - Forgetting to update NS records at the registrar.
+    - Expecting a private zone to resolve from a VNet that isn't linked.
+    - Pointing an A record at a public IP that later changes instead of using an alias.
+  examTips:
+    - '"Make the domain resolve through Azure DNS" = update the **NS records at the registrar**.'
+    - '"Point contoso.com (apex) at a load balancer IP that might change" = **alias A record**.'
+    - '"VM names registered automatically" = private zone link with **auto-registration**.'
+  quick:
+    - q: How many name servers does a public Azure DNS zone get?
+      a: Four.
+    - q: Can you create a CNAME at the zone apex?
+      a: No. Use an alias record.
+    - q: Which IP do VMs use for Azure-provided DNS?
+      a: 168.63.129.16.
+    - q: How many registration zones can a VNet have?
+      a: One.
+    - q: What do you add so a VNet can resolve a private zone?
+      a: A virtual network link.
+references:
+  - title: What is Azure DNS?
+    url: https://learn.microsoft.com/azure/dns/dns-overview
+  - title: Delegate a domain to Azure DNS
+    url: https://learn.microsoft.com/azure/dns/dns-delegate-domain-azure-dns
+  - title: Azure DNS alias records overview
+    url: https://learn.microsoft.com/azure/dns/dns-alias
+  - title: What is Azure Private DNS?
+    url: https://learn.microsoft.com/azure/dns/private-dns-overview
+  - title: Private DNS zone virtual network links and autoregistration
+    url: https://learn.microsoft.com/azure/dns/private-dns-virtual-network-links
+related:
+  - service-endpoints-and-private-endpoints
+  - azure-load-balancer-for-admins
+  - vnets-subnets-and-public-ips
+---
+
+## Start with a question
+
+<Story question="How does the post office know your business moved to a new address?">
+
+You file a forwarding notice with the council, and from then on letters for your business name go to the new place. If you forget the notice, letters keep going to the old address no matter how nice the new office is.
+
+**Azure DNS** is the new office's address book. **Delegation** is the forwarding notice: you tell your domain registrar that Azure's name servers now answer for your domain. And for names only staff should know, like the server room, a **private zone** is the internal phone list that only works inside the building.
+
+</Story>
+
+## Explain it like I'm 10
+
+<Eli10>
+
+Your phone's contacts turn "Grandma" into a number so you don't have to remember it.
+
+DNS does that for websites: it turns www.contoso.com into an address computers can call.
+
+A public zone is a contact list anyone can read. A private zone is a list only your family's phones can see.
+
+</Eli10>
+
+## The technical explanation
+
+### Public zones
+
+Create a zone named after the domain (`contoso-shop.com`). Azure assigns **four name servers** (`ns1-0x.azure-dns.com`, `.net`, `.org`, `.info`). To make the internet use them, set them as the **NS records** at your **registrar**, or as an NS record set in the **parent zone** for a child zone (delegating `shop.contoso.com` from `contoso.com`). Azure DNS **hosts** zones; it doesn't **register** domains (App Service Domains can).
+
+Zones are Azure resources, so you get **RBAC** (DNS Zone Contributor), **resource locks** and activity logs. Price feel: about $0.50 per zone a month plus $0.40 per million queries (illustrative).
+
+### Records
+
+| Type | Example | Notes |
+| --- | --- | --- |
+| A / AAAA | www → 20.85.4.10 | IPv4 / IPv6 address |
+| CNAME | shop → contoso.azurewebsites.net | Not at the apex, and alone on its name |
+| MX | @ → mail.contoso.com (priority 10) | Mail |
+| TXT | @ → "v=spf1 …" | Verification, SPF |
+| SRV, CAA, PTR, NS | | Services, certificate authorities, reverse lookup, delegation |
+| SOA, NS at @ | | Created for you |
+
+Each record set has a **TTL** (3600 seconds by default) that controls how long resolvers cache it.
+
+### Alias records
+
+An **alias record set** points at an **Azure resource** instead of a fixed value: a **public IP**, **Traffic Manager** profile, **Azure Front Door** or **CDN** endpoint, or another record set in the same zone. If the resource's IP changes, the record follows, and if the resource is deleted the record returns nothing instead of a stale address. Alias A records work at the **apex**, which is how you point `contoso.com` itself at a load balancer.
+
+### Private zones
+
+A **private DNS zone** (for example `contoso.internal` or `privatelink.blob.core.windows.net`) resolves only from **virtual networks linked** to it. VMs using Azure-provided DNS ask **168.63.129.16**, which answers from every linked zone.
+
+- **Virtual network link**: required for every VNet that should resolve the zone. **Peering doesn't share private zones.**
+- **Auto-registration** on a link: VMs in that VNet get A records created, updated and removed automatically. A VNet can have **one** registration zone, but resolution links to many zones.
+- On-premises clients need **Azure DNS Private Resolver** (or a DNS forwarder VM) to query private zones.
+
+### Portal and CLI
+
+Portal: **DNS zones → + Create**, copy the name servers from **Overview**, then **+ Record set** (set **Alias record set: Yes** for an alias). **Private DNS zones → + Create → Virtual Network Links → + Add** (tick **Enable auto registration** if wanted).
+
+```bash
+az network dns zone create -g rg-net-lb -n contoso-shop.com
+az network dns zone show -g rg-net-lb -n contoso-shop.com --query nameServers
+az network dns record-set a add-record -g rg-net-lb -z contoso-shop.com -n api --ipv4-address 20.85.4.11
+az network dns record-set cname set-record -g rg-net-lb -z contoso-shop.com -n shop --cname contoso.azurewebsites.net
+az network dns record-set a create -g rg-net-lb -z contoso-shop.com -n www --target-resource <public-ip-id>
+
+az network private-dns zone create -g rg-net-lb -n contoso.internal
+az network private-dns link vnet create -g rg-net-lb -n link-vnet-web -z contoso.internal \
+  -v vnet-web --registration-enabled true
+az network private-dns record-set a add-record -g rg-net-lb -z contoso.internal -n db --ipv4-address 10.40.2.10
+```
+
+PowerShell: `New-AzDnsZone`, `New-AzDnsRecordSet`, `New-AzPrivateDnsZone`, `New-AzPrivateDnsVirtualNetworkLink`.
+
+<TryIt labs="adm-net-load-balancer" text="Host a zone, add an alias record that follows a load balancer's public IP and curl the name." />
+
+<Callout type="exam">
+"The zone is created but the domain doesn't resolve" means the **registrar's NS records** weren't changed. "Point the apex at an Azure resource" or "the record must update when the IP changes" means an **alias record**. "VMs must register their names automatically" means a private zone link with **auto-registration**, and remember only **one registration zone per VNet**. A VNet without a **virtual network link** can't resolve a private zone, even if it's peered.
+</Callout>
+
+<DeepDive title="Custom DNS servers on a VNet">
+
+A VNet can use **custom DNS servers** (VNet → **DNS servers**) instead of Azure-provided DNS, for example domain controllers. Those servers must forward Azure names, including privatelink zones, to 168.63.129.16, or private endpoints stop resolving. VMs pick up a DNS server change after a restart or DHCP renewal.
+
+</DeepDive>
+
+## Real-world business scenario
+
+<Scenario
+  company="Adventure Works (fictional)"
+  industry="Travel"
+  problem="DNS for adventure-works.com lived at a registrar only one ex-employee could log in to, and internal servers were found through hosts files copied around by hand."
+  service="The public zone moved to Azure DNS with RBAC and a delete lock, NS records updated at the registrar, and an alias A record at the apex pointing to the Front Door profile. A private zone aw.internal linked to every spoke, with auto-registration on the app spokes."
+  why="The team manages DNS like any other Azure resource, the apex never points at a stale IP, and VMs find each other by name without hosts files."
+  outcome="DNS changes went from days to minutes, and the hosts files were deleted."
+/>
+
+## When to use it and when not to
+
+<UseWhen
+  use={[
+    'Hosting public domains with Azure RBAC, locks and the CLI.',
+    'Alias records for apex domains and resources whose IP can change.',
+    'Private zones for internal names and every private endpoint.',
+  ]}
+  avoid={[
+    'Expecting Azure DNS to register a new domain name for you.',
+    'Relying on peering to share private zones. Add links.',
+    'CNAME records at the apex.',
+  ]}
+  alternatives={[
+    '<strong>Azure DNS Private Resolver</strong> to resolve private zones from on-premises and forward to on-premises DNS.',
+    '<strong>Azure Traffic Manager</strong> for DNS-based routing across regions.',
+    '<strong>App Service Domains</strong> to buy a domain inside Azure.',
+  ]}
+/>

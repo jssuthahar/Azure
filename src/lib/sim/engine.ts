@@ -53,7 +53,9 @@ const TAKEN = new Set(['storage', 'mystorage', 'test', 'teststorage', 'azure', '
 
 export type ResType = 'vm' | 'disk' | 'nic' | 'pip' | 'vnet' | 'nsg' | 'storage' | 'plan' | 'webapp' | 'vmss'
   | 'dnszone' | 'pe' | 'vpngw' | 'functionapp' | 'aci' | 'aks' | 'arc' | 'alert' | 'law' | 'foundry'
-  | 'acr' | 'acaenv' | 'containerapp' | 'cosmos' | 'pg' | 'redis' | 'sbns' | 'egtopic' | 'kv' | 'appconfig' | 'appi' | 'logalert';
+  | 'acr' | 'acaenv' | 'containerapp' | 'cosmos' | 'pg' | 'redis' | 'sbns' | 'egtopic' | 'kv' | 'appconfig' | 'appi' | 'logalert'
+  // AZ-104 administrator services
+  | 'routetable' | 'bastion' | 'lb' | 'asg' | 'avset' | 'snapshot' | 'rsv' | 'bvault' | 'actiongroup' | 'apr' | 'netwatcher' | 'dcr';
 export const TYPE_INFO: Record<ResType, { label: string; arm: string; icon: string }> = {
   vm: { label: 'Virtual machine', arm: 'Microsoft.Compute/virtualMachines', icon: '🖥️' },
   disk: { label: 'Disk', arm: 'Microsoft.Compute/disks', icon: '💽' },
@@ -87,6 +89,19 @@ export const TYPE_INFO: Record<ResType, { label: string; arm: string; icon: stri
   appconfig: { label: 'App Configuration', arm: 'Microsoft.AppConfiguration/configurationStores', icon: '🎚️' },
   appi: { label: 'Application Insights', arm: 'Microsoft.Insights/components', icon: '🔭' },
   logalert: { label: 'Log search alert rule', arm: 'Microsoft.Insights/scheduledQueryRules', icon: '🔔' },
+  // AZ-104 administrator services
+  routetable: { label: 'Route table', arm: 'Microsoft.Network/routeTables', icon: '🧭' },
+  bastion: { label: 'Bastion', arm: 'Microsoft.Network/bastionHosts', icon: '🏰' },
+  lb: { label: 'Load balancer', arm: 'Microsoft.Network/loadBalancers', icon: '⚖️' },
+  asg: { label: 'Application security group', arm: 'Microsoft.Network/applicationSecurityGroups', icon: '🏷️' },
+  avset: { label: 'Availability set', arm: 'Microsoft.Compute/availabilitySets', icon: '🧱' },
+  snapshot: { label: 'Snapshot', arm: 'Microsoft.Compute/snapshots', icon: '📸' },
+  rsv: { label: 'Recovery Services vault', arm: 'Microsoft.RecoveryServices/vaults', icon: '🛟' },
+  bvault: { label: 'Backup vault', arm: 'Microsoft.DataProtection/backupVaults', icon: '🗃️' },
+  actiongroup: { label: 'Action group', arm: 'Microsoft.Insights/actionGroups', icon: '📣' },
+  apr: { label: 'Alert processing rule', arm: 'Microsoft.AlertsManagement/actionRules', icon: '🔕' },
+  netwatcher: { label: 'Network Watcher', arm: 'Microsoft.Network/networkWatchers', icon: '🔍' },
+  dcr: { label: 'Data collection rule', arm: 'Microsoft.Insights/dataCollectionRules', icon: '🧾' },
 };
 
 export interface Lock { name: string; level: 'CanNotDelete' | 'ReadOnly' }
@@ -169,6 +184,17 @@ export class Sim {
       this.emit('delete.blocked', { rg: rg.name, what, lock: lock.name });
       throw new SimError(`The scope '${what}' cannot perform delete operation because the following scope(s) are locked: '${rg.name}'. Please remove the lock '${lock.name}' and try again.`, 'ScopeLocked');
     }
+  }
+  /** Public create for exam add-on modules (AZ-104 admin commands): honours ReadOnly locks and duplicate names. */
+  addRes(type: ResType, rgName: string, name: string, props: Record<string, any> = {}, o: { location?: string; tags?: Record<string, string> } = {}) {
+    const g = this.needRg(rgName);
+    this.writable(g, `create ${TYPE_INFO[type].label}`);
+    if (this.find(type, g.name, name)) throw new SimError(`A ${TYPE_INFO[type].label.toLowerCase()} named '${name}' already exists in resource group '${g.name}'.`, 'Conflict');
+    return this.add(type, g, name, o.location ? this.checkLocation(o.location) : g.location, props, o.tags ?? {});
+  }
+  /** Throws ScopeLocked when a ReadOnly lock covers the resource group (for add-on modules that change props). */
+  assertWritable(rgName: string, action: string) {
+    this.writable(this.needRg(rgName), action);
   }
   protected add(type: ResType, rg: RG, name: string, location: string, props: Record<string, any>, tags: Record<string, string> = {}) {
     const r: Res = { id: this.idFor(type, rg.name, name), name, type, rg: rg.name, location, tags, props, created: Date.now() };

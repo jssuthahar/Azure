@@ -1,0 +1,229 @@
+---
+title: App Service Plans, Scaling and Creating a Web App
+seoTitle: App Service Plans, Scaling and Creating a Web App | AZ-104
+description: Provision an App Service plan, create a web app on it, and scale it up to a new tier or out to more instances, with autoscale rules on Standard and higher.
+answer: >-
+  An **App Service plan** is the set of VMs your web apps run on. Its **pricing tier** decides the instance size, how many instances you can have and which features you get: **Free** and **Shared** for testing, **Basic** (up to 3 instances, manual scale), **Standard** (up to 10, **autoscale** and 5 **deployment slots**), **Premium v3** (up to 30, 20 slots, zone redundancy) and **Isolated v2**. Every app on a plan runs on every instance. **Scale up** changes the tier or size; **scale out** changes the instance count, by hand or with **rules-based autoscale** on a metric such as CPU percentage.
+updated: 2026-11-24
+readingMinutes: 12
+keyTerms:
+  - term: App Service plan
+    definition: The compute behind App Service apps. A region, an OS, a pricing tier and a number of instances, shared by every app on the plan.
+  - term: Pricing tier
+    definition: The plan's SKU family (Free, Shared, Basic, Standard, Premium v3, Isolated v2) that sets instance size, instance limits and features.
+  - term: Scale up
+    definition: Moving the plan to a bigger size or a higher tier. Vertical scaling.
+  - term: Scale out
+    definition: Adding instances to the plan. Horizontal scaling.
+  - term: Autoscale setting
+    definition: An Azure Monitor resource that changes a plan's instance count between a minimum and maximum, based on rules or a schedule.
+  - term: Cool down
+    definition: How long autoscale waits after a scale action before it can act again, so it doesn't flap.
+  - term: Automatic scaling
+    definition: A platform-managed scale-out option on Premium v2 and v3 plans that reacts to HTTP traffic without rules.
+interview:
+  - level: beginner
+    q: What's the difference between an App Service plan and a web app?
+    a: >-
+      The plan is the hardware: a set of VMs with a tier and an instance count. The web app is my code or container running on that plan. Several apps can share one plan, and they all share its instances and its bill.
+    followUps: []
+  - level: intermediate
+    q: When do you scale up and when do you scale out?
+    a: >-
+      I scale up when each instance is too small, for example memory runs out, or when I need a feature the tier doesn't have, like deployment slots on Basic. I scale out when the load is many requests that can be shared, so more copies help. Autoscale only works on scale out, and only from Standard up.
+    followUps: []
+  - level: experienced
+    q: How would you set up autoscale for an App Service plan?
+    a: >-
+      In Scale out I'd pick Rules Based, set minimum, maximum and default instance counts, then add a scale-out rule such as CPU Percentage greater than 70% averaged over 10 minutes, increase by 1, cool down 5 minutes, and a matching scale-in rule like CPU below 30%, decrease by 1. Without the scale-in rule the plan grows and never shrinks. In the CLI that's az monitor autoscale create with --resource-type Microsoft.Web/serverfarms, then az monitor autoscale rule create.
+    followUps: []
+  - level: scenario
+    q: One noisy app on a shared plan slows the others down. What do you do?
+    a: >-
+      Scaling the plan would scale every app on it, which wastes money on the quiet ones. I'd move the noisy app to its own App Service plan in the same region, then size and scale that plan for it alone.
+    followUps: []
+revision:
+  keyPoints:
+    - The plan is the compute. Region, OS and tier are set on the plan; the web app runs on it.
+    - Basic scales out by hand to 3 instances. Standard allows 10 and autoscale. Premium v3 allows 30.
+    - Standard gives 5 deployment slots, Premium v3 gives 20. Custom domains with TLS start at Basic.
+    - Scaling acts on the plan, so every app on the plan scales together.
+    - Rules-based autoscale needs a minimum, a maximum, a default and pairs of scale-out and scale-in rules.
+  mistakes:
+    - Trying to add autoscale or slots on a Basic plan.
+    - Writing only a scale-out rule, so the plan never shrinks.
+    - Creating the web app in a different region from the plan you meant to use.
+  examTips:
+    - '"Scale automatically on CPU" = **Standard** or higher with an **autoscale rule**.'
+    - '"More CPU and memory per instance" = **scale up**.'
+    - '"Minimise cost for a dev site with no custom domain" = **Free (F1)**.'
+  quick:
+    - q: How many instances can a Basic plan run?
+      a: Up to 3, scaled manually.
+    - q: Which is the lowest tier with autoscale?
+      a: Standard.
+    - q: How many deployment slots does Premium v3 allow?
+      a: '20.'
+    - q: Which command changes a plan's tier?
+      a: az appservice plan update --sku <SKU>.
+    - q: Which resource type do you autoscale for App Service?
+      a: Microsoft.Web/serverfarms (the plan).
+references:
+  - title: Azure App Service plan overview
+    url: https://learn.microsoft.com/azure/app-service/overview-hosting-plans
+  - title: Scale up an app in Azure App Service
+    url: https://learn.microsoft.com/azure/app-service/manage-scale-up
+  - title: Get started with autoscale in Azure
+    url: https://learn.microsoft.com/azure/azure-monitor/autoscale/autoscale-get-started
+  - title: Automatic scaling in Azure App Service
+    url: https://learn.microsoft.com/azure/app-service/manage-automatic-scaling
+  - title: App Service limits
+    url: https://learn.microsoft.com/azure/azure-resource-manager/management/azure-subscription-service-limits#app-service-limits
+related:
+  - app-service-deployment-slots
+  - app-service-tls-and-custom-domains
+  - container-apps-for-admins
+---
+
+## Start with a question
+
+<Story question="Is it the shop that's busy, or the building it's in?">
+
+Picture a food court. Several stalls share one building, one electricity bill and one set of kitchens. If the whole food court gets crowded, you can move to a bigger building (more power per kitchen) or open more identical kitchens next door.
+
+An **App Service plan** is the building. The **web apps** are the stalls inside it. Moving to a bigger building is **scale up**. Opening more kitchens is **scale out**. And because the stalls share the building, everything you do to it happens to all of them.
+
+</Story>
+
+## Explain it like I'm 10
+
+<Eli10>
+
+The **plan** is a set of computers. Your **apps** live on them.
+
+If one computer is too slow, swap it for a faster one. That's **scale up**.
+
+If there are too many visitors, add more computers that run the same apps. That's **scale out**.
+
+**Autoscale** is a grown-up who watches how busy the computers are and adds or removes them for you, but only if you're on a good enough plan.
+
+</Eli10>
+
+## The technical explanation
+
+### Provision an App Service plan
+
+**Portal:** search **App Service plans** → **+ Create**. On **Basics**: subscription, resource group, **Name**, **Operating System** (Linux or Windows), **Region** and **Pricing plan** (select **Explore pricing plans** to compare). Zone redundancy needs Premium v2 or v3. **Review + create**.
+
+```bash
+az appservice plan create -g rg-admin-web -n asp-contoso-shop --sku B1 --is-linux --number-of-workers 1
+```
+
+```powershell
+New-AzAppServicePlan -ResourceGroupName rg-admin-web -Name asp-contoso-shop -Location eastus -Tier Basic -WorkerSize Small -NumberofWorkers 1 -Linux
+```
+
+### What each tier gives you
+
+| Tier | Max instances | Autoscale | Deployment slots | Custom domain + TLS | Notes |
+| --- | --- | --- | --- | --- | --- |
+| **Free (F1)** | 1 (shared) | No | No | No | 60 CPU minutes a day, for tests |
+| **Shared (D1)** | 1 (shared) | No | No | Domain only, no TLS binding | Windows only |
+| **Basic (B1–B3)** | 3 | No (manual) | No | Yes | Backups, VNet integration |
+| **Standard (S1–S3)** | 10 | Yes | 5 | Yes | Daily backups |
+| **Premium v3 (P0v3–P5mv3)** | 30 | Yes, plus automatic scaling | 20 | Yes | Zone redundancy, bigger sizes |
+| **Isolated v2 (I1v2–I6v2)** | 100 | Yes | 20 | Yes | Runs in an App Service Environment |
+
+As a feel for cost, Basic B1 is about $13 a month per instance, Standard S1 about $73 and Premium v3 P1v3 about $124 (illustrative Linux prices).
+
+### Create an App Service (web app)
+
+**Portal:** search **App Services** → **+ Create → Web App**. **Basics**: **Name** (becomes `<name>.azurewebsites.net`), **Publish** (Code or Container), **Runtime stack**, **Operating System**, **Region**, then the **Linux/Windows Plan** and **Pricing plan**. The plan list only shows plans in the same region and OS. The other tabs cover **Database**, **Deployment** (GitHub Actions), **Networking**, **Monitor + secure** (Application Insights) and **Tags**.
+
+```bash
+az webapp create -g rg-admin-web -p asp-contoso-shop -n app-contoso-shop01 --runtime PYTHON:3.12
+```
+
+```powershell
+New-AzWebApp -ResourceGroupName rg-admin-web -Name app-contoso-shop01 -Location eastus -AppServicePlan asp-contoso-shop
+```
+
+### Scale up and scale out
+
+Both live on the **plan**, and you can reach them from the plan or from any app on it: **Scale up (App Service plan)** and **Scale out (App Service plan)**.
+
+```bash
+# scale out by hand (Basic allows up to 3)
+az appservice plan update -g rg-admin-web -n asp-contoso-shop --number-of-workers 3
+# scale up to Standard to unlock autoscale and slots
+az appservice plan update -g rg-admin-web -n asp-contoso-shop --sku S1
+```
+
+```powershell
+Set-AzAppServicePlan -ResourceGroupName rg-admin-web -Name asp-contoso-shop -Tier Standard -NumberofWorkers 2
+```
+
+Scaling up moves the apps onto new instances, so they restart. Scaling out adds instances behind the built-in load balancer and leaves the running ones alone.
+
+### Autoscale rules
+
+In **Scale out (App Service plan)** the **Scale out method** has three choices: **Manual**, **Automatic** (platform-managed HTTP scaling on Premium v2/v3) and **Rules Based** (an Azure Monitor autoscale setting). For rules you set:
+
+- **Instance limits**: minimum, maximum and default (used if metrics are missing).
+- **Scale-out rule**: for example **CPU Percentage > 70** averaged over **10 minutes** → **increase count by 1**, **cool down 5 minutes**.
+- **Scale-in rule**: for example **CPU Percentage below 30** → **decrease count by 1**. Always pair them.
+
+```bash
+az monitor autoscale create -g rg-admin-web --resource asp-contoso-shop \
+  --resource-type Microsoft.Web/serverfarms --name asp-contoso-shop-autoscale \
+  --min-count 2 --max-count 6 --count 2
+az monitor autoscale rule create -g rg-admin-web --autoscale-name asp-contoso-shop-autoscale \
+  --condition "CpuPercentage > 70 avg 10m" --scale out 1
+az monitor autoscale rule create -g rg-admin-web --autoscale-name asp-contoso-shop-autoscale \
+  --condition "CpuPercentage < 30 avg 10m" --scale in 1
+```
+
+Other useful plan metrics are **Memory Percentage** and **Http Queue Length**. You can also add a **schedule** profile, such as 4 instances every weekday from 08:00 to 18:00.
+
+<TryIt labs="adm-app-service-plan" text="Create a B1 plan and a web app, scale out to 3, get refused a slot, then scale up to S1 and add an autoscale rule." />
+
+<Callout type="exam">
+Questions often hide the tier. "Configure autoscale" or "add a staging slot" on a **Basic** plan means you must **scale up to Standard** first. "More memory per instance" is **scale up**, "more instances" is **scale out**. If several apps share a plan, scaling affects all of them, so "scale only the busy app" means **move it to its own plan**. And autoscale targets the **plan** (`Microsoft.Web/serverfarms`), not the web app.
+</Callout>
+
+<DeepDive title="How many apps per plan?">
+
+There's no fixed number. Put apps on the same plan when they're small, owned by the same team and scale together; it saves money. Split them when one app's load would starve the others, when they need different tiers or regions, or when you want separate bills. Remember a deployment slot is also an app on the plan and uses the same instances.
+
+</DeepDive>
+
+## Real-world business scenario
+
+<Scenario
+  company="Contoso Shop (fictional)"
+  industry="E-commerce"
+  problem="The online shop ran on one Basic B1 instance. Every sale weekend the site slowed down and someone had to scale it by hand late at night."
+  service="The plan was scaled up to Standard S1 and given a rules-based autoscale setting: minimum 2, maximum 6, add one instance when CPU averages over 70% for 10 minutes, remove one under 30%, plus a weekend schedule profile starting at 4 instances."
+  why="Standard is the lowest tier with autoscale and slots, two instances give basic redundancy, and the scale-in rule keeps the bill from staying high after the rush."
+  outcome="The last sale weekend peaked at 5 instances with steady response times, and nobody was paged."
+/>
+
+## When to use it and when not to
+
+<UseWhen
+  use={[
+    'Web apps and APIs that need a managed platform with TLS, slots and backups.',
+    'Steady or predictable traffic where a few always-on instances make sense.',
+    'Several small apps that can share one plan and one bill.',
+  ]}
+  avoid={[
+    'Workloads that sit idle most of the day and should cost nothing then. Container Apps scales to zero.',
+    'Short jobs that run and stop. Use Container Instances or Functions.',
+    'Software that needs full control of the OS. Use a VM.',
+  ]}
+  alternatives={[
+    '<strong>Azure Container Apps</strong> for containers that scale on traffic, down to zero.',
+    '<strong>Azure Functions</strong> for event-driven code billed per execution.',
+    '<strong>Virtual Machine Scale Sets</strong> when you need the OS and autoscale together.',
+  ]}
+/>

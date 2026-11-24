@@ -1,0 +1,213 @@
+---
+title: App Service Custom Domains, Certificates and TLS
+seoTitle: App Service Custom Domains, Certificates and TLS | AZ-104
+description: Map an existing custom DNS name to Azure App Service with TXT and CNAME records, add a managed or imported certificate, bind it, and enforce HTTPS and TLS 1.2.
+answer: >-
+  To map a custom domain to App Service, prove you own it and point it at the app. Create a **TXT** record named **asuid.<subdomain>** (or **asuid** for the root) holding the app's **custom domain verification ID**, plus a **CNAME** to `<app>.azurewebsites.net` for a subdomain or an **A** record to the app's IP for the root domain. Then **add the custom domain** on the app. Custom domains need **Basic** or higher for TLS (Free can't use them at all). Secure it with a free **App Service managed certificate** (no wildcards, not exportable), an imported **Key Vault** certificate or an uploaded **.pfx**, bound with **SNI SSL**. Finally turn on **HTTPS Only** and keep the **minimum TLS version** at **1.2** (the default) or higher.
+updated: 2026-11-24
+readingMinutes: 11
+keyTerms:
+  - term: Custom domain verification ID
+    definition: A value unique to the app (and subscription) that you put in an asuid TXT record to prove you control the domain.
+  - term: asuid TXT record
+    definition: The DNS TXT record App Service checks for domain ownership, named asuid.<subdomain>, or asuid for the root domain.
+  - term: CNAME record
+    definition: A DNS alias from one name to another, such as www to app-contoso.azurewebsites.net. Used for subdomains, not the root.
+  - term: App Service managed certificate
+    definition: A free TLS certificate App Service issues and renews for a custom domain. No wildcards and it can't be exported.
+  - term: SNI SSL
+    definition: A TLS binding that uses Server Name Indication, so many certificates share one IP address. The usual choice.
+  - term: HTTPS Only
+    definition: A setting that redirects every HTTP request to HTTPS with a 301.
+  - term: Minimum inbound TLS version
+    definition: The oldest TLS version clients may use to connect. Default 1.2; 1.0, 1.1 and 1.3 are the other options.
+interview:
+  - level: beginner
+    q: Why does App Service ask for a TXT record before it accepts my domain?
+    a: >-
+      To stop anyone else from claiming it. Only the owner of the domain can add a TXT record named asuid.www with the app's verification ID, so the record proves the domain is mine before App Service starts serving it.
+    followUps: []
+  - level: intermediate
+    q: How do you map the root domain contoso.com rather than www?
+    a: >-
+      DNS doesn't allow a CNAME at the zone apex, so I'd create an A record at @ pointing to the app's inbound IP address, plus a TXT record named asuid with the verification ID. Then I add contoso.com as a custom domain on the app.
+    followUps: []
+  - level: experienced
+    q: When wouldn't you use an App Service managed certificate?
+    a: >-
+      When I need a wildcard like *.contoso.com, when I need to export the certificate to use somewhere else, or when the security team wants a specific certificate authority or an EV certificate. Then I'd import a certificate from Key Vault, buy an App Service certificate, or upload a password-protected .pfx. Managed certificates also need the app to be reachable publicly so the issuer can validate it.
+    followUps: []
+  - level: scenario
+    q: An audit says the site still accepts TLS 1.0 and plain HTTP. What do you change?
+    a: >-
+      In Configuration, General settings, I'd set HTTPS Only to On so HTTP gets redirected, and set Minimum Inbound TLS Version to 1.2 or 1.3. In the CLI that's az webapp update --https-only true and az webapp config set --min-tls-version 1.2. Neither change needs a redeploy.
+    followUps: []
+revision:
+  keyPoints:
+    - Ownership is proven with a TXT record asuid.<subdomain> containing the custom domain verification ID.
+    - Subdomains use a CNAME to <app>.azurewebsites.net; the root domain uses an A record to the app's IP.
+    - Free tier has no custom domains; Shared can map a domain but can't bind a certificate; Basic and up can do both.
+    - Managed certificates are free and auto-renewed, but can't be wildcards or exported.
+    - HTTPS Only redirects HTTP; minimum inbound TLS version defaults to 1.2.
+  mistakes:
+    - Trying to create a CNAME at the zone apex.
+    - Requesting a managed certificate before the custom domain is added to the app.
+    - Expecting a managed certificate to cover *.contoso.com.
+  examTips:
+    - '"Verify domain ownership" = **TXT** record **asuid.<name>**.'
+    - '"Free certificate that renews itself" = **App Service managed certificate** (Basic or higher).'
+    - '"Wildcard certificate" = import from **Key Vault**, buy an App Service certificate, or upload a **.pfx**.'
+  quick:
+    - q: Which record proves domain ownership to App Service?
+      a: A TXT record named asuid.<subdomain>.
+    - q: Which record maps www to the app?
+      a: A CNAME to <app>.azurewebsites.net.
+    - q: Can a managed certificate be a wildcard?
+      a: No.
+    - q: What is the default minimum inbound TLS version?
+      a: '1.2.'
+    - q: Which binding type lets many certificates share one IP?
+      a: SNI SSL.
+references:
+  - title: Set up an existing custom domain in Azure App Service
+    url: https://learn.microsoft.com/azure/app-service/app-service-web-tutorial-custom-domain
+  - title: Add and manage TLS/SSL certificates in Azure App Service
+    url: https://learn.microsoft.com/azure/app-service/configure-ssl-certificate
+  - title: Secure a custom DNS name with a TLS/SSL binding
+    url: https://learn.microsoft.com/azure/app-service/configure-ssl-bindings
+  - title: TLS and SSL in Azure App Service
+    url: https://learn.microsoft.com/azure/app-service/overview-tls
+related:
+  - app-service-plans-and-scaling
+  - app-service-backup-and-networking
+---
+
+## Start with a question
+
+<Story question="How does a post office know it's really your new address?">
+
+When you move house, you can't just tell the post office "send Ravi's letters to me". They want proof: a bill or a letter with your name at the new address. Then they forward the mail, and you put a lock on the letterbox so nobody reads it on the way.
+
+A custom domain works the same way. A **TXT record** in DNS is your proof of address. A **CNAME** (or A record) forwards visitors to the app. The **TLS certificate** is the lock, and **HTTPS Only** makes sure nothing arrives in an open envelope.
+
+</Story>
+
+## Explain it like I'm 10
+
+<Eli10>
+
+Your app has a long, boring name like app-contoso-www01.azurewebsites.net.
+
+You want people to type **www.contoso-learn.com** instead.
+
+First you write a secret code in your domain's settings so Azure believes it's yours. That's the **TXT record**.
+
+Then you add a sign saying "www goes over there". That's the **CNAME**.
+
+Then you add a padlock so nobody can peek. That's the **certificate**.
+
+</Eli10>
+
+## The technical explanation
+
+### Map an existing custom DNS name
+
+You need three things: a plan on **Basic** or higher (Free doesn't support custom domains, and Shared can't bind certificates), access to the domain's DNS, and the app's **custom domain verification ID**.
+
+**Portal:** web app → **Settings → Custom domains** → **+ Add custom domain**. Choose **All other domain services** (or **App Service Domain** if you bought it in Azure), the certificate option and **SNI SSL**, type the domain, and the pane lists the records to create:
+
+| Domain | Records to create at your DNS host |
+| --- | --- |
+| **Subdomain** (www.contoso-learn.com) | **TXT** `asuid.www` = verification ID, **CNAME** `www` → `app-contoso-www01.azurewebsites.net` |
+| **Root** (contoso-learn.com) | **TXT** `asuid` = verification ID, **A** `@` → the app's inbound IP address |
+| **Wildcard** (*.contoso-learn.com) | **TXT** `asuid` = verification ID, **CNAME** `*` → the app's default domain |
+
+Select **Validate**, then **Add**. If the domain already serves live traffic elsewhere, add the TXT record first and switch the CNAME last, so the move has no downtime.
+
+```bash
+az webapp show -g rg-admin-dns -n app-contoso-www01 --query customDomainVerificationId -o tsv
+az network dns record-set txt add-record -g rg-admin-dns -z contoso-learn.com -n asuid.www -v <verification-id>
+az network dns record-set cname set-record -g rg-admin-dns -z contoso-learn.com -n www -c app-contoso-www01.azurewebsites.net
+az webapp config hostname add -g rg-admin-dns --webapp-name app-contoso-www01 --hostname www.contoso-learn.com
+```
+
+```powershell
+Set-AzWebApp -ResourceGroupName rg-admin-dns -Name app-contoso-www01 -HostNames @('www.contoso-learn.com', 'app-contoso-www01.azurewebsites.net')
+```
+
+### Certificates: four ways to get one
+
+| Option | Cost | Wildcard | Export | Notes |
+| --- | --- | --- | --- | --- |
+| **App Service managed certificate** | Free | No | No | Basic and up; renews itself; the app must be publicly reachable |
+| **App Service certificate** | Paid yearly | Yes | Yes | Bought in Azure, stored in Key Vault |
+| **Import from Key Vault** | Your certificate | Yes | Yes | The app needs access to the vault; renewals sync |
+| **Upload a .pfx** | Your certificate | Yes | You hold it | Password-protected, private key exportable |
+
+You'll find them in **Settings → Certificates**: **Managed certificates**, **Bring your own certificates (.pfx)** and **Public key certificates (.cer)**, the last one for outbound calls, not for your domain.
+
+**Binding** connects a certificate to a hostname. **SNI SSL** is the normal choice; **IP SSL** gives the hostname its own IP address and is for old clients that don't send SNI.
+
+```bash
+az webapp config ssl create -g rg-admin-dns -n app-contoso-www01 --hostname www.contoso-learn.com
+az webapp config ssl bind -g rg-admin-dns -n app-contoso-www01 \
+  --certificate-thumbprint <thumbprint> --ssl-type SNI
+```
+
+PowerShell uses `New-AzWebAppCertificate` for a managed certificate and `New-AzWebAppSSLBinding` to bind one.
+
+### Configure TLS
+
+In **Settings → Configuration → General settings** (the platform settings):
+
+- **HTTPS Only**: On sends a 301 from `http://` to `https://`.
+- **Minimum Inbound TLS Version**: 1.2 by default. Choose 1.3 for the strictest setting; 1.0 and 1.1 are only for very old clients.
+- **FTP state**: FTPS only or Disabled, so nothing uploads in clear text.
+
+```bash
+az webapp update -g rg-admin-dns -n app-contoso-www01 --https-only true
+az webapp config set -g rg-admin-dns -n app-contoso-www01 --min-tls-version 1.2
+```
+
+<TryIt labs="adm-app-service-domain-tls" text="Try the domain before the DNS records exist, add the TXT and CNAME, then bind a managed certificate and enforce TLS 1.2." />
+
+<Callout type="exam">
+"Verify ownership" is always the **asuid TXT** record. A **CNAME** can't sit at the root, so the apex needs an **A** record. "Free certificate, renews automatically" is the **managed certificate**, but it fails for a **wildcard** or when the certificate must be **exported**. "Redirect all HTTP traffic" is **HTTPS Only**, and "reject TLS 1.0 clients" is the **minimum TLS version**. If the plan is **Free**, the first step is to **scale up**.
+</Callout>
+
+<DeepDive title="What a swap does to domains and certificates">
+
+Custom domain names, non-public certificates and TLS settings stay with their deployment slot when you swap. That's on purpose: production keeps www.contoso-learn.com and its certificate, and only the code and swappable settings move. If you want staging on its own domain, add a separate hostname (such as staging.contoso-learn.com) to the staging slot.
+
+</DeepDive>
+
+## Real-world business scenario
+
+<Scenario
+  company="Contoso Learning (fictional)"
+  industry="Education"
+  problem="The course site lived at app-contoso-www01.azurewebsites.net. Marketing printed www.contoso-learn.com on flyers, and the security review flagged TLS 1.0 and plain HTTP."
+  service="The plan was moved from Free to Basic B1. The team added the asuid.www TXT record and a www CNAME in Azure DNS, an A record and asuid TXT for the root domain, App Service managed certificates for both names with SNI SSL, HTTPS Only, and minimum TLS 1.2."
+  why="Basic is the cheapest tier with TLS bindings, managed certificates cost nothing and renew themselves, and the DNS records prove ownership without touching the live site until the end."
+  outcome="Both names serve over HTTPS with a padlock, HTTP redirects, the audit closed, and nobody has to remember a renewal date."
+/>
+
+## When to use it and when not to
+
+<UseWhen
+  use={[
+    'A public web app should answer on your own domain name.',
+    'You want a free certificate that renews itself for www or the root domain.',
+    'Compliance asks for HTTPS everywhere and modern TLS only.',
+  ]}
+  avoid={[
+    'You need *.contoso.com covered by one free certificate. Managed certificates don\'t do wildcards.',
+    'The certificate must be reused on other servers. Use Key Vault or an App Service certificate.',
+    'The app runs on the Free tier. Scale up first.',
+  ]}
+  alternatives={[
+    '<strong>Azure Front Door</strong> to terminate TLS at the edge for several apps and regions.',
+    '<strong>Azure Key Vault</strong> certificates when one certificate is shared across services.',
+    '<strong>App Service Domain</strong> to buy the domain in Azure, with DNS set up for you.',
+  ]}
+/>

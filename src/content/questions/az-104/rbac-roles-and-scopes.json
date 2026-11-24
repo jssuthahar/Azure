@@ -1,0 +1,148 @@
+{
+ "cert": "az-104",
+ "domain": 1,
+ "topic": "rbac-roles-and-scopes",
+ "questions": [
+  {
+   "id": "adm-id-rbac-1",
+   "type": "single",
+   "question": "The App team must be able to create, modify and delete any resource in resource group RG1. The team must not be able to grant other users access to RG1. Which built-in role should you assign to the App team on RG1?",
+   "options": [
+    {
+     "text": "Contributor",
+     "why": "Correct. Contributor manages all resources but cannot assign roles."
+    },
+    {
+     "text": "Owner",
+     "why": "Owner can also assign roles, which violates the requirement."
+    },
+    {
+     "text": "User Access Administrator",
+     "why": "This role manages access only and cannot create resources."
+    },
+    {
+     "text": "Reader",
+     "why": "Reader can only view resources."
+    }
+   ],
+   "answer": [
+    0
+   ],
+   "explanation": "Contributor excludes Microsoft.Authorization write and delete actions through its NotActions.",
+   "objective": "1.2.1"
+  },
+  {
+   "id": "adm-id-rbac-2",
+   "type": "single",
+   "question": "A security team must manage role assignments for all Azure resources in a subscription. The team must not be able to create or modify resources. Which role should you assign?",
+   "options": [
+    {
+     "text": "User Access Administrator",
+     "why": "Correct. It manages access to Azure resources without resource management rights."
+    },
+    {
+     "text": "Contributor",
+     "why": "Contributor manages resources and cannot assign roles."
+    },
+    {
+     "text": "Owner",
+     "why": "Owner can also create and modify resources."
+    },
+    {
+     "text": "Security Reader",
+     "why": "Security Reader views security information and cannot assign roles."
+    }
+   ],
+   "answer": [
+    0
+   ],
+   "explanation": "User Access Administrator includes Microsoft.Authorization/* and read permissions.",
+   "objective": "1.2.1"
+  },
+  {
+   "id": "adm-id-rbac-3",
+   "type": "single",
+   "question": "Your company has 30 subscriptions under a management group named MG1, and new subscriptions are added monthly. The auditors group must be able to view resources in all current and future subscriptions. You need to minimize administrative effort. What should you do?",
+   "options": [
+    {
+     "text": "Assign the Reader role to the auditors group at the MG1 scope",
+     "why": "Correct. Assignments at a management group are inherited by all child subscriptions, including new ones."
+    },
+    {
+     "text": "Assign the Reader role to the auditors group in each subscription",
+     "why": "This must be repeated for every new subscription."
+    },
+    {
+     "text": "Assign the Global Reader Microsoft Entra role to the auditors group",
+     "why": "Global Reader is a directory role and does not grant access to Azure resources."
+    },
+    {
+     "text": "Create an Azure Policy assignment at MG1",
+     "why": "Azure Policy evaluates resources; it does not grant access."
+    }
+   ],
+   "answer": [
+    0
+   ],
+   "explanation": "Azure role assignments inherit from management groups to subscriptions, resource groups and resources.",
+   "objective": "1.2.2"
+  },
+  {
+   "id": "adm-id-rbac-4",
+   "type": "single",
+   "question": "Operators must start, restart and deallocate virtual machines in RG2. They must not manage virtual networks or storage accounts. You need to follow the principle of least privilege by using a built-in role. Which role should you assign on RG2?",
+   "options": [
+    {
+     "text": "Virtual Machine Contributor",
+     "why": "Correct. It manages virtual machines without granting access to the virtual network or storage accounts."
+    },
+    {
+     "text": "Contributor",
+     "why": "Contributor also allows managing networks and storage."
+    },
+    {
+     "text": "Network Contributor",
+     "why": "This role manages networking resources, not virtual machines."
+    },
+    {
+     "text": "Virtual Machine User Login",
+     "why": "This role allows signing in to a VM, not managing it."
+    }
+   ],
+   "answer": [
+    0
+   ],
+   "explanation": "Job function roles such as Virtual Machine Contributor grant narrower permissions than Contributor.",
+   "objective": "1.2.1"
+  },
+  {
+   "id": "adm-id-rbac-5",
+   "type": "multi",
+   "question": "You need to assign the Reader role to User1 for a management group named MG-Prod by using Azure CLI. Which two values must the command include? Each correct answer presents part of the solution.",
+   "options": [
+    {
+     "text": "--role Reader",
+     "why": "Correct. The role definition is required."
+    },
+    {
+     "text": "--scope /providers/Microsoft.Management/managementGroups/MG-Prod",
+     "why": "Correct. A management group scope uses the Microsoft.Management provider path."
+    },
+    {
+     "text": "--resource-group MG-Prod",
+     "why": "A management group is not a resource group."
+    },
+    {
+     "text": "--subscription MG-Prod",
+     "why": "A management group is not a subscription."
+    }
+   ],
+   "answer": [
+    0,
+    1
+   ],
+   "explanation": "Use az role assignment create --assignee user1@contoso.com --role Reader --scope /providers/Microsoft.Management/managementGroups/MG-Prod.",
+   "objective": "1.2.2"
+  }
+ ]
+}

@@ -1,0 +1,148 @@
+{
+ "cert": "az-104",
+ "domain": 1,
+ "topic": "azure-policy-for-admins",
+ "questions": [
+  {
+   "id": "adm-id-pol-1",
+   "type": "single",
+   "question": "You must prevent users from creating resources outside the West Europe and North Europe regions in all subscriptions under a management group. What should you do?",
+   "options": [
+    {
+     "text": "Assign the Allowed locations policy definition at the management group scope",
+     "why": "Correct. Allowed locations uses the Deny effect, and the assignment is inherited by all child subscriptions."
+    },
+    {
+     "text": "Assign the Reader role at the management group scope",
+     "why": "RBAC controls who can act, not where resources can be created."
+    },
+    {
+     "text": "Apply a ReadOnly lock to each subscription",
+     "why": "A ReadOnly lock blocks all changes, not only other regions."
+    },
+    {
+     "text": "Create a budget filtered by location",
+     "why": "Budgets alert on cost; they do not block deployments."
+    }
+   ],
+   "answer": [
+    0
+   ],
+   "explanation": "Policy assignments at a management group apply to all subscriptions beneath it, including future ones.",
+   "objective": "1.3.1"
+  },
+  {
+   "id": "adm-id-pol-2",
+   "type": "single",
+   "question": "You assign a policy that uses the Modify effect to add a missing tag to resources. Existing resources remain non-compliant. What should you do?",
+   "options": [
+    {
+     "text": "Create a remediation task for the policy assignment",
+     "why": "Correct. Remediation tasks apply Modify and DeployIfNotExists effects to existing resources."
+    },
+    {
+     "text": "Change the policy enforcement mode to Disabled",
+     "why": "Disabled stops enforcement; it does not fix resources."
+    },
+    {
+     "text": "Assign the policy again at the same scope",
+     "why": "A duplicate assignment does not remediate existing resources."
+    },
+    {
+     "text": "Create a policy exemption for the resources",
+     "why": "An exemption excludes resources instead of fixing them."
+    }
+   ],
+   "answer": [
+    0
+   ],
+   "explanation": "Modify policies act on create and update requests. Existing resources need a remediation task, which uses the assignment’s managed identity.",
+   "objective": "1.3.1"
+  },
+  {
+   "id": "adm-id-pol-3",
+   "type": "single",
+   "question": "You plan to assign a policy definition that uses the DeployIfNotExists effect by using Azure CLI. What must the assignment include?",
+   "options": [
+    {
+     "text": "A managed identity and a location for the identity",
+     "why": "Correct. DeployIfNotExists and Modify assignments need a managed identity to make changes."
+    },
+    {
+     "text": "A resource lock on the scope",
+     "why": "Locks are not required and could block remediation."
+    },
+    {
+     "text": "An initiative definition",
+     "why": "A single definition can be assigned without an initiative."
+    },
+    {
+     "text": "The Owner role for every user in the scope",
+     "why": "Users do not need Owner; the assignment identity performs the deployment."
+    }
+   ],
+   "answer": [
+    0
+   ],
+   "explanation": "Use --mi-system-assigned with --location (or --mi-user-assigned), and grant the identity the required role.",
+   "objective": "1.3.1"
+  },
+  {
+   "id": "adm-id-pol-4",
+   "type": "multi",
+   "question": "You need to evaluate how many existing resources would violate a new policy before the policy blocks any deployment. Which two approaches meet the requirement? Each correct answer presents a complete solution.",
+   "options": [
+    {
+     "text": "Assign the definition with the Audit effect",
+     "why": "Correct. Audit reports non-compliance without blocking."
+    },
+    {
+     "text": "Assign the definition with policy enforcement set to Disabled",
+     "why": "Correct. DoNotEnforce evaluates compliance without applying the effect."
+    },
+    {
+     "text": "Assign the definition with the Deny effect and an exemption for every resource",
+     "why": "This is impractical and still blocks new deployments."
+    },
+    {
+     "text": "Apply a CanNotDelete lock before assigning the policy",
+     "why": "Locks do not evaluate policy compliance."
+    }
+   ],
+   "answer": [
+    0,
+    1
+   ],
+   "explanation": "Audit and enforcement mode Disabled let you measure compliance safely before enforcing Deny.",
+   "objective": "1.3.1"
+  },
+  {
+   "id": "adm-id-pol-5",
+   "type": "single",
+   "question": "You need to apply 12 related policy definitions to several subscriptions and manage them as a single unit with one compliance score. What should you create?",
+   "options": [
+    {
+     "text": "An initiative definition",
+     "why": "Correct. An initiative groups policy definitions into one assignable set."
+    },
+    {
+     "text": "A management group for each definition",
+     "why": "Management groups organize subscriptions, not definitions."
+    },
+    {
+     "text": "A custom RBAC role",
+     "why": "RBAC roles grant permissions; they do not group policies."
+    },
+    {
+     "text": "Twelve resource locks",
+     "why": "Locks do not evaluate or group policies."
+    }
+   ],
+   "answer": [
+    0
+   ],
+   "explanation": "Initiatives (policy set definitions) simplify assignment and report compliance for the whole set.",
+   "objective": "1.3.1"
+  }
+ ]
+}

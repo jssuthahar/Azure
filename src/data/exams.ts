@@ -59,6 +59,17 @@ import { EXAM_ITEMS as gh300Items } from './gh-300/exam-items';
 import { PROBLEM_SOLUTION as gh300Problems } from './gh-300/problem-solution';
 import { SERVICES as gh300Services } from './gh-300/services';
 import { SORT_SETS as gh300Sort, RIDDLES as gh300Riddles } from './gh-300/games';
+import * as az104 from './az-104/syllabus';
+import { COURSE as az104Course } from './az-104/course';
+import { SIMS3D_ADMIN as az104Sims3d } from './az-104/sims3d';
+import { TOURS_ADMIN as az104Tours } from './az-104/portal-tours';
+import { EMBED_LESSON_3D as az104Embed3d } from './az-104/embeds';
+import { LESSON_SIMS as az104Sims } from './az-104/lesson-sims';
+import { COMPARISONS as az104Compare } from './az-104/compare';
+import { EXAM_ITEMS as az104Items } from './az-104/exam-items';
+import { PROBLEM_SOLUTION as az104Problems } from './az-104/problem-solution';
+import { SERVICES as az104Services } from './az-104/services';
+import { SORT_SETS as az104Sort, RIDDLES as az104Riddles } from './az-104/games';
 
 
 export interface Exam {
@@ -207,6 +218,32 @@ const EXAMS: Record<string, Exam> = {
     lesson3d: ai200Embed3d,
     tours: ai200Tours,
     services: ai200Services,
+  },
+  'az-104': {
+    slug: 'az-104',
+    code: 'AZ-104',
+    name: info('az-104').name,
+    info: info('az-104'),
+    accent: '#005ba1',
+    modules: az104.MODULES,
+    skillsMeasuredAsOf: az104.SKILLS_MEASURED_AS_OF,
+    syllabusVerifiedOn: az104.SYLLABUS_VERIFIED_ON,
+    studyGuideUrl: az104.STUDY_GUIDE_URL,
+    courseUrl: 'https://learn.microsoft.com/en-us/training/courses/az-104t00',
+    facts: az104.EXAM_FACTS,
+    lessonSims: az104Sims,
+    comparisons: az104Compare,
+    whatIfs: [],
+    examItems: az104Items,
+    visuals: {},
+    problems: az104Problems,
+    games: { sortSets: az104Sort, riddles: az104Riddles },
+    activities: {},
+    course: az104Course,
+    sims3d: az104Sims3d,
+    lesson3d: az104Embed3d,
+    tours: az104Tours,
+    services: az104Services,
   },
   'gh-300': {
     slug: 'gh-300',

@@ -1,0 +1,207 @@
+---
+title: Storage Redundancy and Object Replication
+seoTitle: Azure Storage Redundancy and Object Replication | AZ-104
+description: Choose LRS, ZRS, GRS or GZRS, change or convert redundancy, fail over a storage account, and set up object replication between accounts for AZ-104.
+answer: >-
+  **Redundancy** decides how many copies Azure keeps and where: **LRS** (3 copies in one datacenter), **ZRS** (3 copies across **availability zones**), **GRS** (LRS plus an asynchronous copy in the **paired region**) and **GZRS** (ZRS plus a paired-region copy). **RA-GRS** and **RA-GZRS** also let you **read** the secondary. Changing between LRS and GRS is a simple update; adding zones (LRS to ZRS, GRS to GZRS) is a **conversion**. A **customer-managed failover** promotes the secondary during an outage. **Object replication** is different: it asynchronously copies **block blobs** from a container in one account to a container in another, and needs **versioning on both accounts** and the **change feed on the source**.
+updated: 2026-11-24
+readingMinutes: 12
+keyTerms:
+  - term: Locally redundant storage (LRS)
+    definition: Three synchronous copies in one datacenter in the primary region.
+  - term: Zone-redundant storage (ZRS)
+    definition: Three synchronous copies across three availability zones in the primary region.
+  - term: Geo-redundant storage (GRS)
+    definition: LRS in the primary region plus an asynchronous LRS copy in the paired secondary region.
+  - term: Geo-zone-redundant storage (GZRS)
+    definition: ZRS in the primary region plus an asynchronous LRS copy in the paired secondary region.
+  - term: Last Sync Time
+    definition: The point up to which writes are guaranteed to be in the secondary region. Writes after it may be lost in an unplanned failover.
+  - term: Object replication
+    definition: An account feature that copies block blobs asynchronously from a source container to a destination container in another storage account.
+interview:
+  - level: beginner
+    q: What's the difference between ZRS and GRS?
+    a: >-
+      ZRS spreads three copies across three availability zones in one region, so it survives a zone or datacenter failure and stays writable. GRS keeps three copies in one datacenter plus three more in the paired region, so it survives losing a whole region, but the secondary copy is asynchronous and you have to fail over to use it.
+    followUps: []
+  - level: intermediate
+    q: How do you change an LRS account to ZRS?
+    a: >-
+      It's a conversion, not a quick setting change, because data has to be spread across zones. In the portal you pick ZRS on the Redundancy blade and Azure starts the conversion, or in the CLI az storage account migration start with --sku Standard_ZRS. The account stays online. LRS to GRS, on the other hand, is a simple update.
+    followUps: []
+  - level: experienced
+    q: What happens during an unplanned customer-managed failover?
+    a: >-
+      The secondary region becomes the primary and DNS points there. Because geo-replication is asynchronous, any writes after the Last Sync Time can be lost, so I check that first. After failover the account is LRS in the new primary, and I have to reconfigure geo-redundancy. A planned failover, used for drills, keeps geo-redundancy and loses nothing.
+    followUps: []
+  - level: scenario
+    q: Users in Europe need low-latency reads of product images stored in an East US account. GRS is already on. Does that help?
+    a: >-
+      Not really. GRS goes to the paired region, West US, and the secondary isn't readable unless it's RA-GRS. I'd use object replication to copy the images container to an account in West Europe and point European users at it. That needs versioning on both accounts and the change feed on the source.
+    followUps: []
+revision:
+  keyPoints:
+    - LRS 3 copies one datacenter; ZRS 3 across zones; GRS LRS + paired region; GZRS ZRS + paired region.
+    - RA- options allow reads from the secondary endpoint (<account>-secondary).
+    - Premium accounts support LRS and ZRS only.
+    - LRS to GRS is an update; LRS to ZRS and GRS to GZRS are conversions.
+    - Unplanned failover can lose writes after Last Sync Time and leaves the account LRS.
+    - Object replication needs versioning on both accounts and change feed on the source; block blobs only.
+  mistakes:
+    - Thinking GRS lets you read from the secondary without failover (that's RA-GRS).
+    - Thinking object replication is the same as GRS.
+    - Expecting Archive-tier blobs to replicate.
+  examTips:
+    - '"Survive a zone outage and stay writable" = **ZRS** (or GZRS).'
+    - '"Read data during a regional outage without failover" = **RA-GRS / RA-GZRS**.'
+    - '"Copy blobs to an account in a region you choose" = **object replication**.'
+  quick:
+    - q: How many copies does LRS keep?
+      a: Three, in one datacenter.
+    - q: What two features must be on for object replication?
+      a: Blob versioning on both accounts and change feed on the source.
+    - q: Where does GRS keep its secondary copy?
+      a: In the paired region.
+    - q: Which redundancy options do premium accounts support?
+      a: LRS and ZRS.
+    - q: What property tells you how current the secondary region is?
+      a: Last Sync Time.
+references:
+  - title: Azure Storage redundancy
+    url: https://learn.microsoft.com/azure/storage/common/storage-redundancy
+  - title: Change how a storage account is replicated
+    url: https://learn.microsoft.com/azure/storage/common/redundancy-migration
+  - title: Azure storage disaster recovery planning and failover
+    url: https://learn.microsoft.com/azure/storage/common/storage-disaster-recovery-guidance
+  - title: Object replication for block blobs
+    url: https://learn.microsoft.com/azure/storage/blobs/object-replication-overview
+related:
+  - configure-storage-accounts-and-encryption
+  - blob-soft-delete-and-versioning
+  - storage-explorer-and-azcopy
+---
+
+## Start with a question
+
+<Story question="Where do you keep copies of your family photos so that one bad day can't wipe them all out?">
+
+Three copies on one laptop protect you from a corrupt file, not from a stolen laptop. Copies on three devices in three rooms survive a burst pipe. A copy at your cousin's house in another city survives a fire on your street.
+
+Azure Storage gives you the same choices: **LRS** (one building), **ZRS** (three buildings across **availability zones**), and **GRS/GZRS** (plus a copy in another region). **Object replication** is different again: it's you choosing to send certain albums to a friend abroad.
+
+</Story>
+
+## Explain it like I'm 10
+
+<Eli10>
+
+LRS: three copies of your drawing in one drawer.
+
+ZRS: three copies in three classrooms.
+
+GRS: three in one drawer, and three more in a school in another town.
+
+GZRS: three classrooms, plus the other town.
+
+Object replication: you post a copy of chosen drawings to your pen pal's school, and keep posting new ones.
+
+</Eli10>
+
+## The technical explanation
+
+### The four options
+
+| Option | Copies | Survives | Secondary readable |
+| --- | --- | --- | --- |
+| **LRS** | 3, one datacenter | Disk and rack failures | No |
+| **ZRS** | 3, three zones | A zone or datacenter failure, stays writable | No |
+| **GRS** | 3 local + 3 in paired region (async) | A regional disaster, after failover | Only with **RA-GRS** |
+| **GZRS** | 3 across zones + 3 in paired region (async) | Zone failure and regional disaster | Only with **RA-GZRS** |
+
+With read access, the secondary endpoint is `https://<account>-secondary.blob.core.windows.net`. Premium accounts support **LRS** and **ZRS** only. The **Archive** tier is supported on LRS, GRS and RA-GRS accounts, not on zone-redundant ones. Prices rise roughly in the order LRS, ZRS, GRS, GZRS: for 1 TB of Hot data, LRS is around $20 a month and GRS about double (illustrative).
+
+### Changing redundancy
+
+Portal: **Data management > Redundancy**.
+
+- **LRS ↔ GRS / RA-GRS**: a simple update (`az storage account update --sku Standard_GRS`).
+- **Adding or removing zones** (LRS ↔ ZRS, GRS ↔ GZRS): a **conversion** that runs in the background while the account stays online (`az storage account migration start --sku Standard_ZRS`). To go LRS to GZRS, change to GRS first and then convert.
+
+### Failover
+
+If the primary region is down, a **customer-managed failover** (Redundancy blade, **Prepare for failover**, or `az storage account failover`) promotes the secondary. Check **Last Sync Time** first: writes after it may not be in the secondary and are lost in an **unplanned** failover. Afterwards the account is LRS in the new primary until you turn geo-redundancy back on. A **planned** failover swaps the regions without data loss, useful for drills.
+
+### Object replication
+
+Object replication copies **block blobs** from a **source container** to a **destination container** in another storage account, in any region or subscription, asynchronously. It's for latency (data near users), separation (a copy in another account) and processing pipelines, not for disaster recovery of the whole account.
+
+Rules to remember:
+
+- **Blob versioning** on **both** accounts, and the **change feed** on the **source**.
+- Block blobs only. Blobs in the **Archive** tier, snapshots and hierarchical namespace accounts aren't supported.
+- A policy holds rules (container pairs) with optional **prefix filters** and a **minimum creation time** that decides whether existing blobs copy.
+- A source account can replicate to at most **two** destination accounts.
+- Cross-tenant replication is blocked unless **Allow cross-tenant replication** is on.
+
+Portal: **Data management > Object replication > Create replication rules**.
+
+```bash
+az storage account blob-service-properties update -g rg-storage-prod -n stcontosoprod \
+  --enable-versioning true --enable-change-feed true
+az storage account blob-service-properties update -g rg-storage-prod -n streplicaweu \
+  --enable-versioning true
+
+# Created on the destination; then apply the same policy to the source
+az storage account or-policy create -g rg-storage-prod --account-name streplicaweu \
+  --source-account stcontosoprod --destination-account streplicaweu \
+  --source-container photos --destination-container photos-replica \
+  --min-creation-time 2026-11-01T00:00:00Z
+```
+
+```powershell
+Set-AzStorageAccount -ResourceGroupName rg-storage-prod -Name stcontosoprod -SkuName Standard_GRS
+Invoke-AzStorageAccountFailover -ResourceGroupName rg-storage-prod -Name stcontosoprod
+```
+
+<TryIt labs="adm-storage-accounts" text="Change LRS to GRS, convert to GZRS, then set up object replication with its prerequisites." />
+
+<Callout type="exam">
+Map the requirement to the cheapest option that meets it. "Disk or rack failures, lowest cost" is **LRS**; "zone or datacenter failure" is **ZRS**; "regional disaster" is **GRS**; "zone and region" is **GZRS**; "read during an outage" adds **RA-**. "Copy blobs to a second account" is **object replication**, which needs **versioning on both** and **change feed on the source**. A premium account can't be GRS.
+</Callout>
+
+<DeepDive title="RPO, SLA and what geo-replication doesn't do">
+
+Geo-replication typically keeps the secondary within about 15 minutes of the primary, but there's no SLA on that number. Replication copies deletes and corruption too, so redundancy is not a backup. Pair it with soft delete, versioning, point-in-time restore or Azure Backup for blobs.
+
+</DeepDive>
+
+## Real-world business scenario
+
+<Scenario
+  company="Contoso Media (fictional)"
+  industry="Media"
+  problem="Product photos lived in one LRS account in East US. A datacenter incident took the site's images offline for hours, and European customers complained about slow loading."
+  service="The account was changed to GRS and then converted to GZRS. Object replication now copies the photos container to an account in West Europe, which the European site reads from."
+  why="GZRS survives a zone failure and has a copy in the paired region. Object replication puts images near European users without waiting for a failover."
+  outcome="A later zone outage went unnoticed by customers, and European page loads got faster."
+/>
+
+## When to use it and when not to
+
+<UseWhen
+  use={[
+    'Production data that must survive a zone failure (ZRS or GZRS).',
+    'Data you must recover after a regional disaster (GRS or GZRS).',
+    'Blobs that should also live in another account or region you choose (object replication).',
+  ]}
+  avoid={[
+    'Data you can easily recreate (LRS is cheaper).',
+    'Protection from accidental deletes (use soft delete and versioning; replication copies deletes).',
+    'Archive-tier or hierarchical namespace data with object replication.',
+  ]}
+  alternatives={[
+    '<strong>AzCopy</strong> for one-off copies between accounts.',
+    '<strong>Azure Backup for blobs</strong> for point-in-time recovery.',
+  ]}
+/>

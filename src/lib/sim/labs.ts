@@ -6,6 +6,7 @@ import type { Sim } from './engine';
 import { ME, type World } from './world';
 import { AI_LABS } from './labs-ai';
 import { DEV_LABS } from './labs-dev';
+import { ADMIN_LABS } from './labs-admin';
 import { GH_LABS, GH_SANDBOX } from './labs-gh';
 
 export interface LabTask {
@@ -523,6 +524,7 @@ export const LABS: Lab[] = [
   },
   ...AI_LABS,
   ...DEV_LABS,
+  ...ADMIN_LABS,
   ...GH_LABS,
 ];
 

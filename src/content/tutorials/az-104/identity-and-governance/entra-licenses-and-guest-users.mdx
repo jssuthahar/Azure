@@ -1,0 +1,193 @@
+---
+title: "Licenses and External Users in Microsoft Entra ID"
+seoTitle: Entra ID Licenses and Guest Users (B2B) Explained | AZ-104
+description: Assign Microsoft Entra licenses directly or by group, fix usage location and seat errors, and invite B2B guest users with external collaboration settings.
+answer: >-
+  A **license** turns on paid features for a user, such as Microsoft 365 E3 or **Microsoft Entra ID P1/P2**. You can assign it **directly** to a user, which needs the user's **usage location** first, or to a **group** (**group-based licensing**, needs Entra ID P1), so members gain and lose it as they join and leave. **External users** from other organisations join as **guests** through **B2B collaboration**: they sign in with their **own** account, appear with user type **Guest** and an **#EXT#** UPN, and what they can do is set in **External collaboration settings** and **cross-tenant access settings**.
+updated: 2026-11-24
+readingMinutes: 11
+keyTerms:
+  - term: Usage location
+    definition: The two-letter country where a user mainly uses Microsoft services. Required before you assign a license directly.
+  - term: Group-based licensing
+    definition: Assigning licenses to a group so every member inherits them. Needs Microsoft Entra ID P1 or a plan that includes it.
+  - term: Service plan
+    definition: One service inside a license, such as Exchange Online or Teams, which you can switch off per assignment.
+  - term: B2B collaboration
+    definition: Inviting people from other organisations as guests who sign in with their own identity.
+  - term: Guest user
+    definition: A user object with user type Guest that represents an external person in your tenant.
+  - term: External collaboration settings
+    definition: Tenant settings for who can invite guests, what guests can see, and which domains are allowed.
+  - term: Cross-tenant access settings
+    definition: Inbound and outbound rules per partner organisation, including trusting their MFA and device claims.
+interview:
+  - level: beginner
+    q: What's the difference between assigning a license directly and through a group?
+    a: >-
+      Direct means I pick a user and give them the license. Group-based means I give the license to a group, and everyone in it gets it. When someone leaves the group they lose it, which stops paid licenses sitting with people who don't need them.
+    followUps: []
+  - level: intermediate
+    q: A direct license assignment fails. What's the first thing you check?
+    a: >-
+      The user's usage location. Licenses depend on which country the service is used in, so the portal won't assign one until usage location is set. After that I'd check whether there are any free seats left for that product.
+    followUps: []
+  - level: experienced
+    q: Some members of a licensed group show an error state. Why?
+    a: >-
+      Usually not enough seats, so the group can't license everyone, or a conflict between two service plans the user gets from different groups. I'd add seats or remove the conflicting plan, then select Reprocess on the group's Licenses blade. Members without a usage location use the directory's location under group licensing, so that's rarely the cause.
+    followUps: []
+  - level: scenario
+    q: A partner's consultants need access to one SharePoint site and an internal app for three months. How would you set it up?
+    a: >-
+      I'd invite them as B2B guests, ideally into a group that has access to the site and the app, so I'm not managing a password for them. I'd restrict invitations to the partner's domain in External collaboration settings, require MFA through Conditional Access, and put an access review or an expiry on the group so access ends with the project.
+    followUps: []
+revision:
+  keyPoints:
+    - Direct license assignment needs a usage location on the user.
+    - Group-based licensing (Entra ID P1) gives every member the license and removes it when they leave.
+    - Not enough seats puts members in an error state; add seats, then Reprocess.
+    - 'Guests sign in with their own account. User type Guest, UPN contains #EXT#.'
+    - External collaboration settings control guest access level, who can invite and allowed domains.
+  mistakes:
+    - Thinking a guest needs a password created in your tenant. They use their home identity.
+    - Assigning licenses user by user when a group would keep them correct automatically.
+  examTips:
+    - '"License assignment fails for a new user" = set the **usage location**.'
+    - '"Licenses should follow department membership" = **group-based licensing** on a **dynamic group**.'
+    - '"Only allow guests from fabrikam.com" = **Collaboration restrictions** in **External collaboration settings**.'
+  quick:
+    - q: What must be set before you assign a license directly?
+      a: The user's usage location.
+    - q: Which license does group-based licensing need?
+      a: Microsoft Entra ID P1 (or a plan that includes it).
+    - q: How can you spot a guest's UPN?
+      a: 'It contains #EXT#, for example priya_fabrikam.com#EXT#@contoso.onmicrosoft.com.'
+    - q: Where do you limit invitations to certain domains?
+      a: External Identities, External collaboration settings, Collaboration restrictions.
+    - q: What do you select after adding seats for a group in error?
+      a: Reprocess, on the group's Licenses blade.
+references:
+  - title: What is group-based licensing in Microsoft Entra ID?
+    url: https://learn.microsoft.com/entra/fundamentals/concept-group-based-licensing
+  - title: Assign or remove licenses in the Microsoft Entra admin center
+    url: https://learn.microsoft.com/entra/fundamentals/license-users-groups
+  - title: B2B collaboration overview
+    url: https://learn.microsoft.com/entra/external-id/what-is-b2b
+  - title: Configure external collaboration settings
+    url: https://learn.microsoft.com/entra/external-id/external-collaboration-settings-configure
+  - title: Cross-tenant access overview
+    url: https://learn.microsoft.com/entra/external-id/cross-tenant-access-overview
+related:
+  - entra-users-and-groups
+  - self-service-password-reset
+  - rbac-roles-and-scopes
+---
+
+## Start with a question
+
+<Story question="How does a gym give members the right pass, and let a visiting friend in for a day?">
+
+A gym hands each member a pass for the classes they've paid for. Some companies buy passes for a whole team, so anyone who joins the team gets one and anyone who leaves hands it back. And when you bring a friend, the gym doesn't make them a new ID card. They show their own driving licence and sign in as a guest.
+
+In Microsoft Entra ID the pass is a **license**, the team deal is **group-based licensing**, and the visiting friend is a **B2B guest** who signs in with their own company account.
+
+</Story>
+
+## Explain it like I'm 10
+
+<Eli10>
+
+A **license** is a ticket that lets you use the paid rides.
+
+You can hand tickets to kids one by one. Or you give tickets to the whole football team, and anyone who joins the team gets one too. That's **group licensing**.
+
+A kid from another school can visit. They bring their own school card. You just write "visitor" next to their name. That's a **guest**.
+
+</Eli10>
+
+## The technical explanation
+
+### Licenses
+
+Products such as **Microsoft 365 E3**, **Microsoft Entra ID P1** and **P2** are bought as a number of seats. Each license contains **service plans** (Exchange Online, Teams, Entra ID P1 and so on) that you can switch off when you assign it.
+
+| | Direct assignment | Group-based licensing |
+| --- | --- | --- |
+| Where | User → **Licenses** → + Assignments | Group → **Licenses** → + Assignments |
+| Needs | **Usage location** on the user | **Entra ID P1** (or a plan that includes it) |
+| Leavers | You remove it by hand | Removed when they leave the group |
+| Missing usage location | Assignment fails | The directory's location is used |
+| Not enough seats | Assignment fails | Members show an **error state**; add seats, then **Reprocess** |
+
+Pair group licensing with a **dynamic group** and licenses follow HR data with no clicks at all. If a user gets the same product directly and from a group, they use one seat, and you can remove the direct one safely.
+
+```powershell
+# Microsoft Graph PowerShell
+Update-MgUser -UserId sam@contoso.com -UsageLocation "IN"
+$e3 = Get-MgSubscribedSku | Where-Object SkuPartNumber -eq "SPE_E3"
+Set-MgUserLicense -UserId sam@contoso.com -AddLicenses @{SkuId = $e3.SkuId} -RemoveLicenses @()
+```
+
+### External users (B2B collaboration)
+
+**Users → + New user → Invite external user** sends an invitation. The guest redeems it and signs in with their own Microsoft Entra account, a Microsoft account, Google or a one-time email passcode. In your tenant they appear with **User type: Guest**, and a UPN like `priya_fabrikam.com#EXT#@contoso.onmicrosoft.com`. You give them access the same way as anyone else: groups, app assignments, Azure roles.
+
+**External Identities → External collaboration settings** controls:
+
+- **Guest user access**: same as members, **limited** (the default), or restricted to their own objects.
+- **Guest invite settings**: from "anyone, including guests" down to "no one".
+- **Collaboration restrictions**: allow any domain, deny listed domains, or allow **only** listed domains.
+
+**Cross-tenant access settings** go further per organisation: block or allow inbound and outbound B2B, and **trust the partner's MFA** so guests aren't asked twice. For customer-facing sign-up apps, Microsoft points you to **External ID in an external tenant** instead of B2B guests.
+
+<Flow
+  caption="Licensing the sales team and inviting a partner"
+  steps={[
+    { title: 'Group', text: 'Sales-Team is a dynamic group of everyone in Sales.' },
+    { title: 'License', text: 'Microsoft 365 E3 is assigned to the group, so every member gets a seat.' },
+    { title: 'Invite', text: 'priya@fabrikam.com is invited and redeems with her Fabrikam account.' },
+    { title: 'Access', text: 'Priya joins a project group that has access to one SharePoint site.' },
+  ]}
+/>
+
+<TryIt labs="adm-entra-users-licenses" text="See a direct license fail without usage location, then license the whole group and invite a guest." />
+
+<Callout type="exam">
+"The license can't be assigned to a newly created user" points to **usage location**. "Licenses must be removed automatically when users change department" is **group-based licensing**, usually on a **dynamic group**. "Users from a partner must use their existing credentials" is **B2B collaboration** (guest). "Only users from fabrikam.com can be invited" is **Collaboration restrictions** with an allow list. If a question asks which license enables group-based licensing, answer **Microsoft Entra ID P1**.
+</Callout>
+
+<DeepDive title="Guests and Azure resources">
+
+Guests can hold **Azure roles** too. Invite the partner, then assign them, or better a group they're in, a role at a resource group. By default guests can't browse your directory freely, which is why the "limited access" setting exists. If a guest needs to see other users in a picker, you either raise their access level or give them a directory role like Directory Readers. Remove guests (or let **access reviews** remove them) when the work ends; stale guests are a common audit finding.
+
+</DeepDive>
+
+## Real-world business scenario
+
+<Scenario
+  company="Northwind Traders (fictional)"
+  industry="Wholesale"
+  problem="Northwind paid for 40 Microsoft 365 E3 licenses still held by people who'd changed roles, and consultants from an agency shared one generic account."
+  service="Group-based licensing on dynamic department groups, and B2B guest invitations for each agency consultant, with invitations restricted to the agency's domain and MFA trusted from the agency tenant."
+  why="Licenses move with the department attribute, and every consultant signs in as themselves, so actions are traceable and access ends when the guest is removed."
+  outcome="About $1,400 a month of unused licenses was freed up and the shared account was deleted."
+/>
+
+## When to use it and when not to
+
+<UseWhen
+  use={[
+    'Licenses that should follow team membership (group-based licensing).',
+    'One-off licenses for a specific person, after setting usage location (direct).',
+    'Partners, contractors and suppliers who already have a work account (B2B guests).',
+  ]}
+  avoid={[
+    'Creating member accounts with passwords for external people. Invite them as guests.',
+    'Group licensing on a group that will exceed your seat count without monitoring errors.',
+  ]}
+  alternatives={[
+    '<strong>External ID (external tenant)</strong> for customer sign-up and sign-in to your apps.',
+    '<strong>Entitlement management access packages</strong> when guests should request access that expires on its own.',
+  ]}
+/>

@@ -1,0 +1,27 @@
+{ "cert": "az-104", "domain": 3, "topic": "app-service-backup-and-networking", "questions": [
+  { "id": "adm-app-net-1", "type": "single", "scenario": "A web app must back up its files, configuration and linked Azure SQL database every day. Backups must be retained for 60 days and must be downloadable.", "question": "What should you configure?", "options": [
+    { "text": "A custom backup with a daily schedule and 60-day retention to a blob container in a storage account", "why": "Correct. Custom backups support a schedule, retention, linked databases and downloadable files." },
+    { "text": "Automatic backups", "why": "Automatic backups are hourly, retained for 30 days and cannot be downloaded." },
+    { "text": "A deployment slot named backup", "why": "A slot is a live copy of the app, not a backup with retention." },
+    { "text": "An Azure Files share mounted to the app", "why": "Mounting storage does not create backups of the app or database." } ], "answer": [0], "explanation": "Custom backups go to a storage account in the same subscription through a SAS URL and can be up to 10 GB.", "objective": "3.4.6" },
+  { "id": "adm-app-net-2", "type": "single", "question": "A web app must connect to an Azure SQL database that is reachable only through a private endpoint in a virtual network. What should you configure on the web app?", "options": [
+    { "text": "Virtual network integration with a dedicated subnet in the virtual network", "why": "Correct. VNet integration routes the app's outbound traffic into the virtual network." },
+    { "text": "A private endpoint for the web app", "why": "A private endpoint provides private inbound access to the app. It does not route the app's outbound calls." },
+    { "text": "An access restriction that allows the database IP address", "why": "Access restrictions filter inbound traffic to the app." },
+    { "text": "A custom domain", "why": "Custom domains do not affect outbound network connectivity." } ], "answer": [0], "explanation": "The integration subnet must be empty, /28 or larger, and delegated to Microsoft.Web/serverFarms.", "objective": "3.4.7" },
+  { "id": "adm-app-net-3", "type": "single", "scenario": "You configure an access restriction on a web app with the following rule: priority 100, action Allow, source 203.0.113.0/24. No other rules exist.", "question": "What happens to a request from 198.51.100.10?", "options": [
+    { "text": "The request is denied with HTTP 403", "why": "Correct. Once an Allow rule exists, unmatched traffic is denied." },
+    { "text": "The request is allowed because no Deny rule exists", "why": "Unmatched requests are denied after any Allow rule is added." },
+    { "text": "The request is redirected to HTTPS", "why": "Redirection is controlled by HTTPS Only, not by access restrictions." },
+    { "text": "The request is queued until an administrator approves it", "why": "Access restrictions allow or deny requests immediately." } ], "answer": [0], "explanation": "Rules are evaluated by priority, lowest number first, and unmatched traffic falls through to the deny action.", "objective": "3.4.7" },
+  { "id": "adm-app-net-4", "type": "single", "question": "You need to ensure that a web app is reachable only from a virtual network and has no public inbound access. What should you do?", "options": [
+    { "text": "Create a private endpoint for the web app and disable public network access", "why": "Correct. A private endpoint provides a private IP address, and disabling public access removes the public entry point." },
+    { "text": "Configure virtual network integration", "why": "VNet integration affects outbound traffic only." },
+    { "text": "Add a hybrid connection", "why": "Hybrid connections provide outbound access to an on-premises host and port." },
+    { "text": "Set Minimum Inbound TLS Version to 1.3", "why": "The TLS version does not restrict which networks can reach the app." } ], "answer": [0], "explanation": "Link a private DNS zone for privatelink.azurewebsites.net so clients resolve the app to its private IP address.", "objective": "3.4.7" },
+  { "id": "adm-app-net-5", "type": "multi", "question": "You configure virtual network integration for a web app. Which two requirements must the integration subnet meet? Each correct answer presents part of the solution.", "options": [
+    { "text": "The subnet is delegated to Microsoft.Web/serverFarms", "why": "Correct. The integration subnet must be delegated to App Service." },
+    { "text": "The subnet is /28 or larger and is not used by other resources", "why": "Correct. The subnet must be empty and large enough for the plan's instances." },
+    { "text": "The subnet is named AppServiceSubnet", "why": "No specific subnet name is required." },
+    { "text": "The subnet contains a VPN gateway", "why": "A gateway is not required for regional VNet integration." } ], "answer": [0, 1], "explanation": "A /26 subnet is recommended so that the plan can scale out.", "objective": "3.4.7" }
+] }

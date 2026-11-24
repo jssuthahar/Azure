@@ -1,0 +1,214 @@
+---
+title: "Implement and Manage Azure Policy"
+seoTitle: Azure Policy Effects, Assignments and Remediation | AZ-104
+description: Assign Azure Policy definitions and initiatives, pick Deny, Audit, Modify or DeployIfNotExists, read compliance and run remediation tasks, with portal and CLI.
+answer: >-
+  **Azure Policy** checks resources against rules and applies an **effect**. A **policy definition** holds the rule; an **initiative** groups several; an **assignment** applies one to a **scope** (management group, subscription or resource group), with optional **exclusions** and **parameters**. Common effects are **Deny** (block the request), **Audit** (allow but mark non-compliant), **Append**, **Modify** (change properties such as tags during deployment) and **DeployIfNotExists** (deploy a related resource). Modify and DeployIfNotExists need a **managed identity**, and a **remediation task** fixes resources that existed before the assignment. **Enforcement mode: Disabled** lets you test without blocking. Compliance shows in **Policy → Compliance**.
+updated: 2026-11-24
+readingMinutes: 12
+keyTerms:
+  - term: Policy definition
+    definition: A JSON rule with a condition and an effect, such as Allowed locations or Require a tag on resources.
+  - term: Initiative
+    definition: A set of policy definitions assigned together, for example a regulatory baseline.
+  - term: Assignment
+    definition: A definition or initiative applied to a scope with parameter values, exclusions and an enforcement mode.
+  - term: Effect
+    definition: What happens when a resource matches the rule - Deny, Audit, Append, Modify, DeployIfNotExists, AuditIfNotExists or Disabled.
+  - term: Remediation task
+    definition: A job that applies a Modify or DeployIfNotExists policy to resources that already exist.
+  - term: Exemption
+    definition: A record that excludes a resource or scope from an assignment, with a reason and optional expiry.
+  - term: Enforcement mode
+    definition: Enabled (Default) applies the effect; Disabled (DoNotEnforce) only evaluates compliance.
+interview:
+  - level: beginner
+    q: What's the difference between Azure Policy and RBAC?
+    a: >-
+      RBAC decides who can do things. Policy decides what's allowed to exist, whoever does it. An Owner can still be stopped by an Allowed locations policy, because policy is about the resource, not the person.
+    followUps: []
+  - level: intermediate
+    q: Deny or Audit for a new tagging rule?
+    a: >-
+      I'd usually start with Audit, or the assignment in DoNotEnforce mode, to see how many resources would fail without breaking anyone's deployments. Then move to Modify to add the tag automatically, or Deny if teams must supply it themselves.
+    followUps: []
+  - level: experienced
+    q: Why does a Modify or DeployIfNotExists assignment need a managed identity?
+    a: >-
+      Because Policy itself makes the change, not the user. The assignment's managed identity needs a role such as Tag Contributor or Contributor on the scope. The portal creates and grants it for you on the Remediation tab; with the CLI you add --mi-system-assigned and --location, then assign the role.
+    followUps: []
+  - level: scenario
+    q: You assigned Inherit a tag from the resource group, but old resources still don't have the tag. What now?
+    a: >-
+      Modify only acts on create and update requests. For resources that already existed I'd create a remediation task for the assignment, either from Policy, Remediation, or with az policy remediation create. It uses the managed identity to add the tag to every non-compliant resource.
+    followUps: []
+revision:
+  keyPoints:
+    - Definition (rule) → initiative (group) → assignment (scope + parameters + exclusions).
+    - Deny blocks; Audit flags; Modify and Append change the request; DeployIfNotExists deploys something related.
+    - Modify and DeployIfNotExists need a managed identity with the right role.
+    - Remediation tasks fix existing resources. Deny and Audit can't be remediated.
+    - Enforcement mode Disabled (DoNotEnforce) evaluates without blocking. Exemptions exclude specific resources.
+  mistakes:
+    - Expecting a new Deny policy to remove or fix resources that already exist. It only blocks new requests; old ones show non-compliant.
+    - Forgetting that resource groups themselves aren't checked by many resource-level policies like Require a tag on resources.
+  examTips:
+    - '"Prevent resources outside West Europe" = **Allowed locations** (Deny).'
+    - '"Add the tag automatically, including to existing resources" = **Modify** policy + **remediation task**.'
+    - '"Apply several policies as one unit" = an **initiative**.'
+  quick:
+    - q: Which effects support remediation tasks?
+      a: Modify and DeployIfNotExists.
+    - q: What does Audit do to a non-compliant resource?
+      a: Lets it be created or changed and marks it non-compliant.
+    - q: Which enforcement mode tests a policy without blocking?
+      a: Disabled (DoNotEnforce).
+    - q: What's a group of policy definitions called?
+      a: An initiative (policy set definition).
+    - q: Which CLI command starts a remediation?
+      a: az policy remediation create --name ... --policy-assignment ...
+references:
+  - title: What is Azure Policy?
+    url: https://learn.microsoft.com/azure/governance/policy/overview
+  - title: Azure Policy definitions effect basics
+    url: https://learn.microsoft.com/azure/governance/policy/concepts/effect-basics
+  - title: Remediate non-compliant resources with Azure Policy
+    url: https://learn.microsoft.com/azure/governance/policy/how-to/remediate-resources
+  - title: Azure Policy assignment structure
+    url: https://learn.microsoft.com/azure/governance/policy/concepts/assignment-structure
+  - title: az policy assignment
+    url: https://learn.microsoft.com/cli/azure/policy/assignment
+related:
+  - locks-and-tags-at-scale
+  - resource-groups-subscriptions-management-groups
+  - rbac-roles-and-scopes
+---
+
+## Start with a question
+
+<Story question="How does a building inspector keep every new house safe without visiting every site every day?">
+
+A council publishes building rules: no houses on the flood plain, every house needs a smoke alarm. Some rules stop the build before it starts (planning permission refused). Some just get noted on an inspection report. And some the council fixes for you, like fitting the missing smoke alarm and sending the bill.
+
+**Azure Policy** is that rulebook. **Deny** refuses the build, **Audit** writes it on the report, and **Modify** fits the smoke alarm for you.
+
+</Story>
+
+## Explain it like I'm 10
+
+<Eli10>
+
+Your class has rules on the wall.
+
+"No phones in class": a teacher takes it at the door. That's **Deny**.
+
+"Homework should have your name": the teacher marks it but still accepts it. That's **Audit**.
+
+"Every book needs a cover": the teacher puts a cover on for you. That's **Modify**. And for the books already on the shelf, someone does a cover-fixing day. That's **remediation**.
+
+</Eli10>
+
+## The technical explanation
+
+### The pieces
+
+- **Definition**: the rule (`if` a condition, `then` an effect). Hundreds are **built-in**; you can write **custom** ones in JSON.
+- **Initiative** (policy set): several definitions grouped, such as a security baseline.
+- **Assignment**: a definition or initiative applied at a **scope** (management group, subscription, resource group) with **parameters**, **exclusions**, a **non-compliance message** and an **enforcement mode**.
+- **Exemption**: excludes one resource or scope, with a reason (waiver or mitigated) and an optional expiry.
+
+Policies assigned higher up apply to everything below. The person deploying doesn't matter: an Owner is stopped by Deny just like anyone else.
+
+### Effects
+
+| Effect | When | Result | Needs identity? |
+| --- | --- | --- | --- |
+| **Deny** | Create or update | Request refused with `RequestDisallowedByPolicy` | No |
+| **Audit** | Create, update and evaluation | Allowed, marked **Non-compliant** | No |
+| **Append** | Create or update | Adds fields, such as IP rules | No |
+| **Modify** | Create or update, and remediation | Adds, replaces or removes tags and some properties | **Yes** |
+| **AuditIfNotExists** | After deployment | Flags if a related resource (like an extension) is missing | No |
+| **DeployIfNotExists** | After deployment, and remediation | Deploys the missing related resource, such as diagnostic settings | **Yes** |
+| **Disabled** | Never | Turns the rule off | No |
+
+### Assign a policy
+
+Portal: **Policy → Definitions** → pick one → **Assign policy**. Tabs: **Basics** (scope, exclusions, assignment name, **Policy enforcement**), **Parameters**, **Remediation** (create a remediation task, managed identity type and location), **Non-compliance messages**, **Review + create**.
+
+```bash
+# Deny anything outside two regions, at a management group
+az policy assignment create -n eu-only \
+  --policy e56962a6-4747-49cd-b67b-bf8b01975c4c \
+  --scope /providers/Microsoft.Management/managementGroups/mg-contoso \
+  --params '{ "listOfAllowedLocations": { "value": ["westeurope","northeurope"] } }'
+
+# Modify: copy the costcenter tag from the resource group, with a managed identity
+az policy assignment create -n inherit-costcenter \
+  --policy ea3f2387-9b95-492a-a190-fcdc54f7b070 -g rg-finance \
+  --params '{ "tagName": { "value": "costcenter" } }' \
+  --mi-system-assigned --location westeurope
+
+# Fix resources that already exist
+az policy remediation create -n fix-costcenter --policy-assignment inherit-costcenter -g rg-finance
+
+az policy state summarize -g rg-finance        # compliance numbers
+az policy state trigger-scan -g rg-finance     # re-evaluate now
+```
+
+When you assign through the CLI, give the managed identity a role (for tags, **Tag Contributor**) at the scope. The portal does this for you.
+
+### Compliance
+
+New assignments are evaluated within about **30 minutes**; existing resources are re-checked about every **24 hours** or when you trigger a scan. **Policy → Compliance** shows each assignment's percentage and the non-compliant resources with the reason.
+
+<Flow
+  caption="One rule, three effects"
+  steps={[
+    { title: 'Deny', text: 'A storage account in East US is refused at deployment.' },
+    { title: 'Audit', text: 'A VM without managed disks is created but listed as non-compliant.' },
+    { title: 'Modify', text: 'A new disk gets costcenter=FIN-042 copied from its resource group.' },
+    { title: 'Remediate', text: 'A remediation task tags the 40 disks that existed before.' },
+  ]}
+/>
+
+<TryIt labs="adm-policy-locks-cost" text="Hit an Allowed locations deny, then assign a Modify policy with a managed identity and run a remediation task." />
+
+<Callout type="exam">
+"Prevent" or "ensure resources can only be created" = **Deny**. "Identify" or "report" = **Audit**. "Automatically add a tag" = **Modify** (or Append for some properties). "Automatically deploy diagnostic settings or an agent" = **DeployIfNotExists**. "Apply to existing resources" = **remediation task**, which needs a **managed identity**. "Group several policies" = **initiative**. Policy controls **what**; RBAC controls **who**.
+</Callout>
+
+<DeepDive title="Policy and resource groups">
+
+Most built-in resource policies use mode **Indexed**, which evaluates resources that support tags and location, not resource groups themselves. That's why there are separate definitions like **Require a tag on resource groups**. A resource group's tags are also not inherited by its resources; **Inherit a tag from the resource group** (Modify) is the built-in fix. Allowed locations doesn't apply to resource groups either; use **Allowed locations for resource groups** if the group's metadata location matters.
+
+</DeepDive>
+
+## Real-world business scenario
+
+<Scenario
+  company="Tailwind Traders (fictional)"
+  industry="Logistics"
+  problem="Tailwind found storage accounts in four regions it had never approved and could only attribute 60% of its Azure spend to a department."
+  service="An initiative at the root management group with Allowed locations (Deny, West Europe and North Europe), Inherit a tag from the resource group if missing for costcenter (Modify, system-assigned identity) and Require a tag on resource groups (Deny). Remediation tasks tagged the existing estate."
+  why="Wrong-region deployments now fail immediately, every resource carries its group's cost center, and new subscriptions inherit the rules the day they're created."
+  outcome="Untagged spend fell from 40% to under 3%, and no new resources appeared outside Europe."
+/>
+
+## When to use it and when not to
+
+<UseWhen
+  use={[
+    'Restricting regions, SKUs or resource types across many subscriptions.',
+    'Adding or enforcing tags automatically.',
+    'Deploying required settings (diagnostics, agents) with DeployIfNotExists.',
+  ]}
+  avoid={[
+    'Deciding which people can act. Use RBAC.',
+    'Protecting one critical resource from deletion. Use a lock.',
+    'Going straight to Deny on a big estate without testing in Audit or DoNotEnforce first.',
+  ]}
+  alternatives={[
+    '<strong>Initiatives</strong> to manage many related rules together.',
+    '<strong>Microsoft Defender for Cloud</strong> regulatory compliance, which is built on Policy initiatives.',
+  ]}
+/>

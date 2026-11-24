@@ -1,0 +1,148 @@
+{
+ "cert": "az-104",
+ "domain": 4,
+ "topic": "nsgs-asgs-and-effective-rules",
+ "questions": [
+  {
+   "id": "adm-net-nsg-1",
+   "type": "single",
+   "question": "An NSG contains the following inbound rules: priority 100 deny TCP 3389 from Internet, priority 200 allow TCP 3389 from 203.0.113.0/24. A user at 203.0.113.25 connects to a VM on TCP 3389. What happens?",
+   "options": [
+    {
+     "text": "The connection is denied by the rule that has priority 100.",
+     "why": "Correct. 203.0.113.25 is an internet address, and the rule with the lower number is processed first."
+    },
+    {
+     "text": "The connection is allowed by the rule that has priority 200.",
+     "why": "The priority 200 rule is never reached, because the priority 100 rule matches first."
+    },
+    {
+     "text": "The connection is allowed because allow rules take precedence over deny rules.",
+     "why": "NSGs do not prefer allow or deny. The lowest priority number that matches wins."
+    },
+    {
+     "text": "The connection is denied by DenyAllInBound.",
+     "why": "A custom rule matches before the default rule at 65500."
+    }
+   ],
+   "answer": [
+    0
+   ],
+   "explanation": "NSG rules are processed in priority order from the lowest number, and processing stops at the first match.",
+   "objective": "4.2.2"
+  },
+  {
+   "id": "adm-net-nsg-2",
+   "type": "single",
+   "question": "A subnet NSG allows inbound TCP 443 from the internet. The network interface of VM1 in the subnet has an NSG that contains only the default rules. Can internet users connect to VM1 on TCP 443?",
+   "options": [
+    {
+     "text": "No, because the NIC NSG denies the traffic with DenyAllInBound",
+     "why": "Correct. Inbound traffic must be allowed by both the subnet NSG and the NIC NSG."
+    },
+    {
+     "text": "Yes, because the subnet NSG allows the traffic",
+     "why": "The NIC NSG is also evaluated, and it has no rule that allows TCP 443 from the internet."
+    },
+    {
+     "text": "Yes, because AllowVnetInBound allows the traffic",
+     "why": "AllowVnetInBound applies to the VirtualNetwork service tag, not internet sources."
+    },
+    {
+     "text": "No, because NSGs cannot be associated with both a subnet and a NIC",
+     "why": "An NSG can be associated with a subnet and another with a NIC at the same time."
+    }
+   ],
+   "answer": [
+    0
+   ],
+   "explanation": "For inbound traffic Azure evaluates the subnet NSG and then the NIC NSG. Both must allow the traffic.",
+   "objective": "4.2.2"
+  },
+  {
+   "id": "adm-net-nsg-3",
+   "type": "single",
+   "question": "You manage web servers and database servers in the same virtual network. Web servers are added and removed frequently. You need an NSG rule that allows TCP 1433 from the web servers to the database servers without updating IP addresses. What should you use?",
+   "options": [
+    {
+     "text": "Application security groups as the source and destination of the rule",
+     "why": "Correct. Rules that reference ASGs apply to whichever network interfaces are members."
+    },
+    {
+     "text": "The VirtualNetwork service tag as the source",
+     "why": "This would allow every address in the virtual network, not only the web servers."
+    },
+    {
+     "text": "A route table with a route to the database subnet",
+     "why": "Route tables control paths, not which traffic is allowed."
+    },
+    {
+     "text": "A service endpoint for Microsoft.Sql",
+     "why": "Service endpoints apply to Azure SQL Database, not SQL Server on VMs."
+    }
+   ],
+   "answer": [
+    0
+   ],
+   "explanation": "Add the NICs to application security groups, such as asg-web and asg-db, and reference the groups in the rule.",
+   "objective": "4.2.1"
+  },
+  {
+   "id": "adm-net-nsg-4",
+   "type": "single",
+   "question": "You need to identify every NSG rule that applies to the network interface of a running VM, including rules from the subnet NSG. What should you use?",
+   "options": [
+    {
+     "text": "Effective security rules for the network interface",
+     "why": "Correct. It shows the combined rules from every NSG that applies to the NIC."
+    },
+    {
+     "text": "Effective routes for the network interface",
+     "why": "Effective routes show routing, not security rules."
+    },
+    {
+     "text": "The activity log of the NSG",
+     "why": "The activity log shows management operations, not the resulting rules."
+    },
+    {
+     "text": "Next hop in Network Watcher",
+     "why": "Next hop shows where traffic is routed."
+    }
+   ],
+   "answer": [
+    0
+   ],
+   "explanation": "Effective security rules are available on the NIC in the portal or by using az network nic list-effective-nsg.",
+   "objective": "4.2.2"
+  },
+  {
+   "id": "adm-net-nsg-5",
+   "type": "multi",
+   "question": "Which two statements about network security groups are true? Each correct answer presents a complete solution.",
+   "options": [
+    {
+     "text": "NSGs are stateful, so return traffic for an allowed inbound flow is allowed automatically.",
+     "why": "Correct. You do not need an outbound rule for the replies."
+    },
+    {
+     "text": "Custom rules can use a priority from 100 to 4096.",
+     "why": "Correct. Default rules use priorities from 65000."
+    },
+    {
+     "text": "Default security rules can be deleted.",
+     "why": "Default rules cannot be deleted. Override them with lower-numbered rules."
+    },
+    {
+     "text": "An application security group can contain network interfaces from different virtual networks.",
+     "why": "All network interfaces in an ASG must be in the same virtual network."
+    }
+   ],
+   "answer": [
+    0,
+    1
+   ],
+   "explanation": "NSGs track connection state, custom rules use priorities 100 to 4096, and default rules can only be overridden.",
+   "objective": "4.2.1"
+  }
+ ]
+}

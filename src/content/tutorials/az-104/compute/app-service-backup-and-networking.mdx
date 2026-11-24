@@ -1,0 +1,213 @@
+---
+title: App Service Backup and Networking
+seoTitle: App Service Backup and Networking Settings | AZ-104
+description: Configure App Service backups to a storage account with a schedule and retention, then set VNet integration for outbound and access restrictions inbound.
+answer: >-
+  App Service keeps **automatic backups** every hour for 30 days with no setup, and you add **custom backups** when you need your own schedule, retention, linked databases or a copy you can download. A custom backup goes to a **blob container** in a storage account in the same subscription, through a **SAS URL**, holds up to **10 GB** and needs **Basic** or higher. Networking has two directions. **Outbound**: **VNet integration** lets the app reach private resources through an empty subnet (/28 or larger, /26 recommended) delegated to **Microsoft.Web/serverFarms**. **Inbound**: **access restrictions** allow or deny traffic by IP range, service tag or subnet in **priority** order, and a **private endpoint** gives the app a private IP inside your VNet.
+updated: 2026-11-24
+readingMinutes: 12
+keyTerms:
+  - term: Automatic backup
+    definition: An hourly backup App Service takes for you and keeps for 30 days. You can restore it but not download or schedule it.
+  - term: Custom backup
+    definition: A backup you configure to your own storage container, on demand or on a schedule, with retention and optional linked databases.
+  - term: SAS URL
+    definition: A container URL with a shared access signature that lets App Service write backups into your storage account.
+  - term: VNet integration
+    definition: Outbound connectivity from an app into a virtual network through a delegated subnet. It doesn't give the app a private inbound address.
+  - term: Subnet delegation
+    definition: Marking a subnet for one service, here Microsoft.Web/serverFarms, so App Service can place its integration there.
+  - term: Access restrictions
+    definition: An inbound allow and deny list for the app, evaluated by priority, matching IP ranges, service tags or subnets.
+  - term: Private endpoint
+    definition: A network interface with a private IP from your VNet that receives inbound traffic for the app.
+interview:
+  - level: beginner
+    q: What's the difference between automatic and custom backups?
+    a: >-
+      Automatic backups just happen every hour and are kept for 30 days, with no storage account. I can restore from them but can't download them or pick the schedule. Custom backups go to my own storage container, on the schedule and retention I choose, can include linked databases, and I can download them.
+    followUps: []
+  - level: intermediate
+    q: The app needs to call a SQL database that only has a private endpoint. What do you configure?
+    a: >-
+      VNet integration on the app, into an empty subnet of the VNet that can reach the database, delegated to Microsoft.Web/serverFarms. That's outbound. I'd also make sure DNS resolves the database name to its private IP, usually through a private DNS zone linked to the VNet.
+    followUps: []
+  - level: experienced
+    q: How do access restriction rules work?
+    a: >-
+      They're evaluated in priority order, lowest number first, and the first match wins. Each rule allows or denies an IPv4 or IPv6 range, a service tag like AzureFrontDoor.Backend, or a subnet through a service endpoint. Once I add an Allow rule, the unmatched action is deny, so anything not listed gets a 403. The SCM (advanced tool) site can use the main rules or its own.
+    followUps: []
+  - level: scenario
+    q: The security team says the finance app must not have any public inbound address. What's your plan?
+    a: >-
+      I'd add a private endpoint for the app in a subnet of the corporate VNet, link a private DNS zone for privatelink.azurewebsites.net, and set Public network access to Disabled. If the app also calls private resources, it gets VNet integration for outbound. Access restrictions alone still leave a public address, just filtered.
+    followUps: []
+revision:
+  keyPoints:
+    - Automatic backups run hourly, are kept 30 days and need no storage account.
+    - Custom backups go to a blob container via a SAS URL, up to 10 GB, Basic tier and up, with a schedule and retention.
+    - Restore over the same app, to another app or to a slot.
+    - VNet integration is outbound only and needs an empty, delegated subnet (/28 minimum, /26 recommended).
+    - Access restrictions filter inbound by priority; a private endpoint gives a private inbound IP.
+  mistakes:
+    - Expecting VNet integration to make the app private for inbound traffic.
+    - Pointing VNet integration at a subnet that already holds VMs or is delegated to another service.
+    - Forgetting that one Allow rule makes everything else denied.
+  examTips:
+    - '"App must reach a private database" = **VNet integration** (outbound).'
+    - '"Only the office IP range may browse the app" = **access restriction** Allow rule.'
+    - '"No public inbound access at all" = **private endpoint** and public access **Disabled**.'
+  quick:
+    - q: How often do automatic backups run?
+      a: Every hour.
+    - q: Where do custom backups go?
+      a: A blob container in a storage account, reached with a SAS URL.
+    - q: What is the maximum size of a custom backup?
+      a: 10 GB (app and database content together).
+    - q: Which service must the integration subnet be delegated to?
+      a: Microsoft.Web/serverFarms.
+    - q: In what order are access restrictions evaluated?
+      a: By priority, lowest number first.
+references:
+  - title: Back up and restore your app in Azure App Service
+    url: https://learn.microsoft.com/azure/app-service/manage-backup
+  - title: App Service networking features
+    url: https://learn.microsoft.com/azure/app-service/networking-features
+  - title: Integrate your app with an Azure virtual network
+    url: https://learn.microsoft.com/azure/app-service/overview-vnet-integration
+  - title: Set up Azure App Service access restrictions
+    url: https://learn.microsoft.com/azure/app-service/app-service-ip-restrictions
+  - title: Use private endpoints for App Service apps
+    url: https://learn.microsoft.com/azure/app-service/overview-private-endpoint
+related:
+  - app-service-tls-and-custom-domains
+  - app-service-deployment-slots
+---
+
+## Start with a question
+
+<Story question="Can a shop have a back door to the warehouse and a guard at the front door?">
+
+A shop has two doors. The back door goes to the company's private warehouse, so staff can fetch stock. The front door has a guard who checks a list before letting customers in. And every night the manager photocopies the day's ledger and locks it in a safe across the road.
+
+App Service has the same three things. **VNet integration** is the back door: the app goes **out** to private resources. **Access restrictions** (or a **private endpoint**) are the front door: who can come **in**. **Backups** are the photocopies, kept in a storage account you own.
+
+</Story>
+
+## Explain it like I'm 10
+
+<Eli10>
+
+Your app is a treehouse.
+
+A **backup** is a photo of the treehouse every night, so you can rebuild it if a storm knocks it down.
+
+**VNet integration** is a secret tunnel from the treehouse to your house, so the treehouse can get snacks from the kitchen. It only goes one way: out.
+
+**Access restrictions** are a list at the ladder: "only friends from my street can climb up".
+
+</Eli10>
+
+## The technical explanation
+
+### Configure backup
+
+| | Automatic backups | Custom backups |
+| --- | --- | --- |
+| Setup | None | Storage account + container in the same subscription |
+| Frequency | Every hour, fixed | On demand, or a schedule you set (for example every 1 day) |
+| Retention | 30 days, fixed | Days you choose, with "keep at least one backup" |
+| Size | Up to 30 GB | Up to 10 GB, of which up to 4 GB can be databases |
+| Linked databases | No | Yes (Azure SQL, MySQL, PostgreSQL via connection strings) |
+| Download | No | Yes, it's a file in your container |
+
+Backup and restore need **Basic** or higher. Restores can overwrite the app, go to a **different app**, or go to a **deployment slot** so you can check the result before users see it.
+
+**Portal:** web app → **Settings → Backups** → **Configure custom backups**. Pick the **Storage account** and **Container**, turn **Scheduled backup** On, set **Backup every** (days or hours), **Start backup schedule from**, **Retention (Days)** and **Keep at least one backup**, tick any databases, then **Configure**. **Backup Now** takes one on demand, **Restore** brings one back.
+
+```bash
+SAS_URL="https://stcontosobak01.blob.core.windows.net/webbackups?<sas-token>"
+az webapp config backup create -g rg-admin-fin --webapp-name app-contoso-fin01 \
+  --backup-name fin-before-release --container-url "$SAS_URL"
+az webapp config backup update -g rg-admin-fin --webapp-name app-contoso-fin01 \
+  --container-url "$SAS_URL" --frequency 1d --retention 30 --retain-one true
+az webapp config backup restore -g rg-admin-fin --webapp-name app-contoso-fin01 \
+  --backup-name fin-before-release --container-url "$SAS_URL" --overwrite
+```
+
+```powershell
+New-AzWebAppBackup -ResourceGroupName rg-admin-fin -Name app-contoso-fin01 -StorageAccountUrl $sasUrl -BackupName fin-before-release
+Edit-AzWebAppBackupConfiguration -ResourceGroupName rg-admin-fin -Name app-contoso-fin01 -StorageAccountUrl $sasUrl -FrequencyInterval 1 -FrequencyUnit Day -RetentionPeriodInDays 30 -KeepAtLeastOneBackup
+```
+
+To leave files out of a custom backup (logs, caches), add a `_backup.filter` file listing the paths in the app's `D:\home\site\wwwroot` folder (or `/home/site/wwwroot` on Linux).
+
+### Configure networking
+
+**Settings → Networking** splits the two directions.
+
+**Outbound traffic configuration**
+
+- **Virtual network integration**: the app's calls to private IPs (and, with **route all** on, which is the default, all its outbound traffic) leave through a subnet of your VNet. Requirements: **Basic** or higher, an **empty subnet** used only for this, **/28 or larger** (/26 recommended so the plan can scale out), **delegated to Microsoft.Web/serverFarms**. NSGs and route tables on that subnet apply to the app's outbound traffic.
+- **Hybrid connections**: reach a single host and port on-premises through a relay, without a VPN.
+- **Outbound addresses**: the public IPs the app uses when it calls the internet, useful for partner firewalls.
+
+**Inbound traffic configuration**
+
+- **Public network access**: Enabled from all networks, enabled from select virtual networks and IP addresses (access restrictions), or Disabled.
+- **Access restrictions**: rules with a name, **Allow** or **Deny**, **priority** (lowest first, first match wins), and a source: IPv4/IPv6 range, **service tag** (for example `AzureFrontDoor.Backend`), or a **subnet** through a service endpoint. Once any Allow rule exists, unmatched traffic gets **403**. The **advanced tool site** (SCM/Kudu) can reuse the main rules or have its own.
+- **Private endpoints**: a private IP for the app in your VNet, for clients on the VNet, peered VNets or on-premises over VPN or ExpressRoute. Pair it with a private DNS zone (`privatelink.azurewebsites.net`) and, if you want, public access Disabled.
+
+```bash
+az network vnet subnet create -g rg-admin-fin --vnet-name vnet-fin -n snet-app-outbound --address-prefixes 10.20.1.0/26
+az webapp vnet-integration add -g rg-admin-fin -n app-contoso-fin01 --vnet vnet-fin --subnet snet-app-outbound
+az webapp config access-restriction add -g rg-admin-fin -n app-contoso-fin01 \
+  --rule-name office --action Allow --ip-address 203.0.113.0/24 --priority 100
+```
+
+```powershell
+Add-AzWebAppAccessRestrictionRule -ResourceGroupName rg-admin-fin -WebAppName app-contoso-fin01 -Name office -Priority 100 -Action Allow -IpAddress 203.0.113.0/24
+```
+
+<TryIt labs="adm-app-service-backup-network" text="Take a custom backup and schedule it, get refused VNet integration on a /29 subnet, use a /26, then allow only the office range." />
+
+<Callout type="exam">
+Sort the question by direction first. The app **calling** something private (a database, a storage account with a firewall, an on-premises server) is **outbound**: **VNet integration** or a hybrid connection. People **reaching** the app is **inbound**: **access restrictions** to filter, a **private endpoint** to make it private. For backups, "keep 30 days, daily, include the database, downloadable" is a **custom backup** to a **storage container**; "nothing configured, hourly" is the **automatic** kind. Both need at least **Basic**.
+</Callout>
+
+<DeepDive title="Why the integration subnet needs room">
+
+Each instance of the plan takes an address in the integration subnet, and scaling or platform upgrades briefly need extra ones. Azure also reserves five addresses in every subnet. A /28 has 16 addresses, so 11 are usable, which a busy plan can run out of. A /26 gives 59 usable addresses and lets several plans share the subnet. You can't resize a subnet that's in use, so start bigger than you think.
+
+</DeepDive>
+
+## Real-world business scenario
+
+<Scenario
+  company="Contoso Finance (fictional)"
+  industry="Finance"
+  problem="A release deleted the finance portal's configuration, nobody had a usable backup, and the portal couldn't reach the new SQL database because it only had a private endpoint. It was also open to the whole internet."
+  service="Custom backups every day to a webbackups container, kept 30 days and including the SQL database. VNet integration into a /26 subnet delegated to Microsoft.Web/serverFarms with a private DNS zone for the database. Access restrictions allowing only the office range and the VPN range."
+  why="Backups they own and can download, a private path to the database without exposing it, and a front door that only staff can open."
+  outcome="The next bad release was restored to a staging slot, checked and swapped back in 20 minutes. The penetration test found no public route to the portal from outside the office."
+/>
+
+## When to use it and when not to
+
+<UseWhen
+  use={[
+    'You need your own backup schedule, retention or downloadable copies.',
+    'The app must call databases or services that only have private addresses.',
+    'Only known networks (an office, Front Door, a VNet) should reach the app.',
+  ]}
+  avoid={[
+    'You think VNet integration hides the app from the internet. It doesn\'t; use a private endpoint.',
+    'Backups need to be bigger than 10 GB. Back up the database with its own service instead.',
+    'The plan is on Free or Shared. Scale up to Basic first.',
+  ]}
+  alternatives={[
+    '<strong>Private endpoint</strong> for private inbound access with no public address.',
+    '<strong>Azure Front Door</strong> with an access restriction on its service tag for a global, protected entry point.',
+    '<strong>Database point-in-time restore</strong> for large databases instead of App Service backups.',
+  ]}
+/>

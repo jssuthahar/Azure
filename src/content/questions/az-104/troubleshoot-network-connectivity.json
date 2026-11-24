@@ -1,0 +1,148 @@
+{
+ "cert": "az-104",
+ "domain": 4,
+ "topic": "troubleshoot-network-connectivity",
+ "questions": [
+  {
+   "id": "adm-net-ts-1",
+   "type": "single",
+   "question": "You need to identify which network security group rule blocks inbound TCP 443 traffic from a specific internet IP address to VM1. Which Azure Network Watcher tool should you use?",
+   "options": [
+    {
+     "text": "IP flow verify",
+     "why": "Correct. It tests one flow and returns the rule that allows or denies it."
+    },
+    {
+     "text": "Next hop",
+     "why": "Next hop shows routing, not security rules."
+    },
+    {
+     "text": "Packet capture",
+     "why": "Packet capture records traffic but does not name the NSG rule."
+    },
+    {
+     "text": "VPN troubleshoot",
+     "why": "VPN troubleshoot diagnoses VPN gateways and connections."
+    }
+   ],
+   "answer": [
+    0
+   ],
+   "explanation": "IP flow verify checks a specific protocol, local and remote IP address and port against the effective security rules.",
+   "objective": "4.1.5"
+  },
+  {
+   "id": "adm-net-ts-2",
+   "type": "single",
+   "question": "VM1 in Spoke1 cannot connect to VM2 in Spoke2. Both spokes are peered with a hub. Next hop for traffic from VM1 to VM2 returns None. What is the cause?",
+   "options": [
+    {
+     "text": "There is no route from Spoke1 to Spoke2 because virtual network peering is not transitive",
+     "why": "Correct. Next hop None means the packet is dropped."
+    },
+    {
+     "text": "An NSG on the VM2 subnet denies the traffic",
+     "why": "An NSG would not change the next hop result."
+    },
+    {
+     "text": "IP forwarding is disabled on VM1",
+     "why": "IP forwarding is needed on appliances that forward traffic, not on the source VM."
+    },
+    {
+     "text": "The private DNS zone is not linked to Spoke1",
+     "why": "DNS does not affect the next hop for an IP address."
+    }
+   ],
+   "answer": [
+    0
+   ],
+   "explanation": "Spokes that are peered only with a hub do not have routes to each other. Peer them directly or use user-defined routes to an NVA in the hub.",
+   "objective": "4.1.5"
+  },
+  {
+   "id": "adm-net-ts-3",
+   "type": "single",
+   "question": "You need to test whether VM1 can connect to sql1.contoso.com on TCP 1433, and if it cannot, identify the hop where the connection fails. Which tool should you use?",
+   "options": [
+    {
+     "text": "Connection troubleshoot",
+     "why": "Correct. It tests end-to-end connectivity to a VM, IP address or FQDN on a port and reports the failing hop."
+    },
+    {
+     "text": "IP flow verify",
+     "why": "IP flow verify evaluates NSG rules for one flow and does not test the full path."
+    },
+    {
+     "text": "Effective routes",
+     "why": "Effective routes show routing but do not test connectivity."
+    },
+    {
+     "text": "NSG flow logs",
+     "why": "Flow logs record traffic over time."
+    }
+   ],
+   "answer": [
+    0
+   ],
+   "explanation": "Connection troubleshoot (az network watcher test-connectivity) reports reachability, latency and issues such as NSG rules or routes on each hop.",
+   "objective": "4.1.5"
+  },
+  {
+   "id": "adm-net-ts-4",
+   "type": "multi",
+   "question": "Traffic from Subnet1 is routed to a network virtual appliance (NVA) by a user-defined route. Connection troubleshoot reports that traffic stops at the NVA. Which two configurations should you verify? Each correct answer presents part of the solution.",
+   "options": [
+    {
+     "text": "IP forwarding is enabled on the network interface of the NVA",
+     "why": "Correct. Without it, Azure drops packets that are not addressed to the NVA."
+    },
+    {
+     "text": "A return route through the NVA exists for the destination subnet",
+     "why": "Correct. Asymmetric routing causes stateful appliances to drop traffic."
+    },
+    {
+     "text": "A service endpoint is enabled on Subnet1",
+     "why": "Service endpoints apply to Azure PaaS services."
+    },
+    {
+     "text": "The NVA has a public IP address",
+     "why": "Forwarding between private subnets does not require a public IP address."
+    }
+   ],
+   "answer": [
+    0,
+    1
+   ],
+   "explanation": "NVAs need IP forwarding, and traffic must return through the same appliance.",
+   "objective": "4.1.5"
+  },
+  {
+   "id": "adm-net-ts-5",
+   "type": "single",
+   "question": "You need to view all the routes, including system routes and user-defined routes, that apply to the network interface of VM1, and see which routes are not active. What should you use?",
+   "options": [
+    {
+     "text": "Effective routes on the network interface",
+     "why": "Correct. It lists every route source, prefix, next hop and state, including Invalid routes."
+    },
+    {
+     "text": "The route table resource",
+     "why": "A route table shows only its own user-defined routes."
+    },
+    {
+     "text": "Effective security rules",
+     "why": "Effective security rules show NSG rules."
+    },
+    {
+     "text": "Connection monitor",
+     "why": "Connection monitor tests connectivity over time."
+    }
+   ],
+   "answer": [
+    0
+   ],
+   "explanation": "Effective routes (az network nic show-effective-route-table) combine system, BGP and user-defined routes and show their state.",
+   "objective": "4.1.5"
+  }
+ ]
+}

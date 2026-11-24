@@ -1,0 +1,27 @@
+{ "cert": "az-104", "domain": 3, "topic": "create-and-size-virtual-machines", "questions": [
+  { "id": "adm-vm-size-1", "type": "single", "scenario": "VM1 runs Windows Server and is currently running. In the Size blade, the size Standard_E8s_v5 is unavailable for selection.", "question": "What should you do first so that you can resize VM1 to Standard_E8s_v5?", "options": [
+    { "text": "Stop (deallocate) VM1", "why": "Correct. Deallocating releases VM1 from its hardware cluster so that every size in the region becomes available." },
+    { "text": "Restart VM1", "why": "A restart keeps the VM on the same hardware cluster." },
+    { "text": "Shut down VM1 from inside the operating system", "why": "This leaves VM1 allocated to the same cluster." },
+    { "text": "Detach the data disks of VM1", "why": "Disks are not the reason a size is unavailable on the current cluster." } ], "answer": [0], "explanation": "Sizes that are not available on the current cluster can be selected after the VM is deallocated.", "objective": "3.2.4" },
+  { "id": "adm-vm-size-2", "type": "single", "question": "You resize a running virtual machine from Standard_D2s_v5 to Standard_D4s_v5. The new size is available on the current hardware cluster. What is the effect on the virtual machine?", "options": [
+    { "text": "The virtual machine restarts", "why": "Correct. A resize always restarts the VM." },
+    { "text": "The virtual machine is resized with no interruption", "why": "Resizing requires a restart." },
+    { "text": "The virtual machine is deleted and recreated with new disks", "why": "The disks and configuration are kept." },
+    { "text": "The temporary disk is converted to a managed disk", "why": "Resizing does not change the type of the temporary disk." } ], "answer": [0], "explanation": "Plan a resize in a maintenance window because it causes a short outage.", "objective": "3.2.4" },
+  { "id": "adm-vm-size-3", "type": "single", "scenario": "A line-of-business application runs an in-memory database that needs a high memory-to-vCPU ratio. You need to choose a VM size family.", "question": "Which family should you choose?", "options": [
+    { "text": "E-series", "why": "Correct. E-series sizes are memory optimised." },
+    { "text": "F-series", "why": "F-series sizes are compute optimised with a low memory-to-vCPU ratio." },
+    { "text": "B-series", "why": "B-series sizes are burstable and suit mostly idle workloads." },
+    { "text": "N-series", "why": "N-series sizes provide GPUs." } ], "answer": [0], "explanation": "D is general purpose, E is memory optimised, F is compute optimised, L is storage optimised and N is GPU.", "objective": "3.2.4" },
+  { "id": "adm-vm-size-4", "type": "single", "question": "You need to create a Linux virtual machine in availability zone 2 by using the Azure CLI. Which command should you run?", "options": [
+    { "text": "az vm create --resource-group RG1 --name VM1 --image Ubuntu2404 --zone 2 --generate-ssh-keys", "why": "Correct. --zone places the VM in the specified availability zone." },
+    { "text": "az vm create --resource-group RG1 --name VM1 --image Ubuntu2404 --availability-set 2", "why": "--availability-set expects the name of an availability set, not a zone." },
+    { "text": "az vm create --resource-group RG1 --name VM1 --image Ubuntu2404 --location zone2", "why": "zone2 is not a location. Zones are selected with --zone." },
+    { "text": "az vmss create --resource-group RG1 --name VM1 --image Ubuntu2404 --instance-count 2", "why": "This creates a scale set with two instances." } ], "answer": [0], "explanation": "In PowerShell, use New-AzVM with the -Zone parameter.", "objective": "3.2.1" },
+  { "id": "adm-vm-size-5", "type": "single", "scenario": "VM1 is not used outside business hours. Compute charges for VM1 must stop overnight while its disks and configuration are kept.", "question": "What should you do each evening?", "options": [
+    { "text": "Stop VM1 from the Azure portal so that it is deallocated", "why": "Correct. A deallocated VM is not billed for compute. Disks remain and are still billed." },
+    { "text": "Shut down VM1 from inside the operating system", "why": "The VM stays allocated and compute is still billed." },
+    { "text": "Resize VM1 to Standard_B1s", "why": "A smaller size still incurs compute charges while running." },
+    { "text": "Delete VM1 and keep the OS disk", "why": "This removes the VM configuration, which must be kept." } ], "answer": [0], "explanation": "Stopped (deallocated) ends compute billing. Stopped (allocated) does not.", "objective": "3.2.1" }
+] }

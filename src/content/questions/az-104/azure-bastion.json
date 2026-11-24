@@ -1,0 +1,148 @@
+{
+ "cert": "az-104",
+ "domain": 4,
+ "topic": "azure-bastion",
+ "questions": [
+  {
+   "id": "adm-net-bas-1",
+   "type": "single",
+   "question": "You plan to deploy Azure Bastion to VNet1. Which subnet configuration should you create?",
+   "options": [
+    {
+     "text": "A subnet named AzureBastionSubnet with a /26 prefix",
+     "why": "Correct. Bastion requires this exact name and a /26 or larger subnet."
+    },
+    {
+     "text": "A subnet named BastionSubnet with a /27 prefix",
+     "why": "The name must be AzureBastionSubnet, and /27 is too small."
+    },
+    {
+     "text": "A subnet named GatewaySubnet with a /26 prefix",
+     "why": "GatewaySubnet is used for VPN and ExpressRoute gateways."
+    },
+    {
+     "text": "A subnet named AzureBastionSubnet with a /29 prefix",
+     "why": "A /29 is smaller than the required /26."
+    }
+   ],
+   "answer": [
+    0
+   ],
+   "explanation": "Azure Bastion is deployed to a dedicated subnet named AzureBastionSubnet with a prefix of /26 or larger.",
+   "objective": "4.2.3"
+  },
+  {
+   "id": "adm-net-bas-2",
+   "type": "single",
+   "question": "Administrators must connect to Azure VMs by using the native SSH client on their workstations through Azure Bastion. Which Bastion configuration meets the requirement?",
+   "options": [
+    {
+     "text": "Standard SKU with native client support enabled",
+     "why": "Correct. Native client connections require Standard or Premium with native client support."
+    },
+    {
+     "text": "Basic SKU with a Standard public IP address",
+     "why": "The Basic SKU supports connections from the Azure portal only."
+    },
+    {
+     "text": "Developer SKU",
+     "why": "The Developer SKU supports portal connections to one VM at a time."
+    },
+    {
+     "text": "Basic SKU with IP-based connection",
+     "why": "IP-based connection requires the Standard SKU, and it does not enable the native client."
+    }
+   ],
+   "answer": [
+    0
+   ],
+   "explanation": "The az network bastion ssh and az network bastion rdp commands require the Standard or Premium SKU with native client support (tunneling) enabled.",
+   "objective": "4.2.3"
+  },
+  {
+   "id": "adm-net-bas-3",
+   "type": "single",
+   "question": "Azure Bastion is deployed in a hub virtual network. VM1 is in a spoke virtual network that is peered with the hub. VM1 has no public IP address. Can administrators use the Bastion host to connect to VM1?",
+   "options": [
+    {
+     "text": "Yes, because Bastion can connect to VMs in peered virtual networks",
+     "why": "Correct. Bastion connects to the private IP address of VMs in peered virtual networks."
+    },
+    {
+     "text": "No, because VM1 requires a public IP address",
+     "why": "Bastion connects to private IP addresses, so a public IP is not required."
+    },
+    {
+     "text": "No, because Bastion must be deployed in the same virtual network as the VM",
+     "why": "Bastion supports VMs in peered virtual networks."
+    },
+    {
+     "text": "Yes, but only if gateway transit is enabled",
+     "why": "Gateway transit is not required for Bastion."
+    }
+   ],
+   "answer": [
+    0
+   ],
+   "explanation": "One Bastion host in a hub can serve VMs in peered spokes when the peerings are connected and NSGs allow RDP or SSH from the Bastion subnet.",
+   "objective": "4.2.3"
+  },
+  {
+   "id": "adm-net-bas-4",
+   "type": "single",
+   "question": "You deploy Azure Bastion. Administrators cannot connect to VM1 through Bastion. The subnet of VM1 has an NSG. Which inbound rule should the NSG include?",
+   "options": [
+    {
+     "text": "Allow TCP 3389 and 22 from the address range of AzureBastionSubnet",
+     "why": "Correct. Bastion connects to the VM private IP from its own subnet."
+    },
+    {
+     "text": "Allow TCP 443 from the Internet service tag",
+     "why": "Administrators connect to Bastion on 443. The VM receives RDP or SSH from Bastion."
+    },
+    {
+     "text": "Allow TCP 3389 from the Internet service tag",
+     "why": "This exposes the VM to the internet, which Bastion is meant to avoid."
+    },
+    {
+     "text": "Allow all traffic from the AzureLoadBalancer service tag",
+     "why": "This tag is used for load balancer health probes."
+    }
+   ],
+   "answer": [
+    0
+   ],
+   "explanation": "The target VM must accept RDP (3389) or SSH (22) from the Bastion subnet. The default AllowVnetInBound rule also allows it unless a higher-priority rule denies it.",
+   "objective": "4.2.3"
+  },
+  {
+   "id": "adm-net-bas-5",
+   "type": "multi",
+   "question": "Which two features require the Standard or Premium SKU of Azure Bastion? Each correct answer presents a complete solution.",
+   "options": [
+    {
+     "text": "Host scaling by changing the instance count",
+     "why": "Correct. Basic uses a fixed two instances."
+    },
+    {
+     "text": "Shareable links",
+     "why": "Correct. Shareable links are available in Standard and Premium."
+    },
+    {
+     "text": "Connecting to a VM from the Azure portal",
+     "why": "All SKUs support portal connections."
+    },
+    {
+     "text": "Connecting to VMs in the same virtual network",
+     "why": "All SKUs connect to VMs in the same virtual network."
+    }
+   ],
+   "answer": [
+    0,
+    1
+   ],
+   "explanation": "Standard adds host scaling, native client support, IP-based connection and shareable links. Premium adds features such as session recording.",
+   "objective": "4.2.3"
+  }
+ ]
+}

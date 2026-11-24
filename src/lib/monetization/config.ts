@@ -95,6 +95,7 @@ export const MONETIZATION = {
     'az-900': { enabled: false, name: 'SPONSOR NAME', logo: '/images/sponsor-placeholder.svg', url: 'https://PLACEHOLDER', tagline: 'AZ-900 track supported by SPONSOR NAME' },
     'ai-901': { enabled: false, name: 'SPONSOR NAME', logo: '/images/sponsor-placeholder.svg', url: 'https://PLACEHOLDER', tagline: 'AI-901 track supported by SPONSOR NAME' },
     'ai-200': { enabled: false, name: 'SPONSOR NAME', logo: '/images/sponsor-placeholder.svg', url: 'https://PLACEHOLDER', tagline: 'AI-200 track supported by SPONSOR NAME' },
+    'az-104': { enabled: false, name: 'SPONSOR NAME', logo: '/images/sponsor-placeholder.svg', url: 'https://PLACEHOLDER', tagline: 'AZ-104 track supported by SPONSOR NAME' },
     'gh-300': { enabled: false, name: 'SPONSOR NAME', logo: '/images/sponsor-placeholder.svg', url: 'https://PLACEHOLDER', tagline: 'GH-300 track supported by SPONSOR NAME' },
   } as Record<string, Sponsor>,
 

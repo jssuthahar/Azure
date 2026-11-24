@@ -1,0 +1,211 @@
+---
+title: Configure and Troubleshoot Azure Load Balancer
+seoTitle: Configure and Troubleshoot Azure Load Balancer | AZ-104
+description: Configure a public or internal Standard Azure Load Balancer with backend pools, health probes and rules, then troubleshoot unhealthy backends for AZ-104.
+answer: >-
+  **Azure Load Balancer** spreads **TCP and UDP** flows (layer 4) from a **frontend IP** to a **backend pool** of VMs or scale set instances. A **public** load balancer uses a Standard public IP; an **internal** one uses a private IP in a subnet. A **load-balancing rule** maps a frontend port to a backend port and uses a **health probe** (TCP, HTTP or HTTPS) to send new flows only to healthy instances. Use the **Standard SKU** (Basic was retired on 30 September 2025): it's zone-redundant, needs backends in **one VNet**, and is **secure by default**, so an **NSG must allow** the traffic. Probes come from **168.63.129.16** (the **AzureLoadBalancer** tag); blocking it marks backends **Down**.
+updated: 2026-11-24
+readingMinutes: 12
+keyTerms:
+  - term: Frontend IP configuration
+    definition: The IP address clients connect to. A Standard public IP for a public load balancer, or a private IP in a subnet for an internal one.
+  - term: Backend pool
+    definition: The VMs or scale set instances, by NIC or by IP address in one VNet, that receive the traffic.
+  - term: Health probe
+    definition: A regular TCP, HTTP or HTTPS check of each backend. HTTP and HTTPS need a 200 response to count as healthy.
+  - term: Load-balancing rule
+    definition: Maps a frontend IP and port to a backend pool and port, with a probe, distribution mode and options such as floating IP.
+  - term: Session persistence
+    definition: Distribution mode. None (5-tuple hash, default), Client IP (2-tuple) or Client IP and protocol (3-tuple).
+  - term: Inbound NAT rule
+    definition: Forwards one frontend port to one backend instance, for example port 50001 to VM1 port 22.
+interview:
+  - level: beginner
+    q: What's the difference between a public and an internal load balancer?
+    a: >-
+      A public load balancer has a public IP frontend, so internet clients can reach it, typically for a web tier. An internal one has a private IP frontend inside a subnet, so only the VNet, peered VNets and on-premises can reach it, which suits app or database tiers.
+    followUps: []
+  - level: intermediate
+    q: One backend VM is marked unhealthy, but the app works when you browse to it directly. What do you check?
+    a: >-
+      What the probe does. Is the probe port the port the app listens on, and for HTTP, does the path return 200? Then the NSGs on that VM's subnet and NIC: a rule that blocks the AzureLoadBalancer tag, or 168.63.129.16, makes the probe fail even though users could connect. I'd look at the Health Probe Status metric and the effective security rules.
+    followUps: []
+  - level: experienced
+    q: What changed when Basic Load Balancer was retired?
+    a: >-
+      Everything is Standard now. Standard is secure by default, so backends need an NSG that allows traffic. It supports availability zones, a 99.99% SLA, HTTPS probes, outbound rules and backends of any VM in one VNet, not just an availability set. And it needs Standard public IPs.
+    followUps: []
+  - level: scenario
+    q: A VM in the backend pool calls the internal load balancer's frontend IP and the call times out. Why?
+    a: >-
+      If the flow gets hashed back to the same VM, it fails, because an internal load balancer doesn't support a backend sending traffic to its own frontend and landing on itself. The usual fix is to have the app call the other tier directly or put the client in a different pool.
+    followUps: []
+revision:
+  keyPoints:
+    - Layer 4 (TCP/UDP). Frontend, backend pool, health probe, load-balancing rule.
+    - Public frontend = Standard public IP. Internal frontend = private IP in a subnet.
+    - Standard only (Basic retired 30 September 2025). Zone-redundant, one VNet per pool, secure by default.
+    - Probes come from 168.63.129.16. Don't block the AzureLoadBalancer tag.
+    - Default distribution is a 5-tuple hash. Client IP persistence keeps a client on one VM.
+  mistakes:
+    - No NSG on a Standard load balancer's backends, so nothing gets in.
+    - HTTP probe pointing at a path that returns 404 or a redirect.
+    - Using Load Balancer when URL routing or a WAF is needed (Application Gateway).
+  examTips:
+    - '"Distribute TCP traffic across VMs, keep the database tier private" = **internal** load balancer.'
+    - '"Backend marked unhealthy" = check the **probe port/path** and **NSG rules for AzureLoadBalancer**.'
+    - '"Same client must reach the same VM" = session persistence **Client IP**.'
+  quick:
+    - q: At which OSI layer does Azure Load Balancer work?
+      a: Layer 4 (TCP and UDP).
+    - q: Which IP do health probes come from?
+      a: 168.63.129.16.
+    - q: What response does an HTTP probe need?
+      a: HTTP 200.
+    - q: What is the default distribution mode?
+      a: 5-tuple hash (session persistence None).
+    - q: Which metric shows probe results?
+      a: Health Probe Status (DipAvailability).
+references:
+  - title: What is Azure Load Balancer?
+    url: https://learn.microsoft.com/azure/load-balancer/load-balancer-overview
+  - title: Azure Load Balancer health probes
+    url: https://learn.microsoft.com/azure/load-balancer/load-balancer-custom-probe-overview
+  - title: Troubleshoot Azure Load Balancer health probe status
+    url: https://learn.microsoft.com/azure/load-balancer/load-balancer-troubleshoot-health-probe-status
+  - title: Configure the distribution mode for Azure Load Balancer
+    url: https://learn.microsoft.com/azure/load-balancer/load-balancer-distribution-mode
+related:
+  - nsgs-asgs-and-effective-rules
+  - azure-dns-zones-and-records
+  - troubleshoot-network-connectivity
+---
+
+## Start with a question
+
+<Story question="How does a busy café keep the queue moving when one barista goes on break?">
+
+The manager points each new customer to a free barista. Every few minutes she glances along the counter, and if someone has stepped away, she stops sending customers to that spot until they're back.
+
+An **Azure Load Balancer** is the manager. It hands each new connection to a VM in the **backend pool**, and a **health probe** is her glance along the counter. A VM that stops answering gets no new customers until it recovers.
+
+</Story>
+
+## Explain it like I'm 10
+
+<Eli10>
+
+At lunch there are three dinner ladies and one long line.
+
+A teacher at the front sends the next kid to whichever lady is free.
+
+Every few seconds the teacher checks "are you still serving?". If one lady says nothing, the teacher stops sending kids to her.
+
+</Eli10>
+
+## The technical explanation
+
+### The parts
+
+| Part | What you set |
+| --- | --- |
+| **Frontend IP** | Public (a Standard public IP, zone-redundant) or internal (a private IP in a subnet) |
+| **Backend pool** | VMs or scale set instances by **NIC** or by **IP address**, all in **one VNet** |
+| **Health probe** | Protocol TCP, HTTP or HTTPS, port, path (HTTP/S), interval (default 5 seconds) |
+| **Load-balancing rule** | Frontend IP + port → backend pool + port, probe, session persistence, idle timeout, floating IP, TCP reset |
+| **Inbound NAT rule** | One frontend port → one VM (for example 50001 → VM1:22) |
+| **Outbound rule** | SNAT for outbound internet from the pool (public load balancer) |
+
+Distribution: **None** (5-tuple hash of source IP, source port, destination IP, destination port, protocol), **Client IP** (2-tuple) or **Client IP and protocol** (3-tuple). **HA ports** (all ports, all protocols) exist on internal Standard load balancers for NVAs.
+
+### Standard SKU behaviour
+
+- **Secure by default**: backends get no inbound traffic unless an NSG on the subnet or NIC allows it.
+- **Zone-redundant** frontends, 99.99% SLA, HTTPS probes, up to 1,000 backend instances.
+- Backends must be in **one virtual network**.
+- **Basic was retired** on 30 September 2025, so new deployments are Standard (or Gateway for chaining NVAs).
+
+Price feel: about $0.025 an hour for the first 5 rules plus a small charge per GB processed (illustrative).
+
+### Public vs internal
+
+<Compare
+  caption="Same load balancer, two kinds of frontend"
+  columns={[
+    { title: 'Public load balancer', icon: '🌍', tone: 'accent', items: ['Frontend: Standard public IP', 'Clients: anywhere on the internet', 'Typical tier: web', 'Can provide outbound SNAT'] },
+    { title: 'Internal load balancer', icon: '🏠', tone: 'ok', items: ['Frontend: private IP in a subnet', 'Clients: VNet, peered VNets, on-premises', 'Typical tier: app, database, NVA (HA ports)', 'No internet exposure'] },
+  ]}
+/>
+
+### Troubleshooting
+
+| Symptom | Likely cause | Check |
+| --- | --- | --- |
+| One backend never gets traffic | Probe fails on that VM | Probe port/path, app listening, NSG blocking **AzureLoadBalancer** / 168.63.129.16, guest firewall |
+| All backends Down | Probe misconfigured | Wrong port, HTTP path returns 404 or 301 |
+| Probes healthy, clients time out | NSG doesn't allow client traffic | Effective security rules on the backend NIC (Standard is secure by default) |
+| Backend VM can't reach the internal frontend | Flow hashed back to itself | Not supported; call the other tier directly |
+| Uneven distribution | Few clients behind one NAT | Expected with hashing; review session persistence |
+
+Use **Load balancer → Insights** and the metrics **Health Probe Status** (DipAvailability) and **Data Path Availability** (VipAvailability), plus Network Watcher on the backend VMs.
+
+### Portal and CLI
+
+Portal: **Load balancers → + Create**: **Basics** (SKU Standard, Type Public or Internal, Tier Regional) → **Frontend IP configuration** → **Backend pools** → **Inbound rules** (rule + new health probe) → **Review + create**.
+
+```bash
+az network public-ip create -g rg-net-lb -n pip-lb --sku Standard --allocation-method Static
+az network lb create -g rg-net-lb -n lb-web --sku Standard --public-ip-address pip-lb \
+  --frontend-ip-name fe-web --backend-pool-name bepool-web
+az network lb probe create -g rg-net-lb --lb-name lb-web -n probe-http --protocol Http --port 80 --path /health
+az network lb rule create -g rg-net-lb --lb-name lb-web -n rule-http --protocol Tcp \
+  --frontend-port 80 --backend-port 80 --frontend-ip-name fe-web --backend-pool-name bepool-web --probe-name probe-http
+az network nic ip-config address-pool add -g rg-net-lb --nic-name nic-web01 --ip-config-name ipconfig1 \
+  --lb-name lb-web --address-pool bepool-web
+# Internal instead: az network lb create ... --vnet-name vnet-web --subnet snet-app --private-ip-address 10.40.2.10
+```
+
+PowerShell: `New-AzLoadBalancerFrontendIpConfig`, `New-AzLoadBalancerBackendAddressPoolConfig`, `New-AzLoadBalancerProbeConfig`, `New-AzLoadBalancerRuleConfig`, `New-AzLoadBalancer -Sku Standard`.
+
+<TryIt labs="adm-net-load-balancer" text="Build a Standard load balancer, put a DNS name on it and fix a backend whose probe is blocked by an NSG." />
+
+<Callout type="exam">
+Read for the layer: TCP/UDP across VMs is **Load Balancer**; URL paths, TLS offload or a WAF is **Application Gateway**. "Only reachable from inside the VNet" is an **internal** frontend. When a backend is unhealthy, the answers are the **probe** (port, path, a 200 response) or an **NSG blocking AzureLoadBalancer / 168.63.129.16**. A Standard load balancer with **no NSG** on its backends lets nothing in. "Users must stay on the same VM" is **Client IP** session persistence.
+</Callout>
+
+<DeepDive title="Floating IP and HA ports">
+
+**Floating IP** (direct server return) keeps the frontend IP as the destination when the packet reaches the VM, which SQL Server Always On listeners need. **HA ports** on an internal Standard load balancer balance every port and protocol with one rule, which is how you put a pair of firewall NVAs behind one internal frontend and point UDRs at it.
+
+</DeepDive>
+
+## Real-world business scenario
+
+<Scenario
+  company="Proseware Learning (fictional)"
+  industry="Education"
+  problem="Exam-day traffic overloaded the single web VM, and when the team added a second VM behind a load balancer, it never received traffic."
+  service="A Standard public load balancer with an HTTP probe on /health, two then four web VMs across zones in one backend pool, and an internal load balancer in front of the API tier. Effective security rules showed a hardened NSG denying the AzureLoadBalancer tag on the new VM, which was removed."
+  why="The probe can now reach every VM, so traffic spreads across all healthy ones and a failed VM drops out on its own."
+  outcome="Exam-day traffic was shared across four VMs with no outage, and a VM that crashed mid-morning was taken out of rotation within seconds."
+/>
+
+## When to use it and when not to
+
+<UseWhen
+  use={[
+    'Spreading TCP or UDP traffic over VMs or scale set instances.',
+    'An internal frontend for app, database or NVA tiers.',
+    'High availability across zones with health probes doing the failover.',
+  ]}
+  avoid={[
+    'URL-based routing, TLS termination or WAF. Use Application Gateway.',
+    'Global routing across regions by latency. Use Front Door or Traffic Manager.',
+    'Backends with no NSG allowing the traffic on a Standard load balancer.',
+  ]}
+  alternatives={[
+    '<strong>Azure Application Gateway</strong> for layer 7 routing and WAF.',
+    '<strong>Azure Front Door</strong> for global HTTP(S) load balancing and acceleration.',
+    '<strong>Cross-region (global tier) Load Balancer</strong> for layer 4 across regions.',
+  ]}
+/>

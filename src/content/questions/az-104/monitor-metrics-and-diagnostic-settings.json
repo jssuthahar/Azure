@@ -1,0 +1,152 @@
+{
+ "cert": "az-104",
+ "domain": 5,
+ "topic": "monitor-metrics-and-diagnostic-settings",
+ "questions": [
+  {
+   "id": "adm-ops-mon-1",
+   "type": "single",
+   "question": "You need to review the average Percentage CPU of a virtual machine for each hour over the last 14 days. No monitoring configuration has been performed on the virtual machine. What should you use?",
+   "options": [
+    {
+     "text": "Metrics explorer in Azure Monitor",
+     "why": "Correct. Platform metrics are collected automatically and retained for 93 days, so 14 days of CPU data is available without configuration."
+    },
+    {
+     "text": "A Log Analytics workspace query on the Perf table",
+     "why": "The Perf table requires the Azure Monitor Agent and a data collection rule, which have not been configured."
+    },
+    {
+     "text": "The activity log",
+     "why": "The activity log records control-plane operations, not performance values."
+    },
+    {
+     "text": "A diagnostic setting that sends resource logs to a storage account",
+     "why": "A virtual machine has no resource log categories, and new settings do not provide historical data."
+    }
+   ],
+   "answer": [
+    0
+   ],
+   "explanation": "Platform metrics such as Percentage CPU are collected for every virtual machine without an agent and are kept for 93 days. Metrics explorer can chart them with the Average aggregation and a one-hour granularity.",
+   "objective": "5.1.1"
+  },
+  {
+   "id": "adm-ops-mon-2",
+   "type": "single",
+   "question": "A storage account named stcontoso1 receives many failed requests. You must chart the number of failed transactions by response type for the last 24 hours. What should you do in Metrics explorer?",
+   "options": [
+    {
+     "text": "Select the Transactions metric with the Sum aggregation and apply splitting by the ResponseType dimension",
+     "why": "Correct. Splitting draws one line per response type, which separates authorization errors from successful calls."
+    },
+    {
+     "text": "Select the Availability metric with the Average aggregation",
+     "why": "Availability shows a percentage and does not break failures down by response type."
+    },
+    {
+     "text": "Select the Transactions metric and change the time granularity to 1 day",
+     "why": "A daily granularity gives one value for the period and does not group by response type."
+    },
+    {
+     "text": "Select the Used capacity metric and add a filter on Blob type",
+     "why": "Used capacity measures stored data, not transactions."
+    }
+   ],
+   "answer": [
+    0
+   ],
+   "explanation": "Metrics explorer supports filtering and splitting on metric dimensions. The Transactions metric of a storage account has a ResponseType dimension.",
+   "objective": "5.1.1"
+  },
+  {
+   "id": "adm-ops-mon-3",
+   "type": "multi",
+   "question": "You plan to collect the StorageRead and StorageWrite logs of an Azure Storage account and query them by using KQL. The solution must minimize administrative effort. Which two actions should you perform? Each correct answer presents part of the solution.",
+   "options": [
+    {
+     "text": "Create a diagnostic setting on the blob service of the storage account",
+     "why": "Correct. StorageRead, StorageWrite and StorageDelete are available on each storage service, not on the account resource."
+    },
+    {
+     "text": "Select a Log Analytics workspace as the destination",
+     "why": "Correct. A Log Analytics workspace stores the logs in tables that you can query with KQL."
+    },
+    {
+     "text": "Install the Azure Monitor Agent on the storage account",
+     "why": "Agents are installed on virtual machines and servers, not on storage accounts."
+    },
+    {
+     "text": "Select an event hub as the only destination",
+     "why": "Event Hubs streams logs to other systems. It does not support KQL queries."
+    },
+    {
+     "text": "Create a diagnostic setting on the storage account resource",
+     "why": "The account-level setting offers only the Transaction metrics and has no StorageRead or StorageWrite categories."
+    }
+   ],
+   "answer": [
+    0,
+    1
+   ],
+   "explanation": "Storage resource logs are configured per service (blobServices, fileServices, queueServices, tableServices). Sending them to a Log Analytics workspace makes them queryable, for example in the StorageBlobLogs table.",
+   "objective": "5.1.2"
+  },
+  {
+   "id": "adm-ops-mon-4",
+   "type": "single",
+   "question": "You must retain the activity log of an Azure subscription for two years and query it together with other logs. What should you configure?",
+   "options": [
+    {
+     "text": "A subscription diagnostic setting that sends the activity log to a Log Analytics workspace with a two-year retention period",
+     "why": "Correct. The activity log keeps events for 90 days. Exporting it to a workspace lets you retain and query it for longer in the AzureActivity table."
+    },
+    {
+     "text": "A longer retention period on the Activity log blade",
+     "why": "The activity log retention of 90 days cannot be changed on the blade."
+    },
+    {
+     "text": "A diagnostic setting on each resource group",
+     "why": "Diagnostic settings for the activity log are configured at the subscription level."
+    },
+    {
+     "text": "An alert processing rule",
+     "why": "Alert processing rules modify fired alerts. They do not export or retain logs."
+    }
+   ],
+   "answer": [
+    0
+   ],
+   "explanation": "Use Export Activity Logs (a subscription diagnostic setting) to send the activity log to a Log Analytics workspace, a storage account or Event Hubs.",
+   "objective": "5.1.2"
+  },
+  {
+   "id": "adm-ops-mon-5",
+   "type": "single",
+   "question": "You need to collect Windows event logs from an Azure virtual machine named VM1 and send them to a Log Analytics workspace. What should you do?",
+   "options": [
+    {
+     "text": "Install the Azure Monitor Agent on VM1 and associate VM1 with a data collection rule that collects the event logs",
+     "why": "Correct. Guest operating system data is collected by the Azure Monitor Agent according to data collection rules."
+    },
+    {
+     "text": "Create a diagnostic setting on VM1 that sends allLogs to the workspace",
+     "why": "Virtual machines do not expose resource log categories, so a diagnostic setting can send only platform metrics."
+    },
+    {
+     "text": "Enable boot diagnostics on VM1",
+     "why": "Boot diagnostics captures serial console output and screenshots, not event logs in a workspace."
+    },
+    {
+     "text": "Create a subscription diagnostic setting for the activity log",
+     "why": "The activity log contains control-plane events, not guest event logs."
+    }
+   ],
+   "answer": [
+    0
+   ],
+   "explanation": "The Azure Monitor Agent and data collection rules replace the legacy Log Analytics agent and diagnostics extension for guest data.",
+   "objective": "5.1.2"
+  }
+ ]
+}

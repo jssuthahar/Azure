@@ -1,0 +1,148 @@
+{
+ "cert": "az-104",
+ "domain": 1,
+ "topic": "entra-users-and-groups",
+ "questions": [
+  {
+   "id": "adm-id-usr-1",
+   "type": "single",
+   "question": "You need to ensure that users are added to a group automatically when their Department attribute is set to Sales, and removed when the attribute changes. What should you configure?",
+   "options": [
+    {
+     "text": "A security group with the Dynamic User membership type and the rule (user.department -eq \"Sales\")",
+     "why": "Correct. Dynamic User membership evaluates user properties and adds or removes members automatically."
+    },
+    {
+     "text": "A security group with the Assigned membership type and the Sales department as the owner",
+     "why": "Owners manage an assigned group manually. Membership does not follow the Department attribute."
+    },
+    {
+     "text": "A Microsoft 365 group with the Dynamic Device membership type",
+     "why": "Dynamic Device rules evaluate device properties, not user properties such as department."
+    },
+    {
+     "text": "An administrative unit that contains the Sales department users",
+     "why": "Administrative units scope administration. They do not add users to groups."
+    }
+   ],
+   "answer": [
+    0
+   ],
+   "explanation": "Dynamic membership rules use user properties such as user.department. Membership is recalculated when the property changes.",
+   "objective": "1.1.1"
+  },
+  {
+   "id": "adm-id-usr-2",
+   "type": "single",
+   "question": "Your organization plans to use dynamic groups in Microsoft Entra ID. Which license is required for the users who are members of the dynamic groups?",
+   "options": [
+    {
+     "text": "Microsoft Entra ID P1",
+     "why": "Correct. Dynamic membership requires Microsoft Entra ID P1 or higher for users in scope."
+    },
+    {
+     "text": "Microsoft Entra ID Free",
+     "why": "The Free edition does not include dynamic membership groups."
+    },
+    {
+     "text": "An Azure subscription with the Owner role",
+     "why": "Azure RBAC roles do not license Microsoft Entra features."
+    },
+    {
+     "text": "Microsoft Defender for Cloud",
+     "why": "Defender for Cloud protects workloads. It does not license directory features."
+    }
+   ],
+   "answer": [
+    0
+   ],
+   "explanation": "Dynamic membership groups require Microsoft Entra ID P1 (or P2) licenses.",
+   "objective": "1.1.1"
+  },
+  {
+   "id": "adm-id-usr-3",
+   "type": "single",
+   "question": "An administrator attempts to add User1 to a group named Sales-Team, but the Add members option is unavailable. Other groups accept new members. What is the most likely cause?",
+   "options": [
+    {
+     "text": "Sales-Team uses the Dynamic User membership type",
+     "why": "Correct. Members of a dynamic group are determined only by its rule and cannot be added manually."
+    },
+    {
+     "text": "Sales-Team is a security group",
+     "why": "Security groups with assigned membership accept manual members."
+    },
+    {
+     "text": "User1 does not have a usage location",
+     "why": "Usage location affects license assignment, not group membership."
+    },
+    {
+     "text": "Sales-Team has more than one owner",
+     "why": "The number of owners does not prevent members from being added."
+    }
+   ],
+   "answer": [
+    0
+   ],
+   "explanation": "To include User1 in a dynamic group, change the user property that the membership rule evaluates.",
+   "objective": "1.1.2"
+  },
+  {
+   "id": "adm-id-usr-4",
+   "type": "single",
+   "question": "You need to create 400 cloud-only user accounts from a spreadsheet provided by HR with the least administrative effort. What should you use?",
+   "options": [
+    {
+     "text": "Bulk create in the Users blade with the provided CSV template",
+     "why": "Correct. Bulk create imports users from a CSV template in one operation."
+    },
+    {
+     "text": "Microsoft Entra Connect",
+     "why": "Entra Connect synchronizes users from on-premises Active Directory. The users are cloud-only."
+    },
+    {
+     "text": "The Create new user wizard for each user",
+     "why": "This works but requires 400 separate operations."
+    },
+    {
+     "text": "An Azure Policy assignment",
+     "why": "Azure Policy governs Azure resources. It does not create directory users."
+    }
+   ],
+   "answer": [
+    0
+   ],
+   "explanation": "Bulk operations support bulk create, bulk invite and bulk delete by using CSV templates.",
+   "objective": "1.1.1"
+  },
+  {
+   "id": "adm-id-usr-5",
+   "type": "multi",
+   "question": "You need to create a group that can be assigned the Helpdesk Administrator Microsoft Entra role. Which two settings must be configured when you create the group? Each correct answer presents part of the solution.",
+   "options": [
+    {
+     "text": "Set Group type to Security",
+     "why": "Correct. Role-assignable groups are security groups (or Microsoft 365 groups), and Security is the usual choice."
+    },
+    {
+     "text": "Set Microsoft Entra roles can be assigned to the group to Yes",
+     "why": "Correct. This setting must be enabled at creation and cannot be changed later."
+    },
+    {
+     "text": "Set Membership type to Dynamic User",
+     "why": "Role-assignable groups cannot use dynamic membership."
+    },
+    {
+     "text": "Assign the group the Owner role on the subscription",
+     "why": "Azure RBAC roles are unrelated to Microsoft Entra role assignment."
+    }
+   ],
+   "answer": [
+    0,
+    1
+   ],
+   "explanation": "A role-assignable group must have the Microsoft Entra roles can be assigned to the group option enabled when it is created, and its membership must be assigned.",
+   "objective": "1.1.2"
+  }
+ ]
+}

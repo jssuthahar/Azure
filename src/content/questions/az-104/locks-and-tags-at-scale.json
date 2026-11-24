@@ -1,0 +1,147 @@
+{
+ "cert": "az-104",
+ "domain": 1,
+ "topic": "locks-and-tags-at-scale",
+ "questions": [
+  {
+   "id": "adm-id-lck-1",
+   "type": "single",
+   "question": "Administrators must be able to resize virtual machines in RG1, but nobody must be able to delete RG1 or its resources. What should you configure?",
+   "options": [
+    {
+     "text": "A CanNotDelete lock on RG1",
+     "why": "Correct. CanNotDelete allows updates and blocks deletion."
+    },
+    {
+     "text": "A ReadOnly lock on RG1",
+     "why": "ReadOnly blocks resizing because it is a write operation."
+    },
+    {
+     "text": "The Reader role for administrators on RG1",
+     "why": "Reader cannot resize virtual machines."
+    },
+    {
+     "text": "An Azure Policy assignment with the Audit effect",
+     "why": "Audit does not block deletion."
+    }
+   ],
+   "answer": [
+    0
+   ],
+   "explanation": "CanNotDelete (Delete in the portal) permits read and update operations and blocks delete operations for all users.",
+   "objective": "1.3.2"
+  },
+  {
+   "id": "adm-id-lck-2",
+   "type": "single",
+   "question": "A ReadOnly lock is applied to a resource group that contains a storage account. Which operation fails?",
+   "options": [
+    {
+     "text": "Listing the storage account access keys",
+     "why": "Correct. Listing keys is a POST operation and is blocked by a ReadOnly lock."
+    },
+    {
+     "text": "Viewing the storage account properties in the portal",
+     "why": "Read operations are allowed."
+    },
+    {
+     "text": "Viewing the role assignments on the resource group",
+     "why": "Read operations are allowed."
+    },
+    {
+     "text": "Viewing the activity log for the resource group",
+     "why": "Read operations are allowed."
+    }
+   ],
+   "answer": [
+    0
+   ],
+   "explanation": "ReadOnly locks block write and some POST operations, which can break normal management tasks.",
+   "objective": "1.3.2"
+  },
+  {
+   "id": "adm-id-lck-3",
+   "type": "single",
+   "question": "User1 is assigned the Contributor role on a resource group that has a CanNotDelete lock. User1 must delete a virtual machine in the resource group. What should happen first?",
+   "options": [
+    {
+     "text": "A user who has the Owner or User Access Administrator role removes the lock",
+     "why": "Correct. Removing a lock requires Microsoft.Authorization/locks/delete, which Contributor lacks."
+    },
+    {
+     "text": "User1 removes the lock",
+     "why": "Contributor cannot delete locks."
+    },
+    {
+     "text": "User1 is assigned the Reader role",
+     "why": "Reader adds no delete permission and does not affect locks."
+    },
+    {
+     "text": "The resource group is moved to another subscription",
+     "why": "Moving does not remove the requirement to delete the lock."
+    }
+   ],
+   "answer": [
+    0
+   ],
+   "explanation": "Locks apply to everyone. Only users with lock delete permission can remove them.",
+   "objective": "1.3.2"
+  },
+  {
+   "id": "adm-id-lck-4",
+   "type": "single",
+   "question": "Resource group RG1 has the tag costcenter=FIN-042. A new virtual machine is created in RG1 without tags. Which tags does the virtual machine have?",
+   "options": [
+    {
+     "text": "No tags",
+     "why": "Correct. Resources do not inherit tags from their resource group by default."
+    },
+    {
+     "text": "costcenter=FIN-042",
+     "why": "Tags are not inherited unless a policy or another process applies them."
+    },
+    {
+     "text": "costcenter=FIN-042 and any subscription tags",
+     "why": "Subscription tags are not inherited by default either."
+    },
+    {
+     "text": "Only tags required by the Microsoft.Compute provider",
+     "why": "Resource providers do not add tags automatically."
+    }
+   ],
+   "answer": [
+    0
+   ],
+   "explanation": "Use the Inherit a tag from the resource group policy (Modify) to copy tags to resources.",
+   "objective": "1.3.3"
+  },
+  {
+   "id": "adm-id-lck-5",
+   "type": "single",
+   "question": "You need to add the tag owner=ops to a storage account without removing its existing tags by using Azure CLI. Which command should you use?",
+   "options": [
+    {
+     "text": "az tag update --resource-id <id> --operation Merge --tags owner=ops",
+     "why": "Correct. Merge adds or updates the listed tags and keeps existing tags."
+    },
+    {
+     "text": "az tag update --resource-id <id> --operation Replace --tags owner=ops",
+     "why": "Replace removes tags that are not listed."
+    },
+    {
+     "text": "az tag update --resource-id <id> --operation Delete --tags owner=ops",
+     "why": "Delete removes the listed tags."
+    },
+    {
+     "text": "az lock create --name owner --lock-type CanNotDelete",
+     "why": "This creates a lock, not a tag."
+    }
+   ],
+   "answer": [
+    0
+   ],
+   "explanation": "az tag update supports Merge, Replace and Delete operations.",
+   "objective": "1.3.3"
+  }
+ ]
+}

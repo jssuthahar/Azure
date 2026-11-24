@@ -1,0 +1,198 @@
+---
+title: Connect to VMs Securely with Azure Bastion
+seoTitle: Azure Bastion SKUs, Subnet and Native Client | AZ-104
+description: Deploy Azure Bastion in AzureBastionSubnet, pick Developer, Basic, Standard or Premium, and connect to VMs over private IPs from the portal or native client.
+answer: >-
+  **Azure Bastion** is a managed service that lets you **RDP and SSH to VMs on their private IPs** from the Azure portal over **TLS 443**, so VMs need **no public IP** and no open 3389 or 22 to the internet. It's deployed into a subnet named exactly **AzureBastionSubnet**, **/26 or larger**, with a **Standard public IP**, and it reaches VMs in its own VNet and **peered VNets**. SKUs are **Developer** (free, shared, no subnet), **Basic**, **Standard** (adds host scaling, **native client** support with `az network bastion ssh/rdp`, IP-based connection, shareable links) and **Premium** (adds session recording and private-only deployment).
+updated: 2026-11-24
+readingMinutes: 10
+keyTerms:
+  - term: Azure Bastion
+    definition: A fully managed PaaS service that provides RDP and SSH to VMs over TLS from the portal or a native client, using the VMs' private IPs.
+  - term: AzureBastionSubnet
+    definition: The dedicated subnet Bastion is deployed into. The name must be exact and the size /26 or larger.
+  - term: Native client support
+    definition: A Standard or Premium setting (tunneling) that lets you connect with your local SSH or RDP client through az network bastion ssh or rdp.
+  - term: Host scaling
+    definition: Changing the number of Bastion instances (Standard and Premium, 2 to 50) to support more concurrent sessions.
+  - term: Shareable link
+    definition: A Standard feature that gives a user a URL to connect to one VM through Bastion without portal access.
+  - term: Developer SKU
+    definition: A free, shared Bastion option for dev and test that connects one VM at a time, with no dedicated subnet or public IP.
+interview:
+  - level: beginner
+    q: Why use Azure Bastion instead of giving each VM a public IP?
+    a: >-
+      With a public IP and port 3389 or 22 open, the VM is exposed to the whole internet and gets brute-force attempts within minutes. Bastion keeps the VMs private. Admins connect to Bastion over HTTPS, and Bastion opens RDP or SSH to the VM's private IP.
+    followUps: []
+  - level: intermediate
+    q: What does Bastion need to deploy?
+    a: >-
+      A subnet named exactly AzureBastionSubnet in the VNet, at least /26, and a Standard static public IP (except the Developer SKU). It's billed per hour plus outbound data, so I usually put one in the hub and let it serve peered spokes.
+    followUps: []
+  - level: experienced
+    q: An admin wants to SSH from their laptop terminal through Bastion. What do you set up?
+    a: >-
+      Upgrade Bastion to Standard or Premium and enable native client support. Then the admin runs az network bastion ssh with the VM's resource ID, or az network bastion rdp on Windows. Basic only supports connecting from the portal.
+    followUps: []
+  - level: scenario
+    q: Bastion is in the hub, but you can't connect to a VM in a spoke. What do you check?
+    a: >-
+      That the spoke is peered with the hub and both links are Connected. Then the NSG on the VM's subnet: it must allow 3389 or 22 from the AzureBastionSubnet range. And that the VM is running and the user has Reader on the VM, its NIC and the Bastion resource.
+    followUps: []
+revision:
+  keyPoints:
+    - Bastion gives RDP/SSH over TLS 443 to private IPs. VMs need no public IP.
+    - AzureBastionSubnet, exact name, /26 or larger, plus a Standard public IP.
+    - Reaches VMs in its VNet and peered VNets.
+    - Developer (free, shared), Basic, Standard (scaling, native client, shareable link, IP-based), Premium (session recording, private-only).
+    - You can upgrade a SKU but not downgrade it.
+  mistakes:
+    - Naming the subnet BastionSubnet or making it a /27.
+    - Expecting az network bastion ssh to work on the Basic SKU.
+    - Blocking 3389/22 from the Bastion subnet in the VM's NSG.
+  examTips:
+    - '"Connect to VMs without public IPs, from the browser" = **Azure Bastion**.'
+    - '"Use the local SSH client through Bastion" = **Standard or Premium + native client support**.'
+    - '"Minimum subnet size for Bastion" = **/26**.'
+  quick:
+    - q: What must the Bastion subnet be called?
+      a: AzureBastionSubnet.
+    - q: What is the minimum size of that subnet?
+      a: /26.
+    - q: Which port does the admin use to reach Bastion?
+      a: TCP 443 (HTTPS).
+    - q: Can Bastion connect to VMs in peered VNets?
+      a: Yes.
+    - q: Which SKUs support native client connections?
+      a: Standard and Premium.
+references:
+  - title: What is Azure Bastion?
+    url: https://learn.microsoft.com/azure/bastion/bastion-overview
+  - title: Azure Bastion configuration settings (SKUs and subnet)
+    url: https://learn.microsoft.com/azure/bastion/configuration-settings
+  - title: Connect to a VM using Bastion and the native client
+    url: https://learn.microsoft.com/azure/bastion/connect-vm-native-client-windows
+  - title: Working with NSG access and Azure Bastion
+    url: https://learn.microsoft.com/azure/bastion/bastion-nsg
+related:
+  - nsgs-asgs-and-effective-rules
+  - configure-vnet-peering
+  - vnets-subnets-and-public-ips
+---
+
+## Start with a question
+
+<Story question="How does a hotel let a plumber into room 214 without giving them a master key?">
+
+The plumber signs in at the front desk. Someone walks them up, opens 214, and stays while they work. The plumber never gets a key, and no room door faces the street.
+
+**Azure Bastion** is that front desk. Admins sign in through the Azure portal over HTTPS, and Bastion opens the RDP or SSH session to the VM's **private** address. The VMs don't need public IPs, so there's no door on the street for attackers to try.
+
+</Story>
+
+## Explain it like I'm 10
+
+<Eli10>
+
+Your treehouse has no ladder, so strangers can't climb up.
+
+When your friend wants to visit, they go to your mum at the back door. She checks who they are and lifts them up with a rope.
+
+Bastion is your mum with the rope. The treehouse is your VM.
+
+</Eli10>
+
+## The technical explanation
+
+### How it works
+
+1. The admin opens the VM in the portal and selects **Connect → Connect via Bastion** (or runs the native client command).
+2. The browser talks to Bastion over **TLS 443**, after Microsoft Entra sign-in and Azure RBAC checks.
+3. Bastion opens **RDP (3389)** or **SSH (22)** to the VM's **private IP** inside the VNet.
+
+Bastion is a hardened, managed host: no OS for you to patch, no jump box to secure.
+
+### What you need
+
+| Requirement | Detail |
+| --- | --- |
+| Subnet | Named exactly **AzureBastionSubnet**, **/26 or larger** (a /26 gives room for host scaling) |
+| Public IP | **Standard**, static (not needed for Developer or private-only Premium) |
+| Reach | VMs in the same VNet and in **peered** VNets |
+| VM NSG | Allow 3389/22 **from the AzureBastionSubnet range** (or VirtualNetwork) |
+| Permissions | Reader on the VM, its NIC and the Bastion resource |
+
+If you put an NSG on AzureBastionSubnet itself, it needs specific rules (inbound 443 from Internet and from GatewayManager, outbound to the VNet on 3389/22, to AzureCloud on 443, and so on). Route tables aren't supported on that subnet.
+
+### SKUs
+
+| Feature | Developer | Basic | Standard | Premium |
+| --- | --- | --- | --- | --- |
+| Portal RDP/SSH | ✅ | ✅ | ✅ | ✅ |
+| Dedicated host, peered VNets | No | ✅ | ✅ | ✅ |
+| Host scaling (2 to 50 instances) | No | No | ✅ | ✅ |
+| Native client (`az network bastion ssh/rdp`) | No | No | ✅ | ✅ |
+| IP-based connection, shareable link | No | No | ✅ | ✅ |
+| Session recording, private-only deployment | No | No | No | ✅ |
+
+You can **upgrade** a SKU in place but not downgrade. Price feel: Basic is around $0.19 an hour plus outbound data (illustrative), Standard costs more per hour plus per extra instance.
+
+### Portal and CLI
+
+Portal: create **AzureBastionSubnet** in the VNet, then **Bastions → + Create** (tier, instance count, VNet, public IP) and on **Advanced** tick **Native client support** if needed. You can also choose **Enable Azure Bastion** on the **Security** tab when creating a VNet.
+
+```bash
+az network vnet subnet create -g rg-net-paas --vnet-name vnet-paas -n AzureBastionSubnet --address-prefixes 10.30.3.0/26
+az network public-ip create -g rg-net-paas -n pip-bastion --sku Standard --allocation-method Static
+az network bastion create -g rg-net-paas -n bas-paas --vnet-name vnet-paas \
+  --public-ip-address pip-bastion --sku Standard --enable-tunneling true --location eastus
+az network bastion ssh -g rg-net-paas -n bas-paas --target-resource-id <vm-resource-id> \
+  --auth-type AAD
+az network bastion update -g rg-net-paas -n bas-paas --scale-units 4
+```
+
+PowerShell: `New-AzBastion -ResourceGroupName rg-net-paas -Name bas-paas -PublicIpAddress $pip -VirtualNetwork $vnet -Sku Standard`.
+
+<TryIt labs="adm-net-private-access" text="Get refused with a /27 subnet, fix it, then SSH to a VM with no public IP." />
+
+<Callout type="exam">
+Exact details win marks here: the subnet is **AzureBastionSubnet**, at least **/26**, and the public IP is **Standard**. "Use the native RDP or SSH client on my workstation" requires **Standard or Premium** with native client support. "Admins must connect to VMs that have no public IP, through the browser, over 443" is **Bastion**. One Bastion in a hub can serve **peered** spokes.
+</Callout>
+
+<DeepDive title="Bastion or just-in-time VM access?">
+
+Microsoft Defender for Cloud's just-in-time access opens a management port on the NSG for a short time to one source IP. It reduces exposure but still needs a public IP on the VM. Bastion removes the public exposure entirely. Many teams use Bastion for everyday admin and keep VPN or ExpressRoute for bulk access from the office.
+
+</DeepDive>
+
+## Real-world business scenario
+
+<Scenario
+  company="Fabrikam Manufacturing (fictional)"
+  industry="Manufacturing"
+  problem="Every factory-floor VM had a public IP with RDP open so contractors could support it. The security team counted 40,000 failed sign-ins a day."
+  service="Azure Bastion Standard in the hub VNet with native client support, peered to every factory spoke. Public IPs removed from VMs, and spoke NSGs allow 3389 and 22 only from the AzureBastionSubnet range."
+  why="Contractors still connect, through the portal or their own clients, but no VM is reachable from the internet."
+  outcome="Failed sign-in attempts on VMs dropped to zero, and the audit log shows who opened every session."
+/>
+
+## When to use it and when not to
+
+<UseWhen
+  use={[
+    'Admins need RDP or SSH to VMs that must not have public IPs.',
+    'A hub and spoke network where one Bastion can serve every peered VNet.',
+    'Contractors who need access without VPN clients (shareable links on Standard).',
+  ]}
+  avoid={[
+    'Connecting whole offices or apps to a VNet. Use a VPN gateway or ExpressRoute.',
+    'Expecting native client or host scaling on Basic.',
+    'Tiny subnets: anything smaller than /26 fails.',
+  ]}
+  alternatives={[
+    '<strong>Point-to-site VPN</strong> when admins need full network access, not just RDP/SSH.',
+    '<strong>Just-in-time VM access</strong> in Defender for Cloud to open ports briefly.',
+    '<strong>Bastion Developer</strong> for free, one-at-a-time access in dev and test.',
+  ]}
+/>

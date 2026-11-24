@@ -1,0 +1,217 @@
+---
+title: Blob Containers, Access Tiers and Lifecycle Management
+seoTitle: Blob Containers, Access Tiers and Lifecycle Rules | AZ-104
+description: Create blob containers with the right anonymous access level, choose Hot, Cool, Cold or Archive tiers, and automate tier changes with lifecycle management rules.
+answer: >-
+  A **container** groups blobs inside a storage account. Its **anonymous access level** is **Private** (default), **Blob** or **Container**, and anonymous access only works if the account allows it (new accounts don't). **Access tiers** trade storage price for access price: **Hot**, **Cool** (30-day minimum), **Cold** (90 days) and **Archive** (180 days, **offline**, rehydrating takes up to **15 hours** at Standard priority). Archive is supported on **LRS, GRS and RA-GRS** accounts. A **lifecycle management policy** is a set of JSON rules that moves blobs to cooler tiers or deletes them (and old versions and snapshots) based on days since **modification**, **creation** or **last access**, and runs about **once a day**.
+updated: 2026-11-24
+readingMinutes: 12
+keyTerms:
+  - term: Container
+    definition: A named group of blobs in a storage account, similar to a top-level folder.
+  - term: Anonymous access level
+    definition: Private, Blob (anonymous read of blobs) or Container (anonymous read and list), allowed only if the account permits anonymous access.
+  - term: Access tier
+    definition: Hot, Cool, Cold or Archive, which sets the balance between storage cost and access cost for a blob.
+  - term: Early deletion charge
+    definition: A charge for moving or deleting a blob before the tier's minimum days (30 Cool, 90 Cold, 180 Archive).
+  - term: Rehydration
+    definition: Moving an archived blob back to an online tier so it can be read. Standard or High priority.
+  - term: Lifecycle management policy
+    definition: Account-level JSON rules that move or delete blobs, versions and snapshots by age or last access.
+interview:
+  - level: beginner
+    q: What's the difference between Cool and Archive?
+    a: >-
+      Cool is online: you can read a blob immediately, you just pay more per read and a bit less per GB than Hot, with a 30-day minimum. Archive is offline: it's the cheapest storage, but you can't read the blob until you rehydrate it, which can take up to 15 hours at Standard priority, and there's a 180-day minimum.
+    followUps: []
+  - level: intermediate
+    q: You try to create a container with anonymous blob access and get an error. Why?
+    a: >-
+      The account setting Allow Blob anonymous access is off, which is the default for new accounts. No container can be made public until that's turned on at account level. I'd only do that for content that really should be public, and keep everything else private and shared with SAS.
+    followUps: []
+  - level: experienced
+    q: How would you write a lifecycle rule for blobs that should go cool once nobody reads them?
+    a: >-
+      Turn on last access time tracking for the account, then use daysAfterLastAccessTimeGreaterThan in the tierToCool action, and optionally enableAutoTierToHotFromCool so a blob that gets read again goes back to Hot. Rules based on modification time don't need tracking. I'd filter with a prefix or blob index tags so the rule doesn't touch everything.
+    followUps: []
+  - level: scenario
+    q: Finance keeps invoices for seven years and rarely opens anything older than a month. Design the storage.
+    a: >-
+      A private invoices container in an LRS or GRS account, because Archive isn't available on zone-redundant accounts. A lifecycle rule with prefix invoices/ moving blobs to Cool after 30 days, Cold after 90, Archive after 180, and deleting after about 2,555 days. Finance knows an archived invoice needs rehydrating, and urgent ones can use High priority.
+    followUps: []
+revision:
+  keyPoints:
+    - Container names 3-63 lowercase letters, numbers and hyphens.
+    - Anonymous access needs the account setting on; new accounts block it.
+    - Hot, Cool (30 d), Cold (90 d), Archive (180 d, offline).
+    - Rehydrate Archive with Set Blob Tier or a copy; Standard up to 15 hours, High usually under 1 hour for blobs under 10 GB.
+    - Archive works on LRS, GRS, RA-GRS only.
+    - Lifecycle rules run about daily; new policies can take up to 24 hours to act.
+  mistakes:
+    - Setting Archive as the account default tier (only Hot, Cool or Cold can be).
+    - Using daysAfterLastAccessTimeGreaterThan without enabling access tracking.
+    - Expecting a lifecycle change to happen instantly.
+  examTips:
+    - '"Cheapest storage, can wait hours to read" = **Archive**.'
+    - '"Rarely read, needed immediately when read" = **Cool** or **Cold**.'
+    - '"Move blobs automatically by age" = **lifecycle management**.'
+  quick:
+    - q: What is the minimum storage duration for the Cold tier?
+      a: 90 days.
+    - q: How long can Standard priority rehydration from Archive take?
+      a: Up to 15 hours.
+    - q: Which account redundancy options support the Archive tier?
+      a: LRS, GRS and RA-GRS.
+    - q: Which lifecycle condition needs last access time tracking?
+      a: daysAfterLastAccessTimeGreaterThan.
+    - q: Which anonymous access level allows listing blobs in a container?
+      a: Container.
+references:
+  - title: Manage blob containers using the Azure portal
+    url: https://learn.microsoft.com/azure/storage/blobs/blob-containers-portal
+  - title: Configure anonymous read access for containers and blobs
+    url: https://learn.microsoft.com/azure/storage/blobs/anonymous-read-access-configure
+  - title: Access tiers for blob data
+    url: https://learn.microsoft.com/azure/storage/blobs/access-tiers-overview
+  - title: Blob rehydration from the archive tier
+    url: https://learn.microsoft.com/azure/storage/blobs/archive-rehydrate-overview
+  - title: Optimize costs by automatically managing the data lifecycle
+    url: https://learn.microsoft.com/azure/storage/blobs/lifecycle-management-overview
+related:
+  - blob-soft-delete-and-versioning
+  - configure-storage-accounts-and-encryption
+  - storage-redundancy-and-object-replication
+---
+
+## Start with a question
+
+<Story question="Why keep last year's tax papers on your desk when they could go in a box in the loft?">
+
+This month's bills sit on your desk because you touch them daily. Last year's go in a filing cabinet. Papers from five years ago go in a box in the loft: cheap to keep, but you need a ladder and an afternoon to get them out.
+
+Blob **access tiers** are the desk (**Hot**), the cabinet (**Cool** and **Cold**) and the loft (**Archive**). A **lifecycle policy** is the house rule that moves papers along on their own.
+
+</Story>
+
+## Explain it like I'm 10
+
+<Eli10>
+
+Your toys live in four places.
+
+The toy box by your bed (Hot) for toys you play with every day.
+
+The cupboard (Cool) and the garage (Cold) for toys you use sometimes.
+
+Grandma's attic (Archive) for baby toys. Very cheap, but you have to wait a long time to get them back.
+
+Lifecycle management is a rule: "if nobody touched a toy for a month, move it to the cupboard".
+
+</Eli10>
+
+## The technical explanation
+
+### Containers
+
+Portal: **Data storage > Containers > + Container**. Name it (3 to 63 lowercase letters, numbers and hyphens) and pick the **anonymous access level**:
+
+| Level | Anonymous users can |
+| --- | --- |
+| **Private** | Nothing (the default) |
+| **Blob** | Read blobs if they know the URL |
+| **Container** | Read blobs and list the container |
+
+Anonymous access is possible only when the account setting **Allow Blob anonymous access** is on. New accounts have it **off**, and with it off every container stays private whatever you choose. Advanced options include a default **encryption scope** and version-level immutability.
+
+### Access tiers
+
+| Tier | Online | Minimum days | Good for |
+| --- | --- | --- | --- |
+| **Hot** | Yes | None | Data in active use |
+| **Cool** | Yes | 30 | Backups, older content read occasionally |
+| **Cold** | Yes | 90 | Rarely read, must be instant when read |
+| **Archive** | **No** | 180 | Compliance archives, raw data you may never read |
+
+The account has a default tier (Hot, Cool or Cold) that blobs inherit; you can set a tier per blob. Moving out of a tier early adds an **early deletion charge**. Rough feel for 1 TB a month: Hot around $20, Archive around $2 (illustrative). Archive is available on **LRS, GRS and RA-GRS** accounts only.
+
+To read an archived blob you **rehydrate** it: change its tier to Hot, Cool or Cold, or copy it to an online blob. **Standard** priority can take up to **15 hours**; **High** priority is usually under an hour for blobs smaller than 10 GB and costs more.
+
+### Lifecycle management
+
+Portal: **Data management > Lifecycle management > + Add a rule**. A rule has:
+
+- **Scope and filters**: all blobs or a **filter set** of blob **prefixes** (such as `invoices/`) and **blob index tags**; blob type **block blobs** (append blobs support delete only); subtypes **base blobs**, **snapshots**, **versions**.
+- **Conditions**: `daysAfterModificationGreaterThan`, `daysAfterCreationGreaterThan` or `daysAfterLastAccessTimeGreaterThan` (which needs **last access time tracking** turned on).
+- **Actions**: `tierToCool`, `tierToCold`, `tierToArchive`, `delete`, and `enableAutoTierToHotFromCool`.
+
+A policy holds up to 100 rules. Azure runs it about **once a day**, and a new or changed policy can take up to **24 hours** to start acting. If several actions match one blob, the cheapest one wins (delete, then Archive, then Cold, then Cool).
+
+```json
+{ "rules": [ { "enabled": true, "name": "age-out-invoices", "type": "Lifecycle",
+  "definition": {
+    "filters": { "blobTypes": ["blockBlob"], "prefixMatch": ["invoices/"] },
+    "actions": {
+      "baseBlob": {
+        "tierToCool":    { "daysAfterModificationGreaterThan": 30 },
+        "tierToCold":    { "daysAfterModificationGreaterThan": 90 },
+        "tierToArchive": { "daysAfterModificationGreaterThan": 180 },
+        "delete":        { "daysAfterModificationGreaterThan": 2555 } },
+      "version": { "delete": { "daysAfterCreationGreaterThan": 90 } } } } } ] }
+```
+
+```bash
+az storage container create --account-name stcontosoprod -n invoices          # private
+az storage blob set-tier --account-name stcontosoprod -c invoices -n invoice-2025-01.pdf --tier Cold
+az storage account management-policy create -g rg-storage-prod --account-name stcontosoprod \
+  --policy @lifecycle.json
+```
+
+```powershell
+$ctx = (Get-AzStorageAccount -ResourceGroupName rg-storage-prod -Name stcontosoprod).Context
+New-AzStorageContainer -Name invoices -Permission Off -Context $ctx
+$blob = Get-AzStorageBlob -Container invoices -Blob invoice-2025-01.pdf -Context $ctx
+$blob.BlobClient.SetAccessTier("Cold")
+```
+
+<TryIt labs="adm-storage-accounts" text="Get refused a public container, then apply a lifecycle policy with Cool, Cold and Archive steps." />
+
+<Callout type="exam">
+Read the access pattern. "Accessed daily" is **Hot**. "Rarely accessed but must be available immediately" is **Cool** or **Cold** (Cold if it's kept 90+ days). "Can tolerate hours of latency, lowest cost" is **Archive**. "Read an archived blob" means **rehydrate** first. "Move blobs automatically" is **lifecycle management**, and "based on last read" means turning on **last access time tracking**. A container that can't be made public points to the account's **anonymous access** setting.
+</Callout>
+
+<DeepDive title="Smaller details that cost money">
+
+Changing tiers costs write operations, and reading Cool, Cold and Archive data costs more per GB. Lifecycle rules that move millions of tiny blobs can cost more than they save, so filter by prefix and consider packing small files. Versions and snapshots are billed too; give them their own delete actions in the same policy.
+
+</DeepDive>
+
+## Real-world business scenario
+
+<Scenario
+  company="Proseware Insurance (fictional)"
+  industry="Insurance"
+  problem="Seven years of claim PDFs sat in Hot storage. Almost nothing older than a month was opened, and the storage bill grew every quarter."
+  service="A private claims container in a GRS account with a lifecycle rule: Cool after 30 days, Cold after 90, Archive after 180 and delete after seven years, plus a rule deleting old versions after 90 days."
+  why="Old claims cost a fraction of Hot prices, and nobody has to move files by hand. The rare archived claim is rehydrated with High priority."
+  outcome="Storage cost for the container dropped sharply within six months, and auditors still get any claim within an hour."
+/>
+
+## When to use it and when not to
+
+<UseWhen
+  use={[
+    'Data whose use drops with age, such as invoices, logs and backups.',
+    'Compliance data you must keep for years but rarely read (Archive).',
+    'Tidying up old versions and snapshots automatically.',
+  ]}
+  avoid={[
+    'Data read unpredictably and urgently (Archive latency hurts).',
+    'Short-lived data deleted within 30 days (early deletion charges in Cool).',
+    'Zone-redundant accounts if you need Archive (not supported there).',
+  ]}
+  alternatives={[
+    '<strong>Cold tier</strong> instead of Archive when reads must be instant.',
+    '<strong>Smart, per-blob tiering by last access</strong> with enableAutoTierToHotFromCool.',
+  ]}
+/>

@@ -1,0 +1,152 @@
+{
+ "cert": "az-104",
+ "domain": 5,
+ "topic": "alerts-action-groups-processing-rules",
+ "questions": [
+  {
+   "id": "adm-ops-alr-1",
+   "type": "single",
+   "question": "You need to send an email and an SMS message to the operations team and call an ITSM webhook when any of 25 alert rules fires. The solution must minimize administrative effort when the contact details change. What should you create?",
+   "options": [
+    {
+     "text": "One action group that contains the email, SMS and webhook, and add it to each alert rule",
+     "why": "Correct. An action group is reusable, so a change to the contacts is made once."
+    },
+    {
+     "text": "An alert processing rule for each alert rule",
+     "why": "Alert processing rules modify fired alerts. They do not define notifications on their own."
+    },
+    {
+     "text": "A separate action group for each alert rule",
+     "why": "This works but increases the effort when the contact details change."
+    },
+    {
+     "text": "A diagnostic setting that sends alerts to Event Hubs",
+     "why": "Diagnostic settings route logs and metrics. They do not send email or SMS notifications."
+    }
+   ],
+   "answer": [
+    0
+   ],
+   "explanation": "Action groups contain notifications (email, SMS, push, voice, ARM role) and actions (webhook, Logic App, Function, runbook, Event Hubs, ITSM).",
+   "objective": "5.1.4"
+  },
+  {
+   "id": "adm-ops-alr-2",
+   "type": "single",
+   "question": "Patches are installed on all virtual machines in a resource group every Saturday from 22:00 to 02:00. Alerts that fire during this window must still be recorded, but no notifications must be sent. What should you configure?",
+   "options": [
+    {
+     "text": "An alert processing rule of type Suppress notifications with a recurring weekly schedule",
+     "why": "Correct. Suppression removes action groups from fired alerts during the schedule while the alerts remain visible."
+    },
+    {
+     "text": "Disable each alert rule every Saturday",
+     "why": "Disabled rules do not record alerts, and the manual effort is high."
+    },
+    {
+     "text": "Remove the action group from each alert rule",
+     "why": "This stops notifications permanently, not only during the window."
+    },
+    {
+     "text": "Lower the severity of each alert rule to Sev4",
+     "why": "Severity does not control whether action groups are called."
+    }
+   ],
+   "answer": [
+    0
+   ],
+   "explanation": "Alert processing rules support Always, At a specific time and Recurring schedules, and act on alerts after they fire.",
+   "objective": "5.1.4"
+  },
+  {
+   "id": "adm-ops-alr-3",
+   "type": "single",
+   "question": "You create an action group. The display name that you enter is rejected. What is the most likely cause?",
+   "options": [
+    {
+     "text": "The display name is longer than 12 characters",
+     "why": "Correct. The action group display name (short name) can contain up to 12 characters because it appears in SMS and email notifications."
+    },
+    {
+     "text": "The action group is not in the same region as the virtual machines",
+     "why": "Action groups are global resources."
+    },
+    {
+     "text": "The action group has no webhook action",
+     "why": "Actions are optional. An action group can contain only notifications."
+    },
+    {
+     "text": "The resource group is in a different region",
+     "why": "The resource group region does not limit the display name."
+    }
+   ],
+   "answer": [
+    0
+   ],
+   "explanation": "Choose a short, recognizable display name such as opsteam.",
+   "objective": "5.1.4"
+  },
+  {
+   "id": "adm-ops-alr-4",
+   "type": "single",
+   "question": "You must be notified when Azure reports a service incident that affects virtual machines in the regions that your subscription uses. Which type of alert rule should you create?",
+   "options": [
+    {
+     "text": "An activity log alert rule for Service Health events",
+     "why": "Correct. Service Health events are written to the activity log and can trigger activity log alerts."
+    },
+    {
+     "text": "A metric alert rule on Percentage CPU",
+     "why": "A metric alert monitors resource metrics, not Azure service incidents."
+    },
+    {
+     "text": "A log search alert rule on the Heartbeat table",
+     "why": "Heartbeats indicate whether agents report. They do not describe Azure service incidents."
+    },
+    {
+     "text": "An alert processing rule",
+     "why": "Alert processing rules modify alerts. They do not detect events."
+    }
+   ],
+   "answer": [
+    0
+   ],
+   "explanation": "Create Service Health alerts from Monitor > Service Health or as activity log alert rules filtered by service, region and event type.",
+   "objective": "5.1.4"
+  },
+  {
+   "id": "adm-ops-alr-5",
+   "type": "multi",
+   "question": "The security team must receive every Sev0 and Sev1 alert that fires in a subscription that contains more than 200 alert rules. Which two actions should you perform? Each correct answer presents part of the solution.",
+   "options": [
+    {
+     "text": "Create an alert processing rule scoped to the subscription with the Apply action group type",
+     "why": "Correct. One rule adds an action group to every matching fired alert without editing alert rules."
+    },
+    {
+     "text": "Add a filter on severity Sev0 and Sev1 to the alert processing rule",
+     "why": "Correct. Filters limit the rule to the required severities."
+    },
+    {
+     "text": "Edit each alert rule to add the security team action group",
+     "why": "This meets the requirement but requires changes to more than 200 rules."
+    },
+    {
+     "text": "Create an alert processing rule of type Suppress notifications",
+     "why": "Suppression removes notifications instead of adding them."
+    },
+    {
+     "text": "Create a diagnostic setting on the subscription",
+     "why": "Diagnostic settings export logs. They do not route alerts to an action group."
+    }
+   ],
+   "answer": [
+    0,
+    1
+   ],
+   "explanation": "Alert processing rules can apply action groups across a scope and can be filtered by severity, resource type, alert rule and other properties.",
+   "objective": "5.1.4"
+  }
+ ]
+}

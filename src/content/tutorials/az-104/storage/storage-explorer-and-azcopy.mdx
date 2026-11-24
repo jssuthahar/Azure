@@ -1,0 +1,206 @@
+---
+title: Move Data with Azure Storage Explorer and AzCopy
+seoTitle: Azure Storage Explorer and AzCopy for Admins | AZ-104
+description: Manage and move Azure Storage data with Storage Explorer, Storage browser and AzCopy copy and sync, using Microsoft Entra ID or SAS tokens, with exam tips.
+answer: >-
+  **Azure Storage Explorer** is a free desktop app (Windows, macOS, Linux) for browsing and managing blobs, files, queues and tables; it connects with **Microsoft Entra ID**, an **account name and key**, a **connection string** or a **SAS URL**, and uses AzCopy for transfers. **AzCopy** is a free command-line tool for bulk and scripted transfers: `azcopy copy` (with `--recursive`), `azcopy sync` (only what changed, optionally `--delete-destination true`), `make`, `list`, `remove` and `jobs resume`. AzCopy authenticates with **Microsoft Entra ID** (`azcopy login`, which needs a **Storage Blob Data** role, not just Owner) or a **SAS** on the URL. The portal's **Storage browser** handles quick, small jobs.
+updated: 2026-11-24
+readingMinutes: 10
+keyTerms:
+  - term: AzCopy
+    definition: A free command-line utility for copying and syncing data to, from and between Azure storage accounts.
+  - term: Azure Storage Explorer
+    definition: A free desktop app to browse and manage Azure Storage data, which uses AzCopy under the hood for transfers.
+  - term: Storage browser
+    definition: The data browser built into the storage account blade in the Azure portal.
+  - term: azcopy sync
+    definition: A command that compares source and destination and copies only new or changed files, optionally deleting extras at the destination.
+  - term: Server-to-server copy
+    definition: An AzCopy copy between two storage accounts where the data moves directly between them, not through the machine running AzCopy.
+  - term: Storage Blob Data Contributor
+    definition: An Azure RBAC data role that allows reading, writing and deleting blob data with Microsoft Entra ID.
+interview:
+  - level: beginner
+    q: When would you use AzCopy instead of the portal?
+    a: >-
+      For anything more than a handful of files, or anything I want to repeat. AzCopy runs many transfers in parallel, can resume a job that broke halfway, can sync only changes, and fits in a script or a scheduled task. The portal is fine for uploading three PDFs.
+    followUps: []
+  - level: intermediate
+    q: You run azcopy login and then azcopy copy, and get a 403 AuthorizationPermissionMismatch, even though you're Owner of the subscription. Why?
+    a: >-
+      Owner is a management role. With azcopy login, AzCopy sends my Microsoft Entra token, and Blob Storage checks data roles. I need Storage Blob Data Contributor (or Owner) on the account or container, and it can take a few minutes to apply. Or I can use a SAS on the URL instead.
+    followUps: []
+  - level: experienced
+    q: How do you copy a container between two storage accounts without downloading it?
+    a: >-
+      azcopy copy with both URLs, the source with a SAS that allows read and list, the destination with a SAS that allows write and create, or Entra ID on both. AzCopy uses server-to-server APIs, so the data flows between the accounts and my machine only coordinates the job.
+    followUps: []
+  - level: scenario
+    q: A nightly job must keep a folder of PDFs on a file server mirrored to a blob container, including removing files that were deleted locally. What do you run?
+    a: >-
+      azcopy sync from the local folder to the container URL with --delete-destination true, authenticated with a managed identity (azcopy login --identity) that has Storage Blob Data Contributor, or a SAS. Sync compares last-modified times, so each night only the changes move.
+    followUps: []
+revision:
+  keyPoints:
+    - Storage Explorer connects via Entra ID, account key, connection string, SAS URL or the Azurite emulator.
+    - AzCopy auth = Microsoft Entra ID (azcopy login) or a SAS appended to the URL.
+    - Entra ID with AzCopy needs a Storage Blob Data role. Owner alone isn't enough.
+    - azcopy copy --recursive for folders; azcopy sync for changes only.
+    - Server-to-server copies don't pass data through your machine.
+    - AzCopy is preinstalled in Azure Cloud Shell.
+  mistakes:
+    - Assuming subscription Owner can read blob data through AzCopy or Storage browser with Entra ID.
+    - Using azcopy copy every night and re-sending everything instead of azcopy sync.
+    - Forgetting --recursive when copying a folder.
+  examTips:
+    - '"Copy millions of files, scriptable, resumable" = **AzCopy**.'
+    - '"GUI for admins to manage blobs, queues, tables and files" = **Storage Explorer**.'
+    - '"Only copy what changed" = **azcopy sync**.'
+  quick:
+    - q: Which two ways can AzCopy authenticate to Blob Storage?
+      a: Microsoft Entra ID (azcopy login) or a SAS token.
+    - q: Which flag copies a folder and its subfolders?
+      a: --recursive
+    - q: Which flag makes azcopy sync delete files missing from the source?
+      a: --delete-destination true
+    - q: What role does an Entra identity need to upload blobs with AzCopy?
+      a: Storage Blob Data Contributor (or Owner).
+    - q: Which tool does Storage Explorer use for transfers?
+      a: AzCopy.
+references:
+  - title: Get started with AzCopy
+    url: https://learn.microsoft.com/azure/storage/common/storage-use-azcopy-v10
+  - title: Authorize access to blobs and files with AzCopy and Microsoft Entra ID
+    url: https://learn.microsoft.com/azure/storage/common/storage-use-azcopy-authorize-azure-active-directory
+  - title: Synchronize with Azure Blob storage by using AzCopy
+    url: https://learn.microsoft.com/azure/storage/common/storage-use-azcopy-blobs-synchronize
+  - title: Get started with Storage Explorer
+    url: https://learn.microsoft.com/azure/storage/storage-explorer/vs-azure-tools-storage-manage-with-storage-explorer
+related:
+  - sas-tokens-and-stored-access-policies
+  - storage-redundancy-and-object-replication
+  - blob-containers-tiers-and-lifecycle
+---
+
+## Start with a question
+
+<Story question="How do you move a house full of boxes: one at a time in your car, or with a moving truck?">
+
+For three boxes, your car is fine. For a whole house, you hire a truck with a crew that loads many boxes at once and can pick up where they stopped if it rains.
+
+In Azure Storage, the portal's **Storage browser** is your car. **Azure Storage Explorer** is a comfortable van you drive with a mouse. **AzCopy** is the moving truck: a command-line tool built for big, repeatable, resumable moves.
+
+</Story>
+
+## Explain it like I'm 10
+
+<Eli10>
+
+You need to put 1,000 books on the new library shelves.
+
+You could carry them one by one (the portal).
+
+Or use a trolley you push around (Storage Explorer).
+
+Or tell a team of robots "move every book from this room to that shelf, and tomorrow move only the new ones" (AzCopy).
+
+The robots need a pass to get in: your school ID with the right badge, or a signed permission slip.
+
+</Eli10>
+
+## The technical explanation
+
+### Storage browser and Storage Explorer
+
+The portal's **Storage browser** (on every storage account) lets you browse containers, file shares, queues and tables, upload, download, change tiers and generate SAS tokens. Watch the **authentication method**: with *Microsoft Entra user account* you need a data role; with *Access key* you need permission to list keys.
+
+**Azure Storage Explorer** is the desktop version, free for Windows, macOS and Linux. You can open it from the portal with **Open in Explorer**. It connects to:
+
+- a **subscription**, by signing in with Microsoft Entra ID,
+- one **storage account or service**, with a connection string, an account name and key, or a **SAS URL** (handy for partners: they see only what the SAS allows),
+- the **local emulator** (Azurite).
+
+It manages blobs (including tiers, snapshots, soft-deleted blobs and versions), file shares, queues, tables, access policies and Data Lake ACLs. Big uploads and downloads run through **AzCopy** inside it.
+
+### AzCopy
+
+AzCopy v10 is a single executable, already installed in **Azure Cloud Shell**. It's built for scale: parallel transfers, automatic retries, job plans you can resume, and server-to-server copies.
+
+| Command | Use |
+| --- | --- |
+| `azcopy login` | Sign in with Microsoft Entra ID (`--identity` for a managed identity) |
+| `azcopy make` | Create a container or file share |
+| `azcopy copy` (`cp`) | Copy files or blobs; add `--recursive` for folders |
+| `azcopy sync` | Copy only new or changed files; `--delete-destination true` removes extras |
+| `azcopy list` / `remove` | List or delete blobs |
+| `azcopy jobs list` / `jobs resume` | See and restart jobs |
+
+Useful flags: `--include-pattern "*.pdf"`, `--block-blob-tier Cool`, `--dry-run`, `--put-md5`.
+
+**Authorization** is either:
+
+1. **Microsoft Entra ID**: `azcopy login`. Blob Storage then checks **data roles**: **Storage Blob Data Reader** to read, **Storage Blob Data Contributor** or **Owner** to write. Subscription Owner isn't enough. Role assignments can take a few minutes to apply.
+2. **SAS token** appended to the URL, which needs no role.
+
+AzCopy doesn't take an account key directly for Blob Storage; use a SAS or Entra ID.
+
+```bash
+# Entra ID: sign in, then copy a folder (needs Storage Blob Data Contributor)
+azcopy login
+azcopy copy "./hr-docs/*" "https://stcontosoprod.blob.core.windows.net/hr-archive" --recursive
+
+# SAS: no role needed, short expiry, HTTPS only
+SAS=$(az storage container generate-sas --account-name stcontosoprod -n hr-archive \
+  --permissions acwl --expiry 2026-11-25T18:00Z --https-only -o tsv)
+azcopy copy "./hr-docs/*" "https://stcontosoprod.blob.core.windows.net/hr-archive?$SAS" --recursive
+
+# Nightly mirror: only changes, and remove what was deleted locally
+azcopy sync "./hr-docs" "https://stcontosoprod.blob.core.windows.net/hr-archive?$SAS" --delete-destination true
+
+# Account to account (server to server)
+azcopy copy "https://stcontosoprod.blob.core.windows.net/photos?<SAS>" \
+  "https://streplicaweu.blob.core.windows.net/photos?<SAS>" --recursive
+```
+
+<TryIt labs="adm-storage-files-azcopy" text="Sign AzCopy in and get a 403, then copy with a SAS and run azcopy sync." />
+
+<Callout type="exam">
+"Bulk copy, scriptable, resumable" is **AzCopy**. "Graphical tool for blobs, files, queues and tables on a Mac" is **Storage Explorer**. "Only transfer changed files" is **azcopy sync**. "An admin who is Owner gets 403 with azcopy login" means a missing **Storage Blob Data** role. And for tens of terabytes over a slow link, the answer is **Azure Data Box**, not AzCopy.
+</Callout>
+
+<DeepDive title="Performance and logs">
+
+AzCopy picks a concurrency level based on CPU count; set `AZCOPY_CONCURRENCY_VALUE` to tune it, and `azcopy benchmark` to test throughput. Every job writes a log and a plan file under `~/.azcopy`, which is how `azcopy jobs resume` knows what's already done. Copying between accounts keeps the data on the Azure network, so it's fast and your bandwidth doesn't matter.
+
+</DeepDive>
+
+## Real-world business scenario
+
+<Scenario
+  company="Tailwind Traders (fictional)"
+  industry="Retail"
+  problem="Twenty years of scanned delivery notes (about 2 million PDFs) sat on an ageing file server. Uploading through the portal kept timing out."
+  service="AzCopy on the file server, signed in with a managed identity that has Storage Blob Data Contributor, running azcopy copy --recursive once and then azcopy sync every night until cut-over. Admins use Storage Explorer to spot-check folders."
+  why="Parallel, resumable transfers finished the bulk copy over a weekend, and nightly sync moved only that day's new scans."
+  outcome="The file server was switched off a month early, and the scripts now run as a scheduled task for other sites."
+/>
+
+## When to use it and when not to
+
+<UseWhen
+  use={[
+    'Bulk uploads, downloads or account-to-account copies (AzCopy).',
+    'Repeating jobs such as nightly sync from on-premises (azcopy sync).',
+    'Admins who prefer a GUI for browsing and fixing data (Storage Explorer).',
+  ]}
+  avoid={[
+    'Tens of terabytes over a slow connection (Azure Data Box).',
+    'Continuous copying of new blobs between accounts with no scheduler (object replication).',
+    'Keeping on-premises file servers in sync with a share as a cache (Azure File Sync).',
+  ]}
+  alternatives={[
+    '<strong>Azure Data Box</strong> for offline bulk transfer.',
+    '<strong>Object replication</strong> for automatic blob copies between accounts.',
+    '<strong>Azure File Sync</strong> for file servers with cloud tiering.',
+  ]}
+/>

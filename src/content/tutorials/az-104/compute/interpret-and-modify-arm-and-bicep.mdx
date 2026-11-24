@@ -1,0 +1,244 @@
+---
+title: Read and Modify ARM Templates and Bicep Files
+seoTitle: Read and Modify ARM Templates and Bicep Files | AZ-104
+description: Learn to read an ARM template and a Bicep file part by part, then change parameters, allowed values, variables and resources safely for AZ-104.
+answer: >-
+  An **ARM template** (JSON) and a **Bicep file** describe the same thing: the Azure resources you want. Both have **parameters** (inputs), **variables** (values worked out once), **resources** (type, API version, name, location, properties) and **outputs**. Bicep is shorter and the CLI compiles it to ARM JSON before **Azure Resource Manager** deploys it. To modify a template, change a parameter's **default value** or **allowed values**, add a parameter, or edit a resource's properties, then preview the result with **what-if**.
+updated: 2026-11-24
+readingMinutes: 11
+keyTerms:
+  - term: ARM template
+    definition: A JSON file that declares Azure resources for Azure Resource Manager to deploy.
+  - term: Bicep
+    definition: A shorter language for the same templates. It compiles to ARM JSON before deployment.
+  - term: Parameter
+    definition: An input to a template, such as a storage account name or a SKU, supplied at deployment time or taken from a default.
+  - term: Variable
+    definition: A value worked out once inside the template and reused, such as a tags object.
+  - term: Output
+    definition: A value the deployment returns, such as an endpoint URL or a resource ID.
+  - term: Decorator
+    definition: A Bicep annotation on a parameter, such as @allowed, @minLength or @secure.
+  - term: Template expression
+    definition: In ARM JSON, a value in square brackets that Resource Manager evaluates, such as [parameters('skuName')].
+  - term: Symbolic name
+    definition: The name you give a resource inside a Bicep file (for example st) so other parts can reference it.
+interview:
+  - level: beginner
+    q: What are the main sections of an ARM template?
+    a: >-
+      $schema and contentVersion at the top, then parameters, variables, resources and outputs. Functions is optional too. Resources is the only one that does real work: each entry has a type, an apiVersion, a name, a location and its properties.
+    followUps: []
+  - level: intermediate
+    q: How would you stop people deploying a Premium storage account from your template?
+    a: >-
+      I'd restrict the SKU parameter. In ARM JSON that's allowedValues on the parameter, in Bicep it's the @allowed decorator. Resource Manager rejects any other value during validation, before anything is created. If I need it enforced for everyone, not only people using my template, that's an Azure Policy job.
+    followUps: []
+  - level: experienced
+    q: What's the practical difference between a resource's symbolic name and its name in Bicep?
+    a: >-
+      The symbolic name, like st, only exists inside the file. I use it to reference the resource, for example st.id or st.properties.primaryEndpoints.blob, and Bicep works out dependsOn for me. The name property is the real Azure resource name that shows up in the portal.
+    followUps: []
+  - level: scenario
+    q: A colleague hands you a template and says it creates a VM. How do you check what it really does before you run it?
+    a: >-
+      I read the parameters to see what I have to supply and what the defaults are, then the resources section for every type it creates, including the NIC, public IP and NSG. Then I run az deployment group what-if against a test resource group, which lists each create, modify and delete without changing anything.
+    followUps: []
+revision:
+  keyPoints:
+    - Templates are declarative. You describe the end state; Resource Manager works out the steps.
+    - ARM JSON sections are parameters, variables, resources and outputs (plus $schema and contentVersion).
+    - Bicep uses param, var, resource and output keywords and compiles to ARM JSON.
+    - allowedValues (JSON) and @allowed (Bicep) restrict input; validation fails before anything is created.
+    - ARM expressions live in square brackets, such as [parameters('name')] and [resourceGroup().location].
+  mistakes:
+    - Thinking Bicep deploys something different from ARM JSON. It compiles to the same JSON.
+    - Editing a resource name in a template and expecting Azure to rename the old resource. It creates a new one.
+  examTips:
+    - '"Which value will be used?" = the value passed at deployment, otherwise the **defaultValue**.'
+    - '"Only allow certain SKUs in the template" = **allowedValues** or **@allowed**.'
+    - '"Location of the resource group" = **resourceGroup().location**.'
+  quick:
+    - q: Which ARM template section holds the resources to deploy?
+      a: resources.
+    - q: Which Bicep decorator limits a parameter to a list of values?
+      a: '@allowed.'
+    - q: What does the CLI do with a .bicep file before deployment?
+      a: It compiles it to an ARM JSON template.
+    - q: Which function returns the resource group's region?
+      a: resourceGroup().location.
+    - q: Which Bicep decorator hides a parameter value such as a password?
+      a: '@secure().'
+references:
+  - title: Understand the structure and syntax of ARM templates
+    url: https://learn.microsoft.com/azure/azure-resource-manager/templates/syntax
+  - title: Bicep file structure and syntax
+    url: https://learn.microsoft.com/azure/azure-resource-manager/bicep/file
+  - title: Parameters in Bicep
+    url: https://learn.microsoft.com/azure/azure-resource-manager/bicep/parameters
+  - title: Template functions in ARM templates
+    url: https://learn.microsoft.com/azure/azure-resource-manager/templates/template-functions
+related:
+  - deploy-and-export-templates
+  - create-and-size-virtual-machines
+---
+
+## Start with a question
+
+<Story question="How do you build the same thing twice and get exactly the same result?">
+
+Think of flat-pack furniture. The instructions list the parts, the measurements you can choose ("shelf height: 30, 40 or 50 cm") and the finished piece. Follow them twice and you get two identical bookcases.
+
+A **template** is that instruction sheet for Azure. It lists the resources, the choices you're allowed to make (**parameters**) and what you get back at the end (**outputs**). AZ-104 expects you to read one, in **ARM JSON** or **Bicep**, and change it without breaking it.
+
+</Story>
+
+## Explain it like I'm 10
+
+<Eli10>
+
+Imagine ordering a pizza with a form.
+
+The boxes you fill in, like size and toppings, are **parameters**. The shop's rule "only small, medium or large" is the **allowed values** list.
+
+The kitchen reads the form and makes the pizza. That's **Azure Resource Manager** building your **resources**.
+
+The receipt with your order number is the **output**.
+
+</Eli10>
+
+## The technical explanation
+
+Both formats are **declarative**: you describe what should exist, not the clicks to make it. Resource Manager compares that with what's already there and does the rest.
+
+### The same storage account in both formats
+
+```bicep
+@minLength(3)
+@maxLength(24)
+param storageName string
+
+param location string = resourceGroup().location
+
+@allowed([
+  'Standard_LRS'
+  'Standard_ZRS'
+  'Standard_GRS'
+])
+param skuName string = 'Standard_LRS'
+
+var tags = {
+  env: 'prod'
+  owner: 'platform-team'
+}
+
+resource st 'Microsoft.Storage/storageAccounts@2023-05-01' = {
+  name: storageName
+  location: location
+  sku: { name: skuName }
+  kind: 'StorageV2'
+  tags: tags
+}
+
+output blobEndpoint string = st.properties.primaryEndpoints.blob
+```
+
+```json
+{
+  "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+  "contentVersion": "1.0.0.0",
+  "parameters": {
+    "storageName": { "type": "string", "minLength": 3, "maxLength": 24 },
+    "location": { "type": "string", "defaultValue": "[resourceGroup().location]" },
+    "skuName": {
+      "type": "string",
+      "defaultValue": "Standard_LRS",
+      "allowedValues": [ "Standard_LRS", "Standard_ZRS", "Standard_GRS" ]
+    }
+  },
+  "variables": { "tags": { "env": "prod", "owner": "platform-team" } },
+  "resources": [{
+    "type": "Microsoft.Storage/storageAccounts",
+    "apiVersion": "2023-05-01",
+    "name": "[parameters('storageName')]",
+    "location": "[parameters('location')]",
+    "sku": { "name": "[parameters('skuName')]" },
+    "kind": "StorageV2",
+    "tags": "[variables('tags')]"
+  }],
+  "outputs": {
+    "blobEndpoint": { "type": "string", "value": "[reference(parameters('storageName')).primaryEndpoints.blob]" }
+  }
+}
+```
+
+### Reading it part by part
+
+| Part | ARM JSON | Bicep | What to look for |
+| --- | --- | --- | --- |
+| Inputs | `"parameters": {}` | `param name type = default` | Type, default value, allowed values, min/max length |
+| Worked-out values | `"variables": {}` | `var name = …` | Values built from parameters, such as names and tags |
+| Resources | `"resources": []` | `resource sym 'type@api' = {}` | Type, API version, name, location, SKU, properties |
+| Results | `"outputs": {}` | `output name type = …` | What the deployment hands back |
+| Expressions | `"[parameters('x')]"` | `x` | Square brackets mean "evaluate this" in JSON |
+| Dependencies | `dependsOn` | inferred from references | In Bicep, `plan.id` inside another resource creates the dependency |
+
+A few functions turn up everywhere: `resourceGroup().location`, `uniqueString(resourceGroup().id)` for unique names, `concat()` or Bicep string interpolation `'st${prefix}'`, and `resourceId()` in JSON.
+
+**Which value wins?** A value passed at deployment time (on the command line or in a parameters file) beats the default. No default and no value means validation fails.
+
+### Modifying a template safely
+
+The exam shows you a template and asks what to change. The usual edits:
+
+- **Allow a new SKU**: add it to `allowedValues` (JSON) or `@allowed` (Bicep). Change `defaultValue` or `= 'value'` if it should become the default.
+- **Make a hard-coded value configurable**: add a parameter and replace the literal with `[parameters('x')]` or `x`.
+- **Add a resource**: a new entry in `resources` (or a new `resource` block) with type, API version, name and location. If it needs another resource, reference it (Bicep) or add `dependsOn` (JSON).
+- **Protect secrets**: `"type": "securestring"` in JSON, `@secure()` in Bicep. The value isn't logged in deployment history.
+- **Pass values in a file**: a JSON parameters file, or a `.bicepparam` file that starts with `using 'main.bicep'`.
+
+Watch out for one trap: changing a resource's `name` doesn't rename anything. Resource Manager creates a second resource with the new name and, in the default mode, leaves the old one where it is.
+
+In the portal, **Deploy a custom template › Build your own template in the editor** lets you paste or load JSON, edit it and see a parameter form built from it. For Bicep, edit the file in VS Code with the Bicep extension or in Cloud Shell's editor.
+
+<TryIt labs="adm-vm-bicep" text="Read storage.bicep, break its @allowed list, change its default SKU with sed and deploy it." />
+
+<Callout type="exam">
+Expect a template on screen and a question like "which SKU will be used?" or "what must you change so admins can pick Standard_ZRS?". Read the **parameters** first: a passed value beats `defaultValue`, and anything outside **allowedValues** fails validation before deployment. `[resourceGroup().location]` puts the resource in the group's region. In Bicep, look for `@allowed`, `@secure()` and string interpolation with `${}`.
+</Callout>
+
+<DeepDive title="Why Bicep is usually the better file to edit">
+
+Bicep removes most of the punctuation and the `[ ]` expression strings, infers `dependsOn` from references, and gives you type checking in VS Code before you deploy. Modules (`module net 'network.bicep' = { … }`) split big deployments into reusable files. Because it compiles to the same JSON, nothing changes for Resource Manager: day-one support for new resource types and API versions applies to both. Keep JSON when another tool generates it or a vendor ships it that way, and use `az bicep decompile` when you want to take one over.
+
+</DeepDive>
+
+## Real-world business scenario
+
+<Scenario
+  company="Contoso Retail (fictional)"
+  industry="Retail"
+  problem="Each store team created its own log storage account by hand. Some picked Premium, some forgot TLS 1.2, and nobody could tell which settings were right."
+  service="One Bicep file with storageName and skuName parameters, an @allowed list of Standard_LRS, Standard_ZRS and Standard_GRS, a tags variable and minimumTlsVersion set in the resource. When the platform team decided zone redundancy should be the default, they changed one line: param skuName string = 'Standard_ZRS'."
+  why="Inputs are limited to safe choices, the defaults carry the company's decision, and every account is built from the same reviewed file."
+  outcome="New accounts take minutes, none are Premium by accident, and a change to the standard is a one-line pull request."
+/>
+
+## When to use it and when not to
+
+<UseWhen
+  use={[
+    'You deploy the same kind of resources more than once, such as per store, per team or per environment.',
+    'You want infrastructure changes reviewed like code before they happen.',
+    'You need to know exactly how a resource was configured, months later.',
+  ]}
+  avoid={[
+    'A quick test resource you\'ll delete in an hour. The portal is faster.',
+    'Enforcing rules on people who don\'t use your template. That needs Azure Policy.',
+  ]}
+  alternatives={[
+    '<strong>Azure Policy</strong> to enforce allowed SKUs or regions for everyone.',
+    '<strong>Template specs</strong> to share a reviewed template inside your organisation.',
+    '<strong>Terraform</strong> if your team already standardises on it across clouds.',
+  ]}
+/>

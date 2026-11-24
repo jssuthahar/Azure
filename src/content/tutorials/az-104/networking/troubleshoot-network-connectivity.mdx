@@ -1,0 +1,201 @@
+---
+title: Troubleshoot Virtual Network Connectivity
+seoTitle: Troubleshoot Azure VNet Connectivity | AZ-104
+description: Troubleshoot Azure VNet connectivity step by step with effective routes, effective security rules, IP flow verify, next hop and connection troubleshoot.
+answer: >-
+  When VM A can't reach B, check in order: **routing**, then **NSGs**, then **name resolution**, then the **app**. **Azure Network Watcher** (enabled automatically per region) has a tool for each question. **Connection troubleshoot** tests A to B on a port and reports the failing hop. **Next hop** and the NIC's **effective routes** show where a packet goes (next hop **None** means it's dropped, often because **peering isn't transitive**). **IP flow verify** and **effective security rules** name the **NSG rule** that allows or denies a flow. Also check peering state (**Connected**), **IP forwarding** on NVAs, overlapping ranges and DNS.
+updated: 2026-11-24
+readingMinutes: 11
+keyTerms:
+  - term: Azure Network Watcher
+    definition: A regional service with network diagnostic and monitoring tools, enabled automatically when you create a VNet in a region.
+  - term: IP flow verify
+    definition: Tests whether a single flow (protocol, local IP:port, remote IP:port, direction) to or from a VM is allowed, and names the NSG rule that decides.
+  - term: Next hop
+    definition: Shows the next hop type, next hop IP and route table for a packet from a VM to a destination IP.
+  - term: Connection troubleshoot
+    definition: Tests connectivity from a VM to another VM, IP or FQDN on a port and reports reachability, latency and the hop where it fails.
+  - term: Effective routes
+    definition: The combined system, BGP and user-defined routes applied to a NIC, with each route's state.
+  - term: NSG diagnostics
+    definition: A Network Watcher tool that evaluates NSG rules for a traffic pattern across the NSGs on its path.
+interview:
+  - level: beginner
+    q: A VM can't reach another VM. What's the first tool you'd use?
+    a: >-
+      Connection troubleshoot in Network Watcher. It tests the real path on the port I care about and tells me whether it's reachable, and if not, which hop failed, which points me at routes or NSGs.
+    followUps: []
+  - level: intermediate
+    q: What's the difference between IP flow verify and next hop?
+    a: >-
+      IP flow verify answers "is this flow allowed?" by checking NSG rules and naming the rule. Next hop answers "where does this packet go?" by checking routes and returning the next hop type, like VirtualAppliance, Internet or None. One is security, the other is routing.
+    followUps: []
+  - level: experienced
+    q: Next hop returns None between two spokes. What does that tell you?
+    a: >-
+      There's no route to the destination, so Azure drops the packet. Between spokes that are only peered to a hub, that's non-transitive peering. I'd either peer them directly or add UDRs on both spokes to a hub NVA, turn on IP forwarding on the NVA and allow forwarded traffic on the peerings.
+    followUps: []
+  - level: scenario
+    q: After adding a firewall in the hub, spoke VMs lost access to each other. Routes point at the firewall. Walk through your checks.
+    a: >-
+      Next hop from a spoke VM should say VirtualAppliance with the firewall IP. Then I check IP forwarding on the firewall's NIC if it's an NVA, the return route in the other spoke so traffic is symmetric, allow forwarded traffic on the spoke peerings, and the firewall's own rules. Connection troubleshoot then confirms which hop still fails.
+    followUps: []
+revision:
+  keyPoints:
+    - Order - routes, NSGs, DNS, then the app.
+    - Connection troubleshoot = end-to-end test with the failing hop.
+    - Next hop / effective routes = where the packet goes. None = dropped.
+    - IP flow verify / effective security rules = which NSG rule allows or denies.
+    - Common causes - non-transitive peering, missing IP forwarding, one-sided peering, NIC NSG, missing private DNS link.
+  mistakes:
+    - Editing NSGs when the real problem is a route (next hop None).
+    - Forgetting the return path through a stateful firewall.
+    - Testing from Cloud Shell, which isn't inside your VNet.
+  examTips:
+    - '"Which NSG rule blocks the traffic?" = **IP flow verify** (or effective security rules).'
+    - '"Is traffic sent to the NVA?" = **Next hop**.'
+    - '"Test VM to FQDN on port 1433 and find the failing hop" = **Connection troubleshoot**.'
+  quick:
+    - q: Which tool names the NSG rule that denied a flow?
+      a: IP flow verify.
+    - q: What does next hop type None mean?
+      a: The packet is dropped because no route sends it anywhere.
+    - q: Where do you see all routes applied to a VM?
+      a: Effective routes on its network interface.
+    - q: Is Network Watcher enabled automatically?
+      a: Yes, per region, in the NetworkWatcherRG resource group.
+    - q: Which CLI command runs connection troubleshoot?
+      a: az network watcher test-connectivity.
+references:
+  - title: What is Azure Network Watcher?
+    url: https://learn.microsoft.com/azure/network-watcher/network-watcher-overview
+  - title: IP flow verify overview
+    url: https://learn.microsoft.com/azure/network-watcher/ip-flow-verify-overview
+  - title: Next hop overview
+    url: https://learn.microsoft.com/azure/network-watcher/next-hop-overview
+  - title: Connection troubleshoot overview
+    url: https://learn.microsoft.com/azure/network-watcher/connection-troubleshoot-overview
+  - title: Troubleshoot Azure virtual network peering issues
+    url: https://learn.microsoft.com/troubleshoot/azure/virtual-network/virtual-network-troubleshoot-peering-issues
+related:
+  - user-defined-routes
+  - nsgs-asgs-and-effective-rules
+  - configure-vnet-peering
+---
+
+## Start with a question
+
+<Story question="Your parcel never arrived. Do you blame the courier, the address or the security guard?">
+
+You check in order. Did it leave the depot and which van took it? Was the address right? Did the building's security turn the driver away? Each question has someone who knows the answer, and guessing wastes a day.
+
+Network problems are the same. **Routes** decide which van, **DNS** decides the address and **NSGs** are the security guard. **Azure Network Watcher** gives you a tool for each, so you stop guessing and read the answer.
+
+</Story>
+
+## Explain it like I'm 10
+
+<Eli10>
+
+A ball won't reach your friend across the playground.
+
+Maybe there's no path, because a fence is in the way. Maybe a teacher said "no balls past this line". Maybe you threw it to the wrong friend.
+
+You check the path, then the rules, then the name. One at a time.
+
+</Eli10>
+
+## The technical explanation
+
+### Work through the layers
+
+| Question | Tool | What a bad answer looks like |
+| --- | --- | --- |
+| Can A reach B on port X at all? | **Connection troubleshoot** (`az network watcher test-connectivity`) | Unreachable, with the hop that failed |
+| Where does the packet go? | **Next hop** (`show-next-hop`), **Effective routes** on the NIC | None, Internet when you expected VirtualAppliance, a wrong appliance IP |
+| Which NSG rule decides? | **IP flow verify** (`test-ip-flow`), **Effective security rules**, **NSG diagnostics** | Deny with the rule name, such as DenyAllInBound on the NIC NSG |
+| Does the name resolve right? | `nslookup` from a VM in the VNet | Public IP for a private endpoint, NXDOMAIN for a private zone |
+| Is it the app? | Packet capture, the VM's own firewall and logs | Port not listening |
+
+**Network Watcher** is enabled automatically in each region where you have a VNet (resources live in **NetworkWatcherRG**). Most tools need the VM running and the **Network Watcher agent** extension for packet capture and connection troubleshoot. Monitoring tools such as **Connection monitor** and **VNet flow logs** belong to the monitoring domain; here we troubleshoot one problem at a time.
+
+### Classic causes
+
+| Symptom | Cause | Fix |
+| --- | --- | --- |
+| Spoke 1 can't reach spoke 2, next hop None | Peering isn't transitive | Peer them, or UDRs to a hub NVA on both sides |
+| Peering shows Initiated | Only one side created | Create the other link |
+| Peering won't create | Overlapping address spaces | Re-address one VNet |
+| Packets die at the NVA | IP forwarding off, or no return route | Enable IP forwarding (NIC and OS), add the mirror route |
+| NVA forwards into a spoke but it's dropped | Peering doesn't allow forwarded traffic | Allow forwarded traffic on the spoke's peering |
+| Allowed on the subnet, still blocked | NIC-level NSG | Fix or remove the NIC NSG |
+| Load balancer backend Down | Probe blocked or wrong port/path | Allow AzureLoadBalancer, fix the probe |
+| Private endpoint ignored | No privatelink DNS zone or VNet link | Link the zone, add a DNS zone group |
+
+### Portal and CLI
+
+Portal: **Network Watcher → Network diagnostic tools → Connection troubleshoot / IP flow verify / Next hop / Effective security rules**. On a NIC: **Help → Effective routes** and **Effective security rules**. From a VM: **Help → Connection troubleshoot**.
+
+```bash
+az network watcher test-connectivity -g rg-net-hub --source-resource vm-app1 --dest-address 10.2.1.4 --dest-port 443
+az network watcher show-next-hop -g rg-net-hub --vm vm-app1 --source-ip 10.1.1.4 --dest-ip 10.2.1.4
+az network watcher test-ip-flow -g rg-net-hub --vm vm-app2 --direction Inbound --protocol TCP \
+  --local 10.2.1.4:443 --remote 10.1.1.4:50000
+az network nic show-effective-route-table -g rg-net-hub -n nic-app1 -o table
+az network nic list-effective-nsg -g rg-net-hub -n nic-app2
+```
+
+PowerShell: `Test-AzNetworkWatcherConnectivity`, `Get-AzNetworkWatcherNextHop`, `Test-AzNetworkWatcherIPFlow`, `Get-AzEffectiveRouteTable`.
+
+<Flow
+  caption="A troubleshooting session that ends well"
+  steps={[
+    { title: 'Test', text: 'Connection troubleshoot: Unreachable, next hop None.' },
+    { title: 'Route', text: 'Effective routes: 10.2.0.0/16 only matches 10.0.0.0/8 → None. Add UDRs to the hub NVA.' },
+    { title: 'Forward', text: 'Still failing at the NVA: turn on IP forwarding.' },
+    { title: 'Rule', text: 'IP flow verify on the target: AllowVnetInBound. Retest: Reachable.' },
+  ]}
+/>
+
+<TryIt labs="adm-net-hub-spoke" text="Watch spoke-to-spoke traffic fail with next hop None, then fix it with routes through an NVA." />
+
+<Callout type="exam">
+Match the question to the tool. "Which security rule blocks it?" is **IP flow verify** (or effective security rules). "Does traffic go to the virtual appliance?" is **Next hop**. "Test from VM1 to an FQDN on a port and see where it fails" is **Connection troubleshoot**. "Capture traffic for analysis" is **Packet capture**. If the scenario involves three VNets in a chain, the answer is usually **non-transitive peering**.
+</Callout>
+
+<DeepDive title="Why Cloud Shell can't test your VNet">
+
+Cloud Shell runs in a Microsoft-managed container outside your VNet (unless you deploy it into a VNet), so `nslookup` or `curl` from it tests the public internet path, not what your VMs see. Network Watcher tools run from the VM's NIC, which is why they give the real answer for private endpoints, private zones and UDRs.
+
+</DeepDive>
+
+## Real-world business scenario
+
+<Scenario
+  company="Wide World Importers (fictional)"
+  industry="Wholesale"
+  problem="After a firewall migration, the order API in one spoke couldn't reach the inventory database in another. The app, database and network teams spent two days each proving it wasn't their fault."
+  service="A runbook built on Network Watcher: connection troubleshoot from the API VM, next hop, effective routes and IP flow verify. Next hop showed VirtualAppliance to the old firewall IP; the route table still pointed there."
+  why="Each tool answers one question with evidence, so the team found the stale route in ten minutes instead of arguing."
+  outcome="The route was updated, connection troubleshoot showed Reachable, and the runbook is now the first step for every connectivity ticket."
+/>
+
+## When to use it and when not to
+
+<UseWhen
+  use={[
+    'Any "can\'t connect" ticket between VMs, PaaS endpoints or on-premises.',
+    'Proving a route or NSG change worked before closing a change request.',
+    'Checking why a load balancer backend or private endpoint is ignored.',
+  ]}
+  avoid={[
+    'Testing VNet paths from Cloud Shell or your laptop.',
+    'Changing NSGs before you know routing is fine.',
+    'Using one-off tools for ongoing monitoring. Use Connection monitor for that.',
+  ]}
+  alternatives={[
+    '<strong>Connection monitor</strong> for continuous reachability and latency tests with alerts.',
+    '<strong>VNet flow logs and Traffic analytics</strong> to see who talked to whom over time.',
+    '<strong>Azure Monitor Network Insights</strong> for a health view across network resources.',
+  ]}
+/>

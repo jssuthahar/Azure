@@ -1,0 +1,214 @@
+---
+title: Storage Firewalls and Virtual Network Rules
+seoTitle: Azure Storage Firewall and Virtual Network Rules | AZ-104
+description: Lock an Azure storage account to selected networks with default action Deny, virtual network rules, IP rules and trusted service exceptions, for AZ-104.
+answer: >-
+  The **storage firewall** controls which networks can reach a storage account's public endpoint. Set the **default action** to **Deny** (in the portal, *Enabled from selected virtual networks and IP addresses*) and only these get in: subnets added as **virtual network rules** (they use the **Microsoft.Storage service endpoint**), public addresses in **IP rules**, specific **resource instances**, and **trusted Azure services** if you tick that exception. The firewall is checked before authorization, so a valid key or SAS from a blocked network still gets **403**.
+updated: 2026-11-24
+readingMinutes: 11
+keyTerms:
+  - term: Default action
+    definition: What the storage firewall does with a request that matches no rule. Allow (the default) or Deny.
+  - term: Virtual network rule
+    definition: A firewall rule that allows traffic from one subnet, which needs the Microsoft.Storage service endpoint turned on.
+  - term: IP network rule
+    definition: A firewall rule that allows a public IPv4 address or CIDR range, such as an office's internet range.
+  - term: Trusted services exception
+    definition: A firewall exception that lets listed Azure services, such as Azure Backup and Event Grid, reach the account even when the default action is Deny.
+  - term: Resource instance rule
+    definition: A firewall rule that lets one specific Azure resource, identified by its managed identity, reach the account.
+  - term: Service endpoint
+    definition: A subnet setting that sends traffic for an Azure service over the Azure backbone and tells the service which subnet it came from.
+interview:
+  - level: beginner
+    q: What does setting a storage account firewall to Deny actually do?
+    a: >-
+      It changes the default for requests that don't match a rule. Anything not coming from an allowed subnet, an allowed public IP, an allowed resource instance or a trusted Azure service gets a 403, even if it presents a valid key or SAS. It doesn't change who is authorized, it changes where they're allowed to come from.
+    followUps: []
+  - level: intermediate
+    q: A developer says the app VM can't reach storage after you set the firewall to Deny. You added the VM's public IP as an IP rule. What's wrong?
+    a: >-
+      If the VM is in Azure, especially in the same region, its traffic to storage doesn't arrive from its public IP. IP rules don't apply to requests from the same Azure region. I'd add the VM's subnet as a virtual network rule, which turns on the Microsoft.Storage service endpoint, or give storage a private endpoint.
+    followUps: []
+  - level: experienced
+    q: After you locked the firewall, Azure Backup and some diagnostics stopped working. How do you fix it without opening the account up again?
+    a: >-
+      I'd tick the exception "Allow Azure services on the trusted services list to access this storage account", which in the CLI is --bypass AzureServices. If logging or metrics readers need access, I'd add Logging and Metrics to the bypass too. For a service that isn't on the trusted list, I'd use a resource instance rule for that specific resource.
+    followUps: []
+  - level: scenario
+    q: Contoso wants the storage account reachable only from its app subnet and its head office. Walk me through it in the CLI.
+    a: >-
+      az storage account update with --default-action Deny and --bypass AzureServices. Then az storage account network-rule add with --vnet-name and --subnet for the app subnet, after making sure the subnet has the Microsoft.Storage service endpoint. Then network-rule add with --ip-address and the office's public CIDR. Finally I'd test a data call from outside and expect a 403.
+    followUps: []
+revision:
+  keyPoints:
+    - "Portal path: storage account > Security + networking > Networking > Firewalls and virtual networks."
+    - Enabled from selected virtual networks and IP addresses = default action Deny.
+    - VNet rules need the Microsoft.Storage service endpoint on the subnet; the portal can enable it for you.
+    - IP rules take public IPv4 addresses and CIDR ranges only. No private ranges and no /31 or /32 prefixes.
+    - IP rules don't apply to clients in the same Azure region as the account.
+    - The trusted services exception (bypass AzureServices) lets services like Azure Backup in.
+  mistakes:
+    - Adding an Azure VM's public IP as an IP rule and expecting it to work from the same region.
+    - Thinking a valid account key gets past the firewall. It doesn't.
+    - Forgetting your own client IP, then wondering why the portal can't list blobs.
+  examTips:
+    - '"Allow only one subnet" = **virtual network rule** plus **Microsoft.Storage service endpoint**.'
+    - '"Allow the on-premises office" = **IP rule** with its **public** range.'
+    - '"Azure Backup fails after the firewall change" = enable the **trusted Microsoft services** exception.'
+  quick:
+    - q: Which CLI flag sets the firewall to block by default?
+      a: az storage account update --default-action Deny
+    - q: What must a subnet have before it can be used in a storage VNet rule?
+      a: The Microsoft.Storage service endpoint.
+    - q: Can an IP rule contain 10.0.0.0/16?
+      a: No. IP rules accept public addresses only.
+    - q: Which bypass value allows trusted Azure services?
+      a: AzureServices.
+    - q: Does the firewall apply to management operations such as listing keys?
+      a: No. It protects the data plane (blobs, files, queues, tables).
+references:
+  - title: Configure Azure Storage firewalls and virtual networks
+    url: https://learn.microsoft.com/azure/storage/common/storage-network-security
+  - title: Trusted access for resources registered in your subscription
+    url: https://learn.microsoft.com/azure/storage/common/storage-network-security-trusted-azure-services
+  - title: Virtual network service endpoints
+    url: https://learn.microsoft.com/azure/virtual-network/virtual-network-service-endpoints-overview
+  - title: az storage account network-rule
+    url: https://learn.microsoft.com/cli/azure/storage/account/network-rule
+related:
+  - sas-tokens-and-stored-access-policies
+  - storage-access-keys
+  - configure-storage-accounts-and-encryption
+---
+
+## Start with a question
+
+<Story question="If someone steals the key to your house, how do you still keep them out?">
+
+You put a guard at the gate of your housing society. The guard has a list: residents of Block A, the office van, the milk delivery. A stranger walks up holding a perfectly good copy of your house key. The guard doesn't care about the key. The stranger isn't on the list, so the stranger doesn't get through the gate.
+
+That's the **storage firewall**. Keys and SAS tokens decide *what* someone can do. The firewall decides *where* they're allowed to come from, and it checks first.
+
+</Story>
+
+## Explain it like I'm 10
+
+<Eli10>
+
+Your storage account is a toy box in the school hall.
+
+At first the hall door is wide open, so anyone can walk in if they know the toy box password.
+
+Now a teacher stands at the door with a list. Only your class (the **virtual network**), your parents' car (an **IP address**) and the school nurse (a **trusted service**) may come in.
+
+Everyone else is turned away at the door, even if they know the password.
+
+</Eli10>
+
+## The technical explanation
+
+Every storage account has a public endpoint, such as `https://stcontoso.blob.core.windows.net`. Out of the box it accepts requests from **all networks**. The storage firewall (Microsoft calls it *network security* for the account) lets you narrow that down.
+
+### The settings on the Networking blade
+
+In the portal go to the storage account, then **Security + networking > Networking > Firewalls and virtual networks**. Under **Public network access** you'll see three choices:
+
+| Choice | What it means |
+| --- | --- |
+| Enabled from all networks | Default action **Allow**. Anyone on any network can try. |
+| Enabled from selected virtual networks and IP addresses | Default action **Deny**. Only the rules and exceptions below get in. |
+| Disabled | No public access at all. Only **private endpoints** work. |
+
+Once you pick *selected networks*, four kinds of exceptions open up:
+
+- **Virtual networks**: add a subnet. The subnet needs the **Microsoft.Storage** service endpoint, and the portal offers to turn it on for you. Traffic then reaches storage over the Azure backbone and storage knows which subnet it came from.
+- **Firewall (IP rules)**: public IPv4 addresses or CIDR ranges, such as `198.51.100.0/24` for an office. Private ranges (10.x, 172.16-31.x, 192.168.x) are refused, and `/31` or `/32` ranges aren't supported, so add a single address without a prefix. There's also a tick box to add your own client IP so the portal can still show data.
+- **Resource instances**: allow one specific resource, like a single Azure AI Search service, based on its managed identity.
+- **Exceptions**: *Allow Azure services on the trusted services list to access this storage account* (Azure Backup, Event Grid, Azure Monitor and others), plus read access to storage logging and metrics.
+
+<Callout type="note">
+IP rules don't apply to requests that come from the **same Azure region** as the account, because those use private Azure addresses. For an Azure VM or app in the same region, use a **virtual network rule** or a **private endpoint**, not its public IP.
+</Callout>
+
+### Data plane, not management plane
+
+The firewall guards **data**: blobs, files, queues and tables. It doesn't stop `az storage account show`, listing keys or changing settings, because those go through Azure Resource Manager and are controlled by Azure RBAC. That's why you can lock yourself out of reading blobs while still being able to fix the firewall.
+
+### The same thing in the CLI and PowerShell
+
+```bash
+# Block by default, but keep trusted Azure services working
+az storage account update -g rg-storage-prod -n stcontosoprod \
+  --default-action Deny --bypass AzureServices
+
+# Allow one subnet (it needs the Microsoft.Storage service endpoint)
+az network vnet subnet update -g rg-storage-prod --vnet-name vnet-app -n snet-app \
+  --service-endpoints Microsoft.Storage
+az storage account network-rule add -g rg-storage-prod --account-name stcontosoprod \
+  --vnet-name vnet-app --subnet snet-app
+
+# Allow the office's public range
+az storage account network-rule add -g rg-storage-prod --account-name stcontosoprod \
+  --ip-address 198.51.100.0/24
+```
+
+```powershell
+Update-AzStorageAccountNetworkRuleSet -ResourceGroupName rg-storage-prod -Name stcontosoprod `
+  -DefaultAction Deny -Bypass AzureServices
+Add-AzStorageAccountNetworkRule -ResourceGroupName rg-storage-prod -Name stcontosoprod `
+  -IPAddressOrRange "198.51.100.0/24"
+```
+
+<TryIt labs="adm-storage-lockdown" text="Set the firewall to Deny, get blocked yourself, then add a VNet rule and an IP rule." />
+
+<Flow
+  caption="What happens to one request"
+  steps={[
+    { title: 'Arrive', text: 'A request reaches stcontosoprod.blob.core.windows.net.' },
+    { title: 'Firewall', text: 'Is it from an allowed subnet, IP, resource instance or trusted service? If not and the default is Deny: 403.' },
+    { title: 'Authorize', text: 'Only now does storage check the key, SAS or Microsoft Entra token.' },
+    { title: 'Serve', text: 'The blob is returned if both checks pass.' },
+  ]}
+/>
+
+<Callout type="exam">
+Watch for the order of checks: a question that says "the user has a valid SAS but gets 403" often means the **firewall**. "Allow only the app subnet" is a **virtual network rule** with the **Microsoft.Storage service endpoint**. "Allow the office" is an **IP rule** with a **public** range. "Backups stopped after locking the account" is the **trusted Microsoft services** exception. "No public access at all" is **Disabled** plus a **private endpoint**.
+</Callout>
+
+<DeepDive title="Service endpoints or private endpoints?">
+
+A service endpoint keeps the storage account's public IP but lets you say "only this subnet". It's free and quick. A **private endpoint** gives the account a private IP inside your VNet, so traffic never touches the public endpoint, and it works from on-premises over VPN or ExpressRoute. Many companies use a private endpoint and set public network access to **Disabled**. Service endpoints by default only work for accounts in the same region as the VNet (and its pair); `Microsoft.Storage.Global` endpoints extend that to any region.
+
+</DeepDive>
+
+## Real-world business scenario
+
+<Scenario
+  company="Contoso Retail (fictional)"
+  industry="Retail"
+  problem="An old connection string with an account key leaked in a public repo. Anyone who found it could download every customer invoice from anywhere in the world."
+  service="The team rotated the key, then set the storage firewall to Deny with a virtual network rule for the invoice app's subnet, an IP rule for head office and the trusted services exception for Azure Backup."
+  why="Even if a key leaks again, the attacker isn't calling from an allowed network, so the firewall returns 403 before the key is even checked."
+  outcome="The next security review found the account unreachable from the internet, backups kept running, and the app needed no code change."
+/>
+
+## When to use it and when not to
+
+<UseWhen
+  use={[
+    'Your data should only be reached from known subnets or offices.',
+    'You need a quick extra layer on top of keys, SAS and RBAC.',
+    'Azure services such as Backup still need to get in through the trusted services exception.',
+  ]}
+  avoid={[
+    'Clients are anywhere on the internet, such as a public mobile app (use SAS or Entra ID instead).',
+    'You need fully private connectivity from on-premises (use a private endpoint).',
+    'You expect it to restrict management actions; it only covers data.',
+  ]}
+  alternatives={[
+    '<strong>Private endpoints</strong> with public network access disabled.',
+    '<strong>Network security perimeter</strong> to group several PaaS resources behind one boundary.',
+    '<strong>Microsoft Entra ID and RBAC</strong> to control who can act on the data.',
+  ]}
+/>

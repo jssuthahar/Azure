@@ -1,0 +1,211 @@
+---
+title: User-Defined Routes and Route Tables
+seoTitle: Azure User-Defined Routes and Route Tables | AZ-104
+description: Create Azure route tables and user-defined routes, send traffic to a firewall with next hop Virtual appliance, and read effective routes in the portal and CLI.
+answer: >-
+  Azure gives every subnet **system routes** (your VNet, peered VNets, 0.0.0.0/0 to the Internet). A **route table** holds **user-defined routes (UDRs)** that override them. You **associate the route table with a subnet** (one table per subnet, one table can serve many subnets), in the same region and subscription. Each route has an address prefix and a **next hop type**: **Virtual appliance** (needs the appliance's private IP), **Virtual network gateway**, **Virtual network**, **Internet** or **None** (drop). Azure picks the **longest prefix match**; on the same prefix a **user route beats BGP and system routes**. An NVA must have **IP forwarding** enabled on its NIC.
+updated: 2026-11-24
+readingMinutes: 10
+keyTerms:
+  - term: System route
+    definition: A route Azure creates for you, such as VnetLocal for the VNet's range, VNetPeering for peered ranges and Internet for 0.0.0.0/0.
+  - term: Route table
+    definition: An Azure resource holding user-defined routes, associated with one or more subnets in the same region and subscription.
+  - term: User-defined route (UDR)
+    definition: A route you add to a route table to override system routes for an address prefix.
+  - term: Next hop type Virtual appliance
+    definition: Sends matching traffic to the private IP of a firewall or network virtual appliance.
+  - term: IP forwarding
+    definition: A NIC setting that lets a VM receive and forward packets not addressed to it. Required on NVAs.
+  - term: Propagate gateway routes
+    definition: A route table setting. When off, routes learned by a VPN or ExpressRoute gateway over BGP aren't added to the subnet.
+interview:
+  - level: beginner
+    q: What's the difference between a system route and a user-defined route?
+    a: >-
+      Azure creates system routes automatically so a subnet can reach its VNet, peered VNets and the internet. A user-defined route is one I add in a route table to change that, for example sending all internet traffic to a firewall.
+    followUps: []
+  - level: intermediate
+    q: Two routes match a packet, 10.0.0.0/8 and 10.2.0.0/16. Which one wins?
+    a: >-
+      The longest prefix, so 10.2.0.0/16. Only if two routes have exactly the same prefix does the source matter, and then a user-defined route wins over a BGP route, which wins over a system route.
+    followUps: []
+  - level: experienced
+    q: You added 0.0.0.0/0 to a firewall but some subnets lost their VPN routes. Why?
+    a: >-
+      Probably the route table has propagate gateway routes turned off, so routes learned from the VPN gateway over BGP don't reach those subnets. Either turn propagation back on, or add explicit routes for the on-premises ranges with next hop virtual network gateway or the firewall.
+    followUps: []
+  - level: scenario
+    q: Spoke traffic should pass through a firewall at 10.0.2.4 in the hub. Routes are in place, but packets disappear at the firewall. What do you check?
+    a: >-
+      IP forwarding on the firewall VM's NIC in Azure, and forwarding inside its operating system. Then the return path: the other spoke needs a route back through the same firewall, otherwise replies take a different path and the firewall drops them as asymmetric. And allow forwarded traffic on the spoke peerings.
+    followUps: []
+revision:
+  keyPoints:
+    - Route tables attach to subnets, not NICs. One per subnet, many subnets per table.
+    - Same region and subscription as the VNet.
+    - Next hop types - Virtual appliance (with IP), Virtual network gateway, Virtual network, Internet, None.
+    - Longest prefix wins; on a tie, User > BGP > System.
+    - NVAs need IP forwarding on the Azure NIC and in the OS.
+  mistakes:
+    - Creating a route table and never associating it with a subnet.
+    - Forgetting the return route on the other side, which breaks stateful firewalls.
+    - Using Virtual appliance without a next hop IP address.
+  examTips:
+    - '"Force internet traffic through a firewall" = 0.0.0.0/0 → **Virtual appliance** + firewall IP, associated with the subnet.'
+    - '"Drop traffic to a range" = next hop **None**.'
+    - '"Where does the packet go?" = **Next hop** or **Effective routes** on the NIC.'
+  quick:
+    - q: What do you associate a route table with?
+      a: One or more subnets.
+    - q: Which next hop type needs an IP address?
+      a: Virtual appliance.
+    - q: Which route wins, 10.0.0.0/16 or 10.0.1.0/24, for 10.0.1.5?
+      a: 10.0.1.0/24, the longest prefix.
+    - q: What must be enabled on an NVA's NIC?
+      a: IP forwarding.
+    - q: Where do you see all routes that apply to a VM?
+      a: Effective routes on its network interface.
+references:
+  - title: Virtual network traffic routing
+    url: https://learn.microsoft.com/azure/virtual-network/virtual-networks-udr-overview
+  - title: Create, change, or delete a route table
+    url: https://learn.microsoft.com/azure/virtual-network/manage-route-table
+  - title: Diagnose a virtual machine routing problem
+    url: https://learn.microsoft.com/azure/virtual-network/diagnose-network-routing-problem
+related:
+  - configure-vnet-peering
+  - troubleshoot-network-connectivity
+  - vnets-subnets-and-public-ips
+---
+
+## Start with a question
+
+<Story question="Why does the sat nav suddenly send you through the toll gate?">
+
+Normally it picks the shortest road. But if the council puts up a sign saying "all lorries must go through the weigh station", every lorry takes that detour, no matter what the sat nav thinks.
+
+Azure picks routes for every subnet on its own. A **route table** with **user-defined routes** is that council sign: "everything leaving this subnet goes through the firewall first". You write the sign, then you hang it on the subnets it applies to.
+
+</Story>
+
+## Explain it like I'm 10
+
+<Eli10>
+
+The school bus has a map that says which road goes where.
+
+The head teacher adds a note: "All buses must stop at the gate guard first."
+
+The note only counts on buses it's stuck to. And the guard has to be allowed to wave buses through, or every bus just waits there forever.
+
+</Eli10>
+
+## The technical explanation
+
+### System routes
+
+Every subnet starts with routes Azure creates:
+
+| Prefix | Next hop | Why |
+| --- | --- | --- |
+| The VNet's address space | Virtual network (VnetLocal) | Talk inside the VNet |
+| Each peered VNet's space | VNet peering | Talk over peerings |
+| 0.0.0.0/0 | Internet | Outbound internet |
+| 10.0.0.0/8, 172.16.0.0/12, 192.168.0.0/16, 100.64.0.0/10 | None | Drop private ranges you don't own |
+| Service tag prefixes | Virtual network service endpoint | Added when you enable a service endpoint |
+
+A VPN or ExpressRoute gateway adds **BGP** routes for on-premises ranges.
+
+### Route tables and UDRs
+
+A route table is a resource with routes in it. Each route has a name, a **destination** (a CIDR or a **service tag** such as `Storage`), a **next hop type** and, for Virtual appliance, a **next hop address**.
+
+| Next hop type | Use it to |
+| --- | --- |
+| **Virtual appliance** | Send traffic to a firewall or NVA private IP (often Azure Firewall's private IP) |
+| **Virtual network gateway** | Send traffic to the VPN gateway (forced tunnelling on-premises) |
+| **Virtual network** | Keep traffic inside the VNet, overriding a broader route |
+| **Internet** | Send traffic straight out, for example to bypass the firewall for one range |
+| **None** | Drop it |
+
+You **associate** the table with **subnets**. A subnet has at most one route table; a table can serve many subnets. The table must be in the **same region and subscription** as the VNet. **Propagate gateway routes** (on by default) controls whether gateway BGP routes reach those subnets.
+
+### How Azure picks a route
+
+1. **Longest prefix match**: 10.2.1.0/24 beats 10.2.0.0/16 beats 0.0.0.0/0.
+2. Same prefix: **User** route, then **BGP**, then **System**. The losing system route shows as **Invalid** in effective routes.
+
+### Making an NVA work
+
+- Turn on **IP forwarding** on the NVA's NIC (NIC → **IP configurations**) and in the guest OS. Azure Firewall handles this itself.
+- Add the **return route** on the other side, or replies skip the firewall and a stateful firewall drops them.
+- On peered spokes, **allow forwarded traffic** on the peering so packets the hub NVA forwards are accepted.
+
+<Flow
+  caption="Spoke 1 to spoke 2 through the hub firewall"
+  steps={[
+    { title: 'Lookup', text: 'app1 sends to 10.2.1.4. rt-spoke1 has 10.2.0.0/16 → Virtual appliance 10.0.2.4.' },
+    { title: 'Hub', text: 'The packet crosses the peering to the firewall, which has IP forwarding on.' },
+    { title: 'Forward', text: 'The firewall allows it and sends it over the hub-to-spoke2 peering.' },
+    { title: 'Return', text: 'rt-spoke2 sends 10.1.0.0/16 back through 10.0.2.4, so replies use the same path.' },
+  ]}
+/>
+
+### Portal and CLI
+
+Portal: **Route tables → + Create** (region, name, propagate gateway routes) → **Routes → + Add** → **Subnets → + Associate**. Check the result on a VM's NIC under **Help → Effective routes**.
+
+```bash
+az network route-table create -g rg-net-hub -n rt-spoke1
+az network route-table route create -g rg-net-hub --route-table-name rt-spoke1 -n to-spoke2 \
+  --address-prefix 10.2.0.0/16 --next-hop-type VirtualAppliance --next-hop-ip-address 10.0.2.4
+az network vnet subnet update -g rg-net-hub --vnet-name vnet-spoke1 -n snet-app --route-table rt-spoke1
+az network nic update -g rg-net-hub -n nic-fw --ip-forwarding true
+az network nic show-effective-route-table -g rg-net-hub -n nic-app1 -o table
+```
+
+PowerShell uses `New-AzRouteTable`, `Add-AzRouteConfig` and `Set-AzVirtualNetworkSubnetConfig -RouteTable`.
+
+<TryIt labs="adm-net-hub-spoke" text="Route spoke-to-spoke traffic through an NVA in the hub and check the next hop." />
+
+<Callout type="exam">
+Look for the word **subnet**: route tables associate with subnets, never directly with a NIC or a VNet. "All internet-bound traffic must be inspected" is a **0.0.0.0/0** route to a **Virtual appliance**. "Block traffic to a range" can be next hop **None**. If traffic dies at the NVA, the missing piece is **IP forwarding**. If one route is /16 and another /24, the **/24 wins**.
+</Callout>
+
+<DeepDive title="UDRs and Azure services">
+
+Some subnets don't take UDRs freely. **GatewaySubnet** supports them but you must not send 0.0.0.0/0 to an NVA there unless you know what you're doing, and **AzureBastionSubnet** doesn't support route tables. Private endpoints ignore UDRs unless you turn on **network policies** for private endpoints on that subnet. When you use Azure Firewall, the firewall subnet needs its own 0.0.0.0/0 to the Internet.
+
+</DeepDive>
+
+## Real-world business scenario
+
+<Scenario
+  company="Woodgrove Bank (fictional)"
+  industry="Banking"
+  problem="Auditors found that VMs in the loan app spoke could reach the internet directly, bypassing the bank's firewall, and nobody could prove what left the network."
+  service="Azure Firewall in the hub at 10.0.2.4. A route table on every spoke subnet with 0.0.0.0/0 and the other spokes' ranges pointing to next hop Virtual appliance 10.0.2.4, and mirror routes on every spoke."
+  why="Every outbound and spoke-to-spoke packet now passes one firewall that logs it, and effective routes prove the path for the auditors."
+  outcome="The audit finding closed, and the firewall logs caught an outdated library calling home within the first week."
+/>
+
+## When to use it and when not to
+
+<UseWhen
+  use={[
+    'Forcing internet or spoke-to-spoke traffic through Azure Firewall or another NVA.',
+    'Sending on-premises-bound traffic through the VPN gateway (forced tunnelling).',
+    'Dropping traffic to ranges a subnet should never reach (next hop None).',
+  ]}
+  avoid={[
+    'Blocking ports. That\'s an NSG job, not a routing job.',
+    'Route tables on AzureBastionSubnet, which doesn\'t support them.',
+    'One-way routes through a stateful firewall without the return route.',
+  ]}
+  alternatives={[
+    '<strong>NSGs</strong> to allow or deny traffic without changing its path.',
+    '<strong>Azure Virtual WAN</strong> with routing intent to steer traffic through a secured hub.',
+    '<strong>Azure Route Server</strong> to exchange routes with NVAs over BGP instead of static UDRs.',
+  ]}
+/>

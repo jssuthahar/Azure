@@ -14,7 +14,7 @@ const PAGES = ['/', '/certifications/', '/ai-certifications/', '/platform/', '/a
   '/az-900/compare/blob-vs-files-vs-disk/', '/az-900/services/', '/az-900/mock-exam/', '/az-900/labs/', '/az-900/labs/sandbox/', '/simulator/region-goes-down/',
   '/az-900/games/', '/az-900/games/sort/', '/az-900/glossary/', '/az-900/revision/', '/az-900/practice/', '/az-900/study-plan/', '/az-900/cheat-sheet/', '/az-900/exam-day/', '/az-900/interview/', '/progress/', '/certificate/', '/app/', '/sitemap/', '/embed/',
   '/ai-901/', '/ai-901/foundry/build-an-agent-in-foundry/', '/ai-901/mock-exam/', '/ai-901/labs/', '/ai-901/labs/ai-first-agent/', '/ai-901/compare/generative-ai-vs-ai-agents/', '/ai-901/services/',
-  '/ai-200/', '/ai-200/containers/azure-container-apps/', '/ai-200/data-for-ai/pgvector-rag/', '/ai-200/mock-exam/', '/ai-200/labs/', '/ai-200/labs/dev-container-apps/', '/ai-200/compare/service-bus-vs-event-grid/', '/ai-200/services/', '/gh-300/', '/gh-300/copilot-features/agent-mode-mcp-and-subagents/', '/gh-300/mock-exam/', '/gh-300/labs/gh-cli-setup/', '/gh-600/', '/ai-103/'];
+  '/ai-200/', '/ai-200/containers/azure-container-apps/', '/ai-200/data-for-ai/pgvector-rag/', '/ai-200/mock-exam/', '/ai-200/labs/', '/ai-200/labs/dev-container-apps/', '/ai-200/compare/service-bus-vs-event-grid/', '/ai-200/services/', '/az-104/', '/az-104/networking/nsgs-asgs-and-effective-rules/', '/az-104/storage/sas-tokens-and-stored-access-policies/', '/az-104/mock-exam/', '/az-104/labs/', '/az-104/services/', '/gh-300/', '/gh-300/copilot-features/agent-mode-mcp-and-subagents/', '/gh-300/mock-exam/', '/gh-300/labs/gh-cli-setup/', '/gh-600/', '/ai-103/'];
 
 const b = await launch();
 const fail = [];

@@ -1,0 +1,236 @@
+---
+title: Azure Monitor Metrics and Diagnostic Settings
+seoTitle: Azure Monitor Metrics and Diagnostic Settings | AZ-104
+description: Read platform metrics in Metrics explorer, route resource logs and the activity log with diagnostic settings, and pick the right destination for AZ-104.
+answer: >-
+  **Platform metrics** are numbers every Azure resource sends to Azure Monitor about once a minute, with no setup, and Azure keeps them for **93 days**. **Resource logs** (such as StorageRead or Key Vault AuditEvent) aren't kept at all until you create a **diagnostic setting** that sends them to a **Log Analytics workspace**, a **storage account**, **Event Hubs** or a partner solution. The **activity log** records control-plane actions (who created, changed or deleted what) for **90 days**. A VM has no resource logs: its guest OS data comes through the **Azure Monitor Agent** and a **data collection rule**.
+updated: 2026-11-24
+readingMinutes: 11
+keyTerms:
+  - term: Platform metrics
+    definition: Numeric values that Azure resources send to Azure Monitor automatically, about once a minute, kept for 93 days.
+  - term: Metrics explorer
+    definition: The Metrics blade where you chart a metric with an aggregation, filters and splitting.
+  - term: Resource logs
+    definition: Data-plane logs from inside a resource, such as blob reads or Key Vault secret gets. Not collected until a diagnostic setting routes them.
+  - term: Activity log
+    definition: The subscription-level log of control-plane operations (create, update, delete, role assignments), kept 90 days.
+  - term: Diagnostic setting
+    definition: A rule on a resource that sends chosen log categories and metrics to a Log Analytics workspace, storage account, event hub or partner solution.
+  - term: Category group
+    definition: A shortcut in a diagnostic setting, allLogs or audit, that picks up new log categories automatically.
+  - term: Resource-specific mode
+    definition: A diagnostic setting option that writes logs to one table per category instead of the shared AzureDiagnostics table.
+  - term: Azure Monitor Agent
+    definition: The agent that collects guest OS logs and performance counters from VMs according to data collection rules.
+interview:
+  - level: beginner
+    q: What's the difference between a metric and a log in Azure Monitor?
+    a: >-
+      A metric is a number sampled over time, like CPU percentage every minute. It's cheap, fast and great for charts and threshold alerts. A log is a record with lots of fields, like "GetBlob on invoice-12.pdf from 203.0.113.50 returned 403". Logs answer who, what and why, and you query them with KQL in a Log Analytics workspace.
+    followUps: []
+  - level: intermediate
+    q: A developer says the storage account's logs show nothing. What's your first check?
+    a: >-
+      Whether there's a diagnostic setting at all, and whether it's on the right level. Storage resource logs live on the blob, file, queue and table services, not on the account itself. So I'd open Diagnostic settings, pick the blob service, tick allLogs and send it to the workspace. Logs only start flowing from that moment; there's no backfill.
+    followUps: []
+  - level: experienced
+    q: How would you keep the activity log for two years?
+    a: >-
+      The activity log itself keeps 90 days. I'd add a subscription-level diagnostic setting that sends the categories I need (Administrative, Security, Policy, ServiceHealth and so on) to a Log Analytics workspace and set that table's retention to two years, or archive it to a storage account if nobody needs to query it often.
+    followUps: []
+  - level: scenario
+    q: The security team wants Key Vault access logs in their SIEM in real time and the auditors want seven years of copies. How do you do both?
+    a: >-
+      One diagnostic setting on the vault with AuditEvent, sending to Event Hubs for the SIEM and to a storage account with a lifecycle rule for the long-term copy. I could add the workspace in the same setting too. A resource can have up to five diagnostic settings, but one with several destinations is usually enough.
+    followUps: []
+revision:
+  keyPoints:
+    - Platform metrics are automatic and kept 93 days. Metrics explorer charts them with aggregation, filtering and splitting.
+    - Resource logs need a diagnostic setting. Destinations are a Log Analytics workspace, a storage account, Event Hubs or a partner solution.
+    - Storage logs are set on each service (blobServices/default and so on), not on the account.
+    - The activity log is subscription-wide, control plane only, and kept 90 days. Export it with a subscription diagnostic setting.
+    - VMs have no resource log categories. Use the Azure Monitor Agent with a data collection rule for guest OS data.
+  mistakes:
+    - Expecting resource logs from before the diagnostic setting existed. Collection starts when you save it.
+    - Adding the diagnostic setting on the storage account and wondering why StorageRead never appears.
+    - Thinking the activity log shows data-plane actions like reading a blob. It doesn't.
+  examTips:
+    - '"Query the logs with KQL" = destination **Log Analytics workspace**. "Cheapest long-term archive" = **storage account**. "Stream to a third-party SIEM" = **Event Hubs**.'
+    - '"Who deleted the VM?" = **activity log**. "Who read the blob?" = **resource logs** through a diagnostic setting.'
+    - The storage account used as a destination must be in the **same region** as the monitored resource.
+  quick:
+    - q: How long are platform metrics kept?
+      a: 93 days.
+    - q: How long does the activity log keep events?
+      a: 90 days.
+    - q: Name the four diagnostic setting destination types.
+      a: Log Analytics workspace, storage account, Event Hubs, partner solution.
+    - q: What collects guest OS logs from a VM?
+      a: The Azure Monitor Agent with a data collection rule.
+    - q: How many diagnostic settings can one resource have?
+      a: Up to five.
+references:
+  - title: Azure Monitor Metrics overview
+    url: https://learn.microsoft.com/azure/azure-monitor/metrics/data-platform-metrics
+  - title: Diagnostic settings in Azure Monitor
+    url: https://learn.microsoft.com/azure/azure-monitor/platform/diagnostic-settings
+  - title: Azure Monitor activity log
+    url: https://learn.microsoft.com/azure/azure-monitor/platform/activity-log
+  - title: Monitor Azure Blob Storage
+    url: https://learn.microsoft.com/azure/storage/blobs/monitor-blob-storage
+  - title: az monitor diagnostic-settings
+    url: https://learn.microsoft.com/cli/azure/monitor/diagnostic-settings
+related:
+  - kql-for-azure-admins
+  - alerts-action-groups-processing-rules
+  - monitor-insights-and-network-watcher
+---
+
+## Start with a question
+
+<Story question="Your car's dashboard shows speed and fuel all the time. So why doesn't it remember who borrowed it last Tuesday?">
+
+The dashboard gives you numbers the moment you start the engine: speed, fuel, temperature. Nobody had to switch that on. But if you want a record of every trip, who drove and where they went, you have to fit a trip recorder and decide where its data goes.
+
+Azure works the same way. **Platform metrics** are the dashboard: CPU, transactions and availability arrive on their own. **Resource logs** are the trip recorder: they're only kept once you add a **diagnostic setting** and choose where they go. And the **activity log** is the car's service book: who changed the car itself.
+
+</Story>
+
+## Explain it like I'm 10
+
+<Eli10>
+
+Your school counts how many kids come in each morning. It does that every day, without anyone asking. That's a **metric**.
+
+If the head teacher wants to know exactly who came in late and through which door, someone has to write it down in a notebook and decide where the notebook lives. That's a **log** and its **diagnostic setting**.
+
+And the office keeps a list of who changed the school rules. That's the **activity log**.
+
+</Eli10>
+
+## The technical explanation
+
+Azure Monitor collects three kinds of data from Azure resources without you installing anything, but only one of them is kept by default.
+
+| Data | What it is | Collected by default? | Kept | Where you see it |
+| --- | --- | --- | --- | --- |
+| **Platform metrics** | Numbers sampled about once a minute (Percentage CPU, Transactions, Availability) | Yes | **93 days** | Metrics explorer, metric alerts |
+| **Resource logs** | Data-plane records from inside the resource (StorageRead, AuditEvent, NetworkSecurityGroupEvent) | **No** | Wherever you send them | Log Analytics, storage, Event Hubs |
+| **Activity log** | Control-plane operations for the subscription: create, update, delete, role assignments, Service Health | Yes | **90 days** | Monitor > Activity log, every resource's Activity log blade |
+
+### Interpret metrics in Metrics explorer
+
+Open any resource, then **Monitoring > Metrics** (or **Monitor > Metrics** and pick a scope). Each chart has:
+
+- a **metric namespace** and **metric**, such as *Account / Transactions* on a storage account,
+- an **aggregation**: Average, Min, Max, Sum or Count. Average CPU and Max CPU can tell very different stories,
+- **Add filter** to keep one dimension value (only *ResponseType = AuthorizationError*),
+- **Apply splitting** to draw one line per dimension value (one line per response type, per API name, per VM instance),
+- a **time range** and **time granularity**. One chart can show up to 30 days, and you can pan back through the 93 days kept.
+
+From the same chart you can **Save to dashboard** or select **New alert rule**. The CLI equivalent reads the same data:
+
+```bash
+az monitor metrics list \
+  --resource /subscriptions/<sub>/resourceGroups/rg-ops-mon/providers/Microsoft.Compute/virtualMachines/vm-web01 \
+  --metric "Percentage CPU" --interval PT1M --aggregation Average -o table
+
+az monitor metrics list-definitions --resource <resource id> -o table   # what metrics exist
+```
+
+<Callout type="tip">
+VM platform metrics come from the host, so they show CPU, disk and network but not guest memory usage or free disk space inside the OS. For those you need the Azure Monitor Agent (VM insights turns it on for you).
+</Callout>
+
+### Configure log settings with diagnostic settings
+
+A **diagnostic setting** is a rule on one resource. It has a name, the **log categories** or **category groups** to send (`allLogs` or `audit`, which also pick up categories Microsoft adds later), optionally **AllMetrics**, and one or more **destinations**:
+
+| Destination | Pick it when | Notes |
+| --- | --- | --- |
+| **Log Analytics workspace** | You want to query with KQL, build workbooks or create log search alerts | Choose **Azure diagnostics** (one shared table) or **Resource specific** (one table per category, recommended where offered) |
+| **Storage account** | You need a cheap archive for audits | Must be in the **same region** as the resource. Use lifecycle rules for retention |
+| **Event Hubs** | You stream to a SIEM or a third-party tool | Needs a namespace and an authorization rule |
+| **Partner solution** | You use an Azure Native ISV service such as Datadog or Elastic | Configured from the partner resource |
+
+One setting can use several destinations at once, and a resource can have **up to five** diagnostic settings. Logs flow from the moment you save; nothing is backfilled.
+
+**Portal path:** resource > **Monitoring > Diagnostic settings** > **+ Add diagnostic setting**. For a storage account you first pick the **blob**, **file**, **queue** or **table** service, because that's where StorageRead, StorageWrite and StorageDelete live. The account level only offers the Transaction metrics.
+
+```bash
+az monitor diagnostic-settings categories list \
+  --resource <storage id>/blobServices/default -o table
+
+az monitor diagnostic-settings create --name diag-blob \
+  --resource <storage id>/blobServices/default \
+  --workspace law-contoso-ops \
+  --logs '[{"categoryGroup":"allLogs","enabled":true}]' \
+  --metrics '[{"category":"Transaction","enabled":true}]'
+```
+
+```powershell
+$log = New-AzDiagnosticSettingLogSettingsObject -CategoryGroup allLogs -Enabled $true
+New-AzDiagnosticSetting -Name diag-blob -ResourceId "$storageId/blobServices/default" `
+  -WorkspaceId $workspaceId -Log $log
+```
+
+<TryIt labs="adm-ops-monitor-logs" text="Read CPU metrics, get blocked adding logs to a VM, route blob logs to a workspace and query them." />
+
+### Virtual machines are different
+
+A VM has **no resource log categories**. A diagnostic setting on a VM can only send platform metrics. Windows event logs, Syslog and guest performance counters come from the **Azure Monitor Agent (AMA)**, and a **data collection rule (DCR)** says what to collect and which workspace to send it to. The old Log Analytics agent (MMA) and the Windows Azure Diagnostics extension are retired, so don't pick them in a new design.
+
+### The activity log
+
+The activity log is one per subscription and records **control-plane** events: someone created a VM, changed an NSG rule, assigned a role, listed storage keys, or Azure posted a Service Health event. It doesn't record data-plane actions like reading a blob. Filter it by resource group, resource, operation, caller and time span in **Monitor > Activity log**, or from the CLI:
+
+```bash
+az monitor activity-log list -g rg-ops-mon --offset 1h -o table
+az monitor activity-log list --caller ben@contoso.com --offset 7d
+```
+
+To keep it longer than 90 days or join it with other logs, select **Export Activity Logs**, which creates a **subscription diagnostic setting** (`az monitor diagnostic-settings subscription create`). In a workspace it lands in the **AzureActivity** table.
+
+<Callout type="exam">
+Watch for the verb. "Chart CPU for the last two weeks" is **Metrics explorer**, no setup. "Find who **deleted** or **changed** a resource" is the **activity log**. "Find who **read** a blob or got a secret" needs **resource logs**, so the answer includes a **diagnostic setting**. If the question asks for "the least administrative effort to query with KQL", the destination is a **Log Analytics workspace**; "lowest cost retention for years" is a **storage account**; "send to a third-party SIEM" is **Event Hubs**. And if they try to collect guest event logs with a diagnostic setting on a VM, that's the wrong tool: it's the **Azure Monitor Agent** with a **data collection rule**.
+</Callout>
+
+<DeepDive title="Resource-specific tables, costs and retention">
+
+When you send logs to a workspace, **resource-specific** mode writes each category to its own table (StorageBlobLogs, AzureBackup tables, AppServiceHTTPLogs). Queries are faster, columns are typed and you can set retention per table. The older **Azure diagnostics** mode puts everything into the wide AzureDiagnostics table. Some services only support one mode; Azure Backup reports need resource-specific.
+
+Workspaces charge per GB ingested (around $2.30 per GB on pay-as-you-go for Analytics logs, illustrative) and include 31 days of retention. Interactive retention goes up to two years, and long-term retention up to 12 years at a lower price. For noisy, rarely queried data, look at the **Basic** or **Auxiliary** table plans, or archive to storage instead.
+
+</DeepDive>
+
+## Real-world business scenario
+
+<Scenario
+  company="Contoso Pharma (fictional)"
+  industry="Healthcare manufacturing"
+  problem="A storage account holding batch records showed a spike in failed requests on the Transactions metric, and an auditor asked who had read the files in the last month. Nobody could answer: no diagnostic settings existed."
+  service="Metrics explorer with splitting by response type showed the spike was authorization errors. The admin team added a diagnostic setting on the blob service with allLogs, sending to a Log Analytics workspace for KQL and to a same-region storage account with a seven-year lifecycle rule. A subscription diagnostic setting exported the activity log to the same workspace."
+  why="Metrics told them something was wrong within minutes. Resource logs told them who and from where. The activity log covered every configuration change."
+  outcome="The next audit request took one KQL query. The failures turned out to be an old SAS token in a partner script, which was rotated the same day."
+/>
+
+## When to use it and when not to
+
+<UseWhen
+  use={[
+    'You need to see how a resource is behaving right now or over the last 93 days: use Metrics explorer.',
+    'You need to know who accessed data inside a resource: add a diagnostic setting for its resource logs.',
+    'You need to know who changed or deleted a resource: read the activity log, and export it for longer retention.',
+  ]}
+  avoid={[
+    'Sending every log category from every resource to a workspace "just in case". Pick categories you will query, or archive to storage.',
+    'Using a diagnostic setting for guest OS data on a VM. Use the Azure Monitor Agent and a data collection rule.',
+    'Relying on the activity log for data-plane auditing such as blob reads.',
+  ]}
+  alternatives={[
+    '<strong>Azure Policy</strong> (DeployIfNotExists) to create diagnostic settings on every new resource automatically.',
+    '<strong>VM insights</strong> to switch on the Azure Monitor Agent and a ready-made data collection rule.',
+    '<strong>Storage account archive</strong> instead of a workspace for logs you keep only for compliance.',
+  ]}
+/>

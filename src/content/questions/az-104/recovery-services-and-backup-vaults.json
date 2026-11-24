@@ -1,0 +1,152 @@
+{
+ "cert": "az-104",
+ "domain": 5,
+ "topic": "recovery-services-and-backup-vaults",
+ "questions": [
+  {
+   "id": "adm-ops-vlt-1",
+   "type": "single",
+   "question": "You have virtual machines in the East US and West Europe regions. You need to back up all the virtual machines by using Azure Backup. What is the minimum number of Recovery Services vaults that you must create?",
+   "options": [
+    {
+     "text": "Two",
+     "why": "Correct. For Azure virtual machine backup, the vault must be in the same region as the virtual machines, so one vault per region is required."
+    },
+    {
+     "text": "One",
+     "why": "A single vault cannot back up virtual machines in a different region."
+    },
+    {
+     "text": "Three",
+     "why": "Only two regions are used."
+    },
+    {
+     "text": "One per virtual machine",
+     "why": "A vault can protect many virtual machines in its region."
+    }
+   ],
+   "answer": [
+    0
+   ],
+   "explanation": "Create one Recovery Services vault in each region that contains virtual machines to protect.",
+   "objective": "5.2.1"
+  },
+  {
+   "id": "adm-ops-vlt-2",
+   "type": "multi",
+   "question": "You create a Recovery Services vault. You must be able to restore virtual machines in the paired region at any time. Which two settings should you configure before you protect any items? Each correct answer presents part of the solution.",
+   "options": [
+    {
+     "text": "Set Backup Storage Redundancy to Geo-redundant",
+     "why": "Correct. Cross Region Restore requires geo-redundant storage."
+    },
+    {
+     "text": "Enable Cross Region Restore",
+     "why": "Correct. Cross Region Restore allows restores in the paired region on demand."
+    },
+    {
+     "text": "Set Backup Storage Redundancy to Locally-redundant",
+     "why": "Locally redundant storage keeps data in one region only."
+    },
+    {
+     "text": "Enable soft delete for 180 days",
+     "why": "Soft delete protects deleted data but does not enable cross-region restores."
+    },
+    {
+     "text": "Create the vault in the paired region",
+     "why": "For virtual machine backup, the vault must be in the same region as the virtual machines."
+    }
+   ],
+   "answer": [
+    0,
+    1
+   ],
+   "explanation": "Storage redundancy can be changed only before items are protected in the vault.",
+   "objective": "5.2.1"
+  },
+  {
+   "id": "adm-ops-vlt-3",
+   "type": "single",
+   "question": "You need to back up the blobs in a storage account and several managed disks that are not attached to protected virtual machines. What should you create?",
+   "options": [
+    {
+     "text": "A Backup vault",
+     "why": "Correct. Backup vaults protect Azure Blobs, managed disks, Azure Database for PostgreSQL flexible server and AKS."
+    },
+    {
+     "text": "A Recovery Services vault",
+     "why": "Recovery Services vaults protect virtual machines, Azure Files, SQL Server and SAP HANA in virtual machines, and host Site Recovery."
+    },
+    {
+     "text": "A Log Analytics workspace",
+     "why": "A workspace stores logs, not backups."
+    },
+    {
+     "text": "A storage account with geo-redundant storage",
+     "why": "Geo-redundant storage replicates data but does not provide backup policies or point-in-time recovery."
+    }
+   ],
+   "answer": [
+    0
+   ],
+   "explanation": "The Backup vault managed identity also needs roles such as Storage Account Backup Contributor or Disk Backup Reader on the data sources.",
+   "objective": "5.2.2"
+  },
+  {
+   "id": "adm-ops-vlt-4",
+   "type": "single",
+   "question": "You configure blob backup in a Backup vault named BV1 for a storage account named st1. Configuration fails with a permissions error. What should you do?",
+   "options": [
+    {
+     "text": "Assign the Storage Account Backup Contributor role on st1 to the managed identity of BV1",
+     "why": "Correct. The Backup vault identity requires this role to manage blob backups on the storage account."
+    },
+    {
+     "text": "Assign the Backup Contributor role on BV1 to your user account",
+     "why": "Your account permissions on the vault do not give the vault access to the storage account."
+    },
+    {
+     "text": "Enable soft delete on BV1",
+     "why": "Soft delete does not grant access to data sources."
+    },
+    {
+     "text": "Change st1 to geo-redundant storage",
+     "why": "The redundancy of the storage account does not affect the vault permissions."
+    }
+   ],
+   "answer": [
+    0
+   ],
+   "explanation": "For disks, the vault identity needs Disk Backup Reader on the disk and Disk Snapshot Contributor on the snapshot resource group.",
+   "objective": "5.2.2"
+  },
+  {
+   "id": "adm-ops-vlt-5",
+   "type": "single",
+   "question": "You need a backup policy for Azure virtual machines that backs up every four hours and supports Trusted Launch virtual machines. Instant restore snapshots must be kept for 10 days. What should you configure?",
+   "options": [
+    {
+     "text": "An Enhanced policy with an hourly schedule every 4 hours and instant restore retention of 10 days",
+     "why": "Correct. Enhanced policies support multiple backups per day, Trusted Launch virtual machines and up to 30 days of instant restore retention."
+    },
+    {
+     "text": "A Standard policy with a daily schedule and instant restore retention of 10 days",
+     "why": "Standard policies run once a day and keep instant restore snapshots for 1 to 5 days."
+    },
+    {
+     "text": "A Standard policy with four daily backup times",
+     "why": "Standard policies support one backup per day."
+    },
+    {
+     "text": "A Backup vault policy for Azure Disks",
+     "why": "Disk policies protect individual managed disks, not virtual machines with application-consistent backups."
+    }
+   ],
+   "answer": [
+    0
+   ],
+   "explanation": "Daily retention for virtual machine backups can be 7 to 9999 days, with optional weekly, monthly and yearly retention.",
+   "objective": "5.2.3"
+  }
+ ]
+}

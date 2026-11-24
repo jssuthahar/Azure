@@ -1,0 +1,27 @@
+{ "cert": "az-104", "domain": 3, "topic": "app-service-tls-and-custom-domains", "questions": [
+  { "id": "adm-app-dom-1", "type": "single", "scenario": "You plan to map www.contoso.com to a web app named app-contoso. The DNS zone for contoso.com is hosted by a third-party DNS provider.", "question": "Which record must you create to verify ownership of the domain?", "options": [
+    { "text": "A TXT record named asuid.www that contains the custom domain verification ID of the app", "why": "Correct. App Service checks the asuid TXT record to verify domain ownership." },
+    { "text": "An MX record named www that points to app-contoso.azurewebsites.net", "why": "MX records route email and are not used for App Service domain verification." },
+    { "text": "An NS record named www that points to Azure DNS", "why": "Delegating the subdomain is not required to verify ownership." },
+    { "text": "A PTR record for the app IP address", "why": "Reverse lookup records are not used for domain verification." } ], "answer": [0], "explanation": "Create the asuid TXT record for verification and a CNAME record that points www to the default domain of the app.", "objective": "3.4.5" },
+  { "id": "adm-app-dom-2", "type": "single", "question": "You need to map the root domain contoso.com to a web app. Which DNS records should you create?", "options": [
+    { "text": "An A record for @ that points to the inbound IP address of the app and a TXT record named asuid", "why": "Correct. The zone apex cannot use a CNAME, so an A record is used together with the asuid TXT record." },
+    { "text": "A CNAME record for @ that points to the default domain of the app", "why": "DNS does not allow a CNAME record at the zone apex." },
+    { "text": "A TXT record named asuid only", "why": "The TXT record verifies ownership but does not route traffic to the app." },
+    { "text": "An SRV record for @", "why": "SRV records are not used to map a domain to App Service." } ], "answer": [0], "explanation": "Subdomains use a CNAME record. The root domain uses an A record.", "objective": "3.4.5" },
+  { "id": "adm-app-dom-3", "type": "single", "scenario": "A web app has the custom domains www.contoso.com and shop.contoso.com. You need a TLS certificate for each name. The solution must minimize cost and administrative effort for renewals.", "question": "What should you use?", "options": [
+    { "text": "App Service managed certificates", "why": "Correct. Managed certificates are free and renew automatically for non-wildcard custom domains." },
+    { "text": "A wildcard certificate uploaded as a .pfx file", "why": "An uploaded certificate costs money and must be renewed and uploaded again by you." },
+    { "text": "A self-signed certificate", "why": "Browsers do not trust self-signed certificates." },
+    { "text": "A public key certificate (.cer)", "why": "Public key certificates are used for outbound calls, not to secure a custom domain." } ], "answer": [0], "explanation": "Managed certificates require the Basic tier or higher and cannot be wildcards or exported.", "objective": "3.4.4" },
+  { "id": "adm-app-dom-4", "type": "single", "question": "A security audit requires that a web app reject connections that use TLS 1.0 or TLS 1.1 and redirect HTTP requests to HTTPS. Which two settings should you configure?", "options": [
+    { "text": "Set HTTPS Only to On and set Minimum Inbound TLS Version to 1.2", "why": "Correct. HTTPS Only redirects HTTP, and the minimum TLS version rejects older protocols." },
+    { "text": "Enable Always On and set FTP state to Disabled", "why": "These settings do not affect HTTPS redirection or the TLS version." },
+    { "text": "Add an access restriction that denies port 80", "why": "Access restrictions filter by source, not by port or protocol version." },
+    { "text": "Bind the certificate by using IP SSL", "why": "The binding type does not set the minimum TLS version or redirect HTTP." } ], "answer": [0], "explanation": "Both settings are in Configuration, General settings, or can be set with az webapp update --https-only and az webapp config set --min-tls-version.", "objective": "3.4.4" },
+  { "id": "adm-app-dom-5", "type": "single", "question": "A web app runs on an App Service plan in the Free F1 tier. You need to add the custom domain www.contoso.com and secure it with TLS. What should you do first?", "options": [
+    { "text": "Scale up the App Service plan to the Basic tier or higher", "why": "Correct. The Free tier does not support custom domains, and TLS bindings require Basic or higher." },
+    { "text": "Create an App Service managed certificate", "why": "A managed certificate requires a custom domain on a Basic or higher plan." },
+    { "text": "Enable HTTPS Only", "why": "HTTPS Only does not enable custom domains." },
+    { "text": "Create a deployment slot", "why": "Slots are not related to custom domains and are not available in the Free tier." } ], "answer": [0], "explanation": "After scaling up, add the DNS records, add the custom domain, then create and bind a certificate.", "objective": "3.4.5" }
+] }

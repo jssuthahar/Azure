@@ -1,0 +1,184 @@
+---
+title: Manage and Rotate Storage Access Keys
+seoTitle: Manage and Rotate Azure Storage Access Keys | AZ-104
+description: Rotate Azure storage account access keys without downtime, set key expiration reminders, store keys in Key Vault and disable Shared Key access, for AZ-104.
+answer: >-
+  Every storage account has **two 512-bit access keys**, **key1** and **key2**. Either key gives **full access** to all data, so treat them like a root password. Two keys exist so you can **rotate without downtime**: move apps to key2, **regenerate key1**, then later do the reverse. A **key expiration policy** (rotation reminder) flags keys older than a set number of days, but doesn't rotate them. Regenerating a key also breaks every **SAS** signed with it. The safest end state is **Microsoft Entra ID** with **Allow storage account key access** set to **Disabled**.
+updated: 2026-11-24
+readingMinutes: 9
+keyTerms:
+  - term: Storage account access key
+    definition: One of two 512-bit keys that authorize any request to the account with Shared Key, giving full access to all data.
+  - term: Shared Key authorization
+    definition: Signing each request with an account key. Account SAS and service SAS tokens are also signed this way.
+  - term: Key rotation
+    definition: Regenerating an access key so the old value stops working.
+  - term: Key expiration policy
+    definition: An account setting (keyExpirationPeriodInDays) that marks keys as due for rotation after a number of days, shown as a rotation reminder.
+  - term: Allow storage account key access
+    definition: An account setting that, when disabled, refuses every request signed with an account key, including account and service SAS.
+  - term: Storage Account Key Operator Service Role
+    definition: A built-in role that lets a principal list and regenerate keys without other management rights.
+interview:
+  - level: beginner
+    q: Why does a storage account have two keys?
+    a: >-
+      So you can rotate them without downtime. Apps use one key while you regenerate the other. Then you switch the apps over and regenerate the first. If there were only one key, every rotation would be an outage.
+    followUps: []
+  - level: intermediate
+    q: A support engineer with the Reader role can't see the access keys. Is that a bug?
+    a: >-
+      No. Listing keys needs the listKeys action, which Reader doesn't have. Owner, Contributor, Storage Account Contributor and Storage Account Key Operator Service Role have it. Reader and Data Access is another option if they only need to read data through the portal.
+    followUps: []
+  - level: experienced
+    q: What does a key expiration policy actually do?
+    a: >-
+      It records how many days a key may live. The portal shows a rotation reminder and Azure Policy or Azure Monitor can flag accounts whose keys are older than that. It doesn't rotate anything for you. For automatic rotation you'd script it, for example with an Azure Automation runbook or an Event Grid triggered function, and keep the current value in Key Vault.
+    followUps: []
+  - level: scenario
+    q: A key was pasted into a public chat. Walk me through the next ten minutes.
+    a: >-
+      Find out which key it was. If the apps use the other key, regenerate the leaked one straight away. If the apps use the leaked key, swap them to the other key in Key Vault or their settings first, then regenerate. Check that SAS tokens signed with that key are reissued. Then review the storage logs for unusual reads and plan the move to Microsoft Entra ID so this can't happen again.
+    followUps: []
+revision:
+  keyPoints:
+    - "Portal path: storage account > Security + networking > Access keys."
+    - Two keys, each with full access. Rotate one at a time.
+    - Regenerating a key invalidates every connection string and SAS signed with it.
+    - "Set rotation reminder = key expiration policy (CLI: --key-exp-days)."
+    - Store keys in Azure Key Vault, never in code.
+    - Disabling Shared Key access stops keys, account SAS and service SAS. Entra ID and user delegation SAS keep working.
+  mistakes:
+    - Regenerating the key that apps are still using.
+    - Expecting the key expiration policy to rotate keys automatically.
+    - Giving Reader and expecting the person to see keys.
+  examTips:
+    - '"Rotate without downtime" = **switch apps to the other key, then regenerate**.'
+    - '"Prevent any use of account keys" = set **Allow storage account key access** to **Disabled**.'
+    - '"Let a script rotate keys but nothing else" = **Storage Account Key Operator Service Role**.'
+  quick:
+    - q: How many access keys does a storage account have?
+      a: Two (key1 and key2).
+    - q: Which CLI command regenerates key1?
+      a: az storage account keys renew --key primary
+    - q: What happens to a SAS signed with key1 after key1 is regenerated?
+      a: It stops working.
+    - q: Does the key expiration policy rotate keys?
+      a: No, it only flags keys as due for rotation.
+    - q: Which authorization still works when Shared Key access is disabled?
+      a: Microsoft Entra ID (and user delegation SAS).
+references:
+  - title: Manage storage account access keys
+    url: https://learn.microsoft.com/azure/storage/common/storage-account-keys-manage
+  - title: Prevent Shared Key authorization for an Azure Storage account
+    url: https://learn.microsoft.com/azure/storage/common/shared-key-authorization-prevent
+  - title: az storage account keys
+    url: https://learn.microsoft.com/cli/azure/storage/account/keys
+related:
+  - sas-tokens-and-stored-access-policies
+  - storage-firewalls-and-virtual-networks
+  - azure-files-identity-based-access
+---
+
+## Start with a question
+
+<Story question="How do you change the locks on a shop without closing it for a day?">
+
+A shop with one front door has a problem: changing the lock means the door is out of use for a while. A shop with two doors doesn't. You send everyone through the side door, change the front lock, hand out the new key, and next month you do it the other way round.
+
+A storage account has **two access keys** for the same reason. Your apps use one while you **regenerate** the other.
+
+</Story>
+
+## Explain it like I'm 10
+
+<Eli10>
+
+The storage account is a treasure chest with two keys that both open it.
+
+You give your friend the red key and keep the blue one in a drawer.
+
+If you think the red key was copied, you first give your friend the blue key, then melt the red one and make a new red key.
+
+The chest was never locked shut, and the copied key no longer works.
+
+</Eli10>
+
+## The technical explanation
+
+Each account gets two 512-bit keys when it's created. A request signed with either key (**Shared Key** authorization) can read, write and delete anything in the account. Connection strings contain a key. **Account SAS** and **service SAS** tokens are signed with a key too, so they live and die with it.
+
+### Who can see the keys
+
+Listing keys uses the `Microsoft.Storage/storageAccounts/listkeys/action` permission. **Owner**, **Contributor**, **Storage Account Contributor** and **Storage Account Key Operator Service Role** have it. **Reader** doesn't. Anyone who can list keys can read all the data, so treat that permission as a data permission.
+
+### Rotate without downtime
+
+1. Update every app to use **key2** (ideally by changing one secret in Azure Key Vault).
+2. Regenerate **key1**: portal **Access keys > Rotate key** on key1, or `az storage account keys renew --key primary`.
+3. Next rotation, move apps back to key1 and regenerate key2.
+
+If you regenerate the key an app is still using, that app gets 403 errors until you fix it, and every SAS signed with that key is dead.
+
+### Rotation reminders
+
+**Set rotation reminder** on the Access keys blade creates a **key expiration policy**: keys older than, say, 90 days are flagged in the portal, and Azure Policy can report non-compliant accounts. It's a reminder, not automation.
+
+### Turn keys off
+
+Once apps use Microsoft Entra ID, go to **Settings > Configuration** and set **Allow storage account key access** to **Disabled**. Then any request signed with a key, and any account or service SAS, is refused. User delegation SAS and Entra ID keep working. Check first: old tools that only know keys will break.
+
+```bash
+az storage account keys list -g rg-storage-prod -n stcontosoprod -o table
+az storage account keys renew -g rg-storage-prod -n stcontosoprod --key primary
+az storage account update -g rg-storage-prod -n stcontosoprod --key-exp-days 90
+az storage account update -g rg-storage-prod -n stcontosoprod --allow-shared-key-access false
+```
+
+```powershell
+Get-AzStorageAccountKey -ResourceGroupName rg-storage-prod -Name stcontosoprod
+New-AzStorageAccountKey -ResourceGroupName rg-storage-prod -Name stcontosoprod -KeyName key1
+Set-AzStorageAccount -ResourceGroupName rg-storage-prod -Name stcontosoprod -AllowSharedKeyAccess $false
+```
+
+<TryIt labs="adm-storage-lockdown" text="List the keys, regenerate key1 and set a 90-day expiration policy." />
+
+<Callout type="exam">
+"Rotate keys with no downtime" is always **move clients to the other key, then regenerate**. Ordering questions love this sequence. "Stop all use of account keys and key-signed SAS" is **Allow storage account key access: Disabled**. "Remind admins to rotate" is the **key expiration policy**. "A user can regenerate keys but nothing else" points to **Storage Account Key Operator Service Role**. And Reader can't list keys.
+</Callout>
+
+<DeepDive title="Keys in Key Vault, and rotating automatically">
+
+Put the connection string in Key Vault and have apps read it at start-up through a managed identity. Rotation then means updating one secret. To automate it, a common pattern is an Azure Function triggered on a schedule (or by Key Vault's near-expiry event) that regenerates the inactive key, writes it to Key Vault as a new secret version, then flips which key is active. Even better is dropping keys for Microsoft Entra ID altogether.
+
+</DeepDive>
+
+## Real-world business scenario
+
+<Scenario
+  company="Northwind Logistics (fictional)"
+  industry="Logistics"
+  problem="The same storage key had sat in five apps and two scripts for over a year, and nobody dared rotate it."
+  service="The team moved the connection string into Azure Key Vault, switched every app to key2, regenerated key1, set a 90-day rotation reminder, and planned the move to managed identities."
+  why="Rotating through the second key meant zero downtime, and the reminder makes old keys show up before an audit does."
+  outcome="Rotation now takes ten minutes, and the three apps already on managed identities don't need keys at all."
+/>
+
+## When to use it and when not to
+
+<UseWhen
+  use={[
+    'A tool or legacy app only supports Shared Key, and you keep the key in Key Vault.',
+    'Admins mount an Azure Files share with the key to set Windows ACLs.',
+    'You need to kill every key-signed SAS at once by regenerating the key.',
+  ]}
+  avoid={[
+    'Your own apps can use managed identities and RBAC data roles.',
+    'You plan to hand the key to partners (give a SAS instead).',
+    'Compliance requires no shared secrets (disable key access).',
+  ]}
+  alternatives={[
+    '<strong>Microsoft Entra ID</strong> with Storage Blob Data roles and managed identities.',
+    '<strong>User delegation SAS</strong> for delegated, time-limited access with no key.',
+  ]}
+/>

@@ -1,0 +1,215 @@
+---
+title: Azure Container Registry and Container Instances for Admins
+seoTitle: Azure Container Registry and Container Instances | AZ-104
+description: Create and manage an Azure Container Registry, pick its tier, then run and size a container group in Azure Container Instances with the right restart policy.
+answer: >-
+  **Azure Container Registry (ACR)** is your private image store. You pick a tier: **Basic**, **Standard** or **Premium**, and only Premium adds **geo-replication** and **private endpoints**. Apps pull with a Microsoft Entra identity that has the **AcrPull** role, and the admin user stays off. **Azure Container Instances (ACI)** runs an image as a **container group** in seconds, with the **CPU and memory you set at creation** and a **restart policy** of **Always**, **OnFailure** or **Never**. ACI bills per second and **doesn't autoscale**. To change CPU or memory, you recreate the group.
+updated: 2026-11-24
+readingMinutes: 11
+keyTerms:
+  - term: Azure Container Registry
+    definition: A managed, private registry for container images and other OCI artifacts, reached at <name>.azurecr.io.
+  - term: Login server
+    definition: The registry's address, such as acrcontoso.azurecr.io, used in image names and when apps sign in.
+  - term: Geo-replication
+    definition: A Premium ACR feature that keeps a copy of the registry in other regions, so pulls are local and one registry name works everywhere.
+  - term: AcrPull
+    definition: The built-in role that lets an identity pull images from a registry. AcrPush also allows pushing.
+  - term: Container group
+    definition: The unit ACI deploys. One or more containers on the same host that share a lifecycle, network and storage.
+  - term: Restart policy
+    definition: What ACI does when a container exits. Always (default) restarts it, OnFailure restarts only on a non-zero exit code, Never leaves it stopped.
+  - term: Admin user
+    definition: A single shared username and password for a registry. It's off by default and should stay off for production.
+interview:
+  - level: beginner
+    q: What's the difference between Azure Container Registry and Azure Container Instances?
+    a: >-
+      ACR stores images and ACI runs them. The registry is like a private shelf of packaged apps. Container Instances takes one of those packages and runs it as a container group, with the CPU and memory I choose, without me building any VM or cluster.
+    followUps: []
+  - level: intermediate
+    q: Which ACR tier would you choose for a team in the US and Europe that wants fast pulls in both places?
+    a: >-
+      Premium, because geo-replication is Premium only. I'd add a replica in the European region so pulls there stay local, and pushes to either region sync to both. If the registry is Standard today, I can upgrade it in place with az acr update --sku Premium, and the images stay where they are.
+    followUps: []
+  - level: experienced
+    q: A container group needs more memory. How do you change it?
+    a: >-
+      I can't resize it in place. CPU, memory, the OS type and the restart policy are fixed properties, so I delete the container group and create it again with the new values, usually from the same YAML or ARM template. If it keeps needing more capacity under load, it probably belongs in Container Apps, which scales on rules.
+    followUps: []
+  - level: scenario
+    q: A nightly ACI job keeps running and costing money after it finishes. What's wrong?
+    a: >-
+      The restart policy is almost certainly Always, the default, so ACI restarts the container every time it exits. For a job I'd set OnFailure, so it reruns only if it fails, or Never if a failure should be looked at by a person. Then the group stops after the run and billing stops with it.
+    followUps: []
+revision:
+  keyPoints:
+    - ACR tiers are Basic, Standard and Premium. Premium adds geo-replication, private endpoints and the most included storage.
+    - You can change an ACR tier in place with az acr update --sku, with no downtime.
+    - Pull with a managed identity or service principal that has AcrPull. Keep the admin user disabled.
+    - ACI deploys a container group with fixed CPU and memory, a restart policy and optional public IP and DNS label.
+    - ACI doesn't autoscale. Changing CPU, memory or restart policy means deleting and recreating the group.
+  mistakes:
+    - Leaving the restart policy on Always for a batch job, so it loops and keeps billing.
+    - Expecting Container Instances to scale out under load.
+    - Choosing Standard ACR and then needing geo-replication or a private endpoint.
+  examTips:
+    - '"Replicate the registry to another region" = **Premium** ACR.'
+    - '"Run once, restart only if it fails" = restart policy **OnFailure**.'
+    - '"Increase memory of an existing container group" = **delete and redeploy** the group.'
+  quick:
+    - q: Which ACR tier supports geo-replication?
+      a: Premium.
+    - q: What is the default ACI restart policy?
+      a: Always.
+    - q: Which role lets an app pull images from ACR?
+      a: AcrPull.
+    - q: Does Azure Container Instances autoscale?
+      a: No. You size each container group yourself.
+    - q: Which CLI command creates a container group?
+      a: az container create (with --cpu, --memory and --restart-policy).
+references:
+  - title: Introduction to Azure Container Registry
+    url: https://learn.microsoft.com/azure/container-registry/container-registry-intro
+  - title: Azure Container Registry service tiers
+    url: https://learn.microsoft.com/azure/container-registry/container-registry-skus
+  - title: Geo-replication in Azure Container Registry
+    url: https://learn.microsoft.com/azure/container-registry/container-registry-geo-replication
+  - title: What is Azure Container Instances?
+    url: https://learn.microsoft.com/azure/container-instances/container-instances-overview
+  - title: Restart policies for run-once tasks in Azure Container Instances
+    url: https://learn.microsoft.com/azure/container-instances/container-instances-restart-policy
+related:
+  - container-apps-for-admins
+  - app-service-plans-and-scaling
+---
+
+## Start with a question
+
+<Story question="Why pay for a server all day for a job that runs for five minutes?">
+
+Think of a bakery that bakes a special cake once a night. It doesn't buy a second oven and leave it on all day. It keeps the recipe in a locked cupboard, rents an oven for five minutes each night, and hands the oven back when the cake is done.
+
+In Azure the locked cupboard is **Azure Container Registry**: your private images, safe and versioned. The rented oven is **Azure Container Instances**: it runs one image as a **container group**, with the CPU and memory you ask for, and stops when the job is done if you tell it to.
+
+</Story>
+
+## Explain it like I'm 10
+
+<Eli10>
+
+A container image is a lunchbox with everything an app needs packed inside.
+
+The **registry** is your locker at school. Only people with your key can open it.
+
+**Container Instances** is a table where you open one lunchbox and eat. You pick the table size before you sit down, and you can't make it bigger halfway through.
+
+The **restart policy** is your rule for what happens when you finish: sit down again (Always), only if you dropped your food (OnFailure), or go home (Never).
+
+</Eli10>
+
+## The technical explanation
+
+### Azure Container Registry: create and manage it
+
+A registry name is 5 to 50 letters and numbers, no hyphens, and it becomes the **login server**: `acrcontoso.azurecr.io`. Images live in **repositories** and are named by **tag** (`invoice-job:v1`) or by **digest** (`sha256:…`).
+
+| Tier | Included storage | Good for | Premium-only extras |
+| --- | --- | --- | --- |
+| **Basic** | 10 GiB | Learning and small teams | |
+| **Standard** | 100 GiB | Most production teams | |
+| **Premium** | 500 GiB | Large, global or locked-down setups | Geo-replication, private endpoints, the highest throughput |
+
+You can **move between tiers in place**. Upgrading to Premium doesn't move or rebuild images, and there's no downtime.
+
+**Portal:** search **Container registries**, select **+ Create**, fill in **Registry name**, **Location** and **Pricing plan**, then **Review + create**. Later, **Settings → Properties** changes the plan and **Services → Geo-replications** adds regions.
+
+```bash
+az acr create -g rg-admin-apps -n acrcontosoadm01 --sku Standard
+az acr import -n acrcontosoadm01 --source mcr.microsoft.com/azuredocs/aci-helloworld:latest --image aci-helloworld:v1
+az acr update -n acrcontosoadm01 --sku Premium
+az acr replication create -r acrcontosoadm01 -l westeurope
+```
+
+```powershell
+New-AzContainerRegistry -ResourceGroupName rg-admin-apps -Name acrcontosoadm01 -Sku Standard -Location eastus
+Update-AzContainerRegistry -ResourceGroupName rg-admin-apps -Name acrcontosoadm01 -Sku Premium
+```
+
+**Who can pull?** Give the app's managed identity (or a service principal) the **AcrPull** role on the registry. **AcrPush** adds push. The **admin user** is one shared username and password for the whole registry; it's off by default, and you should keep it that way outside quick tests.
+
+<Callout type="tip">
+`az acr import` copies a public image (say from Docker Hub or mcr.microsoft.com) straight into your registry without Docker on your machine. Teams do this so their builds don't depend on a public registry's rate limits.
+</Callout>
+
+### Azure Container Instances: provision a container
+
+ACI deploys a **container group**: one or more containers scheduled on the same host, sharing a lifecycle, an IP address and any mounted volumes (such as an Azure Files share). Linux groups can hold several containers; Windows groups are more limited.
+
+**Portal:** search **Container instances**, select **+ Create**. On **Basics**: container name, region, **Image source** (Quickstart images, Azure Container Registry, Other registry), image and tag, **OS type** and **Size** (vCPU and memory). **Networking** sets Public or Private, a **DNS name label** and ports. **Advanced** holds the **restart policy**, environment variables and command override.
+
+```bash
+az container create -g rg-admin-apps -n aci-invoice-job \
+  --image mcr.microsoft.com/azuredocs/aci-helloworld \
+  --cpu 1 --memory 1.5 --restart-policy OnFailure --os-type Linux
+```
+
+For an image in your own registry, add `--registry-login-server`, `--registry-username` and `--registry-password`, or `--acr-identity` with a managed identity that has AcrPull.
+
+### Sizing and scaling ACI
+
+| Setting | What to know |
+| --- | --- |
+| **CPU and memory** | Requested per container when you create the group. Most regions give a standard Linux group up to 4 vCPU and 16 GB. |
+| **Changing size** | Not in place. CPU, memory, OS type and restart policy need a **delete and recreate**. |
+| **Scaling** | None built in. More load means more groups that you create, or a move to Container Apps or AKS. |
+| **Billing** | Per second of vCPU and memory while the group runs. |
+
+| Restart policy | Behaviour | Use it for |
+| --- | --- | --- |
+| **Always** (default) | Restarts the container whenever it stops | Long-running services |
+| **OnFailure** | Restarts only on a non-zero exit code | Batch jobs that should retry on error |
+| **Never** | Runs once and stays stopped | One-off tasks you want to inspect after |
+
+<TryIt labs="adm-containers" text="Create a registry, get refused a geo-replica on Standard, upgrade to Premium, then run a job in Container Instances with OnFailure." />
+
+<Callout type="exam">
+Watch the wording. "Copy images to a second region" or "private endpoint for the registry" means **Premium**. "Run a task once and only rerun it if it fails" means **OnFailure**; "never restart" means **Never**. "Increase the memory of an existing container group" means **delete and redeploy**, because there's no resize. And any answer that says Container Instances **autoscales** is wrong.
+</Callout>
+
+<DeepDive title="Why not just use the admin user?">
+
+The admin user is one credential shared by everyone and everything, with push and pull rights. You can't tell who used it, and rotating it breaks every app at once. With Microsoft Entra ID, each app's managed identity gets exactly AcrPull on one registry, you see it in the activity log, and nothing has a password to leak. Some older tools still need the admin user; if you must use it, rotate the password and turn it off again when you're done.
+
+</DeepDive>
+
+## Real-world business scenario
+
+<Scenario
+  company="Contoso Finance (fictional)"
+  industry="Finance"
+  problem="An invoice-matching job ran each night on a D4s VM that stayed on all day. Images sat in a public Docker Hub repository, and the European office complained that pulls were slow."
+  service="A Premium Azure Container Registry in East US with a West Europe replica, pulled by managed identities with AcrPull. The nightly job runs in Azure Container Instances with 2 vCPU, 4 GB and restart policy OnFailure, started by a Logic App at 02:00."
+  why="Per-second billing for a 20-minute job instead of a full-time VM, private images with no shared password, and local pulls in Europe."
+  outcome="The job costs a few dollars a month instead of a full VM bill, and the VM was deleted. Failed runs retry on their own, and successful ones stop billing the moment they finish."
+/>
+
+## When to use it and when not to
+
+<UseWhen
+  use={[
+    'You need private, versioned images for any Azure container host.',
+    'A job runs on a schedule or on demand and should stop when it finishes.',
+    'You want a single container running in seconds without a VM or cluster.',
+  ]}
+  avoid={[
+    'The app must scale out and in with traffic. Use Container Apps.',
+    'You need deployment slots, custom domains and backups for a web app. Use App Service.',
+    'You only ever pull public images you never change, so a registry adds little.',
+  ]}
+  alternatives={[
+    '<strong>Azure Container Apps</strong> for container apps that scale on HTTP or events, down to zero.',
+    '<strong>Azure Kubernetes Service</strong> when you need the full Kubernetes API.',
+    '<strong>Azure App Service</strong> for web apps that run from a container image with slots and TLS.',
+  ]}
+/>

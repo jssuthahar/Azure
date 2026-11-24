@@ -1,0 +1,148 @@
+{
+ "cert": "az-104",
+ "domain": 4,
+ "topic": "service-endpoints-and-private-endpoints",
+ "questions": [
+  {
+   "id": "adm-net-pe-1",
+   "type": "single",
+   "question": "On-premises servers connect to Azure through ExpressRoute private peering. The servers must access a storage account without using the public internet, and public network access to the account must be disabled. What should you configure?",
+   "options": [
+    {
+     "text": "A private endpoint for the storage account",
+     "why": "Correct. A private endpoint provides a private IP address that on-premises clients can reach over ExpressRoute."
+    },
+    {
+     "text": "A service endpoint for Microsoft.Storage on the GatewaySubnet",
+     "why": "Service endpoints do not extend to on-premises clients and require the public endpoint."
+    },
+    {
+     "text": "A storage firewall rule that allows the on-premises public IP range",
+     "why": "This uses the public endpoint, which must be disabled."
+    },
+    {
+     "text": "A service endpoint policy",
+     "why": "Service endpoint policies restrict service endpoints and do not provide on-premises access."
+    }
+   ],
+   "answer": [
+    0
+   ],
+   "explanation": "Private endpoints are reachable from the virtual network, peered networks and on-premises networks, and allow public network access to be disabled.",
+   "objective": "4.2.5"
+  },
+  {
+   "id": "adm-net-pe-2",
+   "type": "single",
+   "question": "You create a private endpoint for the blob service of a storage account. VMs in the virtual network still resolve the account name to a public IP address. What should you do?",
+   "options": [
+    {
+     "text": "Create the privatelink.blob.core.windows.net private DNS zone with a record for the account and link it to the virtual network",
+     "why": "Correct. The private DNS zone resolves the name to the private endpoint IP address."
+    },
+    {
+     "text": "Create a second private endpoint for the file service",
+     "why": "A file endpoint does not change name resolution for blob."
+    },
+    {
+     "text": "Enable a service endpoint for Microsoft.Storage",
+     "why": "Service endpoints do not change DNS resolution."
+    },
+    {
+     "text": "Add a user-defined route to the private endpoint",
+     "why": "Routing does not change the address a name resolves to."
+    }
+   ],
+   "answer": [
+    0
+   ],
+   "explanation": "Private endpoints rely on a privatelink private DNS zone linked to the virtual network. A DNS zone group keeps the A record updated.",
+   "objective": "4.2.5"
+  },
+  {
+   "id": "adm-net-pe-3",
+   "type": "single",
+   "question": "Only VMs in Subnet1 must be able to access a storage account. Access from on-premises is not required. You want a solution that has no additional cost. What should you configure?",
+   "options": [
+    {
+     "text": "A Microsoft.Storage service endpoint on Subnet1 and a virtual network rule on the storage account firewall",
+     "why": "Correct. Service endpoints are free and let the storage firewall allow the subnet."
+    },
+    {
+     "text": "A private endpoint in Subnet1",
+     "why": "A private endpoint meets the access requirement but is billed per hour and per GB."
+    },
+    {
+     "text": "An NSG on Subnet1 that allows the Storage service tag",
+     "why": "An NSG on the subnet does not restrict which networks can reach the storage account."
+    },
+    {
+     "text": "A route table that sends Storage traffic to the internet",
+     "why": "This does not restrict access to the storage account."
+    }
+   ],
+   "answer": [
+    0
+   ],
+   "explanation": "Service endpoints identify the subnet to the service so that its firewall can allow only that subnet.",
+   "objective": "4.2.4"
+  },
+  {
+   "id": "adm-net-pe-4",
+   "type": "single",
+   "question": "You enable a Microsoft.Storage service endpoint on Subnet1. Which next hop type appears in the effective routes of a VM in Subnet1 for the storage address prefixes?",
+   "options": [
+    {
+     "text": "VirtualNetworkServiceEndpoint",
+     "why": "Correct. Azure adds routes with this next hop type for the service prefixes."
+    },
+    {
+     "text": "VirtualAppliance",
+     "why": "This next hop type is used by user-defined routes to an NVA."
+    },
+    {
+     "text": "VNetPeering",
+     "why": "This next hop type is used for peered virtual networks."
+    },
+    {
+     "text": "VirtualNetworkGateway",
+     "why": "This next hop type is used for routes through a VPN or ExpressRoute gateway."
+    }
+   ],
+   "answer": [
+    0
+   ],
+   "explanation": "Enabling a service endpoint adds system routes for the service prefixes with the next hop type VirtualNetworkServiceEndpoint.",
+   "objective": "4.2.4"
+  },
+  {
+   "id": "adm-net-pe-5",
+   "type": "multi",
+   "question": "Which two statements about private endpoints are true? Each correct answer presents a complete solution.",
+   "options": [
+    {
+     "text": "A private endpoint is a network interface that has a private IP address from your subnet.",
+     "why": "Correct. The endpoint is a NIC in your subnet."
+    },
+    {
+     "text": "A private endpoint connects to one resource and one target sub-resource, such as blob.",
+     "why": "Correct. Each endpoint maps to a specific sub-resource."
+    },
+    {
+     "text": "One private endpoint for a storage account provides access to blob, file, queue and table services.",
+     "why": "You need one endpoint per sub-resource."
+    },
+    {
+     "text": "Private endpoints are free.",
+     "why": "Private endpoints are billed per hour and per GB processed."
+    }
+   ],
+   "answer": [
+    0,
+    1
+   ],
+   "explanation": "Each private endpoint is a NIC that maps to one sub-resource of one resource through Azure Private Link.",
+   "objective": "4.2.5"
+  }
+ ]
+}

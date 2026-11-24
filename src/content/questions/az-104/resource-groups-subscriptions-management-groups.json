@@ -1,0 +1,148 @@
+{
+ "cert": "az-104",
+ "domain": 1,
+ "topic": "resource-groups-subscriptions-management-groups",
+ "questions": [
+  {
+   "id": "adm-id-hier-1",
+   "type": "multi",
+   "question": "You move a virtual machine and its dependent resources from RG1 to RG2 in the same subscription. Which two statements are true after the move? Each correct answer presents part of the solution.",
+   "options": [
+    {
+     "text": "The resource IDs of the moved resources change",
+     "why": "Correct. The resource group name is part of the resource ID."
+    },
+    {
+     "text": "The resources remain in the same Azure region",
+     "why": "Correct. Moving between resource groups does not change the region."
+    },
+    {
+     "text": "The resources are moved to the region of RG2",
+     "why": "The location of RG2 stores metadata only and does not move resources."
+    },
+    {
+     "text": "Role assignments on the virtual machine move with it",
+     "why": "Role assignments made directly on a moved resource are not moved."
+    }
+   ],
+   "answer": [
+    0,
+    1
+   ],
+   "explanation": "To change region, use Azure Resource Mover or redeploy.",
+   "objective": "1.3.4"
+  },
+  {
+   "id": "adm-id-hier-2",
+   "type": "single",
+   "question": "You need to move a virtual machine named VM1 from RG1 to RG2. VM1 has an OS disk and a network interface. What should you include in the move?",
+   "options": [
+    {
+     "text": "VM1, its OS disk and its network interface",
+     "why": "Correct. A virtual machine must move together with its disks and network interfaces."
+    },
+    {
+     "text": "VM1 only",
+     "why": "Validation fails when dependent resources are omitted."
+    },
+    {
+     "text": "VM1 and the entire virtual network, but not the disk",
+     "why": "The disk must move with the VM."
+    },
+    {
+     "text": "Only the OS disk, then re-create VM1 in RG2",
+     "why": "This is not a move operation."
+    }
+   ],
+   "answer": [
+    0
+   ],
+   "explanation": "Across subscriptions, the virtual network must also be moved.",
+   "objective": "1.3.4"
+  },
+  {
+   "id": "adm-id-hier-3",
+   "type": "single",
+   "question": "Your company creates new subscriptions regularly. Every new subscription must automatically receive the same Azure Policy assignments and role assignments with minimal effort. What should you use?",
+   "options": [
+    {
+     "text": "A management group that contains the subscriptions, with the assignments made at the management group",
+     "why": "Correct. Child subscriptions inherit assignments from the management group."
+    },
+    {
+     "text": "A resource group in each subscription",
+     "why": "Resource groups are below subscriptions and cannot apply settings upward."
+    },
+    {
+     "text": "Tags on each subscription",
+     "why": "Tags do not apply policies or roles."
+    },
+    {
+     "text": "A separate Microsoft Entra tenant for each subscription",
+     "why": "Separate tenants increase administration and break shared governance."
+    }
+   ],
+   "answer": [
+    0
+   ],
+   "explanation": "You can also set a default management group so new subscriptions are placed under it automatically.",
+   "objective": "1.3.7"
+  },
+  {
+   "id": "adm-id-hier-4",
+   "type": "single",
+   "question": "What is the maximum depth of a management group hierarchy, excluding the root level and the subscription level?",
+   "options": [
+    {
+     "text": "Six levels",
+     "why": "Correct. The hierarchy supports up to six levels of depth below the root."
+    },
+    {
+     "text": "Three levels",
+     "why": "More levels are supported."
+    },
+    {
+     "text": "Ten levels",
+     "why": "The limit is six levels."
+    },
+    {
+     "text": "Unlimited",
+     "why": "Depth is limited."
+    }
+   ],
+   "answer": [
+    0
+   ],
+   "explanation": "Each management group and subscription can have only one parent.",
+   "objective": "1.3.7"
+  },
+  {
+   "id": "adm-id-hier-5",
+   "type": "single",
+   "question": "You need to move a subscription named Sub1 under a management group named MG-NonProd by using Azure CLI. Which command should you run?",
+   "options": [
+    {
+     "text": "az account management-group subscription add --name MG-NonProd --subscription Sub1",
+     "why": "Correct. This command places the subscription under the management group."
+    },
+    {
+     "text": "az account set --subscription MG-NonProd",
+     "why": "This changes the active subscription context."
+    },
+    {
+     "text": "az resource move --destination-group MG-NonProd --ids Sub1",
+     "why": "az resource move moves resources between resource groups or subscriptions."
+    },
+    {
+     "text": "az group create --name MG-NonProd",
+     "why": "This creates a resource group."
+    }
+   ],
+   "answer": [
+    0
+   ],
+   "explanation": "Moving a subscription requires write permissions on the subscription and on the source and target management groups.",
+   "objective": "1.3.5"
+  }
+ ]
+}

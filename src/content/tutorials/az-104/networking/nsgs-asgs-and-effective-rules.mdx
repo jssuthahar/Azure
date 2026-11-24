@@ -1,0 +1,206 @@
+---
+title: NSGs, Application Security Groups and Effective Rules
+seoTitle: Azure NSGs, ASGs and Effective Security Rules | AZ-104
+description: Create Azure NSG rules, group NICs with application security groups, and evaluate effective rules when a subnet NSG and a NIC NSG both apply, for AZ-104.
+answer: >-
+  A **network security group (NSG)** holds stateful **allow and deny rules** (source, destination, port, protocol), checked by **priority from 100 to 4096, lowest number first**; the first match wins. Every NSG has **default rules** at 65000 and above (allow VNet, allow Azure Load Balancer, **deny all inbound**). You attach an NSG to a **subnet**, a **NIC**, or both. For **inbound** traffic the **subnet NSG is evaluated first, then the NIC NSG**; outbound runs the other way, and **both must allow**. An **application security group (ASG)** groups NICs so rules can target "the web servers" instead of IP addresses. **Effective security rules** and **IP flow verify** show what really applies.
+updated: 2026-11-24
+readingMinutes: 12
+keyTerms:
+  - term: Network security group (NSG)
+    definition: A set of stateful allow and deny rules for inbound and outbound traffic, attached to subnets and/or network interfaces.
+  - term: Priority
+    definition: A number from 100 to 4096. Lower numbers are processed first, and processing stops at the first match.
+  - term: Default security rules
+    definition: AllowVnetInBound (65000), AllowAzureLoadBalancerInBound (65001), DenyAllInBound (65500), and the outbound equivalents including AllowInternetOutBound. They can't be deleted, only overridden.
+  - term: Service tag
+    definition: A Microsoft-maintained name for a group of IP ranges, such as Internet, VirtualNetwork, AzureLoadBalancer or Storage.
+  - term: Application security group (ASG)
+    definition: A label you attach to NICs so NSG rules can use it as a source or destination instead of IP addresses.
+  - term: Effective security rules
+    definition: The combined rules from every NSG that applies to a NIC, shown on the NIC in the portal or with az network nic list-effective-nsg.
+interview:
+  - level: beginner
+    q: Two rules match the same traffic, one allows and one denies. Which wins?
+    a: >-
+      The one with the lower priority number. Azure processes rules from the lowest number up and stops at the first match, so priority 100 beats priority 200 regardless of which one allows.
+    followUps: []
+  - level: intermediate
+    q: You allowed port 443 in the subnet NSG, but traffic is still blocked. Why?
+    a: >-
+      There's probably an NSG on the NIC too. Inbound traffic has to pass the subnet NSG and then the NIC NSG, and an NSG with no allow rule for 443 ends at DenyAllInBound. I'd open the NIC's effective security rules or run IP flow verify to see the exact rule.
+    followUps: []
+  - level: experienced
+    q: Why use application security groups instead of IP addresses in rules?
+    a: >-
+      Rules then describe roles. "Internet to asg-web on 443, asg-web to asg-db on 1433" stays the same when servers are added, removed or re-addressed; you just put the new NIC in the ASG. The limits are that all NICs in an ASG must be in the same VNet, and ASGs used together in a rule must be in the same VNet too.
+    followUps: []
+  - level: scenario
+    q: Security asks you to block all RDP from the internet but allow it from the office range 203.0.113.0/24. How do you write it?
+    a: >-
+      An allow rule for TCP 3389 from 203.0.113.0/24 at priority 100, and a deny rule for 3389 from Internet at priority 200. The office range matches first. Better still, remove the need entirely with Azure Bastion and only allow 3389 from the Bastion subnet.
+    followUps: []
+revision:
+  keyPoints:
+    - Rules have priority 100 to 4096, lowest first, first match wins. Defaults sit at 65000+.
+    - Inbound - subnet NSG then NIC NSG. Outbound - NIC NSG then subnet NSG. Both must allow.
+    - NSGs are stateful. Allowed inbound traffic gets its replies back automatically.
+    - ASGs group NICs (same VNet) so rules target roles, not IPs.
+    - Effective security rules and IP flow verify show the real result.
+  mistakes:
+    - Forgetting a NIC-level NSG when you've only checked the subnet.
+    - Assuming a higher number has higher priority.
+    - Blocking the AzureLoadBalancer tag and breaking health probes.
+  examTips:
+    - '"Which rule applies?" = find the **lowest priority number** that matches.'
+    - '"Allowed on the subnet but still blocked" = check the **NIC NSG**.'
+    - '"Rules must not change when servers are added" = **application security groups**.'
+  quick:
+    - q: What is the valid priority range for custom rules?
+      a: 100 to 4096.
+    - q: Which NSG is evaluated first for inbound traffic?
+      a: The subnet NSG.
+    - q: What is the priority of DenyAllInBound?
+      a: '65500.'
+    - q: Can an ASG contain NICs from different VNets?
+      a: No.
+    - q: Which CLI command shows effective rules on a NIC?
+      a: az network nic list-effective-nsg.
+references:
+  - title: Network security groups
+    url: https://learn.microsoft.com/azure/virtual-network/network-security-groups-overview
+  - title: How network security groups filter network traffic
+    url: https://learn.microsoft.com/azure/virtual-network/network-security-group-how-it-works
+  - title: Application security groups
+    url: https://learn.microsoft.com/azure/virtual-network/application-security-groups
+  - title: Diagnose a virtual machine network traffic filter problem
+    url: https://learn.microsoft.com/azure/virtual-network/diagnose-network-traffic-filter-problem
+related:
+  - azure-bastion
+  - troubleshoot-network-connectivity
+  - azure-load-balancer-for-admins
+---
+
+## Start with a question
+
+<Story question="Why does a visitor get past reception but still can't open the lab door?">
+
+Reception checks the visitor list for the whole building. The lab has its own card reader with its own list. Being on reception's list doesn't put you on the lab's.
+
+A **subnet NSG** is reception and a **NIC NSG** is the lab door. Traffic coming in has to pass both. And instead of writing every visitor's name, you can write "anyone with a contractor badge". That badge is an **application security group**.
+
+</Story>
+
+## Explain it like I'm 10
+
+<Eli10>
+
+The playground gate has a rule list. The guard reads it from the top and stops at the first rule that fits you.
+
+Rule 1: "Kids in red caps can come in." Rule 2: "Nobody else."
+
+Your classroom door has its own list too. You need a yes from the gate and a yes from the door.
+
+</Eli10>
+
+## The technical explanation
+
+### Rules
+
+Each rule has a **name**, **priority** (100 to 4096), **source** and **destination** (IP, CIDR, **service tag** or **ASG**), **source and destination ports**, **protocol** (TCP, UDP, ICMP or Any), **direction** and **action** (Allow or Deny). Azure checks rules from the **lowest number up** and **stops at the first match**.
+
+Default rules you can't delete:
+
+| Direction | Name | Priority | Effect |
+| --- | --- | --- | --- |
+| Inbound | AllowVnetInBound | 65000 | Allow from the VirtualNetwork tag (your VNet, peered VNets, on-premises via gateway) |
+| Inbound | AllowAzureLoadBalancerInBound | 65001 | Allow health probes from 168.63.129.16 |
+| Inbound | DenyAllInBound | 65500 | Deny everything else |
+| Outbound | AllowVnetOutBound | 65000 | Allow to VirtualNetwork |
+| Outbound | AllowInternetOutBound | 65001 | Allow to Internet |
+| Outbound | DenyAllOutBound | 65500 | Deny everything else |
+
+NSGs are **stateful**: when inbound traffic is allowed, its replies go out without an outbound rule. An NSG must be in the **same region** as what it's attached to, and one NSG can be attached to many subnets and NICs.
+
+### Subnet NSG plus NIC NSG
+
+<Flow
+  caption="Inbound packet to a VM with NSGs on both levels"
+  steps={[
+    { title: 'Subnet NSG', text: 'Checked first. Deny here and the packet is dropped.' },
+    { title: 'NIC NSG', text: 'Checked second. It must also allow the traffic.' },
+    { title: 'VM', text: 'Only traffic both NSGs allow arrives. Outbound runs NIC first, then subnet.' },
+  ]}
+/>
+
+Most designs put NSGs on **subnets** and avoid NIC NSGs unless one VM really needs different rules. Two layers make troubleshooting harder.
+
+### Application security groups
+
+Create an ASG (for example `asg-web`), add NICs to it, and use it as the source or destination in NSG rules: *Internet → asg-web : 443 allow*, *asg-web → asg-db : 1433 allow*. New web servers just join the ASG. Limits: all NICs in an ASG are in the **same VNet**, and if a rule uses ASGs for both source and destination, they must be in the same VNet.
+
+### Effective security rules
+
+On a running VM's NIC, **Help → Effective security rules** shows each NSG that applies (subnet and NIC) with its merged rules. **Network Watcher → IP flow verify** tests one flow and names the rule that allowed or denied it. **NSG diagnostics** does the same for a broader range of sources.
+
+### Portal and CLI
+
+Portal: **Network security groups → + Create**, then **Inbound security rules → + Add**, then **Subnets → Associate** (or NIC → **Network security group**). **Application security groups → + Create**, then on the NIC **Application security groups → Add**.
+
+```bash
+az network asg create -g rg-net-sec -n asg-web
+az network nic create -g rg-net-sec -n nic-web01 --vnet-name vnet-app --subnet snet-web --application-security-groups asg-web
+az network nsg create -g rg-net-sec -n nsg-snet-web
+az network nsg rule create -g rg-net-sec --nsg-name nsg-snet-web -n Allow-HTTPS-to-web \
+  --priority 200 --direction Inbound --access Allow --protocol Tcp \
+  --source-address-prefixes Internet --destination-asgs asg-web --destination-port-ranges 443
+az network vnet subnet update -g rg-net-sec --vnet-name vnet-app -n snet-web --network-security-group nsg-snet-web
+az network nic list-effective-nsg -g rg-net-sec -n nic-web01
+az network watcher test-ip-flow -g rg-net-sec --vm web01 --direction Inbound --protocol TCP \
+  --local 10.20.1.4:443 --remote 203.0.113.10:50000
+```
+
+PowerShell: `New-AzNetworkSecurityRuleConfig`, `New-AzNetworkSecurityGroup`, `New-AzApplicationSecurityGroup`, `Get-AzEffectiveNetworkSecurityGroup`.
+
+<TryIt labs="adm-net-nsg-asg" text="Write a rule against an ASG, get blocked by a NIC NSG and prove it with IP flow verify." />
+
+<Callout type="exam">
+The exam loves a table of rules with priorities and asks what happens to one packet. Sort by **priority number**, find the **first match**, and remember the **DenyAllInBound** at 65500 catches anything unmatched. If there are NSGs on both the subnet and the NIC, the packet needs an allow in **both**. "Rules shouldn't need updating when VMs are added" points to **ASGs**. A rule blocking **AzureLoadBalancer** breaks load balancer health probes.
+</Callout>
+
+<DeepDive title="Augmented rules and service tags">
+
+A single rule can list several IP ranges, ports and service tags (augmented security rules), so you rarely need dozens of near-identical rules. Service tags such as `Storage.EastUS`, `Sql`, `AzureMonitor` or `GatewayManager` are kept up to date by Microsoft, which is why they beat hard-coded IP lists for outbound rules to Azure services.
+
+</DeepDive>
+
+## Real-world business scenario
+
+<Scenario
+  company="Litware Health (fictional)"
+  industry="Healthcare"
+  problem="The patient portal's NSGs had 60 rules listing individual IPs. Every scale-out meant a ticket, and a forgotten NIC NSG kept new web servers dark for a day."
+  service="Three ASGs (asg-web, asg-api, asg-db) and one NSG per subnet with role-based rules: Internet to asg-web on 443, asg-web to asg-api on 8443, asg-api to asg-db on 1433. NIC-level NSGs removed. IP flow verify added to the runbook."
+  why="Rules describe roles, so scale-out needs no rule changes, and one NSG layer makes effective rules easy to read."
+  outcome="The rule count dropped from 60 to 9, and new servers serve traffic as soon as they join their ASG."
+/>
+
+## When to use it and when not to
+
+<UseWhen
+  use={[
+    'Allowing only the ports each tier needs, on every subnet.',
+    'Role-based rules with ASGs so scale-out doesn\'t need rule edits.',
+    'Effective rules and IP flow verify whenever traffic is mysteriously blocked.',
+  ]}
+  avoid={[
+    'NSGs on both subnet and NIC without a reason. One layer is easier to troubleshoot.',
+    'Filtering by domain name or with threat intelligence. That needs Azure Firewall.',
+    'Opening RDP or SSH to the internet. Use Azure Bastion.',
+  ]}
+  alternatives={[
+    '<strong>Azure Firewall</strong> for FQDN rules, threat intelligence and central logging.',
+    '<strong>Azure Virtual Network Manager security admin rules</strong> to enforce rules across many VNets.',
+    '<strong>Azure Bastion</strong> instead of management ports open to the internet.',
+  ]}
+/>

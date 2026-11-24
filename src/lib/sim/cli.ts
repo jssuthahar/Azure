@@ -6,6 +6,7 @@ import { Sim, SimError, SUB_ID, SUB_NAME, REGIONS, VM_SIZES, IMAGES, TYPE_INFO, 
 import { World, BICEP_FILE, POLICY_DEFS, ONPREM_SERVERS, DATABOX_STEPS } from './world';
 import * as F from './foundry';
 import * as D from './devsvc';
+import * as A from './admin';
 
 export interface CliResult {
   out?: string;
@@ -736,6 +737,8 @@ Object.assign(C, {
 /** Shell commands outside `az` that the practice world understands. */
 function shellExtra(tokens: string[], sim: Sim): CliResult | null {
   if (!(sim instanceof World)) return null;
+  const ad = A.shell(tokens, sim);
+  if (ad) return ad;
   const dv = D.shell(tokens, sim);
   if (dv) return dv;
   const ai = F.shell(tokens, sim);
@@ -836,6 +839,8 @@ function runOne(line: string, sim: Sim): CliResult {
     return { error: `bash: ${tokens[0]}: command not found. This practice shell understands Azure CLI commands that start with 'az'. Type 'help'.` };
   }
   if (sim instanceof World) {
+    const ad = A.az(tokens.slice(1), sim);
+    if (ad) return ad;
     const dv = D.az(tokens.slice(1), sim);
     if (dv) return dv;
   }
@@ -868,4 +873,4 @@ function runOne(line: string, sim: Sim): CliResult {
 }
 
 /** Known command prefixes for Tab completion. */
-export const COMPLETIONS = [...KNOWN.map((k) => `az ${k}`), ...D.SHELL_COMPLETIONS];
+export const COMPLETIONS = [...KNOWN.map((k) => `az ${k}`), ...D.SHELL_COMPLETIONS, ...A.COMPLETIONS];

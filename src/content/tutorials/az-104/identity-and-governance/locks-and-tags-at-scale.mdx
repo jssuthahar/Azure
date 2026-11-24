@@ -1,0 +1,205 @@
+---
+title: "Resource Locks and Tags for Administrators"
+seoTitle: Azure Resource Locks and Tags for Administrators | AZ-104
+description: Apply CanNotDelete and ReadOnly locks, know what they block, and tag resources at scale with the portal, CLI and policy so costs and owners stay clear.
+answer: >-
+  A **resource lock** stops changes for **everyone**, Owners included. **CanNotDelete** (Delete in the portal) lets people read and update but not delete; **ReadOnly** blocks every write, so it can also break things like listing storage account keys or scaling an App Service plan. Locks are set at subscription, resource group or resource scope, **inherit** to child resources, and removing one needs `Microsoft.Authorization/locks/delete` (Owner or User Access Administrator). **Tags** are name/value pairs (up to 50 per resource) used for cost, ownership and automation. Resource group tags **aren't inherited** by resources; use **Azure Policy** (Inherit a tag, Require a tag) to apply them at scale.
+updated: 2026-11-24
+readingMinutes: 10
+keyTerms:
+  - term: CanNotDelete lock
+    definition: Called Delete in the portal. Users can read and modify a resource but can't delete it.
+  - term: ReadOnly lock
+    definition: Users can read a resource but can't update or delete it. Some POST operations are blocked too.
+  - term: Lock inheritance
+    definition: A lock on a subscription or resource group applies to every resource inside it, including ones added later.
+  - term: Tag
+    definition: A name and value pair on a resource, resource group or subscription, such as costcenter = FIN-042.
+  - term: Tag inheritance
+    definition: Copying a resource group's or subscription's tag to its resources, done with Azure Policy or Cost Management tag inheritance.
+  - term: Tag Contributor
+    definition: A built-in role that can manage tags on resources without access to the resources themselves.
+interview:
+  - level: beginner
+    q: What's the difference between a Delete lock and a ReadOnly lock?
+    a: >-
+      A Delete lock, CanNotDelete, lets people keep working on the resource but stops anyone deleting it. ReadOnly stops any change at all, including tags. I use Delete on production all the time and ReadOnly only for short freezes.
+    followUps: []
+  - level: intermediate
+    q: Why might a ReadOnly lock break an app?
+    a: >-
+      Because some operations that feel like reads are actually POST requests in Azure Resource Manager. Listing storage account keys is one, so anything that reads keys through the management API fails. Scaling a plan, starting a VM or adding a tag also stop working.
+    followUps: []
+  - level: experienced
+    q: Do resource group tags flow down to resources?
+    a: >-
+      No, not by themselves. I'd assign the built-in Inherit a tag from the resource group if missing policy with a managed identity, plus a remediation task for existing resources. Cost Management also has a tag inheritance setting, but that only affects cost data, not the resources' actual tags.
+    followUps: []
+  - level: scenario
+    q: An Owner can't delete a resource group they created. What's going on?
+    a: >-
+      Almost certainly a lock, on the group or inherited from the subscription. Locks apply to everyone. They'd check Locks on the group and the subscription, remove it if that's the right call, then delete. If there's no lock, I'd check for a deny assignment from a deployment stack.
+    followUps: []
+revision:
+  keyPoints:
+    - CanNotDelete = no deletes, updates allowed. ReadOnly = no writes at all.
+    - Locks apply to every user, including Owners, and inherit from parent scopes.
+    - Removing a lock needs Microsoft.Authorization/locks/delete (Owner, User Access Administrator).
+    - Tags are name/value pairs, up to 50 per resource. Not every resource type supports tags.
+    - Resource group tags don't flow to resources unless a policy copies them.
+  mistakes:
+    - Putting ReadOnly on a busy production resource group and breaking normal operations.
+    - Expecting resources to inherit a tag from their resource group automatically.
+  examTips:
+    - '"Prevent accidental deletion but allow changes" = **CanNotDelete** (Delete).'
+    - '"Prevent any change" = **ReadOnly**.'
+    - '"Every resource must carry its resource group''s costcenter tag" = **Inherit a tag** policy (+ remediation).'
+  quick:
+    - q: Which lock still allows updates?
+      a: CanNotDelete (Delete).
+    - q: Does a lock stop an Owner?
+      a: Yes. Locks apply to everyone.
+    - q: Which command creates a lock on a resource group?
+      a: az lock create --name ... --lock-type CanNotDelete --resource-group ...
+    - q: How many tags can a resource have?
+      a: Up to 50.
+    - q: Are resource group tags inherited by resources by default?
+      a: No.
+references:
+  - title: Lock your resources to protect your infrastructure
+    url: https://learn.microsoft.com/azure/azure-resource-manager/management/lock-resources
+  - title: Use tags to organize your Azure resources
+    url: https://learn.microsoft.com/azure/azure-resource-manager/management/tag-resources
+  - title: Assign policy definitions for tag compliance
+    url: https://learn.microsoft.com/azure/azure-resource-manager/management/tag-policies
+  - title: az lock
+    url: https://learn.microsoft.com/cli/azure/lock
+related:
+  - azure-policy-for-admins
+  - interpret-access-assignments
+  - budgets-cost-alerts-and-advisor
+---
+
+## Start with a question
+
+<Story question="How do museums stop anyone, even staff, from moving the most valuable painting?">
+
+A museum puts the famous painting behind glass with a lock. Curators can still dim the lights and adjust the label, but nobody lifts it off the wall without first getting the key from security. During a stocktake they lock the whole room, so nothing gets touched at all. And every item has a little card saying who donated it and which gallery pays for its care.
+
+The glass case is a **CanNotDelete** lock, the locked room is a **ReadOnly** lock, and the little card is a set of **tags**.
+
+</Story>
+
+## Explain it like I'm 10
+
+<Eli10>
+
+A **Delete lock** is like gluing your Lego model to the table. You can still add bricks, but nobody can throw it away.
+
+A **ReadOnly lock** is a glass box over it. You can look, but you can't touch.
+
+**Tags** are sticky notes on each model: "Built by Mia, Class 5B". They help you find things and know whose they are.
+
+</Eli10>
+
+## The technical explanation
+
+### Resource locks
+
+| | CanNotDelete (portal: **Delete**) | ReadOnly (portal: **Read-only**) |
+| --- | --- | --- |
+| Read | Yes | Yes |
+| Update, tag, scale, start | Yes | **No** |
+| Delete | **No** | **No** |
+| Side effects | Few | Blocks POST actions like listing storage keys; can stop App Service, VMs and backups working normally |
+| Typical use | Production, always on | Short freezes, audits |
+
+- Scopes: **subscription**, **resource group** or **resource**. A lock on a parent applies to everything under it, including resources created later. The most restrictive lock wins.
+- Locks affect the **control plane** only. A CanNotDelete lock on a storage account doesn't stop someone deleting a blob inside it.
+- Locks apply to **everyone**. To remove one you need `Microsoft.Authorization/locks/delete`, which **Owner** and **User Access Administrator** have and **Contributor** doesn't.
+
+Portal: resource or group → **Settings → Locks → + Add** → Lock name, Lock type (**Read-only** or **Delete**), Notes.
+
+```bash
+az lock create --name no-delete --lock-type CanNotDelete --resource-group rg-finance --notes "Finance production"
+az lock create --name freeze --lock-type ReadOnly --resource-group rg-finance \
+  --resource-name stfin0424 --resource-type Microsoft.Storage/storageAccounts
+az lock list --resource-group rg-finance -o table
+az lock delete --name freeze --resource-group rg-finance --resource-name stfin0424 --resource-type Microsoft.Storage/storageAccounts
+```
+
+```powershell
+New-AzResourceLock -LockName no-delete -LockLevel CanNotDelete -ResourceGroupName rg-finance
+```
+
+### Tags
+
+A tag is `name: value`, such as `costcenter: FIN-042`, `env: prod`, `owner: finance-ops@contoso.com`. Each resource, resource group or subscription can have up to **50** tags. Names are case-insensitive, values case-sensitive, and some resource types don't support tags.
+
+```bash
+az group update -n rg-finance --tags costcenter=FIN-042 env=prod     # replaces the group's tags
+az tag update --resource-id <id> --operation Merge --tags owner=finance-ops   # adds without wiping
+az resource tag -g rg-finance -n stfin0424 --resource-type Microsoft.Storage/storageAccounts --tags costcenter=FIN-042
+```
+
+Use `--operation Merge` to add tags and keep the existing ones; `Replace` swaps the whole set and `Delete` removes the ones you list. You need write access to the resource or the **Tag Contributor** role to change tags. A ReadOnly lock blocks tag changes too.
+
+### Tags at scale
+
+Resource group tags **aren't inherited**. To make them stick everywhere:
+
+- **Inherit a tag from the resource group if missing** (Modify) copies the group's tag to resources, with a remediation task for existing ones.
+- **Require a tag on resources** or **on resource groups** (Deny) forces people to supply one.
+- **All resources → select → Assign tags** tags many resources in the portal at once.
+- Cost Management's **tag inheritance** setting applies group and subscription tags to **cost records** only, without changing the resources.
+
+<Flow
+  caption="Protect and label rg-finance"
+  steps={[
+    { title: 'Lock', text: 'CanNotDelete on rg-finance: deletes fail, changes still work.' },
+    { title: 'Tag', text: 'rg-finance gets costcenter=FIN-042 and owner=finance-ops.' },
+    { title: 'Inherit', text: 'A Modify policy copies costcenter onto every resource inside.' },
+    { title: 'Report', text: 'Cost analysis groups spend by costcenter for the monthly chargeback.' },
+  ]}
+/>
+
+<TryIt labs="adm-policy-locks-cost" text="Freeze a group with ReadOnly and see a tag change refused, then swap to CanNotDelete and try to delete it." />
+
+<Callout type="exam">
+"Allow changes but prevent deletion" = **CanNotDelete**. "Prevent all modifications" = **ReadOnly**. A user with **Owner** still can't delete a locked resource. **Contributor can't remove** a lock. Watch for ReadOnly side effects: a question about failing to list storage keys or scale an app often hides a ReadOnly lock. For tags, remember they **don't inherit**, and the fix is **policy**.
+</Callout>
+
+<DeepDive title="Locks, deployments and automation">
+
+ARM template and Bicep deployments in **Complete** mode try to delete resources that aren't in the template, and a CanNotDelete lock will make that fail. Backup and Site Recovery need write access to restore points, so a ReadOnly lock on a VM's resource group can break backups. Some services create their own locks; for example, a Recovery Services vault may add one. If automation must remove and re-add a lock, give its managed identity a narrow custom role with only the lock actions rather than Owner.
+
+</DeepDive>
+
+## Real-world business scenario
+
+<Scenario
+  company="Woodgrove Bank (fictional)"
+  industry="Banking"
+  problem="A script cleaning up test resource groups matched the wrong name and deleted a production resource group, and nobody could tell which team owned half the remaining resources."
+  service="CanNotDelete locks on every production resource group (applied through a pipeline), owner and costcenter tags required on resource groups by a Deny policy, and the Inherit a tag policy copying them to resources. ReadOnly locks are used only during quarter-end audit freezes."
+  why="Scripts and people can still update production, but deletes fail until a platform admin removes the lock on purpose, and every resource shows an owner."
+  outcome="No accidental production deletions since, and the chargeback report covers 98% of spend."
+/>
+
+## When to use it and when not to
+
+<UseWhen
+  use={[
+    'CanNotDelete on production subscriptions, resource groups and shared networking.',
+    'ReadOnly for short, planned freezes.',
+    'Tags for cost center, owner, environment and automation schedules.',
+  ]}
+  avoid={[
+    'Long-term ReadOnly on resources that need normal operations (scaling, backups, key listing).',
+    'Relying on resource group tags to label resources without a policy.',
+  ]}
+  alternatives={[
+    '<strong>Azure RBAC</strong> to stop specific people deleting things, rather than everyone.',
+    '<strong>Deployment stacks</strong> deny settings to protect everything a stack deployed.',
+  ]}
+/>

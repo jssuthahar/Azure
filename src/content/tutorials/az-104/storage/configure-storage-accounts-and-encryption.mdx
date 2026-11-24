@@ -1,0 +1,212 @@
+---
+title: Create and Configure Storage Accounts and Encryption
+seoTitle: Create Azure Storage Accounts and Configure Encryption | AZ-104
+description: Create Azure storage accounts with the right type, performance and security settings, and configure encryption with Microsoft-managed or customer-managed keys.
+answer: >-
+  A **storage account** is created with a globally unique name (3 to 24 lowercase letters and numbers), a region, a **performance** tier (**Standard** general-purpose v2, or **Premium** block blobs, file shares or page blobs) and a **redundancy** option. Secure defaults to keep: **secure transfer (HTTPS) required**, **minimum TLS 1.2**, **anonymous blob access off**. All data is **encrypted at rest with AES-256** automatically. You choose **Microsoft-managed keys** or **customer-managed keys** in Azure Key Vault or Managed HSM (the vault needs **soft delete and purge protection**, and the account needs a **managed identity** with access to the key). **Infrastructure encryption** adds a second layer and can only be enabled **at creation**.
+updated: 2026-11-24
+readingMinutes: 12
+keyTerms:
+  - term: General-purpose v2 (StorageV2)
+    definition: The standard storage account type for blobs, files, queues and tables, recommended for most scenarios.
+  - term: Premium storage account
+    definition: An SSD-backed account type for one service - block blobs, file shares or page blobs - with low latency.
+  - term: Storage service encryption
+    definition: Automatic AES-256 encryption of all data written to Azure Storage. It can't be turned off.
+  - term: Customer-managed key (CMK)
+    definition: An encryption key you own in Azure Key Vault or Managed HSM that protects the account's data encryption keys.
+  - term: Infrastructure encryption
+    definition: A second layer of AES-256 encryption at the infrastructure level, chosen only when the account is created.
+  - term: Encryption scope
+    definition: A named key setting inside an account that can apply a different key to a container or blob.
+interview:
+  - level: beginner
+    q: Is data in Azure Storage encrypted if I do nothing?
+    a: >-
+      Yes. Every byte written to Azure Storage is encrypted with 256-bit AES before it hits disk, and decrypted when you read it. You can't turn that off. What you can choose is who manages the key: Microsoft by default, or you with a customer-managed key in Key Vault.
+    followUps: []
+  - level: intermediate
+    q: Which storage account settings can't you change after creation?
+    a: >-
+      The name, the performance tier (Standard or Premium) and the premium account type, infrastructure encryption, and whether customer-managed keys can cover tables and queues. Redundancy, access tier, TLS version, network rules and the key source can all be changed later.
+    followUps: []
+  - level: experienced
+    q: What do you need before switching a storage account to a customer-managed key?
+    a: >-
+      A key vault or Managed HSM with soft delete and purge protection, an RSA or RSA-HSM key, and an identity for the storage account, system-assigned or user-assigned, with the Key Vault Crypto Service Encryption User role on the key (or get, wrapKey and unwrapKey in an access policy vault). If I leave the key version out, storage picks up new key versions automatically.
+    followUps: []
+  - level: scenario
+    q: Compliance says the company must be able to make storage data unreadable on demand. What would you set up?
+    a: >-
+      A customer-managed key in Key Vault. If the key is disabled or access is removed, storage can't unwrap the data encryption keys, so reads and writes fail until access is restored. I'd add infrastructure encryption on new accounts if they also want double encryption, and protect the vault with purge protection so nobody can destroy the key by accident.
+    followUps: []
+revision:
+  keyPoints:
+    - Name is global, 3-24 lowercase letters and numbers; it becomes part of the endpoint URL.
+    - Standard GPv2 for most work; Premium block blob, file share or page blob for low latency.
+    - Keep secure transfer on, TLS 1.2 minimum, anonymous access off.
+    - All data is AES-256 encrypted at rest. Keys are Microsoft-managed or customer-managed.
+    - CMK needs a vault with soft delete and purge protection, and a managed identity with access.
+    - Infrastructure encryption is create-time only.
+  mistakes:
+    - Trying to switch an existing account from Standard to Premium.
+    - Pointing CMK at a vault without purge protection.
+    - Forgetting to give the account an identity before choosing CMK.
+  examTips:
+    - '"Second layer of encryption" = **infrastructure encryption** (new account).'
+    - '"Company must control and revoke the key" = **customer-managed key** in Key Vault.'
+    - '"Different key per container" = **encryption scope**.'
+  quick:
+    - q: Which algorithm does Azure Storage use to encrypt data at rest?
+      a: 256-bit AES.
+    - q: Can infrastructure encryption be enabled on an existing account?
+      a: No, only when you create it.
+    - q: Which role should the account's identity have on a CMK?
+      a: Key Vault Crypto Service Encryption User.
+    - q: What vault settings are required for CMK?
+      a: Soft delete and purge protection.
+    - q: Which account type is recommended for most scenarios?
+      a: Standard general-purpose v2.
+references:
+  - title: Storage account overview
+    url: https://learn.microsoft.com/azure/storage/common/storage-account-overview
+  - title: Create a storage account
+    url: https://learn.microsoft.com/azure/storage/common/storage-account-create
+  - title: Azure Storage encryption for data at rest
+    url: https://learn.microsoft.com/azure/storage/common/storage-service-encryption
+  - title: Customer-managed keys for Azure Storage encryption
+    url: https://learn.microsoft.com/azure/storage/common/customer-managed-keys-overview
+  - title: Enable infrastructure encryption for double encryption of data
+    url: https://learn.microsoft.com/azure/storage/common/infrastructure-encryption-enable
+related:
+  - storage-redundancy-and-object-replication
+  - storage-firewalls-and-virtual-networks
+  - blob-containers-tiers-and-lifecycle
+---
+
+## Start with a question
+
+<Story question="Who should hold the key to your bank locker: you or the bank?">
+
+Every locker in the bank vault is locked, whatever you do. The question is who keeps the key. For most people, letting the bank manage it is fine. Some customers want their own key so that, if they choose, nobody can open the locker, not even the bank.
+
+Azure Storage works the same way. Your data is **always encrypted**. You decide whether Microsoft manages the key or you bring a **customer-managed key**.
+
+</Story>
+
+## Explain it like I'm 10
+
+<Eli10>
+
+A storage account is a new school locker.
+
+When you get it, you choose its name tag, how big and fast it is, and how many spare copies to keep.
+
+Everything inside is always written in secret code.
+
+Usually the school keeps the code book. If you want, you keep the code book in your own safe instead.
+
+</Eli10>
+
+## The technical explanation
+
+### Create the account: the decisions that matter
+
+Portal: **Storage accounts > + Create**. The wizard tabs are **Basics, Advanced, Networking, Data protection, Encryption, Tags, Review + create**.
+
+| Tab | Setting | Notes |
+| --- | --- | --- |
+| Basics | Storage account name | Globally unique, 3 to 24 lowercase letters and numbers. Becomes `https://<name>.blob.core.windows.net`. |
+| Basics | Performance | **Standard** (general-purpose v2, HDD-backed) or **Premium** (SSD) with an account type of block blobs, file shares or page blobs. Can't be changed later. |
+| Basics | Redundancy | LRS, ZRS, GRS, GZRS (and read-access versions). Can be changed later. |
+| Advanced | Require secure transfer | HTTPS only for REST calls. Keep it on. |
+| Advanced | Allow enabling anonymous access on individual containers | Off by default. Leave it off unless you publish public content. |
+| Advanced | Enable storage account key access | Turn off once everything uses Microsoft Entra ID. |
+| Advanced | Minimum TLS version | 1.2. |
+| Advanced | Hierarchical namespace | Turns the account into Data Lake Storage Gen2. Some features, such as blob versioning, don't support it. |
+| Advanced | Access tier | Default tier for blobs: Hot, Cool or Cold. |
+| Networking | Public network access | All networks, selected networks or disabled with private endpoints. |
+| Data protection | Soft delete and versioning | The portal turns soft delete on by default; the CLI doesn't. |
+| Encryption | Key type, CMK support, infrastructure encryption | Covered below. |
+
+### Encryption at rest
+
+All data in Azure Storage (blobs, files, queues, tables, disks) is encrypted with **256-bit AES** before it's stored. There's nothing to enable and no extra cost.
+
+- **Microsoft-managed keys (MMK)**: the default. Microsoft rotates and protects the keys.
+- **Customer-managed keys (CMK)**: you keep an RSA key in **Azure Key Vault** or **Managed HSM**. Storage uses it to wrap the account's data encryption key. Requirements: the vault has **soft delete and purge protection**, and the account has a **system-assigned or user-assigned managed identity** with **Key Vault Crypto Service Encryption User** on the key. Leave the key version empty and storage picks up new versions automatically.
+- **Infrastructure encryption**: a second AES-256 layer with a different key. **Create time only.**
+- **Encryption scopes**: named key settings that can apply a different key to a container or even a single blob.
+- **Customer-provided keys**: a client sends its own key with each Blob Storage request. Rare, but it exists.
+
+At create time you also choose whether CMK support covers **blobs and files only** or **all service types** (tables and queues too); that can't change later.
+
+If you **disable** the CMK or remove the identity's access, storage can't decrypt, so requests fail until you restore access. That's the control customers want, and also the reason purge protection is mandatory.
+
+### CLI and PowerShell
+
+```bash
+# A secure general-purpose v2 account with double encryption
+az storage account create -g rg-storage-prod -n stcontosoprod -l eastus \
+  --sku Standard_GZRS --kind StorageV2 --min-tls-version TLS1_2 \
+  --allow-blob-public-access false --https-only true --require-infrastructure-encryption
+
+# Switch to a customer-managed key
+az keyvault create -g rg-storage-prod -n kv-contoso-cmk --enable-purge-protection true
+az storage account update -g rg-storage-prod -n stcontosoprod --assign-identity
+# (give the identity "Key Vault Crypto Service Encryption User" on the key, then:)
+az storage account update -g rg-storage-prod -n stcontosoprod \
+  --encryption-key-source Microsoft.Keyvault \
+  --encryption-key-vault https://kv-contoso-cmk.vault.azure.net \
+  --encryption-key-name cmk-storage
+```
+
+```powershell
+New-AzStorageAccount -ResourceGroupName rg-storage-prod -Name stcontosoprod -Location eastus `
+  -SkuName Standard_GZRS -Kind StorageV2 -MinimumTlsVersion TLS1_2 `
+  -AllowBlobPublicAccess $false -RequireInfrastructureEncryption
+Set-AzStorageAccount -ResourceGroupName rg-storage-prod -Name stcontosoprod `
+  -KeyvaultEncryption -KeyVaultUri https://kv-contoso-cmk.vault.azure.net -KeyName cmk-storage
+```
+
+<TryIt labs="adm-storage-accounts" text="Create a locked-down account with infrastructure encryption, then switch it to a customer-managed key." />
+
+<Callout type="exam">
+"Encrypt with a key the company controls and can revoke" is a **customer-managed key**. "Add a second layer of encryption" is **infrastructure encryption**, and if the account already exists the answer involves **creating a new account**. "The CMK setup fails" usually means the vault lacks **purge protection** or the account has no **managed identity** with access. "Low latency for an SMB share" means a **Premium file shares** account. Performance can't be changed after creation.
+</Callout>
+
+<DeepDive title="Upgrading old accounts">
+
+Older general-purpose v1 and BlobStorage accounts can be upgraded to general-purpose v2 in place (Configuration > Upgrade), which is a one-way change and can change your bill because of tier pricing. Premium accounts can't become Standard and the reverse is also true: you create a new account and copy the data with AzCopy or object replication.
+
+</DeepDive>
+
+## Real-world business scenario
+
+<Scenario
+  company="Woodgrove Bank (fictional)"
+  industry="Banking"
+  problem="Regulators required that the bank, not its cloud provider, could make customer statements unreadable on demand, with double encryption for new data."
+  service="New general-purpose v2 accounts created with infrastructure encryption, TLS 1.2, no anonymous access and no key access, then moved to a customer-managed key in a Key Vault with purge protection, reached through a user-assigned managed identity."
+  why="The bank owns the key, can disable it in an emergency, and gets two independent layers of AES-256."
+  outcome="The audit passed, and key rotation is a new key version in Key Vault that storage picks up by itself."
+/>
+
+## When to use it and when not to
+
+<UseWhen
+  use={[
+    'You are creating a new account and want secure defaults from day one.',
+    'Policy says your organization must own and be able to revoke the encryption key (CMK).',
+    'You need different keys for different customers inside one account (encryption scopes).',
+  ]}
+  avoid={[
+    'Microsoft-managed keys already meet your compliance needs; CMK adds work and a dependency on Key Vault.',
+    'You expect to switch Standard to Premium later (create a new account instead).',
+    'You plan to turn on infrastructure encryption for an existing account (not possible).',
+  ]}
+  alternatives={[
+    '<strong>Managed HSM</strong> for FIPS 140-3 Level 3 key protection.',
+    '<strong>Encryption scopes</strong> for per-container keys.',
+  ]}
+/>

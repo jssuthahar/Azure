@@ -1,0 +1,148 @@
+{
+ "cert": "az-104",
+ "domain": 4,
+ "topic": "azure-load-balancer-for-admins",
+ "questions": [
+  {
+   "id": "adm-net-lb-1",
+   "type": "single",
+   "question": "You need to distribute TCP 1433 traffic from application servers to three database VMs. The database endpoint must not be reachable from the internet. What should you deploy?",
+   "options": [
+    {
+     "text": "A Standard internal load balancer",
+     "why": "Correct. An internal load balancer uses a private frontend IP in the virtual network."
+    },
+    {
+     "text": "A Standard public load balancer",
+     "why": "A public frontend is reachable from the internet."
+    },
+    {
+     "text": "An Azure Application Gateway",
+     "why": "Application Gateway is a layer 7 HTTP load balancer and does not suit TCP 1433."
+    },
+    {
+     "text": "Azure Front Door",
+     "why": "Front Door is a global HTTP service with a public endpoint."
+    }
+   ],
+   "answer": [
+    0
+   ],
+   "explanation": "An internal load balancer frontend has a private IP address that is reachable only from the virtual network, peered networks and connected on-premises networks.",
+   "objective": "4.3.2"
+  },
+  {
+   "id": "adm-net-lb-2",
+   "type": "single",
+   "question": "A Standard load balancer marks VM2 in the backend pool as unhealthy. The web application on VM2 works when tested locally. An NSG on the NIC of VM2 contains a deny rule. Which traffic is the deny rule most likely blocking?",
+   "options": [
+    {
+     "text": "Traffic from the AzureLoadBalancer service tag (168.63.129.16)",
+     "why": "Correct. Health probes originate from 168.63.129.16, and blocking them marks the backend as unhealthy."
+    },
+    {
+     "text": "Traffic from the VirtualNetwork service tag",
+     "why": "Health probes do not originate from the virtual network address space."
+    },
+    {
+     "text": "Outbound traffic to the Internet service tag",
+     "why": "Probe responses are return traffic and are allowed automatically by the stateful NSG."
+    },
+    {
+     "text": "Traffic from the GatewayManager service tag",
+     "why": "GatewayManager is used for gateway and Bastion management."
+    }
+   ],
+   "answer": [
+    0
+   ],
+   "explanation": "Allow inbound traffic from the AzureLoadBalancer service tag. The default rule AllowAzureLoadBalancerInBound does this unless a lower-numbered rule denies it.",
+   "objective": "4.3.3"
+  },
+  {
+   "id": "adm-net-lb-3",
+   "type": "single",
+   "question": "A Standard public load balancer has a load-balancing rule for TCP 80, a healthy HTTP probe and two backend VMs. Neither the VM network interfaces nor their subnet has an NSG. Clients cannot connect. What should you do?",
+   "options": [
+    {
+     "text": "Associate an NSG that allows inbound TCP 80 with the subnet or the network interfaces",
+     "why": "Correct. A Standard load balancer is secure by default, so an NSG must allow the traffic."
+    },
+    {
+     "text": "Change the load balancer to the Basic SKU",
+     "why": "The Basic SKU is retired."
+    },
+    {
+     "text": "Add an inbound NAT rule for TCP 80",
+     "why": "Inbound NAT rules forward to one VM and are also subject to the same requirement."
+    },
+    {
+     "text": "Enable floating IP on the rule",
+     "why": "Floating IP changes the destination address seen by the VM and does not allow traffic."
+    }
+   ],
+   "answer": [
+    0
+   ],
+   "explanation": "Standard load balancers and Standard public IP addresses are closed to inbound flows unless an NSG explicitly allows them.",
+   "objective": "4.3.3"
+  },
+  {
+   "id": "adm-net-lb-4",
+   "type": "single",
+   "question": "Users of a web application must be sent to the same backend VM for every request from the same client IP address. Which load-balancing rule setting should you configure?",
+   "options": [
+    {
+     "text": "Session persistence set to Client IP",
+     "why": "Correct. This uses a 2-tuple hash of the source and destination IP addresses."
+    },
+    {
+     "text": "Session persistence set to None",
+     "why": "None uses a 5-tuple hash, so a new source port can reach a different VM."
+    },
+    {
+     "text": "Floating IP enabled",
+     "why": "Floating IP does not affect which VM receives the traffic."
+    },
+    {
+     "text": "A TCP health probe",
+     "why": "Probes check health and do not control distribution."
+    }
+   ],
+   "answer": [
+    0
+   ],
+   "explanation": "Session persistence Client IP (2-tuple) or Client IP and protocol (3-tuple) keeps a client on the same backend.",
+   "objective": "4.3.2"
+  },
+  {
+   "id": "adm-net-lb-5",
+   "type": "multi",
+   "question": "An HTTP health probe is configured for port 80 and the path /status. Every backend VM is marked unhealthy. The web server on each VM listens on port 80 and returns HTTP 404 for /status. Which two actions would resolve the issue? Each correct answer presents a complete solution.",
+   "options": [
+    {
+     "text": "Change the probe path to a page that returns HTTP 200",
+     "why": "Correct. An HTTP probe treats only a 200 response as healthy."
+    },
+    {
+     "text": "Change the probe protocol to TCP on port 80",
+     "why": "Correct. A TCP probe succeeds when the port accepts connections."
+    },
+    {
+     "text": "Increase the probe interval",
+     "why": "The interval changes how often the probe runs, not the result."
+    },
+    {
+     "text": "Add the VMs to a second backend pool",
+     "why": "The same probe would still fail."
+    }
+   ],
+   "answer": [
+    0,
+    1
+   ],
+   "explanation": "HTTP and HTTPS probes require a 200 response. A TCP probe checks only that the port accepts a connection.",
+   "objective": "4.3.3"
+  }
+ ]
+}

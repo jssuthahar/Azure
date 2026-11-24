@@ -1,0 +1,147 @@
+{
+ "cert": "az-104",
+ "domain": 5,
+ "topic": "kql-for-azure-admins",
+ "questions": [
+  {
+   "id": "adm-ops-kql-1",
+   "type": "single",
+   "question": "You need to return only the failed blob requests from the StorageBlobLogs table. Which KQL operator should you use after the table name?",
+   "options": [
+    {
+     "text": "where StatusCode >= 400",
+     "why": "Correct. The where operator filters rows that match a condition."
+    },
+    {
+     "text": "project StatusCode >= 400",
+     "why": "The project operator selects or computes columns. It does not filter rows."
+    },
+    {
+     "text": "summarize StatusCode >= 400",
+     "why": "The summarize operator aggregates rows into groups."
+    },
+    {
+     "text": "render StatusCode >= 400",
+     "why": "The render operator draws a chart of the results."
+    }
+   ],
+   "answer": [
+    0
+   ],
+   "explanation": "A KQL query starts with a table and pipes rows through operators. where keeps only the rows that satisfy the predicate.",
+   "objective": "5.1.3"
+  },
+  {
+   "id": "adm-ops-kql-2",
+   "type": "single",
+   "question": "You need to display the number of failed requests in 15-minute intervals as a line chart. Which query should you run?",
+   "options": [
+    {
+     "text": "StorageBlobLogs | where StatusCode >= 400 | summarize count() by bin(TimeGenerated, 15m) | render timechart",
+     "why": "Correct. bin groups the timestamps into 15-minute buckets, summarize counts each bucket and render timechart draws the chart."
+    },
+    {
+     "text": "StorageBlobLogs | where StatusCode >= 400 | where TimeGenerated > ago(15m) | render timechart",
+     "why": "ago(15m) limits the rows to the last 15 minutes. It does not create 15-minute intervals."
+    },
+    {
+     "text": "StorageBlobLogs | summarize count() by StatusCode | render piechart",
+     "why": "This query counts by status code and draws a pie chart, not a time series."
+    },
+    {
+     "text": "StorageBlobLogs | project TimeGenerated, StatusCode | take 15",
+     "why": "take returns 15 rows. It does not aggregate the data into intervals."
+    }
+   ],
+   "answer": [
+    0
+   ],
+   "explanation": "Use summarize with bin(TimeGenerated, interval) for time series and render timechart to draw them.",
+   "objective": "5.1.3"
+  },
+  {
+   "id": "adm-ops-kql-3",
+   "type": "single",
+   "question": "You must identify the users who deleted Azure resources during the last seven days. The activity log is exported to a Log Analytics workspace. Which table should you query?",
+   "options": [
+    {
+     "text": "AzureActivity",
+     "why": "Correct. Activity log events exported by a subscription diagnostic setting are stored in the AzureActivity table."
+    },
+    {
+     "text": "Heartbeat",
+     "why": "The Heartbeat table records agent heartbeats from monitored machines."
+    },
+    {
+     "text": "Perf",
+     "why": "The Perf table stores performance counters collected by the Azure Monitor Agent."
+    },
+    {
+     "text": "StorageBlobLogs",
+     "why": "StorageBlobLogs contains data-plane requests to Blob Storage."
+    }
+   ],
+   "answer": [
+    0
+   ],
+   "explanation": "Filter AzureActivity on OperationNameValue and ActivityStatusValue and project the Caller column to see who performed delete operations.",
+   "objective": "5.1.3"
+  },
+  {
+   "id": "adm-ops-kql-4",
+   "type": "single",
+   "question": "You run the following query: Heartbeat | summarize LastSeen = max(TimeGenerated) by Computer | where LastSeen < ago(15m). What does the query return?",
+   "options": [
+    {
+     "text": "One row for each computer whose most recent heartbeat is older than 15 minutes",
+     "why": "Correct. The query finds the latest heartbeat per computer and keeps only computers that have not reported for 15 minutes."
+    },
+    {
+     "text": "All heartbeat records from the last 15 minutes",
+     "why": "The summarize operator reduces the results to one row per computer before the filter is applied."
+    },
+    {
+     "text": "The number of heartbeats received in each 15-minute interval",
+     "why": "The query does not use bin and does not count records."
+    },
+    {
+     "text": "Computers that sent a heartbeat during the last 15 minutes",
+     "why": "The filter keeps computers whose last heartbeat is earlier than 15 minutes ago."
+    }
+   ],
+   "answer": [
+    0
+   ],
+   "explanation": "This pattern is commonly saved as a log search alert to detect machines that stop reporting.",
+   "objective": "5.1.3"
+  },
+  {
+   "id": "adm-ops-kql-5",
+   "type": "single",
+   "question": "You write a KQL query that returns the top failing callers of a storage account. You need to be notified when the query returns results, and the query must run every 10 minutes. What should you create?",
+   "options": [
+    {
+     "text": "A log search alert rule that runs the query every 10 minutes and uses an action group",
+     "why": "Correct. Log search alert rules run a KQL query on a schedule and call action groups when the condition is met."
+    },
+    {
+     "text": "A metric alert rule on the Transactions metric",
+     "why": "A metric alert evaluates a metric value. It cannot run the KQL query."
+    },
+    {
+     "text": "An alert processing rule with a recurring schedule",
+     "why": "Alert processing rules modify alerts that have already fired. They do not run queries."
+    },
+    {
+     "text": "A saved query pinned to a dashboard",
+     "why": "A pinned query displays results but does not notify anyone."
+    }
+   ],
+   "answer": [
+    0
+   ],
+   "explanation": "In the Logs toolbar, New alert rule creates a log search alert from the current query.",
+   "objective": "5.1.3"
+  }
+ ]
+}
