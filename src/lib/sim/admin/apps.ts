@@ -28,8 +28,15 @@ type Tier = 'Free' | 'Basic' | 'Standard' | 'PremiumV3';
 const TIERS: Record<string, { tier: Tier; workers: number; slots: number; rank: number }> = {
   F1: { tier: 'Free', workers: 1, slots: 0, rank: 0 },
   B1: { tier: 'Basic', workers: 3, slots: 0, rank: 1 },
+  B2: { tier: 'Basic', workers: 3, slots: 0, rank: 1 },
+  B3: { tier: 'Basic', workers: 3, slots: 0, rank: 1 },
   S1: { tier: 'Standard', workers: 10, slots: 5, rank: 2 },
+  S2: { tier: 'Standard', workers: 10, slots: 5, rank: 2 },
+  S3: { tier: 'Standard', workers: 10, slots: 5, rank: 2 },
+  P0v3: { tier: 'PremiumV3', workers: 30, slots: 20, rank: 3 },
   P1v3: { tier: 'PremiumV3', workers: 30, slots: 20, rank: 3 },
+  P2v3: { tier: 'PremiumV3', workers: 30, slots: 20, rank: 3 },
+  P3v3: { tier: 'PremiumV3', workers: 30, slots: 20, rank: 3 },
 };
 const skuKey = (s?: string) => Object.keys(TIERS).find((k) => lc(k) === lc(s));
 const tierOf = (plan: Res) => TIERS[skuKey(plan.props.sku) ?? 'B1'];
@@ -94,7 +101,7 @@ const planUpdate: Handler = (p, w) => {
   w.assertWritable(plan.rg, 'update App Service plan');
   const want = one(p, '--sku');
   const key = want ? skuKey(want) : skuKey(plan.props.sku);
-  if (!key) throw new SimError(`SKU '${want}' isn't in this practice simulator. Try F1, B1, S1 or P1V3 (each stands for its whole tier).`, 'InvalidSku');
+  if (!key) throw new SimError(`SKU '${want}' isn't in this practice simulator. Try F1, B1-B3, S1-S3 or P0V3-P3V3.`, 'InvalidSku');
   const t = TIERS[key];
   const workers = has(p, '--number-of-workers') ? Number(one(p, '--number-of-workers')) : Math.min(Number(plan.props.workers ?? 1), t.workers);
   const apps = w.res.filter((r) => r.type === 'webapp' && r.rg === plan.rg && r.props.plan === plan.name);

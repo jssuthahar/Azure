@@ -150,6 +150,7 @@ Portal: **Network security groups → + Create**, then **Inbound security rules 
 ```bash
 az network asg create -g rg-net-sec -n asg-web
 az network nic create -g rg-net-sec -n nic-web01 --vnet-name vnet-app --subnet snet-web --application-security-groups asg-web
+az vm create -g rg-net-sec -n web01 --image Ubuntu2204 --nics nic-web01
 az network nsg create -g rg-net-sec -n nsg-snet-web
 az network nsg rule create -g rg-net-sec --nsg-name nsg-snet-web -n Allow-HTTPS-to-web \
   --priority 200 --direction Inbound --access Allow --protocol Tcp \

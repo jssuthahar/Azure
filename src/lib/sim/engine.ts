@@ -27,6 +27,13 @@ export const VM_SIZES: Record<string, { cpu: number; ram: number; hr: number }> 
   Standard_B2s: { cpu: 2, ram: 4, hr: 0.05 },
   Standard_D2s_v5: { cpu: 2, ram: 8, hr: 0.1 },
   Standard_D4s_v5: { cpu: 4, ram: 16, hr: 0.2 },
+  // AZ-104 sizing lessons: more families (B burstable, D general purpose, E memory, F compute)
+  Standard_B4ms: { cpu: 4, ram: 16, hr: 0.17 },
+  Standard_D8s_v5: { cpu: 8, ram: 32, hr: 0.4 },
+  Standard_E2s_v5: { cpu: 2, ram: 16, hr: 0.13 },
+  Standard_E4s_v5: { cpu: 4, ram: 32, hr: 0.25 },
+  Standard_F2s_v2: { cpu: 2, ram: 4, hr: 0.09 },
+  Standard_F4s_v2: { cpu: 4, ram: 8, hr: 0.17 },
 };
 export const IMAGES: Record<string, { label: string; os: 'Linux' | 'Windows' }> = {
   Ubuntu2204: { label: 'Ubuntu Server 22.04 LTS', os: 'Linux' },
@@ -43,8 +50,15 @@ export const STORAGE_SKUS: Record<string, { label: string; mult: number }> = {
 export const PLAN_SKUS: Record<string, { label: string; hr: number }> = {
   F1: { label: 'Free (F1)', hr: 0 },
   B1: { label: 'Basic (B1)', hr: 0.018 },
+  B2: { label: 'Basic (B2)', hr: 0.036 },
+  B3: { label: 'Basic (B3)', hr: 0.072 },
   S1: { label: 'Standard (S1)', hr: 0.1 },
+  S2: { label: 'Standard (S2)', hr: 0.2 },
+  S3: { label: 'Standard (S3)', hr: 0.4 },
+  P0v3: { label: 'Premium v3 (P0v3)', hr: 0.085 },
   P1v3: { label: 'Premium v3 (P1v3)', hr: 0.17 },
+  P2v3: { label: 'Premium v3 (P2v3)', hr: 0.34 },
+  P3v3: { label: 'Premium v3 (P3v3)', hr: 0.68 },
 };
 export const RUNTIMES = ['DOTNETCORE:8.0', 'NODE:20-lts', 'PYTHON:3.12', 'JAVA:21-java21'];
 
@@ -252,7 +266,7 @@ export class Sim {
   }
 
   /* ---------- virtual machines ---------- */
-  createVm(o: { rg: string; name: string; image: string; size?: string; location?: string; zone?: string; admin?: string; ports?: string }, via: Via = 'portal') {
+  createVm(o: { rg: string; name: string; image: string; size?: string; location?: string; zone?: string; admin?: string; ports?: string; vnet?: string }, via: Via = 'portal') {
     const g = this.needRg(o.rg);
     this.writable(g, 'create');
     const image = Object.keys(IMAGES).find((k) => k.toLowerCase() === (o.image ?? '').toLowerCase().replace(/[^a-z0-9]/gi, '')) ??
@@ -269,7 +283,12 @@ export class Sim {
     const zone = o.zone && ['1', '2', '3'].includes(o.zone) ? o.zone : '';
     const ports = o.ports ?? (os === 'Linux' ? '22' : '3389');
     // A VM needs supporting resources: a disk, a NIC, a virtual network and (optionally) a public IP + NSG.
-    let vnet = this.inRg(g.name).find((r) => r.type === 'vnet' && r.location === location);
+    // --vnet-name picks a specific VNet (any resource group, same region); otherwise the first one in the group.
+    let vnet = o.vnet
+      ? this.res.find((r) => r.type === 'vnet' && r.name.toLowerCase() === o.vnet!.toLowerCase())
+      : this.inRg(g.name).find((r) => r.type === 'vnet' && r.location === location);
+    if (o.vnet && !vnet) throw new SimError(`Virtual network '${o.vnet}' was not found.`, 'ResourceNotFound');
+    if (o.vnet && vnet!.location !== location) throw new SimError(`Virtual network '${vnet!.name}' is in ${vnet!.location}, but the VM is in ${location}. A VM's NIC must be in a VNet in the same region.`, 'InvalidResourceReference');
     if (!vnet) vnet = this.add('vnet', g, `${o.name}VNET`, location, { addressSpace: '10.0.0.0/16', subnets: ['default (10.0.0.0/24)'] });
     const n = this.inRg(g.name).filter((r) => r.type === 'nic').length;
     const nsg = this.add('nsg', g, `${o.name}NSG`, location, { inbound: ports === 'none' ? [] : [ports] });

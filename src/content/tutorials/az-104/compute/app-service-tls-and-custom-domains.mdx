@@ -98,7 +98,7 @@ A custom domain works the same way. A **TXT record** in DNS is your proof of add
 
 Your app has a long, boring name like app-contoso-www01.azurewebsites.net.
 
-You want people to type **www.contoso-learn.com** instead.
+You want people to type `www.contoso-learn.com` instead.
 
 First you write a secret code in your domain's settings so Azure believes it's yours. That's the **TXT record**.
 
@@ -118,7 +118,7 @@ You need three things: a plan on **Basic** or higher (Free doesn't support custo
 
 | Domain | Records to create at your DNS host |
 | --- | --- |
-| **Subdomain** (www.contoso-learn.com) | **TXT** `asuid.www` = verification ID, **CNAME** `www` → `app-contoso-www01.azurewebsites.net` |
+| **Subdomain** (`www.contoso-learn.com`) | **TXT** `asuid.www` = verification ID, **CNAME** `www` → `app-contoso-www01.azurewebsites.net` |
 | **Root** (contoso-learn.com) | **TXT** `asuid` = verification ID, **A** `@` → the app's inbound IP address |
 | **Wildcard** (*.contoso-learn.com) | **TXT** `asuid` = verification ID, **CNAME** `*` → the app's default domain |
 
@@ -177,7 +177,7 @@ az webapp config set -g rg-admin-dns -n app-contoso-www01 --min-tls-version 1.2
 
 <DeepDive title="What a swap does to domains and certificates">
 
-Custom domain names, non-public certificates and TLS settings stay with their deployment slot when you swap. That's on purpose: production keeps www.contoso-learn.com and its certificate, and only the code and swappable settings move. If you want staging on its own domain, add a separate hostname (such as staging.contoso-learn.com) to the staging slot.
+Custom domain names, non-public certificates and TLS settings stay with their deployment slot when you swap. That's on purpose: production keeps `www.contoso-learn.com` and its certificate, and only the code and swappable settings move. If you want staging on its own domain, add a separate hostname (such as `staging.contoso-learn.com`) to the staging slot.
 
 </DeepDive>
 

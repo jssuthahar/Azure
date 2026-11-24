@@ -99,7 +99,15 @@ export class World extends Sim {
   }
   rolesAt(upn: string, rg?: string): Role[] {
     const who = this.principalsOf(upn);
-    return this.roles.filter((r) => who.includes(r.principal) && (r.scope === 'subscription' || (rg && r.scope.toLowerCase() === `rg/${rg.toLowerCase()}`))).map((r) => r.role);
+    const own = this.roles.filter((r) => who.includes(r.principal) && (r.scope === 'subscription' || (rg && r.scope.toLowerCase() === `rg/${rg.toLowerCase()}`))).map((r) => r.role);
+    // AZ-104: assignments at a management group above this subscription inherit down (stored by src/lib/sim/admin/identity.ts).
+    const chain = this.mgChain().map((m) => m.toLowerCase());
+    const extra: { principal: string; role: string; scope: string }[] = (this as any).adm?.identity?.roles ?? [];
+    const fromMg = extra
+      .filter((r) => who.includes(r.principal) && (r.role === 'Owner' || r.role === 'Contributor' || r.role === 'Reader')
+        && r.scope.startsWith('mg/') && chain.includes(r.scope.slice(3).toLowerCase()))
+      .map((r) => r.role as Role);
+    return [...own, ...fromMg];
   }
   allow(action: 'read' | 'write' | 'delete' | 'authorize', rg?: string, op = 'write') {
     const roles = this.rolesAt(this.current, rg);

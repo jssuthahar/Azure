@@ -413,7 +413,7 @@ function nicCreate(p: Parsed, w: World): AdminOut {
   const nic = w.addRes('nic', g(p), name, { vnet: v.name, subnet: s.name, privateIp: ip, nsg, asgs, ipForwarding: bool(p, '--ip-forwarding', false), vm: name.replace(/^nic-/i, ''), ipConfig: 'ipconfig1' }, { location: v.location });
   autoRegister(w, nic);
   w.emit('adm.nic', { rg: nic.rg, name, vnet: v.name, subnet: s.name, ip, nsg, asgs, ipForwarding: nic.props.ipForwarding });
-  return { out: json({ NewNIC: { name, ipConfigurations: [{ name: 'ipconfig1', privateIPAddress: ip, subnet: { id: `${v.id}/subnets/${s.name}` }, applicationSecurityGroups: asgs.map((a) => ({ id: idOf(w, 'asg', g(p), a) })) }], networkSecurityGroup: nsg ? { id: idOf(w, 'nsg', g(p), nsg) } : null, enableIPForwarding: nic.props.ipForwarding, provisioningState: 'Succeeded' } }) + `\n(Practice shell: ${name} stands in for VM '${nic.props.vm}'. Network Watcher and Bastion commands accept either name.)` };
+  return { out: json({ NewNIC: { name, ipConfigurations: [{ name: 'ipconfig1', privateIPAddress: ip, subnet: { id: `${v.id}/subnets/${s.name}` }, applicationSecurityGroups: asgs.map((a) => ({ id: idOf(w, 'asg', g(p), a) })) }], networkSecurityGroup: nsg ? { id: idOf(w, 'nsg', g(p), nsg) } : null, enableIPForwarding: nic.props.ipForwarding, provisioningState: 'Succeeded' } }) + `\nNext: attach it to a VM with az vm create -g ${g(p)} -n ${nic.props.vm} --image Ubuntu2204 --nics ${name}` };
 }
 function nicUpdate(p: Parsed, w: World): AdminOut {
   req(p, [[RG, '-g'], ['--name', '-n']]);
@@ -810,7 +810,49 @@ function lbShow(p: Parsed, w: World): AdminOut {
   return out(p, { name: lb.name, sku: { name: 'Standard' }, type: lb.props.type, frontendIPConfigurations: lb.props.frontends, backendAddressPools: lb.props.pools, probes: lb.props.probes, loadBalancingRules: lb.props.rules });
 }
 
+/** `az vm create --vnet-name X --subnet Y`: a real VM whose own NIC sits in that subnet, so Network Watcher,
+ *  NSG, ASG, load balancer and Bastion commands work on the VM itself (no stand-in NIC needed). */
+function vmCreateInSubnet(p: Parsed, w: World): AdminOut {
+  req(p, [[RG, '-g'], ['--name', '-n'], ['--image', ''], ['--vnet-name', ''], ['--subnet', '']]);
+  const v = w.res.find((r) => r.type === 'vnet' && lc(r.name) === lc(one(p, '--vnet-name')));
+  if (!v) throw new SimError(`Virtual network '${one(p, '--vnet-name')}' was not found. Create it first with az network vnet create.`, 'ResourceNotFound');
+  const s = subnetOf(v, one(p, '--subnet')!.split('/').pop()!);
+  if (/^(GatewaySubnet|AzureBastionSubnet|AzureFirewallSubnet)$/i.test(s.name)) throw new SimError(`'${s.name}' is reserved for its Azure service. Put VMs in another subnet.`, 'SubnetReserved');
+  const nsg = one(p, '--nsg') || undefined;
+  if (nsg) w.need('nsg', g(p), nsg);
+  const asgs = words(p, '--asgs').map((a) => a.split('/').pop()!);
+  for (const a of asgs) w.need('asg', g(p), a);
+  const ip = freeIp(w, v, s, one(p, '--private-ip-address'));
+  const noPip = has(p, '--public-ip-address') && !one(p, '--public-ip-address');
+  const vm = w.createVm({ rg: g(p), name: nm(p), image: one(p, '--image')!, size: one(p, '--size'), location: one(p, '--location') ?? v.location, zone: one(p, '--zone'), admin: one(p, '--admin-username'), ports: noPip ? 'none' : undefined, vnet: v.name }, 'cli');
+  const nic = w.find('nic', vm.rg, vm.props.nic)!;
+  Object.assign(nic.props, { vnet: v.name, subnet: s.name, privateIp: ip, nsg, asgs, ipForwarding: false, vm: vm.name, ipConfig: 'ipconfig1' });
+  vm.props.privateIp = ip;
+  if (noPip) { vm.props.publicIp = ''; w.res = w.res.filter((r) => !(r.type === 'pip' && r.name === vm.props.pip && r.rg === vm.rg)); vm.props.pip = ''; }
+  autoRegister(w, nic);
+  w.emit('adm.nic', { rg: nic.rg, name: nic.name, vnet: v.name, subnet: s.name, ip, nsg, asgs, ipForwarding: false, vm: vm.name });
+  return { out: json({ id: vm.id, location: vm.location, powerState: 'VM running', privateIpAddress: ip, publicIpAddress: vm.props.publicIp, resourceGroup: vm.rg, zones: vm.props.zone, network: { vnet: v.name, subnet: s.name, nic: nic.name, nsg: nsg ?? null } }) };
+}
+
+/** `az vm create --nics nic-web01`: a real VM that uses a NIC you created first (the NIC keeps its subnet, IP, NSG and ASGs). */
+function vmCreateWithNic(p: Parsed, w: World): AdminOut {
+  req(p, [[RG, '-g'], ['--name', '-n'], ['--image', ''], ['--nics', '']]);
+  const nic = nicFor(w, g(p), words(p, '--nics')[0]);
+  if (nic.props.attachedVm) throw new SimError(`Network interface '${nic.name}' is already attached to VM '${nic.props.attachedVm}'. A NIC can belong to one VM at a time.`, 'NicInUse');
+  const v = w.res.find((r) => r.type === 'vnet' && lc(r.name) === lc(nic.props.vnet))!;
+  const vm = w.createVm({ rg: g(p), name: nm(p), image: one(p, '--image')!, size: one(p, '--size'), location: nic.location, zone: one(p, '--zone'), admin: one(p, '--admin-username'), ports: 'none', vnet: v.name }, 'cli');
+  // swap the auto-created NIC, NSG and public IP for the learner's NIC
+  const auto = [vm.props.nic, vm.props.nsg, vm.props.pip];
+  w.res = w.res.filter((r) => !(r.rg === vm.rg && auto.includes(r.name) && (r.type === 'nic' || r.type === 'nsg' || r.type === 'pip')));
+  Object.assign(vm.props, { nic: nic.name, nsg: '', pip: '', publicIp: '', privateIp: nic.props.privateIp });
+  nic.props.vm = vm.name;
+  nic.props.attachedVm = vm.name;
+  w.emit('adm.vm.nic', { rg: vm.rg, vm: vm.name, nic: nic.name, subnet: nic.props.subnet, ip: nic.props.privateIp });
+  return { out: json({ id: vm.id, location: vm.location, powerState: 'VM running', privateIpAddress: nic.props.privateIp, publicIpAddress: '', resourceGroup: vm.rg, networkProfile: { networkInterfaces: [{ id: nic.id, primary: true }] } }) };
+}
+
 const TABLE: Record<string, Cmd | Handler> = {
+  'vm create': { run: (p, w) => (has(p, '--nics') ? vmCreateWithNic(p, w) : vmCreateInSubnet(p, w)), when: (p) => has(p, '--nics') || (has(p, '--vnet-name') && has(p, '--subnet')) },
   'network public-ip create': pipCreate,
   'network public-ip show': pipShow,
   'network public-ip list': (p, w) => { const l = w.res.filter((r) => r.type === 'pip' && (!one(p, RG) || lc(r.rg) === lc(g(p)))); const rows = l.map((r) => ({ Name: r.name, ResourceGroup: r.rg, IpAddress: r.props.address, Sku: r.props.sku ?? 'Standard', Allocation: r.props.allocation ?? 'Static', Zones: (r.props.zones ?? []).join(',') })); return out(p, rows, rows, ['Name', 'ResourceGroup', 'IpAddress', 'Sku', 'Allocation', 'Zones']); },
