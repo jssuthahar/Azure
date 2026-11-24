@@ -43,6 +43,7 @@ const LEARN: (Group | Item)[] = [
     { icon: '🃏', label: 'Revision', href: `${x}/revision/`, desc: 'Flashcards and quick notes' },
     { icon: '🎮', label: 'Play & Learn', href: `${x}/games/`, desc: 'Sort It, Match, Lightning Round, Who Am I?' },
     { icon: '🔥', label: 'Daily Challenge', href: `${x}/games/daily/`, desc: '5 questions a day, keep your streak' },
+    ...(exam.sim ? [] : [{ icon: '🏗️', label: 'Architecture Builder', href: `${x}/architect/`, desc: 'Drag Azure resources, check the design, test traffic' }]),
   ] },
   { label: 'Practice Labs', href: `${x}/labs/`, desc: '', icon: 'flask' },
   { label: 'Simulations', href: '/simulator/', desc: '', icon: 'bolt' },
@@ -90,6 +91,7 @@ const groupActive = (g: Group) => g.items.some((i) => i.href === active);
         <option value="Cheat sheet" data-url={`${x}/cheat-sheet/`} />
         <option value="Exam day guide" data-url={`${x}/exam-day/`} />
         <option value="3D explorer" data-url={`${x}/3d-explorer/`} />
+        {!exam.sim && <option value="Architecture builder" data-url={`${x}/architect/`} />}
         <option value="Learning dashboard" data-url={`${x}/learn/`} />
       </datalist>
     </form>

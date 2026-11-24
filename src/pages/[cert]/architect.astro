@@ -1,0 +1,259 @@
+---
+/**
+ * Architecture Builder: drag Azure resources onto a canvas, link them, then
+ * check the design, send test traffic through it and read a plain-English
+ * explanation. Azure exams only (GitHub exams simulate VS Code instead).
+ * Logic: src/lib/architect/ (model, rules, traffic, explain, templates, ui).
+ * Education only: nothing is deployed, and no AI service is called.
+ */
+import LearningLayout from '../../layouts/LearningLayout.astro';
+import { getNav } from '../../lib/learn';
+import { SITE } from '../../config';
+import { getExam, liveExams } from '../../data/exams';
+
+export function getStaticPaths() {
+  return liveExams().filter((e) => !e.sim).map((e) => ({ params: { cert: e.slug } }));
+}
+const exam = getExam(Astro.params.cert);
+const x = `/${exam.slug}`;
+const nav = await getNav(exam.slug);
+const title = `Azure Architecture Builder: Design & Test VNets | ${exam.code}`;
+const description = `Free Azure architecture builder for ${exam.code}: drag VNets, subnets, VMs, NSGs, load balancers and private endpoints, check the design and test traffic.`;
+const crumbs = [
+  { name: 'Home', url: '/' },
+  { name: exam.code, url: `${x}/` },
+  { name: 'Architecture Builder', url: `${x}/architect/` },
+];
+const schema = [{
+  '@type': 'WebApplication',
+  name: 'Azure Architecture Builder',
+  url: `${SITE.url}${x}/architect/`,
+  applicationCategory: 'EducationalApplication',
+  operatingSystem: 'Any (web browser)',
+  isAccessibleForFree: true,
+  offers: { '@type': 'Offer', price: '0', priceCurrency: 'USD' },
+  description,
+  publisher: { '@type': 'Organization', name: SITE.orgFull },
+}];
+const faq = [
+  ['Does this deploy anything to Azure?', 'No. It’s a visual simulation for learning. The checks and the traffic test follow Azure’s rules (subnet names and sizes, NSG priorities, load balancer health probes, peering, private endpoint DNS), but nothing is created in any Azure subscription.'],
+  ['Is “Explain my design” an AI?', 'No. It’s written by the builder’s own rule checker from your design, so it’s free, instant, and nothing you draw leaves your browser.'],
+  ['Where are my designs saved?', 'In this browser only (local storage). Export a design as JSON to keep it or move it to another device, and as SVG or PNG to share the diagram.'],
+];
+---
+<LearningLayout title={title} description={description} breadcrumbs={crumbs} schema={schema} nav={nav} shell={false} wide>
+  <div class="ab-page mx-auto max-w-[1500px] px-4 py-6 sm:px-6">
+    <nav aria-label="Breadcrumb" class="text-sm text-muted"><a class="hover:underline" href="/">Home</a> › <a class="hover:underline" href={`${x}/`}>{exam.code}</a> › <span class="text-[var(--text)]">Architecture Builder</span></nav>
+    <h1 class="mt-3 text-[1.9rem] leading-tight font-bold tracking-tight sm:text-[2.3rem]">Azure Architecture Builder</h1>
+    <p class="mt-2 max-w-3xl text-muted">Build a network the way you would in Azure: virtual networks, subnets, VMs, NSGs, load balancers, private endpoints and more. Then <b>check</b> it for mistakes, <b>send traffic</b> through it and get a plain-English <b>explanation</b>. Try a broken starter design and fix it.</p>
+    <p class="ab-note mt-3" role="note">🧪 Simulation for learning. Nothing is deployed to Azure, and “Explain” is written by the built-in rule checker, not an AI. Designs are saved in this browser only.</p>
+
+    <div class="ab" data-ab-root>
+      <div class="ab-toolbar" role="toolbar" aria-label="Design tools">
+        <div class="ab-tgroup">
+          <label class="sr-only" for="ab-template">Starter design</label>
+          <select id="ab-template" data-ab-template></select>
+          <button type="button" class="btn btn-outline btn-sm" data-ab-load>Load</button>
+        </div>
+        <div class="ab-tgroup">
+          <label class="sr-only" for="ab-name">Design name</label>
+          <input id="ab-name" data-ab-name type="text" maxlength="60" autocomplete="off" spellcheck="false">
+          <button type="button" class="btn btn-outline btn-sm" data-ab-save>💾 Save</button>
+          <label class="sr-only" for="ab-projects">Saved designs</label>
+          <select id="ab-projects" data-ab-projects></select>
+          <button type="button" class="btn btn-outline btn-sm" data-ab-open>Open</button>
+          <button type="button" class="btn btn-outline btn-sm" data-ab-del aria-label="Delete the selected saved design">🗑️</button>
+        </div>
+        <div class="ab-tgroup">
+          <button type="button" class="btn btn-accent btn-sm" data-ab-link aria-pressed="false">🔗 Link</button>
+          <button type="button" class="btn btn-outline btn-sm" data-ab-undo>↶ Undo</button>
+          <button type="button" class="btn btn-outline btn-sm" data-ab-clear>Clear</button>
+          <label class="sr-only" for="ab-export">Export</label>
+          <select id="ab-export" data-ab-export><option value="">Export…</option><option value="png">PNG image</option><option value="svg">SVG diagram</option><option value="json">JSON (re-import)</option></select>
+          <label class="btn btn-outline btn-sm ab-import">Import<input type="file" accept="application/json,.json" data-ab-import class="sr-only"></label>
+        </div>
+      </div>
+      <p class="ab-goal" data-ab-goal hidden></p>
+
+      <div class="ab-grid">
+        <aside class="ab-palette" aria-label="Azure resources to add">
+          <p class="ab-paltitle">Add a resource</p>
+          <div data-ab-palette></div>
+        </aside>
+
+        <div class="ab-stage">
+          <div class="ab-stagebar">
+            <span class="ab-badge" data-ab-badge data-tone="ok"></span>
+            <span class="ab-mode" data-ab-mode aria-hidden="true"></span>
+            <span class="ab-zoom" data-ab-zoom><button type="button" data-z="out" aria-label="Zoom out">−</button><button type="button" data-z="fit">Fit</button><button type="button" data-z="in" aria-label="Zoom in">+</button></span>
+          </div>
+          <div class="ab-wrap" data-ab-wrap>
+            <svg data-ab-svg viewBox="0 0 1600 1000" role="group" aria-label="Design canvas. Tab to a resource; arrow keys move it, Delete removes it, Enter edits it."></svg>
+          </div>
+          <div class="ab-toast" data-ab-toast hidden role="status"></div>
+        </div>
+
+        <section class="ab-panel" aria-label="Design details">
+          <div class="ab-tabs" role="tablist" aria-label="Builder panels">
+            <button type="button" role="tab" id="abt-props" aria-controls="abp-props" aria-selected="true" data-ab-tab="props">Properties</button>
+            <button type="button" role="tab" id="abt-check" aria-controls="abp-check" aria-selected="false" tabindex="-1" data-ab-tab="check">Check</button>
+            <button type="button" role="tab" id="abt-traffic" aria-controls="abp-traffic" aria-selected="false" tabindex="-1" data-ab-tab="traffic">Traffic</button>
+            <button type="button" role="tab" id="abt-explain" aria-controls="abp-explain" aria-selected="false" tabindex="-1" data-ab-tab="explain">Explain</button>
+          </div>
+          <div id="abp-props" role="tabpanel" aria-labelledby="abt-props" data-ab-pane="props"><div data-ab-props></div></div>
+          <div id="abp-check" role="tabpanel" aria-labelledby="abt-check" data-ab-pane="check" hidden><div data-ab-check></div></div>
+          <div id="abp-traffic" role="tabpanel" aria-labelledby="abt-traffic" data-ab-pane="traffic" hidden><div data-ab-traffic></div></div>
+          <div id="abp-explain" role="tabpanel" aria-labelledby="abt-explain" data-ab-pane="explain" hidden>
+            <button type="button" class="btn btn-accent btn-sm" data-ab-explain-run>💡 Explain my design</button>
+            <p class="ab-hint mt-2">Written from your design by the built-in rule checker. No AI, nothing leaves your browser.</p>
+            <div class="ab-explain" data-ab-explain aria-live="polite"></div>
+          </div>
+        </section>
+      </div>
+      <p class="sr-only" aria-live="polite" data-ab-live></p>
+    </div>
+
+    <section class="mt-10 max-w-3xl">
+      <h2 class="text-xl font-bold">How to use it</h2>
+      <ol class="mt-3 list-decimal space-y-1.5 pl-5 text-muted">
+        <li>Load a starter design, or tap <b>Virtual network</b>, then <b>Subnet</b>, then <b>Virtual machine</b>. On a computer you can also drag them onto the canvas.</li>
+        <li>Press <b>🔗 Link</b> and tap two resources to connect them: an NSG to a subnet, a public IP to a load balancer, a load balancer to its VMs, a private endpoint to a storage account.</li>
+        <li>Open <b>Check</b> to see errors and warnings with the fix for each, then <b>Traffic</b> to send a request from the internet, on-premises or a VM and watch where it goes.</li>
+        <li>Export the diagram as PNG or SVG for your notes, or as JSON to open it again later.</li>
+      </ol>
+      <h2 class="mt-8 text-xl font-bold">Questions</h2>
+      <dl class="mt-3 space-y-4">
+        {faq.map(([q, a]) => <div><dt class="font-semibold">{q}</dt><dd class="mt-1 text-muted">{a}</dd></div>)}
+      </dl>
+    </section>
+  </div>
+</LearningLayout>
+
+<script>
+  import { mountBuilder } from '../../lib/architect/ui';
+  const root = document.querySelector<HTMLElement>('[data-ab-root]');
+  if (root) mountBuilder(root, '/az-104/');
+</script>
+
+<style is:global>
+  .ab-note { display: inline-block; border-radius: 8px; background: var(--pastel-yellow); padding: 6px 12px; font-size: .875rem; color: var(--text); }
+  .ab { margin-top: 1.25rem; }
+  .ab-toolbar { display: flex; flex-wrap: wrap; gap: .5rem 1rem; align-items: center; }
+  .ab-tgroup { display: flex; flex-wrap: wrap; gap: .4rem; align-items: center; }
+  .ab-toolbar select, .ab-toolbar input[type="text"] { min-height: 36px; border: 1px solid var(--border); border-radius: 8px; background: var(--bg); color: var(--text); padding: 0 .6rem; font-size: 16px; max-width: 14rem; }
+  .ab-toolbar .btn { min-height: 36px; }
+  .ab-import { cursor: pointer; }
+  .ab-import:focus-within { outline: 2px solid var(--accent); outline-offset: 2px; }
+  .ab-goal { margin-top: .75rem; border-left: 4px solid var(--accent); background: var(--accent-soft); padding: .5rem .75rem; border-radius: 6px; color: var(--text); font-size: .95rem; }
+  .ab-grid { display: grid; gap: 1rem; margin-top: 1rem; grid-template-columns: minmax(0, 1fr); }
+  @media (min-width: 1180px) { .ab-grid { grid-template-columns: 190px minmax(0, 1fr) 340px; } }
+  .ab-palette { min-width: 0; }
+  .ab-paltitle { font-weight: 700; font-size: .9rem; margin-bottom: .4rem; }
+  .ab-pgroup { margin-bottom: .6rem; }
+  .ab-pgh { font-size: .75rem; text-transform: uppercase; letter-spacing: .04em; color: var(--text-muted); margin: .4rem 0 .25rem; }
+  .ab-pal { display: flex; align-items: center; gap: .4rem; width: 100%; min-height: 36px; text-align: left; border: 1px solid var(--border); border-radius: 8px; background: var(--card); color: var(--text); padding: .3rem .55rem; margin-bottom: .3rem; font-size: .875rem; cursor: grab; touch-action: none; }
+  .ab-pal:hover, .ab-pal:focus-visible { border-color: var(--accent); }
+  @media (max-width: 1179px) {
+    .ab-palette > div { display: flex; gap: .4rem; overflow-x: auto; padding-bottom: .4rem; }
+    .ab-pgroup { display: contents; }
+    .ab-pgh { display: none; }
+    .ab-pal { width: auto; flex: 0 0 auto; white-space: nowrap; margin: 0; }
+  }
+  .ab-stage { position: relative; min-width: 0; }
+  .ab-stagebar { display: flex; flex-wrap: wrap; align-items: center; gap: .5rem; margin-bottom: .4rem; }
+  .ab-badge { border-radius: 999px; padding: 3px 10px; font-size: .8rem; font-weight: 700; }
+  .ab-badge[data-tone="ok"] { background: var(--pastel-green); color: var(--text); }
+  .ab-badge[data-tone="warn"] { background: var(--pastel-yellow); color: var(--text); }
+  .ab-badge[data-tone="bad"] { background: var(--bad); color: #fff; }
+  .ab-mode { font-size: .85rem; font-weight: 600; color: var(--accent-deep); }
+  .ab-zoom { margin-left: auto; display: inline-flex; border: 1px solid var(--border); border-radius: 8px; overflow: hidden; }
+  .ab-zoom button { min-width: 40px; min-height: 36px; background: var(--card); color: var(--text); font-weight: 700; }
+  .ab-zoom button + button { border-left: 1px solid var(--border); }
+  .ab-wrap { overflow: auto; max-height: min(72vh, 760px); border: 1px solid var(--border); border-radius: 12px; background: var(--pastel-grey); overscroll-behavior: contain; }
+  .ab-wrap svg { display: block; width: 100%; min-width: 620px; height: auto; touch-action: none; user-select: none; -webkit-user-select: none; }
+  @media (min-width: 1180px) { .ab-wrap svg { min-width: 0; } }
+  .ab-toast { position: absolute; left: 50%; bottom: 14px; transform: translateX(-50%); max-width: min(92%, 560px); border-radius: 10px; padding: .55rem .9rem; font-size: .9rem; background: var(--navy-band); color: #fff; box-shadow: 0 6px 20px rgb(0 0 0 / .2); }
+  .ab-toast[data-tone="bad"] { background: var(--bad); }
+  .ab-toast[data-tone="ok"] { background: var(--ok); }
+  .ab-ghost { position: fixed; left: 0; top: 0; z-index: 60; pointer-events: none; border-radius: 8px; padding: .35rem .6rem; background: var(--accent); color: #fff; font-size: .85rem; font-weight: 600; box-shadow: 0 6px 16px rgb(0 0 0 / .25); }
+
+  /* canvas (SVG) */
+  .ab-bg { fill: var(--pastel-grey); }
+  .ab-node { cursor: grab; outline: none; }
+  .ab-vnet .ab-box { fill: var(--accent-soft); stroke: var(--accent); stroke-width: 2; }
+  .ab-subnet .ab-box { fill: var(--bg); stroke: var(--text-muted); stroke-dasharray: 6 4; stroke-width: 1.5; }
+  .ab-ctitle { font-size: 16px; font-weight: 700; fill: var(--text); }
+  .ab-csub { font-size: 13px; fill: var(--text-muted); }
+  .ab-card { fill: var(--card); stroke: var(--border); stroke-width: 1.5; }
+  .ab-stripe { fill: var(--accent); }
+  .ab-g-security .ab-stripe { fill: var(--bad); }
+  .ab-g-data .ab-stripe { fill: #8764b8; }
+  .ab-g-compute .ab-stripe { fill: var(--ok); }
+  .ab-g-connectivity .ab-stripe { fill: #ca5010; }
+  .ab-icon { font-size: 22px; }
+  .ab-name { font-size: 15px; font-weight: 600; fill: var(--text); }
+  .ab-sub { font-size: 12.5px; fill: var(--text-muted); }
+  .ab-node.is-sel .ab-card, .ab-node.is-sel .ab-box, .ab-node:focus-visible .ab-card, .ab-node:focus-visible .ab-box { stroke: var(--accent); stroke-width: 3.5; }
+  .ab-node.is-linkfrom .ab-card, .ab-node.is-linkfrom .ab-box { stroke: #ca5010; stroke-width: 3.5; stroke-dasharray: 5 3; }
+  .ab-node.is-path .ab-card, .ab-node.is-path .ab-box { stroke: var(--ok); stroke-width: 3.5; }
+  .ab-node.is-pathbad .ab-card, .ab-node.is-pathbad .ab-box { stroke: var(--bad); stroke-width: 3.5; }
+  .ab-flag-error { fill: var(--bad); }
+  .ab-flag-warn { fill: #b35c00; }
+  .ab-flagt { font-size: 12px; font-weight: 700; fill: #fff; pointer-events: none; }
+  .ab-link line { stroke: var(--text-muted); stroke-width: 2; }
+  .ab-link-peer line, .ab-link-dnslink line { stroke-dasharray: 7 5; }
+  .ab-link text { font-size: 12.5px; fill: var(--text-muted); paint-order: stroke; stroke: var(--pastel-grey); stroke-width: 4px; }
+  .ab-link.is-path line { stroke: var(--ok); stroke-width: 3.5; }
+  .ab-link.is-pathbad line { stroke: var(--bad); stroke-width: 3.5; }
+  .ab-arrowhead { fill: var(--text-muted); }
+  .ab-flow { fill: none; stroke-width: 6; stroke-linecap: round; stroke-linejoin: round; opacity: .35; pointer-events: none; }
+  .ab-flow.ok { stroke: var(--ok); } .ab-flow.bad { stroke: var(--bad); }
+  .ab-packet { pointer-events: none; } .ab-packet.ok { fill: var(--ok); } .ab-packet.bad { fill: var(--bad); }
+
+  /* side panel */
+  .ab-panel { min-width: 0; border: 1px solid var(--border); border-radius: 12px; background: var(--card); padding: .75rem; align-self: start; }
+  .ab-tabs { display: flex; gap: .25rem; border-bottom: 1px solid var(--border); margin: -.25rem -.25rem .75rem; overflow-x: auto; }
+  .ab-tabs [role="tab"] { min-height: 40px; padding: 0 .7rem; font-weight: 600; font-size: .9rem; color: var(--text-muted); border-bottom: 3px solid transparent; white-space: nowrap; }
+  .ab-tabs [aria-selected="true"] { color: var(--text); border-color: var(--accent); }
+  .ab-muted { color: var(--text-muted); font-size: .9rem; }
+  .ab-hint { color: var(--text-muted); font-size: .8rem; margin-top: .2rem; }
+  .ab-help { margin-top: .6rem; padding-left: 1.1rem; list-style: disc; color: var(--text-muted); font-size: .875rem; }
+  .ab-help li + li { margin-top: .35rem; }
+  .ab-ph { display: flex; gap: .6rem; align-items: flex-start; margin-bottom: .7rem; }
+  .ab-pi { font-size: 1.8rem; line-height: 1; }
+  .ab-pt { font-weight: 700; }
+  .ab-learn { color: var(--accent); font-weight: 600; white-space: nowrap; }
+  .ab-field { margin-bottom: .6rem; }
+  .ab-field label { display: block; font-size: .85rem; font-weight: 600; margin-bottom: .2rem; }
+  .ab-panel input, .ab-panel select { width: 100%; min-height: 36px; border: 1px solid var(--border); border-radius: 8px; background: var(--bg); color: var(--text); padding: 0 .55rem; font-size: 16px; }
+  .ab-warnline { font-size: .875rem; color: var(--text); background: var(--pastel-yellow); border-radius: 6px; padding: .35rem .55rem; margin-bottom: .6rem; }
+  .ab-rules, .ab-links { border: 1px solid var(--border); border-radius: 10px; padding: .5rem .6rem .6rem; margin: .6rem 0; }
+  .ab-rules legend, .ab-links legend { font-weight: 700; font-size: .85rem; padding: 0 .25rem; }
+  .ab-rule { display: grid; grid-template-columns: 1.4fr .8fr 1.3fr .8fr .9fr 36px; gap: .25rem; margin-bottom: .35rem; }
+  .ab-rule input, .ab-rule select { padding: 0 .3rem; font-size: 14px; }
+  @media (max-width: 420px) { .ab-rule { grid-template-columns: 1fr 1fr 36px; } }
+  .ab-x { min-width: 36px; min-height: 36px; border-radius: 8px; color: var(--text-muted); }
+  .ab-x:hover, .ab-x:focus-visible { background: var(--pastel-grey); color: var(--bad); }
+  .ab-links ul { margin-bottom: .4rem; }
+  .ab-links li { display: flex; align-items: center; gap: .3rem; font-size: .875rem; }
+  .ab-linkadd { display: flex; gap: .35rem; }
+  .ab-linkadd select { flex: 1; }
+  .ab-del { margin-top: .4rem; }
+  .ab-ok { color: var(--ok); font-weight: 600; }
+  .ab-findings { display: grid; gap: .55rem; }
+  .ab-f { border-left: 4px solid var(--border); padding: .35rem .6rem; border-radius: 4px; background: var(--bg); font-size: .875rem; }
+  .ab-f-error { border-color: var(--bad); } .ab-f-warn { border-color: #b35c00; } .ab-f-tip { border-color: var(--accent); }
+  .ab-fbtn { text-align: left; font-weight: 700; color: var(--text); min-height: 32px; }
+  .ab-fbtn:hover { text-decoration: underline; }
+  .ab-flv { display: inline-block; font-size: .7rem; text-transform: uppercase; letter-spacing: .04em; border-radius: 4px; padding: 1px 5px; margin-right: .25rem; background: var(--pastel-grey); color: var(--text); }
+  .ab-f p { color: var(--text-muted); margin-top: .2rem; }
+  .ab-fix { color: var(--text) !important; }
+  .ab-verdict { margin-top: .8rem; font-weight: 700; }
+  .ab-verdict.ok { color: var(--ok); } .ab-verdict.bad { color: var(--bad); }
+  .ab-hops { margin-top: .4rem; display: grid; gap: .35rem; font-size: .875rem; }
+  .ab-hops li { display: flex; gap: .4rem; }
+  .ab-hops li.ok span { color: var(--ok); } .ab-hops li.bad span { color: var(--bad); } .ab-hops li.bad { font-weight: 600; }
+  .ab-explain h3 { font-weight: 700; margin-top: .9rem; font-size: .95rem; }
+  .ab-explain ul { list-style: disc; padding-left: 1.1rem; font-size: .875rem; color: var(--text-muted); }
+  .ab-explain li + li { margin-top: .3rem; }
+</style>

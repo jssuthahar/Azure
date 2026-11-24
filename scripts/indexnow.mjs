@@ -18,3 +18,8 @@ const res = await fetch('https://api.indexnow.org/indexnow', {
   body: JSON.stringify({ host: HOST, key: KEY, keyLocation: `https://${HOST}/${KEY}.txt`, urlList: urls.slice(0, 10000) }),
 });
 console.log(`IndexNow: submitted ${urls.length} URL(s) → HTTP ${res.status} ${res.statusText}`);
+if (!res.ok) {
+  const body = (await res.text()).trim();
+  if (body) console.log(body.slice(0, 500));
+  if (res.status === 403) console.log(`403 = key not accepted. Check https://${HOST}/${KEY}.txt is live and contains only the key, then retry after the deploy has finished.`);
+}
