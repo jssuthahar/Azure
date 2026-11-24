@@ -1,0 +1,148 @@
+{
+ "cert": "az-104",
+ "domain": 2,
+ "topic": "sas-tokens-and-stored-access-policies",
+ "questions": [
+  {
+   "id": "adm-st-sas-1",
+   "type": "single",
+   "question": "You issue service SAS tokens for the container invoices. You must be able to revoke all of the tokens at once without regenerating the storage account keys. What should you do?",
+   "options": [
+    {
+     "text": "Create a stored access policy on the container and generate each SAS so that it references the policy",
+     "why": "Correct. Deleting or changing the policy revokes every SAS that references it."
+    },
+    {
+     "text": "Generate account SAS tokens instead",
+     "why": "Account SAS tokens cannot reference a stored access policy."
+    },
+    {
+     "text": "Set a short expiry on each ad hoc SAS",
+     "why": "A short expiry limits exposure but does not allow revocation on demand."
+    },
+    {
+     "text": "Enable the storage firewall",
+     "why": "The firewall restricts networks. It does not revoke tokens."
+    }
+   ],
+   "answer": [
+    0
+   ],
+   "explanation": "Stored access policies apply to service SAS tokens. An ad hoc SAS can be revoked early only by regenerating the key that signed it.",
+   "objective": "2.1.3"
+  },
+  {
+   "id": "adm-st-sas-2",
+   "type": "single",
+   "question": "A storage account has Allow storage account key access set to Disabled. An application must give a partner temporary read access to one blob. Which type of SAS should you use?",
+   "options": [
+    {
+     "text": "User delegation SAS",
+     "why": "Correct. It is signed with a user delegation key from Microsoft Entra ID and does not need Shared Key access."
+    },
+    {
+     "text": "Service SAS",
+     "why": "A service SAS is signed with an account key, so it is refused when key access is disabled."
+    },
+    {
+     "text": "Account SAS",
+     "why": "An account SAS is signed with an account key, so it is refused when key access is disabled."
+    },
+    {
+     "text": "Service SAS that references a stored access policy",
+     "why": "The policy does not change the signing method. The SAS is still signed with an account key."
+    }
+   ],
+   "answer": [
+    0
+   ],
+   "explanation": "With Shared Key authorization disabled, only Microsoft Entra ID and user delegation SAS tokens work.",
+   "objective": "2.1.2"
+  },
+  {
+   "id": "adm-st-sas-3",
+   "type": "single",
+   "question": "What is the maximum validity period of a user delegation SAS?",
+   "options": [
+    {
+     "text": "7 days",
+     "why": "Correct. The user delegation key, and therefore the SAS, can be valid for at most seven days."
+    },
+    {
+     "text": "1 hour",
+     "why": "One hour is a common choice for short tokens, not the maximum."
+    },
+    {
+     "text": "30 days",
+     "why": "This exceeds the maximum for a user delegation SAS."
+    },
+    {
+     "text": "There is no maximum",
+     "why": "Service and account SAS tokens have no enforced maximum, but user delegation SAS tokens do."
+    }
+   ],
+   "answer": [
+    0
+   ],
+   "explanation": "User delegation keys are valid for up to seven days, which caps the SAS lifetime.",
+   "objective": "2.1.2"
+  },
+  {
+   "id": "adm-st-sas-4",
+   "type": "single",
+   "question": "A container already has five stored access policies. You attempt to add a sixth policy. What happens?",
+   "options": [
+    {
+     "text": "The operation fails because a container supports up to five stored access policies",
+     "why": "Correct. Five is the limit per container, share, queue or table."
+    },
+    {
+     "text": "The oldest policy is replaced",
+     "why": "Policies are not replaced automatically."
+    },
+    {
+     "text": "The policy is created, but SAS tokens cannot reference it",
+     "why": "The policy is not created."
+    },
+    {
+     "text": "The policy is created at the storage account level instead",
+     "why": "Stored access policies exist only on containers, shares, queues and tables."
+    }
+   ],
+   "answer": [
+    0
+   ],
+   "explanation": "Each container, file share, queue or table can have up to five stored access policies.",
+   "objective": "2.1.3"
+  },
+  {
+   "id": "adm-st-sas-5",
+   "type": "multi",
+   "question": "A web application must allow clients to upload files directly to the uploads container for 15 minutes, over HTTPS only. The solution must not grant access to any other container. Which two settings should the SAS include? Each correct answer presents part of the solution.",
+   "options": [
+    {
+     "text": "A service SAS scoped to the uploads container with create and write permissions",
+     "why": "Correct. A service SAS can be limited to one container and to the permissions required."
+    },
+    {
+     "text": "An expiry time 15 minutes in the future and the HTTPS-only protocol",
+     "why": "Correct. The SAS expires after 15 minutes and refuses HTTP."
+    },
+    {
+     "text": "An account SAS with the services value set to b",
+     "why": "An account SAS with resource types for containers can cover every container in the service."
+    },
+    {
+     "text": "Read, write, delete and list permissions",
+     "why": "Delete and list are not required to upload files."
+    }
+   ],
+   "answer": [
+    0,
+    1
+   ],
+   "explanation": "Grant the least permissions for the shortest time on the narrowest resource, and require HTTPS.",
+   "objective": "2.1.2"
+  }
+ ]
+}

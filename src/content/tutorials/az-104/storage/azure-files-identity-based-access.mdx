@@ -1,7 +1,7 @@
 ---
 title: Identity-Based Access for Azure Files
 seoTitle: Identity-Based Access for Azure Files (SMB) | AZ-104
-description: Let users mount Azure file shares with their own identity using AD DS, Microsoft Entra Domain Services or Entra Kerberos, share-level RBAC roles and Windows ACLs.
+description: Let users mount Azure file shares with their own identity via AD DS, Entra Domain Services or Entra Kerberos, share-level RBAC roles and Windows ACLs.
 answer: >-
   **Identity-based access** lets users mount Azure SMB file shares with their own sign-in instead of the storage account key. First enable **one identity source** on the account: on-premises **AD DS**, **Microsoft Entra Domain Services**, or **Microsoft Entra Kerberos** (for hybrid identities on Entra-joined devices). Then grant **share-level permissions** with Azure RBAC roles (**Storage File Data SMB Share Reader**, **Contributor** or **Elevated Contributor**) or a **default share-level permission** for all authenticated identities. Finally, **Windows ACLs** (NTFS permissions) control access to directories and files.
 updated: 2026-11-24

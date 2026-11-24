@@ -867,7 +867,10 @@ function nslookup(host: string, w: World): AdminOut | null {
   // storage account behind a private endpoint
   const acct = w.res.find((r) => r.type === 'storage' && h === `${lc(r.name)}.blob.core.windows.net`);
   const pe = acct && w.res.find((r) => r.type === 'pe' && r.props.target === acct.name);
-  if (acct && pe) {
+  // Only in an AZ-104 session (some admin command already ran): AZ-900's simpler world resolves a
+  // private endpoint privately straight away, and its dns-private-endpoint lab relies on that.
+  const adminSession = w.events.some((e) => e.type.startsWith('adm.'));
+  if (acct && pe && adminSession) {
     const z = N.pdns['privatelink.blob.core.windows.net'];
     const linked = z?.links.some((l) => lc(l.vnet) === lc(pe.props.vnet));
     const rec = z?.records.find((r) => lc(r.name) === lc(acct.name));

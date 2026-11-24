@@ -1,0 +1,148 @@
+{
+ "cert": "az-104",
+ "domain": 2,
+ "topic": "storage-access-keys",
+ "questions": [
+  {
+   "id": "adm-st-key-1",
+   "type": "single",
+   "question": "Applications connect to a storage account by using key1. You must regenerate key1 without causing an outage. What should you do first?",
+   "options": [
+    {
+     "text": "Update the applications to use key2",
+     "why": "Correct. Move every client to the other key before you regenerate key1."
+    },
+    {
+     "text": "Regenerate key2",
+     "why": "Regenerating key2 does not help the applications that use key1."
+    },
+    {
+     "text": "Set a key expiration policy",
+     "why": "The policy only flags old keys. It does not prepare the applications."
+    },
+    {
+     "text": "Disable storage account key access",
+     "why": "This breaks the applications immediately."
+    }
+   ],
+   "answer": [
+    0
+   ],
+   "explanation": "Two keys allow rotation without downtime: switch clients to the other key, then regenerate the one no longer in use.",
+   "objective": "2.1.4"
+  },
+  {
+   "id": "adm-st-key-2",
+   "type": "single",
+   "question": "You configure a key expiration policy of 90 days on a storage account. Which statement is true?",
+   "options": [
+    {
+     "text": "Keys older than 90 days are flagged as due for rotation, but they are not regenerated automatically",
+     "why": "Correct. The policy provides reminders and compliance reporting only."
+    },
+    {
+     "text": "Both keys are regenerated automatically every 90 days",
+     "why": "Azure does not rotate the keys for you."
+    },
+    {
+     "text": "Requests signed with a key older than 90 days are rejected",
+     "why": "Old keys continue to work."
+    },
+    {
+     "text": "SAS tokens expire after 90 days",
+     "why": "The key expiration policy does not set SAS expiry."
+    }
+   ],
+   "answer": [
+    0
+   ],
+   "explanation": "Automate rotation with your own process, for example a script that updates Key Vault.",
+   "objective": "2.1.4"
+  },
+  {
+   "id": "adm-st-key-3",
+   "type": "single",
+   "question": "A user is assigned the Reader role on a storage account and reports that the access keys are not visible. You must allow the user to view and regenerate the keys without granting other management permissions. Which role should you assign?",
+   "options": [
+    {
+     "text": "Storage Account Key Operator Service Role",
+     "why": "Correct. It allows listing and regenerating keys only."
+    },
+    {
+     "text": "Owner",
+     "why": "Owner grants full management access, which exceeds the requirement."
+    },
+    {
+     "text": "Storage Blob Data Reader",
+     "why": "This is a data role and does not grant access to keys."
+    },
+    {
+     "text": "Reader and Data Access",
+     "why": "This role allows viewing keys, but not regenerating them."
+    }
+   ],
+   "answer": [
+    0
+   ],
+   "explanation": "Listing and regenerating keys require the listKeys and regenerateKey actions, which the Storage Account Key Operator Service Role includes.",
+   "objective": "2.1.4"
+  },
+  {
+   "id": "adm-st-key-4",
+   "type": "multi",
+   "question": "You regenerate key1 of a storage account. Which two items stop working? Each correct answer presents part of the solution.",
+   "options": [
+    {
+     "text": "Connection strings that contain the old key1",
+     "why": "Correct. They are signed with a key that no longer exists."
+    },
+    {
+     "text": "Service SAS tokens that were signed with key1",
+     "why": "Correct. Their signatures can no longer be verified."
+    },
+    {
+     "text": "User delegation SAS tokens",
+     "why": "These are signed with a user delegation key from Microsoft Entra ID, not an account key."
+    },
+    {
+     "text": "Applications that use a managed identity with a Storage Blob Data role",
+     "why": "Microsoft Entra ID authorization does not use account keys."
+    }
+   ],
+   "answer": [
+    0,
+    1
+   ],
+   "explanation": "Anything signed with the regenerated key fails. Entra ID access and user delegation SAS tokens are not affected.",
+   "objective": "2.1.4"
+  },
+  {
+   "id": "adm-st-key-5",
+   "type": "single",
+   "question": "All applications that use a storage account now authenticate by using managed identities. You must prevent any future use of the account keys and of SAS tokens signed with them. What should you configure?",
+   "options": [
+    {
+     "text": "Set Allow storage account key access to Disabled",
+     "why": "Correct. Shared Key requests, account SAS and service SAS are then refused."
+    },
+    {
+     "text": "Regenerate both keys",
+     "why": "The new keys could still be used."
+    },
+    {
+     "text": "Create a key expiration policy of 1 day",
+     "why": "The policy only flags old keys."
+    },
+    {
+     "text": "Set the minimum TLS version to 1.2",
+     "why": "TLS settings do not affect key-based authorization."
+    }
+   ],
+   "answer": [
+    0
+   ],
+   "explanation": "Disabling Shared Key authorization leaves Microsoft Entra ID and user delegation SAS as the only ways in.",
+   "objective": "2.1.4"
+  }
+ ]
+}

@@ -11,7 +11,11 @@ const LABS_CLI_ONLY = ['tags-chargeback', 'vm-power-states', 'cli-storage', 'rea
   'identity-access', 'conditional-access', 'policy-guardrails', 'bicep-deploy', 'monitor-alerts', 'migrate-databox'].map((id) => `az-900/labs/${id}`)
   .concat(['dev-acr', 'dev-app-service-container', 'dev-container-apps', 'dev-keda', 'dev-aks', 'dev-cosmos', 'dev-cosmos-vector',
     'dev-postgres', 'dev-redis', 'dev-service-bus', 'dev-event-grid', 'dev-functions', 'dev-key-vault', 'dev-observe'].map((id) => `ai-200/labs/${id}`))
-  .concat(['gh-cli-setup', 'gh-cli-scripts', 'gh-instructions', 'gh-tests', 'gh-mcp-agents', 'gh-seats-audit'].map((id) => `gh-300/labs/${id}`));
+  .concat(['gh-cli-setup', 'gh-cli-scripts', 'gh-instructions', 'gh-tests', 'gh-mcp-agents', 'gh-seats-audit'].map((id) => `gh-300/labs/${id}`))
+  .concat(['adm-entra-users-licenses', 'adm-sspr-pilot', 'adm-rbac-hierarchy', 'adm-policy-locks-cost', 'adm-storage-lockdown', 'adm-storage-protect',
+    'adm-storage-accounts', 'adm-storage-files-azcopy', 'adm-vm-bicep', 'adm-vm-size-disks', 'adm-vm-move', 'adm-vm-availability', 'adm-containers',
+    'adm-app-service-plan', 'adm-app-service-domain-tls', 'adm-app-service-backup-network', 'adm-net-hub-spoke', 'adm-net-nsg-asg', 'adm-net-private-access',
+    'adm-net-load-balancer', 'adm-ops-monitor-logs', 'adm-ops-alerts-insights', 'adm-ops-vm-backup', 'adm-ops-bcdr'].map((id) => `az-104/labs/${id}`));
 
 const b = await launch();
 const fail = [];

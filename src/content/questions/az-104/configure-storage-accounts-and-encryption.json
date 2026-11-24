@@ -1,0 +1,148 @@
+{
+ "cert": "az-104",
+ "domain": 2,
+ "topic": "configure-storage-accounts-and-encryption",
+ "questions": [
+  {
+   "id": "adm-st-acct-1",
+   "type": "single",
+   "question": "You need to create a storage account for SMB file shares that require consistently low latency. Which account configuration should you use?",
+   "options": [
+    {
+     "text": "Premium performance with the file shares account type (FileStorage)",
+     "why": "Correct. Premium file shares run on SSD and provide predictable low latency."
+    },
+    {
+     "text": "Standard performance, general-purpose v2, Cool access tier",
+     "why": "Standard shares are HDD based, and the Cool tier is for infrequent access."
+    },
+    {
+     "text": "Premium performance with the block blobs account type",
+     "why": "Premium block blob accounts do not host file shares."
+    },
+    {
+     "text": "Standard performance with a hierarchical namespace",
+     "why": "A hierarchical namespace is for Data Lake Storage, not low-latency SMB shares."
+    }
+   ],
+   "answer": [
+    0
+   ],
+   "explanation": "Premium FileStorage accounts host SSD-backed file shares and are the only accounts that support NFS shares.",
+   "objective": "2.2.1"
+  },
+  {
+   "id": "adm-st-acct-2",
+   "type": "single",
+   "question": "Your company requires a second layer of encryption for all data in a storage account that already exists. What should you do?",
+   "options": [
+    {
+     "text": "Create a new storage account with infrastructure encryption enabled and move the data",
+     "why": "Correct. Infrastructure encryption can be enabled only when the account is created."
+    },
+    {
+     "text": "Enable infrastructure encryption on the existing account",
+     "why": "This setting cannot be changed after creation."
+    },
+    {
+     "text": "Switch the existing account to a customer-managed key",
+     "why": "A customer-managed key changes who controls the key, not the number of encryption layers."
+    },
+    {
+     "text": "Enable secure transfer required",
+     "why": "Secure transfer protects data in transit, not at rest."
+    }
+   ],
+   "answer": [
+    0
+   ],
+   "explanation": "Infrastructure encryption adds a second AES-256 layer and must be chosen at creation time.",
+   "objective": "2.2.4"
+  },
+  {
+   "id": "adm-st-acct-3",
+   "type": "multi",
+   "question": "You plan to configure a storage account to use a customer-managed key stored in Azure Key Vault. Which two requirements must be met? Each correct answer presents part of the solution.",
+   "options": [
+    {
+     "text": "The key vault has soft delete and purge protection enabled",
+     "why": "Correct. Azure Storage requires both on the vault that holds the key."
+    },
+    {
+     "text": "The storage account has a managed identity with permission to wrap and unwrap the key",
+     "why": "Correct. For example, the Key Vault Crypto Service Encryption User role."
+    },
+    {
+     "text": "The storage account uses the Premium performance tier",
+     "why": "Customer-managed keys are supported on standard and premium accounts."
+    },
+    {
+     "text": "The storage account firewall is set to Allow",
+     "why": "Network settings do not determine whether a customer-managed key can be used."
+    }
+   ],
+   "answer": [
+    0,
+    1
+   ],
+   "explanation": "The account uses its managed identity to reach the key, and purge protection prevents the key from being destroyed permanently by mistake.",
+   "objective": "2.2.4"
+  },
+  {
+   "id": "adm-st-acct-4",
+   "type": "single",
+   "question": "A storage account uses a customer-managed key. A security administrator disables the key in Azure Key Vault. What is the effect?",
+   "options": [
+    {
+     "text": "Requests to read or write data in the account fail until access to the key is restored",
+     "why": "Correct. Storage cannot unwrap the data encryption key without the customer-managed key."
+    },
+    {
+     "text": "The account switches to Microsoft-managed keys automatically",
+     "why": "Storage does not fall back to Microsoft-managed keys."
+    },
+    {
+     "text": "Existing data is deleted",
+     "why": "The data remains, encrypted, and becomes available again when the key is re-enabled."
+    },
+    {
+     "text": "Only new data is affected",
+     "why": "Reads of existing data also fail."
+    }
+   ],
+   "answer": [
+    0
+   ],
+   "explanation": "Control over the key, including the ability to revoke access, is the purpose of a customer-managed key.",
+   "objective": "2.2.4"
+  },
+  {
+   "id": "adm-st-acct-5",
+   "type": "single",
+   "question": "You must create a storage account with the following requirements: only HTTPS requests are accepted, TLS 1.0 and 1.1 are refused, and no container can be made public. Which Azure CLI parameters should you include?",
+   "options": [
+    {
+     "text": "--https-only true --min-tls-version TLS1_2 --allow-blob-public-access false",
+     "why": "Correct. These parameters enforce secure transfer, TLS 1.2 and block anonymous access."
+    },
+    {
+     "text": "--default-action Deny --bypass None",
+     "why": "These parameters configure the firewall, not transport security or anonymous access."
+    },
+    {
+     "text": "--require-infrastructure-encryption --sku Premium_LRS",
+     "why": "These parameters affect encryption layers and performance."
+    },
+    {
+     "text": "--allow-shared-key-access false --kind BlobStorage",
+     "why": "These parameters disable key access and choose a legacy account kind."
+    }
+   ],
+   "answer": [
+    0
+   ],
+   "explanation": "Secure transfer, minimum TLS version and anonymous access are separate account properties that can be set at creation.",
+   "objective": "2.2.1"
+  }
+ ]
+}

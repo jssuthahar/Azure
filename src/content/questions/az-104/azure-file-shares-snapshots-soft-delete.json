@@ -1,0 +1,147 @@
+{
+ "cert": "az-104",
+ "domain": 2,
+ "topic": "azure-file-shares-snapshots-soft-delete",
+ "questions": [
+  {
+   "id": "adm-st-afs-1",
+   "type": "single",
+   "question": "Linux virtual machines must mount an Azure file share by using NFS 4.1. Which storage account should you create for the share?",
+   "options": [
+    {
+     "text": "A premium FileStorage account",
+     "why": "Correct. NFS shares are supported only on premium file shares."
+    },
+    {
+     "text": "A standard general-purpose v2 account",
+     "why": "Standard accounts support SMB file shares only."
+    },
+    {
+     "text": "A premium block blob account",
+     "why": "Block blob accounts do not host file shares."
+    },
+    {
+     "text": "A standard account with a hierarchical namespace",
+     "why": "Hierarchical namespace accounts support NFS 3.0 for blobs, not NFS file shares."
+    }
+   ],
+   "answer": [
+    0
+   ],
+   "explanation": "NFS 4.1 Azure file shares require a premium FileStorage account and network access through a virtual network.",
+   "objective": "2.3.1"
+  },
+  {
+   "id": "adm-st-afs-2",
+   "type": "single",
+   "question": "A user deleted a folder from an Azure file share yesterday. The share has share soft delete enabled and daily share snapshots. How should you recover the folder?",
+   "options": [
+    {
+     "text": "Restore the folder from yesterday's share snapshot",
+     "why": "Correct. Snapshots hold point-in-time copies of files and folders in the share."
+    },
+    {
+     "text": "Undelete the share",
+     "why": "Share soft delete restores a deleted share, not a folder in a live share."
+    },
+    {
+     "text": "Run az storage blob undelete",
+     "why": "This command restores soft-deleted blobs, not files."
+    },
+    {
+     "text": "Fail over the storage account",
+     "why": "Failover changes the primary region and does not recover deleted data."
+    }
+   ],
+   "answer": [
+    0
+   ],
+   "explanation": "Share snapshots recover files and folders. Share soft delete recovers whole shares.",
+   "objective": "2.3.5"
+  },
+  {
+   "id": "adm-st-afs-3",
+   "type": "single",
+   "question": "What is the maximum number of share snapshots that one Azure file share can keep?",
+   "options": [
+    {
+     "text": "200",
+     "why": "Correct. Azure Files supports up to 200 snapshots per share."
+    },
+    {
+     "text": "10",
+     "why": "This is lower than the limit."
+    },
+    {
+     "text": "50",
+     "why": "This is lower than the limit."
+    },
+    {
+     "text": "Unlimited",
+     "why": "The number of snapshots per share is limited."
+    }
+   ],
+   "answer": [
+    0
+   ],
+   "explanation": "Azure Backup can manage snapshot schedules and retention within this limit.",
+   "objective": "2.3.5"
+  },
+  {
+   "id": "adm-st-afs-4",
+   "type": "single",
+   "question": "A file share was deleted. Share soft delete is enabled with a retention period of 14 days. The share had three snapshots. What can you restore?",
+   "options": [
+    {
+     "text": "The share, including its three snapshots",
+     "why": "Correct. Soft-deleted shares are restored together with their snapshots."
+    },
+    {
+     "text": "The share, but not its snapshots",
+     "why": "Snapshots are kept with the soft-deleted share."
+    },
+    {
+     "text": "Only the most recent snapshot",
+     "why": "The whole share is restored."
+    },
+    {
+     "text": "Nothing, because shares with snapshots bypass soft delete",
+     "why": "Soft delete covers shares with snapshots."
+    }
+   ],
+   "answer": [
+    0
+   ],
+   "explanation": "Restore the share with az storage share-rm restore or Undelete in the portal during the retention period.",
+   "objective": "2.3.5"
+  },
+  {
+   "id": "adm-st-afs-5",
+   "type": "single",
+   "question": "You need to create a 2 TiB SMB file share named finance on a standard general-purpose v2 account. The share will have many read and write operations. Which Azure CLI command should you run?",
+   "options": [
+    {
+     "text": "az storage share-rm create --storage-account stcontoso --name finance --quota 2048 --access-tier TransactionOptimized",
+     "why": "Correct. The quota is in GiB, and the transaction optimized tier suits heavy transaction workloads."
+    },
+    {
+     "text": "az storage share-rm create --storage-account stcontoso --name finance --quota 2 --access-tier Premium",
+     "why": "The quota is in GiB, and the Premium tier requires a premium account."
+    },
+    {
+     "text": "az storage container create --account-name stcontoso --name finance",
+     "why": "This creates a blob container, not a file share."
+    },
+    {
+     "text": "az storage share-rm create --storage-account stcontoso --name finance --enabled-protocols NFS",
+     "why": "NFS is not supported on standard accounts."
+    }
+   ],
+   "answer": [
+    0
+   ],
+   "explanation": "Standard file shares offer the transaction optimized, hot and cool tiers, with quotas up to 100 TiB.",
+   "objective": "2.3.1"
+  }
+ ]
+}

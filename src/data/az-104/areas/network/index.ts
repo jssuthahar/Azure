@@ -126,7 +126,7 @@ export const COMPARE: Comparison[] = [
     slug: 'service-endpoint-vs-private-endpoint',
     title: 'Service Endpoint vs Private Endpoint',
     seoTitle: 'Service Endpoint vs Private Endpoint in Azure | AZ-104',
-    description: 'Azure service endpoints vs private endpoints compared: IP address, DNS, on-premises access, data exfiltration, cost and which one AZ-104 scenarios expect you to pick.',
+    description: 'Azure service endpoints vs private endpoints compared: IP address, DNS, on-premises access, data exfiltration, cost and which one AZ-104 scenarios expect.',
     answer: 'A **service endpoint** keeps the PaaS service on its **public IP** but sends your subnet\'s traffic over the Microsoft backbone, so the service firewall can allow that subnet. It\'s free and quick. A **private endpoint** gives one service instance a **private IP** in your VNet through **Private Link**, works from peered VNets and on-premises, and needs a **privatelink private DNS zone**.',
     cols: ['Service endpoint', 'Private endpoint'],
     rows: [

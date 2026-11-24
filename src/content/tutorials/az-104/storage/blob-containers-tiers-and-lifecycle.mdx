@@ -1,7 +1,7 @@
 ---
 title: Blob Containers, Access Tiers and Lifecycle Management
 seoTitle: Blob Containers, Access Tiers and Lifecycle Rules | AZ-104
-description: Create blob containers with the right anonymous access level, choose Hot, Cool, Cold or Archive tiers, and automate tier changes with lifecycle management rules.
+description: Create blob containers with the right anonymous access level, pick Hot, Cool, Cold or Archive tiers, and automate tier changes with lifecycle rules.
 answer: >-
   A **container** groups blobs inside a storage account. Its **anonymous access level** is **Private** (default), **Blob** or **Container**, and anonymous access only works if the account allows it (new accounts don't). **Access tiers** trade storage price for access price: **Hot**, **Cool** (30-day minimum), **Cold** (90 days) and **Archive** (180 days, **offline**, rehydrating takes up to **15 hours** at Standard priority). Archive is supported on **LRS, GRS and RA-GRS** accounts. A **lifecycle management policy** is a set of JSON rules that moves blobs to cooler tiers or deletes them (and old versions and snapshots) based on days since **modification**, **creation** or **last access**, and runs about **once a day**.
 updated: 2026-11-24

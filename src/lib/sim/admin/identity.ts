@@ -10,6 +10,7 @@
  * the portal blade). Every state change emits an `adm.*` event.
  */
 import { run, one, many, has, req, lc, json, out, adm, uuid, table, SimError, SUB_ID, TYPE_INFO, type Cmd, type Handler, type Parsed, type World, type AdminOut } from './kit';
+import { DATA_ROLES } from '../devsvc';
 
 const NOTE = 'ℹ Practice shortcut:';
 const DIRECTORY_COUNTRY = 'IN';
@@ -340,7 +341,9 @@ const roleDefList: Handler = (p, w) => {
 
 const roleAssignCreate: Cmd = {
   // The base CLI handles Owner/Contributor/Reader at subscription or resource-group scope.
-  when: (p) => !BASE_ROLES.includes(lc(one(p, '--role'))) || /managementGroups\/|\/providers\/(?!Microsoft\.Management)[^/]+\/[^/]+\/[^/\s]+/i.test(one(p, '--scope') ?? ''),
+  // AI-200 data-plane roles (AcrPull, Key Vault Secrets User…) and --assignee-object-id stay with devsvc.ts.
+  when: (p) => !has(p, '--assignee-object-id') && !DATA_ROLES.some((r) => lc(r) === lc(one(p, '--role')))
+    && (!BASE_ROLES.includes(lc(one(p, '--role'))) || /managementGroups\/|\/providers\/(?!Microsoft\.Management)[^/]+\/[^/]+\/[^/\s]+/i.test(one(p, '--scope') ?? '')),
   run: (p, w) => {
     req(p, [['--assignee', ''], ['--role', '']]);
     const role = roleName(one(p, '--role'));

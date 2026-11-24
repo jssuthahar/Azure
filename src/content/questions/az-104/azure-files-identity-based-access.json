@@ -1,0 +1,147 @@
+{
+ "cert": "az-104",
+ "domain": 2,
+ "topic": "azure-files-identity-based-access",
+ "questions": [
+  {
+   "id": "adm-st-afid-1",
+   "type": "single",
+   "question": "Users sign in to Microsoft Entra joined devices with hybrid identities synced from on-premises AD DS. The devices have no network line of sight to domain controllers. Users must mount an Azure file share by using their own credentials. Which identity source should you enable on the storage account?",
+   "options": [
+    {
+     "text": "Microsoft Entra Kerberos",
+     "why": "Correct. Microsoft Entra ID issues the Kerberos tickets, so clients do not need to reach a domain controller."
+    },
+    {
+     "text": "On-premises AD DS",
+     "why": "AD DS authentication requires clients to reach a domain controller."
+    },
+    {
+     "text": "Microsoft Entra Domain Services",
+     "why": "The devices are not joined to a Microsoft Entra Domain Services managed domain."
+    },
+    {
+     "text": "Storage account key",
+     "why": "The key is not a user credential and gives full access to every user."
+    }
+   ],
+   "answer": [
+    0
+   ],
+   "explanation": "Microsoft Entra Kerberos suits hybrid users on Entra joined or hybrid joined devices without domain controller connectivity.",
+   "objective": "2.1.5"
+  },
+  {
+   "id": "adm-st-afid-2",
+   "type": "single",
+   "question": "Identity-based access with AD DS is enabled for a storage account. Members of the HR group must be able to read, write and delete files in the share hr-share, but must not change NTFS permissions. Which role should you assign to the group at the share scope?",
+   "options": [
+    {
+     "text": "Storage File Data SMB Share Contributor",
+     "why": "Correct. It allows read, write and delete access over SMB."
+    },
+    {
+     "text": "Storage File Data SMB Share Elevated Contributor",
+     "why": "This role also allows changing Windows ACLs, which exceeds the requirement."
+    },
+    {
+     "text": "Storage Account Contributor",
+     "why": "This is a management role and does not grant SMB data access."
+    },
+    {
+     "text": "Storage Blob Data Contributor",
+     "why": "This role applies to Blob Storage, not Azure Files over SMB."
+    }
+   ],
+   "answer": [
+    0
+   ],
+   "explanation": "Share-level access is granted with the Storage File Data SMB Share roles. Windows ACLs then apply to directories and files.",
+   "objective": "2.1.5"
+  },
+  {
+   "id": "adm-st-afid-3",
+   "type": "single",
+   "question": "You manage access to an Azure file share mainly with Windows ACLs. Every authenticated user must reach the share, and the ACLs must decide what each user can open. What should you configure at the share level?",
+   "options": [
+    {
+     "text": "A default share-level permission",
+     "why": "Correct. It applies a share-level role to all authenticated identities."
+    },
+    {
+     "text": "An account SAS",
+     "why": "A SAS is not used for identity-based SMB access."
+    },
+    {
+     "text": "The Owner role for all users at the subscription scope",
+     "why": "Owner is a management role and grants far more than needed."
+    },
+    {
+     "text": "A stored access policy on the share",
+     "why": "Stored access policies apply to service SAS tokens, not SMB users."
+    }
+   ],
+   "answer": [
+    0
+   ],
+   "explanation": "The default share-level permission avoids assigning RBAC roles to every user when NTFS permissions control access.",
+   "objective": "2.1.5"
+  },
+  {
+   "id": "adm-st-afid-4",
+   "type": "single",
+   "question": "A storage account uses on-premises AD DS authentication for Azure Files. You attempt to also enable Microsoft Entra Kerberos on the same account. What happens?",
+   "options": [
+    {
+     "text": "The operation fails because a storage account can use only one identity source at a time",
+     "why": "Correct. Disable the current source before enabling another."
+    },
+    {
+     "text": "Both sources are enabled and users can choose",
+     "why": "Only one identity source is supported per account."
+    },
+    {
+     "text": "AD DS is disabled automatically",
+     "why": "The change is rejected instead."
+    },
+    {
+     "text": "Microsoft Entra Kerberos is enabled for new shares only",
+     "why": "Identity sources apply to the whole account."
+    }
+   ],
+   "answer": [
+    0
+   ],
+   "explanation": "Azure Files supports one identity source per storage account.",
+   "objective": "2.1.5"
+  },
+  {
+   "id": "adm-st-afid-5",
+   "type": "single",
+   "question": "Users have share-level permission on an Azure file share and the identity source is configured, but they cannot open the folder Payroll. Other folders open successfully. What should you check?",
+   "options": [
+    {
+     "text": "The Windows ACLs on the Payroll folder",
+     "why": "Correct. Directory and file-level permissions are evaluated after share-level permission."
+    },
+    {
+     "text": "Outbound TCP port 445",
+     "why": "A blocked port would prevent mounting the share entirely."
+    },
+    {
+     "text": "The storage account firewall",
+     "why": "A firewall block would affect the whole share, not one folder."
+    },
+    {
+     "text": "The share quota",
+     "why": "The quota limits size, not access to a folder."
+    }
+   ],
+   "answer": [
+    0
+   ],
+   "explanation": "Access requires both share-level permission and Windows ACLs that allow the action.",
+   "objective": "2.1.5"
+  }
+ ]
+}

@@ -1,0 +1,147 @@
+{
+ "cert": "az-104",
+ "domain": 2,
+ "topic": "blob-containers-tiers-and-lifecycle",
+ "questions": [
+  {
+   "id": "adm-st-tier-1",
+   "type": "single",
+   "question": "Audit records are rarely read but must be available within milliseconds when requested. They are kept for at least six months. You need to minimize storage cost. Which access tier should you use?",
+   "options": [
+    {
+     "text": "Cold",
+     "why": "Correct. Cold is online, cheaper to store than Cool, and suits data kept 90 days or more."
+    },
+    {
+     "text": "Archive",
+     "why": "Archive is offline, so reads require rehydration that can take hours."
+    },
+    {
+     "text": "Hot",
+     "why": "Hot has the highest storage cost."
+    },
+    {
+     "text": "Premium",
+     "why": "Premium is a performance tier for low latency and costs more."
+    }
+   ],
+   "answer": [
+    0
+   ],
+   "explanation": "Cool and Cold are online tiers for rarely accessed data. Archive is offline.",
+   "objective": "2.3.3"
+  },
+  {
+   "id": "adm-st-tier-2",
+   "type": "single",
+   "question": "A blob in the Archive tier must be read urgently. The blob is 2 GB. What should you do?",
+   "options": [
+    {
+     "text": "Rehydrate the blob to an online tier with High priority",
+     "why": "Correct. High priority rehydration usually completes in under an hour for blobs smaller than 10 GB."
+    },
+    {
+     "text": "Download the blob directly",
+     "why": "Archived blobs are offline and cannot be read until rehydrated."
+    },
+    {
+     "text": "Rehydrate with Standard priority",
+     "why": "Standard priority can take up to 15 hours."
+    },
+    {
+     "text": "Enable object replication",
+     "why": "Object replication does not replicate archived blobs."
+    }
+   ],
+   "answer": [
+    0
+   ],
+   "explanation": "Rehydrate by changing the tier or copying the blob to an online tier. High priority costs more.",
+   "objective": "2.3.3"
+  },
+  {
+   "id": "adm-st-tier-3",
+   "type": "single",
+   "question": "You attempt to create a container with the anonymous access level set to Blob. The operation fails with PublicAccessNotPermitted. What should you do to allow anonymous access?",
+   "options": [
+    {
+     "text": "Enable Allow Blob anonymous access on the storage account",
+     "why": "Correct. Containers can allow anonymous access only when the account permits it."
+    },
+    {
+     "text": "Create a stored access policy on the container",
+     "why": "Stored access policies apply to SAS tokens, not anonymous access."
+    },
+    {
+     "text": "Set the default network action to Allow",
+     "why": "Network rules do not control anonymous access."
+    },
+    {
+     "text": "Assign the Storage Blob Data Reader role to the container",
+     "why": "Role assignments require authenticated identities."
+    }
+   ],
+   "answer": [
+    0
+   ],
+   "explanation": "New storage accounts block anonymous access by default at the account level.",
+   "objective": "2.3.2"
+  },
+  {
+   "id": "adm-st-lc-4",
+   "type": "single",
+   "question": "You need to move block blobs to the Cool tier when they have not been read for 60 days. What must you configure before the lifecycle rule can use this condition?",
+   "options": [
+    {
+     "text": "Enable last access time tracking on the storage account",
+     "why": "Correct. daysAfterLastAccessTimeGreaterThan requires access tracking."
+    },
+    {
+     "text": "Enable blob versioning",
+     "why": "Versioning is not required for access-based rules."
+    },
+    {
+     "text": "Enable the change feed",
+     "why": "The change feed is not used by lifecycle conditions."
+    },
+    {
+     "text": "Set the account access tier to Cool",
+     "why": "The account default tier does not enable access-based conditions."
+    }
+   ],
+   "answer": [
+    0
+   ],
+   "explanation": "Rules based on modification or creation time work without tracking. Rules based on last access need tracking enabled.",
+   "objective": "2.3.6"
+  },
+  {
+   "id": "adm-st-lc-5",
+   "type": "single",
+   "question": "You create a lifecycle management policy that moves blobs to the Archive tier after 180 days. The storage account uses ZRS. What should you expect?",
+   "options": [
+    {
+     "text": "Blobs are not moved to Archive, because the Archive tier is not supported for ZRS accounts",
+     "why": "Correct. Archive is supported for LRS, GRS and RA-GRS accounts."
+    },
+    {
+     "text": "Blobs are moved to Archive within 24 hours of the policy being saved",
+     "why": "The account redundancy does not support Archive."
+    },
+    {
+     "text": "The account is converted to LRS automatically",
+     "why": "Lifecycle policies do not change account redundancy."
+    },
+    {
+     "text": "Blobs are deleted after 180 days",
+     "why": "The action is a tier change, not a delete."
+    }
+   ],
+   "answer": [
+    0
+   ],
+   "explanation": "Plan Archive use on LRS, GRS or RA-GRS accounts. Lifecycle policies run about once a day.",
+   "objective": "2.3.6"
+  }
+ ]
+}

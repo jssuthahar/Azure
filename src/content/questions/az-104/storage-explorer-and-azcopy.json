@@ -1,0 +1,148 @@
+{
+ "cert": "az-104",
+ "domain": 2,
+ "topic": "storage-explorer-and-azcopy",
+ "questions": [
+  {
+   "id": "adm-st-azc-1",
+   "type": "single",
+   "question": "You run azcopy login and then azcopy copy to upload files to a container. You are an Owner of the subscription. The copy fails with AuthorizationPermissionMismatch. What should you do?",
+   "options": [
+    {
+     "text": "Assign yourself the Storage Blob Data Contributor role on the storage account or container",
+     "why": "Correct. Microsoft Entra authorization for blob data requires a data role."
+    },
+    {
+     "text": "Regenerate the storage account keys",
+     "why": "AzCopy with azcopy login does not use account keys."
+    },
+    {
+     "text": "Run azcopy login again with the --tenant-id parameter",
+     "why": "The sign-in succeeded. The identity lacks a data role."
+    },
+    {
+     "text": "Assign yourself the Contributor role on the resource group",
+     "why": "Contributor is a management role and does not grant data access."
+    }
+   ],
+   "answer": [
+    0
+   ],
+   "explanation": "Owner and Contributor manage the account but do not include blob data actions. Use a Storage Blob Data role or a SAS.",
+   "objective": "2.2.5"
+  },
+  {
+   "id": "adm-st-azc-2",
+   "type": "single",
+   "question": "A folder on a file server must be copied to a blob container every night. Only new or changed files should be transferred, and files deleted from the folder must be removed from the container. Which command should you use?",
+   "options": [
+    {
+     "text": "azcopy sync with --delete-destination true",
+     "why": "Correct. sync compares the source and destination and can remove extra files."
+    },
+    {
+     "text": "azcopy copy with --recursive",
+     "why": "copy transfers every file each time and does not remove deleted files."
+    },
+    {
+     "text": "azcopy remove with --recursive",
+     "why": "remove deletes data. It does not copy new files."
+    },
+    {
+     "text": "az storage blob upload-batch",
+     "why": "upload-batch uploads files but does not remove files deleted from the source."
+    }
+   ],
+   "answer": [
+    0
+   ],
+   "explanation": "azcopy sync transfers only differences, and --delete-destination true mirrors deletions.",
+   "objective": "2.2.5"
+  },
+  {
+   "id": "adm-st-azc-3",
+   "type": "multi",
+   "question": "Which two methods can AzCopy use to authorize access to Azure Blob Storage? Each correct answer presents a complete solution.",
+   "options": [
+    {
+     "text": "Microsoft Entra ID",
+     "why": "Correct. Use azcopy login, a managed identity or a service principal."
+    },
+    {
+     "text": "A SAS token appended to the URL",
+     "why": "Correct. The SAS grants the permissions needed."
+    },
+    {
+     "text": "A stored access policy name passed on the command line",
+     "why": "A policy is referenced by a SAS token, not passed to AzCopy."
+    },
+    {
+     "text": "The storage account key passed with a --key parameter",
+     "why": "AzCopy does not accept the account key directly for Blob Storage."
+    }
+   ],
+   "answer": [
+    0,
+    1
+   ],
+   "explanation": "AzCopy authorizes with Microsoft Entra ID or with SAS tokens.",
+   "objective": "2.2.5"
+  },
+  {
+   "id": "adm-st-azc-4",
+   "type": "single",
+   "question": "An administrator on a macOS computer needs a graphical tool to browse blobs, queues, tables and file shares, change blob tiers and generate SAS tokens. What should you recommend?",
+   "options": [
+    {
+     "text": "Azure Storage Explorer",
+     "why": "Correct. It is a free cross-platform desktop application for managing Azure Storage."
+    },
+    {
+     "text": "AzCopy",
+     "why": "AzCopy is a command-line tool."
+    },
+    {
+     "text": "Azure Data Box",
+     "why": "Data Box is a physical device for offline transfers."
+    },
+    {
+     "text": "Azure File Sync",
+     "why": "File Sync caches Azure file shares on Windows Server."
+    }
+   ],
+   "answer": [
+    0
+   ],
+   "explanation": "Storage Explorer runs on Windows, macOS and Linux and uses AzCopy for transfers.",
+   "objective": "2.2.5"
+  },
+  {
+   "id": "adm-st-azc-5",
+   "type": "single",
+   "question": "You need to copy all blobs from a container in storage1 to a container in storage2 by using AzCopy. The data must not pass through the computer that runs the command. What should you do?",
+   "options": [
+    {
+     "text": "Run azcopy copy with the source and destination container URLs, each authorized by a SAS token or Microsoft Entra ID",
+     "why": "Correct. AzCopy performs a server-to-server copy between accounts."
+    },
+    {
+     "text": "Download the blobs with azcopy copy, then upload them with a second azcopy copy",
+     "why": "This sends the data through the local computer."
+    },
+    {
+     "text": "Run azcopy sync from a local folder",
+     "why": "A local folder is not the source."
+    },
+    {
+     "text": "Enable geo-redundant storage on storage1",
+     "why": "Geo-redundancy copies to the paired region, not to storage2."
+    }
+   ],
+   "answer": [
+    0
+   ],
+   "explanation": "Copies between storage accounts use server-to-server APIs, so data moves directly between the accounts.",
+   "objective": "2.2.5"
+  }
+ ]
+}

@@ -1,0 +1,149 @@
+{
+ "cert": "az-104",
+ "domain": 2,
+ "topic": "blob-soft-delete-and-versioning",
+ "questions": [
+  {
+   "id": "adm-st-sd-1",
+   "type": "single",
+   "question": "Users occasionally delete blobs by mistake. You must be able to recover deleted blobs for 14 days. What should you enable?",
+   "options": [
+    {
+     "text": "Blob soft delete with a retention period of 14 days",
+     "why": "Correct. Soft-deleted blobs can be undeleted during the retention period."
+    },
+    {
+     "text": "Container soft delete with a retention period of 14 days",
+     "why": "Container soft delete recovers deleted containers, not individual blobs."
+    },
+    {
+     "text": "A CanNotDelete resource lock on the storage account",
+     "why": "Resource locks protect the account resource, not blob data."
+    },
+    {
+     "text": "Geo-redundant storage",
+     "why": "Replication copies deletes to the secondary region."
+    }
+   ],
+   "answer": [
+    0
+   ],
+   "explanation": "Blob soft delete retention can be set from 1 to 365 days.",
+   "objective": "2.3.4"
+  },
+  {
+   "id": "adm-st-sd-2",
+   "type": "single",
+   "question": "A document blob is overwritten with incorrect content. You must be able to restore the previous content automatically for future overwrites without taking manual copies. What should you enable?",
+   "options": [
+    {
+     "text": "Blob versioning",
+     "why": "Correct. Each write keeps the previous content as a version."
+    },
+    {
+     "text": "Blob snapshots",
+     "why": "Snapshots must be taken manually or by a scheduled process."
+    },
+    {
+     "text": "Change feed",
+     "why": "The change feed logs changes but does not keep previous content."
+    },
+    {
+     "text": "Last access time tracking",
+     "why": "Access tracking records reads and is used by lifecycle rules."
+    }
+   ],
+   "answer": [
+    0
+   ],
+   "explanation": "Restore a previous version by copying it over the current blob or making it the current version.",
+   "objective": "2.3.7"
+  },
+  {
+   "id": "adm-st-sd-3",
+   "type": "single",
+   "question": "A container named reports was deleted. Container soft delete is enabled. Which Azure CLI command restores the container?",
+   "options": [
+    {
+     "text": "az storage container restore --name reports --deleted-version <version>",
+     "why": "Correct. The deleted version is listed by az storage container list --include-deleted."
+    },
+    {
+     "text": "az storage blob undelete --container-name reports",
+     "why": "This restores soft-deleted blobs in an existing container."
+    },
+    {
+     "text": "az storage share-rm restore --name reports",
+     "why": "This restores a deleted file share."
+    },
+    {
+     "text": "az storage account failover",
+     "why": "Failover changes the primary region."
+    }
+   ],
+   "answer": [
+    0
+   ],
+   "explanation": "Container soft delete keeps the container and its blobs during the retention period.",
+   "objective": "2.3.4"
+  },
+  {
+   "id": "adm-st-sd-4",
+   "type": "multi",
+   "question": "You need to configure point-in-time restore for block blobs in a storage account. Which three features must be enabled? Each correct answer presents part of the solution.",
+   "options": [
+    {
+     "text": "Blob versioning",
+     "why": "Correct. Point-in-time restore depends on versions."
+    },
+    {
+     "text": "Change feed",
+     "why": "Correct. The change feed tracks the changes to undo."
+    },
+    {
+     "text": "Blob soft delete",
+     "why": "Correct. The restore window must be shorter than the soft delete retention."
+    },
+    {
+     "text": "Object replication",
+     "why": "Object replication is not required for point-in-time restore."
+    }
+   ],
+   "answer": [
+    0,
+    1,
+    2
+   ],
+   "explanation": "Point-in-time restore needs versioning, the change feed and blob soft delete.",
+   "objective": "2.3.7"
+  },
+  {
+   "id": "adm-st-sd-5",
+   "type": "single",
+   "question": "Blob soft delete and container soft delete are enabled on a storage account. You must also prevent an administrator from accidentally deleting the storage account itself. What should you configure?",
+   "options": [
+    {
+     "text": "A CanNotDelete resource lock on the storage account",
+     "why": "Correct. Soft delete does not protect against deletion of the account."
+    },
+    {
+     "text": "Blob versioning",
+     "why": "Versioning protects blob content, not the account resource."
+    },
+    {
+     "text": "A longer soft delete retention period",
+     "why": "Retention applies to blobs and containers only."
+    },
+    {
+     "text": "A stored access policy",
+     "why": "Stored access policies apply to SAS tokens."
+    }
+   ],
+   "answer": [
+    0
+   ],
+   "explanation": "Use a resource lock to protect the storage account resource from deletion.",
+   "objective": "2.3.4"
+  }
+ ]
+}

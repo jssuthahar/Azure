@@ -1,0 +1,149 @@
+{
+ "cert": "az-104",
+ "domain": 2,
+ "topic": "storage-redundancy-and-object-replication",
+ "questions": [
+  {
+   "id": "adm-st-red-1",
+   "type": "single",
+   "question": "A storage account must remain available for reads and writes if an availability zone in the primary region fails. Data does not need to be copied to another region. You need to minimize cost. Which redundancy option should you choose?",
+   "options": [
+    {
+     "text": "Zone-redundant storage (ZRS)",
+     "why": "Correct. ZRS keeps three synchronous copies across availability zones."
+    },
+    {
+     "text": "Locally redundant storage (LRS)",
+     "why": "LRS keeps all copies in one datacenter, which a zone failure can take offline."
+    },
+    {
+     "text": "Geo-redundant storage (GRS)",
+     "why": "GRS is not zone redundant in the primary region and costs more."
+    },
+    {
+     "text": "Geo-zone-redundant storage (GZRS)",
+     "why": "GZRS meets the requirement but adds a paired-region copy that is not needed."
+    }
+   ],
+   "answer": [
+    0
+   ],
+   "explanation": "ZRS protects against a zone failure within a region at a lower cost than geo-redundant options.",
+   "objective": "2.2.2"
+  },
+  {
+   "id": "adm-st-red-2",
+   "type": "multi",
+   "question": "Users must be able to read data from a storage account during a regional outage without waiting for a failover. Which redundancy options meet the requirement? Each correct answer presents a complete solution.",
+   "options": [
+    {
+     "text": "RA-GRS",
+     "why": "Correct. Read access to the secondary region is available at any time."
+    },
+    {
+     "text": "RA-GZRS",
+     "why": "Correct. It combines zone redundancy with readable geo-replication."
+    },
+    {
+     "text": "GRS",
+     "why": "The secondary region is not readable until a failover occurs."
+    },
+    {
+     "text": "ZRS",
+     "why": "ZRS keeps data in one region only."
+    }
+   ],
+   "answer": [
+    0,
+    1
+   ],
+   "explanation": "The read-access options expose a secondary endpoint, <account>-secondary, for reads.",
+   "objective": "2.2.2"
+  },
+  {
+   "id": "adm-st-red-3",
+   "type": "single",
+   "question": "A storage account uses LRS. You need to change it to ZRS. What should you do?",
+   "options": [
+    {
+     "text": "Start a conversion to ZRS from the Redundancy page or by running az storage account migration start",
+     "why": "Correct. Adding zones is a conversion that runs in the background."
+    },
+    {
+     "text": "Delete and recreate the account, because redundancy cannot be changed",
+     "why": "Redundancy can be changed after creation."
+    },
+    {
+     "text": "Run az storage account update --sku Standard_GRS",
+     "why": "This adds a secondary region, not zone redundancy."
+    },
+    {
+     "text": "Enable object replication to a ZRS account",
+     "why": "Object replication copies blobs to another account. It does not change the redundancy of the source."
+    }
+   ],
+   "answer": [
+    0
+   ],
+   "explanation": "LRS to GRS is a simple update. LRS to ZRS and GRS to GZRS are conversions.",
+   "objective": "2.2.2"
+  },
+  {
+   "id": "adm-st-or-4",
+   "type": "multi",
+   "question": "You plan to configure object replication from storage1 to storage2. Which two settings must be enabled? Each correct answer presents part of the solution.",
+   "options": [
+    {
+     "text": "Blob versioning on both storage1 and storage2",
+     "why": "Correct. Object replication requires versioning on the source and destination accounts."
+    },
+    {
+     "text": "The change feed on storage1",
+     "why": "Correct. The change feed must be enabled on the source account."
+    },
+    {
+     "text": "Geo-redundant storage on storage2",
+     "why": "Object replication works with any redundancy option."
+    },
+    {
+     "text": "A stored access policy on the destination container",
+     "why": "Stored access policies apply to SAS tokens and are not used by object replication."
+    }
+   ],
+   "answer": [
+    0,
+    1
+   ],
+   "explanation": "Object replication reads changes from the change feed of the source and relies on blob versions in both accounts.",
+   "objective": "2.2.3"
+  },
+  {
+   "id": "adm-st-or-5",
+   "type": "single",
+   "question": "You configure object replication between two storage accounts. Which type of data is replicated?",
+   "options": [
+    {
+     "text": "Block blobs in the source container that are not in the Archive tier",
+     "why": "Correct. Object replication supports block blobs that are online."
+    },
+    {
+     "text": "All blobs, including page blobs and append blobs",
+     "why": "Object replication supports block blobs only."
+    },
+    {
+     "text": "File shares and queues in the source account",
+     "why": "Object replication applies to Blob Storage containers only."
+    },
+    {
+     "text": "Blobs in the Archive tier, after they are rehydrated automatically",
+     "why": "Archived blobs are not replicated or rehydrated by object replication."
+    }
+   ],
+   "answer": [
+    0
+   ],
+   "explanation": "Object replication asynchronously copies block blobs from a source container to a destination container.",
+   "objective": "2.2.3"
+  }
+ ]
+}

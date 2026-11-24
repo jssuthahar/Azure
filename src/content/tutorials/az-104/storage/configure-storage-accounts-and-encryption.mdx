@@ -1,6 +1,6 @@
 ---
 title: Create and Configure Storage Accounts and Encryption
-seoTitle: Create Azure Storage Accounts and Configure Encryption | AZ-104
+seoTitle: Create Azure Storage Accounts and Set Up Encryption | AZ-104
 description: Create Azure storage accounts with the right type, performance and security settings, and configure encryption with Microsoft-managed or customer-managed keys.
 answer: >-
   A **storage account** is created with a globally unique name (3 to 24 lowercase letters and numbers), a region, a **performance** tier (**Standard** general-purpose v2, or **Premium** block blobs, file shares or page blobs) and a **redundancy** option. Secure defaults to keep: **secure transfer (HTTPS) required**, **minimum TLS 1.2**, **anonymous blob access off**. All data is **encrypted at rest with AES-256** automatically. You choose **Microsoft-managed keys** or **customer-managed keys** in Azure Key Vault or Managed HSM (the vault needs **soft delete and purge protection**, and the account needs a **managed identity** with access to the key). **Infrastructure encryption** adds a second layer and can only be enabled **at creation**.

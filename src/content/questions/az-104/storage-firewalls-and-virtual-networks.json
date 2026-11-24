@@ -1,0 +1,148 @@
+{
+ "cert": "az-104",
+ "domain": 2,
+ "topic": "storage-firewalls-and-virtual-networks",
+ "questions": [
+  {
+   "id": "adm-st-fw-1",
+   "type": "multi",
+   "question": "You need to ensure that a storage account accepts data requests only from the subnet snet-app in the virtual network vnet-app. Which two actions should you perform? Each correct answer presents part of the solution.",
+   "options": [
+    {
+     "text": "Enable the Microsoft.Storage service endpoint on snet-app",
+     "why": "Correct. A virtual network rule relies on the Microsoft.Storage service endpoint on the subnet."
+    },
+    {
+     "text": "Set the default network action of the storage account to Deny and add a virtual network rule for snet-app",
+     "why": "Correct. With the default action set to Deny, only the allowed subnet can reach the data."
+    },
+    {
+     "text": "Add the public IP address of each virtual machine in snet-app to the IP rules",
+     "why": "IP rules do not apply to requests that come from Azure resources in the same region, and they do not identify a subnet."
+    },
+    {
+     "text": "Assign the Storage Account Contributor role to the virtual network",
+     "why": "Roles authorize identities. They do not restrict network access."
+    }
+   ],
+   "answer": [
+    0,
+    1
+   ],
+   "explanation": "Virtual network rules allow traffic from subnets that have the Microsoft.Storage service endpoint. The default action must be Deny for the rule to restrict anything.",
+   "objective": "2.1.1"
+  },
+  {
+   "id": "adm-st-fw-2",
+   "type": "single",
+   "question": "The default network action of a storage account is set to Deny. A user on the internet presents a valid account SAS token from an IP address that is not listed in any network rule. What is the result?",
+   "options": [
+    {
+     "text": "The request is rejected with HTTP 403",
+     "why": "Correct. The firewall is evaluated before authorization, so a valid SAS does not bypass it."
+    },
+    {
+     "text": "The request succeeds because the SAS token is valid",
+     "why": "Network rules apply to all data requests, regardless of the credential."
+    },
+    {
+     "text": "The request succeeds only if the SAS token allows HTTPS only",
+     "why": "The protocol restriction does not affect network rules."
+    },
+    {
+     "text": "The request is redirected to the secondary endpoint",
+     "why": "Firewall decisions do not redirect requests."
+    }
+   ],
+   "answer": [
+    0
+   ],
+   "explanation": "Requests from networks that are not allowed are blocked even when they carry a valid key, SAS or token.",
+   "objective": "2.1.1"
+  },
+  {
+   "id": "adm-st-fw-3",
+   "type": "single",
+   "question": "You add the IP rule 10.10.0.0/16 to a storage account so that on-premises users can connect through a site-to-site VPN. The rule is rejected. What should you do instead?",
+   "options": [
+    {
+     "text": "Use a private endpoint or a virtual network rule for traffic that arrives over the VPN",
+     "why": "Correct. IP rules accept public addresses only. Private traffic should use a private endpoint or VNet integration."
+    },
+    {
+     "text": "Change the rule to 10.10.0.0/32",
+     "why": "Private ranges are not allowed in IP rules, and /32 prefixes are not supported."
+    },
+    {
+     "text": "Enable the trusted Microsoft services exception",
+     "why": "The exception applies to listed Azure services, not to on-premises clients."
+    },
+    {
+     "text": "Set the default action to Allow",
+     "why": "This removes the restriction for everyone instead of allowing only on-premises users."
+    }
+   ],
+   "answer": [
+    0
+   ],
+   "explanation": "Storage IP rules accept public IPv4 addresses and ranges only. RFC 1918 ranges cannot be used.",
+   "objective": "2.1.1"
+  },
+  {
+   "id": "adm-st-fw-4",
+   "type": "single",
+   "question": "After you set a storage account to allow access only from selected networks, Azure Backup can no longer back up an Azure file share in the account. You must restore backups without allowing additional public networks. What should you configure?",
+   "options": [
+    {
+     "text": "Allow Azure services on the trusted services list to access this storage account",
+     "why": "Correct. Azure Backup is a trusted Microsoft service and can then bypass the network rules."
+    },
+    {
+     "text": "An IP rule for the Azure Backup public IP range",
+     "why": "Trusted services use the exception, not IP rules, and adding ranges widens access."
+    },
+    {
+     "text": "Allow read access to storage logging from any network",
+     "why": "This exception covers log reads only."
+    },
+    {
+     "text": "Disable public network access",
+     "why": "This blocks the public endpoint completely and does not allow Azure Backup."
+    }
+   ],
+   "answer": [
+    0
+   ],
+   "explanation": "The trusted services exception (bypass AzureServices) lets listed Azure services reach the account when the default action is Deny.",
+   "objective": "2.1.1"
+  },
+  {
+   "id": "adm-st-fw-5",
+   "type": "single",
+   "question": "Which Azure CLI command sets a storage account to block requests that do not match a network rule while allowing trusted Azure services?",
+   "options": [
+    {
+     "text": "az storage account update --default-action Deny --bypass AzureServices",
+     "why": "Correct. This sets the default action and keeps the trusted services exception."
+    },
+    {
+     "text": "az storage account network-rule add --action Deny",
+     "why": "network-rule add adds an allow rule for an IP address or subnet."
+    },
+    {
+     "text": "az storage account update --public-network-access Disabled --bypass AzureServices",
+     "why": "Disabling public network access blocks all public traffic, including allowed networks."
+    },
+    {
+     "text": "az network nsg rule create --access Deny --destination-address-prefixes Storage",
+     "why": "An NSG rule filters subnet traffic. It does not configure the storage firewall."
+    }
+   ],
+   "answer": [
+    0
+   ],
+   "explanation": "The storage firewall is configured on the account with --default-action and --bypass, and allow rules are added with az storage account network-rule add.",
+   "objective": "2.1.1"
+  }
+ ]
+}
