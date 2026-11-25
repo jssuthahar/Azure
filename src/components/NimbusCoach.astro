@@ -18,12 +18,12 @@
  * never on top of the share/coffee card or the Ask panel. One card per page
  * view at most. Non-modal: Esc or ✕ closes it. State: src/lib/coach.ts.
  */
-import Mascot from './Mascot.astro';
+import NimbusBot from './NimbusBot.astro';
 import { SITE } from '../config';
 ---
 <aside id="nc" class="nc" data-coach data-site={SITE.url} hidden role="dialog" aria-modal="false" aria-labelledby="nc-h">
   <div class="nc-top">
-    <Mascot size={44} class="nc-face" />
+    <span class="nc-face"><NimbusBot size={52} mood="wave" /></span>
     <h2 id="nc-h" class="nc-h" tabindex="-1"></h2>
     <button type="button" class="nc-x" data-nc-close aria-label="Close Nimbus">✕</button>
   </div>
@@ -75,8 +75,11 @@ import { SITE } from '../config';
   let shownBy: 'auto' | 'user' | null = null;
   /** What closing the current card means (e.g. snooze the welcome). */
   let onClose: (() => void) | null = null;
-  function show(title: string, html: string, by: 'auto' | 'user') {
+  const bot = box.querySelector<SVGElement>('.nb')!;
+  function show(title: string, html: string, by: 'auto' | 'user', mood: 'idle' | 'wave' | 'think' | 'cheer' = 'idle') {
     head.textContent = title;
+    bot.dataset.mood = mood;
+    bot.classList.remove('nb-in'); void bot.getBoundingClientRect(); bot.classList.add('nb-in');
     body.innerHTML = html;
     const first = !shownBy || box.hidden;
     shownBy = by;
@@ -111,7 +114,7 @@ import { SITE } from '../config';
       <p>Hi, I'm Nimbus. Tell me when you want to sit ${esc(e.code)} and I'll split the ${e.lessons.length} lessons into small daily steps, with a calendar reminder.</p>
       <p class="nc-muted">It takes three taps and stays in your browser. No sign-in needed.</p>
       <div class="nc-btns">${btn('plan', 'Yes, plan it with me', 'btn-accent')}${btn('looking', 'Just looking')}</div>
-      <button type="button" class="nc-link" data-act="never">Don't ask me again</button>`, by);
+      <button type="button" class="nc-link" data-act="never">Don't ask me again</button>`, by, 'wave');
     act({
       plan: () => { setFocus(st, e.slug); st.snooze = undefined; save(); loadPlan(e.slug) ? viewReady(e) : viewDate(e); },
       looking: () => { st.snooze = Date.now() + 3 * DAY; save(); close(); },
@@ -158,7 +161,7 @@ import { SITE } from '../config';
       ${warn}
       <p class="nc-task"><span class="nc-lbl">First up</span> ${esc(t.title)}</p>
       <div class="nc-btns">${link(t.url, 'Start now')}${btn('ics', '📅 Add calendar reminders')}</div>
-      <a class="nc-link" href="/${e.slug}/study-plan/">See the whole plan</a>`, 'user');
+      <a class="nc-link" href="/${e.slug}/study-plan/">See the whole plan</a>`, 'user', 'cheer');
     act({ ics: () => downloadIcs(e) });
   }
 
@@ -174,7 +177,7 @@ import { SITE } from '../config';
       ${bar(pct, `${e.code} lessons done`)}
       ${html}
       <div class="nc-btns">${link(t.url, 'Continue')}${btn('later', 'Later')}</div>
-      ${plan ? '' : `<button type="button" class="nc-link" data-act="date">Set an exam date and get reminders</button>`}`, 'auto');
+      ${plan ? '' : `<button type="button" class="nc-link" data-act="date">Set an exam date and get reminders</button>`}`, 'auto', 'wave');
     act({ later: close, date: () => viewDate(e) });
   }
 
@@ -192,7 +195,7 @@ import { SITE } from '../config';
       ${bar(pct, `${focus.code} lessons done`)}
       <div class="nc-btns">${link(nextTask(focus).url, `Back to ${esc(focus.code)}`)}${btn('look', 'Just looking')}</div>
       <button type="button" class="nc-link" data-act="switch">Switch my focus to ${esc(other.code)}</button>
-      <p class="nc-muted">Switching keeps your ${esc(focus.code)} progress. You can come back to it any time.</p>`, 'auto');
+      <p class="nc-muted">Switching keeps your ${esc(focus.code)} progress. You can come back to it any time.</p>`, 'auto', 'think');
     act({
       look: () => { onClose!(); close(); },
       switch: () => { setFocus(st, other.slug); save(); loadPlan(other.slug) ? viewReady(other) : viewDate(other); },
@@ -207,7 +210,7 @@ import { SITE } from '../config';
     show(`You're ready for ${e.code} 🎉`, `
       <p>${mock >= 80 ? `You scored ${mock}% in a full mock exam.` : `You've finished every ${esc(e.code)} lesson.`} Book the exam while it's fresh, and keep a few mock exams going until the day.</p>
       <div class="nc-btns">${link(`/${e.slug}/exam-day/`, 'Exam-day checklist')}${btn('passed', `I've passed ${esc(e.code)}`)}</div>
-      <button type="button" class="nc-link" data-act="later">I'll keep revising</button>`, 'auto');
+      <button type="button" class="nc-link" data-act="later">I'll keep revising</button>`, 'auto', 'cheer');
     act({ passed: () => markPassed(e), later: close });
   }
 
@@ -217,7 +220,7 @@ import { SITE } from '../config';
     show(`How did ${e.code} go?`, `
       <p>Your exam date was ${pretty(date)}. Tell me how it went and I'll help with what comes next.</p>
       <div class="nc-btns">${btn('passed', 'I passed 🎉', 'btn-accent')}${btn('date', 'Not yet, pick a new date')}</div>
-      <button type="button" class="nc-link" data-act="later">Ask me later</button>`, 'auto');
+      <button type="button" class="nc-link" data-act="later">Ask me later</button>`, 'auto', 'think');
     act({ passed: () => markPassed(e), date: () => viewDate(e), later: () => { delete st.asked[e.slug]; st.greeted = today(); save(); close(); } });
   }
 
@@ -234,7 +237,7 @@ import { SITE } from '../config';
     show(`Well done on ${e.code}`, `
       <p>${st.passed[e.slug] ? 'That one is done. ' : ''}One exam at a time works best. Pick what to focus on next:</p>
       <div class="nc-opts">${nexts.map(({ n, x }) => `<button type="button" class="nc-opt nc-opt-wide" data-next="${x!.slug}"><strong>${esc(x!.code)} · ${esc(x!.name)}</strong><span>${esc(n.why)}</span></button>`).join('')}</div>
-      <a class="nc-link" href="/ai-certifications/">Not sure? Compare paths by role</a>`, 'user');
+      <a class="nc-link" href="/ai-certifications/">Not sure? Compare paths by role</a>`, 'user', st.passed[e.slug] ? 'cheer' : 'idle');
     body.querySelectorAll<HTMLButtonElement>('[data-next]').forEach((b) => b.addEventListener('click', () => {
       const x = examBy(b.dataset.next)!;
       setFocus(st, x.slug); save();
@@ -366,7 +369,9 @@ import { SITE } from '../config';
   body:has(#ask.is-open) .nc, body:has(#xs:not([hidden])) .nc { display: none; }
   body:has(.install-banner) .nc { bottom: calc(156px + env(safe-area-inset-bottom)); }
   .nc-top { display: flex; align-items: center; gap: .6rem; padding-right: 2.2rem; }
-  .nc-face { flex: none; }
+  .nc-face { flex: none; display: grid; place-items: center; width: 56px; height: 56px; margin: -4px 0 -4px -4px; border-radius: 50%; background: radial-gradient(circle at 50% 60%, var(--accent-soft), transparent 70%); }
+  .nc .nb-in { animation: nb-pop .55s cubic-bezier(.3, .7, .4, 1.2); }
+  @media (prefers-reduced-motion: reduce) { .nc .nb-in { animation: none; } }
   .nc-h { font-size: 1.05rem; font-weight: 800; line-height: 1.3; outline: none; }
   .nc-x { position: absolute; top: .45rem; right: .45rem; display: grid; place-items: center; width: 36px; height: 36px; border-radius: 50%; color: var(--text-muted); }
   .nc-x:hover { background: var(--pastel-grey); }

@@ -1,0 +1,125 @@
+---
+/**
+ * Nimbus, animated: the cloud study buddy as a little robot (visor face,
+ * glowing antenna, waving arm). Original artwork, decorative (aria-hidden).
+ *
+ * Moods: idle (floats and blinks), wave (says hello), think (looks up, thought
+ * bubbles), cheer (happy eyes, hops, sparkles). Set `mood`, or change
+ * `data-mood` on the <svg> at runtime (NimbusCoach does). Everything stops
+ * for prefers-reduced-motion.
+ */
+interface Props { size?: number; class?: string; mood?: 'idle' | 'wave' | 'think' | 'cheer' }
+const { size = 64, class: cls = '', mood = 'idle' } = Astro.props;
+const id = `nb${Math.random().toString(36).slice(2, 8)}`;
+---
+<svg class:list={['nb', cls]} data-mood={mood} width={size} height={size} viewBox="0 0 120 120" aria-hidden="true" focusable="false">
+  <defs>
+    <linearGradient id={`${id}-body`} x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#ffffff" />
+      <stop offset="1" stop-color="#cfe5fb" />
+    </linearGradient>
+    <linearGradient id={`${id}-visor`} x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#16365f" />
+      <stop offset="1" stop-color="#071629" />
+    </linearGradient>
+    <radialGradient id={`${id}-orb`} cx=".35" cy=".35" r=".7">
+      <stop offset="0" stop-color="#fff4c2" />
+      <stop offset=".55" stop-color="#ffc83d" />
+      <stop offset="1" stop-color="#f29d00" />
+    </radialGradient>
+  </defs>
+
+  <ellipse class="nb-shadow" cx="60" cy="111" rx="26" ry="4" />
+
+  <!-- thought bubbles (think) -->
+  <g class="nb-think">
+    <circle cx="94" cy="30" r="3" />
+    <circle cx="102" cy="20" r="4.5" />
+    <circle cx="112" cy="8" r="6" />
+  </g>
+  <!-- sparkles (cheer) -->
+  <g class="nb-sparks">
+    <path class="nb-spark" d="M16 34l2.2 5.8 5.8 2.2-5.8 2.2L16 50l-2.2-5.8L8 42l5.8-2.2z" />
+    <path class="nb-spark" d="M104 30l1.8 4.2 4.2 1.8-4.2 1.8-1.8 4.2-1.8-4.2-4.2-1.8 4.2-1.8z" />
+    <path class="nb-spark" d="M100 86l1.5 3.5 3.5 1.5-3.5 1.5-1.5 3.5-1.5-3.5-3.5-1.5 3.5-1.5z" />
+  </g>
+
+  <g class="nb-float">
+    <!-- antenna -->
+    <path d="M60 40V24" stroke="#0078d4" stroke-width="3.5" stroke-linecap="round" />
+    <circle class="nb-glow" cx="60" cy="18" r="10" fill="#ffc83d" />
+    <circle cx="60" cy="18" r="5.5" fill={`url(#${id}-orb)`} stroke="#e08a00" stroke-width="1" />
+
+    <!-- arms (behind the body) -->
+    <rect x="15" y="64" width="10" height="22" rx="5" transform="rotate(28 20 66)" fill={`url(#${id}-body)`} stroke="#0078d4" stroke-width="3" />
+    <g class="nb-arm">
+      <rect x="95" y="58" width="10" height="24" rx="5" fill={`url(#${id}-body)`} stroke="#0078d4" stroke-width="3" />
+    </g>
+
+    <!-- cloud body -->
+    <path d="M30 96h60a20 20 0 0 0 3-39.8A28 28 0 0 0 39.5 49 22 22 0 0 0 30 96z" fill={`url(#${id}-body)`} stroke="#0078d4" stroke-width="3.5" stroke-linejoin="round" />
+    <path d="M44 55a18 18 0 0 1 16-9" stroke="#fff" stroke-width="4" stroke-linecap="round" fill="none" opacity=".9" />
+
+    <!-- visor face -->
+    <rect x="37" y="60" width="50" height="29" rx="14" fill={`url(#${id}-visor)`} />
+    <rect x="41" y="62.5" width="30" height="5" rx="2.5" fill="#fff" opacity=".12" />
+    <g class="nb-eyes">
+      <rect class="nb-eye" x="48" y="67" width="8" height="12" rx="4" />
+      <rect class="nb-eye" x="68" y="67" width="8" height="12" rx="4" />
+    </g>
+    <g class="nb-happy">
+      <path d="M47 75q5-7 10 0M67 75q5-7 10 0" />
+    </g>
+    <path class="nb-mouth" d="M55 82q7 4.5 14 0" />
+    <ellipse cx="43.5" cy="81" rx="3" ry="2" fill="#ff7a93" opacity=".75" />
+    <ellipse cx="80.5" cy="81" rx="3" ry="2" fill="#ff7a93" opacity=".75" />
+  </g>
+</svg>
+
+<style is:global>
+  .nb { overflow: visible; }
+  .nb * { transform-box: fill-box; }
+  .nb-shadow { fill: rgb(0 40 90 / .18); transform-origin: center; animation: nb-shadow 3.2s ease-in-out infinite; }
+  .nb-float { animation: nb-float 3.2s ease-in-out infinite; }
+  .nb-glow { opacity: .35; transform-origin: center; animation: nb-glow 2s ease-in-out infinite; }
+  .nb-eye { fill: #62e6ff; transform-origin: center; animation: nb-blink 4.6s infinite; filter: drop-shadow(0 0 2.5px #62e6ff); }
+  .nb-eyes { transition: transform .3s ease; }
+  .nb-happy path, .nb-mouth { fill: none; stroke: #62e6ff; stroke-width: 3; stroke-linecap: round; filter: drop-shadow(0 0 2px #62e6ff); }
+  .nb-happy { opacity: 0; }
+  .nb-arm { transform-origin: 50% 85%; }
+  .nb-think, .nb-sparks { opacity: 0; }
+  .nb-think circle { fill: #fff; stroke: #0078d4; stroke-width: 2; }
+  .nb-spark { fill: #ffc83d; transform-origin: center; }
+
+  /* wave: two quick waves, then a rest */
+  .nb[data-mood='wave'] .nb-arm { animation: nb-wave 2.6s ease-in-out infinite; }
+  /* think: eyes look up, bubbles pop in turn */
+  .nb[data-mood='think'] .nb-eyes { transform: translate(3px, -2.5px); }
+  .nb[data-mood='think'] .nb-think { opacity: 1; }
+  .nb[data-mood='think'] .nb-think circle { animation: nb-bubble 2.4s ease-in-out infinite; transform-origin: center; }
+  .nb[data-mood='think'] .nb-think circle:nth-child(2) { animation-delay: .3s; }
+  .nb[data-mood='think'] .nb-think circle:nth-child(3) { animation-delay: .6s; }
+  /* cheer: happy eyes, hops, sparkles, both arms up */
+  .nb[data-mood='cheer'] .nb-eyes { opacity: 0; }
+  .nb[data-mood='cheer'] .nb-happy { opacity: 1; }
+  .nb[data-mood='cheer'] .nb-float { animation: nb-hop .9s cubic-bezier(.3, .7, .4, 1) infinite; }
+  .nb[data-mood='cheer'] .nb-arm { animation: nb-wave 1s ease-in-out infinite; }
+  .nb[data-mood='cheer'] .nb-sparks { opacity: 1; }
+  .nb[data-mood='cheer'] .nb-spark { animation: nb-twinkle 1.4s ease-in-out infinite; }
+  .nb[data-mood='cheer'] .nb-spark:nth-child(2) { animation-delay: .45s; }
+  .nb[data-mood='cheer'] .nb-spark:nth-child(3) { animation-delay: .9s; }
+
+  @keyframes nb-float { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-4px); } }
+  @keyframes nb-shadow { 0%, 100% { transform: scaleX(1); opacity: 1; } 50% { transform: scaleX(.82); opacity: .7; } }
+  @keyframes nb-glow { 0%, 100% { transform: scale(.75); opacity: .2; } 50% { transform: scale(1.15); opacity: .5; } }
+  @keyframes nb-blink { 0%, 44%, 50%, 100% { transform: scaleY(1); } 47% { transform: scaleY(.1); } }
+  @keyframes nb-wave { 0%, 55%, 100% { transform: rotate(0); } 10%, 30% { transform: rotate(-28deg); } 20%, 40% { transform: rotate(12deg); } }
+  @keyframes nb-hop { 0%, 100% { transform: translateY(0); } 40% { transform: translateY(-9px); } }
+  @keyframes nb-bubble { 0%, 100% { transform: scale(.7); opacity: .5; } 50% { transform: scale(1); opacity: 1; } }
+  @keyframes nb-twinkle { 0%, 100% { transform: scale(.4) rotate(0); opacity: .3; } 50% { transform: scale(1.1) rotate(25deg); opacity: 1; } }
+  @keyframes nb-pop { 0% { transform: scale(.4) rotate(-12deg); } 60% { transform: scale(1.12) rotate(4deg); } 100% { transform: none; } }
+
+  @media (prefers-reduced-motion: reduce) {
+    .nb *, .nb[data-mood] * { animation: none !important; }
+  }
+</style>
