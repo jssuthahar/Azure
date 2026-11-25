@@ -14,7 +14,7 @@ const { roadmap } = Astro.props;
 const cert = (slug: string): Certification => CERTIFICATIONS.find((c) => c.slug === slug)!;
 const tracks = roadmap.tracks;
 const N = tracks.length;
-const COLORS = ['#0078d4', '#e3008c', '#107c10', '#d97706', '#8661c5', '#00a2ad', '#d13438'];
+const COLORS = ['#0078d4', '#c4007a', '#107c10', '#b45309', '#7a4fc0', '#00838f', '#c42b30'];
 const termSlugs = [...new Set(tracks.flatMap((t) => t.next.map((n) => n.slug)))];
 const K = termSlugs.length;
 const termInfo = (slug: string) => {
