@@ -38,14 +38,24 @@ const spotlight = (slug: string) => {
   return { tours: Object.keys(e.tours).length, scenes: Object.keys(e.sims3d).length, domains: e.modules.length, modules: e.modules };
 };
 const aiTracks = AI_TRACKS.map((t) => ({ ...t, cert: CERTIFICATIONS.find((c) => c.slug === t.slug)! }));
+const lives = liveExams();
+const total3d = lives.reduce((n, e) => n + Object.keys(e.sims3d).length, 0);
+const totalTours = lives.reduce((n, e) => n + Object.keys(e.tours).length, 0);
+const labsOf = (slug: string) => LABS.filter((l) => (l.exam ?? 'az-900') === slug).length;
 const sample = published[0] ? await getTutorial(published[0].key) : undefined;
 const sampleQ = bank.find((q) => q.id === 'd2-arch-10') ?? bank[0];
 
-const LEVELS = [
-  { id: 'Fundamentals', icon: '🌱', tone: 'lv-1', who: 'New to the cloud', text: 'Start from zero. Stories first, then the theory.' },
-  { id: 'Associate', icon: '🛠️', tone: 'lv-2', who: 'Building and running Azure', text: 'Administer, develop and secure real workloads.' },
-  { id: 'Expert', icon: '🏛️', tone: 'lv-3', who: 'Designing at scale', text: 'Architecture and DevOps decisions with trade-offs.' },
-] as const;
+const CHIPS = [
+  { id: 'all', label: 'All' },
+  { id: 'beginner', label: 'Beginner' },
+  { id: 'intermediate', label: 'Intermediate' },
+  { id: 'advanced', label: 'Advanced' },
+  { id: 'ai', label: 'AI' },
+  { id: 'security', label: 'Security' },
+  { id: 'github', label: 'GitHub' },
+];
+const tags = (c: (typeof CERTIFICATIONS)[number]) => [difficulty(c).toLowerCase(), c.icon === 'ai' || /^A[IB]-/.test(c.code) ? 'ai' : '', c.icon === 'shield' || c.code.startsWith('SC-') ? 'security' : '', c.code.startsWith('GH-') ? 'github' : ''].filter(Boolean).join(' ');
+
 
 const why = [
   { icon: '🧊', title: 'Feel it, then learn it', text: 'Every lesson has a 3D scene, an Azure portal walkthrough and a practice lab before the theory.' },
@@ -87,41 +97,184 @@ const schema = [
 ];
 ---
 <PublicLayout title={homeTitle} description={homeDescription} schema={schema}>
-  <!-- Hero -->
+  <!-- Hero: headline, search and two calls to action, the 3D cloud on the right -->
   <section class="h-hero">
-    <div class="mx-auto grid max-w-6xl items-center gap-10 px-4 py-12 sm:px-6 sm:py-16 lg:grid-cols-[1.1fr_1fr]">
+    <div class="mx-auto grid max-w-6xl items-center gap-10 px-4 pb-10 pt-10 sm:px-6 sm:pt-14 lg:grid-cols-[1.05fr_1fr]">
       <div class="text-center lg:text-left">
         <BrandLine class="mb-4" />
-        <p class="eyebrow">Free Microsoft certification courses</p>
-        <h1 class="h-title display mt-3">Learn Microsoft Technologies. <span class="gp-text">Master Your Certification.</span></h1>
-        <p class="mx-auto mt-5 max-w-xl text-lg leading-relaxed text-muted text-pretty lg:mx-0">Explore Microsoft certification courses with beginner-friendly lessons, interactive practice, real-world labs, simulations and mock exams.</p>
-        <div class="mx-auto mt-7 max-w-xl lg:mx-0"><SiteSearch id="home-search" placeholder="Search, e.g. IaaS or AZ-900" /></div>
-        <p class="mt-6 flex flex-wrap items-center justify-center gap-3 lg:justify-start">
-          <a href="#certifications" class="btn btn-primary h-cta">Explore Certifications</a>
-          <a href={`${x}/learn/`} id="hero-start" class="btn btn-outline h-cta">Start Learning <span aria-hidden="true">→</span></a>
+        <h1 class="h-title display">Learn Microsoft Technologies. <span class="gp-text">Master Your Certification.</span></h1>
+        <p class="mx-auto mt-5 max-w-xl text-lg leading-relaxed text-muted text-pretty lg:mx-0">Explore Microsoft certification courses with beginner-friendly lessons, interactive practice, real-world labs, simulations and mock exams. Free, with no account needed.</p>
+        <div class="h-search mx-auto mt-7 max-w-xl lg:mx-0"><SiteSearch id="home-search" placeholder="What do you want to learn? e.g. IaaS or AZ-104" /></div>
+        <p class="h-popular mt-3 justify-center lg:justify-start"><span>Popular:</span>
+          {liveCerts.slice(0, 4).map((c) => <a href={`/${c.slug}/`}>{c.code}</a>)}
         </p>
-        <dl data-ask-clear class="h-stats glass-premium mx-auto mt-7 grid max-w-md grid-cols-3 lg:mx-0">
-          <div><dt>Lessons ready</dt><dd>{totalLessons}</dd></div>
-          <div><dt>Practice questions</dt><dd>{totalQuestions}</dd></div>
-          <div><dt>Price</dt><dd>Free</dd></div>
-        </dl>
+        <p class="mt-6 flex flex-wrap items-center justify-center gap-3 lg:justify-start">
+          <a href={`${x}/learn/`} id="hero-start" class="btn btn-primary h-cta">Start Learning <span aria-hidden="true">→</span></a>
+          <a href="#certifications" class="btn btn-outline h-cta">Explore Certifications</a>
+        </p>
+        <p class="mt-4 text-sm font-semibold"><a href="#simulators" class="text-[var(--accent-deep)] hover:underline">🧪 Try the free Azure simulators: portal, Cloud Shell, 3D and drag-and-drop</a></p>
       </div>
-      <figure class="scene h-scene glass-premium p-3 sm:p-5">
-        <CloudScene />
-        <figcaption class="flex items-center justify-center gap-3 pt-2 text-sm font-medium">
-          <span>The cloud: computers you borrow over the internet.</span>
-          <button type="button" class="speak-btn text-[var(--accent-deep)]" data-say="Imagine your school library lends you any book the moment you ask, and you only pay for the days you keep it. That is cloud computing. Phones, laptops, shops and schools all borrow computers, storage and AI from the cloud over the internet.">🔊 Listen</button>
-        </figcaption>
+      <figure class="h-art">
+        <div class="scene h-scene glass-premium p-3 sm:p-5">
+          <CloudScene />
+          <figcaption class="flex items-center justify-center gap-3 pt-2 text-sm font-medium">
+            <span>The cloud: computers you borrow over the internet.</span>
+            <button type="button" class="speak-btn text-[var(--accent-deep)]" data-say="Imagine your school library lends you any book the moment you ask, and you only pay for the days you keep it. That is cloud computing. Phones, laptops, shops and schools all borrow computers, storage and AI from the cloud over the internet.">🔊 Listen</button>
+          </figcaption>
+        </div>
+        <p class="h-float h-float-a" aria-hidden="true"><span>🧪</span><b>{LABS.length} labs</b><small>no Azure account</small></p>
+        <p class="h-float h-float-b" aria-hidden="true"><span>✅</span><b>{totalQuestions}</b><small>practice questions</small></p>
       </figure>
     </div>
   </section>
 
-  <!-- AI certification roadmap -->
+  <!-- Stats strip -->
+  <section class="h-strip" aria-label="MSDEVBUILD in numbers">
+    <dl data-ask-clear class="mx-auto grid max-w-6xl grid-cols-2 gap-y-5 px-4 py-6 sm:px-6 md:grid-cols-5">
+      <div><dt>Courses live</dt><dd>{liveCerts.length}</dd></div>
+      <div><dt>Lessons ready</dt><dd>{totalLessons}</dd></div>
+      <div><dt>Practice questions</dt><dd>{totalQuestions}</dd></div>
+      <div><dt>Guided labs</dt><dd>{LABS.length}</dd></div>
+      <div class="col-span-2 md:col-span-1"><dt>Price</dt><dd>Free</dd></div>
+    </dl>
+    <p class="mx-auto max-w-6xl px-4 pb-6 text-sm text-muted sm:px-6">Lessons follow Microsoft’s official skills outlines. MSDEVBUILD is an independent site, not affiliated with Microsoft.</p>
+  </section>
+
+  <!-- Course catalogue with filter chips -->
+  <section id="certifications" class="h-sec scroll-mt-28" aria-labelledby="certs">
+    <div class="mx-auto max-w-6xl px-4 sm:px-6">
+      <div class="h-head">
+        <div>
+          <p class="eyebrow">Certifications</p>
+          <h2 id="certs" class="h-h2">Explore free certification courses</h2>
+          <p class="h-lead">A complete course for each exam, free from the first lesson to the mock exam.</p>
+        </div>
+        <a href="/certifications/" class="h-more">Browse all certifications <span aria-hidden="true">→</span></a>
+      </div>
+      <div class="hc-chips mt-6" role="group" aria-label="Filter courses" data-hc-chips hidden>
+        {CHIPS.map((c, i) => <button type="button" class="hc-chip" data-hc-filter={c.id} aria-pressed={i === 0 ? 'true' : 'false'}>{c.label}</button>)}
+      </div>
+      <h3 class="hc-group">Available now</h3>
+      <ul class="hc-grid hc-grid-live">
+        {liveCerts.map((c) => { const sp = spotlight(c.slug); return (
+          <li data-hc-tags={tags(c)}><article class="hc" data-cert={c.slug}>
+            <div class={`hc-art hc-${c.level.toLowerCase()}`}>
+              <CertIcon icon={c.icon} size={46} />
+              <span class="hc-code" aria-hidden="true">{c.code}</span>
+              <span class="hc-free">Free</span>
+            </div>
+            <div class="hc-body">
+              <p class="hc-by"><img src={SITE.authorImageSmall} alt="" width="22" height="22" loading="lazy" /> MSDEVBUILD</p>
+              <h4 class="hc-title"><a href={`/${c.slug}/`} class="hc-link">{c.code}: {c.name}</a></h4>
+              <p class="hc-skills"><b>Skills you’ll gain:</b> {sp.modules.map((m) => m.shortTitle).join(', ')}</p>
+              <p class="hc-meta">{difficulty(c)} · Course · {counts[c.slug]?.lessons} lessons · {counts[c.slug]?.questions} questions</p>
+              <p class="hc-inc">{(c.slug.startsWith('gh-') ? ['Copilot simulations', 'Labs', 'Mock exam'] : ['3D view', 'Portal walkthroughs', 'Labs', 'Mock exam']).map((f) => <span>{f}</span>)}</p>
+            </div>
+          </article></li>
+        ); })}
+      </ul>
+      <div id="roadmap" class="scroll-mt-28">
+        <h3 class="hc-group">Coming soon <small>Each course opens once its lessons, questions and mock exam are complete.</small></h3>
+        <ul class="hc-grid hc-grid-soon">
+          {roadmap.map((c) => (
+            <li data-hc-tags={tags(c)}><a href={`/${c.slug}/`} class={`hc-soon${c.next ? ' is-next' : ''}`}>
+              <span class={`hc-soon-ic hc-${c.level.toLowerCase()}`}><CertIcon icon={c.icon} size={26} /></span>
+              <span class="min-w-0"><strong>{c.code}</strong><span class="hc-soon-n">{c.name}</span></span>
+              <em>{c.next ? 'Up next' : difficulty(c)}</em>
+            </a></li>
+          ))}
+        </ul>
+      </div>
+      <p class="hc-empty mt-6 text-muted" data-hc-empty hidden>No courses match that filter yet. <a href="/certifications/" class="font-semibold text-[var(--accent-deep)] hover:underline">See every certification</a>.</p>
+      <p class="mt-6 text-sm text-muted">Looking for AI-900, AZ-204 or AZ-500? Microsoft retired AI-900 on 30 June 2026 (AI-901 replaces it), AZ-204 on 31 July 2026 (AI-200 replaces it) and AZ-500 on 31 August 2026 (SC-500 replaces it).</p>
+    </div>
+  </section>
+
+  <!-- Simulator showcase -->
+  <section id="simulators" class="h-sec sx scroll-mt-28" aria-labelledby="sx-h">
+    <div class="mx-auto max-w-6xl px-4 sm:px-6">
+      <div class="h-head">
+        <div>
+          <p class="eyebrow">Learn by doing</p>
+          <h2 id="sx-h" class="h-h2">Practise on simulators, right in your browser</h2>
+          <p class="h-lead">Click through the Azure portal, type real CLI commands, drag resources into a design and walk a datacenter in 3D. No Azure account, no credit card and no surprise bill.</p>
+        </div>
+        <a href="/simulator/" class="h-more">All simulations <span aria-hidden="true">→</span></a>
+      </div>
+      <ul class="sx-grid mt-8">
+        <li class="sx-wide"><a href="/az-104/architect/" class="sx-card">
+          <div class="sx-pv sx-pv-arch" aria-hidden="true">
+            <svg viewBox="0 0 420 170" role="presentation">
+              <rect x="14" y="14" width="260" height="104" rx="10" class="a-vnet" /><text x="26" y="32" class="a-t">vnet-web · 10.10.0.0/16</text>
+              <rect x="28" y="42" width="232" height="64" rx="8" class="a-sub" /><text x="38" y="58" class="a-t2">snet-web</text>
+              <rect x="40" y="66" width="96" height="30" rx="6" class="a-card" /><text x="50" y="85" class="a-t2">🖥️ vm-web-01</text>
+              <rect x="150" y="66" width="96" height="30" rx="6" class="a-card" /><text x="160" y="85" class="a-t2">🖥️ vm-web-02</text>
+              <rect x="300" y="60" width="104" height="32" rx="6" class="a-card a-drag" /><text x="312" y="80" class="a-t2">⚖️ lb-web</text>
+              <path d="M300 76 L246 82" class="a-link" /><path d="M300 76 C 230 40, 140 50, 136 70" class="a-link" />
+              <rect x="40" y="132" width="110" height="28" rx="6" class="a-card" /><text x="50" y="150" class="a-t2">🛡️ nsg-web</text>
+              <rect x="170" y="132" width="196" height="28" rx="14" class="a-ok" /><text x="184" y="150" class="a-t3">✓ Traffic: internet → lb → vm</text>
+              <path d="M372 112 l10 26 4 -10 10 -4 z" class="a-cursor" />
+            </svg>
+          </div>
+          <div class="sx-body">
+            <p class="sx-tags"><span>Drag and drop</span><span>New</span></p>
+            <h3 class="sx-t">Azure Architecture Builder</h3>
+            <p class="sx-d">Drag VNets, subnets, VMs, load balancers and private endpoints onto a canvas. Check the design for mistakes, send test traffic and get a plain-English explanation.</p>
+            <span class="sx-go">Build a design <span aria-hidden="true">→</span></span>
+          </div>
+        </a></li>
+        <li class="sx-wide"><a href={`${x}/labs/`} class="sx-card">
+          <div class="sx-pv sx-pv-portal" aria-hidden="true">
+            <div class="pt-bar"><span></span><span></span><span></span><b>Microsoft Azure (practice)</b></div>
+            <div class="pt-main">
+              <div class="pt-side"><i></i><i></i><i></i><i></i><i></i></div>
+              <div class="pt-body">
+                <p class="pt-h">Create a virtual machine</p>
+                <p class="pt-row"><span>Region</span><em>Central India</em></p>
+                <p class="pt-row"><span>Size</span><em>Standard_B2s</em></p>
+                <p class="pt-btn">Review + create</p>
+              </div>
+              <div class="pt-shell"><p><b>$</b> az vm deallocate -n web01</p><p class="pt-ok">💰 ₹730/mo → ₹365/mo</p><p><b>$</b> az group delete -n rg-prod</p><p class="pt-err">ERROR: ScopeLocked</p></div>
+            </div>
+          </div>
+          <div class="sx-body">
+            <p class="sx-tags"><span>Click through</span><span>Type commands</span></p>
+            <h3 class="sx-t">Azure portal and Cloud Shell labs</h3>
+            <p class="sx-d">{LABS.length} guided labs plus a free sandbox. Create VMs, storage, networks and web apps in a practice portal, run real Azure CLI commands and watch the cost meter. Every task is checked as you go.</p>
+            <span class="sx-go">Open a lab <span aria-hidden="true">→</span></span>
+          </div>
+        </a></li>
+        {[
+          { href: `${x}/3d-explorer/`, pv: 'sx-pv-3d', ic: '🧊', tags: ['3D', 'Interactive'], t: '3D Explorer', d: `${total3d} scenes: walk a datacenter, zones and regions, identity and networks. Rotate, zoom and tap anything.` },
+          { href: '/simulator/', pv: 'sx-pv-what', ic: '⚡', tags: ['What if?'], t: 'What-if simulator', d: `${exam.whatIfs.length} scenarios. Pull the plug on a zone or a region and watch what keeps running.` },
+          { href: `${x}/learn/`, pv: 'sx-pv-tour', ic: '🧭', tags: ['Step by step'], t: 'Portal walkthroughs', d: `${totalTours} guided tours inside the lessons. Each one shows exactly where to click in the new Azure portal.` },
+          { href: '/ai-901/labs/ai-foundry-setup/', pv: 'sx-pv-ai', ic: '✨', tags: ['AI', 'Click through'], t: 'Microsoft Foundry simulator', d: `Deploy a model, chat with it, build an agent with tools and run a Foundry SDK script. ${labsOf('ai-901')} AI-901 labs.` },
+          { href: '/gh-300/labs/', pv: 'sx-pv-gh', ic: '💻', tags: ['Type commands'], t: 'VS Code and GitHub Copilot', d: `A practice VS Code, github.com and Copilot CLI terminal for GH-300. ${labsOf('gh-300')} guided labs.` },
+          { href: `${x}/games/sort/`, pv: 'sx-pv-sort', ic: '🗂️', tags: ['Drag and drop', 'Game'], t: 'Sort It and Match', d: 'Drag service cards into the right bucket, match pairs from memory and beat the 60-second Lightning Round.' },
+          { href: `${x}/mock-exam/`, pv: 'sx-pv-exam', ic: '⏱️', tags: ['Exam room'], t: 'Mock exam room', d: 'A timed exam in the style of the real one: agreement screen, review grid, flagged questions and a score report by domain.' },
+          { href: '/embed/', pv: 'sx-pv-embed', ic: '</>', tags: ['For trainers'], t: 'Embed a simulation', d: 'Put any 3D scene or simulation on your own blog or course page with one line of code.' },
+        ].map((c) => (
+          <li><a href={c.href} class="sx-card sx-small">
+            <div class={`sx-pv sx-mini ${c.pv}`} aria-hidden="true"><span>{c.ic}</span></div>
+            <div class="sx-body">
+              <p class="sx-tags">{c.tags.map((t) => <span>{t}</span>)}</p>
+              <h3 class="sx-t">{c.t}</h3>
+              <p class="sx-d">{c.d}</p>
+              <span class="sx-go">Try it <span aria-hidden="true">→</span></span>
+            </div>
+          </a></li>
+        ))}
+      </ul>
+      <p class="mt-6 text-sm text-muted">🧪 All simulators are for learning only. Screens are simplified, nothing is created in Azure, and MSDEVBUILD isn’t affiliated with Microsoft or GitHub.</p>
+    </div>
+  </section>
+
+  <!-- Career paths -->
   <section class="h-sec band-glass" aria-labelledby="ai-road">
     <div class="mx-auto max-w-6xl px-4 sm:px-6">
       <div class="h-head">
         <div>
-          <p class="eyebrow">Azure AI certifications</p>
+          <p class="eyebrow">Azure AI careers</p>
           <h2 id="ai-road" class="h-h2">Which AI certification fits your role?</h2>
           <p class="h-lead">Start with the work you want to own. AI-901 and AZ-900 are optional first steps, not prerequisites.</p>
         </div>
@@ -129,7 +282,8 @@ const schema = [
       </div>
       <ul class="ai-roles mt-8">
         {aiTracks.map((t) => (
-          <li><a href={`/ai-certifications/#${t.slug}`} class="tile ai-role">
+          <li><a href={`/ai-certifications/#${t.slug}`} class="ai-role">
+            <span class="ai-role-ic"><CertIcon icon={t.cert.icon} size={26} /></span>
             <span class="ai-role-k">{t.role}</span>
             <strong class="ai-role-c">{t.cert.code}</strong>
             <span class="ai-role-n">{t.cert.name}</span>
@@ -138,89 +292,6 @@ const schema = [
         ))}
       </ul>
       <p class="mt-5 text-sm text-muted">Moving into architecture? AB-100 and AI-500 are Expert certifications that each need a second credential. <a href="/ai-certifications/#ar-expert" class="font-semibold text-[var(--accent-deep)] hover:underline">See what they need</a>.</p>
-    </div>
-  </section>
-
-  <!-- Featured certifications -->
-  <section id="certifications" class="h-sec scroll-mt-28" aria-labelledby="certs">
-    <div class="mx-auto max-w-6xl px-4 sm:px-6">
-      <div class="h-head">
-        <div>
-          <p class="eyebrow">Certifications</p>
-          <h2 id="certs" class="h-h2">{liveCerts.length === 1 ? `Start with ${liveCerts[0].code}` : 'Pick your certification'}</h2>
-          <p class="h-lead">A complete course, free from the first lesson to the mock exam. More Azure exams follow on the same platform.</p>
-        </div>
-        <a href="/certifications/" class="h-more">Browse all certifications <span aria-hidden="true">→</span></a>
-      </div>
-      {liveCerts.map((c) => { const sp = spotlight(c.slug); return (
-        <article class="spot glass-premium mt-8" data-cert={c.slug}>
-          <div class="spot-main">
-            <p class="spot-meta"><span class="spot-live"><span aria-hidden="true">●</span> Available now</span><span class="spot-pill">{difficulty(c)}</span><span class="spot-pill">Free</span></p>
-            <h3 class="spot-title"><span>{c.code}</span> {c.name}</h3>
-            <p class="spot-text">{c.blurb}</p>
-            <dl class="spot-stats">
-              <div><dt>Lessons</dt><dd>{counts[c.slug]?.lessons}</dd></div>
-              <div><dt>Practice questions</dt><dd>{counts[c.slug]?.questions}</dd></div>
-              <div><dt>Portal walkthroughs</dt><dd>{sp.tours}</dd></div>
-              <div><dt>3D scenes</dt><dd>{sp.scenes}</dd></div>
-            </dl>
-            <p class="mt-6 flex flex-wrap gap-3">
-              <a href={`/${c.slug}/learn/`} class="btn btn-accent spot-btn">Start {c.code} free <span aria-hidden="true">→</span></a>
-              <a href={`/${c.slug}/`} class="btn btn-outline spot-btn">Syllabus and course details</a>
-            </p>
-          </div>
-          <div class="spot-side">
-            <p class="spot-side-h">What the exam covers</p>
-            <ol class="spot-doms">
-              {sp.modules.map((m) => <li><a href={`/${c.slug}/${m.slug}/`}><span class="spot-dn">{m.domain}</span><span class="spot-dt">{m.shortTitle}</span><span class="spot-dw">{m.weight}</span></a></li>)}
-            </ol>
-            <p class="spot-side-h mt-5">Every lesson includes</p>
-            <ul class="spot-inc">
-              <li>3D view</li><li>Azure portal walkthrough</li><li>Practice lab</li><li>Exam tip and quiz</li>
-            </ul>
-          </div>
-        </article>
-      ); })}
-      <div id="roadmap" class="road mt-10 scroll-mt-28" aria-labelledby="road-h">
-        <div class="road-head">
-          <h3 id="road-h" class="text-lg font-bold">On the roadmap</h3>
-          <p class="text-sm text-muted">Each course opens once its lessons, questions and mock exam are complete.</p>
-        </div>
-        <ul class="road-list">
-          {roadmap.map((c) => (
-            <li><a href={`/${c.slug}/`} class={`road-item${c.next ? ' is-next' : ''}`}>
-              <CertIcon icon={c.icon} size={28} />
-              <span class="min-w-0"><strong>{c.code}</strong><span class="road-name">{c.name}</span></span>
-              <em>{c.next ? 'Up next' : c.level}</em>
-            </a></li>
-          ))}
-        </ul>
-      </div>
-      <p class="mt-5 text-sm text-muted">Looking for AI-900, AZ-204 or AZ-500? Microsoft retired AI-900 on 30 June 2026 (AI-901 replaces it), AZ-204 on 31 July 2026 (AI-200 replaces it) and AZ-500 on 31 August 2026 (SC-500 replaces it).</p>
-    </div>
-  </section>
-
-  <!-- By level -->
-  <section class="h-sec band-glass" aria-labelledby="levels">
-    <div class="mx-auto max-w-6xl px-4 sm:px-6">
-      <div class="h-head"><div><p class="eyebrow">Browse by learning level</p>
-      <h2 id="levels" class="h-h2">Start where you are</h2></div></div>
-      <div class="mt-8 grid gap-5 md:grid-cols-3">
-        {LEVELS.map((l) => {
-          const list = CERTIFICATIONS.filter((c) => c.level === l.id);
-          return (
-            <div class={`tile lv ${l.tone}`}>
-              <span class="tile-mark" aria-hidden="true">{l.icon}</span>
-              <h3 class="mt-3 text-xl font-bold">{l.id} <span class="lv-diff">{difficulty(list[0])}</span></h3>
-              <p class="mt-1 font-semibold">{l.who}</p>
-              <p class="mt-1 text-sm text-muted">{l.text}</p>
-              <ul class="mt-4 flex flex-wrap gap-2">
-                {list.map((c) => <li><a href={c.status === 'active' ? `/${c.slug}/` : `/certifications/#${c.slug}`} class={`lv-chip ${c.status === 'active' ? 'lv-live' : ''}`}>{c.code}{c.status === 'active' ? ' ●' : ''}<span class="sr-only">{c.status === 'active' ? ' (available now)' : ' (coming soon)'}</span></a></li>)}
-              </ul>
-            </div>
-          );
-        })}
-      </div>
     </div>
   </section>
 
@@ -267,34 +338,6 @@ const schema = [
           <a href={`${published[0].url}#knowledge-check`} class="btn btn-primary h-cta mt-5">Try it yourself <span aria-hidden="true">→</span></a>
         </div>
       )}
-    </div>
-  </section>
-
-  <!-- Labs and simulations -->
-  <section class="h-sec h-blue" aria-labelledby="labs">
-    <div class="mx-auto grid max-w-6xl items-center gap-10 px-4 sm:px-6 lg:grid-cols-2">
-      <div class="text-center lg:text-left">
-        <p class="eyebrow h-eyebrow-light">Practice labs and simulations</p>
-        <h2 id="labs" class="h-h2">Try it yourself 🧪</h2>
-        <p class="mx-auto mt-4 max-w-lg text-lg leading-relaxed text-[#e6f0fa] lg:mx-0">Practise in a simulated Azure portal and Cloud Shell. Create VMs, storage and web apps, type real Azure CLI commands and watch the cost meter, with no Azure account needed. Then walk through a datacenter in 3D or pull the plug on a region.</p>
-        <ul class="mx-auto mt-5 grid max-w-lg gap-2 text-left text-[#e6f0fa] lg:mx-0">
-          <li>🧪 {LABS.length} guided labs plus a free sandbox</li>
-          <li>🧊 {Object.keys(exam.sims3d).length} 3D scenes: datacenter, zones, regions, identity and more</li>
-          <li>⚡ {exam.whatIfs.length} “what happens if…?” simulations</li>
-        </ul>
-        <div class="mt-7 flex flex-wrap justify-center gap-3 lg:justify-start">
-          <a href={`${x}/labs/`} class="btn h-cta h-btn-w">Open practice labs <span aria-hidden="true">→</span></a>
-          <a href={`${x}/3d-explorer/`} class="btn h-cta h-btn-ow">3D explorer</a>
-          <a href="/simulator/" class="btn h-cta h-btn-ow">Azure simulator</a>
-        </div>
-      </div>
-      <div class="example-box h-shell font-mono text-[0.85rem] !text-[#e6edf3]">
-        <p class="text-[#8fcbf7]">Azure Cloud Shell (practice)</p>
-        <p class="mt-2"><span class="text-[#9fe870]">learner@Azure:~$</span> az vm deallocate -g rg-lab -n web01</p>
-        <p class="mt-1 text-white/80">💰 Cost: $8.76/mo → $4.38/mo</p>
-        <p class="mt-2"><span class="text-[#9fe870]">learner@Azure:~$</span> az group delete -n rg-prod</p>
-        <p class="mt-1 text-[#ff8b94]">ERROR: (ScopeLocked) The scope 'rg-prod' cannot perform delete operation because it is locked…</p>
-      </div>
     </div>
   </section>
 
@@ -371,7 +414,20 @@ const schema = [
       <div class="faq mt-8">
         {faq.map((f) => <details class="faq-item"><summary><h3 class="faq-q">{f.q}</h3></summary><p class="faq-a">{f.a}</p></details>)}
       </div>
-      <div class="mt-10 text-center"><a href="#certifications" class="btn btn-primary h-cta">Choose your certification <span aria-hidden="true">→</span></a></div>
+    </div>
+  </section>
+
+  <!-- Closing call to action -->
+  <section class="h-final" aria-labelledby="final-h">
+    <div class="mx-auto flex max-w-6xl flex-col items-center gap-6 px-4 py-12 text-center sm:px-6 lg:flex-row lg:justify-between lg:text-left">
+      <div>
+        <h2 id="final-h" class="h-h2 !text-white">Take the next step toward your certification</h2>
+        <p class="mt-2 text-lg text-[#e6f0fa]">Every course, lab and mock exam is free. Start now and pick up where you stopped on any device.</p>
+      </div>
+      <p class="flex flex-none flex-wrap justify-center gap-3">
+        <a href="#certifications" class="btn h-cta h-btn-w">Choose your certification <span aria-hidden="true">→</span></a>
+        <a href="/progress/" class="btn h-cta h-btn-ow">My progress</a>
+      </p>
     </div>
   </section>
 </PublicLayout>
@@ -394,11 +450,25 @@ const schema = [
   .h-title span { display: block; }
   .h-cta { min-height: 48px; padding-inline: 1.5rem; font-size: 1rem; }
   .h-scene { border-radius: 1.5rem; overflow: hidden; }
-  .h-stats { border-radius: 1.25rem; padding: 1rem .25rem; }
-  .h-stats > div { padding: 0 .75rem; text-align: center; }
-  .h-stats > div + div { border-left: 1px solid var(--border); }
-  .h-stats dt { font-size: .75rem; line-height: 1.2; color: var(--text-muted); letter-spacing: .02em; }
-  .h-stats dd { margin-top: .3rem; font-size: 1.75rem; font-weight: 800; line-height: 1; font-variant-numeric: tabular-nums; color: var(--accent-deep); }
+  .h-art { position: relative; margin: 0; }
+  .h-float { position: absolute; display: grid; grid-template-columns: auto 1fr; column-gap: .55rem; align-items: center; padding: .6rem .85rem; border-radius: 14px; background: var(--card); border: 1px solid var(--card-line); box-shadow: 0 16px 36px -18px rgb(0 50 100 / .45); font-size: .78rem; line-height: 1.2; }
+  .h-float span { grid-row: span 2; font-size: 1.35rem; }
+  .h-float b { font-size: 1rem; font-weight: 800; color: var(--accent-deep); }
+  .h-float small { color: var(--text-muted); }
+  .h-float-a { left: -14px; top: 18%; }
+  .h-float-b { right: -10px; bottom: 16%; }
+  @media (max-width: 1100px) { .h-float { display: none; } }
+  .h-popular { display: flex; flex-wrap: wrap; align-items: center; gap: .4rem; font-size: .85rem; color: var(--text-muted); }
+  .h-popular a { display: inline-flex; align-items: center; min-height: 36px; padding: 0 .8rem; border-radius: 999px; border: 1px solid var(--border); background: var(--card); color: var(--text); font-weight: 650; }
+  .h-popular a:hover { border-color: var(--accent); color: var(--accent-deep); }
+
+  /* Stats strip */
+  .h-strip { border-block: 1px solid var(--border); background: var(--band-subtle); }
+  .h-strip dl > div { padding-inline: .5rem; }
+  @media (min-width: 768px) { .h-strip dl > div + div { border-left: 1px solid var(--border); padding-left: 1.25rem; } }
+  .h-strip dd { font-size: clamp(1.6rem, 3vw, 2.1rem); font-weight: 800; line-height: 1.05; letter-spacing: -.02em; font-variant-numeric: tabular-nums; color: var(--text); }
+  .h-strip dt { margin-top: .2rem; font-size: .85rem; color: var(--text-muted); }
+  .h-strip dl > div { display: flex; flex-direction: column-reverse; justify-content: flex-end; }
 
   /* Sections */
   .h-sec { padding-block: 3.5rem; }
@@ -409,69 +479,141 @@ const schema = [
   .h-more { font-weight: 650; color: var(--accent-deep); min-height: 44px; display: inline-flex; align-items: center; gap: .3rem; }
   .h-more:hover { text-decoration: underline; }
 
-  /* AI roles */
+  /* Filter chips */
+  .hc-chips { display: flex; gap: .5rem; overflow-x: auto; padding-bottom: .25rem; scrollbar-width: none; }
+  .hc-chips:not([hidden]) { display: flex; }
+  .hc-chip { flex: none; min-height: 40px; padding: 0 1.05rem; border-radius: 999px; border: 1px solid var(--border); background: var(--card); font-size: .9rem; font-weight: 650; color: var(--text); cursor: pointer; transition: background .15s, border-color .15s, color .15s; }
+  .hc-chip:hover { border-color: var(--accent); }
+  .hc-chip[aria-pressed='true'] { background: var(--text); border-color: var(--text); color: var(--bg, #fff); }
+
+  /* Course cards (catalogue style: art, provider, title, skills, meta) */
+  .hc-group { margin-top: 2rem; font-size: 1.15rem; font-weight: 750; }
+  .hc-group small { display: block; margin-top: .15rem; font-size: .85rem; font-weight: 400; color: var(--text-muted); }
+  .hc-grid { margin-top: 1rem; display: grid; gap: 1.1rem; grid-template-columns: repeat(auto-fill, minmax(min(100%, 255px), 1fr)); }
+  .hc-grid > li[hidden], .hc-grid[hidden] { display: none; }
+  @media (min-width: 1150px) { .hc-grid-live { grid-template-columns: repeat(5, minmax(0, 1fr)); gap: .9rem; } .hc-grid-live .hc-code { font-size: 1.55rem; } }
+  .hc { position: relative; display: flex; flex-direction: column; height: 100%; overflow: hidden; border-radius: 16px; border: 1px solid var(--card-line); background: var(--card); transition: transform .2s, box-shadow .2s, border-color .2s; }
+  .hc:hover, .hc:focus-within { transform: translateY(-3px); box-shadow: 0 20px 40px -20px rgb(0 60 120 / .4); border-color: var(--accent); }
+  .hc-art { position: relative; display: flex; align-items: flex-end; justify-content: space-between; height: 128px; margin: 10px 10px 0; padding: 16px 18px; border-radius: 10px; color: #fff; background: linear-gradient(135deg, #0078d4, #004e8c); overflow: hidden; }
+  .hc-art::after { content: ''; position: absolute; inset: 0; background: radial-gradient(130px 90px at 85% 10%, rgb(255 255 255 / .25), transparent 70%), radial-gradient(160px 120px at 0% 120%, rgb(255 255 255 / .14), transparent 70%); pointer-events: none; }
+  .hc-associate { background: linear-gradient(135deg, #5b3fb8, #2b5fd9); }
+  .hc-expert { background: linear-gradient(135deg, #0b5563, #106ebe); }
+  .hc-specialty { background: linear-gradient(135deg, #8a3b12, #c2410c); }
+  .hc-code { white-space: nowrap; font-size: 2rem; font-weight: 800; letter-spacing: -.02em; line-height: 1; text-shadow: 0 2px 10px rgb(0 0 0 / .2); }
+  .hc-free { position: absolute; top: 10px; left: 10px; z-index: 1; padding: .15rem .55rem; border-radius: 6px; background: #fff; color: #0b3a66; font-size: .72rem; font-weight: 800; letter-spacing: .02em; }
+  .hc-body { display: flex; flex: 1; flex-direction: column; padding: 14px 16px 16px; }
+  .hc-by { display: flex; align-items: center; gap: .45rem; font-size: .8rem; font-weight: 600; color: var(--text-muted); }
+  .hc-by img { width: 22px; height: 22px; border-radius: 6px; object-fit: cover; }
+  .hc-title { margin-top: .45rem; font-size: 1.05rem; font-weight: 750; line-height: 1.3; }
+  .hc-link::after { content: ''; position: absolute; inset: 0; z-index: 2; border-radius: inherit; }
+  .hc-link:focus-visible { outline: none; }
+  .hc:has(.hc-link:focus-visible) { outline: 3px solid var(--accent); outline-offset: 2px; }
+  .hc-skills { margin-top: .5rem; font-size: .85rem; line-height: 1.5; color: var(--text-muted); display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
+  .hc-skills b { color: var(--text); font-weight: 650; }
+  .hc-meta { margin-top: auto; padding-top: .8rem; font-size: .8rem; color: var(--text-muted); }
+  .hc-inc { margin-top: .55rem; display: flex; flex-wrap: wrap; gap: .3rem; }
+  .hc-inc span { font-size: .72rem; font-weight: 650; padding: .15rem .5rem; border-radius: 6px; background: var(--accent-soft); color: var(--accent-deep); }
+
+  /* Coming-soon list */
+  .hc-grid-soon { gap: .65rem; grid-template-columns: repeat(auto-fill, minmax(min(100%, 230px), 1fr)); }
+  .hc-soon { display: flex; align-items: center; gap: .7rem; min-height: 56px; padding: .6rem .8rem; border-radius: 12px; background: var(--card); border: 1px solid var(--border); font-size: .88rem; transition: border-color .15s, transform .15s; }
+  .hc-soon:hover, .hc-soon:focus-visible { border-color: var(--accent); transform: translateY(-2px); }
+  .hc-soon-ic { flex: none; display: grid; place-items: center; width: 38px; height: 38px; border-radius: 10px; color: #fff; }
+  .hc-soon strong { display: block; }
+  .hc-soon-n { display: block; color: var(--text-muted); font-size: .8rem; line-height: 1.3; }
+  .hc-soon em { margin-left: auto; flex: none; font-style: normal; font-size: .7rem; font-weight: 700; color: var(--text-muted); }
+  .hc-soon.is-next { border-color: var(--accent); }
+  .hc-soon.is-next em { color: #fff; background: #005a9e; padding: .15rem .5rem; border-radius: 999px; }
+
+  /* Career paths */
   .ai-roles { display: grid; gap: .85rem; grid-template-columns: 1fr; }
   @media (min-width: 560px) { .ai-roles { grid-template-columns: repeat(2, 1fr); } }
   @media (min-width: 900px) { .ai-roles { grid-template-columns: repeat(3, 1fr); } }
-  @media (min-width: 1440px) { .ai-roles { grid-template-columns: repeat(5, minmax(0, 1fr)); } }
-  .ai-role { display: flex; flex-direction: column; min-width: 0; height: 100%; padding: 1.1rem 1.15rem; overflow: hidden; overflow-wrap: anywhere; }
-  .ai-role::before { content: ''; position: absolute; inset: 0 0 auto; height: 4px; background: linear-gradient(90deg, #0078d4, #005a9e); }
-  .ai-role-k { font-size: .72rem; font-weight: 700; text-transform: uppercase; letter-spacing: .1em; color: var(--accent-deep); }
-  .ai-role-c { margin-top: .35rem; font-size: 1.5rem; font-weight: 800; letter-spacing: -.02em; }
+  @media (min-width: 1200px) { .ai-roles { grid-template-columns: repeat(5, minmax(0, 1fr)); } }
+  .ai-role { display: flex; flex-direction: column; height: 100%; min-width: 0; padding: 1.1rem 1.15rem; border-radius: 16px; background: var(--card); border: 1px solid var(--card-line); overflow-wrap: anywhere; transition: transform .2s, box-shadow .2s, border-color .2s; }
+  .ai-role:hover, .ai-role:focus-visible { transform: translateY(-3px); border-color: var(--accent); box-shadow: 0 18px 36px -20px rgb(0 60 120 / .4); }
+  .ai-role-ic { display: grid; place-items: center; width: 44px; height: 44px; border-radius: 12px; background: var(--accent-soft); color: var(--accent-deep); }
+  .ai-role-k { margin-top: .8rem; font-size: .72rem; font-weight: 700; text-transform: uppercase; letter-spacing: .1em; color: var(--accent-deep); }
+  .ai-role-c { margin-top: .3rem; font-size: 1.45rem; font-weight: 800; letter-spacing: -.02em; }
   .ai-role-n { font-size: .9rem; font-weight: 600; color: var(--text-muted); }
   .ai-role-s { margin-top: auto; padding-top: .7rem; font-size: .8rem; color: var(--text-muted); font-weight: 600; }
   .ai-role-s.is-live { color: var(--ok); }
 
-  /* Live certification spotlight */
-  .spot { display: grid; gap: 0; overflow: hidden; border-radius: 1.5rem; }
-  @media (min-width: 900px) { .spot { grid-template-columns: 1.35fr 1fr; } }
-  .spot-main { padding: clamp(1.25rem, 3vw, 2.25rem); }
-  .spot-meta { display: flex; flex-wrap: wrap; gap: .5rem; font-size: .78rem; font-weight: 700; }
-  .spot-live { color: var(--ok); }
-  .spot-pill { border-radius: 999px; background: var(--accent-soft); color: var(--accent-deep); padding: 2px 10px; }
-  .spot-title { margin-top: .75rem; font-size: clamp(1.4rem, 3vw, 1.9rem); font-weight: 800; line-height: 1.2; letter-spacing: -.02em; }
-  .spot-title span { color: var(--accent-deep); }
-  .spot-text { margin-top: .6rem; max-width: 46ch; color: var(--text-muted); line-height: 1.6; }
-  .spot-stats { margin-top: 1.4rem; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: .75rem; }
-  @media (min-width: 560px) { .spot-stats { grid-template-columns: repeat(4, minmax(0, 1fr)); } }
-  .spot-stats > div { display: flex; flex-direction: column-reverse; justify-content: flex-end; border-left: 3px solid var(--accent); padding-left: .7rem; }
-  .spot-stats dd { font-size: 1.6rem; font-weight: 800; line-height: 1.1; font-variant-numeric: tabular-nums; }
-  .spot-stats dt { font-size: .78rem; color: var(--text-muted); }
-  .spot-btn { min-height: 44px; }
-  .spot-side { padding: clamp(1.25rem, 3vw, 2.25rem); background: var(--band-subtle); border-top: 1px solid var(--border); }
-  @media (min-width: 900px) { .spot-side { border-top: 0; border-left: 1px solid var(--border); } }
-  .spot-side-h { font-size: .72rem; font-weight: 700; letter-spacing: .16em; text-transform: uppercase; color: var(--accent-deep); }
-  .spot-doms { margin-top: .6rem; display: grid; gap: .4rem; }
-  .spot-doms a { display: flex; align-items: center; gap: .7rem; min-height: 44px; padding: .45rem .7rem; border-radius: 12px; background: var(--gp-fill); border: 1px solid var(--gp-tile-line); box-shadow: 0 4px 12px -8px rgb(0 72 130 / .3); transition: border-color .15s, transform .15s; }
-  .spot-doms a:hover { border-color: var(--accent); transform: translateX(2px); }
-  .spot-dn { flex: none; display: grid; place-items: center; width: 1.7rem; height: 1.7rem; border-radius: 8px; background: linear-gradient(135deg, #0078d4, #005a9e); color: #fff; font-weight: 800; font-size: .85rem; }
-  .spot-dt { flex: 1; min-width: 0; font-weight: 600; font-size: .92rem; }
-  .spot-dw { flex: none; font-size: .78rem; color: var(--text-muted); font-variant-numeric: tabular-nums; }
-  .spot-inc { margin-top: .6rem; display: flex; flex-wrap: wrap; gap: .4rem; }
-  .spot-inc li { font-size: .8rem; font-weight: 600; padding: .3rem .7rem; border-radius: 999px; background: var(--card); border: 1px solid var(--bar-line, var(--border)); }
-  .spot-inc li::before { content: '✓ '; color: var(--ok); font-weight: 800; }
 
-  /* Roadmap */
-  .road { border-radius: 1.25rem; border: 1px dashed var(--border); padding: 1.1rem; background: var(--glass); }
-  .road-head { display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: .25rem 1rem; }
-  .road-list { margin-top: .9rem; display: grid; gap: .6rem; grid-template-columns: repeat(auto-fill, minmax(min(100%, 210px), 1fr)); }
-  .road-item { display: flex; align-items: center; gap: .65rem; padding: .65rem .8rem; border-radius: 12px; background: var(--card); border: 1px solid var(--border); color: var(--accent-deep); font-size: .88rem; transition: border-color .15s, transform .15s; }
-  .road-item strong { display: block; color: var(--text); }
-  .road-name { display: block; color: var(--text-muted); font-size: .8rem; line-height: 1.3; }
-  .road-item em { margin-left: auto; flex: none; font-style: normal; font-size: .7rem; font-weight: 700; color: var(--text-muted); }
-  .road-item.is-next { border-color: var(--accent); }
-  a.road-item:hover, a.road-item:focus-visible { border-color: var(--accent); transform: translateY(-2px); }
-  .road-item.is-next em { color: #fff; background: #005a9e; padding: .15rem .5rem; border-radius: 999px; }
+  /* Simulator showcase */
+  .sx-grid { display: grid; gap: 1rem; grid-template-columns: 1fr; }
+  @media (min-width: 640px) { .sx-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+  @media (min-width: 1024px) { .sx-grid { grid-template-columns: repeat(4, minmax(0, 1fr)); } .sx-wide { grid-column: span 2; } }
+  .sx-card { display: flex; flex-direction: column; height: 100%; overflow: hidden; border-radius: 18px; border: 1px solid var(--card-line); background: var(--card); transition: transform .2s, box-shadow .2s, border-color .2s; }
+  .sx-card:hover, .sx-card:focus-visible { transform: translateY(-3px); border-color: var(--accent); box-shadow: 0 22px 44px -22px rgb(0 60 120 / .45); }
+  .sx-body { display: flex; flex: 1; flex-direction: column; padding: 1rem 1.15rem 1.15rem; }
+  .sx-tags { display: flex; flex-wrap: wrap; gap: .3rem; }
+  .sx-tags span { font-size: .7rem; font-weight: 750; letter-spacing: .02em; padding: .15rem .5rem; border-radius: 6px; background: var(--accent-soft); color: var(--accent-deep); }
+  .sx-tags span:is(:only-child, :first-child) { background: var(--text); color: var(--bg); }
+  .sx-t { margin-top: .55rem; font-size: 1.1rem; font-weight: 750; line-height: 1.3; }
+  .sx-d { margin-top: .35rem; font-size: .9rem; line-height: 1.55; color: var(--text-muted); }
+  .sx-go { margin-top: auto; padding-top: .8rem; font-weight: 700; font-size: .92rem; color: var(--accent-deep); }
+  .sx-card:hover .sx-go { text-decoration: underline; }
+  .sx-pv { position: relative; margin: 10px 10px 0; border-radius: 12px; overflow: hidden; }
+  .sx-mini { display: grid; place-items: center; height: 110px; font-size: 2.6rem; color: #fff; font-weight: 800; }
+  .sx-mini span { filter: drop-shadow(0 6px 14px rgb(0 0 0 / .25)); transition: transform .25s; }
+  .sx-card:hover .sx-mini span { transform: scale(1.12) rotate(-4deg); }
+  .sx-pv-3d { background: radial-gradient(80px 60px at 70% 30%, rgb(255 255 255 / .3), transparent 70%), linear-gradient(135deg, #0b5563, #0f8aa3); }
+  .sx-pv-what { background: radial-gradient(80px 60px at 30% 30%, rgb(255 255 255 / .3), transparent 70%), linear-gradient(135deg, #b45309, #e25822); }
+  .sx-pv-tour { background: radial-gradient(80px 60px at 70% 30%, rgb(255 255 255 / .3), transparent 70%), linear-gradient(135deg, #0067b8, #2b88d8); }
+  .sx-pv-ai { background: radial-gradient(80px 60px at 30% 30%, rgb(255 255 255 / .3), transparent 70%), linear-gradient(135deg, #5b3fb8, #b43fb8); }
+  .sx-pv-gh { background: radial-gradient(80px 60px at 70% 30%, rgb(255 255 255 / .2), transparent 70%), linear-gradient(135deg, #1f2328, #3d444d); font-family: ui-monospace, monospace; font-size: 2rem; }
+  .sx-pv-sort { background: radial-gradient(80px 60px at 30% 30%, rgb(255 255 255 / .3), transparent 70%), linear-gradient(135deg, #107c10, #3fa33f); }
+  .sx-pv-exam { background: radial-gradient(80px 60px at 70% 30%, rgb(255 255 255 / .3), transparent 70%), linear-gradient(135deg, #003e70, #0067b8); }
+  .sx-pv-embed { background: radial-gradient(80px 60px at 30% 30%, rgb(255 255 255 / .3), transparent 70%), linear-gradient(135deg, #374151, #6b7280); font-family: ui-monospace, monospace; font-size: 2rem; }
+  @media (max-width: 639px) {
+    .sx-small { flex-direction: row; }
+    .sx-small .sx-mini { flex: none; width: 76px; height: auto; margin: 10px 0 10px 10px; font-size: 2rem; }
+    .sx-small .sx-body { padding: .75rem .9rem .85rem; }
+    .sx-small .sx-t { margin-top: .35rem; font-size: 1rem; }
+    .sx-small .sx-d { font-size: .85rem; }
+    .sx-small .sx-go { padding-top: .4rem; }
+  }
+  /* Architecture Builder preview */
+  .sx-pv-arch { height: 200px; background: var(--band-subtle); background-image: radial-gradient(var(--border) 1px, transparent 1px); background-size: 14px 14px; border: 1px solid var(--border); }
+  .sx-pv-arch svg { width: 100%; height: 100%; }
+  .a-vnet { fill: rgb(0 120 212 / .08); stroke: #0078d4; stroke-width: 1.5; }
+  .a-sub { fill: none; stroke: #0078d4; stroke-dasharray: 4 3; }
+  .a-card { fill: var(--card); stroke: var(--border); filter: drop-shadow(0 3px 5px rgb(0 40 90 / .15)); }
+  .a-drag { stroke: #0078d4; stroke-width: 2; animation: sx-drag 3.2s ease-in-out infinite; transform-box: fill-box; }
+  .a-link { fill: none; stroke: #107c10; stroke-width: 1.6; stroke-dasharray: 5 4; animation: sx-dash 1.2s linear infinite; }
+  .a-ok { fill: rgb(16 124 16 / .12); stroke: #107c10; }
+  .a-t { font: 700 10px system-ui, sans-serif; fill: #005a9e; }
+  .a-t2 { font: 600 10px system-ui, sans-serif; fill: var(--text); }
+  .a-t3 { font: 700 10px system-ui, sans-serif; fill: #0b6a0b; }
+  .a-cursor { fill: var(--text); stroke: var(--card); stroke-width: 1.5; animation: sx-drag 3.2s ease-in-out infinite; }
+  :global([data-theme='dark']) .a-t { fill: #6cb8f6; }
+  :global([data-theme='dark']) .a-t3 { fill: #7fd67f; }
+  :global([data-theme='dark']) .a-link { stroke: #5fcf5f; }
+  @keyframes sx-drag { 0%, 100% { transform: translate(0, 0); } 50% { transform: translate(-8px, -4px); } }
+  @keyframes sx-dash { to { stroke-dashoffset: -18; } }
+  @media (prefers-reduced-motion: reduce) { .a-drag, .a-link, .a-cursor { animation: none; } }
+  /* Portal + shell preview */
+  .sx-pv-portal { height: 200px; border: 1px solid var(--border); background: var(--card); font-size: .68rem; }
+  .pt-bar { display: flex; align-items: center; gap: .3rem; height: 24px; padding: 0 .6rem; background: #0067b8; color: #fff; }
+  .pt-bar span { width: 7px; height: 7px; border-radius: 50%; background: rgb(255 255 255 / .55); }
+  .pt-bar b { margin-left: .4rem; font-weight: 600; }
+  .pt-main { display: grid; grid-template-columns: 28px 1fr 1fr; height: calc(100% - 24px); }
+  .pt-side { display: grid; align-content: start; gap: 8px; padding: 8px 7px; background: var(--band-subtle); border-right: 1px solid var(--border); }
+  .pt-side i { display: block; height: 12px; border-radius: 3px; background: var(--border); }
+  .pt-body { padding: .6rem .7rem; }
+  .pt-h { font-weight: 750; font-size: .78rem; }
+  .pt-row { display: flex; justify-content: space-between; gap: .4rem; margin-top: .45rem; padding: .25rem .4rem; border: 1px solid var(--border); border-radius: 4px; }
+  .pt-row span { color: var(--text-muted); }
+  .pt-btn { display: inline-block; margin-top: .6rem; padding: .25rem .6rem; border-radius: 4px; background: #0078d4; color: #fff; font-weight: 700; }
+  .pt-shell { padding: .55rem .65rem; background: #0b1020; color: #e6edf3; font-family: ui-monospace, monospace; font-size: .64rem; line-height: 1.6; overflow: hidden; }
+  .pt-shell b { color: #9fe870; }
+  .pt-ok { color: #8fcbf7; }
+  .pt-err { color: #ff8b94; }
 
-  /* Levels */
-  .lv { padding: 1.4rem; overflow: hidden; }
-  .lv::before { content: ''; position: absolute; inset: 0 0 auto; height: 4px; background: #0078d4; }
-  .lv-2::before { background: #005a9e; }
-  .lv-3::before { background: #003a66; }
-  .lv-diff { margin-left: .35rem; vertical-align: middle; border-radius: 999px; background: var(--accent-soft); color: var(--accent-deep); padding: 2px 9px; font-size: .75rem; font-weight: 700; }
-  .lv-chip { display: inline-flex; align-items: center; min-height: 36px; padding: 0 .85rem; border-radius: 999px; border: 1px solid var(--border); background: var(--card); font-size: .85rem; font-weight: 700; transition: border-color .15s; }
-  .lv-chip:hover { border-color: var(--accent); }
-  .lv-live { background: #0078d4; border-color: #0078d4; color: #fff; }
+  /* Closing band */
+  .h-final { color: #fff; background: radial-gradient(60% 120% at 100% 0%, rgb(255 255 255 / .14), transparent 70%), linear-gradient(135deg, #0067b8, #003e70); }
+  :global([data-theme='dark']) .h-final { background: var(--band); }
 
   /* Why */
   .h-why { display: flex; gap: .9rem; padding: 1.15rem; }
@@ -484,22 +626,34 @@ const schema = [
   .h-inset { background: var(--card); }
 
   /* Azure-blue band, the blog's --band in place of the old navy */
-  .h-blue { color: #fff; background: radial-gradient(70% 90% at 100% 0%, rgb(255 255 255 / .14), transparent 70%), linear-gradient(155deg, #005a9e, #003e70); }
-  :global([data-theme='dark']) .h-blue { background: var(--band); }
-  .h-blue .h-h2 { color: #fff; }
-  .h-eyebrow-light { color: #e6f0fa; }
-  .h-eyebrow-light::before { background: #fff; }
   .h-btn-w { background: #fff; color: #004f8c; }
   .h-btn-w:hover { transform: translateY(-1px); box-shadow: 0 10px 24px -10px rgb(0 0 0 / .5); }
   .h-btn-ow { border: 1.5px solid rgb(255 255 255 / .85); color: #fff; }
   .h-btn-ow:hover { background: #fff; color: #004f8c; }
-  .h-shell { background: #0b1020 !important; color: #e6edf3 !important; border: 1px solid rgb(255 255 255 / .14); border-radius: 1.25rem; box-shadow: 0 28px 64px -20px rgb(0 0 0 / .55); }
 
   /* Mock exam + interview */
   .h-prep { padding: 1.5rem; }
 </style>
 
 <script>
+  // Course filter chips (the full list shows without JavaScript).
+  const chips = document.querySelector<HTMLElement>('[data-hc-chips]');
+  if (chips) {
+    chips.hidden = false;
+    const items = [...document.querySelectorAll<HTMLElement>('[data-hc-tags]')];
+    const empty = document.querySelector<HTMLElement>('[data-hc-empty]');
+    chips.addEventListener('click', (e) => {
+      const btn = (e.target as HTMLElement).closest<HTMLButtonElement>('[data-hc-filter]');
+      if (!btn) return;
+      const f = btn.dataset.hcFilter!;
+      chips.querySelectorAll('[data-hc-filter]').forEach((b) => b.setAttribute('aria-pressed', String(b === btn)));
+      let shown = 0;
+      for (const li of items) { const on = f === 'all' || li.dataset.hcTags!.split(' ').includes(f); li.hidden = !on; if (on) shown++; }
+      document.querySelectorAll<HTMLElement>('.hc-grid').forEach((g) => { const grp = g.previousElementSibling as HTMLElement | null; const any = [...g.children].some((c) => !(c as HTMLElement).hidden); g.hidden = !any; if (grp?.classList.contains('hc-group')) grp.hidden = !any; });
+      if (empty) empty.hidden = shown > 0;
+    });
+  }
+
   // Returning learner: Start Learning picks up where they left off.
   try {
     const last = JSON.parse(localStorage.getItem('msdb-last-lesson') || 'null');
