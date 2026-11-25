@@ -1,0 +1,152 @@
+{
+ "cert": "ai-103",
+ "domain": 2,
+ "topic": "design-agents-roles-goals-and-tools",
+ "questions": [
+  {
+   "id": "agt-g-design-agents-1",
+   "type": "single",
+   "scenario": "An order agent invents order numbers when customers ask where their parcel is.",
+   "question": "Which change reduces this behaviour most directly?",
+   "options": [
+    {
+     "text": "Remove the function and let the model answer from memory",
+     "why": "The model has no order data."
+    },
+    {
+     "text": "Reduce the quota of the deployment",
+     "why": "Quota does not control behaviour."
+    },
+    {
+     "text": "Define the function with a strict schema that requires order_id and instruct the agent to ask when it is missing",
+     "why": "Correct. The schema and instructions together tell the agent to ask."
+    },
+    {
+     "text": "Raise the temperature",
+     "why": "It increases invention."
+    }
+   ],
+   "answer": [
+    2
+   ],
+   "explanation": "A required parameter and clear instructions make the agent ask for missing information.",
+   "objective": "2.2.1"
+  },
+  {
+   "id": "agt-g-design-agents-2",
+   "type": "single",
+   "scenario": "You are creating a prompt agent in Foundry Agent Service.",
+   "question": "Where do you define its role and goal?",
+   "options": [
+    {
+     "text": "In the name of the model deployment",
+     "why": "A name does not control behaviour."
+    },
+    {
+     "text": "In the project endpoint",
+     "why": "The endpoint identifies the project."
+    },
+    {
+     "text": "In the Application Insights connection",
+     "why": "It is a monitoring destination."
+    },
+    {
+     "text": "In the instructions of the agent definition",
+     "why": "Correct. Instructions set role, goal and rules."
+    }
+   ],
+   "answer": [
+    3
+   ],
+   "explanation": "Instructions are the main place for role, goal, rules and escalation behaviour.",
+   "objective": "2.2.1"
+  },
+  {
+   "id": "agt-g-design-agents-3",
+   "type": "single",
+   "scenario": "A support agent must remember what was said earlier in the same chat.",
+   "question": "What should the application use?",
+   "options": [
+    {
+     "text": "A conversation, passing its ID with each request",
+     "why": "Correct. The conversation stores the messages for the session."
+    },
+    {
+     "text": "A new conversation for every message",
+     "why": "It loses earlier messages."
+    },
+    {
+     "text": "A larger deployment capacity",
+     "why": "Capacity does not store history."
+    },
+    {
+     "text": "A guardrail",
+     "why": "Guardrails check content and do not store history."
+    }
+   ],
+   "answer": [
+    0
+   ],
+   "explanation": "A conversation is short-term memory for one chat. Cross-session memory is a separate feature.",
+   "objective": "2.2.1"
+  },
+  {
+   "id": "agt-g-design-agents-4",
+   "type": "single",
+   "scenario": "The model should call get_order_status only when a customer gives an order number.",
+   "question": "Which part of the tool definition most directly tells the model when to call it?",
+   "options": [
+    {
+     "text": "The resource group",
+     "why": "It has no effect on tool choice."
+    },
+    {
+     "text": "The function description",
+     "why": "Correct. The model reads the description to decide when the tool applies."
+    },
+    {
+     "text": "The deployment type",
+     "why": "It does not describe the tool."
+    },
+    {
+     "text": "The index name",
+     "why": "It is not part of a function definition."
+    }
+   ],
+   "answer": [
+    1
+   ],
+   "explanation": "The tool name, description and parameter descriptions are what the model reads.",
+   "objective": "2.2.1"
+  },
+  {
+   "id": "agt-g-design-agents-5",
+   "type": "single",
+   "scenario": "A change to an agent made things worse and the team must return to the previous behaviour quickly.",
+   "question": "Which feature supports this?",
+   "options": [
+    {
+     "text": "Lowering the temperature to zero",
+     "why": "It does not restore earlier instructions and tools."
+    },
+    {
+     "text": "Creating a new project",
+     "why": "It does not restore the old definition."
+    },
+    {
+     "text": "Agent versions, pointing the application back to the earlier version",
+     "why": "Correct. Each change creates a version."
+    },
+    {
+     "text": "Deleting the model deployment",
+     "why": "It would break the agent."
+    }
+   ],
+   "answer": [
+    2
+   ],
+   "explanation": "Versioning lets you roll back an agent definition.",
+   "objective": "2.2.1"
+  }
+ ]
+}

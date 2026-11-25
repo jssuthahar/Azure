@@ -1,0 +1,191 @@
+---
+title: Content Understanding for Images and Video
+seoTitle: Content Understanding for Images and Video | AI-103
+description: >-
+  Turn photos and video into structured fields with Azure Content Understanding in Foundry Tools: prebuilt and custom analyzers, segmentation, and pro mode.
+answer: >-
+  **Azure Content Understanding** in Foundry Tools runs an **analyzer** on an image or video and returns the same **structured fields** every time. Start with a prebuilt analyzer such as **prebuilt-imageSearch** or **prebuilt-videoSearch**, or build a **custom analyzer** with **classify** and **generate** fields. For video, turn on **segmentation** to get scenes with their own fields, key frames and transcript. **Pro mode** adds reasoning across inputs and reference data.
+updated: 2026-11-25
+readingMinutes: 10
+keyTerms:
+  - term: Analyzer
+    definition: A Content Understanding definition that says how to process a kind of content and which fields to return.
+  - term: Field schema
+    definition: The list of fields an analyzer returns, each with a name, a type and a method (extract, classify or generate).
+  - term: Segmentation
+    definition: Splitting a video into scenes or chapters based on categories you describe, with results for each segment.
+  - term: Key frames
+    definition: Representative frames the service picks from a video segment for analysis and search.
+  - term: Pro mode
+    definition: A Content Understanding mode that applies multi-step reasoning, can use several inputs and reference data, and suits validation-style tasks.
+interview:
+  - level: beginner
+    q: Why use Content Understanding instead of asking a chat model to describe a photo?
+    a: >-
+      A chat model's reply can have a different shape each time. An analyzer returns the same named fields with confidence scores, so a database or workflow can use them directly.
+    followUps: []
+  - level: intermediate
+    q: Which field methods work for images and video?
+    a: >-
+      Generate and classify. Extract reads values that are written in a document, so it's for document analyzers. Classify picks one value from a list I give it.
+    followUps: []
+  - level: experienced
+    q: A 12-minute training video must be searchable by topic. How do you set that up?
+    a: >-
+      I'd use a video analyzer with segmentation on and a short description of how to split it. Each segment returns its own fields, key frames and transcript lines, which I index in Azure AI Search with the time range.
+    followUps: []
+  - level: scenario
+    q: When would you look at pro mode?
+    a: >-
+      When the job needs reasoning across several inputs or checking against reference data, not just reading one file. I'd confirm on Microsoft Learn which content types support it first, because availability changes.
+    followUps: []
+revision:
+  keyPoints:
+    - Prebuilt analyzers include prebuilt-imageSearch and prebuilt-videoSearch.
+    - A custom analyzer derives from a base such as prebuilt-image or prebuilt-video and defines a field schema.
+    - Image and video fields use classify or generate. Extract is for documents.
+    - Video segmentation returns per-segment fields, key frames and transcript. Off means one segment.
+    - The resource needs default model deployments, for example a chat model.
+  mistakes:
+    - Using the extract method on an image analyzer.
+    - Expecting chapters from a video analyzer with segmentation off.
+    - Trusting low-confidence fields without review.
+  examTips:
+    - '"Same fields for every photo" = **custom analyzer** with a field schema.'
+    - '"Jump to a section of a video" = **segmentation**.'
+    - '"Reason over several inputs and reference data" = **pro mode**.'
+  quick:
+    - q: Which prebuilt analyzer gives a searchable description of an image?
+      a: prebuilt-imageSearch.
+    - q: Which methods can an image field use?
+      a: Classify and generate.
+    - q: What does segmentation add to a video analyzer?
+      a: Per-segment fields, key frames and transcript.
+    - q: What happens with segmentation off?
+      a: The whole video is one segment.
+    - q: What does the resource need before analyzers work?
+      a: Default model deployments.
+references:
+  - title: What is Azure Content Understanding in Foundry Tools?
+    url: https://learn.microsoft.com/azure/ai-services/content-understanding/overview
+  - title: Content Understanding prebuilt analyzers
+    url: https://learn.microsoft.com/azure/ai-services/content-understanding/concepts/prebuilt-analyzers
+  - title: Study guide for Exam AI-103
+    url: https://learn.microsoft.com/en-us/credentials/certifications/resources/study-guides/ai-103
+related:
+  - multimodal-image-understanding
+  - responsible-ai-for-visual-content
+---
+
+## Start with a question
+
+<Story question="An insurance clerk has 2,000 claim photos and a spreadsheet with a column called 'Damage type'. Can the photos fill that column on their own?">
+
+A chat model can describe each photo, but one reply says "a dent near the door" and the next says "the vehicle shows damage". A spreadsheet needs "dent" every time.
+
+**Content Understanding** fixes that. You define the fields once, such as DamageType with four allowed values, and every photo comes back as the same record.
+
+</Story>
+
+## Explain it like I'm 10
+
+<Eli10>
+
+Picture a form with boxes: "What's damaged?" and "Write one sentence about it."
+
+A helper looks at each photo and fills in the same boxes, every time. For a long video, the helper first cuts it into scenes, then fills in a form for each scene.
+
+The form is the **analyzer**. The cutting is **segmentation**.
+
+</Eli10>
+
+## The technical explanation
+
+Content Understanding is a Foundry Tool. You call an **analyzer** with a file and get **fields** back, with confidence scores. It uses model deployments on your resource, so the resource needs default deployments such as a chat model before analyzers run. The API version used in this lesson is 2025-11-01 (checked 25 November 2026).
+
+### Prebuilt analyzers
+
+| Analyzer | Returns |
+| --- | --- |
+| `prebuilt-imageSearch` | A description of the image, for search indexes |
+| `prebuilt-videoSearch` | The video split into segments with descriptions, key frames and transcript |
+
+### Custom analyzers: single-task
+
+A custom analyzer starts from a base (`prebuilt-image` or `prebuilt-video`) and adds a **field schema**.
+
+```python
+from azure.ai.contentunderstanding import ContentUnderstandingClient
+from azure.identity import DefaultAzureCredential
+
+client = ContentUnderstandingClient(endpoint=endpoint, credential=DefaultAzureCredential())
+# A field schema, in the analyzer definition
+fields = {
+  "DamageType": {"type": "string", "method": "classify",
+                 "enum": ["dent", "scratch", "broken glass", "none"]},
+  "Notes":      {"type": "string", "method": "generate",
+                 "description": "One sentence on what is damaged and where."},
+}
+poller = client.begin_analyze(analyzer_id="damage-photo", inputs=[AnalyzeInput(url=photo_url)])
+print(poller.result().contents[0].fields)
+```
+
+| Method | What it does | Works for |
+| --- | --- | --- |
+| `extract` | Reads a value written in the content | Documents only |
+| `classify` | Picks one value from your list | Images, video, audio, documents |
+| `generate` | Writes a value from understanding the content | Images, video, audio, documents |
+
+### Video: segmentation
+
+A video analyzer can treat the file as **one segment** or split it. With **segmentation on** you describe the scenes, for example "one segment per training topic". You get the whole video plus each segment with its own **fields**, **key frames** and **WEBVTT transcript**. Your search app can then jump straight to 03:10 instead of replaying 12 minutes.
+
+### Pro mode
+
+**Standard** analyzers apply one analysis task to the input. **Pro mode** adds **multi-step reasoning** that can use **several inputs** and **reference data**, which suits checks such as validating a submission against a policy. Support depends on the content type and changes over time, so read the current Learn page before you rely on it.
+
+### Finding objects and regions
+
+For "where is it?" you have two options. A **generate** field can describe objects and, for video, when they appear. Or ask a multimodal model for labels and boxes. Either way, confidence is limited, so show the result to a reviewer when the decision matters.
+
+<Callout type="exam">
+"The same fields for every file" = **custom analyzer**. "extract on a photo analyzer fails" = use **classify or generate**. "Find the part of a video about forklifts" = **segmentation**. "Compare against reference data" = **pro mode**.
+</Callout>
+
+<DeepDive title="Why does a video with segmentation off still return something?">
+
+Without segmentation the analyzer treats the whole file as one content item. You still get the fields you defined, plus a transcript, for the full video. That's the right choice for whole-video questions, such as "does this clip show a brand logo anywhere?", where you don't need chapters.
+
+</DeepDive>
+
+<TryIt labs="agt-vision-cu" text="Run a prebuilt analyzer, create a custom damage analyzer, then compare a video with and without segmentation." />
+
+## Real-world business scenario
+
+<Scenario
+  company="Fabrikam Insurance"
+  industry="Insurance"
+  problem="Claim photos were read by hand, and a 12-minute safety video was impossible to search."
+  service="Content Understanding in Foundry Tools. A damage-photo analyzer classifies DamageType and generates Notes, and a training-chapters analyzer segments the video by topic."
+  why="Every photo returns the same fields with confidence scores, and each video segment carries its own transcript and key frames for search."
+  outcome="Clear claims went straight into the claims system, low-confidence ones went to adjusters, and staff found the forklift section in seconds."
+/>
+
+## When to use it and when not to
+
+<UseWhen
+  use={[
+    'A workflow or database needs the same fields from every photo or video.',
+    'You want chapters, key frames and a transcript from long videos.',
+    'You want a visual policy check that returns classifications you can enforce.',
+  ]}
+  avoid={[
+    'A person just wants a one-off description. A chat model is simpler.',
+    'You need a value read from a printed form. Use a document analyzer with extract.',
+    'You need pixel-exact regions.',
+  ]}
+  alternatives={[
+    'A multimodal chat model for flexible questions.',
+    'Azure AI Search to index the fields that analyzers return.',
+  ]}
+/>

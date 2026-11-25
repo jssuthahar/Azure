@@ -1,0 +1,187 @@
+---
+title: Speech Translation and Reasoning over Audio
+seoTitle: Speech Translation and Audio Models in Foundry | AI-103
+description: Translate speech with Azure Speech and reason over recordings with an audio-capable model like gpt-4o-audio-preview. AI-103 objectives 4.2.3 and 4.2.4.
+answer: >-
+  **Speech translation** in Azure Speech recognises one spoken language and returns text in several target languages in one pass, and can speak the result with a voice name. Use it when you need transcripts, fixed languages and low cost. When the question is about **how** something was said (tone, emotion, pace, sounds), send the recording to an **audio-capable model** such as **gpt-4o-audio-preview** as an **input_audio** content part. A text-only deployment such as gpt-4.1-mini rejects audio with an error, so deploy an audio model or transcribe first.
+updated: 2026-11-25
+readingMinutes: 9
+keyTerms:
+  - term: Speech translation
+    definition: Azure Speech recognising speech in one language and returning translations in one or more target languages.
+  - term: TranslationRecognizer
+    definition: The Speech SDK object that runs speech translation. Results come back keyed by language code.
+  - term: Speech to speech translation
+    definition: Speech translation with a voice name set, so the translation is also spoken.
+  - term: Audio-capable model
+    definition: A model deployment that accepts audio input, such as gpt-4o-audio-preview.
+  - term: input_audio
+    definition: The content part type used to send base64-encoded audio to a chat completion request.
+interview:
+  - level: beginner
+    q: How do you show Hindi callers' words in English and Tamil?
+    a: >-
+      Speech translation. I set the spoken language to hi-IN and add en and ta as targets. One recognition pass returns text in both, and with a voice name set it can speak the translation too.
+    followUps: []
+  - level: intermediate
+    q: When is a transcript not enough?
+    a: >-
+      When the answer depends on how it was said. A transcript keeps the words and drops tone, pace, laughter and background sounds. For "was the caller frustrated at the start?" I'd send the audio to an audio-capable model.
+    followUps: []
+  - level: experienced
+    q: Why do you get a 400 when you send input_audio to gpt-4.1-mini?
+    a: >-
+      That deployment only takes text and images. Audio input needs an audio-capable model like gpt-4o-audio-preview, or I transcribe with Speech first and send the text.
+    followUps: []
+  - level: scenario
+    q: Support wants transcripts in four languages for 10,000 calls a week. Do you use an audio model?
+    a: >-
+      No. Speech translation gives transcripts and the four languages at lower cost and with predictable output. I'd use an audio model on a smaller sample where supervisors ask about tone, because it costs more per minute.
+    followUps: []
+revision:
+  keyPoints:
+    - Speech translation returns several target languages from one recognition pass.
+    - A voice name on the translation config makes it speak the result.
+    - Transcripts lose tone and pace. Audio-capable models keep them.
+    - Audio goes in as an input_audio content part, base64 encoded.
+    - Text-only deployments reject audio input.
+  mistakes:
+    - Sending audio to a text-only deployment.
+    - Using an audio model for plain transcripts in fixed languages.
+    - Translating a transcript with text translation when speech translation already returns both.
+  examTips:
+    - '"Hindi speech to English and Tamil text" = **speech translation**.'
+    - '"How did the caller sound?" = **audio-capable model**.'
+    - '"Transcripts and fixed languages, lowest cost" = **Speech**, not an audio model.'
+  quick:
+    - q: Which SDK object runs speech translation?
+      a: TranslationRecognizer.
+    - q: What content part carries audio to a chat model?
+      a: input_audio.
+    - q: Name an audio-capable model.
+      a: gpt-4o-audio-preview.
+    - q: What do you set to speak the translation?
+      a: A voice name.
+    - q: Which model type rejects input_audio?
+      a: A text-only deployment such as gpt-4.1-mini.
+references:
+  - title: What is speech translation
+    url: https://learn.microsoft.com/azure/ai-services/speech-service/speech-translation
+  - title: How to recognize and translate speech
+    url: https://learn.microsoft.com/azure/ai-services/speech-service/get-started-speech-translation
+  - title: Audio generation with Azure OpenAI audio models
+    url: https://learn.microsoft.com/azure/ai-foundry/openai/how-to/audio-completions
+related:
+  - speech-to-text-and-text-to-speech
+  - translate-text-with-foundry
+---
+
+## Start with a question
+
+<Story question="Can a transcript tell you the caller was angry?">
+
+Contoso Telecom takes calls in Hindi. The agents read English and Tamil. A supervisor also wants to know how upset a caller sounded at the start of a call and whether they calmed down by the end.
+
+These are two different jobs. One is **translating speech**. The other is **understanding sound**. A transcript handles the first and loses the second.
+
+</Story>
+
+## Explain it like I'm 10
+
+<Eli10>
+
+**Speech translation** is a friend who listens to your Hindi and writes it down in English and Tamil at the same time. If you ask, they can say it out loud too.
+
+An **audio model** is a friend who listens to the whole recording and tells you how it felt: "She started angry and fast, then relaxed". A written note can't tell you that. And if you give the recording to a friend who can only read, they say "I can't listen to that".
+
+</Eli10>
+
+## The technical explanation
+
+### Speech translation
+
+Azure Speech recognises speech in a **spoken language** and returns text in one or more **target languages** from the same pass. Set a voice name and it also produces **synthesized speech** of the translation (speech to speech).
+
+```python
+cfg = speechsdk.translation.SpeechTranslationConfig(subscription=KEY, endpoint=ENDPOINT)
+cfg.speech_recognition_language = "hi-IN"
+cfg.add_target_language("en")
+cfg.add_target_language("ta")
+cfg.voice_name = "en-IN-NeerjaNeural"     # also speak the English translation
+
+rec = speechsdk.translation.TranslationRecognizer(translation_config=cfg, audio_config=audio)
+result = rec.recognize_once_async().get()
+print(result.text)                 # what was heard, in Hindi
+print(result.translations["en"])   # the English translation
+```
+
+If the caller's language isn't known, enable **language identification** for the candidate languages. Results are keyed by language code.
+
+### Reasoning over audio
+
+A transcript keeps the words and loses everything else. Questions about **tone, emotion, pace, hesitation or background sounds** need a model that takes audio. **gpt-4o-audio-preview** is one such deployment. The audio goes in as an **input_audio** content part, base64 encoded:
+
+```python
+completion = client.chat.completions.create(
+    model="gpt-4o-audio-preview",
+    modalities=["text"],
+    messages=[{"role": "user", "content": [
+        {"type": "text", "text": "How did the customer feel at the start and at the end?"},
+        {"type": "input_audio", "input_audio": {"data": audio_b64, "format": "wav"}},
+    ]}],
+)
+```
+
+A **text-only deployment** such as gpt-4.1-mini returns an error for this request. Deploy an audio-capable model, or transcribe first.
+
+### Which pattern?
+
+| Need | Use | Why |
+| --- | --- | --- |
+| Transcripts and fixed languages, high volume | Speech translation | Cheaper and predictable |
+| Transcript, then text analysis | Speech to text, then Azure Language or a model | Reuse text tools |
+| Tone, emotion, pace, sounds | Audio-capable model | It hears the audio |
+| Live conversation across languages | Voice Live or speech translation with a voice | Low latency |
+
+<TryIt labs="agt-speech-agent" text="Translate a Hindi call into English and Tamil, then send a recording to the wrong model and the right one." />
+
+<Callout type="exam">
+"Return **text in several languages** from **spoken** input" is **speech translation**. "Tell me how the **caller felt**" is an **audio-capable model**. A **400 error** on **input_audio** means the deployment doesn't accept audio. **Fixed languages and low cost** points back to **Speech**, not an audio model.
+</Callout>
+
+<DeepDive title="Preview model names change">
+
+Audio-capable models such as gpt-4o-audio-preview are listed in the Foundry model catalog with their own regions and quotas, and preview names and versions get replaced over time (checked 25 November 2026). In an exam answer, remember the idea: audio in needs an audio-capable deployment. In a project, check the catalog for the current model and region.
+
+</DeepDive>
+
+## Real-world business scenario
+
+<Scenario
+  company="Contoso Telecom (fictional)"
+  industry="Telecommunications"
+  problem="Hindi-speaking customers called a support line staffed by English and Tamil readers, and supervisors wanted to know which calls started angry, but reading transcripts missed the tone."
+  service="Azure Speech translation from hi-IN into English and Tamil for every call, and a gpt-4o-audio-preview deployment used on flagged calls to describe the caller's tone at the start and at the end."
+  why="Speech translation covered the volume at predictable cost. The audio model was reserved for the questions a transcript can't answer."
+  outcome="Agents read live translations during calls, and supervisors reviewed the angriest calls first each morning."
+/>
+
+## When to use it and when not to
+
+<UseWhen
+  use={[
+    'You need text in several languages from spoken input (speech translation).',
+    'The question is about tone, emotion or sounds in a recording (audio model).',
+    'You want a spoken translation as well as text (set a voice name).',
+  ]}
+  avoid={[
+    'You send audio to a text-only deployment.',
+    'You pay for an audio model on every call when transcripts are enough.',
+    'You assume a transcript preserves tone.',
+  ]}
+  alternatives={[
+    '<strong>Speech to text, then a text model</strong> when you only need the content of the call.',
+    '<strong>Voice Live</strong> for a real-time spoken conversation.',
+    '<strong>Text translation</strong> when you already have a transcript.',
+  ]}
+/>

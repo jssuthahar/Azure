@@ -1,0 +1,240 @@
+---
+title: Extract Documents with Content Understanding
+seoTitle: Content Understanding Document Extraction | AI-103
+description: Turn PDFs and scans into clean Markdown and typed fields with confidence by building Content Understanding analyzers, then feed agents and RAG.
+answer: >-
+  **Azure Content Understanding in Foundry Tools** turns documents, images, audio and video into **Markdown** and **fields**. A **prebuilt** analyzer (such as **prebuilt-layout** or **prebuilt-documentSearch**) works with no setup. A **custom analyzer** extends **prebuilt-document** with a field schema where each field uses a method: **extract** (text on the page), **classify** (a fixed list) or **generate** (the model writes it). Results include a **confidence score** and a **source**, so you can send low-confidence values to a person. It runs on your Foundry resource with your own model deployments.
+updated: 2026-11-25
+readingMinutes: 13
+keyTerms:
+  - term: Analyzer
+    definition: A reusable definition that says how to process a type of content and what output to produce.
+  - term: Prebuilt analyzer
+    definition: A ready-made analyzer such as prebuilt-layout, prebuilt-documentSearch or an industry analyzer. No schema needed.
+  - term: Field schema
+    definition: The list of fields a custom analyzer returns, each with a type, a method and a description.
+  - term: Extract, classify, generate
+    definition: The three field methods. Extract reads values written in the content, classify picks from a list you give, generate lets the model write the value.
+  - term: Confidence score
+    definition: A number from 0 to 1 that says how sure the service is about a field value.
+  - term: Grounding (source)
+    definition: The location in the content that a field value came from, such as the page and position.
+  - term: Default model deployments
+    definition: The chat and embedding deployments on your Foundry resource that Content Understanding uses for field extraction.
+interview:
+  - level: beginner
+    q: What does Content Understanding give you that plain OCR doesn't?
+    a: >-
+      OCR gives you text. Content Understanding gives you structure and meaning: clean Markdown with tables and figure descriptions, plus named fields such as total or claim number, each with a confidence score and where it was found.
+    followUps: []
+  - level: intermediate
+    q: When do you use extract, classify and generate for a field?
+    a: >-
+      Extract for values that are written in the document, like an invoice number. Classify when the answer must be one of a fixed list, such as the type of claim. Generate when the value isn't written anywhere and the model has to produce it, like a short summary.
+    followUps:
+      - q: Why prefer extract over generate when both could work?
+        a: >-
+          Extract stays tied to the text on the page, so it's more predictable and easier to verify with its source. Generate can paraphrase or invent.
+  - level: experienced
+    q: A handwritten policy number comes back with confidence 0.61. What do you do?
+    a: >-
+      I set a threshold for the field, say 0.8, and route anything below it to a person for review instead of trusting it. I'd also check the source location so the reviewer sees the exact spot, and measure how often the low-confidence fields were actually wrong.
+    followUps: []
+  - level: scenario
+    q: Your analyzer creation fails with a model deployment error. What's missing?
+    a: >-
+      The default model deployments for the resource. Content Understanding needs a chat model and an embedding model deployed on the Foundry resource, mapped as defaults, and the analyzer's models section has to name them.
+    followUps: []
+  - level: architecture
+    q: How do Content Understanding and Azure AI Search work together for RAG?
+    a: >-
+      Content Understanding converts each file to layout-aware Markdown with figure descriptions, and Search indexes it. You can analyse first and index the Markdown, or use the Content Understanding skill inside the indexer's skillset. The same analyzer can also produce fields to drive a workflow.
+    followUps: []
+revision:
+  keyPoints:
+    - Content Understanding is a Foundry Tool that runs on your Foundry resource with your own model deployments.
+    - It handles documents, images, audio and video. Outputs are Markdown plus fields.
+    - Prebuilt analyzers need no schema. Custom analyzers extend a base such as prebuilt-document.
+    - Field methods are extract, classify and generate.
+    - Turn on confidence and source estimation, then route low-confidence fields to a person.
+    - GA API version is 2025-11-01. A 2026-06-01-preview adds newer features such as agentic mode.
+  mistakes:
+    - Using generate for a value that is written on the page.
+    - Trusting handwritten or blurry fields without a confidence threshold.
+    - Creating an analyzer before the default model deployments exist.
+  examTips:
+    - '"Clean text for RAG with tables and figures" = **prebuilt-documentSearch** Markdown.'
+    - '"Typed fields with confidence from forms" = a **custom analyzer** with a **field schema**.'
+    - '"Choose from a fixed list" = **classify**. "Write a summary" = **generate**.'
+  quick:
+    - q: Which method reads values that are written in the document?
+      a: Extract.
+    - q: Which base analyzer do custom document analyzers extend?
+      a: prebuilt-document.
+    - q: What tells you whether to trust a field?
+      a: Its confidence score (and source).
+    - q: What must exist on the Foundry resource before field extraction works?
+      a: Default chat and embedding model deployments.
+    - q: Which prebuilt analyzer is tuned for RAG on documents?
+      a: prebuilt-documentSearch.
+references:
+  - title: What is Azure Content Understanding in Foundry Tools?
+    url: https://learn.microsoft.com/azure/ai-services/content-understanding/overview
+  - title: Prebuilt analyzers
+    url: https://learn.microsoft.com/azure/ai-services/content-understanding/concepts/prebuilt-analyzers
+  - title: Analyzer reference
+    url: https://learn.microsoft.com/azure/ai-services/content-understanding/concepts/analyzer-reference
+related:
+  - search-enrichment-skills
+  - ingest-and-index-content
+  - connect-retrieval-to-agents
+---
+
+## Start with a question
+
+<Story question="Claim forms arrive as PDFs with photos and handwriting. How do you turn them into data a claims system and an agent can trust?">
+
+Picture a clerk who reads every claim. A scanner only gives her a photocopy of the words. A good clerk does more: she copies the claim number into the right box, ticks "water damage" from a list, writes a two-line summary for the adjuster, and puts a small question mark next to the number she couldn't read.
+
+**Content Understanding** is that clerk. The photocopy is OCR. The boxes are **fields**. The ticks are **classify**, the summary is **generate**, and the question mark is a low **confidence score**.
+
+</Story>
+
+## Explain it like I'm 10
+
+<Eli10>
+
+You get a messy homework page with a drawing, a table and some scribbles. Your job is to fill in a clean form: name, date, total.
+
+You copy the name exactly from the page. You choose a category from a list. You write one sentence about the whole page yourself.
+
+If a word is too smudgy, you put a little star on it and ask your teacher to check it. That star is the confidence score.
+
+</Eli10>
+
+## The technical explanation
+
+Content Understanding is a **Foundry Tool**, part of your Microsoft Foundry resource. It reads **documents, images, audio and video** and returns output in a shape you choose: Markdown for reasoning and search, and fields for automation. This lesson focuses on documents.
+
+### Prebuilt analyzers
+
+| Analyzer | Use it for |
+| --- | --- |
+| **prebuilt-read** / **prebuilt-layout** | OCR, paragraphs, tables and structure, no fields |
+| **prebuilt-documentSearch** | RAG: Markdown, table structure, figure descriptions, handwritten annotations and a summary |
+| Industry analyzers (invoice, contract and others) | Common documents with fields already defined |
+| **prebuilt-document** | The base you extend for a custom analyzer |
+
+Start here. If a prebuilt analyzer returns what you need, don't build a custom one.
+
+### Custom analyzers and the field schema
+
+When you need your own fields, you create an analyzer with a base, the models it should use, a config, and a `fieldSchema`:
+
+```json
+{
+  "analyzerId": "insurance-claim",
+  "baseAnalyzerId": "prebuilt-document",
+  "models": { "completion": "gpt-4.1-mini", "embedding": "text-embedding-3-small" },
+  "config": { "returnDetails": true, "estimateFieldSourceAndConfidence": true, "tableFormat": "markdown" },
+  "fieldSchema": { "fields": {
+    "ClaimNumber":  { "type": "string", "method": "extract",  "description": "Claim reference, starts with CLM-" },
+    "TotalClaimed": { "type": "number", "method": "extract",  "description": "Total amount claimed" },
+    "IncidentType": { "type": "string", "method": "classify", "enum": ["water damage", "fire", "theft", "collision", "other"] },
+    "Summary":      { "type": "string", "method": "generate", "description": "Two-sentence summary for the adjuster" }
+  } }
+}
+```
+
+| Method | Returns | Example |
+| --- | --- | --- |
+| **extract** | A value written in the content | Claim number, total |
+| **classify** | One value from a list you give | Type of incident |
+| **generate** | A value the model writes | Summary, a yes or no judgement |
+
+Good descriptions matter: they act as the instruction for each field. Use the least creative method that works, because **extract** can be checked against the page and **generate** can't.
+
+### Setting up on your Foundry resource
+
+1. Deploy a **chat** model and an **embedding** model on the resource, for example `gpt-4.1-mini` and `text-embedding-3-small`.
+2. Map them once as the resource's **default model deployments**.
+3. Create the analyzer (`PUT .../contentunderstanding/analyzers/{id}`).
+4. Analyze a file (`POST ...:analyze`). It's a long-running operation, so you poll or use the SDK's poller.
+
+```python
+client = ContentUnderstandingClient(endpoint=endpoint, credential=DefaultAzureCredential())
+result = client.begin_analyze(analyzer_id="insurance-claim",
+                              inputs=[AnalysisInput(url=blob_url)]).result()
+content = result.contents[0]
+print(content.markdown)                       # clean text for RAG and agents
+for name, f in content.fields.items():
+    print(name, f.value, f.confidence, f.source)
+```
+
+The GA API version is **2025-11-01** (checked 25 November 2026). A **2026-06-01-preview** version adds newer features such as an agentic mode for complex documents, so confirm which one your SDK targets.
+
+### Confidence and grounding
+
+With `estimateFieldSourceAndConfidence` on, each field comes with a **confidence** and a **source** (where it was found). That lets you build **straight-through processing**: values above your threshold flow straight into the claims system, and anything below goes to a person who sees the exact spot on the page. A handwritten policy number at 0.61 is exactly the value you don't want to trust blindly.
+
+### Feeding agents and RAG
+
+- **Markdown** is the clean representation for a model: headings, tables and figure descriptions stay intact. Index it in Azure AI Search, or use the **Content Understanding skill** inside the indexer's skillset.
+- **Fields** feed workflows and tools, such as an agent that opens a claim only when the fields are confident.
+- One analyzer can produce both in the same call.
+
+<Flow
+  caption="A claim form through Content Understanding"
+  steps={[
+    { title: 'Read', text: 'OCR and layout analysis read text, tables and figures.' },
+    { title: 'Extract', text: 'The model fills extract fields from the text on the page.' },
+    { title: 'Classify', text: 'Classify fields pick one value from your list.' },
+    { title: 'Generate', text: 'Generate fields get a model-written value, such as a summary.' },
+    { title: 'Check', text: 'Low-confidence fields go to a person. The rest flow on.' },
+  ]}
+/>
+
+<TryIt labs="agt-extract-content-understanding" text="Create basic and full analyzers, compare their output, and find the field that falls below the confidence threshold." />
+
+<Callout type="exam">
+"Clean Markdown for RAG with figure descriptions" is **prebuilt-documentSearch**. "Typed fields from forms" is a **custom analyzer** that extends **prebuilt-document** with a **field schema**. Value written in the document is **extract**, a fixed list is **classify**, model-written text is **generate**. "Know which values to double-check" means turn on **confidence and source**, then review below a threshold.
+</Callout>
+
+<DeepDive title="Classification, segmentation and limits">
+
+Analyzers can **classify whole files** or **split a multi-document PDF** into segments by category (for example invoice, contract, other) and send each segment to a category-specific analyzer. Always include an "other" category so unmatched content doesn't get forced into a wrong one.
+
+Plan for limits: file size, page counts and language support differ by modality and version, so check the service limits page for the type you process. Cost has two parts: the content processed (pages or minutes) and the model tokens used for field extraction on your deployments. Test on a sample set and measure accuracy per field before you switch off human review.
+
+</DeepDive>
+
+## Real-world business scenario
+
+<Scenario
+  company="Litware Insurance (fictional)"
+  industry="Insurance"
+  problem="Adjusters retyped claim numbers, dates and totals from PDFs and photos. Mistakes in handwritten policy numbers caused payouts to the wrong policy."
+  service="A Content Understanding custom analyzer based on prebuilt-document with extract fields for numbers and dates, a classify field for incident type, a generate summary field, and confidence plus source turned on. Fields above 0.8 go to the claims system and the rest go to a review queue."
+  why="Extract keeps values tied to the page, classify keeps categories consistent, and confidence stops unclear handwriting from reaching payment."
+  outcome="Most claims flow through without retyping, and reviewers only see the handful of fields the service wasn't sure about, with the page location highlighted."
+/>
+
+## When to use it and when not to
+
+<UseWhen
+  use={[
+    "You need named fields from invoices, claims, contracts or forms, with confidence.",
+    "You want layout-aware Markdown with table structure and figure descriptions for RAG.",
+    "You process mixed content, such as documents, call recordings and video, with one approach.",
+  ]}
+  avoid={[
+    "You only need to search across many documents. Index them with Azure AI Search.",
+    "The task is plain text analysis, such as sentiment or translation. Use Azure Language or Translator.",
+    "A value that must never be wrong is read from a blurry image with no human review.",
+  ]}
+  alternatives={[
+    "<strong>Azure AI Search</strong> with OCR and Text Split for simple retrieval.",
+    "<strong>A multimodal model with a JSON schema</strong> for quick one-off extraction.",
+    "<strong>Azure Language</strong> for entities and PII in text you already have.",
+  ]}
+/>

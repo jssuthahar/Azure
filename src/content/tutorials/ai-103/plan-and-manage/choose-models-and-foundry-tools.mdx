@@ -1,0 +1,198 @@
+---
+title: Choose Models and Foundry Services for the Task
+seoTitle: Choose Foundry Models and Services for the Task | AI-103
+description: Pick between LLMs, reasoning models, small language models, multimodal models and Foundry Tools, then the right Foundry service. AI-103 1.1.1 and 1.1.2.
+answer: >-
+  Match the job to the **smallest thing that passes your tests**. A **reasoning model** (such as o4-mini) plans multistep problems. A **small language model** (such as Phi-4-mini) handles narrow, high-volume work cheaply. A **multimodal model** accepts images or audio as well as text. A **Foundry Tool** such as **Content Understanding**, **Azure Speech** or **Azure Language** does a fixed job with no prompt work. For the service: **Foundry Models** for generating, **Foundry IQ on Azure AI Search** for grounding and vector search, **Foundry Agent Service** for agent workflows. Check the **model card** (inputs, context window, regions, deployment types) and then your own test set.
+updated: 2026-11-25
+readingMinutes: 10
+keyTerms:
+  - term: Reasoning model
+    definition: A model that spends extra tokens thinking through a problem before it answers. Better at multistep tasks, slower and more expensive per answer. Reasoning models take a reasoning effort setting instead of temperature.
+  - term: Small language model (SLM)
+    definition: A compact model, such as Phi-4-mini, that is cheap and fast and good enough for narrow tasks like labelling or short answers.
+  - term: Multimodal model
+    definition: A model that accepts more than text, such as images or audio, so one call can describe a photo or reason over a recording.
+  - term: Foundry Tools
+    definition: Prebuilt AI services in Foundry (Content Understanding, Azure Speech, Azure Language, Azure Vision, Translator and more) that do a fixed job through an API.
+  - term: Model card
+    definition: The catalog page for a model. It lists supported inputs, context window, capabilities, regions and deployment options, plus benchmark scores.
+  - term: Foundry IQ
+    definition: The knowledge layer in Foundry. A knowledge base on Azure AI Search that agents query for grounded, cited answers.
+interview:
+  - level: beginner
+    q: Why not use the biggest model for everything?
+    a: >-
+      It costs more, it's slower, and most jobs don't need it. I'd start with the smallest model that passes my test set, and only move up when it fails. A labelling job on a small language model can cost a fraction of the same job on a reasoning model.
+    followUps: []
+  - level: intermediate
+    q: When do you pick a Foundry Tool instead of a model?
+    a: >-
+      When the job is fixed and well defined: extract fields from invoices, transcribe speech, detect PII, translate text. The tool gives a predictable output shape and price, and there's no prompt to maintain. I'd use a model when the task needs reasoning, or custom output that the tool can't give.
+    followUps: []
+  - level: experienced
+    q: How do you compare two candidate models fairly?
+    a: >-
+      I build a test set from real inputs with expected answers, run both models with the same prompt, and score with evaluators for quality, plus cost and latency. The catalog's quality index is a starting point, but my data decides. I also check the model card for input types, context window, region and deployment type, because a great model I can't deploy in my region is no use.
+    followUps: []
+  - level: scenario
+    q: A bank needs to summarise 200,000 emails a night, answer a few hard legal questions a day and read scanned cheques. What do you choose?
+    a: >-
+      Three different things. A small or mini model for the email summaries, because volume is high and the task is narrow. A reasoning model for the legal questions, because they're few and hard. Content Understanding for the cheques, because it reads documents into fields without prompt work.
+    followUps: []
+revision:
+  keyPoints:
+    - Smallest model that passes your tests wins. Move up only when it fails.
+    - Reasoning models for multistep problems, small models for narrow high-volume work, multimodal models for images and audio.
+    - Foundry Tools do fixed jobs (documents, speech, language, vision) with predictable output.
+    - The model card shows inputs, context window, regions and deployment types. Check it before you design.
+    - Foundry IQ on Azure AI Search grounds answers, and Foundry Agent Service runs agent workflows.
+  mistakes:
+    - Sending photos to a text-only model and getting a 400 error.
+    - Choosing by benchmark score alone and never testing on your own data.
+    - Prompting a large model to do what Content Understanding or Azure Language already does.
+  examTips:
+    - '"Multistep planning or maths" = a **reasoning model**.'
+    - '"Thousands of simple labels, low cost" = a **small language model**.'
+    - '"Fields from invoices, forms, audio or video" = **Content Understanding**.'
+    - '"Answer from our documents with citations" = **Foundry IQ** (Azure AI Search), not a bigger model.'
+  quick:
+    - q: Which model type spends extra tokens thinking before it answers?
+      a: A reasoning model.
+    - q: Which model type suits high-volume, narrow tasks at low cost?
+      a: A small language model.
+    - q: Where do you check which inputs a model accepts?
+      a: The model card in the catalog.
+    - q: Which Foundry Tool pulls structured fields from documents, audio and video?
+      a: Content Understanding.
+    - q: What should decide between two models that both look suitable?
+      a: Your own test set, plus cost and latency.
+references:
+  - title: Explore the Foundry model catalog
+    url: https://learn.microsoft.com/azure/ai-foundry/concepts/foundry-models-overview
+  - title: Azure OpenAI reasoning models
+    url: https://learn.microsoft.com/azure/ai-foundry/openai/how-to/reasoning
+  - title: What is Microsoft Foundry?
+    url: https://learn.microsoft.com/azure/ai-foundry/what-is-azure-ai-foundry
+  - title: Azure Content Understanding in Foundry Tools
+    url: https://learn.microsoft.com/azure/ai-services/content-understanding/overview
+related:
+  - retrieval-indexing-and-agent-memory
+  - foundry-infrastructure-and-deployment-options
+---
+
+## Start with a question
+
+<Story question="Would you send a courier on a motorbike to deliver one envelope across the road, or ask a lorry?">
+
+Priya runs support engineering at Contoso. Last month the team sent every request to the biggest model they could find. Tickets got labelled, contracts got reviewed, invoices got read. It worked, and the bill was alarming.
+
+The fix wasn't a cleverer prompt. It was sending each job to the **cheapest thing that does it well**. Some jobs needed a thinker. Some needed a fast, cheap labeller. Some didn't need a language model at all.
+
+</Story>
+
+## Explain it like I'm 10
+
+<Eli10>
+
+Imagine a school with different helpers.
+
+One teacher is brilliant at hard puzzles, but she's slow and busy. That's a **reasoning model**.
+
+One helper is quick at sorting lost property into boxes. That's a **small language model**.
+
+One helper can look at photos and tell you what's in them. That's a **multimodal model**.
+
+And there's a scanner machine that reads forms and gives you the answers. That's a **Foundry Tool**.
+
+You wouldn't ask the puzzle teacher to sort socks.
+
+</Eli10>
+
+## The technical explanation
+
+### The model families you'll choose between
+
+| Need | Pick | Why |
+| --- | --- | --- |
+| Hard, multistep reasoning, planning, maths, code | **Reasoning model** (o4-mini and similar) | It thinks before answering. It uses a reasoning effort setting, not temperature. |
+| Everyday chat, summaries, tool calling | **gpt-4.1-class LLM** or its **mini** version | Good balance of quality, speed and cost. Large context. |
+| Narrow, high-volume, latency-sensitive work | **Small language model** (Phi-4-mini-instruct) | Cheap, fast, and easier to run at the edge. |
+| Photos, screenshots, charts | **Multimodal model** (gpt-4.1, gpt-4o, Phi-4-multimodal) | Accepts image input. A text-only model returns an error. |
+| Audio reasoning | **Audio-capable model** (gpt-4o-audio-preview) | Hears tone and pace, not just words. |
+| Search by meaning | **Embedding model** (text-embedding-3-small) | Turns text into vectors for retrieval. |
+
+Read the **model card** before you design: supported inputs, context window, capabilities (tool calling, structured outputs, reasoning), the regions and the deployment types it can use. Model availability changes often, so check the catalog the week you build.
+
+### When a Foundry Tool beats a model
+
+Foundry Tools give you a fixed job through an API, often with a fixed price and output shape.
+
+| Job | Foundry Tool |
+| --- | --- |
+| Fields and markdown from documents, images, audio, video | **Content Understanding** |
+| Speech to text, text to speech, speech translation | **Azure Speech** |
+| Entities, PII, sentiment, summaries | **Azure Language** |
+| Text translation with glossaries | **Azure Translator** |
+| Image analysis and OCR | **Azure Vision** |
+| Harmful content scoring and Prompt Shields | **Azure Content Safety** |
+
+Use a model when you need reasoning, free-form output, or a task the tool can't do. Many solutions use both: Content Understanding reads the invoice, a model decides what to do with it.
+
+### Choosing the Foundry service for the task
+
+- **Generate text, images, code**: **Foundry Models** (a deployment of a model in your Foundry resource).
+- **Ground answers on your data and search by meaning**: **Foundry IQ** knowledge bases on **Azure AI Search** (keyword, vector, hybrid, semantic ranking).
+- **Run an agent with tools and conversation state**: **Foundry Agent Service**.
+- **Process documents, audio, video**: **Content Understanding**.
+- **Many agents or steps with approvals**: workflows in Foundry (covered in domain 2).
+
+### Test before you commit
+
+1. Collect 50 to 200 real inputs with the answers you'd accept.
+2. Run two or three candidates with the same prompt.
+3. Score with evaluators (groundedness, relevance, your own graders), and note cost and latency.
+4. Pick the smallest model that clears your bar. Write down why, so the next change is a decision and not a guess.
+
+<TryIt labs="agt-plan-choose-ground" text="Ask the advisor which model or Foundry Tool fits a multistep contract question, 10,000 hourly labels and a stack of invoices." />
+
+<Callout type="exam">
+Read the verbs. "Plan", "reason through" and "multistep" point to a **reasoning model**. "Classify thousands" and "lowest cost" point to a **small language model**. "Describe an image" needs a **multimodal** model. "Extract fields from invoices" is **Content Understanding**. When a question says answers must come from company documents, the service is **Foundry IQ on Azure AI Search**, and a bigger model isn't the fix.
+</Callout>
+
+<DeepDive title="Why 'best model' isn't a thing">
+
+A quality index averages many public tests. Your support tickets, your policies and your languages aren't those tests. A model that's second on the leaderboard can be first on your data. That's why the test set matters more than the ranking, and why you re-run it when a new model version arrives.
+
+</DeepDive>
+
+## Real-world business scenario
+
+<Scenario
+  company="Contoso Insurance (fictional)"
+  industry="Insurance"
+  problem="Every request, from simple claim labelling to scanned medical forms, went to one large model. Costs climbed and the forms came back with missing fields."
+  service="Phi-4-mini-instruct for claim labelling, o4-mini for the few complex coverage questions, Content Understanding for the scanned forms, and gpt-4.1-mini with a Foundry IQ knowledge base for policy answers."
+  why="Each job went to the cheapest option that passed a test set built from real claims. Content Understanding returned the form fields in a fixed shape, which the old prompt never did."
+  outcome="The monthly model bill fell by more than half, and the form field error rate dropped enough that manual rechecking stopped."
+/>
+
+## When to use it and when not to
+
+<UseWhen
+  use={[
+    'The workload mixes easy high-volume jobs with a few hard ones.',
+    'A fixed job (documents, speech, PII) already has a Foundry Tool.',
+    'You can build a test set from real inputs and rerun it when models change.',
+  ]}
+  avoid={[
+    'You choose by leaderboard rank and never test your own data.',
+    'You use one big model for everything because it is simpler to wire.',
+    'You prompt a general model to do a job a tool does with a stable output.',
+  ]}
+  alternatives={[
+    '<strong>A model router</strong> in your app that sends each request to the cheapest model that fits.',
+    '<strong>Fine-tuning a small model</strong> when prompting a large one is too costly at volume.',
+    '<strong>Distillation</strong> to teach a small model from a large one on your own examples.',
+  ]}
+/>

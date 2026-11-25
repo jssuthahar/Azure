@@ -1,0 +1,147 @@
+{
+ "cert": "ai-103",
+ "domain": 3,
+ "topic": "multimodal-image-understanding",
+ "questions": [
+  {
+   "id": "cv-und-1",
+   "type": "single",
+   "question": "A news site has 40,000 product photos that need a one-sentence description for thumbnails. Which approach meets the requirement with the least effort?",
+   "options": [
+    {
+     "text": "Send each image to a multimodal chat deployment with a prompt that requests a single concise sentence",
+     "why": "Correct. A multimodal model returns text, and the prompt controls the length and style."
+    },
+    {
+     "text": "Train a custom image classification model",
+     "why": "Classification returns labels, not descriptive sentences."
+    },
+    {
+     "text": "Use text-embedding models on the image file names",
+     "why": "Embeddings of file names do not describe the content of the pictures."
+    },
+    {
+     "text": "Use gpt-image to redraw each photo",
+     "why": "Image generation creates new pictures. It does not describe existing ones."
+    }
+   ],
+   "answer": [
+    0
+   ],
+   "explanation": "A vision-enabled chat model accepts images and a prompt. A concise caption prompt gives short descriptions for thumbnails.",
+   "objective": "3.2.2"
+  },
+  {
+   "id": "cv-und-2",
+   "type": "single",
+   "question": "An insurance application asks a multimodal model about a photo: 'How old is the car?' The model must not guess when the photo does not show the answer. What should the developer configure?",
+   "options": [
+    {
+     "text": "A system message that tells the model to answer only from visible evidence and to say when it cannot tell",
+     "why": "Correct. Grounding instructions reduce speculation."
+    },
+    {
+     "text": "A higher temperature",
+     "why": "A higher temperature increases variation and the risk of guesses."
+    },
+    {
+     "text": "A larger value for n",
+     "why": "The n parameter controls the number of completions, not grounding."
+    },
+    {
+     "text": "Detail set to low",
+     "why": "Detail affects image resolution, not whether the model guesses."
+    }
+   ],
+   "answer": [
+    0
+   ],
+   "explanation": "Visual question answering is grounded by instructing the model to use visible evidence and to state that it cannot tell when the image does not show the answer.",
+   "objective": "3.2.3"
+  },
+  {
+   "id": "cv-und-3",
+   "type": "single",
+   "question": "A web team must generate alt text for informative images. Which instruction best follows accessibility guidance?",
+   "options": [
+    {
+     "text": "Describe every pixel region in as much detail as possible",
+     "why": "Alt text must be short. Long descriptions belong in an extended description."
+    },
+    {
+     "text": "Start every description with 'Image of'",
+     "why": "Screen readers already announce an image, so this wording adds noise."
+    },
+    {
+     "text": "Return only the file name",
+     "why": "A file name does not describe the content."
+    },
+    {
+     "text": "Describe the purpose of the image briefly, include meaningful text shown in the image, and return an empty value for decorative images",
+     "why": "Correct. This follows common alt text guidance."
+    }
+   ],
+   "answer": [
+    3
+   ],
+   "explanation": "Alt text states the purpose briefly and includes meaningful text. Decorative images get empty alt text, and complex images can have a separate extended description.",
+   "objective": "3.2.4"
+  },
+  {
+   "id": "cv-und-4",
+   "type": "single",
+   "question": "An application sends 12 images in one request to a multimodal chat deployment to compare them. The request fails. What is the most likely cause?",
+   "options": [
+    {
+     "text": "Images must be sent one at a time",
+     "why": "Several images can be sent in the same request, up to the limit."
+    },
+    {
+     "text": "The detail parameter must be set to high",
+     "why": "The detail parameter does not remove the image limit."
+    },
+    {
+     "text": "A single request is limited to 10 images",
+     "why": "Correct. Split the images into several requests."
+    },
+    {
+     "text": "The deployment type must be Provisioned",
+     "why": "The deployment type does not set the number of images in a request."
+    }
+   ],
+   "answer": [
+    2
+   ],
+   "explanation": "A request can include up to 10 images. Send larger sets in batches and combine the results in the application.",
+   "objective": "3.2.2"
+  },
+  {
+   "id": "cv-und-5",
+   "type": "single",
+   "question": "An application reads small printed text in photographs of delivery labels, but the model often misses characters. The application sets detail to low to save cost. What should the developer change?",
+   "options": [
+    {
+     "text": "Switch to a gpt-image deployment",
+     "why": "Image generation models do not read text from photographs for analysis."
+    },
+    {
+     "text": "Set the temperature to 2",
+     "why": "Temperature does not improve what the model can see."
+    },
+    {
+     "text": "Send the image as a URL instead of base64",
+     "why": "The transport method does not change the resolution used for analysis."
+    },
+    {
+     "text": "Set detail to high so the model sees the image at higher resolution",
+     "why": "Correct. High detail processes more of the image and helps with small text."
+    }
+   ],
+   "answer": [
+    3
+   ],
+   "explanation": "The detail setting trades cost and speed against fidelity. Low reads a reduced version of the image, so small text can be missed.",
+   "objective": "3.2.1"
+  }
+ ]
+}

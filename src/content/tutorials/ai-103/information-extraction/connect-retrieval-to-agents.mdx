@@ -1,0 +1,248 @@
+---
+title: Connect Retrieval Pipelines to Agents and Workflows
+seoTitle: Connect Retrieval to Agents and Workflows | AI-103
+description: Wire an Azure AI Search knowledge base into a Foundry agent as an MCP tool, set retrieval effort, grant the project identity access and cite sources.
+answer: >-
+  Agents don't call an index directly. You create **knowledge sources** (such as a search index), group them in a **knowledge base** with a **retrieval reasoning effort** (**minimal**, **low** or **medium**), and give the agent the knowledge base as a tool through its **MCP endpoint**. The **project's managed identity** needs the **Search Index Data Reader** role on the search service, or the call fails with 403. Instructions tell the agent to cite sources and to say "I don't know" when nothing comes back. Workflows and apps call the same knowledge base through the retrieve API.
+updated: 2026-11-25
+readingMinutes: 13
+keyTerms:
+  - term: Knowledge source
+    definition: A connection to content for retrieval, such as a search index, Blob Storage, SharePoint, OneLake or the web.
+  - term: Knowledge base
+    definition: The top-level object that lists knowledge sources and controls retrieval, including the reasoning effort and the output mode.
+  - term: Agentic retrieval
+    definition: A multi-query pipeline that plans subqueries, runs them in parallel, reranks with the semantic ranker and merges the results.
+  - term: Retrieval reasoning effort
+    definition: A knowledge base setting (minimal, low or medium) that decides how much model-based query planning happens.
+  - term: MCP tool
+    definition: A tool an agent calls through the Model Context Protocol. A knowledge base exposes one at its MCP endpoint.
+  - term: Project connection
+    definition: A Foundry project setting that stores how the agent authenticates to a tool, such as the project's managed identity.
+  - term: Search Index Data Reader
+    definition: The role that allows read-only queries on a search service's indexes.
+interview:
+  - level: beginner
+    q: Why give an agent a knowledge base instead of letting the model answer on its own?
+    a: >-
+      A model only knows what it was trained on and what's in the prompt. A knowledge base lets the agent look up your current company content and answer from it, with citations you can check.
+    followUps: []
+  - level: intermediate
+    q: What is the difference between minimal, low and medium retrieval reasoning effort?
+    a: >-
+      Minimal skips model planning and sends the question to the sources as it is, so it's fastest and cheapest. Low and medium use a chat model to break the question into subqueries and choose sources, with medium doing more of that work. They cost more tokens and add latency, but handle multi-part questions better.
+    followUps:
+      - q: Which setting needs a model deployment?
+        a: >-
+          Low and medium, for planning. Answer synthesis also needs a model, whatever the effort.
+  - level: experienced
+    q: The agent's knowledge base call returns 403. What do you check?
+    a: >-
+      The identity the tool authenticates as. With a project connection it's the project's managed identity, so I'd confirm it has Search Index Data Reader on the search service, that the connection audience is the search endpoint, and that network rules allow the call.
+    followUps: []
+  - level: scenario
+    q: The agent invents a refund rule that isn't in your policies. How do you stop it?
+    a: >-
+      Ground it on the knowledge base, write instructions that say to answer only from retrieved passages, cite them and admit when nothing relevant came back, and evaluate groundedness on a test set. If retrieval returns nothing useful, fix the index first, not the prompt.
+    followUps: []
+  - level: architecture
+    q: How do you make sure users only see documents they're allowed to see?
+    a: >-
+      Use sources that carry access control information and have the knowledge base run queries under the caller's Microsoft Entra identity where supported, so permissions are enforced at query time. For custom indexes I'd store security groups on each chunk and filter on them.
+    followUps: []
+revision:
+  keyPoints:
+    - Agents call a knowledge base. The knowledge base holds knowledge sources and the retrieval settings.
+    - Minimal effort has no model planning. Low and medium use a chat model to plan subqueries.
+    - The agent reaches the knowledge base as an MCP tool, authenticated through a project connection.
+    - The project's managed identity needs Search Index Data Reader on the search service.
+    - Instructions must require citations and an honest "I don't know".
+    - Workflows and apps use the retrieve REST API or SDK on the same knowledge base.
+  mistakes:
+    - Granting a broad role such as Owner or Contributor when Search Index Data Reader is enough.
+    - Expecting multi-part questions to be split at minimal effort.
+    - Letting the agent answer from memory when retrieval returns nothing.
+  examTips:
+    - '"Agent calls search with no keys" = **project managed identity** plus **Search Index Data Reader**.'
+    - '"Break a multi-part question into subqueries" = **low or medium** reasoning effort.'
+    - '"Expose retrieval to an agent as a tool" = the knowledge base **MCP** endpoint.'
+  quick:
+    - q: Which object do agents call for retrieval?
+      a: A knowledge base.
+    - q: Which effort level skips model planning?
+      a: Minimal.
+    - q: Which role lets the project identity read the index?
+      a: Search Index Data Reader.
+    - q: How does an agent reach the knowledge base as a tool?
+      a: Through its MCP endpoint.
+    - q: What should the agent say when nothing relevant is retrieved?
+      a: That it doesn't know.
+references:
+  - title: What is Foundry IQ?
+    url: https://learn.microsoft.com/azure/foundry/agents/concepts/what-is-foundry-iq
+  - title: Agentic retrieval in Azure AI Search
+    url: https://learn.microsoft.com/azure/search/agentic-retrieval-overview
+  - title: Create a knowledge base
+    url: https://learn.microsoft.com/azure/search/agentic-retrieval-how-to-create-knowledge-base
+  - title: Connect to Azure AI Search with role-based access
+    url: https://learn.microsoft.com/azure/search/search-security-rbac
+related:
+  - semantic-hybrid-and-vector-search
+  - ingest-and-index-content
+  - search-enrichment-skills
+---
+
+## Start with a question
+
+<Story question="Your HR agent confidently invents a parental leave rule. How do you make it answer from the real policies, and say so when it can't?">
+
+Think of a new employee at a help desk. If you give them no manual, they guess. If you give them a manual and tell them "answer from the manual and point to the page", they stop guessing. If the answer isn't in the manual, they say "let me check".
+
+A **knowledge base** is the manual, a **knowledge source** is one book in it, and the **MCP tool** is the agent's way to open it. The **managed identity** is the staff badge that lets the agent into the library, and the instructions are the rule: cite the page, or say you don't know.
+
+</Story>
+
+## Explain it like I'm 10
+
+<Eli10>
+
+Imagine a robot helper who answers questions. If it only uses its memory, it sometimes makes things up.
+
+So you give it a library card. Now when someone asks, the robot walks to the library, finds the right pages, and answers with "I found this on page 12".
+
+But the library only opens for robots with a badge. No badge, the door stays shut. And if the pages don't have the answer, a good robot says "I don't know" instead of guessing.
+
+</Eli10>
+
+## The technical explanation
+
+You've built an index. Now the agent has to use it, safely and with citations.
+
+### The pieces
+
+| Piece | Job |
+| --- | --- |
+| **Knowledge source** | Points at content: a search index on your service, Blob Storage, SharePoint, OneLake, or the web. |
+| **Knowledge base** | Lists knowledge sources, sets the **retrieval reasoning effort** and the **output mode**, and exposes retrieve and MCP endpoints. |
+| **Agentic retrieval** | Plans subqueries, runs them in parallel (keyword, vector or hybrid), reranks each with the semantic ranker and merges the result. |
+| **Agent** | A Foundry agent with the knowledge base as a tool and instructions about how to use it. |
+
+Indexed sources need a **semantic configuration** on the index, because every subquery is reranked.
+
+### Retrieval reasoning effort
+
+| Effort | What happens | Needs a model? |
+| --- | --- | --- |
+| **minimal** | One query goes to the candidate sources as it is. | No (unless you want answer synthesis) |
+| **low** | A model plans subqueries and picks sources. | Yes |
+| **medium** | More planning and iteration than low. | Yes |
+
+Set it explicitly instead of assuming a default. A question such as "Can I expense a taxi from the airport, and how long do I have to claim it?" is really two questions. At minimal effort it's one blended query; at low effort it becomes two focused ones that run in parallel.
+
+The **output mode** is either **extractive data** (raw passages with references, which your agent or app reasons over) or **answer synthesis** (the knowledge base writes a cited answer, which needs a model).
+
+### Creating them (REST, GA contract 2026-10-01)
+
+```http
+PUT /knowledgesources/ks-policies?api-version=2026-10-01
+{ "name": "ks-policies", "kind": "searchIndex",
+  "searchIndexParameters": { "searchIndexName": "policies-idx" } }
+
+PUT /knowledgebases/kb-policies?api-version=2026-10-01
+{ "name": "kb-policies",
+  "knowledgeSources": [ { "name": "ks-policies" } ],
+  "retrievalReasoningEffort": { "kind": "low" },
+  "outputMode": "extractiveData",
+  "models": [ { "kind": "azureOpenAI", "azureOpenAIParameters": {
+      "resourceUri": "https://ai-agt-kb01.openai.azure.com",
+      "deploymentId": "gpt-4.1-mini", "modelName": "gpt-4.1-mini" } } ] }
+```
+
+Some agentic retrieval features are still in preview, and which ones you get depends on the Search REST API version you call. As of 25 November 2026, `2026-10-01` is the GA contract for minimal, low and medium effort, citations and answer synthesis, and a preview version adds newer items. Check the current migration page when you build.
+
+### Connecting the agent
+
+1. **Create a project connection** to the knowledge base's MCP endpoint (`.../knowledgebases/<name>/mcp`), using the **project managed identity** and the search audience.
+2. **Add the tool** to the agent with `allowed_tools` limited to the retrieve tool, and decide on `require_approval` (reading a policy index is low risk).
+3. **Grant the role.** On the search service, assign the project's managed identity **Search Index Data Reader**. Read-only is all an agent needs.
+4. **Write the instructions.** Say to answer from the retrieved passages, cite the sources, and reply that it doesn't know when nothing relevant comes back.
+
+```python
+tool = MCPTool(server_label="policies", server_url=mcp_endpoint,
+               require_approval="never", allowed_tools=["knowledge_base_retrieve"],
+               project_connection_id="kb-policies-mcp")
+agent = project.agents.create_version(agent_name="policy-agent",
+    definition=PromptAgentDefinition(model="gpt-4.1-mini", tools=[tool],
+        instructions="Use the knowledge base tool. If it has no answer, say you don't know. Cite sources."))
+```
+
+Without the role you get a **403** on the first tool call, which is the classic mistake. Network settings matter too: a private connection between the agent and the search service doesn't automatically protect the search service's own connections to its data sources and models.
+
+### Workflows and apps
+
+Anything that can make an HTTPS call can use the same knowledge base: a Logic Apps or Power Automate step, an Azure Function, or a Microsoft Agent Framework app. They call the **retrieve** endpoint (or SDK) with the conversation, then pass the returned passages to a model or use them directly. One knowledge base can serve many agents.
+
+### Other ways to ground an agent
+
+| Option | Use it when |
+| --- | --- |
+| **Knowledge base (Foundry IQ)** | Curated company content shared by many agents, with planning and citations |
+| **Azure AI Search tool** on an index | One index and a simple, direct query |
+| **File search** | Files a user uploads in a conversation |
+| **Function tool** | Live data from a system of record |
+
+<Flow
+  caption="One question through a knowledge base"
+  steps={[
+    { title: 'Ask', text: 'The agent calls the knowledge base tool with the question.' },
+    { title: 'Plan', text: 'At low or medium effort a model splits it into subqueries.' },
+    { title: 'Search', text: 'Subqueries run in parallel over the knowledge sources, each reranked.' },
+    { title: 'Merge', text: 'Passages and references come back to the agent.' },
+    { title: 'Answer', text: 'The agent answers with citations, or says it does not know.' },
+  ]}
+/>
+
+<TryIt labs="agt-extract-agent-kb" text="Compare minimal and low effort, watch the agent fail with a 403, grant the role, then ask something the knowledge base can't answer." />
+
+<Callout type="exam">
+"The agent gets 403 from search" is a missing **Search Index Data Reader** assignment for the **project's managed identity**. "A multi-part question must be split automatically" needs **low or medium** effort and a chat model. "Expose retrieval as an agent tool" is the knowledge base **MCP** endpoint. Citations come from the retrieved references, so tell the agent to use them.
+</Callout>
+
+<DeepDive title="Permissions and cost">
+
+Sources such as SharePoint and some others can carry access control lists, and the knowledge base can run queries under the caller's Microsoft Entra identity so users only get content they're allowed to see. For your own indexes, store group IDs on each chunk and apply a filter that matches the signed-in user.
+
+Agentic retrieval is billed in more than one place: the semantic ranker reranks up to 50 chunks per subquery, and low and medium effort add model tokens for planning and, if you use it, answer synthesis. Lower the effort, reduce the number of sources, or answer simple questions with minimal effort to keep cost down. Review the activity log the retrieve call can return, which shows each subquery and how many results it produced.
+
+</DeepDive>
+
+## Real-world business scenario
+
+<Scenario
+  company="Contoso HR (fictional)"
+  industry="Human resources"
+  problem="The HR chatbot answered travel and leave questions from memory. Employees were told wrong claim deadlines, and an audit found no way to see where an answer came from."
+  service="A knowledge base over the policies index at low retrieval effort, connected to the HR agent as an MCP tool with the project's managed identity and Search Index Data Reader. Instructions require citations and an I don't know reply."
+  why="Multi-part questions are split and answered from the right documents, there are no keys to manage, and every answer carries the file it came from."
+  outcome="Wrong-deadline tickets fell by almost two thirds, and auditors can follow each answer back to a policy page."
+/>
+
+## When to use it and when not to
+
+<UseWhen
+  use={[
+    "Several agents or apps should share one curated, cited source of company knowledge.",
+    "Users ask multi-part or context-dependent questions that one query can't answer.",
+    "You need keyless access and permission-aware answers.",
+  ]}
+  avoid={[
+    "The question needs live data from a system of record. Use a function tool.",
+    "A user uploads a file for one chat. File search is lighter.",
+    "Latency and cost are tight and questions are simple. Use minimal effort or a direct index query.",
+  ]}
+  alternatives={[
+    "<strong>Azure AI Search tool</strong> for a direct query on one index.",
+    "<strong>File search</strong> for per-conversation files.",
+    "<strong>Retrieve API in a workflow</strong> when no agent is involved.",
+  ]}
+/>

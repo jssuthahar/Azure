@@ -4,6 +4,7 @@
  * runs in the browser; designs are saved in localStorage (per browser) and can
  * be exported as SVG, PNG or JSON. EDUCATION ONLY: nothing is deployed.
  */
+import { iconSvg, iconG } from './icons';
 import { CATALOG, KINDS, LINK_LABEL, linkKindFor, makeNode, byId, childrenOf, linked, newId, emptyDesign, isDesign, type Design, type ArchNode, type Kind, type NsgRule } from './model';
 import { check, summary, type Finding } from './rules';
 import { simulate, sources, targets } from './traffic';
@@ -11,7 +12,7 @@ import { explain } from './explain';
 import { TEMPLATES } from './templates';
 
 const W = 1600, H = 1000;
-const LEAF = { w: 170, h: 58 };
+const LEAF = { w: 182, h: 66 };
 const PAD = { top: 34, side: 18, bottom: 18 };
 const MIN: Partial<Record<Kind, { w: number; h: number }>> = { vnet: { w: 340, h: 210 }, subnet: { w: 190, h: 100 } };
 const KEY = 'msdb-architect-v1';
@@ -131,9 +132,9 @@ export function mountBuilder(root: HTMLElement, lessonBase: string) {
       const sub = info.container ? (n.kind === 'vnet' ? n.props.addressSpace : n.props.prefix) : n.kind === 'vm' ? `${n.props.os} · zone ${n.props.zone}` : n.kind === 'lb' ? `${n.props.type} · ${n.props.sku}` : n.kind === 'nsg' ? `${(n.props.rules ?? []).length} custom rule(s)` : n.kind === 'storage' || n.kind === 'sql' ? `public: ${n.props.publicAccess}` : n.kind === 'pip' ? n.props.sku : n.kind === 'dns' ? n.props.zone : info.label;
       html += `<g class="${cls}" data-id="${n.id}" tabindex="0" role="button" aria-label="${esc(label)}" aria-pressed="${sel === n.id}">`;
       if (info.container) {
-        html += `<rect class="ab-box" x="${r.x}" y="${r.y}" width="${r.w}" height="${r.h}" rx="10"/><text class="ab-ctitle" x="${r.x + 12}" y="${r.y + 21}">${esc(info.icon)} ${esc(n.name)}</text><text class="ab-csub" x="${r.x + r.w - 12}" y="${r.y + 21}" text-anchor="end">${esc(sub)}</text>`;
+        html += `<rect class="ab-box" x="${r.x}" y="${r.y}" width="${r.w}" height="${r.h}" rx="10"/>${iconG(n.kind, r.x + 10, r.y + 7, 18)}<text class="ab-ctitle" x="${r.x + 34}" y="${r.y + 21}">${esc(n.name)}</text><text class="ab-csub" x="${r.x + r.w - 12}" y="${r.y + 21}" text-anchor="end">${esc(sub)}</text>`;
       } else {
-        html += `<rect class="ab-card" x="${r.x}" y="${r.y}" width="${r.w}" height="${r.h}" rx="9"/><rect class="ab-stripe" x="${r.x}" y="${r.y}" width="6" height="${r.h}" rx="3"/><text class="ab-icon" x="${r.x + 16}" y="${r.y + 37}">${esc(info.icon)}</text><text class="ab-name" x="${r.x + 46}" y="${r.y + 25}">${esc(n.name.length > 15 ? n.name.slice(0, 14) + '…' : n.name)}</text><text class="ab-sub" x="${r.x + 46}" y="${r.y + 44}">${esc(String(sub).length > 19 ? String(sub).slice(0, 18) + '…' : sub)}</text>`;
+        html += `<rect class="ab-card" x="${r.x}" y="${r.y}" width="${r.w}" height="${r.h}" rx="9"/><rect class="ab-stripe" x="${r.x}" y="${r.y}" width="6" height="${r.h}" rx="3"/><rect class="ab-icobg" x="${r.x + 13}" y="${r.y + 15}" width="36" height="36" rx="9"/>${iconG(n.kind, r.x + 18, r.y + 20, 26)}<text class="ab-name" x="${r.x + 58}" y="${r.y + 29}">${esc(n.name.length > 15 ? n.name.slice(0, 14) + '…' : n.name)}</text><text class="ab-sub" x="${r.x + 58}" y="${r.y + 49}">${esc(String(sub).length > 18 ? String(sub).slice(0, 17) + '…' : sub)}</text>`;
       }
       if (flag) html += `<circle class="ab-flag ab-flag-${flag}" cx="${r.x + r.w - 4}" cy="${r.y + 4}" r="9"/><text class="ab-flagt" x="${r.x + r.w - 4}" y="${r.y + 8.5}" text-anchor="middle">${flag === 'error' ? '!' : '?'}</text>`;
       html += '</g>';
@@ -301,7 +302,7 @@ export function mountBuilder(root: HTMLElement, lessonBase: string) {
 
   /* ---------------- palette: tap to add, or drag onto the canvas ---------------- */
   const pal = $('[data-ab-palette]');
-  pal.innerHTML = (['Networking', 'Compute', 'Data', 'Security', 'Connectivity'] as const).map((grp) => `<div class="ab-pgroup"><p class="ab-pgh">${grp}</p>${KINDS.filter((k) => CATALOG[k].group === grp).map((k) => `<button type="button" class="ab-pal" data-kind="${k}" title="${esc(CATALOG[k].blurb)}"><span aria-hidden="true">${CATALOG[k].icon}</span> ${esc(CATALOG[k].label)}</button>`).join('')}</div>`).join('');
+  pal.innerHTML = (['Networking', 'Compute', 'Data', 'Security', 'Connectivity'] as const).map((grp) => `<div class="ab-pgroup"><p class="ab-pgh">${grp}</p>${KINDS.filter((k) => CATALOG[k].group === grp).map((k) => `<button type="button" class="ab-pal" data-kind="${k}" title="${esc(CATALOG[k].blurb)}">${iconSvg(k)} ${esc(CATALOG[k].label)}</button>`).join('')}</div>`).join('');
   let pdrag: { kind: Kind; sx: number; sy: number; moved: boolean; ghost?: HTMLElement } | null = null;
   pal.addEventListener('pointerdown', (e) => {
     const b = (e.target as Element).closest('[data-kind]') as HTMLButtonElement | null;
@@ -453,7 +454,7 @@ export function mountBuilder(root: HTMLElement, lessonBase: string) {
     const PORTS = ['*', '22', '80', '443', '3389', '8080'];
     const nsgEditor = n.kind === 'nsg' ? `<fieldset class="ab-rules"><legend>Inbound rules</legend>${rules.length ? '' : '<p class="ab-muted">No custom rules: the defaults allow traffic from inside the VNet and from the load balancer probe, and deny everything else inbound.</p>'}${rules.map((r, i) => `<div class="ab-rule" data-rule="${i}"><input aria-label="Rule ${i + 1} name" data-r="name" value="${esc(r.name)}"><input aria-label="Rule ${i + 1} priority" data-r="priority" type="number" min="100" max="4096" value="${r.priority}"><select aria-label="Rule ${i + 1} source" data-r="source">${['Internet', 'VirtualNetwork', 'AzureLoadBalancer', 'Any'].map((o) => `<option${r.source === o ? ' selected' : ''}>${o}</option>`).join('')}</select><select aria-label="Rule ${i + 1} port" data-r="port">${PORTS.map((o) => `<option${String(r.port) === o ? ' selected' : ''}>${o}</option>`).join('')}</select><select aria-label="Rule ${i + 1} action" data-r="access">${['Allow', 'Deny'].map((o) => `<option${r.access === o ? ' selected' : ''}>${o}</option>`).join('')}</select><button type="button" class="ab-x" data-rule-del="${i}" aria-label="Remove rule ${esc(r.name)}">✕</button></div>`).join('')}<button type="button" class="btn btn-outline btn-sm" data-rule-add>+ Add rule</button><p class="ab-hint">Lower priority numbers win. Defaults: AllowVnetInBound 65000, AllowAzureLoadBalancerInBound 65001, DenyAllInBound 65500.</p></fieldset>` : '';
     el.innerHTML = `
-      <div class="ab-ph"><span class="ab-pi" aria-hidden="true">${info.icon}</span><div><p class="ab-pt">${esc(info.label)}</p><p class="ab-muted">${esc(info.blurb)}${learn(info.lesson)}</p></div></div>
+      <div class="ab-ph"><span class="ab-pi" aria-hidden="true">${iconSvg(n.kind, 26)}</span><div><p class="ab-pt">${esc(info.label)}</p><p class="ab-muted">${esc(info.blurb)}${learn(info.lesson)}</p></div></div>
       <div class="ab-field"><label for="abf-name">Name</label><input id="abf-name" data-prop="__name" value="${esc(n.name)}" autocomplete="off" spellcheck="false"></div>
       ${n.parent ? `<p class="ab-muted">Inside <b>${esc(byId(d, n.parent)?.name)}</b>.</p>` : info.parents.length ? `<p class="ab-warnline">Not inside a ${info.parents.map((p) => CATALOG[p].label.toLowerCase()).join(' or ')} yet. Drag it into one.</p>` : ''}
       ${info.fields.map(field).join('')}
@@ -555,8 +556,8 @@ text{font-family:Inter,Segoe UI,system-ui,sans-serif}
 .ab-bg{fill:#ffffff}.ab-vnet .ab-box{fill:#eef5fc;stroke:#0078d4;stroke-width:2}.ab-subnet .ab-box{fill:#f6f8fa;stroke:#8a99a8;stroke-dasharray:6 4}
 .ab-ctitle{font-size:16px;font-weight:700;fill:#0b1020}.ab-csub{font-size:13px;fill:#4a5163}
 .ab-card{fill:#ffffff;stroke:#c8d1dc}.ab-stripe{fill:#0078d4}.ab-g-security .ab-stripe{fill:#c50f1f}.ab-g-data .ab-stripe{fill:#8764b8}.ab-g-compute .ab-stripe{fill:#107c10}.ab-g-connectivity .ab-stripe{fill:#ca5010}
-.ab-icon{font-size:22px}.ab-name{font-size:15px;font-weight:600;fill:#0b1020}.ab-sub{font-size:12.5px;fill:#4a5163}
-.ab-link line{stroke:#5b6b7c;stroke-width:2}.ab-link-peer line,.ab-link-dnslink line{stroke-dasharray:7 5}.ab-link text{font-size:12.5px;fill:#4a5163}.ab-arrowhead{fill:#5b6b7c}
+.ab-name{font-size:16.5px;font-weight:600;fill:#0b1020}.ab-sub{font-size:13.5px;fill:#4a5163}.ab-icobg{fill:#e8f1fb}.ab-gico{stroke:#0078d4}.ab-g-compute .ab-gico{stroke:#107c10}.ab-g-data .ab-gico{stroke:#7a4fc0}.ab-g-security .ab-gico{stroke:#c42b30}.ab-g-connectivity .ab-gico{stroke:#ca5010}
+.ab-link line{stroke:#5b6b7c;stroke-width:2.5}.ab-link-peer line,.ab-link-dnslink line,.ab-link-vpn line,.ab-link-route line{stroke-dasharray:7 5}.ab-link text{font-size:13px;font-weight:700;fill:#4a5163;paint-order:stroke;stroke:#fff;stroke-width:6px}.ab-link-backend line{stroke:#107c10}.ab-link-backend text{fill:#107c10}.ab-link-nsg line{stroke:#ca5010}.ab-link-nsg text{fill:#ca5010}.ab-link-pip line{stroke:#7a4fc0}.ab-link-pip text{fill:#7a4fc0}.ab-link-peer line{stroke:#0078d4}.ab-link-peer text{fill:#0078d4}.ab-link-pe line,.ab-link-dnslink line{stroke:#00838f}.ab-link-pe text,.ab-link-dnslink text{fill:#00838f}.ab-link-vpn line{stroke:#2b4f8c}.ab-link-vpn text{fill:#2b4f8c}.ab-link-route line{stroke:#c42b30}.ab-link-route text{fill:#c42b30}.ab-arrowhead{fill:#5b6b7c}
 .ab-flag-error{fill:#c50f1f}.ab-flag-warn{fill:#b35c00}.ab-flagt{font-size:12px;font-weight:700;fill:#fff}
 .ab-flow{fill:none;stroke-width:5;stroke-linecap:round;opacity:.5}.ab-flow.ok{stroke:#107c10}.ab-flow.bad{stroke:#c50f1f}
 .ab-foot{font-size:12px;fill:#4a5163}`;

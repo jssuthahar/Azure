@@ -1,0 +1,188 @@
+---
+title: Retrieval, Indexing and Agent Memory Choices
+seoTitle: Retrieval, Indexing and Agent Memory in Foundry | AI-103
+description: Choose keyword, vector, hybrid or agentic retrieval on Azure AI Search, plan indexing, and pick memory, tools and knowledge for agents. AI-103 1.1.3 and 1.1.4.
+answer: >-
+  Put curated company content in a **Foundry IQ knowledge base** on **Azure AI Search**, which can use **keyword**, **vector**, **hybrid** (best default) and **semantic ranking**, and **agentic retrieval** to plan sub-queries. Use **file search** for files a user uploads in a conversation. Use **memory** for what the agent learns about a person across sessions: **user profile** memory and **chat summary** memory, scoped per user. Plan indexing with **indexers** (pull) or the push API, **chunking** and **integrated vectorization**. Connect other tools with **MCP**, **OpenAPI** or **functions**. Knowledge answers "what's true here", memory answers "what do we know about this person".
+updated: 2026-11-25
+readingMinutes: 11
+keyTerms:
+  - term: Hybrid search
+    definition: A query that runs keyword and vector search together and merges the results. Usually the best starting point for retrieval-augmented generation.
+  - term: Semantic ranker
+    definition: An Azure AI Search feature that re-ranks the top results by meaning and can return captions and answers.
+  - term: Agentic retrieval
+    definition: A retrieval mode where a model plans sub-queries from a conversation, runs them in parallel and returns grounded passages. It powers Foundry IQ knowledge bases.
+  - term: Chunking
+    definition: Splitting documents into pieces before indexing so each piece is small enough to retrieve and fits the model's context.
+  - term: Integrated vectorization
+    definition: An Azure AI Search feature that chunks content and calls an embedding model during indexing and at query time, so you don't write that code.
+  - term: Agent memory
+    definition: A store of information the agent learned about a user across sessions, such as preferences. Separate from knowledge, and scoped to one user.
+interview:
+  - level: beginner
+    q: What's the difference between knowledge and memory for an agent?
+    a: >-
+      Knowledge is what's true for everyone, like the refund policy, and it comes from a knowledge base or search index. Memory is what the agent learned about one person, like "she's vegetarian". Knowledge is curated by the company. Memory is built from conversations and scoped to the user.
+    followUps: []
+  - level: intermediate
+    q: Why hybrid search for a policy assistant?
+    a: >-
+      Keyword search is great for exact terms like "PCI-07" or a part number, and vector search is great when the user words it differently from the document. Hybrid runs both and merges the lists, so I get both kinds of hit. Adding the semantic ranker then orders the top results by meaning.
+    followUps: []
+  - level: experienced
+    q: How do you decide between an indexer and pushing documents yourself?
+    a: >-
+      If the data lives in a supported source such as Blob Storage, SQL or Cosmos DB, an indexer handles scheduling, change tracking and skills for me. I'd push through the API when the data comes from my own app and needs near real-time updates, or the source isn't supported.
+    followUps: []
+  - level: scenario
+    q: Users complain the agent forgets their allergies, and sometimes quotes a retired policy. What do you change?
+    a: >-
+      Two separate fixes. For allergies, I'd turn on user profile memory scoped to the signed-in user. For the retired policy, I'd fix the index: a scheduled indexer that notices deletions, and metadata such as effective date so retrieval can filter. Memory can't fix stale knowledge, and a fresh index can't remember a person.
+    followUps: []
+revision:
+  keyPoints:
+    - Knowledge bases (Foundry IQ on Azure AI Search) hold curated company content and return cited passages.
+    - Hybrid search with semantic ranking is the usual strong default. Pure vector misses exact terms.
+    - File search covers files a user uploads in a conversation, without a separate index build.
+    - Memory is per user (user profile and chat summary). Knowledge is shared and curated.
+    - Index with an indexer for supported sources, or push through the API. Chunk, and enrich with metadata.
+  mistakes:
+    - Using memory to store company policy, or a knowledge base to store personal preferences.
+    - Pure vector search for part numbers and codes.
+    - Building a one-off index and never scheduling refreshes, so answers go stale.
+  examTips:
+    - '"Exact codes and meaning-based matches" = **hybrid** search.'
+    - '"User uploads a file in chat" = **file search**.'
+    - '"Remember preferences across sessions" = **memory**, scoped per user.'
+    - '"Plans sub-queries over several sources" = **agentic retrieval** / a **Foundry IQ knowledge base**.'
+  quick:
+    - q: Which search mode combines keyword and vector results?
+      a: Hybrid search.
+    - q: Where do company policies belong for an agent?
+      a: In a knowledge base on Azure AI Search (Foundry IQ).
+    - q: Which agent feature handles a user's own uploaded file?
+      a: File search.
+    - q: What are the two kinds of memory most agents need?
+      a: User profile memory and chat summary memory.
+    - q: What does chunking do?
+      a: Splits documents into small pieces for indexing and retrieval.
+references:
+  - title: What is Foundry IQ?
+    url: https://learn.microsoft.com/azure/ai-foundry/agents/concepts/what-is-foundry-iq
+  - title: Hybrid search in Azure AI Search
+    url: https://learn.microsoft.com/azure/search/hybrid-search-overview
+  - title: Agentic retrieval in Azure AI Search
+    url: https://learn.microsoft.com/azure/search/agentic-retrieval-overview
+  - title: Memory in Foundry Agent Service
+    url: https://learn.microsoft.com/azure/ai-foundry/agents/concepts/what-is-memory
+related:
+  - choose-models-and-foundry-tools
+  - monitor-models-agents-and-search
+---
+
+## Start with a question
+
+<Story question="Should the shop assistant remember your name, or read the refund rules from the wall?">
+
+A good assistant does both, and keeps them apart. The refund rules are on the wall for everyone. Your name and your dislike of coriander are in the assistant's head, for you alone.
+
+An AI agent needs the same split. The wall is a **knowledge base** that anyone can read and the company controls. The assistant's head is **memory**, filled in as it talks to each person. Mix them up and you get an agent that invents policy or forgets the customer.
+
+</Story>
+
+## Explain it like I'm 10
+
+<Eli10>
+
+Imagine your class has a big library and each kid has a notebook.
+
+The **library** has the school rules and textbooks. Everyone uses the same books. That's **knowledge**.
+
+Your **notebook** says "Asha likes drawing" and "Asha is allergic to nuts". Only you use it. That's **memory**.
+
+If you bring your own homework to the teacher, she reads that page right there. That's **file search**.
+
+</Eli10>
+
+## The technical explanation
+
+### Retrieval methods on Azure AI Search
+
+| Method | What it matches | Use it for |
+| --- | --- | --- |
+| **Keyword (full text)** | Exact words with BM25 ranking | Codes, names, part numbers |
+| **Vector** | Meaning, using embeddings | Questions worded differently from the document |
+| **Hybrid** | Keyword and vector, merged | The usual default for RAG |
+| **Semantic ranker** | Re-orders the top results by meaning | Better order, captions, answers |
+| **Agentic retrieval** | A model plans sub-queries and runs them in parallel | Multi-part questions over several sources |
+
+A **Foundry IQ knowledge base** wraps agentic retrieval. You add **knowledge sources** (an existing search index, Blob Storage, SharePoint or the web), choose how much reasoning effort the query planner uses, and agents call the knowledge base as a tool. The agent gets grounded passages with citations.
+
+### Plan the indexing
+
+1. **Source**: Blob Storage, Azure SQL, Cosmos DB, SharePoint, or your own app.
+2. **Ingest**: an **indexer** pulls on a schedule and tracks changes, or you **push** documents through the API.
+3. **Chunk** the text so a piece is small enough to retrieve and to fit in the prompt. Overlap chunks a little so sentences aren't cut off.
+4. **Vectorize** with an embedding model. **Integrated vectorization** does chunking and embedding for you during indexing and at query time.
+5. **Enrich** with metadata (department, effective date, language) so you can filter, and so retrieval can skip retired content.
+6. **Refresh** on a schedule, and deal with deletions, or the agent quotes yesterday's policy.
+
+### Other ways an agent gets information
+
+- **File search**: a vector store built from files a user uploads in a conversation (or you attach to the agent). Good for one person's contract, not for company-wide content.
+- **Azure AI Search tool**: point the agent straight at an index you already built.
+- **Web search** (grounding with Bing): fresh public information.
+- **MCP servers, OpenAPI tools and functions**: live data and actions from other systems.
+
+### Memory
+
+| Memory type | Holds | Example |
+| --- | --- | --- |
+| **User profile** | Stable facts and preferences | "Vegetarian", "prefers email" |
+| **Chat summary** | A summary of each past conversation | "Asked about a refund on order 48213" |
+
+Scope memory to a user (for example `{user_id}`), set a **retention** time, and let the user see and delete it. Memory is in preview in Foundry as of 25 November 2026, so check Microsoft Learn before you rely on the details.
+
+<TryIt labs="agt-plan-choose-ground" text="Build a knowledge base, then watch an agent forget a customer and remember them once memory is on." />
+
+<Callout type="exam">
+"Company policies with citations" is a **knowledge base on Azure AI Search**. "Exact SKU and also paraphrased questions" is **hybrid** search. "A user uploads a file in the chat" is **file search**. "Remember the user's preferences next week" is **memory** scoped to that user. Questions that mix both are testing whether you separate **shared knowledge** from **personal memory**.
+</Callout>
+
+<DeepDive title="Why pure vector search isn't enough">
+
+Embeddings capture meaning, so "can I get my money back" finds the refund page. They're weak at exact strings. Search for "PCI-07" and a vector index may return other compliance pages that feel similar. Keyword search nails the exact code. Running both and merging is cheap insurance, and the semantic ranker then puts the best passage first.
+
+</DeepDive>
+
+## Real-world business scenario
+
+<Scenario
+  company="Fabrikam Foods (fictional)"
+  industry="Food delivery"
+  problem="The support agent quoted a refund policy that ended last quarter and asked returning customers about dietary needs they'd already given."
+  service="A Foundry IQ knowledge base over the policy library in Blob Storage with a nightly indexer and an effective-date filter, file search for order receipts, and user profile memory scoped to each signed-in customer."
+  why="The indexer removed retired policies and kept the library current. Memory carried preferences across sessions, and the two stores stayed separate, so policy never ended up in a customer's profile."
+  outcome="Wrong-policy complaints fell sharply, and customers stopped repeating their dietary needs in every chat."
+/>
+
+## When to use it and when not to
+
+<UseWhen
+  use={[
+    'Answers must come from company documents, with citations.',
+    'Users ask a mix of exact-term and plain-language questions (hybrid).',
+    'The agent serves returning users whose preferences matter.',
+  ]}
+  avoid={[
+    'You store personal preferences in the shared knowledge base.',
+    'You index once and never refresh or delete.',
+    'You turn on memory without a user scope, retention time or a way to delete.',
+  ]}
+  alternatives={[
+    '<strong>File search</strong> when the content belongs to one conversation.',
+    '<strong>Web search grounding</strong> for public, fresh facts.',
+    '<strong>A database tool or MCP server</strong> when the answer is a live record, not a document.',
+  ]}
+/>

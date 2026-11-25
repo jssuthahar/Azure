@@ -1,0 +1,148 @@
+{
+ "cert": "ai-103",
+ "domain": 4,
+ "topic": "speech-translation-and-audio-reasoning",
+ "questions": [
+  {
+   "id": "txt-sta-1",
+   "type": "single",
+   "question": "Hindi-speaking callers must see English and Tamil text of what they say, from one recognition pass. Which approach should you use?",
+   "options": [
+    {
+     "text": "Speech translation with hi-IN as the spoken language and en and ta as targets",
+     "why": "Correct. One TranslationRecognizer returns every target language."
+    },
+    {
+     "text": "Two separate text translation calls on a saved transcript",
+     "why": "This is not required when speech translation returns both."
+    },
+    {
+     "text": "Text to speech with a Tamil voice",
+     "why": "Text to speech creates audio from text."
+    },
+    {
+     "text": "Sentiment analysis",
+     "why": "Sentiment does not translate."
+    }
+   ],
+   "answer": [
+    0
+   ],
+   "explanation": "Speech translation recognises one spoken language and returns text in several target languages together.",
+   "objective": "4.2.4"
+  },
+  {
+   "id": "txt-sta-2",
+   "type": "single",
+   "question": "Supervisors want to ask whether a caller sounded frustrated at the start of a recorded call and relieved at the end. A transcript alone is not enough. What should you do?",
+   "options": [
+    {
+     "text": "Run key phrase extraction on the transcript",
+     "why": "Key phrases do not capture how something was said."
+    },
+    {
+     "text": "Send the audio to an audio-capable model deployment",
+     "why": "Correct. The model hears tone and pace."
+    },
+    {
+     "text": "Translate the transcript into English",
+     "why": "Translation does not add tone."
+    },
+    {
+     "text": "Use PII detection",
+     "why": "PII detection masks personal data."
+    }
+   ],
+   "answer": [
+    1
+   ],
+   "explanation": "Questions about tone, emotion or sounds need a model that accepts audio input.",
+   "objective": "4.2.3"
+  },
+  {
+   "id": "txt-sta-3",
+   "type": "single",
+   "question": "An app sends a WAV file as input_audio to a gpt-4.1-mini deployment and receives an HTTP 400 error. What is the cause?",
+   "options": [
+    {
+     "text": "The deployment is text and image only and does not accept audio",
+     "why": "Correct. Deploy an audio-capable model or transcribe first."
+    },
+    {
+     "text": "The audio is longer than the token quota",
+     "why": "A quota would return 429, not a 400 about input type."
+    },
+    {
+     "text": "The deployment needs a guardrail",
+     "why": "A guardrail does not change supported input types."
+    },
+    {
+     "text": "The Speech resource key has expired",
+     "why": "The request does not go through a Speech key."
+    }
+   ],
+   "answer": [
+    0
+   ],
+   "explanation": "Audio input is supported only by audio-capable models such as gpt-4o-audio-preview. Others reject input_audio.",
+   "objective": "4.2.3"
+  },
+  {
+   "id": "txt-sta-4",
+   "type": "single",
+   "question": "You need to choose between speech translation and sending recordings to an audio model. Support wants transcripts in four fixed languages at the lowest cost, and tone is not required. Which is the best choice?",
+   "options": [
+    {
+     "text": "An audio-capable model for every call",
+     "why": "This costs more and tone is not required."
+    },
+    {
+     "text": "Azure Speech translation",
+     "why": "Correct. It gives transcripts and translations for fixed languages at lower cost."
+    },
+    {
+     "text": "Content Safety",
+     "why": "It scores harm and does not translate."
+    },
+    {
+     "text": "Custom NER",
+     "why": "Custom NER extracts entities."
+    }
+   ],
+   "answer": [
+    1
+   ],
+   "explanation": "Use speech translation when transcripts and fixed languages are enough. Use an audio-capable model when the answer depends on tone or sounds.",
+   "objective": "4.2.4"
+  },
+  {
+   "id": "txt-sta-5",
+   "type": "multi",
+   "question": "You configure speech translation so that callers hear the translation as well as read it. Which two settings are required? Each correct answer presents part of the solution.",
+   "options": [
+    {
+     "text": "A target language for the translation",
+     "why": "Correct. At least one target language is required."
+    },
+    {
+     "text": "A Content Safety guardrail on the output",
+     "why": "A guardrail is optional and does not enable speech output."
+    },
+    {
+     "text": "A voice name for the synthesized translation",
+     "why": "Correct. The voice defines the speech output."
+    },
+    {
+     "text": "A custom NER deployment",
+     "why": "This is for text entity extraction."
+    }
+   ],
+   "answer": [
+    0,
+    2
+   ],
+   "explanation": "Speech-to-speech translation needs target languages and a voice name for synthesized output.",
+   "objective": "4.2.4"
+  }
+ ]
+}

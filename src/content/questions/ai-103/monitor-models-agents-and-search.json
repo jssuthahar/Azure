@@ -1,0 +1,148 @@
+{
+ "cert": "ai-103",
+ "domain": 1,
+ "topic": "monitor-models-agents-and-search",
+ "questions": [
+  {
+   "id": "plan-mon-1",
+   "type": "single",
+   "question": "Answer quality from a production agent has declined, but latency and error rates are normal. Which feature detects this kind of change?",
+   "options": [
+    {
+     "text": "Continuous evaluation of sampled live responses",
+     "why": "Correct. Evaluators such as groundedness score answer quality over time."
+    },
+    {
+     "text": "A higher quota",
+     "why": "Quota affects throttling, not quality."
+    },
+    {
+     "text": "A private endpoint",
+     "why": "Networking does not measure quality."
+    },
+    {
+     "text": "Azure Policy",
+     "why": "Policy enforces configuration and does not score answers."
+    }
+   ],
+   "answer": [
+    0
+   ],
+   "explanation": "Metrics cover platform health, and evaluators cover answer quality.",
+   "objective": "1.3.2"
+  },
+  {
+   "id": "plan-mon-2",
+   "type": "single",
+   "scenario": "Groundedness scores fell after a policy update. The model version and prompt have not changed.",
+   "question": "What should you check first?",
+   "options": [
+    {
+     "text": "The Azure AI Search indexer run history",
+     "why": "Correct. A failed or incomplete ingestion leaves stale content for retrieval."
+    },
+    {
+     "text": "The VNet address space",
+     "why": "Address ranges do not affect groundedness."
+    },
+    {
+     "text": "The resource group tags",
+     "why": "Tags do not affect answers."
+    },
+    {
+     "text": "The Bing grounding key",
+     "why": "This is unrelated to the policy index."
+    }
+   ],
+   "answer": [
+    0
+   ],
+   "explanation": "Check data ingestion when quality drops after content changes.",
+   "objective": "1.3.3"
+  },
+  {
+   "id": "plan-mon-3",
+   "type": "single",
+   "question": "Where can you inspect each model call, tool call and approval for a single agent run?",
+   "options": [
+    {
+     "text": "Traces in Application Insights",
+     "why": "Correct. Tracing records the spans of each run."
+    },
+    {
+     "text": "Subscription activity log",
+     "why": "The activity log shows control-plane operations, not run details."
+    },
+    {
+     "text": "Network security group flow logs",
+     "why": "These record network flows, not agent steps."
+    },
+    {
+     "text": "Azure Advisor",
+     "why": "Advisor gives recommendations and not run traces."
+    }
+   ],
+   "answer": [
+    1
+   ],
+   "explanation": "Tracing provides step-level visibility.",
+   "objective": "1.3.2"
+  },
+  {
+   "id": "plan-mon-4",
+   "type": "single",
+   "question": "Search queries on an Azure AI Search service are throttled during peak hours while the index size is small. What should you add?",
+   "options": [
+    {
+     "text": "Replicas",
+     "why": "Correct. Replicas serve queries and improve availability."
+    },
+    {
+     "text": "Partitions",
+     "why": "Partitions add storage and indexing capacity, not query capacity."
+    },
+    {
+     "text": "A second index with the same data",
+     "why": "This does not increase query capacity of the service."
+    },
+    {
+     "text": "A larger embedding model",
+     "why": "This does not address query throttling."
+    }
+   ],
+   "answer": [
+    1
+   ],
+   "explanation": "Replicas scale query load and partitions scale storage.",
+   "objective": "1.3.3"
+  },
+  {
+   "id": "plan-mon-5",
+   "type": "single",
+   "question": "You want an alert when safety guardrails block an unusual number of requests. Which signals should you use?",
+   "options": [
+    {
+     "text": "Guardrail and content filter event metrics or logs with an alert rule",
+     "why": "Correct. Safety events are monitored through metrics and logs with alerts."
+    },
+    {
+     "text": "Disk space metrics",
+     "why": "These are unrelated."
+    },
+    {
+     "text": "The subscription owner list",
+     "why": "Ownership has no relation to blocked requests."
+    },
+    {
+     "text": "The model card",
+     "why": "The model card is documentation, not live monitoring."
+    }
+   ],
+   "answer": [
+    1
+   ],
+   "explanation": "Monitor safety events like any other operational signal.",
+   "objective": "1.3.2"
+  }
+ ]
+}

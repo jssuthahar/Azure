@@ -1,0 +1,240 @@
+---
+title: Enrich Content with Built-in and Custom Skills
+seoTitle: Search Enrichment with Built-in and Custom Skills | AI-103
+description: Add OCR, PII detection, a custom Web API skill and the Content Understanding skill to an Azure AI Search skillset and map the outputs into the index.
+answer: >-
+  A **skillset** in Azure AI Search is a chain of **skills** that enrich each document while an indexer runs. **Built-in skills** cover text (**PII Detection**, **Key Phrase Extraction**, **Text Split**, **Entity Recognition**), images (**OCR**, **Image Analysis**) and layout (the **Content Understanding** skill). A **custom skill** calls your own endpoint through the **Web API** skill. Each skill reads and writes nodes in an **enrichment tree**, and only what you map with **output field mappings** or **index projections** reaches the index.
+updated: 2026-11-25
+readingMinutes: 12
+keyTerms:
+  - term: Skill
+    definition: One enrichment step in a skillset. It has a context, inputs and outputs.
+  - term: Enrichment tree
+    definition: The in-memory structure for one document where each skill adds its outputs as nodes, such as /document/content or /document/normalized_images/*.
+  - term: Context
+    definition: The level at which a skill runs once per item, for example once per document or once per image.
+  - term: Output field mapping
+    definition: An indexer setting that copies a node in the enrichment tree to a field in the index.
+  - term: Web API skill
+    definition: A custom skill that sends batches of records to an HTTP endpoint you own, often an Azure Function, and reads the results back.
+  - term: Content Understanding skill
+    definition: A built-in skill that connects to your Content Understanding resource for layout-aware analysis and semantic chunking.
+  - term: Enrichment cache
+    definition: Stored skill outputs that let a rerun skip skills whose inputs haven't changed.
+interview:
+  - level: beginner
+    q: What is a skillset?
+    a: >-
+      A list of skills that run on each document during indexing. Each skill reads something from the document, such as text or an image, and adds a new piece of information, such as the text found by OCR or a masked copy with personal data removed.
+    followUps: []
+  - level: intermediate
+    q: Your PII Detection skill runs but the index has no masked text. What's wrong?
+    a: >-
+      Skill outputs live in the enrichment tree. They only reach the index when an output field mapping, or an index projection for chunks, points at an index field. I'd add the mapping, make sure the index has a matching field, then reset and rerun the indexer.
+    followUps:
+      - q: Which text should you index if raw phone numbers mustn't be searchable?
+        a: >-
+          The masked output, not the original content field. Chunk and embed the masked text so the raw values never reach the index.
+  - level: experienced
+    q: When would you write a custom Web API skill instead of using a built-in one?
+    a: >-
+      When I need logic no built-in skill has: looking up an internal product code, calling a private classifier, or using a third-party embedding model. The skill is an HTTPS endpoint, usually a Function, that takes a batch of records and returns the same record IDs with data, errors and warnings.
+    followUps: []
+  - level: scenario
+    q: A custom skill times out on large batches. What do you change?
+    a: >-
+      Lower the batch size so each call does less work, raise the timeout within the allowed range, and make the function faster or scale it out. I'd also return warnings for records that fail instead of failing the whole batch, and check the indexer's execution history.
+    followUps: []
+  - level: architecture
+    q: How do you decide between the Content Understanding skill and plain Text Split with OCR?
+    a: >-
+      If the documents have tables, sections and figures that matter, the Content Understanding skill chunks along that layout and describes figures, which keeps rows and headings together. For simple prose, OCR plus Text Split is cheaper and enough. I'd compare retrieval quality on real questions before paying for the richer option.
+    followUps: []
+revision:
+  keyPoints:
+    - A skillset is an ordered chain of skills. Order comes from the inputs and outputs, not from the list order alone.
+    - Built-in skills cover text, images and layout. Custom skills call your HTTPS endpoint (Web API skill).
+    - Skill outputs live in the enrichment tree until you map them to the index.
+    - Output field mappings handle one-to-one fields. Index projections handle one-to-many, such as chunks.
+    - Rerun after a skillset change needs an indexer reset, and an enrichment cache saves repeat skill cost.
+    - Content Understanding skill gives layout-aware chunks and figure descriptions.
+  mistakes:
+    - Computing an enrichment and never mapping it to an index field.
+    - Indexing the original text when the goal was a masked copy.
+    - Forgetting that a custom skill must return every recordId it received.
+  examTips:
+    - '"Personal data must not be searchable" = **PII Detection** and index the **masked** text.'
+    - '"Logic that isn''t built in" = a **Web API** custom skill, often an **Azure Function**.'
+    - '"Tables and sections must stay together in chunks" = the **Content Understanding** skill.'
+  quick:
+    - q: What do you call the structure that holds skill outputs for one document?
+      a: The enrichment tree.
+    - q: Which skill calls your own HTTP endpoint?
+      a: The Web API (custom) skill.
+    - q: Which setting copies an enrichment to an index field?
+      a: An output field mapping.
+    - q: Which skill reads text from images?
+      a: The OCR skill.
+    - q: What gives one search document per chunk?
+      a: Index projections.
+references:
+  - title: Skillsets in Azure AI Search
+    url: https://learn.microsoft.com/azure/search/cognitive-search-working-with-skillsets
+  - title: Built-in skills in Azure AI Search
+    url: https://learn.microsoft.com/azure/search/cognitive-search-predefined-skills
+  - title: Custom Web API skill
+    url: https://learn.microsoft.com/azure/search/cognitive-search-custom-skill-web-api
+  - title: PII Detection skill
+    url: https://learn.microsoft.com/azure/search/cognitive-search-skill-pii-detection
+  - title: Content Understanding prebuilt analyzers
+    url: https://learn.microsoft.com/azure/ai-services/content-understanding/concepts/prebuilt-analyzers
+related:
+  - ingest-and-index-content
+  - semantic-hybrid-and-vector-search
+  - content-understanding-document-extraction
+---
+
+## Start with a question
+
+<Story question="Your support chats are full of phone numbers and card digits, and a legacy product code needs a lookup. How do you clean and enrich the text before it's searchable?">
+
+Think of a mailroom. Before a letter reaches a desk, someone slits it open, a second person blacks out the account numbers, a third stamps the department from a lookup table, and then it goes into the pigeonholes.
+
+A **skillset** is that mailroom line. Each worker is a **skill**. Some are standard (read the photo, black out personal data). Some are yours (stamp the department from our own table). The pigeonhole is the index, but a stamp that never gets written down on the letter never reaches it.
+
+</Story>
+
+## Explain it like I'm 10
+
+<Eli10>
+
+You and your friends make a photo album. One friend writes captions, one covers faces with stickers, and one adds the date from a calendar you made yourselves.
+
+Each friend writes on a sticky note. If nobody sticks the note onto the album page, the caption is lost. That sticking step is the mapping.
+
+</Eli10>
+
+## The technical explanation
+
+A skillset sits between document cracking and the index. For each document the indexer builds an **enrichment tree**, a tree of nodes that starts with `/document/content` (text) and `/document/normalized_images/*` (images). Every skill reads some nodes and **adds new nodes**.
+
+### Anatomy of a skill
+
+| Part | What it means |
+| --- | --- |
+| `@odata.type` | Which skill it is |
+| `context` | How often it runs: once per `/document`, or once for each item such as `/document/normalized_images/*` |
+| `inputs` | Which nodes it reads (`source`) |
+| `outputs` | The nodes it writes (`targetName`) |
+
+Execution order follows the data: a skill that reads another skill's output waits for it.
+
+### Built-in skills by job
+
+| Job | Skills |
+| --- | --- |
+| Read images | **OCR**, Image Analysis |
+| Shape text | **Text Split** (chunks), Text Merge (put OCR text back with the body) |
+| Understand text | Key Phrase Extraction, Entity Recognition, Sentiment, Language Detection, Text Translation, Custom Entity Lookup |
+| Protect data | **PII Detection** (finds personal data, returns a masked copy) |
+| Vectors | **Azure OpenAI Embedding** (and Azure Vision multimodal embeddings, in preview) |
+| Layout and chunking | **Content Understanding** skill (tables, sections, figures, semantic chunks) |
+| Generative | GenAI Prompt (a Foundry chat model in the pipeline) |
+
+Some skills run on Microsoft-hosted models and need an attached Foundry resource for billing. Others, such as the embedding and Content Understanding skills, call a resource and deployment you own.
+
+### Custom skills: the Web API skill
+
+When no built-in skill does what you need, point a **Web API skill** at your own HTTPS endpoint. The service sends a batch of records, and your code returns one result per `recordId`:
+
+```json
+{ "@odata.type": "#Microsoft.Skills.Custom.WebApiSkill",
+  "uri": "https://func-skills.azurewebsites.net/api/lookup",
+  "httpMethod": "POST", "batchSize": 10, "timeout": "PT30S",
+  "context": "/document",
+  "inputs":  [ { "name": "text", "source": "/document/content" } ],
+  "outputs": [ { "name": "productCode", "targetName": "productCode" } ] }
+```
+
+```json
+{ "values": [ { "recordId": "r1", "data": { "productCode": "WM-2210" }, "errors": null, "warnings": null } ] }
+```
+
+Return **every** `recordId` you received, report problems in `errors` or `warnings` per record, and secure the endpoint (a function key, or Microsoft Entra ID authentication on the skill). Azure Functions is the common home for it.
+
+### Getting enrichments into the index
+
+A skill output is only a node in a temporary tree. To keep it, you map it:
+
+- **Output field mappings** on the indexer copy one node to one index field, such as `/document/maskedText` to `masked_text`.
+- **Index projections** on the skillset create **one search document per item** (each chunk) and set the parent key. Use these with Text Split.
+
+If personal data must not be searchable, split and embed the **masked** text, and don't map the original `content` to a searchable field.
+
+```json
+"outputFieldMappings": [
+  { "sourceFieldName": "/document/maskedText", "targetFieldName": "masked_text" }
+]
+```
+
+### Cost and reruns
+
+Skills that call models cost money for every document, every run. Turn on an **enrichment cache** so a rerun reuses outputs whose inputs didn't change. When you change a skillset, **reset** the indexer, because it won't revisit files it already processed.
+
+<Flow
+  caption="A skillset line for one scanned document"
+  steps={[
+    { title: 'Read', text: 'OCR reads the text from the page images.' },
+    { title: 'Merge', text: 'Text Merge puts the OCR text back with the body text.' },
+    { title: 'Protect', text: 'PII Detection returns a masked copy.' },
+    { title: 'Look up', text: 'A Web API skill adds the product code from your own system.' },
+    { title: 'Map', text: 'Output mappings and projections write the fields into the index.' },
+  ]}
+/>
+
+<TryIt labs="agt-extract-index-pipeline" text="Build a skillset in the lab and watch OCR change what the indexer can read." />
+
+<Callout type="exam">
+"A skill ran but the data isn't in the index" means a missing **output field mapping** (or **index projection**). "Custom logic" means a **Web API** skill, usually an **Azure Function**, and the response must repeat every **recordId**. "Keep tables and headings together in chunks" points to the **Content Understanding** skill, and "mask personal data" to **PII Detection**.
+</Callout>
+
+<DeepDive title="Knowledge store and debug sessions">
+
+A skillset can also write enrichments outside the index with a **knowledge store**: tables, JSON objects or image files in Azure Storage. It's useful for analytics, or to inspect what a skill produced without paying to query the index.
+
+When a skill's output looks wrong, use a **debug session** in the portal. It runs one document through the skillset and shows the enrichment tree, node by node, so you can see where a value went missing and test a changed skill before you rerun the whole indexer.
+
+Sensitive data adds one more habit: apply PII detection before the embedding skill, so the vector is made from the masked text too.
+
+</DeepDive>
+
+## Real-world business scenario
+
+<Scenario
+  company="Fabrikam Retail (fictional)"
+  industry="Retail"
+  problem="Support chat exports contained card digits and phone numbers, and every article mentioned legacy product codes that the agent had to translate by hand."
+  service="A skillset with OCR for screenshots, PII Detection, Text Split and an embedding skill, plus a Web API skill that calls an Azure Function to translate legacy codes. The indexer maps masked_text and product_code into the index."
+  why="Masking before chunking keeps personal data out of both the text and the vectors, and the custom skill adds a field no built-in skill could."
+  outcome="The assistant can filter by product code and cites chat excerpts with no personal data. The privacy review passed with no changes to the pipeline."
+/>
+
+## When to use it and when not to
+
+<UseWhen
+  use={[
+    "You must read text in images, remove personal data or add fields before documents are searchable.",
+    "You need domain logic during ingestion, such as code lookups, and can host it as an HTTPS endpoint.",
+    "Documents have tables and figures that fixed-length chunking would cut apart.",
+  ]}
+  avoid={[
+    "The content is clean text with no special needs. Text Split and an embedding skill are enough.",
+    "You need typed fields with confidence from each document. Use Content Understanding directly.",
+    "The logic needs seconds per record. Do it offline and upload the result instead.",
+  ]}
+  alternatives={[
+    "<strong>Preprocess with Content Understanding</strong> and index the Markdown.",
+    "<strong>Push model</strong> with your own enrichment code before upload.",
+    "<strong>Knowledge store</strong> when the enrichments are for analytics, not search.",
+  ]}
+/>

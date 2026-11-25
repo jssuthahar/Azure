@@ -1,0 +1,147 @@
+{
+ "cert": "ai-103",
+ "domain": 3,
+ "topic": "image-generation-and-editing",
+ "questions": [
+  {
+   "id": "cv-img-1",
+   "type": "single",
+   "question": "A marketing application uses a gpt-image deployment to replace the sky in an existing product photo. All other parts of the photo must remain unchanged. What should the application send with the edit request?",
+   "options": [
+    {
+     "text": "The image and a JPEG mask with the sky area in black",
+     "why": "A mask must be a PNG with an alpha channel. Transparency, not colour, identifies the editable area."
+    },
+    {
+     "text": "A new generation request with the size set to auto",
+     "why": "A generation request creates a new image and does not preserve the original photo."
+    },
+    {
+     "text": "The image and a prompt that describes the new sky only",
+     "why": "The prompt alone does not restrict the model to one area, so other parts of the image can change."
+    },
+    {
+     "text": "The image, a PNG mask of the same dimensions with the sky area transparent, and a prompt",
+     "why": "Correct. The transparent area of the mask identifies the region the model may change."
+    }
+   ],
+   "answer": [
+    3
+   ],
+   "explanation": "For a mask-based edit, supply the image, a PNG mask with the same dimensions in which the editable area is transparent, and a prompt that describes the change.",
+   "objective": "3.1.3"
+  },
+  {
+   "id": "cv-img-2",
+   "type": "single",
+   "question": "A web application must generate a company logo that has a transparent background by using a gpt-image deployment. Which output format must the request specify?",
+   "options": [
+    {
+     "text": "PNG",
+     "why": "Correct. A transparent background requires PNG output."
+    },
+    {
+     "text": "WEBP",
+     "why": "WEBP is not supported as an output format for gpt-image models in Azure OpenAI."
+    },
+    {
+     "text": "JPEG",
+     "why": "JPEG does not support transparency."
+    },
+    {
+     "text": "GIF",
+     "why": "GIF is not an output format offered by the image generation API."
+    }
+   ],
+   "answer": [
+    0
+   ],
+   "explanation": "Set output_format to png and background to transparent. JPEG cannot store transparency.",
+   "objective": "3.1.5"
+  },
+  {
+   "id": "cv-img-3",
+   "type": "single",
+   "question": "An application calls the images generation API of a gpt-image-1 deployment and tries to read a download URL from the response. The property is empty. What is the cause?",
+   "options": [
+    {
+     "text": "The application must enable the URL option in the guardrail",
+     "why": "Guardrails classify content. They do not control how an image is returned."
+    },
+    {
+     "text": "gpt-image models return the image only as base64-encoded data",
+     "why": "Correct. The application must decode the b64_json value and save it as a file."
+    },
+    {
+     "text": "The prompt is too long to return a URL",
+     "why": "Prompt length does not control the response format."
+    },
+    {
+     "text": "The deployment must use the Standard deployment type to return URLs",
+     "why": "The deployment type does not change the response format."
+    }
+   ],
+   "answer": [
+    1
+   ],
+   "explanation": "gpt-image models return base64 image data. Applications decode it themselves, because no temporary URL is provided.",
+   "objective": "3.1.1"
+  },
+  {
+   "id": "cv-img-4",
+   "type": "single",
+   "question": "A solution must create five alternative banner images from one prompt in a single request at the lowest cost per request. Which settings should the developer use?",
+   "options": [
+    {
+     "text": "Five separate requests with n set to 1 and quality set to high",
+     "why": "This costs more and takes longer than one request with n set to 5 at low quality."
+    },
+    {
+     "text": "n set to 5 and quality set to high",
+     "why": "High quality increases cost and generation time."
+    },
+    {
+     "text": "n set to 15 and quality set to low",
+     "why": "The value of n must be between 1 and 10."
+    },
+    {
+     "text": "n set to 5 and quality set to low",
+     "why": "Correct. n sets the number of images (1 to 10) and a low quality setting reduces cost and time."
+    }
+   ],
+   "answer": [
+    3
+   ],
+   "explanation": "n accepts 1 to 10 images per request, and quality accepts low, medium or high. Lower quality is cheaper and faster.",
+   "objective": "3.1.5"
+  },
+  {
+   "id": "cv-img-5",
+   "type": "single",
+   "question": "A developer edits a photo of a staff member and notices that the face and the logo on the shirt change slightly after every edit. The developer must keep these details as close to the original as possible. Which setting should the developer change?",
+   "options": [
+    {
+     "text": "Remove the prompt from the request",
+     "why": "An edit request requires a prompt that describes the change."
+    },
+    {
+     "text": "Set input_fidelity to high",
+     "why": "Correct. High input fidelity preserves faces, logos and fine details of the input image more closely."
+    },
+    {
+     "text": "Set n to 10",
+     "why": "More images give more variations, but each one can still change details."
+    },
+    {
+     "text": "Set the output format to JPEG",
+     "why": "The format affects file size and transparency, not how closely details are preserved."
+    }
+   ],
+   "answer": [
+    1
+   ],
+   "explanation": "The input_fidelity setting controls how closely an edit follows the details of the input image. High keeps faces, logos and text closer to the original.",
+   "objective": "3.1.3"
+  }
+ ]
+}

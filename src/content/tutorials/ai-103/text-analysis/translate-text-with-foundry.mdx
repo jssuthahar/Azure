@@ -1,0 +1,197 @@
+---
+title: Translate Text with Translator or a Language Model
+seoTitle: Azure Translator vs LLM Translation | AI-103
+description: Translate with Azure Translator or an LLM flow, protect brand terms with a dynamic dictionary, and choose by cost, speed, consistency and tone. AI-103 4.1.3.
+answer: >-
+  Use **Azure Translator in Foundry Tools** when you want fast, consistent, per-character translation: it **detects the source language**, returns **several target languages in one call**, and keeps terms right with a **dynamic dictionary** (no training) or **Custom Translator** (trained on your sentence pairs). A multi-service resource needs the **region** sent with the key. Use an **LLM translation flow** when tone, context or formatting rules matter: you write them in plain words in the instructions. It costs more, can vary run to run, and should be tested with an evaluation set before release.
+updated: 2026-11-25
+readingMinutes: 9
+keyTerms:
+  - term: Azure Translator
+    definition: The Foundry Tool for text and document translation, with language detection and support for many languages in one request.
+  - term: Dynamic dictionary
+    definition: Markup in a Translator request that fixes how a term is translated, or keeps it unchanged. No training needed.
+  - term: Custom Translator
+    definition: A feature where you train a translation model on your own sentence pairs so domain terms and style come out right.
+  - term: LLM translation flow
+    definition: Translation done by a model deployment, with tone, glossary and formatting rules written in the instructions.
+  - term: Region header
+    definition: The Ocp-Apim-Subscription-Region header, required when a multi-service resource key calls Translator.
+interview:
+  - level: beginner
+    q: How do you translate one message into three languages?
+    a: >-
+      One call to Azure Translator with three target languages. I leave the source out so it detects it, and I get all three translations back together.
+    followUps: []
+  - level: intermediate
+    q: Translator keeps translating our product name. What do you do?
+    a: >-
+      I add a dynamic dictionary entry in the request for that name, so it stays as written. If the whole domain has terms like that, I'd train a Custom Translator model on our own sentence pairs instead.
+    followUps: []
+  - level: experienced
+    q: How do you choose between Translator and a model for translation?
+    a: >-
+      I compare cost, consistency and tone. Translator is quick, cheap per character and gives the same output each time. A model follows tone and format rules but costs more and can vary, so I'd run an evaluation on real messages and check term accuracy and tone before I'd trust it.
+    followUps: []
+  - level: scenario
+    q: A bank wants formal Hindi letters that keep numbers as digits. What's your design?
+    a: >-
+      A model deployment with instructions for formal tone, digits and the product name in English, temperature 0, and an evaluation set of real letters checked by a native reviewer. I'd keep Translator as the cheap path for messages where tone doesn't matter.
+    followUps: []
+revision:
+  keyPoints:
+    - Translator returns many target languages from one request and can detect the source.
+    - Dynamic dictionary needs no training. Custom Translator needs sentence pairs.
+    - A multi-service resource needs the region header with the key.
+    - LLM flows follow tone rules written in plain language but cost more and can vary.
+    - Evaluate an LLM flow before you ship it.
+  mistakes:
+    - Calling Translator once per target language.
+    - Training Custom Translator when a dynamic dictionary would do.
+    - Forgetting the region on a multi-service resource.
+  examTips:
+    - '"Brand name must stay unchanged, no training" = **dynamic dictionary**.'
+    - '"Formal tone, rules in plain words" = **LLM translation flow**.'
+    - '"Millions of messages, lowest cost, same output" = **Translator**.'
+  quick:
+    - q: How many target languages can one Translator call return?
+      a: Several.
+    - q: What do you add to keep a brand name unchanged without training?
+      a: A dynamic dictionary entry.
+    - q: Which header carries the region for a multi-service resource?
+      a: Ocp-Apim-Subscription-Region.
+    - q: What should you do before shipping an LLM translation flow?
+      a: Evaluate it on a test set.
+    - q: Which feature trains on your own sentence pairs?
+      a: Custom Translator.
+references:
+  - title: What is Azure Translator
+    url: https://learn.microsoft.com/azure/ai-services/translator/text-translation/overview
+  - title: Dynamic dictionary in Translator
+    url: https://learn.microsoft.com/azure/ai-services/translator/text-translation/how-to/prevent-translation
+  - title: Custom Translator overview
+    url: https://learn.microsoft.com/azure/ai-services/translator/custom-translator/overview
+related:
+  - sentiment-safety-and-sensitive-content
+  - speech-translation-and-audio-reasoning
+---
+
+## Start with a question
+
+<Story question="Should your refund email say 'Contoso Pay' or 'Contoso Payer' in French?">
+
+Contoso Pay sends refund messages to customers in Chennai, Delhi and Lyon. A translation service turns the English into Tamil, Hindi and French in under a second. The text reads well. But the product name came out translated like ordinary words, and in French it's now "Contoso Payer".
+
+That's the whole lesson in one example. Translation is easy to get fast. Getting the **terms** and the **tone** right is the work.
+
+</Story>
+
+## Explain it like I'm 10
+
+<Eli10>
+
+**Azure Translator** is a speedy interpreter who has translated millions of sentences. Ask for three languages at once and you get three answers right away. But if your pet's name is "Biscuit", they might translate it to the word for a cookie.
+
+A **dynamic dictionary** is a sticky note: "Biscuit stays Biscuit".
+
+An **LLM translation flow** is a thoughtful friend. You say "be polite, use digits for numbers" and they do it. They're slower, and now and then they say it a bit differently, so you check their work.
+
+</Eli10>
+
+## The technical explanation
+
+### Azure Translator
+
+Azure Translator in Foundry Tools translates text and documents. Key behaviors:
+
+- **Language detection**: leave `from` out and the response includes the detected language and a score.
+- **Several targets per call**: pass a list of target languages and get one result per language.
+- **Billing per character**, and very low latency.
+- **Same input, same output**, which helps testing.
+
+```python
+from azure.core.credentials import AzureKeyCredential
+from azure.ai.translation.text import TextTranslationClient
+
+client = TextTranslationClient(credential=AzureKeyCredential(KEY), region="eastus")
+result = client.translate(body=[message], to_language=["ta", "hi", "fr"])
+for t in result[0].translations:
+    print(t.to, t.text)
+```
+
+A **multi-service** Foundry resource needs the **region** sent with the key (the `Ocp-Apim-Subscription-Region` header, or `region=` in the SDK). A single-service Translator resource doesn't.
+
+### Protect your terms
+
+| Need | Use | Training |
+| --- | --- | --- |
+| Keep one or two names unchanged, or fix a few translations | **Dynamic dictionary** in the request | None |
+| A whole domain's vocabulary and style, medical or legal | **Custom Translator** | Sentence pairs in your language pair |
+
+The dynamic dictionary is markup inside the text:
+
+```text
+Your <mstrans:dictionary translation="Contoso Pay">Contoso Pay</mstrans:dictionary> refund will arrive in 2 working days.
+```
+
+### LLM translation flows
+
+Put the rules in the instructions of a model deployment:
+
+```text
+Translate the user's text into Hindi. Tone: formal.
+Keep "Contoso Pay" in English. Keep numbers as digits. Return only the translation.
+```
+
+Set temperature to 0 for steadier output. The model follows tone and formatting rules that Translator can't, and it can use context you pass in. The price is cost per token, slower replies and some variation, so build an **evaluation** set of real messages and check accuracy, tone and terms before release.
+
+| | Azure Translator | LLM flow |
+| --- | --- | --- |
+| Cost | Per character, low | Per token, higher |
+| Speed | Very fast | Slower |
+| Consistency | Same every time | Can vary |
+| Tone and format | Limited | Follows instructions |
+| Your terms | Dictionary, Custom Translator | Glossary in the prompt |
+
+<TryIt labs="agt-text-translate" text="Translate into three languages in one call, protect Contoso Pay with a dynamic dictionary, then compare with a formal LLM translation." />
+
+<Callout type="exam">
+Cost, speed and steadiness at volume point to **Azure Translator**. Words like **formal tone**, **keep numbers as digits** or **follow these style rules** point to an **LLM flow**. "Keep the product name unchanged" without training is a **dynamic dictionary**. A **multi-service** resource error about the region means the **region header** is missing.
+</Callout>
+
+<DeepDive title="Custom Translator or a dynamic dictionary?">
+
+A dynamic dictionary is a per-request override. It's perfect for a handful of names, but you must send it with every call. Custom Translator trains a model on parallel sentences, so it learns context and style across thousands of terms. Pick the dictionary for the quick fix, and Custom Translator when your content has its own language, like medical device manuals.
+
+</DeepDive>
+
+## Real-world business scenario
+
+<Scenario
+  company="Contoso Pay (fictional)"
+  industry="Payments"
+  problem="Refund and dispute messages in English had to go out in Tamil, Hindi and French. The brand name was translated, and compliance wanted a formal tone for dispute letters."
+  service="Azure Translator with a dynamic dictionary for routine refund messages, and a model deployment with a formal-tone instruction for dispute letters, tested on 200 reviewed samples."
+  why="Translator handled the volume cheaply and steadily. The model was used only where tone changed the outcome, and it was checked before release."
+  outcome="Routine messages went out in seconds in three languages with the brand intact, and the dispute letters passed review by native-speaking staff."
+/>
+
+## When to use it and when not to
+
+<UseWhen
+  use={[
+    'You translate large volumes and need the same output for the same input (Translator).',
+    'A brand or product name must stay as written (dynamic dictionary).',
+    'The text needs a set tone or format, and you can test it (LLM flow).',
+  ]}
+  avoid={[
+    'You call Translator once for each target language.',
+    'You ship an LLM translation flow without an evaluation set.',
+    'You train Custom Translator to protect two product names.',
+  ]}
+  alternatives={[
+    '<strong>Custom Translator</strong> for a large domain vocabulary.',
+    '<strong>Document translation</strong> for whole files that must keep their layout.',
+    '<strong>Speech translation</strong> when the input is audio.',
+  ]}
+/>

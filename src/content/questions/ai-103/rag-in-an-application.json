@@ -1,0 +1,153 @@
+{
+ "cert": "ai-103",
+ "domain": 2,
+ "topic": "rag-in-an-application",
+ "questions": [
+  {
+   "id": "agt-g-rag-in-an-appl-1",
+   "type": "single",
+   "scenario": "A returns policy changes every week. The chatbot must answer from the current policy and cite the document.",
+   "question": "Which approach should you use?",
+   "options": [
+    {
+     "text": "Retrieval-augmented generation that searches an index refreshed from the policy documents",
+     "why": "Correct. Updating the index updates the answers without retraining."
+    },
+    {
+     "text": "Fine-tune the model each week on the new policy",
+     "why": "Fine-tuning is slow and costly, and is not a reliable way to add changing facts."
+    },
+    {
+     "text": "Increase the temperature of the model",
+     "why": "Temperature changes variety of wording, not knowledge."
+    },
+    {
+     "text": "Raise the max output tokens",
+     "why": "This changes answer length and does not add policy content."
+    }
+   ],
+   "answer": [
+    0
+   ],
+   "explanation": "RAG supplies current facts at query time. Refreshing the index is far cheaper than retraining a model.",
+   "objective": "2.1.2"
+  },
+  {
+   "id": "agt-g-rag-in-an-appl-2",
+   "type": "single",
+   "scenario": "Users search for exact product codes such as KX-4420 and also ask paraphrased questions such as \"my kettle stopped heating\".",
+   "question": "Which retrieval method best supports both?",
+   "options": [
+    {
+     "text": "A full-table scan in the application",
+     "why": "It does not scale and does not rank by relevance."
+    },
+    {
+     "text": "Hybrid search that combines keyword and vector queries",
+     "why": "Correct. Keywords catch exact codes and vectors catch meaning."
+    },
+    {
+     "text": "Keyword search only",
+     "why": "Keyword search misses paraphrased questions."
+    },
+    {
+     "text": "Vector search only",
+     "why": "Vector search can miss exact identifiers."
+    }
+   ],
+   "answer": [
+    1
+   ],
+   "explanation": "Hybrid search merges keyword and vector results, which suits mixed query styles.",
+   "objective": "2.1.2"
+  },
+  {
+   "id": "agt-g-rag-in-an-appl-3",
+   "type": "single",
+   "scenario": "Retrieved chunks often start mid-sentence, and answers lack the surrounding context.",
+   "question": "What should you adjust in the ingestion process?",
+   "options": [
+    {
+     "text": "The temperature of the chat model",
+     "why": "Temperature does not change how documents are split."
+    },
+    {
+     "text": "The number of projects in the resource",
+     "why": "Projects do not affect chunking."
+    },
+    {
+     "text": "The chunk size and overlap",
+     "why": "Correct. Larger chunks or more overlap keep related text together."
+    },
+    {
+     "text": "The deployment type of the chat model",
+     "why": "Deployment type affects processing location and billing, not chunk boundaries."
+    }
+   ],
+   "answer": [
+    2
+   ],
+   "explanation": "Chunking decides what the retriever can return. Tune size and overlap and test with real questions.",
+   "objective": "2.1.2"
+  },
+  {
+   "id": "agt-g-rag-in-an-appl-4",
+   "type": "multi",
+   "scenario": "A support bot must avoid inventing policy details when retrieval returns nothing useful.",
+   "question": "Which two actions should you take? Select two.",
+   "options": [
+    {
+     "text": "Return source identifiers with each chunk so the answer can cite them",
+     "why": "Correct. Citations let users and evaluators check the answer."
+    },
+    {
+     "text": "Raise the temperature so the model explores more answers",
+     "why": "A higher temperature increases the chance of invented details."
+    },
+    {
+     "text": "Remove the instructions so the model has more freedom",
+     "why": "Removing instructions makes ungrounded answers more likely."
+    },
+    {
+     "text": "Instruct the model to answer only from the supplied sources and say it does not know otherwise",
+     "why": "Correct. The instruction sets the behaviour when sources are missing."
+    }
+   ],
+   "answer": [
+    0,
+    3
+   ],
+   "explanation": "Grounding combines clear instructions with sources that can be cited.",
+   "objective": "2.1.2"
+  },
+  {
+   "id": "agt-g-rag-in-an-appl-5",
+   "type": "single",
+   "scenario": "An index stores vectors created with text-embedding-3-small. Queries return poor matches after a developer embeds the query with a different embedding model.",
+   "question": "What is the cause?",
+   "options": [
+    {
+     "text": "Query vectors and index vectors must come from the same embedding model",
+     "why": "Correct. Vectors from different models are not comparable."
+    },
+    {
+     "text": "The chat model has too little quota",
+     "why": "The chat model is not involved in vector similarity."
+    },
+    {
+     "text": "Hybrid search cannot use vectors",
+     "why": "Hybrid search does combine vectors with keywords."
+    },
+    {
+     "text": "The index has too many replicas",
+     "why": "Replicas affect availability and query volume, not relevance of vectors."
+    }
+   ],
+   "answer": [
+    0
+   ],
+   "explanation": "Use the same embedding model for ingestion and for queries.",
+   "objective": "2.1.2"
+  }
+ ]
+}

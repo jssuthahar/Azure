@@ -1,0 +1,148 @@
+{
+ "cert": "ai-103",
+ "domain": 5,
+ "topic": "semantic-hybrid-and-vector-search",
+ "questions": [
+  {
+   "id": "x5-sem-1",
+   "type": "single",
+   "question": "Users search an HR index for \"cab reimbursement\", but the policy text says \"taxi fares are refunded\". Keyword queries return no results. What should you add first?",
+   "options": [
+    {
+     "text": "A filter on the department field",
+     "why": "Filters narrow results. They do not add synonyms."
+    },
+    {
+     "text": "A vector query that uses an embedding of the question",
+     "why": "Correct. Vector search matches meaning, so related wording is found."
+    },
+    {
+     "text": "A larger top value on the keyword query",
+     "why": "A larger result count does not match words that do not appear."
+    },
+    {
+     "text": "A scoring profile that boosts the title field",
+     "why": "Boosting reorders matches. It cannot create matches for words that are absent."
+    }
+   ],
+   "answer": [
+    1
+   ],
+   "explanation": "Keyword search matches tokens. Vector search finds semantically similar text.",
+   "objective": "5.1.2"
+  },
+  {
+   "id": "x5-sem-2",
+   "type": "single",
+   "question": "A hybrid query returns results with scores such as 0.0328 and 0.0164. What explains the small values?",
+   "options": [
+    {
+     "text": "The query exceeded the service's query rate limit",
+     "why": "Throttling returns an error. It does not alter scores."
+    },
+    {
+     "text": "The results are merged and scored by using Reciprocal Rank Fusion",
+     "why": "Correct. RRF scores are sums of reciprocal ranks, so they are small and unrelated to BM25 or similarity values."
+    },
+    {
+     "text": "The semantic ranker returned scores on a 0 to 4 scale",
+     "why": "Reranker scores are reported on a 0 to 4 scale, and these values are not."
+    },
+    {
+     "text": "The vector index uses scalar quantization",
+     "why": "Quantization affects storage and recall, not the scale of fused scores."
+    }
+   ],
+   "answer": [
+    1
+   ],
+   "explanation": "Hybrid queries merge keyword and vector lists with RRF.",
+   "objective": "5.1.2"
+  },
+  {
+   "id": "x5-sem-3",
+   "type": "single",
+   "question": "A query that uses queryType semantic fails because the index has no semantic configuration. Which statement about the semantic ranker is correct?",
+   "options": [
+    {
+     "text": "It reranks at most the top 50 results of the first-stage query and needs a semantic configuration on the index",
+     "why": "Correct. It is a second-stage reranker that reads the fields named in the configuration."
+    },
+    {
+     "text": "It replaces the vectorizer, so no embedding model is needed",
+     "why": "It does not create embeddings. Vector queries still need them."
+    },
+    {
+     "text": "It retrieves documents that the keyword and vector queries did not return",
+     "why": "The ranker only reorders results that the first stage returned."
+    },
+    {
+     "text": "It runs on the whole index before the keyword query",
+     "why": "It is applied after the first-stage query, to the top results only."
+    }
+   ],
+   "answer": [
+    0
+   ],
+   "explanation": "The semantic ranker is a second-stage reranker over the top 50.",
+   "objective": "5.1.2"
+  },
+  {
+   "id": "x5-sem-4",
+   "type": "single",
+   "question": "A support index must find exact error codes such as E-1074 and also match natural language descriptions. Vector-only queries return unrelated articles for codes. Which query type should you use?",
+   "options": [
+    {
+     "text": "Hybrid, with a keyword query and a vector query in one request",
+     "why": "Correct. Keyword matching keeps exact codes and vectors cover the descriptions."
+    },
+    {
+     "text": "Keyword only, with a synonym map for every code",
+     "why": "This does not cover free-form descriptions and is hard to maintain."
+    },
+    {
+     "text": "Vector only, with a larger k",
+     "why": "A larger k returns more neighbours but does not make codes match exactly."
+    },
+    {
+     "text": "Semantic ranker only, with no first-stage query",
+     "why": "The ranker needs first-stage results to reorder."
+    }
+   ],
+   "answer": [
+    0
+   ],
+   "explanation": "Hybrid search combines exact matching and meaning matching.",
+   "objective": "5.1.2"
+  },
+  {
+   "id": "x5-sem-5",
+   "type": "multi",
+   "question": "Documents were embedded with text-embedding-3-small. Which two statements about querying the vector field are correct?",
+   "options": [
+    {
+     "text": "Vector queries cannot be combined with keyword queries in one request",
+     "why": "They can, and that combination is a hybrid query."
+    },
+    {
+     "text": "A vector query can include filters that are applied before or after the nearest-neighbour search",
+     "why": "Correct. preFilter and postFilter modes control the order."
+    },
+    {
+     "text": "Any embedding model can be used for the query because all vectors are interchangeable",
+     "why": "Vectors from different models live in different spaces and give poor results."
+    },
+    {
+     "text": "Query text must be embedded with the same model, which a vectorizer on the index can do",
+     "why": "Correct. Vectors from different models are not comparable."
+    }
+   ],
+   "answer": [
+    1,
+    3
+   ],
+   "explanation": "The query and the documents must share an embedding model, and filters can be combined with vector queries.",
+   "objective": "5.1.2"
+  }
+ ]
+}

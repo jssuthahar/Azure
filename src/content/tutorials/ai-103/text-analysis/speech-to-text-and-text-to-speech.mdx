@@ -1,0 +1,197 @@
+---
+title: Speech to Text and Text to Speech for Agents
+seoTitle: Speech to Text, Text to Speech and Custom Speech | AI-103
+description: Give an agent a voice with Azure Speech. Cover speech to text, text to speech with SSML, phrase lists, custom speech, Voice Live. AI-103 4.2.1, 4.2.2.
+answer: >-
+  A voice agent is a loop you can swap piece by piece: **speech to text** turns the caller into words, the **model or agent** answers, and **text to speech** with a **neural voice** speaks the reply. **SSML** controls pauses, rate and pitch. When domain words come out wrong, try a **phrase list** first (no training). For many terms, accents or noisy lines, train a **custom speech** model and use its **endpoint ID**. For a live phone agent, **Voice Live** runs speech in, the model or agent, and speech out over one low-latency connection with noise suppression and turn detection built in.
+updated: 2026-11-25
+readingMinutes: 10
+keyTerms:
+  - term: Speech to text
+    definition: Azure Speech converting spoken audio into text, in real time or in batch.
+  - term: Text to speech
+    definition: Azure Speech turning text into spoken audio with a neural voice.
+  - term: SSML
+    definition: Speech Synthesis Markup Language. XML that sets the voice, pauses, rate, pitch and style of synthesized speech.
+  - term: Phrase list
+    definition: A short list of words and phrases that biases recognition toward them. No training required.
+  - term: Custom speech
+    definition: A speech recognition model trained on your text or labelled audio and called through a custom endpoint ID.
+  - term: Voice Live
+    definition: A real-time speech to speech interface for models and agents, with noise suppression, echo cancellation and end-of-turn detection.
+interview:
+  - level: beginner
+    q: How does a voice agent work?
+    a: >-
+      Speech to text turns what the caller says into text. The model or agent reads it and writes an answer. Text to speech turns the answer into audio and plays it back. Each of the three pieces can be swapped on its own.
+    followUps: []
+  - level: intermediate
+    q: Speech recognition keeps mishearing two drug names. What do you try?
+    a: >-
+      A phrase list with those two names. It needs no data and no training, and it boosts those words. If it's hundreds of terms or the audio is noisy, I'd train custom speech on related text or labelled audio.
+    followUps: []
+  - level: experienced
+    q: When do you move from the Speech SDK loop to Voice Live?
+    a: >-
+      When latency and natural turn-taking matter, like a phone line. Voice Live handles speech in, the model or agent and speech out over one connection, with noise suppression, echo cancellation and end-of-turn detection, so I'm not stitching three calls together and handling interruptions myself.
+    followUps: []
+  - level: scenario
+    q: Callers say the agent sounds rushed when it reads times and codes. What do you change?
+    a: >-
+      I'd send the reply as SSML instead of plain text: a break before the time, a slightly slower prosody rate for it, and say-as for codes. The words don't change, only the delivery.
+    followUps: []
+revision:
+  keyPoints:
+    - One voice turn is speech to text, model or agent, text to speech.
+    - Phrase list is the quick, no-training fix. Custom speech is for many terms, accents or noise.
+    - A custom speech model is used by setting its endpoint ID in the SpeechConfig.
+    - SSML controls pauses, rate, pitch and style of the spoken reply.
+    - Voice Live is the low-latency speech to speech option for live agents.
+  mistakes:
+    - Training custom speech for two misheard words.
+    - Using SSML and expecting it to fix recognition errors. It only shapes output.
+    - Stitching three slow calls together for a live phone line.
+  examTips:
+    - '"A few words misheard, no training" = **phrase list**.'
+    - '"Industry vocabulary, accents, noise" = **custom speech**.'
+    - '"Add a pause and slow the rate" = **SSML**.'
+  quick:
+    - q: What does SSML change?
+      a: How synthesized speech is delivered (pauses, rate, pitch, style).
+    - q: What do you set to use a custom speech model?
+      a: Its endpoint ID.
+    - q: What does Voice Live combine?
+      a: Speech in, the model or agent, and speech out on one connection.
+    - q: Which fix needs no training for a few words?
+      a: A phrase list.
+    - q: What turns the agent reply into spoken audio?
+      a: Text to speech with a neural voice.
+references:
+  - title: What is the Speech service
+    url: https://learn.microsoft.com/azure/ai-services/speech-service/overview
+  - title: Custom speech overview
+    url: https://learn.microsoft.com/azure/ai-services/speech-service/custom-speech-overview
+  - title: Improve recognition with phrase lists
+    url: https://learn.microsoft.com/azure/ai-services/speech-service/improve-accuracy-phrase-list
+  - title: Speech Synthesis Markup Language (SSML) overview
+    url: https://learn.microsoft.com/azure/ai-services/speech-service/speech-synthesis-markup
+  - title: Voice Live API overview
+    url: https://learn.microsoft.com/azure/ai-services/speech-service/voice-live
+related:
+  - speech-translation-and-audio-reasoning
+  - translate-text-with-foundry
+---
+
+## Start with a question
+
+<Story question="What happens if the pharmacy agent hears 'met for men' instead of Metformin?">
+
+Contoso Pharmacy wants a phone agent. A caller says, "I need a refill of Metformin 500." The speech model hears "met for men 500". The agent looks for a drug that doesn't exist, apologises, and the caller hangs up.
+
+Nothing is wrong with the agent's brain. The mistake happened one step earlier, at the ears, and every later step inherited it. A voice agent is only as good as its **speech in** and **speech out**.
+
+</Story>
+
+## Explain it like I'm 10
+
+<Eli10>
+
+A voice agent is a phone call with a robot receptionist.
+
+**Speech to text** is her ears and a notepad: she writes down what you say. **The model** is her brain: it decides what to answer. **Text to speech** is her mouth.
+
+If the notepad says "met for men", her brain tries to answer the wrong question. A **phrase list** is a sticky note beside the notepad: "Words you'll hear: Metformin, Atorvastatin". **SSML** is a tip for her mouth: "pause here, say the time slowly".
+
+</Eli10>
+
+## The technical explanation
+
+### The voice loop
+
+1. **Speech to text** (Azure Speech): real-time recognition of the caller's audio.
+2. **Model or agent**: reads the text and answers.
+3. **Text to speech**: a **neural voice** such as `en-IN-NeerjaNeural` speaks the answer.
+
+```python
+import azure.cognitiveservices.speech as speechsdk
+
+cfg = speechsdk.SpeechConfig(subscription=KEY, endpoint=ENDPOINT)
+cfg.speech_synthesis_voice_name = "en-IN-NeerjaNeural"
+recognizer = speechsdk.SpeechRecognizer(cfg, speechsdk.audio.AudioConfig(filename="question.wav"))
+heard = recognizer.recognize_once().text
+reply = ask_agent(heard)
+speechsdk.SpeechSynthesizer(cfg).speak_text_async(reply).get()
+```
+
+### Domain words: phrase list or custom speech
+
+| | Phrase list | Custom speech |
+| --- | --- | --- |
+| Best for | A handful of names and terms | Many terms, accents, noisy lines, industry vocabulary |
+| Data needed | None | Related text and/or audio with human-labelled transcripts |
+| Training | None | Train, test, deploy an endpoint |
+| In code | `PhraseListGrammar.addPhrase("Metformin")` | `cfg.endpoint_id = "<custom endpoint ID>"` |
+
+Start with the phrase list. Move to custom speech when the list stops helping.
+
+### Shape the voice with SSML
+
+Plain text uses the voice's defaults. **SSML** is XML that controls the delivery:
+
+```xml
+<speak version="1.0" xmlns="http://www.w3.org/2001/10/synthesis" xml:lang="en-IN">
+  <voice name="en-IN-NeerjaNeural">
+    Your Metformin is ready <break time="300ms"/>
+    <prosody rate="-10%">after 5 PM.</prosody>
+  </voice>
+</speak>
+```
+
+Use `<break>` for pauses, `<prosody>` for rate and pitch, and the voice's style options where supported. SSML changes how the answer sounds. It never fixes what was heard.
+
+### Voice Live for live agents
+
+Stitching three calls together adds delay and makes interruptions awkward. **Voice Live** exposes a single real-time connection: audio goes in, a model (such as gpt-4.1-mini) or a **Foundry agent** answers, and audio comes back out. It includes **noise suppression**, **echo cancellation** and **end-of-utterance (turn) detection**. Choose it for phone agents, kiosks and anywhere a pause of a second feels wrong.
+
+<TryIt labs="agt-speech-agent" text="Run the voice loop on a question, watch drug names go wrong, add a phrase list, and reply with SSML." />
+
+<Callout type="exam">
+**Small number of words, no training** is a **phrase list**. **Industry vocabulary, accents or noise** is **custom speech**, used through its **endpoint ID**. **Pauses, rate or pitch** are **SSML**. **One low-latency connection for speech in and out with an agent** is **Voice Live**.
+</Callout>
+
+<DeepDive title="Why recognition errors travel so far">
+
+An agent has no ears of its own. It only sees the transcript. If the transcript is wrong, the agent can be completely confident and completely wrong. That's why teams measure **word error rate** on their own recordings, test the hard vocabulary first, and keep a confirmation step ("Did you say Metformin 500?") for actions that matter, like refills or payments.
+
+</DeepDive>
+
+## Real-world business scenario
+
+<Scenario
+  company="Contoso Pharmacy (fictional)"
+  industry="Healthcare retail"
+  problem="Refill calls overloaded the counter after 5 PM, and a trial voice bot misheard drug names and sounded rushed when it read pickup times."
+  service="Azure Speech with a phrase list for the 40 most common drug names, a custom speech model trained on labelled call audio for the full catalogue, SSML replies with a pause before the time, and Voice Live in front of a Foundry agent."
+  why="The phrase list was the quick fix during the pilot. Custom speech handled the long tail and local accents. SSML made times easy to catch, and Voice Live cut the lag between turns."
+  outcome="Most refill calls were completed without staff, and the team added a spoken confirmation for the drug and strength."
+/>
+
+## When to use it and when not to
+
+<UseWhen
+  use={[
+    'An agent must talk to people on a phone, kiosk or smart speaker.',
+    'Domain names are misrecognised (phrase list first, then custom speech).',
+    'Replies include times, numbers or codes that need careful delivery (SSML).',
+  ]}
+  avoid={[
+    'You train custom speech to fix two words.',
+    'You expect SSML to correct what the recogniser heard.',
+    'You act on a spoken request that costs money or health without a confirmation.',
+  ]}
+  alternatives={[
+    '<strong>Voice Live</strong> for natural, low-latency live conversations.',
+    '<strong>Batch transcription</strong> for recorded calls you process later.',
+    '<strong>A text chat agent</strong> when speech adds nothing for the user.',
+  ]}
+/>

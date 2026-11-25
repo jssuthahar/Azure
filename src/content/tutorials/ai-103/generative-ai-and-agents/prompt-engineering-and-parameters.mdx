@@ -1,0 +1,200 @@
+---
+title: 'Prompt Engineering, Parameters and Self-Critique'
+seoTitle: 'Prompt Engineering, Parameters and Self-Critique | AI-103'
+description: 'Tune what a model produces: write clear instructions, add few-shot examples, set temperature, top_p and max output tokens, and use self-critique loops.'
+answer: >-
+  Tune generation in two places. **Prompts** set role, rules, format and examples, and a **few-shot example** often fixes format faster than more rules. **Parameters** shape the sampling: a **low temperature** gives steady, factual wording, a high one gives variety, and **max output tokens** caps length, so a reply cut off with an **incomplete** status needs a higher cap. A **self-critique loop** drafts, checks against a checklist and revises once. Reasoning models use **reasoning effort** instead of temperature.
+updated: 2026-11-25
+readingMinutes: 12
+keyTerms:
+  - term: Temperature
+    definition: >-
+      A sampling setting. Lower values give steadier wording, higher values give more varied wording.
+  - term: Top P
+    definition: >-
+      A sampling setting that limits choices to the most likely words. Change it or temperature, not both.
+  - term: Max output tokens
+    definition: >-
+      A cap on how many tokens the model may generate. Too low cuts the reply short.
+  - term: Few-shot prompting
+    definition: >-
+      Putting one or more worked examples in the prompt so the model copies the format and tone.
+  - term: Self-critique
+    definition: >-
+      A loop where the model checks its own draft against criteria and revises it.
+  - term: Reasoning effort
+    definition: >-
+      A setting on reasoning models that controls how much the model thinks before answering.
+interview:
+  - level: beginner
+    q: 'What does temperature do?'
+    a: >-
+      It controls how adventurous the wording is. Near 0 the model picks the most likely words and the answer is steady. Higher, the answers vary more, which is nice for ideas and risky for facts.
+    followUps: []
+  - level: intermediate
+    q: 'A reply stops mid-sentence. What do you check?'
+    a: >-
+      The response status. If it says incomplete because of max output tokens, the cap was too low. I raise it, or I ask for a shorter answer in the instructions.
+    followUps: []
+  - level: experienced
+    q: 'How do you design a self-critique loop?'
+    a: >-
+      I draft with the normal prompt, then ask the model to check the draft against a short checklist and list problems, then revise once with those problems. I limit it to one or two rounds, and I evaluate whether it really improves the score, because it costs extra calls.
+    followUps: []
+  - level: scenario
+    q: 'Product descriptions vary wildly and sometimes get the warranty wrong. What do you change?'
+    a: >-
+      I lower the temperature, add a worked example in the instructions that shows the format and the warranty line, state the length, and add a verification step that compares the warranty with the product data.
+    followUps: []
+revision:
+  keyPoints:
+    - 'Instructions set role, audience, rules and length.'
+    - 'A few-shot example fixes format and tone quickly.'
+    - 'Low temperature for facts; higher for ideas.'
+    - 'Incomplete status points to the output token cap.'
+    - 'Reasoning models take reasoning effort, not temperature.'
+  mistakes:
+    - 'Changing temperature and top_p together.'
+    - 'Setting max output tokens so low that replies are cut.'
+    - 'Running endless self-critique loops.'
+  examTips:
+    - '"Consistent, factual output" = **low temperature**.'
+    - '"Reply cut off, status incomplete" = **raise max output tokens**.'
+    - '"Reasoning model rejects temperature" = use **reasoning effort**.'
+  quick:
+    - q: 'What does a low temperature give?'
+      a: 'Steady, repeatable wording.'
+    - q: 'What fixes a cut-off reply?'
+      a: 'A higher max output tokens value.'
+    - q: 'What does a few-shot example do?'
+      a: 'It shows the format and tone.'
+    - q: 'What is a self-critique loop?'
+      a: 'Draft, check against criteria, revise.'
+    - q: 'What replaces temperature on reasoning models?'
+      a: 'Reasoning effort.'
+references:
+  - title: 'Prompt engineering techniques'
+    url: https://learn.microsoft.com/azure/ai-foundry/openai/concepts/prompt-engineering
+  - title: 'Reasoning models'
+    url: https://learn.microsoft.com/azure/ai-foundry/openai/how-to/reasoning
+  - title: 'Responses API'
+    url: https://learn.microsoft.com/azure/ai-foundry/openai/how-to/responses
+related:
+  - evaluate-models-and-apps
+  - deploy-and-consume-models
+  - workflows-and-tool-augmented-flows
+---
+
+## Start with a question
+
+<Story question="Why do two cooks make different dishes from the same recipe?">
+
+One recipe says "season to taste". One cook adds a pinch, another adds a fistful. One follows the recipe card exactly, another improvises. If you want the same dish every time, you write clearer steps, show a photo of the finished plate and tell them how much to use.
+
+A model is the cook. **Instructions** are the recipe. A **worked example** is the photo. **Temperature** is how much the cook improvises. **Max output tokens** is the size of the plate.
+
+</Story>
+
+## Explain it like I'm 10
+
+<Eli10>
+
+Imagine asking a friend to tell a story.
+
+If you say "tell it exactly like the book", they copy the book. That's a **low temperature**.
+
+If you say "make it wild!", the story gets silly and different every time. That's a **high temperature**.
+
+If you only give them one minute, the story stops mid-sentence. That's **max output tokens** too low.
+
+And if they read their story back and fix the mistakes before telling you, that's **self-critique**.
+
+</Eli10>
+
+## The technical explanation
+
+### 1. Prompt: say it clearly
+
+A good instruction names the **role**, the **audience**, the **rules**, the **format** and the **length**.
+
+```text
+You are Contoso's product copywriter. Write a product description for an Indian online shop.
+Use plain English, mention the warranty, and stay under 60 words.
+
+Example
+Input: steel water bottle
+Output: Keeps chai hot for 12 hours. Leak-proof lid, 1-year warranty.
+```
+
+Put separate parts in clear sections, give the answer format, and add **one or two examples** when the format matters. That's **few-shot prompting**.
+
+### 2. Parameters: shape the sampling
+
+| Setting | Effect | Use |
+| --- | --- | --- |
+| **Temperature** | Low is steady, high is varied | 0 to 0.3 for facts and extraction, higher for ideas |
+| **Top P** | Limits to the most likely words | Change it **or** temperature, not both |
+| **Max output tokens** | Caps reply length | Too low cuts the answer. Check the status |
+
+```python
+r = openai.responses.create(model="support-chat", instructions=instructions, input=product,
+                            temperature=0.2, top_p=1, max_output_tokens=300)
+print(r.output_text, r.status, r.incomplete_details)   # status "incomplete" means a cap was hit
+```
+
+**Reasoning models** such as o4-mini don't take temperature. You steer them with **reasoning effort** (low, medium or high), and a higher effort costs more tokens and time.
+
+### 3. Reflection and self-critique
+
+Let the model check its work. Draft, then critique against a checklist, then revise once:
+
+```python
+draft = openai.responses.create(model=m, instructions=instructions, input=product).output_text
+critique = openai.responses.create(model=m, input=f"Check this against the rules and list problems: {draft}").output_text
+final = openai.responses.create(model=m, input=f"Rewrite fixing: {critique}\n{draft}").output_text
+```
+
+Keep the checklist short and the loop to **one or two rounds**. It costs extra calls, so measure whether it raises evaluation scores. For reasoning, a **chain-of-thought** style prompt ("work through the steps, then answer") can help standard models on multistep problems. Reasoning models think by themselves, so you don't need to ask. You can evaluate the reasoning by scoring intermediate steps against a rubric, or by comparing several attempts and keeping the consistent answer.
+
+<TryIt labs="agt-genai-tune" text="Raise the temperature, add a few-shot example, cut max output tokens to 30, then add a self-critique pass." />
+
+<Callout type="exam">
+Match the symptom to the knob. "Different wording every time" points to a **lower temperature**. "Wrong format" points to a **few-shot example**. "Ends mid-sentence with status incomplete" points to **max output tokens**. "A reasoning model rejects temperature" points to **reasoning effort**. "Draft, check, revise" is **self-critique**.
+</Callout>
+
+<DeepDive title="Change one thing at a time">
+
+If you change the prompt, the temperature and the model together, you won't know which helped. Change one setting, run your evaluation set, and keep the change only if scores improve. Prompts are code: store them in Git, version them, and compare versions on the same data.
+
+</DeepDive>
+
+## Real-world business scenario
+
+<Scenario
+  company="Fabrikam Appliances (fictional)"
+  industry="Consumer goods"
+  problem="Product descriptions changed tone every time, some got the warranty wrong, and a few stopped mid-sentence."
+  service="Instructions with role, audience, a 60-word limit and one worked example, temperature 0.2, max output tokens 300 with a check of the response status, and a self-critique pass against a three-line checklist."
+  why="The example fixed the format, the low temperature steadied the wording, the higher cap stopped cut-offs, and the critique caught the wrong warranty."
+  outcome="Descriptions came out consistent, and the evaluation score for rule-following rose by a clear margin."
+/>
+
+## When to use it and when not to
+
+<UseWhen
+  use={[
+    'Output format, tone or length is inconsistent.',
+    'You need steadier answers for facts or extraction.',
+    'A draft benefits from a check against rules before it is used.',
+  ]}
+  avoid={[
+    'Using the prompt to enforce exact business rules. Use code.',
+    'Raising temperature for factual answers.',
+    'Endless critique loops that cost more than they help.',
+  ]}
+  alternatives={[
+    '<strong>RAG</strong> when the problem is missing knowledge, not wording.',
+    '<strong>Structured outputs</strong> when code must parse the reply.',
+    '<strong>Fine-tuning</strong> only when prompts can\'t hold a style at high volume.',
+  ]}
+/>

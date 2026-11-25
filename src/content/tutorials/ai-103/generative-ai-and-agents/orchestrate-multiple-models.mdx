@@ -1,0 +1,194 @@
+---
+title: 'Orchestrate Multiple Models and Rules Engines'
+seoTitle: 'Orchestrate Multiple Models and Rules Engines | AI-103'
+description: 'Route each request to the cheapest component that handles it: rules first, a small language model next, a large or reasoning model only when needed.'
+answer: >-
+  Don't send everything to the biggest model. A **hybrid** design tries **rules** first for answers code can decide exactly, a **small language model** for easy language work, and a **large or reasoning model** only for hard requests. A **model router** deployment can choose among models for you, or your own **cascade** can **escalate** when the small model is unsure. This lowers cost and latency, and you measure each route with evaluations and traces.
+updated: 2026-11-25
+readingMinutes: 11
+keyTerms:
+  - term: Hybrid design
+    definition: >-
+      A system that combines a rules engine, small models and large models, each doing what it does best.
+  - term: Cascade
+    definition: >-
+      Trying the cheapest component first and escalating to a stronger one only when needed.
+  - term: Model router
+    definition: >-
+      A Foundry deployment that selects among underlying models for each prompt.
+  - term: Rules engine
+    definition: >-
+      Plain code or tables that give exact, repeatable answers with no model call.
+  - term: Escalation
+    definition: >-
+      Passing a request to a larger model or a person when the first attempt is unsure.
+  - term: Reasoning model
+    definition: >-
+      A model that thinks through multistep problems before answering, at higher cost and latency.
+interview:
+  - level: beginner
+    q: 'Why not use the biggest model for everything?'
+    a: >-
+      It's slower and costs more, and for simple questions it gives no better answer. A lookup table answers store hours perfectly for free.
+    followUps: []
+  - level: intermediate
+    q: 'How does a cascade work?'
+    a: >-
+      The request goes to rules first. If no rule fits, a small model tries. If it's unsure or the task is hard, the request goes to the large model. Each step is cheaper than the next, and most requests stop early.
+    followUps: []
+  - level: experienced
+    q: 'What are the risks of routing?'
+    a: >-
+      Misrouting a hard request to a weak model lowers quality, and routing logic is another thing to test. I evaluate each route on its own and the whole path together, set confidence thresholds for escalation, and watch traces for requests that bounce between models.
+    followUps: []
+  - level: scenario
+    q: 'Reviews must be labelled at 100,000 an hour, but a few are sarcastic and confuse the small model. What do you do?'
+    a: >-
+      I keep the small model for the volume, have it return a confidence or a label I can check, and escalate low-confidence reviews to a larger model. I measure how many escalate and whether accuracy improves.
+    followUps: []
+revision:
+  keyPoints:
+    - 'Rules first for exact answers.'
+    - 'Small models for simple, high-volume language work.'
+    - 'Large or reasoning models only when needed.'
+    - 'Escalate when the cheaper component is unsure.'
+    - 'Evaluate each route and the whole path.'
+  mistakes:
+    - 'Using a model for a lookup a table can answer.'
+    - 'Routing with no fallback for low confidence.'
+    - 'Never measuring how many requests reach the large model.'
+  examTips:
+    - '"Fixed policy limit" = **rules engine**.'
+    - '"High-volume simple labelling" = **small model**.'
+    - '"Pick the model for each prompt automatically" = **model router**.'
+  quick:
+    - q: 'What goes first in a cascade?'
+      a: 'Rules.'
+    - q: 'Which model suits simple volume labelling?'
+      a: 'A small language model.'
+    - q: 'What chooses a model per prompt?'
+      a: 'A model router.'
+    - q: 'When do you escalate?'
+      a: 'When the cheaper component is unsure.'
+    - q: 'What do you measure per route?'
+      a: 'Quality, cost and latency.'
+references:
+  - title: 'Model router for Microsoft Foundry'
+    url: https://learn.microsoft.com/azure/ai-foundry/openai/concepts/model-router
+  - title: 'Choose the right model in Foundry'
+    url: https://learn.microsoft.com/azure/ai-foundry/concepts/foundry-models-overview
+  - title: 'Microsoft Agent Framework overview'
+    url: https://learn.microsoft.com/agent-framework/overview/agent-framework-overview
+related:
+  - deploy-and-consume-models
+  - tracing-and-token-analytics
+  - workflows-and-tool-augmented-flows
+---
+
+## Start with a question
+
+<Story question="Who answers the phone at a good hospital?">
+
+The receptionist answers "what are the visiting hours?" from a card on the desk. A nurse handles common questions. Only the hard cases go to a consultant, whose time is the most expensive.
+
+A good AI system works the same way. **Rules** answer what a table can answer. A **small model** handles easy language work. The **large model** is the consultant, called only when needed.
+
+</Story>
+
+## Explain it like I'm 10
+
+<Eli10>
+
+Imagine three helpers at school.
+
+The first just reads from a list on the wall: "The library opens at nine." No thinking needed.
+
+The second is a quick helper who can sort and label things.
+
+The third is the clever professor who solves the hard puzzles but is slow and busy.
+
+You ask the list first, then the quick helper, and only go to the professor when you really must.
+
+</Eli10>
+
+## The technical explanation
+
+### Choose the cheapest thing that works
+
+| Request | Handled by | Why |
+| --- | --- | --- |
+| "What are your store hours?" | **Rules** (lookup table) | Exact, free, no model |
+| "Refund ₹1,200 for ORD-1042" | **Rules** (policy limit in code) | The limit is a policy, so code decides |
+| "Classify this review" | **Small model** (Phi-4-mini-instruct) | Simple, high volume |
+| "Compare three warranty plans for a café" | **Large or reasoning model** (gpt-4.1, o4-mini) | Multi-part reasoning |
+
+### A cascade in code
+
+```python
+def route(request: str) -> str:
+    if re.search(r"store hours|opening time", request, re.I):  return "rules"     # deterministic answer, no LLM
+    if re.search(r"refund", request, re.I):                    return "rules"     # policy limit decided by code
+    if len(request) < 120:                                     return os.environ.get("SMALL_DEPLOYMENT", "Phi-4-mini-instruct")
+    return os.environ.get("LARGE_DEPLOYMENT", "gpt-4.1")                          # long, multi-part reasoning
+
+for req in REQUESTS:
+    target = route(req)
+    answer = RULES[req] if target == "rules" else openai.responses.create(model=target, input=req).output_text
+```
+
+Real systems often decide with more than length. They use a **classifier**, the small model's own **confidence**, or the result of a first attempt, and **escalate** when the cheaper component isn't sure.
+
+### Let a router choose
+
+A **model router** is a Foundry deployment (preview as of 25 November 2026) that looks at each prompt and selects one of several underlying models, balancing quality and cost. You call it like any deployment, and the response says which model answered. Use it when you want routing without writing the logic, and check traces to confirm the mix is what you expect.
+
+### Combine models and tools in one flow
+
+Routing also joins different kinds of components in one flow: Content Understanding extracts fields from an invoice, a small model classifies the vendor, a large model drafts a dispute letter, and rules check the totals. Each piece is the right size for its job.
+
+### Measure it
+
+In the lab's four-request example, one large model makes **4** model calls. The cascade makes **2**, because rules answered two requests, so the relative cost falls to roughly a quarter. Compare **quality**, **cost** and **latency** per route with evaluations and traces, and watch the share of requests that reach the large model.
+
+<TryIt labs="agt-genai-flow-route" text="Send the same four requests to the large model only, then through the cascade, and compare the number of model calls." />
+
+<Callout type="exam">
+"Exact policy answer" is a **rules engine**. "Cheapest option for simple, high-volume text labelling" is a **small language model**. "Let the platform pick a model per prompt" is a **model router**. "Order of attempts to reduce cost" is **rules, then small model, then large model**, with **escalation** for low confidence.
+</Callout>
+
+<DeepDive title="Guard the router too">
+
+If a user's text decides which model runs, a user can try to steer it. Don't let the request tell the router "use the biggest model". Route on your own signals, cap the large-model calls per user, and trace routing decisions so a spike of expensive calls is easy to spot.
+
+</DeepDive>
+
+## Real-world business scenario
+
+<Scenario
+  company="Northwind Traders (fictional)"
+  industry="Wholesale"
+  problem="Every customer message went to the largest model, including store hours and refund limits. Replies were slow at peak and the bill kept growing."
+  service="A cascade: a rules table for store hours and the refund limit, Phi-4-mini-instruct for review labels, and gpt-4.1 only for long multi-part questions, with escalation when the small model is unsure."
+  why="Exact answers cost nothing, simple language work uses the small model, and the large model sees only the requests that need it."
+  outcome="Half the requests needed no model call, average latency fell, and the model bill dropped by about three quarters with no drop in evaluation scores."
+/>
+
+## When to use it and when not to
+
+<UseWhen
+  use={[
+    'Request difficulty varies a lot.',
+    'Some answers are exact policy that code can decide.',
+    'Volume is high enough that model size changes the bill.',
+  ]}
+  avoid={[
+    'A single, uniform task. One model is simpler.',
+    'You can\'t test each route. Untested routing hides quality loss.',
+    'Routing based on text the user controls, with no limits.',
+  ]}
+  alternatives={[
+    '<strong>One well-chosen model</strong> when traffic is small.',
+    '<strong>A model router</strong> for routing with no custom logic.',
+    '<strong>A workflow</strong> when steps, not requests, differ.',
+  ]}
+/>

@@ -1,0 +1,152 @@
+{
+ "cert": "ai-103",
+ "domain": 2,
+ "topic": "deploy-and-consume-models",
+ "questions": [
+  {
+   "id": "agt-g-deploy-and-con-1",
+   "type": "single",
+   "scenario": "An application calls a model in a Microsoft Foundry project. The model was deployed with the deployment name support-chat. The application passes model=\"gpt-4.1-mini\" and receives a DeploymentNotFound error.",
+   "question": "What should you change?",
+   "options": [
+    {
+     "text": "Pass support-chat as the model value",
+     "why": "Correct. Calls are made to the deployment name."
+    },
+    {
+     "text": "Deploy a second copy of gpt-4.1-mini under the model name",
+     "why": "Deployment names are chosen by you, and the application must use the one that exists."
+    },
+    {
+     "text": "Increase the tokens-per-minute quota",
+     "why": "Quota limits throughput. It does not cause a missing deployment error."
+    },
+    {
+     "text": "Switch the application to an API key",
+     "why": "The authentication method does not affect whether the deployment name is found."
+    }
+   ],
+   "answer": [
+    0
+   ],
+   "explanation": "The model parameter carries the deployment name. The deployment holds the model, version, deployment type and capacity.",
+   "objective": "2.1.1"
+  },
+  {
+   "id": "agt-g-deploy-and-con-2",
+   "type": "single",
+   "scenario": "A company must label 200,000 short support tickets each day as billing, delivery or other. The labels are simple, and cost and latency matter more than deep reasoning.",
+   "question": "Which model should you deploy for this task?",
+   "options": [
+    {
+     "text": "An image generation model such as gpt-image-1",
+     "why": "Image generation models do not classify text."
+    },
+    {
+     "text": "A small language model such as Phi-4-mini-instruct",
+     "why": "Correct. Simple, high-volume classification is a good fit for a small model."
+    },
+    {
+     "text": "A reasoning model such as o4-mini",
+     "why": "Reasoning models cost more and respond more slowly than the task needs."
+    },
+    {
+     "text": "An embedding model such as text-embedding-3-small",
+     "why": "Embedding models return vectors, not text labels."
+    }
+   ],
+   "answer": [
+    1
+   ],
+   "explanation": "Match model size to the task. A small language model handles simple volume work cheaply and quickly, and a large or reasoning model is kept for hard problems.",
+   "objective": "2.1.1"
+  },
+  {
+   "id": "agt-g-deploy-and-con-3",
+   "type": "single",
+   "question": "A Python application must connect to a Microsoft Foundry project by using the Foundry SDK. Which value does AIProjectClient require?",
+   "options": [
+    {
+     "text": "The connection string of a storage account",
+     "why": "A storage connection string does not identify a Foundry project."
+    },
+    {
+     "text": "The name of the model in the catalog",
+     "why": "The model name is not an endpoint. The app passes a deployment name when it calls a model."
+    },
+    {
+     "text": "The project endpoint",
+     "why": "Correct. The endpoint has the form https://<resource>.services.ai.azure.com/api/projects/<project>."
+    },
+    {
+     "text": "The subscription ID of the resource group",
+     "why": "The client needs the project endpoint, not the subscription ID."
+    }
+   ],
+   "answer": [
+    2
+   ],
+   "explanation": "AIProjectClient takes the project endpoint and a credential, for example DefaultAzureCredential.",
+   "objective": "2.1.6"
+  },
+  {
+   "id": "agt-g-deploy-and-con-4",
+   "type": "multi",
+   "scenario": "An application runs on Azure Container Apps and calls a Foundry model deployment. Security policy forbids storing API keys.",
+   "question": "Which two actions should you perform? Select two.",
+   "options": [
+    {
+     "text": "Assign a Foundry role such as Foundry User to that identity on the Foundry resource",
+     "why": "Correct. The identity must have a role that allows it to call the deployment."
+    },
+    {
+     "text": "Store the resource key in an environment variable",
+     "why": "This stores a secret, which the policy forbids."
+    },
+    {
+     "text": "Create a second deployment for each user",
+     "why": "Deployments are not used for authentication."
+    },
+    {
+     "text": "Enable a managed identity on the container app",
+     "why": "Correct. The identity lets the app request Microsoft Entra ID tokens."
+    }
+   ],
+   "answer": [
+    0,
+    3
+   ],
+   "explanation": "Keyless access combines a managed identity with a role assignment, and the code uses DefaultAzureCredential.",
+   "objective": "2.1.6"
+  },
+  {
+   "id": "agt-g-deploy-and-con-5",
+   "type": "single",
+   "scenario": "Customers upload photos of damaged parcels, and the app must describe the damage in text.",
+   "question": "Which type of model should you deploy?",
+   "options": [
+    {
+     "text": "A multimodal chat model that accepts image input, such as gpt-4.1",
+     "why": "Correct. It can read an image and return a text description."
+    },
+    {
+     "text": "A text-only small language model",
+     "why": "It cannot interpret image input."
+    },
+    {
+     "text": "An embedding model",
+     "why": "It produces vectors and does not describe images."
+    },
+    {
+     "text": "A text-to-speech voice",
+     "why": "Text to speech converts text into audio."
+    }
+   ],
+   "answer": [
+    0
+   ],
+   "explanation": "Choose the model by input and output types. Image understanding requires a model that accepts images.",
+   "objective": "2.1.1"
+  }
+ ]
+}

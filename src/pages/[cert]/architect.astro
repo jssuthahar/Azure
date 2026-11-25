@@ -50,21 +50,21 @@ const faq = [
 
     <div class="ab" data-ab-root>
       <div class="ab-toolbar" role="toolbar" aria-label="Design tools">
-        <div class="ab-tgroup">
+        <div class="ab-tgroup" data-label="Starter">
           <label class="sr-only" for="ab-template">Starter design</label>
           <select id="ab-template" data-ab-template></select>
           <button type="button" class="btn btn-outline btn-sm" data-ab-load>Load</button>
         </div>
-        <div class="ab-tgroup">
+        <div class="ab-tgroup" data-label="My designs">
           <label class="sr-only" for="ab-name">Design name</label>
           <input id="ab-name" data-ab-name type="text" maxlength="60" autocomplete="off" spellcheck="false">
           <button type="button" class="btn btn-outline btn-sm" data-ab-save>💾 Save</button>
           <label class="sr-only" for="ab-projects">Saved designs</label>
           <select id="ab-projects" data-ab-projects></select>
           <button type="button" class="btn btn-outline btn-sm" data-ab-open>Open</button>
-          <button type="button" class="btn btn-outline btn-sm" data-ab-del aria-label="Delete the selected saved design">🗑️</button>
+          <button type="button" class="btn btn-outline btn-sm" data-ab-del aria-label="Delete the selected saved design">🗑️ Delete</button>
         </div>
-        <div class="ab-tgroup">
+        <div class="ab-tgroup" data-label="Edit">
           <button type="button" class="btn btn-accent btn-sm" data-ab-link aria-pressed="false">🔗 Link</button>
           <button type="button" class="btn btn-outline btn-sm" data-ab-undo>↶ Undo</button>
           <button type="button" class="btn btn-outline btn-sm" data-ab-clear>Clear</button>
@@ -90,6 +90,9 @@ const faq = [
           <div class="ab-wrap" data-ab-wrap>
             <svg data-ab-svg viewBox="0 0 1600 1000" role="group" aria-label="Design canvas. Tab to a resource; arrow keys move it, Delete removes it, Enter edits it."></svg>
           </div>
+          <ul class="ab-legend" aria-label="Link colours">
+            <li class="lg-backend">backend pool</li><li class="lg-nsg">NSG</li><li class="lg-pip">public IP</li><li class="lg-peer">peering</li><li class="lg-pe">private link</li><li class="lg-dnslink">DNS link</li><li class="lg-vpn">VPN</li><li class="lg-route">route (UDR)</li>
+          </ul>
           <div class="ab-toast" data-ab-toast hidden role="status"></div>
         </div>
 
@@ -138,7 +141,9 @@ const faq = [
 <style is:global>
   .ab-note { display: inline-block; border-radius: 8px; background: var(--pastel-yellow); padding: 6px 12px; font-size: .875rem; color: var(--text); }
   .ab { margin-top: 1.25rem; }
-  .ab-toolbar { display: flex; flex-wrap: wrap; gap: .5rem 1rem; align-items: center; }
+  .ab-toolbar { display: flex; flex-wrap: wrap; gap: .6rem; align-items: stretch; padding: .6rem; border-radius: 16px; border: 1px solid var(--card-line); background: var(--glass); box-shadow: var(--glass-shadow); -webkit-backdrop-filter: blur(10px); backdrop-filter: blur(10px); }
+  .ab-tgroup { position: relative; display: flex; flex-wrap: wrap; align-items: center; gap: .4rem; padding: 1.35rem .6rem .55rem; border-radius: 12px; background: var(--card); border: 1px solid var(--border); }
+  .ab-tgroup::before { content: attr(data-label); position: absolute; top: .35rem; left: .65rem; font-size: .66rem; font-weight: 800; letter-spacing: .12em; text-transform: uppercase; color: var(--accent-deep); }
   .ab-tgroup { display: flex; flex-wrap: wrap; gap: .4rem; align-items: center; }
   .ab-toolbar select, .ab-toolbar input[type="text"] { min-height: 36px; border: 1px solid var(--border); border-radius: 8px; background: var(--bg); color: var(--text); padding: 0 .6rem; font-size: 16px; max-width: 14rem; }
   .ab-toolbar .btn { min-height: 36px; }
@@ -169,30 +174,42 @@ const faq = [
   .ab-zoom { margin-left: auto; display: inline-flex; border: 1px solid var(--border); border-radius: 8px; overflow: hidden; }
   .ab-zoom button { min-width: 40px; min-height: 36px; background: var(--card); color: var(--text); font-weight: 700; }
   .ab-zoom button + button { border-left: 1px solid var(--border); }
-  .ab-wrap { overflow: auto; max-height: min(72vh, 760px); border: 1px solid var(--border); border-radius: 12px; background: var(--pastel-grey); overscroll-behavior: contain; }
+  .ab-wrap { overflow: auto; max-height: min(78vh, 860px); border: 1px solid var(--border); border-radius: 14px; background-color: var(--pastel-grey); background-image: radial-gradient(color-mix(in srgb, var(--text-muted) 28%, transparent) 1px, transparent 1px); background-size: 20px 20px; overscroll-behavior: contain; box-shadow: inset 0 1px 3px rgb(0 0 0 / .06); }
   .ab-wrap svg { display: block; width: 100%; min-width: 620px; height: auto; touch-action: none; user-select: none; -webkit-user-select: none; }
   @media (min-width: 1180px) { .ab-wrap svg { min-width: 0; } }
   .ab-toast { position: absolute; left: 50%; bottom: 14px; transform: translateX(-50%); max-width: min(92%, 560px); border-radius: 10px; padding: .55rem .9rem; font-size: .9rem; background: var(--navy-band); color: #fff; box-shadow: 0 6px 20px rgb(0 0 0 / .2); }
+  .ab-legend { display: flex; flex-wrap: wrap; gap: .35rem .9rem; margin-top: .55rem; font-size: .78rem; color: var(--text-muted); }
+  .ab-legend li { display: flex; align-items: center; gap: .35rem; }
+  .ab-legend li::before { content: ''; width: 22px; height: 0; border-top: 3px solid var(--lc); }
+  .lg-backend { --lc: #107c10; } .lg-nsg { --lc: #ca5010; } .lg-pip { --lc: #7a4fc0; } .lg-peer { --lc: #0078d4; } .lg-pe { --lc: #00838f; } .lg-vpn { --lc: #2b4f8c; } .lg-route { --lc: #c42b30; } .lg-dnslink { --lc: #00838f; }
+  .lg-peer::before, .lg-dnslink::before, .lg-vpn::before, .lg-route::before { border-top-style: dashed !important; }
+  :global(.ab-pal .ab-ico) { color: var(--accent-deep); flex: none; }
   .ab-toast[data-tone="bad"] { background: var(--bad); }
   .ab-toast[data-tone="ok"] { background: var(--ok); }
   .ab-ghost { position: fixed; left: 0; top: 0; z-index: 60; pointer-events: none; border-radius: 8px; padding: .35rem .6rem; background: var(--accent); color: #fff; font-size: .85rem; font-weight: 600; box-shadow: 0 6px 16px rgb(0 0 0 / .25); }
 
   /* canvas (SVG) */
-  .ab-bg { fill: var(--pastel-grey); }
+  .ab-bg { fill: transparent; }
   .ab-node { cursor: grab; outline: none; }
   .ab-vnet .ab-box { fill: var(--accent-soft); stroke: var(--accent); stroke-width: 2; }
   .ab-subnet .ab-box { fill: var(--bg); stroke: var(--text-muted); stroke-dasharray: 6 4; stroke-width: 1.5; }
   .ab-ctitle { font-size: 16px; font-weight: 700; fill: var(--text); }
   .ab-csub { font-size: 13px; fill: var(--text-muted); }
-  .ab-card { fill: var(--card); stroke: var(--border); stroke-width: 1.5; }
+  .ab-card { fill: var(--card); stroke: var(--border); stroke-width: 1.5; filter: drop-shadow(0 4px 8px rgb(0 40 90 / .14)); transition: stroke .15s; }
+  .ab-leaf:hover .ab-card { stroke: var(--accent); }
+  .ab-icobg { fill: color-mix(in srgb, var(--grp, var(--accent)) 13%, transparent); }
+  .ab-gico { stroke: var(--grp, var(--accent)); }
+  .ab-node { --grp: #0078d4; }
+  .ab-g-compute { --grp: #107c10; } .ab-g-data { --grp: #7a4fc0; } .ab-g-security { --grp: #c42b30; } .ab-g-connectivity { --grp: #ca5010; }
+  :global([data-theme='dark']) .ab-node { --grp: #4ea8f0; } :global([data-theme='dark']) .ab-g-compute { --grp: #5fcf5f; } :global([data-theme='dark']) .ab-g-data { --grp: #b39af0; } :global([data-theme='dark']) .ab-g-security { --grp: #ff7b7f; } :global([data-theme='dark']) .ab-g-connectivity { --grp: #f0955a; }
   .ab-stripe { fill: var(--accent); }
   .ab-g-security .ab-stripe { fill: var(--bad); }
   .ab-g-data .ab-stripe { fill: #8764b8; }
   .ab-g-compute .ab-stripe { fill: var(--ok); }
   .ab-g-connectivity .ab-stripe { fill: #ca5010; }
   .ab-icon { font-size: 22px; }
-  .ab-name { font-size: 15px; font-weight: 600; fill: var(--text); }
-  .ab-sub { font-size: 12.5px; fill: var(--text-muted); }
+  .ab-name { font-size: 16.5px; font-weight: 650; fill: var(--text); }
+  .ab-sub { font-size: 13.5px; fill: var(--text-muted); }
   .ab-node.is-sel .ab-card, .ab-node.is-sel .ab-box, .ab-node:focus-visible .ab-card, .ab-node:focus-visible .ab-box { stroke: var(--accent); stroke-width: 3.5; }
   .ab-node.is-linkfrom .ab-card, .ab-node.is-linkfrom .ab-box { stroke: #ca5010; stroke-width: 3.5; stroke-dasharray: 5 3; }
   .ab-node.is-path .ab-card, .ab-node.is-path .ab-box { stroke: var(--ok); stroke-width: 3.5; }
@@ -200,10 +217,16 @@ const faq = [
   .ab-flag-error { fill: var(--bad); }
   .ab-flag-warn { fill: #b35c00; }
   .ab-flagt { font-size: 12px; font-weight: 700; fill: #fff; pointer-events: none; }
-  .ab-link line { stroke: var(--text-muted); stroke-width: 2; }
+  .ab-link { --lc: var(--text-muted); }
+  .ab-link-backend { --lc: #107c10; } .ab-link-nsg { --lc: #ca5010; } .ab-link-pip { --lc: #7a4fc0; } .ab-link-peer { --lc: #0078d4; } .ab-link-pe, .ab-link-dnslink { --lc: #00838f; } .ab-link-vpn { --lc: #2b4f8c; } .ab-link-route { --lc: #c42b30; }
+  :global([data-theme='dark']) .ab-link-backend { --lc: #5fcf5f; } :global([data-theme='dark']) .ab-link-nsg { --lc: #f0955a; } :global([data-theme='dark']) .ab-link-pip { --lc: #b39af0; } :global([data-theme='dark']) .ab-link-peer { --lc: #4ea8f0; } :global([data-theme='dark']) .ab-link-pe, :global([data-theme='dark']) .ab-link-dnslink { --lc: #4fd1db; } :global([data-theme='dark']) .ab-link-vpn { --lc: #8fb3f0; } :global([data-theme='dark']) .ab-link-route { --lc: #ff7b7f; }
+  .ab-link line { stroke: var(--lc); stroke-width: 2.5; }
+  .ab-link-vpn line, .ab-link-route line { stroke-dasharray: 7 5; }
   .ab-link-peer line, .ab-link-dnslink line { stroke-dasharray: 7 5; }
-  .ab-link text { font-size: 12.5px; fill: var(--text-muted); paint-order: stroke; stroke: var(--pastel-grey); stroke-width: 4px; }
-  .ab-link.is-path line { stroke: var(--ok); stroke-width: 3.5; }
+  .ab-link text { font-size: 13px; font-weight: 700; fill: var(--lc); paint-order: stroke; stroke: var(--card); stroke-width: 6px; stroke-linejoin: round; }
+  .ab-link.is-path line { stroke: var(--ok); stroke-width: 4; stroke-dasharray: 10 6; animation: ab-dash .8s linear infinite; }
+  @keyframes ab-dash { to { stroke-dashoffset: -16; } }
+  @media (prefers-reduced-motion: reduce) { .ab-link.is-path line { animation: none; } }
   .ab-link.is-pathbad line { stroke: var(--bad); stroke-width: 3.5; }
   .ab-arrowhead { fill: var(--text-muted); }
   .ab-flow { fill: none; stroke-width: 6; stroke-linecap: round; stroke-linejoin: round; opacity: .35; pointer-events: none; }
@@ -220,7 +243,7 @@ const faq = [
   .ab-help { margin-top: .6rem; padding-left: 1.1rem; list-style: disc; color: var(--text-muted); font-size: .875rem; }
   .ab-help li + li { margin-top: .35rem; }
   .ab-ph { display: flex; gap: .6rem; align-items: flex-start; margin-bottom: .7rem; }
-  .ab-pi { font-size: 1.8rem; line-height: 1; }
+  .ab-pi { display: grid; place-items: center; width: 44px; height: 44px; flex: none; border-radius: 12px; background: var(--accent-soft); color: var(--accent-deep); }
   .ab-pt { font-weight: 700; }
   .ab-learn { color: var(--accent); font-weight: 600; white-space: nowrap; }
   .ab-field { margin-bottom: .6rem; }

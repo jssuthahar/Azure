@@ -1,0 +1,184 @@
+---
+title: Safety Evaluations, Tracing and Auditing
+seoTitle: Foundry Evaluators, Red Teaming, Tracing and Audit | AI-103
+description: Measure quality and safety with evaluators, attack with the AI red teaming agent, and keep trace logs, provenance and approvals for audit. AI-103 1.4.2, 1.4.3.
+answer: >-
+  Use **evaluators** to score answers: quality (**groundedness**, **relevance**, **coherence**), safety (violence, hate and unfairness, self-harm, sexual, protected material) and agent evaluators (**intent resolution**, **tool call accuracy**, **task adherence**). Run the **AI red teaming agent** to attack the app before launch and report an **attack success rate**. Evaluator results include a **reason**, which gives explanations. For **auditing**, turn on **tracing** to Application Insights so every model call, tool call and **approval** is recorded, keep **provenance metadata** (source documents, model version, who approved) and use **approval workflows** for risky actions.
+updated: 2026-11-25
+readingMinutes: 10
+keyTerms:
+  - term: Evaluator
+    definition: A scorer for model or agent output. Built-in evaluators check quality, safety and agent behaviour. You can also write custom ones.
+  - term: Groundedness
+    definition: A quality score for how well an answer is supported by the retrieved context. Low groundedness means the model added unsupported claims.
+  - term: AI red teaming agent
+    definition: A Foundry tool, built on PyRIT, that automatically attacks your app with prompts across risk categories and attack strategies, then reports how many got through.
+  - term: Tool call accuracy
+    definition: An agent evaluator that checks whether the agent chose the right tools and passed the right arguments.
+  - term: Trace
+    definition: A recorded timeline of a run, with spans for model calls, tool calls, guardrail results and approvals. Stored in Application Insights.
+  - term: Provenance metadata
+    definition: "Information that says where an answer came from: source documents, model and version, prompt version, time and the person who approved an action."
+interview:
+  - level: beginner
+    q: What does an evaluator do?
+    a: >-
+      It scores a response. For example, groundedness checks if the answer is supported by the retrieved text, and a safety evaluator checks for harmful content. I run them on a test set or on live samples, and I get a score and a short reason for each row.
+    followUps: []
+  - level: intermediate
+    q: Why run red teaming if you already evaluate on a test set?
+    a: >-
+      A test set has the questions I thought of. Red teaming searches for the ones I didn't: jailbreaks, encoded prompts, multi-turn pressure. It gives an attack success rate I can lower by adding controls, then scan again.
+    followUps: []
+  - level: experienced
+    q: What should an audit trail for an agent contain?
+    a: >-
+      Who asked, what the model saw, which documents were retrieved, every tool call with arguments, guardrail results, any human approval with the approver and time, and the model, agent and prompt versions. With tracing in Application Insights, a retention period and restricted access, an auditor can replay why a refund happened.
+    followUps: []
+  - level: scenario
+    q: Compliance asks you to prove the loan agent doesn't give unfair advice. What do you present?
+    a: >-
+      Evaluation runs on a representative test set with fairness-related and safety evaluators, the red team report, the guardrail settings, and sampled traces with approvals. I'd also show the process: evaluators in the pipeline gate, so a regression blocks release. Evidence over time matters more than a single run.
+    followUps: []
+revision:
+  keyPoints:
+    - Evaluators score quality, safety and agent behaviour, with a reason for each score.
+    - Tool call accuracy and task adherence are agent evaluators. Groundedness needs context.
+    - The AI red teaming agent attacks before launch and reports an attack success rate.
+    - Tracing to Application Insights records model calls, tool calls and approvals for audit.
+    - Provenance metadata and approval workflows make decisions explainable and accountable.
+  mistakes:
+    - Running evaluators once and never in the pipeline or on live samples.
+    - Tracing without retention or access controls for the sensitive data inside traces.
+    - Treating a high average score as proof that no unsafe case exists.
+  examTips:
+    - '"Is the answer supported by the retrieved text" = **groundedness**.'
+    - '"Did the agent call the right tool with the right arguments" = **tool call accuracy**.'
+    - '"Attack the app before launch" = **AI red teaming agent**.'
+    - '"Replay why a decision happened" = **trace logs** with approvals.'
+  quick:
+    - q: Which evaluator measures support from retrieved context?
+      a: Groundedness.
+    - q: Which tool automatically attacks an app before launch?
+      a: The AI red teaming agent.
+    - q: Where are traces stored?
+      a: In Application Insights.
+    - q: What does an agent evaluator like tool call accuracy check?
+      a: Whether the right tools were called with the right arguments.
+    - q: What metric does a red team scan report?
+      a: Attack success rate.
+references:
+  - title: Built-in evaluators in Foundry
+    url: https://learn.microsoft.com/azure/ai-foundry/concepts/observability
+  - title: AI Red Teaming Agent
+    url: https://learn.microsoft.com/azure/ai-foundry/concepts/ai-red-teaming-agent
+  - title: Agent evaluators
+    url: https://learn.microsoft.com/azure/ai-foundry/concepts/evaluation-evaluators/agent-evaluators
+  - title: Set up tracing
+    url: https://learn.microsoft.com/azure/ai-foundry/how-to/develop/trace-application
+related:
+  - content-safety-filters-and-guardrails
+  - govern-agent-behavior
+---
+
+## Start with a question
+
+<Story question="How do you prove the agent is safe, and how do you explain what it did last Tuesday?">
+
+Before launch, the risk team asks Asha for evidence. "It seemed fine in testing" isn't evidence. After launch, a customer disputes a refund and an auditor asks who approved it and why.
+
+Both questions have the same answer: **measure before, record during**. Evaluators and red teaming produce the numbers before launch. Traces and approvals produce the story afterwards.
+
+</Story>
+
+## Explain it like I'm 10
+
+<Eli10>
+
+Think of a driving test.
+
+Before you get your licence, an examiner gives you **marks** for different skills: stopping, signalling, parking. Those are **evaluators**.
+
+Then a tricky examiner tries to **fool** you with surprise situations. That's the **red team**.
+
+After you pass, the car keeps a **diary** of every trip, so if there's a bump, people can see what happened. That's a **trace**.
+
+</Eli10>
+
+## The technical explanation
+
+### Evaluators
+
+| Family | Examples | Question answered |
+| --- | --- | --- |
+| **Quality** | Groundedness, relevance, coherence, fluency, similarity | Is it correct, on topic and readable? |
+| **Safety** | Violence, sexual, self-harm, hate and unfairness, protected material, code vulnerability | Does it contain harmful content? |
+| **Agent** | Intent resolution, tool call accuracy, task adherence | Did the agent understand, act and finish correctly? |
+| **Custom** | Your code or a prompt-based grader | Anything your policy needs |
+
+Each result has a **score** and a **reason**, which is how you explain a low score to the team. Run evaluators on a dataset in the portal or from code:
+
+```python
+from azure.ai.evaluation import evaluate, GroundednessEvaluator, RelevanceEvaluator
+
+result = evaluate(
+    data="evals/support-cases.jsonl",
+    evaluators={"groundedness": GroundednessEvaluator(model_config), "relevance": RelevanceEvaluator(model_config)},
+)
+```
+
+Put the same run in the pipeline as a **gate** and use a sampled version for **continuous evaluation** after release.
+
+### Red teaming
+
+The **AI red teaming agent** generates adversarial prompts across risk categories (violence, hate and unfairness, sexual, self-harm), applies **attack strategies** (encoding, character flipping, jailbreak templates, multi-turn), sends them to your target and reports an **attack success rate**. Fix gaps with guardrail controls or prompt changes, then scan again.
+
+### Auditing: trace, provenance, approval
+
+1. **Trace logging**: connect Application Insights and enable tracing (OpenTelemetry). Each run records spans for the model call, tool calls, retrievals, guardrail results and approvals.
+2. **Provenance metadata**: store the retrieved source IDs, citations, model and prompt version, and the approver with each important answer or action.
+3. **Approval workflows**: risky tools pause for a human decision. The decision, approver and time go into the trace.
+4. **Retention and access**: traces contain user text. Set a retention period, limit who can read them, and mask personal data.
+
+<TryIt labs="agt-plan-safety-govern" text="Run evaluators, send 120 red team attacks, and replay a trace to see which approval allowed a refund." />
+
+<Callout type="exam">
+"Check that answers are supported by the retrieved passages" is **groundedness**. "Check that the agent used the right tools" is **tool call accuracy**. "Find weaknesses before launch with automated attacks" is the **AI red teaming agent**. "Show an auditor what happened" is **tracing** with **approval records**. Evaluators and red teaming are **pre-release evidence**, and traces are **post-release evidence**.
+</Callout>
+
+<DeepDive title="Why a model grades the model">
+
+Most quality evaluators use a language model as the judge, with a rubric and a reason. It's cheaper than humans and consistent, and it has its own blind spots. Calibrate it by comparing its scores with a few hundred human-labelled examples, keep the judge model pinned, and use humans for high-stakes domains.
+
+</DeepDive>
+
+## Real-world business scenario
+
+<Scenario
+  company="Fabrikam Bank (fictional)"
+  industry="Banking"
+  problem="The risk committee wouldn't approve a loan-information agent without evidence of safety and traceable decisions."
+  service="An evaluation gate for groundedness, relevance and safety evaluators, an AI red teaming scan before each release, tracing to Application Insights with a one-year retention, and approval records for any account action."
+  why="The committee got measured numbers and attack results, and the audit team could replay any session from its trace."
+  outcome="The agent was approved, and the first customer complaint was resolved from the trace in minutes."
+/>
+
+## When to use it and when not to
+
+<UseWhen
+  use={[
+    'Answers or actions carry legal, financial or safety risk.',
+    'You need evidence for a release decision or a regulator.',
+    'Several people change prompts, tools or data.',
+  ]}
+  avoid={[
+    'You trust one average score and skip red teaming.',
+    'You keep traces forever with open access to personal data.',
+    'You evaluate once at launch and never again.',
+  ]}
+  alternatives={[
+    '<strong>Human review panels</strong> for subjective or high-stakes judgments.',
+    '<strong>Custom evaluators</strong> for company rules a built-in one doesn\'t know.',
+    '<strong>Lightweight spot checks</strong> for a small internal prototype.',
+  ]}
+/>

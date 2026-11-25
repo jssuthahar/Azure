@@ -1,0 +1,151 @@
+{
+ "cert": "ai-103",
+ "domain": 2,
+ "topic": "foundry-sdks-and-connectors",
+ "questions": [
+  {
+   "id": "agt-g-foundry-sdks-a-1",
+   "type": "single",
+   "scenario": "A Python app must call Azure AI Search without hard-coding its URL or credentials. The search service is connected to the Foundry project.",
+   "question": "How should the app obtain the search endpoint?",
+   "options": [
+    {
+     "text": "Ask the user to type the endpoint at start-up",
+     "why": "This is not a reasonable design for an application."
+    },
+    {
+     "text": "Read the endpoint from the model deployment",
+     "why": "Deployments do not hold search endpoints."
+    },
+    {
+     "text": "Call project.connections.get with the connection name",
+     "why": "Correct. The connection stores the target and authentication method."
+    },
+    {
+     "text": "Copy the URL into a constant in the source file",
+     "why": "This hard-codes the value and needs a change per environment."
+    }
+   ],
+   "answer": [
+    2
+   ],
+   "explanation": "Connections keep targets and authentication details out of code.",
+   "objective": "2.1.5"
+  },
+  {
+   "id": "agt-g-foundry-sdks-a-2",
+   "type": "single",
+   "scenario": "The same code must run on a developer laptop and in Azure without any key.",
+   "question": "Which credential should the code use?",
+   "options": [
+    {
+     "text": "A hard-coded API key",
+     "why": "The requirement is no key."
+    },
+    {
+     "text": "A shared access signature",
+     "why": "This is a storage mechanism and does not authenticate to Foundry."
+    },
+    {
+     "text": "An anonymous client",
+     "why": "Foundry requires authentication."
+    },
+    {
+     "text": "DefaultAzureCredential",
+     "why": "Correct. It uses the developer sign-in locally and a managed identity in Azure."
+    }
+   ],
+   "answer": [
+    3
+   ],
+   "explanation": "DefaultAzureCredential tries several sources in order, which keeps code the same across environments.",
+   "objective": "2.1.5"
+  },
+  {
+   "id": "agt-g-foundry-sdks-a-3",
+   "type": "single",
+   "question": "Which Python package provides AIProjectClient?",
+   "options": [
+    {
+     "text": "azure-ai-projects",
+     "why": "Correct. It is the Foundry SDK."
+    },
+    {
+     "text": "azure-ai-textanalytics",
+     "why": "This package is for Azure Language."
+    },
+    {
+     "text": "azure-search-documents",
+     "why": "This package is for Azure AI Search."
+    },
+    {
+     "text": "azure-mgmt-resource",
+     "why": "This package manages Azure resources."
+    }
+   ],
+   "answer": [
+    0
+   ],
+   "explanation": "azure-ai-projects contains AIProjectClient and models for agents, connections and more.",
+   "objective": "2.1.5"
+  },
+  {
+   "id": "agt-g-foundry-sdks-a-4",
+   "type": "single",
+   "scenario": "A developer wants to call a model through the Responses API by using the project client.",
+   "question": "Which call returns an OpenAI-compatible client?",
+   "options": [
+    {
+     "text": "DefaultAzureCredential().get_token()",
+     "why": "This returns a token, not a client."
+    },
+    {
+     "text": "project.get_openai_client()",
+     "why": "Correct. It returns a client configured for the project."
+    },
+    {
+     "text": "project.connections.list()",
+     "why": "This lists connections."
+    },
+    {
+     "text": "project.deployments.delete()",
+     "why": "This is not how a client is obtained."
+    }
+   ],
+   "answer": [
+    1
+   ],
+   "explanation": "The Foundry SDK hands out an OpenAI-compatible client tied to the project.",
+   "objective": "2.1.5"
+  },
+  {
+   "id": "agt-g-foundry-sdks-a-5",
+   "type": "single",
+   "scenario": "An agent app must export traces to Application Insights, and the instrumentation needs the connection string.",
+   "question": "Where can the app obtain it through the SDK?",
+   "options": [
+    {
+     "text": "From the search index schema",
+     "why": "Index schemas do not contain it."
+    },
+    {
+     "text": "From the agent instructions",
+     "why": "Instructions are not configuration storage."
+    },
+    {
+     "text": "From the project telemetry methods, by using the Application Insights connection",
+     "why": "Correct. The project knows which Application Insights resource is connected."
+    },
+    {
+     "text": "From the model deployment name",
+     "why": "The deployment name does not hold a connection string."
+    }
+   ],
+   "answer": [
+    2
+   ],
+   "explanation": "A connected Application Insights resource lets the SDK discover the trace destination.",
+   "objective": "2.1.5"
+  }
+ ]
+}

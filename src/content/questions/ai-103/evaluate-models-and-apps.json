@@ -1,0 +1,152 @@
+{
+ "cert": "ai-103",
+ "domain": 2,
+ "topic": "evaluate-models-and-apps",
+ "questions": [
+  {
+   "id": "agt-g-evaluate-model-1",
+   "type": "single",
+   "scenario": "A RAG chatbot sometimes states refund amounts that do not appear in the retrieved documents.",
+   "question": "Which evaluator detects this problem?",
+   "options": [
+    {
+     "text": "F1 score",
+     "why": "F1 compares with a ground truth answer and does not check support by context."
+    },
+    {
+     "text": "Groundedness",
+     "why": "Correct. It scores whether the response is supported by the context."
+    },
+    {
+     "text": "Fluency",
+     "why": "Fluency scores language quality, not support by sources."
+    },
+    {
+     "text": "Coherence",
+     "why": "Coherence scores logical flow, not factual support."
+    }
+   ],
+   "answer": [
+    1
+   ],
+   "explanation": "Fabrications are claims not supported by the context, which groundedness measures.",
+   "objective": "2.1.4"
+  },
+  {
+   "id": "agt-g-evaluate-model-2",
+   "type": "single",
+   "scenario": "A response is accurate and well written but answers a different question from the one the user asked.",
+   "question": "Which evaluator would score this response low?",
+   "options": [
+    {
+     "text": "Groundedness",
+     "why": "The response may be well supported yet still off topic."
+    },
+    {
+     "text": "Protected material",
+     "why": "It checks for copyrighted content."
+    },
+    {
+     "text": "Relevance",
+     "why": "Correct. It measures how well the response addresses the query."
+    },
+    {
+     "text": "Violence",
+     "why": "Violence checks harmful content."
+    }
+   ],
+   "answer": [
+    2
+   ],
+   "explanation": "Relevance compares the response with what was asked.",
+   "objective": "2.1.4"
+  },
+  {
+   "id": "agt-g-evaluate-model-3",
+   "type": "single",
+   "scenario": "You must test whether retrieved documents containing hidden instructions can change the behaviour of your app.",
+   "question": "Which evaluator should you run?",
+   "options": [
+    {
+     "text": "Coherence",
+     "why": "Coherence does not test security."
+    },
+    {
+     "text": "Similarity",
+     "why": "Similarity compares with a ground truth."
+    },
+    {
+     "text": "Relevance",
+     "why": "Relevance does not test for injected instructions."
+    },
+    {
+     "text": "Indirect attack",
+     "why": "Correct. It checks for manipulation through content the app retrieves."
+    }
+   ],
+   "answer": [
+    3
+   ],
+   "explanation": "Safety evaluators cover harm categories and indirect attacks on documents or tool output.",
+   "objective": "2.1.4"
+  },
+  {
+   "id": "agt-g-evaluate-model-4",
+   "type": "single",
+   "scenario": "A team changes the system prompt and must prove quality did not drop before release.",
+   "question": "What should they do?",
+   "options": [
+    {
+     "text": "Run the same evaluators on the same fixed dataset before and after the change and compare scores",
+     "why": "Correct. Identical data and metrics make the comparison fair."
+    },
+    {
+     "text": "Ask three colleagues to try the bot for five minutes",
+     "why": "This is informal and not repeatable."
+    },
+    {
+     "text": "Increase the deployment quota",
+     "why": "Quota has no bearing on quality."
+    },
+    {
+     "text": "Switch to a larger model",
+     "why": "It does not show whether the prompt change helped or hurt."
+    }
+   ],
+   "answer": [
+    0
+   ],
+   "explanation": "Repeatable evaluation on a fixed test set is how changes are gated.",
+   "objective": "2.1.4"
+  },
+  {
+   "id": "agt-g-evaluate-model-5",
+   "type": "single",
+   "scenario": "AI-assisted evaluators such as groundedness and relevance are configured in a Python script.",
+   "question": "What must the script supply for them to run?",
+   "options": [
+    {
+     "text": "A custom speech model",
+     "why": "Speech models are unrelated."
+    },
+    {
+     "text": "A model configuration that points to a judge model deployment",
+     "why": "Correct. A model scores each row."
+    },
+    {
+     "text": "A Cosmos DB account",
+     "why": "The evaluators do not need a Cosmos DB account."
+    },
+    {
+     "text": "A private endpoint on the search service",
+     "why": "Networking is not required to run them."
+    }
+   ],
+   "answer": [
+    1
+   ],
+   "explanation": "AI-assisted evaluators use a judge model, which costs tokens.",
+   "objective": "2.1.4"
+  }
+ ]
+}

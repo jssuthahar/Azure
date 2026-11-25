@@ -1,0 +1,152 @@
+{
+ "cert": "ai-103",
+ "domain": 2,
+ "topic": "orchestrate-multiple-models",
+ "questions": [
+  {
+   "id": "agt-g-orchestrate-mu-1",
+   "type": "single",
+   "scenario": "A support app answers \"What are your store hours?\" thousands of times a day. The answer is in a table.",
+   "question": "How should the request be handled?",
+   "options": [
+    {
+     "text": "By a fine-tuned model",
+     "why": "The data is a simple lookup."
+    },
+    {
+     "text": "By an image model",
+     "why": "It does not apply."
+    },
+    {
+     "text": "By a rules engine that reads the table, with no model call",
+     "why": "Correct. Code answers exactly and for free."
+    },
+    {
+     "text": "By a reasoning model",
+     "why": "It adds cost and risk."
+    }
+   ],
+   "answer": [
+    2
+   ],
+   "explanation": "Use rules when code can decide exactly.",
+   "objective": "2.3.4"
+  },
+  {
+   "id": "agt-g-orchestrate-mu-2",
+   "type": "single",
+   "scenario": "The app must label 100,000 reviews as positive, neutral or negative every hour at low cost.",
+   "question": "Which component fits?",
+   "options": [
+    {
+     "text": "A large reasoning model for every review",
+     "why": "It is more costly than needed."
+    },
+    {
+     "text": "A speech model",
+     "why": "The input is text."
+    },
+    {
+     "text": "A video model",
+     "why": "The input is text."
+    },
+    {
+     "text": "A small language model",
+     "why": "Correct. It is cheap and fast for simple labelling."
+    }
+   ],
+   "answer": [
+    3
+   ],
+   "explanation": "Send simple, high-volume work to small models.",
+   "objective": "2.3.4"
+  },
+  {
+   "id": "agt-g-orchestrate-mu-3",
+   "type": "single",
+   "scenario": "A team wants a service to choose a suitable model for each prompt automatically.",
+   "question": "Which feature fits?",
+   "options": [
+    {
+     "text": "A model router deployment",
+     "why": "Correct. It selects among underlying models per prompt."
+    },
+    {
+     "text": "A batch deployment",
+     "why": "It processes queued jobs."
+    },
+    {
+     "text": "An embedding deployment",
+     "why": "It returns vectors."
+    },
+    {
+     "text": "A content filter",
+     "why": "It checks risk."
+    }
+   ],
+   "answer": [
+    0
+   ],
+   "explanation": "A model router is one way to send prompts to different models.",
+   "objective": "2.3.4"
+  },
+  {
+   "id": "agt-g-orchestrate-mu-4",
+   "type": "single",
+   "scenario": "A hybrid design uses rules, a small model and a large model.",
+   "question": "In what order should a request be tried to reduce cost?",
+   "options": [
+    {
+     "text": "All three in parallel for every request",
+     "why": "It triples the cost."
+    },
+    {
+     "text": "Rules first, then the small model, then the large model only when needed",
+     "why": "Correct. The cheapest adequate component handles each request."
+    },
+    {
+     "text": "Large model first, then the small model",
+     "why": "Every request would pay the highest price."
+    },
+    {
+     "text": "Small model first for every request, including exact lookups",
+     "why": "Rules answer exact lookups more cheaply and reliably."
+    }
+   ],
+   "answer": [
+    1
+   ],
+   "explanation": "Cascade from cheapest to most capable.",
+   "objective": "2.3.4"
+  },
+  {
+   "id": "agt-g-orchestrate-mu-5",
+   "type": "single",
+   "scenario": "The small model returns a low-confidence label for some reviews.",
+   "question": "What should the design do?",
+   "options": [
+    {
+     "text": "Delete the request",
+     "why": "It loses data."
+    },
+    {
+     "text": "Raise the temperature",
+     "why": "It does not raise confidence."
+    },
+    {
+     "text": "Escalate those requests to a larger model",
+     "why": "Correct. A fallback improves quality for hard cases."
+    },
+    {
+     "text": "Always accept the low-confidence label",
+     "why": "It risks wrong labels."
+    }
+   ],
+   "answer": [
+    2
+   ],
+   "explanation": "Escalation keeps cost low while protecting quality.",
+   "objective": "2.3.4"
+  }
+ ]
+}

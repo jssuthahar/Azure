@@ -343,6 +343,7 @@ const data = {
   .cm-route small { font-size: .68rem; font-weight: 800; text-transform: uppercase; letter-spacing: .1em; color: var(--text-muted); }
   .cm-route b { font-size: 1.7rem; font-weight: 900; letter-spacing: -.02em; line-height: 1.1; }
   .cm-route > div:last-child b { color: var(--c); }
+  [data-theme='dark'] .cm-route > div:last-child b { color: color-mix(in srgb, var(--c) 45%, #fff); }
   .cm-route em { font-style: normal; font-size: .8rem; color: var(--text-muted); }
   .cm-route-go { font-size: 1.5rem; animation: cm-go 1.6s ease-in-out infinite; }
   @keyframes cm-go { 50% { transform: translateX(6px); } }

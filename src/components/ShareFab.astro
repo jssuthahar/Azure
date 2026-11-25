@@ -1,0 +1,93 @@
+---
+/**
+ * Floating "Share" button (bottom-left, opposite Ask Nimbus) on every page.
+ * Shares the page you're on: LinkedIn, X, WhatsApp, Facebook, Telegram, email
+ * or copy link; on touch devices it opens the native share sheet first.
+ * Hidden where screen space belongs to the task: mock exams, labs, embeds and
+ * slide mode. Nothing is tracked.
+ */
+---
+<div class="sf" data-sf>
+  <button type="button" class="sf-btn" data-sf-open aria-expanded="false" aria-controls="sf-panel"><span aria-hidden="true">📤</span> <span class="sf-lbl">Share</span></button>
+  <div id="sf-panel" class="sf-panel" data-sf-panel hidden role="dialog" aria-label="Share this page">
+    <p class="sf-h">Share this page</p>
+    <p class="sf-t" data-sf-title></p>
+    <div class="sf-nets">
+      <a data-net="linkedin" target="_blank" rel="noopener" href="#"><span class="sf-ic sf-li" aria-hidden="true">in</span>LinkedIn</a>
+      <a data-net="x" target="_blank" rel="noopener" href="#"><span class="sf-ic sf-x" aria-hidden="true">𝕏</span>X</a>
+      <a data-net="whatsapp" target="_blank" rel="noopener" href="#"><span class="sf-ic sf-wa" aria-hidden="true">✆</span>WhatsApp</a>
+      <a data-net="facebook" target="_blank" rel="noopener" href="#"><span class="sf-ic sf-fb" aria-hidden="true">f</span>Facebook</a>
+      <a data-net="telegram" target="_blank" rel="noopener" href="#"><span class="sf-ic sf-tg" aria-hidden="true">➤</span>Telegram</a>
+      <a data-net="email" href="#"><span class="sf-ic sf-em" aria-hidden="true">✉</span>Email</a>
+    </div>
+    <button type="button" class="sf-copy" data-sf-copy>🔗 Copy link</button>
+  </div>
+</div>
+
+<script>
+  const root = document.querySelector<HTMLElement>('[data-sf]');
+  const HIDE = /\/(mock-exam|labs\/[^/]+|embed)(\/|$)/;
+  if (root) {
+    if (HIDE.test(location.pathname)) root.remove();
+    else {
+      const btn = root.querySelector<HTMLButtonElement>('[data-sf-open]')!;
+      const panel = root.querySelector<HTMLElement>('[data-sf-panel]')!;
+      const url = () => location.origin + location.pathname;
+      const title = () => document.title.replace(/\s*\|\s*MSDEVBUILD.*$/, '');
+      const text = () => `${title()}: free on MSDEVBUILD`;
+      const links: Record<string, () => string> = {
+        linkedin: () => `https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(url())}`,
+        x: () => `https://twitter.com/intent/tweet?text=${encodeURIComponent(text())}&url=${encodeURIComponent(url())}`,
+        whatsapp: () => `https://wa.me/?text=${encodeURIComponent(`${text()} ${url()}`)}`,
+        facebook: () => `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(url())}`,
+        telegram: () => `https://t.me/share/url?url=${encodeURIComponent(url())}&text=${encodeURIComponent(text())}`,
+        email: () => `mailto:?subject=${encodeURIComponent(title())}&body=${encodeURIComponent(`${text()}\n${url()}`)}`,
+      };
+      const open = (on: boolean) => {
+        panel.hidden = !on;
+        btn.setAttribute('aria-expanded', String(on));
+        if (on) {
+          root.querySelector('[data-sf-title]')!.textContent = title();
+          panel.querySelectorAll<HTMLAnchorElement>('a[data-net]').forEach((a) => { a.href = links[a.dataset.net!](); });
+          panel.querySelector<HTMLElement>('a')?.focus({ preventScroll: true });
+        }
+      };
+      btn.addEventListener('click', async (e) => {
+        e.stopPropagation();
+        if (panel.hidden && navigator.share && matchMedia('(pointer: coarse)').matches) {
+          try { await navigator.share({ title: title(), text: text(), url: url() }); return; } catch { /* cancelled: show the panel */ }
+        }
+        open(panel.hidden);
+      });
+      panel.querySelector('[data-sf-copy]')!.addEventListener('click', async (e) => {
+        const b = e.currentTarget as HTMLButtonElement;
+        try { await navigator.clipboard.writeText(url()); b.textContent = '✓ Link copied'; } catch { b.textContent = url(); }
+        setTimeout(() => { b.textContent = '🔗 Copy link'; }, 2500);
+      });
+      panel.querySelectorAll('a[data-net]').forEach((a) => a.addEventListener('click', () => setTimeout(() => open(false), 200)));
+      document.addEventListener('click', (e) => { if (!panel.hidden && !root.contains(e.target as Node)) open(false); });
+      document.addEventListener('keydown', (e) => { if (e.key === 'Escape' && !panel.hidden) { open(false); btn.focus(); } });
+    }
+  }
+</script>
+
+<style is:global>
+  .sf { position: fixed; z-index: 80; left: 1rem; bottom: 1rem; }
+  .sf:has(.sf-panel:not([hidden])) { z-index: 95; }
+  html.presenting .sf, .kp:not([hidden]) ~ .sf { display: none; }
+  .sf-btn { display: inline-flex; align-items: center; gap: .4rem; min-height: 44px; padding: 0 1rem; border-radius: 999px; font-weight: 700; font-size: .9rem; color: var(--text); background: var(--glass); border: 1px solid var(--card-line); box-shadow: 0 12px 30px -12px rgb(0 40 90 / .45); -webkit-backdrop-filter: blur(12px); backdrop-filter: blur(12px); transition: transform .2s, box-shadow .2s; }
+  .sf-btn:hover { transform: translateY(-2px); box-shadow: 0 16px 34px -12px rgb(0 60 120 / .55); }
+  .sf-panel { position: absolute; left: 0; bottom: calc(100% + .6rem); width: min(320px, calc(100vw - 2rem)); padding: .9rem; border-radius: 16px; background: var(--card); color: var(--text); border: 1px solid var(--card-line); box-shadow: 0 24px 60px -20px rgb(0 30 70 / .55); }
+  .sf-panel[hidden] { display: none; }
+  .sf-h { font-size: .72rem; font-weight: 800; letter-spacing: .12em; text-transform: uppercase; color: var(--accent-deep); }
+  .sf-t { margin-top: .25rem; font-weight: 650; font-size: .9rem; line-height: 1.35; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+  .sf-nets { margin-top: .7rem; display: grid; grid-template-columns: repeat(3, 1fr); gap: .45rem; }
+  .sf-nets a { display: flex; flex-direction: column; align-items: center; gap: .3rem; padding: .55rem .2rem; border-radius: 12px; border: 1px solid var(--border); font-size: .74rem; font-weight: 650; color: var(--text) !important; text-decoration: none !important; transition: border-color .15s, transform .15s; }
+  .sf-nets a:hover, .sf-nets a:focus-visible { border-color: var(--accent); transform: translateY(-2px); }
+  .sf-ic { display: grid; place-items: center; width: 34px; height: 34px; border-radius: 10px; color: #fff; font-weight: 800; font-size: .95rem; }
+  .sf-li { background: #0a66c2; } .sf-x { background: #111; } .sf-wa { background: #1e9e50; } .sf-fb { background: #1668d8; } .sf-tg { background: #2a8ec7; } .sf-em { background: #5b6b7c; }
+  .sf-copy { margin-top: .55rem; width: 100%; min-height: 40px; border-radius: 10px; border: 1px solid var(--border); font-weight: 700; font-size: .85rem; }
+  .sf-copy:hover { border-color: var(--accent); }
+  @media (max-width: 640px) { .sf { left: .75rem; bottom: .9rem; } .sf-lbl { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); } .sf-btn { width: 48px; justify-content: center; padding: 0; } }
+  @media print { .sf { display: none !important; } }
+</style>

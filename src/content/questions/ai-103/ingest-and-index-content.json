@@ -1,0 +1,148 @@
+{
+ "cert": "ai-103",
+ "domain": 5,
+ "topic": "ingest-and-index-content",
+ "questions": [
+  {
+   "id": "x5-ing-1",
+   "type": "single",
+   "question": "You index PDFs from Azure Blob Storage with an Azure AI Search indexer and a skillset that includes the OCR skill. Scanned PDFs still return no text. What should you configure?",
+   "options": [
+    {
+     "text": "Set imageAction to generateNormalizedImages on the indexer",
+     "why": "Correct. The OCR skill only receives images when document cracking extracts them, and this setting provides them."
+    },
+    {
+     "text": "Increase the number of replicas on the search service",
+     "why": "Replicas add query capacity. They do not change what the indexer extracts."
+    },
+    {
+     "text": "Add a semantic configuration to the index",
+     "why": "A semantic configuration affects query-time ranking, not text extraction."
+    },
+    {
+     "text": "Change the data source to use an account key",
+     "why": "The authentication method does not affect whether images are passed to OCR."
+    }
+   ],
+   "answer": [
+    0
+   ],
+   "explanation": "The indexer must be configured to extract images (imageAction set to generateNormalizedImages) so that the OCR skill has input.",
+   "objective": "5.1.4"
+  },
+  {
+   "id": "x5-ing-2",
+   "type": "single",
+   "question": "A RAG index must return individual passages from 200-page PDFs, each linked to its source file. Which combination should you use in the skillset?",
+   "options": [
+    {
+     "text": "The Text Split skill and index projections",
+     "why": "Correct. Text Split creates chunks and index projections write each chunk as its own search document with a parent key."
+    },
+    {
+     "text": "The PII Detection skill and a synonym map",
+     "why": "These protect data and expand terms. They do not create chunks."
+    },
+    {
+     "text": "The Key Phrase Extraction skill and a scoring profile",
+     "why": "Key phrases summarise content. They do not divide a file into passages."
+    },
+    {
+     "text": "A single index document per file and a larger vector dimension",
+     "why": "A file-sized document returns whole files, and dimensions do not control chunking."
+    }
+   ],
+   "answer": [
+    0
+   ],
+   "explanation": "Chunking plus index projections gives one search document per chunk with a link to its parent.",
+   "objective": "5.1.4"
+  },
+  {
+   "id": "x5-ing-3",
+   "type": "single",
+   "question": "An indexer must read a blob container without storing a connection string or key. Which two actions are required?",
+   "options": [
+    {
+     "text": "Enable a managed identity on the storage account and assign it Search Service Contributor",
+     "why": "The search service is the caller, so the role must be granted to its identity on the storage account."
+    },
+    {
+     "text": "Assign the Owner role to the indexer on the subscription",
+     "why": "Indexers are not role assignees, and Owner is far more than needed."
+    },
+    {
+     "text": "Create a shared access signature and store it in the index",
+     "why": "A SAS is still a secret to manage, and it must not be stored in the index."
+    },
+    {
+     "text": "Enable a system-assigned managed identity on the search service and assign it Storage Blob Data Reader on the storage account",
+     "why": "Correct. The data source then authenticates as the service identity with a read-only data role."
+    }
+   ],
+   "answer": [
+    3
+   ],
+   "explanation": "Use the search service's managed identity with Storage Blob Data Reader to avoid keys.",
+   "objective": "5.1.1"
+  },
+  {
+   "id": "x5-ing-4",
+   "type": "single",
+   "question": "You change the chunk size in the Text Split skill. After the next scheduled run the index still contains the old chunks. What should you do?",
+   "options": [
+    {
+     "text": "Delete the data source and recreate it with the same name",
+     "why": "This is unnecessary. A reset of the indexer is sufficient."
+    },
+    {
+     "text": "Reset the indexer and run it again",
+     "why": "Correct. Blob change detection skips unchanged files, so a reset is needed to process every document again."
+    },
+    {
+     "text": "Scale the search service to a higher tier",
+     "why": "Capacity does not make the indexer revisit unchanged files."
+    },
+    {
+     "text": "Disable the semantic ranker",
+     "why": "The ranker has no effect on how documents are indexed."
+    }
+   ],
+   "answer": [
+    1
+   ],
+   "explanation": "Unchanged blobs are skipped, so pipeline changes require an indexer reset.",
+   "objective": "5.1.4"
+  },
+  {
+   "id": "x5-ing-5",
+   "type": "multi",
+   "question": "You must make recorded support calls searchable in Azure AI Search. Which two approaches meet the requirement?",
+   "options": [
+    {
+     "text": "Analyze the recordings with Azure Content Understanding and index the returned transcript text",
+     "why": "Correct. Analysis produces transcripts and segments that can then be indexed."
+    },
+    {
+     "text": "Add the OCR skill to read the audio files",
+     "why": "OCR reads text in images. It does not process audio."
+    },
+    {
+     "text": "Set the semantic ranker to read the audio",
+     "why": "The ranker reorders text results. It does not ingest audio."
+    },
+    {
+     "text": "Transcribe the audio with Azure Speech and upload the text to the index",
+     "why": "Correct. The transcript becomes searchable text."
+    }
+   ],
+   "answer": [
+    0,
+    3
+   ],
+   "explanation": "Indexers do not transcribe audio themselves. Convert the audio to text first, then index it.",
+   "objective": "5.1.1"
+  }
+ ]
+}

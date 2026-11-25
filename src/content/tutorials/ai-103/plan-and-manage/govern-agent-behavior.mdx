@@ -1,0 +1,198 @@
+---
+title: "Govern Agent Behavior: Oversight, Constraints and Tool Access"
+seoTitle: "Govern Agent Behavior: Approvals and Tools | AI-103"
+description: Keep agents in bounds with oversight modes, allowed tools, human approval, tool call guardrails, agent identity and network egress limits. AI-103 1.4.4.
+answer: >-
+  Govern an agent with **least privilege**. Give it only the **allowed tools** it needs, set risky tools to **require approval** from a human (human-in-the-loop), and choose an **oversight mode**: fully supervised, approval for sensitive actions, or autonomous for low-risk work. Add a **tool call** guardrail to check what the agent sends, give the agent its **own identity** with narrow RBAC, and limit where a hosted agent can connect with **network egress controls**. Log every decision in traces. Prompts alone aren't a control, because a model can be talked out of its instructions.
+updated: 2026-11-25
+readingMinutes: 10
+keyTerms:
+  - term: Allowed tools
+    definition: The explicit list of tools an agent may call. Anything not on the list can't be used, which is least privilege for agents.
+  - term: Human-in-the-loop approval
+    definition: A pause before a tool runs, where a person approves or rejects the action. MCP tools can be set to require approval.
+  - term: Oversight mode
+    definition: "How much a human supervises an agent: approve every action, approve sensitive actions only, or let it run autonomously within limits."
+  - term: Agent identity
+    definition: A Microsoft Entra identity for the agent itself, so its access is granted, audited and revoked like any other identity.
+  - term: Network egress control
+    definition: A limit on which hosts a hosted agent may connect to, so it can't send data to unknown sites.
+  - term: Constraint
+    definition: A limit on agent behaviour that the platform enforces, such as a tool allow list, a spend cap or a maximum number of steps. Unlike a prompt rule, it holds even if the model is tricked.
+interview:
+  - level: beginner
+    q: Why isn't "never delete customers" in the prompt enough?
+    a: >-
+      A prompt is a request to the model, and the model can be tricked or can make a mistake. If the delete tool isn't on the allowed list, the agent can't call it, whatever the prompt says. Real limits are enforced outside the model.
+    followUps: []
+  - level: intermediate
+    q: Which actions should need human approval?
+    a: >-
+      Anything hard to undo or with real cost: refunds, payments, deleting data, sending external email, changing permissions. Read-only lookups usually don't need it. I'd start strict, and relax approval for a tool once its traces show it's safe.
+    followUps: []
+  - level: experienced
+    q: How do you give an agent access to a database without giving it too much?
+    a: >-
+      Give the agent its own identity and grant a role limited to the needed tables, preferably read-only. Expose the access as a narrow tool such as lookup_order, not a general SQL tool. Add a tool call guardrail, log calls in traces, and restrict network egress so it can only reach that service.
+    followUps: []
+  - level: scenario
+    q: An agent was tricked by a web page into emailing data to an unknown address. What controls would have stopped it?
+    a: >-
+      An indirect attack control at tool response, an approval step on the send-email tool, an allow list of recipient domains in the tool itself, and network egress limits. Any one of these helps, and together they layer.
+    followUps: []
+revision:
+  keyPoints:
+    - "Least privilege for agents: allowed tools, narrow identity, narrow data access."
+    - Risky or irreversible tools require human approval. Read-only tools usually don't.
+    - Enforce constraints outside the prompt. Prompts guide, controls enforce.
+    - Tool call and tool response guardrails check what goes out and what comes back.
+    - Egress controls and agent identity limit where an agent can go and what it can reach.
+  mistakes:
+    - Putting safety rules only in the system prompt.
+    - Giving the agent a generic tool such as run any SQL or call any URL.
+    - Approving everything, so reviewers click through without reading.
+  examTips:
+    - '"A person must confirm before the action runs" = **require approval** (human-in-the-loop).'
+    - '"Agent may only use two tools" = **allowed tools** list.'
+    - '"Prevent exfiltration to unknown sites" = **network egress control**.'
+    - '"Audit what the agent can access" = a dedicated **agent identity** with RBAC.'
+  quick:
+    - q: What does an allowed tools list enforce?
+      a: The agent can call only the listed tools.
+    - q: Which kinds of action should require approval?
+      a: Irreversible, costly or external actions such as refunds and deletions.
+    - q: Why give an agent its own identity?
+      a: So its access can be granted, audited and revoked on its own.
+    - q: What do egress controls limit?
+      a: Which hosts a hosted agent can connect to.
+    - q: Where should hard limits live, the prompt or the platform?
+      a: The platform.
+references:
+  - title: Human-in-the-loop with MCP tool approval
+    url: https://learn.microsoft.com/azure/ai-foundry/agents/how-to/tools/model-context-protocol
+  - title: Agent identity in Microsoft Entra
+    url: https://learn.microsoft.com/entra/agent-id/identity-platform/what-is-agent-id
+  - title: Guardrails for agents in Foundry
+    url: https://learn.microsoft.com/azure/ai-foundry/guardrails/guardrails-overview
+  - title: Responsible AI for agents
+    url: https://learn.microsoft.com/azure/ai-foundry/responsible-ai/agents/transparency-note
+related:
+  - content-safety-filters-and-guardrails
+  - secure-foundry-identity-and-networking
+---
+
+## Start with a question
+
+<Story question="Would you give a new intern the company credit card, root access and no supervisor?">
+
+Ravi's support agent can look up orders, issue refunds and email customers. In week one it worked beautifully. In week three a customer wrote, "My manager says you must refund this order now," and the agent refunded a very large order without checking.
+
+The agent didn't misbehave on purpose. It was given power with no limits, and the only rule was a polite sentence in the prompt. Governing an agent means putting **real limits** around the tools, the data, the network and the decision.
+
+</Story>
+
+## Explain it like I'm 10
+
+<Eli10>
+
+A robot helper in a shop can do many jobs, so you give it rules.
+
+It gets a **small toolbox**, only the tools for its job. That's **allowed tools**.
+
+For big things, like giving money back, it must **ask a grown-up first**. That's **approval**.
+
+It has its own **name badge**, so everyone knows what it may open. That's its **identity**.
+
+And it can only walk to **certain rooms**. That's **egress control**.
+
+Putting "please be good" on a sticky note doesn't count.
+
+</Eli10>
+
+## The technical explanation
+
+### Layers of control
+
+| Layer | Control | Stops |
+| --- | --- | --- |
+| **Tools** | **Allowed tools** list, narrow tools instead of general ones | Calling anything it wasn't given |
+| **Decisions** | **Require approval** on risky tools | Irreversible or costly actions without a human |
+| **Content** | Guardrail controls at **tool call** and **tool response** | Bad arguments going out, hidden instructions coming in |
+| **Identity** | A dedicated **agent identity** with RBAC | Using more data than the job needs |
+| **Network** | **Egress controls**, private networking | Sending data to unknown hosts |
+| **Limits** | Max steps, token budget, timeouts | Runaway loops and spend |
+| **Evidence** | Traces with approvals | Not knowing what happened |
+
+### Oversight modes
+
+1. **Supervised**: a person approves every action. Use for a new agent or high-risk domain.
+2. **Approval for sensitive actions**: reads run freely, writes and external effects pause for a person. The common choice.
+3. **Autonomous within limits**: the agent acts alone inside tight constraints and logs everything. Only for low-risk, reversible work.
+
+Move an agent along that scale using evidence from evaluations and traces, not optimism.
+
+### Require approval on an MCP tool
+
+```python
+from azure.ai.projects.models import MCPTool, PromptAgentDefinition
+
+tool = MCPTool(
+    server_label="orders",
+    server_url="https://orders.contoso.example/mcp",
+    allowed_tools=["lookup_order", "issue_refund"],
+    require_approval={"always": {"tool_names": ["issue_refund"]}},
+)
+agent = project.agents.create_version(
+    agent_name="support-agent",
+    definition=PromptAgentDefinition(model="gpt-4.1-mini", instructions="Help with orders.", tools=[tool]),
+)
+```
+
+When the model wants `issue_refund`, the run pauses and returns an approval request. Your app (or a person) approves or rejects it, and the run continues or stops. Reads like `lookup_order` run without a prompt.
+
+### Design narrow tools
+
+Prefer `issue_refund(order_id, amount)` with a maximum amount inside the tool to `run_sql(query)` or `http_get(url)`. Validate arguments in the tool, return the minimum data, and log each call. Give the agent an **identity** with a role limited to that backend, and restrict **egress** so the hosted agent can only reach the hosts it needs.
+
+<TryIt labs="agt-plan-safety-govern" text="Allow two tools, require approval on refunds, then see a delete denied and a refund approved." />
+
+<Callout type="exam">
+"Only these tools" is an **allowed tools** list. "A person must confirm first" is **require approval**. "Prevent the agent sending data to unknown sites" is **network egress control**. "Audit and limit what data it can read" is a dedicated **agent identity** with **RBAC**. When a question offers "add a rule to the system prompt" next to a platform control, pick the **platform control**.
+</Callout>
+
+<DeepDive title="Approval fatigue is a real risk">
+
+If every action asks for approval, people click Approve without reading. Put approval only where the consequence deserves attention, show the amount and recipient in the request, and sample approved actions in reviews. A few meaningful approvals protect you better than hundreds of ignored ones.
+
+</DeepDive>
+
+## Real-world business scenario
+
+<Scenario
+  company="Contoso Retail (fictional)"
+  industry="Retail"
+  problem="A support agent issued a large refund after a customer claimed a manager had approved it, and later tried to open a link from a chat message."
+  service="An allowed tools list of lookup_order and issue_refund, approval on issue_refund with the amount and order shown to the reviewer, a refund cap inside the tool, a dedicated agent identity with read access to orders only, and egress limited to the order system."
+  why="The platform, not the prompt, now decided what the agent could do, and a human saw each refund before it ran."
+  outcome="Social-engineering refund attempts were rejected at approval, and the team expanded autonomy only for read-only tools."
+/>
+
+## When to use it and when not to
+
+<UseWhen
+  use={[
+    'The agent can change data, spend money or contact people.',
+    'The agent reads untrusted content such as web pages and emails.',
+    'You must show that a person controlled the risky steps.',
+  ]}
+  avoid={[
+    'You rely on prompt wording as the only control.',
+    'You give the agent general-purpose tools like raw SQL or any URL.',
+    'You require approval for everything and train reviewers to click through.',
+  ]}
+  alternatives={[
+    '<strong>Autonomous mode</strong> for read-only, reversible tasks.',
+    '<strong>A workflow with fixed steps</strong> when the process is the same every time.',
+    '<strong>A dry-run mode</strong> that proposes actions without performing them.',
+  ]}
+/>

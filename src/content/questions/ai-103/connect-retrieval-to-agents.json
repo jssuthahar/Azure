@@ -1,0 +1,148 @@
+{
+ "cert": "ai-103",
+ "domain": 5,
+ "topic": "connect-retrieval-to-agents",
+ "questions": [
+  {
+   "id": "x5-agt-1",
+   "type": "single",
+   "question": "A Foundry agent calls a knowledge base through its MCP tool by using the project's managed identity. Every call returns 403. What should you do?",
+   "options": [
+    {
+     "text": "Increase the agent's retrieval reasoning effort to medium",
+     "why": "Effort changes query planning, not authorization."
+    },
+    {
+     "text": "Assign the Search Index Data Reader role to the project's managed identity on the search service",
+     "why": "Correct. Read-only access to the indexes is the least privilege the call needs."
+    },
+    {
+     "text": "Add a semantic configuration to the knowledge base",
+     "why": "This does not grant access."
+    },
+    {
+     "text": "Assign the Owner role to the agent on the resource group",
+     "why": "Owner is excessive, and agents are not role assignees."
+    }
+   ],
+   "answer": [
+    1
+   ],
+   "explanation": "The identity that calls the search service needs a data-plane read role.",
+   "objective": "5.1.5"
+  },
+  {
+   "id": "x5-agt-2",
+   "type": "single",
+   "question": "Users ask two-part questions such as \"Can I expense a taxi, and how long do I have to claim it?\". You want the knowledge base to split them into subqueries. What should you configure?",
+   "options": [
+    {
+     "text": "A scoring profile on the index",
+     "why": "Scoring profiles do not split questions."
+    },
+    {
+     "text": "A retrieval reasoning effort of minimal",
+     "why": "Minimal skips model planning and sends the question as it is."
+    },
+    {
+     "text": "A retrieval reasoning effort of low or medium, with a chat model deployment for query planning",
+     "why": "Correct. Model-based planning breaks the question into subqueries."
+    },
+    {
+     "text": "A larger chunk size in the Text Split skill",
+     "why": "Chunk size is an indexing setting."
+    }
+   ],
+   "answer": [
+    2
+   ],
+   "explanation": "Low and medium effort use a model to plan subqueries.",
+   "objective": "5.1.5"
+  },
+  {
+   "id": "x5-agt-3",
+   "type": "single",
+   "question": "An agent must say that it does not know when the knowledge base returns nothing relevant, and cite sources otherwise. Where should you put these requirements?",
+   "options": [
+    {
+     "text": "In the semantic configuration of the index",
+     "why": "This names fields for ranking."
+    },
+    {
+     "text": "In the diagnostic settings of the search service",
+     "why": "Diagnostics record telemetry. They do not control behaviour."
+    },
+    {
+     "text": "In the data source definition of the indexer",
+     "why": "The data source defines where files are, not how answers are written."
+    },
+    {
+     "text": "In the agent's instructions, together with the knowledge base tool",
+     "why": "Correct. Instructions govern how the agent uses retrieved content."
+    }
+   ],
+   "answer": [
+    3
+   ],
+   "explanation": "Grounding behaviour is set in the agent instructions, supported by good retrieval.",
+   "objective": "5.1.5"
+  },
+  {
+   "id": "x5-agt-4",
+   "type": "single",
+   "question": "Several agents must share one curated source of company policies with planned subqueries and citations. Which design fits?",
+   "options": [
+    {
+     "text": "One knowledge base with knowledge sources, connected to each agent as a tool",
+     "why": "Correct. A knowledge base can be shared by multiple agents."
+    },
+    {
+     "text": "Memory configured with a user profile",
+     "why": "Memory stores facts learned about users, not curated documents."
+    },
+    {
+     "text": "A function tool that runs a SQL query for each question",
+     "why": "This does not provide planned retrieval or citations."
+    },
+    {
+     "text": "A separate file search vector store uploaded to every agent",
+     "why": "File search suits per-agent or per-conversation files, and it duplicates the content."
+    }
+   ],
+   "answer": [
+    0
+   ],
+   "explanation": "Knowledge bases are the shared grounding layer for agents.",
+   "objective": "5.1.5"
+  },
+  {
+   "id": "x5-agt-5",
+   "type": "multi",
+   "question": "Which two statements about connecting a workflow or application to a knowledge base are correct?",
+   "options": [
+    {
+     "text": "A knowledge base can be used only by agents created in the Foundry portal",
+     "why": "Applications and other frameworks can call it too."
+    },
+    {
+     "text": "An application can call the knowledge base retrieve API or an SDK, without using an agent",
+     "why": "Correct. Any client that can call the REST API can use it."
+    },
+    {
+     "text": "Retrieval always requires a chat model, even at minimal effort",
+     "why": "Minimal effort extraction from an index does not need a chat model."
+    },
+    {
+     "text": "A private connection from the agent to the search service does not automatically protect the search service's own connections to data sources and models",
+     "why": "Correct. Inbound and outbound boundaries are separate."
+    }
+   ],
+   "answer": [
+    1,
+    3
+   ],
+   "explanation": "The retrieve API serves any client, and network isolation must be planned for each dependency.",
+   "objective": "5.1.5"
+  }
+ ]
+}

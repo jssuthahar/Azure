@@ -1,0 +1,229 @@
+---
+title: Ingest and Index Content for RAG
+seoTitle: Ingest and Index Content for RAG | AI-103
+description: Build an Azure AI Search ingestion pipeline with a data source, a skillset for OCR, chunking and embeddings, an index and an indexer that stays current.
+answer: >-
+  To ingest content for RAG, an **Azure AI Search** (Foundry IQ) **indexer** reads files from a **data source** such as Blob Storage, runs a **skillset** (**OCR**, **Text Split**, an **embedding** model) and writes one search document per **chunk** into an **index**. Scanned pages only become searchable when the OCR skill receives images (**imageAction: generateNormalizedImages**). Use a managed identity for access, a schedule to keep the index current, and **reset** the indexer when you change the pipeline. Audio and video are analysed first (for example with Content Understanding), then their text is indexed.
+updated: 2026-11-25
+readingMinutes: 12
+keyTerms:
+  - term: Indexer
+    definition: A crawler in the search service that reads a data source, runs an optional skillset and writes documents into an index.
+  - term: Data source
+    definition: The connection to where the files live, such as an Azure Blob Storage container, with the identity used to read it.
+  - term: Skillset
+    definition: An ordered set of skills (OCR, Text Split, embeddings, PII detection and others) that enrich each document during indexing.
+  - term: Chunk
+    definition: A passage of a document, typically a few thousand characters with some overlap, that becomes its own search document.
+  - term: Index projection
+    definition: A skillset setting that writes one search document per chunk (child) and links each back to its source file (parent) with a key.
+  - term: imageAction
+    definition: An indexer setting that tells document cracking to extract images. generateNormalizedImages makes images available to the OCR skill.
+  - term: Integrated vectorization
+    definition: Chunking and embedding handled inside the indexer pipeline, with a vectorizer on the index that embeds queries at query time.
+interview:
+  - level: beginner
+    q: What does an indexer do in Azure AI Search?
+    a: >-
+      It pulls content from a data source, optionally enriches it with a skillset, and writes the result into a search index. You schedule it or run it on demand, and for blobs it only re-reads files that changed.
+    followUps: []
+  - level: intermediate
+    q: Why are chunks stored as separate search documents in a RAG index?
+    a: >-
+      A model can only read a limited amount of context, and a whole 200-page PDF is a poor search result. Chunks are small enough to rank, embed and cite precisely, and the parent key links each one back to the file.
+    followUps:
+      - q: How do you produce one search document per chunk?
+        a: >-
+          Add a Text Split skill, then use an index projection in the skillset so each chunk is written as its own document with a parent_id.
+  - level: experienced
+    q: Scanned PDFs in your container return no results. What do you check?
+    a: >-
+      Whether the skillset has an OCR skill and whether the indexer's imageAction is generateNormalizedImages. Without images the OCR skill has nothing to read. I'd also check the indexer's execution history for warnings, then reset and rerun after the fix.
+    followUps: []
+  - level: scenario
+    q: You changed the chunk size in the Text Split skill, but the index still shows the old chunks. Why?
+    a: >-
+      The indexer remembers which blobs it has processed, so unchanged files are skipped. I'd reset the indexer so it reprocesses every document, or turn on enrichment caching to avoid paying again for skills whose inputs didn't change.
+    followUps: []
+  - level: architecture
+    q: How would you design ingestion for 40,000 PDFs, scans and call recordings?
+    a: >-
+      Put PDFs and scans in Blob Storage and index them with a skillset that has OCR, Text Split and embeddings, using the search service's managed identity and a schedule. For recordings I'd analyse them with Content Understanding or Azure Speech first and index the transcripts, because indexers don't transcribe audio themselves.
+    followUps: []
+revision:
+  keyPoints:
+    - "An indexer needs a data source and an index. A skillset is optional but is where OCR, chunking and embeddings happen."
+    - Chunk the text, then give each chunk its own search document with an index projection.
+    - OCR needs imageAction = generateNormalizedImages, otherwise scans yield no text.
+    - Use the search service's managed identity and Storage Blob Data Reader instead of connection strings.
+    - Blob change detection is automatic. Reset the indexer after changing the skillset or settings.
+    - Audio and video are analysed first (Content Understanding or Speech) and their text is indexed.
+  mistakes:
+    - Forgetting imageAction, so scanned files are silently empty.
+    - Changing a skillset and expecting old documents to update without a reset.
+    - Embedding documents with one model and querying with another.
+  examTips:
+    - '"Scanned documents are not searchable" = **OCR skill** plus **generateNormalizedImages**.'
+    - '"One search result per passage" = **Text Split** plus **index projections**.'
+    - '"No keys in the pipeline" = **managed identity** on the search service with a data role.'
+  quick:
+    - q: Which object ties a data source, a skillset and an index together?
+      a: The indexer.
+    - q: Which indexer setting hands images to the OCR skill?
+      a: imageAction set to generateNormalizedImages.
+    - q: What do you do after changing a skillset so old files are reprocessed?
+      a: Reset the indexer, then run it.
+    - q: Which skill turns long text into passages?
+      a: The Text Split skill.
+    - q: How do you make each chunk its own search document?
+      a: Use an index projection in the skillset.
+references:
+  - title: Indexers in Azure AI Search
+    url: https://learn.microsoft.com/azure/search/search-indexer-overview
+  - title: Skillsets in Azure AI Search
+    url: https://learn.microsoft.com/azure/search/cognitive-search-working-with-skillsets
+  - title: Integrated vectorization
+    url: https://learn.microsoft.com/azure/search/vector-search-integrated-vectorization
+  - title: OCR skill
+    url: https://learn.microsoft.com/azure/search/cognitive-search-skill-ocr
+  - title: Text Split skill
+    url: https://learn.microsoft.com/azure/search/cognitive-search-skill-textsplit
+related:
+  - semantic-hybrid-and-vector-search
+  - search-enrichment-skills
+  - connect-retrieval-to-agents
+  - content-understanding-document-extraction
+---
+
+## Start with a question
+
+<Story question="Half of Contoso's policies are scanned PDFs. How do you make them searchable for an AI agent without retyping anything?">
+
+Think of a library that receives boxes of paper. Someone has to open each box, read what's inside, split a long report into chapters, write a card for every chapter and put the cards in the catalogue. If a page is a photograph of text, somebody has to read the photo first.
+
+In Azure AI Search that person is the **indexer**. The reading glasses are the **OCR skill**. The chapter splitting is **Text Split**. The catalogue is the **index**, and every chapter gets its own card, a **chunk**.
+
+</Story>
+
+## Explain it like I'm 10
+
+<Eli10>
+
+You have a huge pile of homework sheets. Your teacher wants a quick way to find "the sheet about volcanoes".
+
+So a helper reads every sheet, cuts the long ones into small pieces, writes a label on each piece, and files them in a box. If a sheet is a photo of writing, the helper reads the photo first.
+
+Next week, the helper only looks at the sheets that changed. If you change the rules for cutting, you tell the helper "start again from the beginning". That's a reset.
+
+</Eli10>
+
+## The technical explanation
+
+RAG (retrieval-augmented generation) only works as well as the index behind it. Azure AI Search (Microsoft calls it **Foundry IQ** when agents use it) builds that index with a pipeline of four objects.
+
+### The four objects
+
+| Object | What it holds |
+| --- | --- |
+| **Data source** | Where the files are (a Blob Storage container, for example) and the identity used to read them. |
+| **Index** | The fields: a key, a title, the `chunk` text, a `text_vector` field, and optional semantic settings. |
+| **Skillset** | The enrichment steps: OCR, Text Split, an embedding skill, and any others you add. |
+| **Indexer** | Runs the pipeline: crack the file, run the skills, map the output, write documents. |
+
+You can create them in the portal with the **Import data (new)** wizard, with the Python SDK (`azure-search-documents`), or with the REST API.
+
+### From file to chunks
+
+1. **Document cracking.** The indexer opens PDFs, Office files and images and pulls out text, metadata and (if you ask) images.
+2. **OCR.** If `imageAction` is `generateNormalizedImages`, the extracted images go to the **OCR skill**. A scanned page is only an image, so without this step it has no text at all.
+3. **Text Split.** The text is cut into chunks (for example 2,000 characters with a 500 character overlap) so each passage stays focused.
+4. **Embedding.** The **Azure OpenAI embedding skill** calls your embedding deployment, such as `text-embedding-3-small`, and returns a vector for each chunk.
+5. **Index projections.** One search document per chunk, with a `parent_id` that points back to the file.
+
+```python
+indexers.create_or_update_indexer(SearchIndexer(
+    name="ixr-policies", data_source_name="ds-policies",
+    target_index_name="policies-idx", skillset_name="ss-policies",
+    parameters=IndexingParameters(configuration={
+        "dataToExtract": "contentAndMetadata",
+        "imageAction": "generateNormalizedImages"})))   # without this, OCR sees nothing
+```
+
+This is **integrated vectorization**: chunking and embedding happen inside the pipeline, and a **vectorizer** on the index embeds the user's question at query time with the same model. If you embed documents with one model and queries with another, the vectors don't line up and results turn to noise.
+
+### Access without keys
+
+Give the search service a **system-assigned managed identity**, then assign it **Storage Blob Data Reader** on the storage account. The data source then uses the identity instead of a connection string. If you forget the role, the indexer fails with a 403.
+
+### Keeping the index current
+
+For blobs, **change detection is built in**: a scheduled run reads only new and changed files. Two cases need care:
+
+- **Deleted files.** Turn on a deletion policy (such as soft delete) so removed blobs leave the index.
+- **Pipeline changes.** If you change the skillset, chunk size or `imageAction`, unchanged files are still skipped. **Reset** the indexer so every document is processed again. **Enrichment caching** stops you paying twice for skills whose input didn't change.
+
+### What about images, audio and video?
+
+| Content | How it gets in |
+| --- | --- |
+| PDFs and Office files | Document cracking, then Text Split and embeddings |
+| Scanned pages and images | OCR skill with `imageAction`; optionally image description with a model or multimodal embeddings |
+| Audio and video | Analyse first with **Content Understanding** (transcripts, segments, summaries) or **Azure Speech**, then index the text |
+
+<Flow
+  caption="From a blob to a searchable chunk"
+  steps={[
+    { title: 'Crack', text: 'The indexer opens the file and extracts text and images.' },
+    { title: 'Read', text: 'The OCR skill reads text from the images.' },
+    { title: 'Split', text: 'Text Split cuts the content into chunks.' },
+    { title: 'Embed', text: 'The embedding skill creates a vector for each chunk.' },
+    { title: 'Project', text: 'Each chunk becomes a search document linked to its file.' },
+  ]}
+/>
+
+<TryIt labs="agt-extract-index-pipeline" text="Build the pipeline in Cloud Shell, find the scanned form the first run misses, then fix it with imageAction and a reset." />
+
+<Callout type="exam">
+"Scanned PDFs return nothing" points at the **OCR skill** and **imageAction = generateNormalizedImages**. "Search results should be passages with a link back to the file" points at **Text Split** with **index projections**. "The pipeline must not store a key" points at the **managed identity** and a data role. "I changed the skillset and nothing happened" means **reset** the indexer.
+</Callout>
+
+<DeepDive title="Push or pull?">
+
+An indexer is the **pull** model: the service reads from a supported source on a schedule. The **push** model means your own code calls the index API to upload JSON documents, which is the only option for sources an indexer doesn't support, and it gives you full control of timing.
+
+Push has no skillset. If you need chunking or embeddings, you do them yourself before you upload, or you land the files in Blob Storage and use an indexer. Many teams do exactly that: a small job analyses audio or video, writes the Markdown transcript to Blob Storage, and the normal indexer picks it up.
+
+Also check the limits of your tier: the number of indexes, indexers and skillsets, and the maximum time one indexer run can take, before you plan a very large first load.
+
+</DeepDive>
+
+## Real-world business scenario
+
+<Scenario
+  company="Contoso Insurance (fictional)"
+  industry="Insurance"
+  problem="Claims handlers searched 30,000 policy PDFs and scanned forms by file name. A third of the files were scans, so full-text search never saw their content."
+  service="A blob container with every file, an Azure AI Search indexer that uses the service's managed identity, and a skillset with OCR, Text Split and the text-embedding-3-small skill. Index projections write one document per chunk, and the indexer runs nightly."
+  why="OCR makes scans searchable, chunks keep results precise and citeable, and change detection means only the files edited that day are read again."
+  outcome="Handlers find the right clause in seconds, and the claims agent can cite the exact passage and file it used."
+/>
+
+## When to use it and when not to
+
+<UseWhen
+  use={[
+    "You need an agent or app to answer from a large body of documents with citations.",
+    "Your files include scans or images with text, and you want that text searchable.",
+    "Content changes regularly and you want the index to follow it on a schedule.",
+  ]}
+  avoid={[
+    "You only need to look up a few records by key. A database query is simpler.",
+    "A file is uploaded by a user for this conversation only. File search on the agent fits better than a pipeline.",
+    "You need typed fields from each document, such as invoice totals. Use Content Understanding for that.",
+  ]}
+  alternatives={[
+    "<strong>Push model</strong> with the SDK when the source has no indexer.",
+    "<strong>Content Understanding</strong> to turn files into Markdown and fields before indexing.",
+    "<strong>File search</strong> in the agent for one-off uploads.",
+  ]}
+/>

@@ -1,0 +1,194 @@
+---
+title: CI/CD for Foundry Projects
+seoTitle: CI/CD Pipelines for Foundry Projects | AI-103
+description: Put agents, prompts and Bicep in Git, sign in with workload identity federation, gate releases on evaluations and promote dev to test to prod. AI-103 1.2.4.
+answer: >-
+  Keep the **agent definition, prompts, evaluation set and Bicep** in Git. A pipeline (GitHub Actions or Azure DevOps) signs in with **workload identity federation** (an OIDC **federated credential** on a managed identity or app registration), so no secret is stored. It deploys the infrastructure with **Bicep** to a **dev** project, runs an **evaluation** on a fixed test set as a **gate**, and only then promotes the same definition to **test** and **prod** projects, each with its own RBAC and approvals. Prod secrets don't exist; access is by role.
+updated: 2026-11-25
+readingMinutes: 9
+keyTerms:
+  - term: Workload identity federation
+    definition: A way for a pipeline to get an Azure token by proving its identity with an OIDC token from GitHub or Azure DevOps, so no client secret is stored.
+  - term: Federated credential
+    definition: The trust setting on a managed identity or app registration that says which repository, branch or environment may sign in.
+  - term: Evaluation gate
+    definition: A pipeline step that runs evaluators on a test set and fails the build if scores fall below a threshold.
+  - term: Bicep
+    definition: Azure's declarative language for infrastructure. It describes Foundry resources, projects, deployments and role assignments as code.
+  - term: Environment promotion
+    definition: Moving the same tested definition from dev to test to prod, with approvals between stages, instead of rebuilding it each time.
+  - term: Infrastructure as code
+    definition: Describing cloud resources in files kept in source control, so environments can be recreated and reviewed like software.
+interview:
+  - level: beginner
+    q: Why does the pipeline use workload identity federation instead of a client secret?
+    a: >-
+      A secret can leak, expire and needs rotating. With federation, GitHub proves who the job is with a short-lived OIDC token, and Azure trusts that because I set up a federated credential for that repo and branch. There's nothing stored to steal.
+    followUps: []
+  - level: intermediate
+    q: What do you version-control for an agent project?
+    a: >-
+      The Bicep for the resource, projects and deployments, the agent definition with its instructions and tool list, the evaluation dataset and thresholds, and the pipeline file. Anything that changes behaviour belongs in Git, so a review shows exactly what changed.
+    followUps: []
+  - level: experienced
+    q: How do you stop a prompt change that makes answers worse?
+    a: >-
+      I add an evaluation step to the pipeline that runs a fixed test set through evaluators such as groundedness and relevance, and fails the job under a threshold. Promotion to test and prod depends on that step passing, and prod also needs a manual approval from a protected environment.
+    followUps: []
+  - level: scenario
+    q: Dev, test and prod must be isolated, but the same definition must run in each. How?
+    a: >-
+      One Bicep template with parameters per environment, deployed into separate Foundry projects or resources with their own RBAC and networking. The agent definition is the same file. Only parameters such as model capacity, endpoints and connection names differ.
+    followUps: []
+revision:
+  keyPoints:
+    - Agents, prompts, evaluation data and Bicep live in Git and flow through pull requests.
+    - Federated credentials let a pipeline sign in without a stored secret.
+    - An evaluation step is a release gate. Failing scores stop promotion.
+    - Promote the same tested definition dev, test, prod, with approvals and separate RBAC.
+    - Use least-privilege roles for the pipeline identity at each environment.
+  mistakes:
+    - Storing a client secret in repository secrets when federation is available.
+    - Promoting by rebuilding in prod instead of promoting the tested definition.
+    - Giving the pipeline Owner on the whole subscription.
+  examTips:
+    - '"No secrets stored in the pipeline" = **workload identity federation**.'
+    - '"Block a release that lowers quality" = an **evaluation gate**.'
+    - '"Repeatable environments" = **Bicep** (infrastructure as code).'
+  quick:
+    - q: What does a federated credential trust?
+      a: A specific repository, branch or environment of GitHub or Azure DevOps.
+    - q: What does an evaluation gate do?
+      a: Fails the pipeline when scores fall below the threshold.
+    - q: Which language describes Foundry infrastructure as code?
+      a: Bicep.
+    - q: Should the same definition be promoted or rebuilt for prod?
+      a: Promoted.
+    - q: Which GitHub permission lets a job request an OIDC token?
+      a: id-token write.
+references:
+  - title: Authenticate to Azure from GitHub Actions with OpenID Connect
+    url: https://learn.microsoft.com/azure/developer/github/connect-from-azure-openid-connect
+  - title: Workload identity federation
+    url: https://learn.microsoft.com/entra/workload-id/workload-identity-federation
+  - title: Evaluate your generative AI app in CI/CD
+    url: https://learn.microsoft.com/azure/ai-foundry/how-to/evaluation-github-action
+  - title: Bicep for Microsoft.CognitiveServices accounts
+    url: https://learn.microsoft.com/azure/templates/microsoft.cognitiveservices/accounts
+related:
+  - configure-model-and-agent-deployments
+  - responsible-ai-evaluations-and-auditing
+---
+
+## Start with a question
+
+<Story question="Who checks that a prompt tweak didn't make the agent worse?">
+
+On Friday, someone shortened the support agent's instructions to make replies "snappier". It passed a quick look. By Monday, answers were quoting policy that didn't exist. Nobody was careless. There was just no step that measured quality before the change reached customers.
+
+A pipeline is that step. It runs the same checks every time, and nobody has to remember.
+
+</Story>
+
+## Explain it like I'm 10
+
+<Eli10>
+
+Imagine a cake factory with a door guard.
+
+Every new recipe goes through the door. First it's baked in a **practice kitchen** (dev), then tasted by testers (test), then sold in the shop (prod).
+
+The guard doesn't use a key you could lose. He recognises the baker's badge for that day, so there's **no key to steal**.
+
+And before the cake goes to the shop, a taste test gives it marks. If the marks are low, the guard says "not today".
+
+</Eli10>
+
+## The technical explanation
+
+### What goes into Git
+
+```text
+repo/
+  infra/main.bicep          Foundry resource, projects, deployments, role assignments
+  infra/dev.bicepparam      per-environment values (capacity, names)
+  agents/support-agent.yaml instructions, model, tools
+  evals/support-cases.jsonl test set with expected answers
+  .github/workflows/deploy.yml
+```
+
+Review changes by pull request. A prompt edit is a code change.
+
+### Sign in without a secret
+
+1. Create a **user-assigned managed identity** (or app registration).
+2. Add a **federated credential**: issuer `https://token.actions.githubusercontent.com`, subject such as `repo:contoso/agents:environment:prod`.
+3. Give that identity the roles it needs on each environment's scope, for example **Contributor** on the dev resource group and a narrower role in prod.
+4. In the workflow, grant `id-token: write` and use `azure/login`.
+
+```yaml
+permissions: { id-token: write, contents: read }
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    environment: prod
+    steps:
+      - uses: actions/checkout@v4
+      - uses: azure/login@v2
+        with: { client-id: ${{ vars.AZURE_CLIENT_ID }}, tenant-id: ${{ vars.AZURE_TENANT_ID }}, subscription-id: ${{ vars.AZURE_SUBSCRIPTION_ID }} }
+      - run: az deployment group create -g rg-agents-dev -f infra/main.bicep -p infra/dev.bicepparam
+      - run: python run_evals.py --dataset evals/support-cases.jsonl --min-groundedness 4.0
+```
+
+### The stages
+
+1. **Pull request**: validate Bicep (`az deployment group what-if`), run unit tests and a small evaluation.
+2. **Merge to main**: deploy to **dev**, run the full evaluation, publish an agent version.
+3. **Gate**: evaluators score the run. Under the threshold, the pipeline stops and prod is untouched.
+4. **Promote** to **test**, then **prod** through protected environments that need an approver.
+5. **After release**: continuous evaluation and monitoring keep watching.
+
+Use separate **projects or resources** per environment, each with its own RBAC and networking, and promote the **same definition** with different parameters.
+
+<TryIt labs="agt-plan-cicd" text="Read a pipeline that signs in with no secret, then see a bad change ship without a gate and get blocked with one." />
+
+<Callout type="exam">
+"No secrets stored in the pipeline" means **workload identity federation** with a **federated credential**. "Stop a release that lowers quality" means an **evaluation gate**. "Recreate the same environment reliably" means **Bicep**. "Promote tested changes" means the **same definition** moves through dev, test and prod, with approvals before prod.
+</Callout>
+
+<DeepDive title="Why the subject claim in the federated credential matters">
+
+The subject says which workflow runs may sign in: a repo, a branch, a tag or an environment. A loose subject, such as any branch in the repo, lets a pull request from a fork-like context ask for production access. Tie prod's credential to the protected `prod` environment, so the approval rule applies before Azure issues a token.
+
+</DeepDive>
+
+## Real-world business scenario
+
+<Scenario
+  company="Fabrikam Bank (fictional)"
+  industry="Banking"
+  problem="Prompt edits went straight to production, a service principal secret had been pasted into a wiki, and a quality drop took three days to notice."
+  service="Bicep and agent definitions in GitHub, a federated credential per environment, an evaluation step with groundedness and relevance thresholds, and a protected prod environment that needed an approver."
+  why="Federation removed the secret, the gate measured every change, and the approval kept a human in front of prod."
+  outcome="The next weak prompt change was blocked in the pull request, and releases became routine."
+/>
+
+## When to use it and when not to
+
+<UseWhen
+  use={[
+    'More than one person changes prompts, tools or infrastructure.',
+    'You must show who changed what, and when.',
+    'Quality has to be measured before customers see a change.',
+  ]}
+  avoid={[
+    'You keep a long-lived secret in the pipeline when federation works.',
+    'You rebuild prod by hand instead of promoting the tested definition.',
+    'Your evaluation set is five questions long and never changes.',
+  ]}
+  alternatives={[
+    '<strong>Azure Developer CLI (azd)</strong> templates for a quick start on a single environment.',
+    '<strong>Azure DevOps pipelines</strong> with a workload identity service connection.',
+    '<strong>Manual promotion in the portal</strong> for a prototype that has no users yet.',
+  ]}
+/>

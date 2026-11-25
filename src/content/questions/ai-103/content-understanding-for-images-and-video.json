@@ -1,0 +1,147 @@
+{
+ "cert": "ai-103",
+ "domain": 3,
+ "topic": "content-understanding-for-images-and-video",
+ "questions": [
+  {
+   "id": "cv-cu-1",
+   "type": "single",
+   "question": "A claims application must store the same fields, including a damage type chosen from four values, for every uploaded photo. Which solution meets the requirement?",
+   "options": [
+    {
+     "text": "A custom Content Understanding analyzer based on the image analyzer with a classify field",
+     "why": "Correct. A field schema returns the same structure for every file."
+    },
+    {
+     "text": "An image generation request with n set to 4",
+     "why": "The n setting controls the number of generated images."
+    },
+    {
+     "text": "A gpt-image deployment with a mask",
+     "why": "Image generation does not analyze uploaded photos."
+    },
+    {
+     "text": "A chat completion that asks for a description in free text",
+     "why": "Free text does not guarantee the same fields."
+    }
+   ],
+   "answer": [
+    0
+   ],
+   "explanation": "A custom analyzer with a field schema returns typed fields each time. The classify method picks a value from a list that you define.",
+   "objective": "3.2.5"
+  },
+  {
+   "id": "cv-cu-2",
+   "type": "single",
+   "question": "A developer defines a field in a custom image analyzer by using the extract method and receives a validation error. What should the developer use instead?",
+   "options": [
+    {
+     "text": "The extract method with a higher confidence threshold",
+     "why": "The error is not caused by a confidence threshold."
+    },
+    {
+     "text": "The estimate method",
+     "why": "No such field method exists."
+    },
+    {
+     "text": "The generate or classify method",
+     "why": "Correct. Extract is meant for values written in documents. Images use generate or classify."
+    },
+    {
+     "text": "A video analyzer as the base",
+     "why": "This changes the content type but does not make extract valid for images."
+    }
+   ],
+   "answer": [
+    2
+   ],
+   "explanation": "For images and video, use generate (free text from understanding) or classify (a value from your list). Extract is for documents.",
+   "objective": "3.2.7"
+  },
+  {
+   "id": "cv-cu-3",
+   "type": "single",
+   "question": "A training department has a 12-minute video. A search application must jump to the section about forklift safety. Which configuration enables this?",
+   "options": [
+    {
+     "text": "A video analyzer with segmentation enabled and a description of how to split the video",
+     "why": "Correct. Each segment returns its own fields, key frames and transcript."
+    },
+    {
+     "text": "A video analyzer with segmentation disabled",
+     "why": "With segmentation disabled the whole video is one segment."
+    },
+    {
+     "text": "An image analyzer applied to the file",
+     "why": "An image analyzer does not process video."
+    },
+    {
+     "text": "A gpt-image deployment",
+     "why": "Image generation creates pictures and does not analyze video."
+    }
+   ],
+   "answer": [
+    0
+   ],
+   "explanation": "Segmentation divides video into scenes by using your category descriptions. Each segment has its own results, which enables search by section.",
+   "objective": "3.2.6"
+  },
+  {
+   "id": "cv-cu-4",
+   "type": "single",
+   "question": "An analyst compares a standard Content Understanding analyzer with pro mode. Which statement correctly describes the difference?",
+   "options": [
+    {
+     "text": "Standard mode does not return confidence scores",
+     "why": "Standard analyzers return structured fields."
+    },
+    {
+     "text": "Pro mode removes the need for an analyzer",
+     "why": "Pro mode still uses an analyzer definition."
+    },
+    {
+     "text": "Standard mode applies a single analysis task to the input to produce fields, and pro mode adds reasoning across inputs and reference data",
+     "why": "Correct. Pro mode targets multi-step reasoning and validation scenarios."
+    },
+    {
+     "text": "Pro mode runs only on-premises",
+     "why": "Both modes are cloud capabilities of the service."
+    }
+   ],
+   "answer": [
+    2
+   ],
+   "explanation": "Single-task analyzers produce fields from the input. Pro mode adds multi-step reasoning, which can use several inputs and reference data. Check Microsoft Learn for the content types that currently support it.",
+   "objective": "3.2.7"
+  },
+  {
+   "id": "cv-cu-5",
+   "type": "single",
+   "question": "An application must identify where in a photograph the damaged area appears and show the location to a reviewer. The location does not need to be exact. Which approach is appropriate?",
+   "options": [
+    {
+     "text": "Generate a new image with a red circle",
+     "why": "Image generation changes the picture and does not locate the damage in the original."
+    },
+    {
+     "text": "Use a larger value of n in the image API",
+     "why": "The n parameter controls the number of generated images."
+    },
+    {
+     "text": "Ask a multimodal model to return the object label and a bounding box, then let a person confirm it",
+     "why": "Correct. Model-returned boxes are approximate, so a reviewer confirms them."
+    },
+    {
+     "text": "Use the extract method on a photo analyzer",
+     "why": "Extract is for documents."
+    }
+   ],
+   "answer": [
+    2
+   ],
+   "explanation": "Region identification from a language model returns approximate boxes. Present them to a person, or define fields that describe the objects when repeatable output is needed.",
+   "objective": "3.2.8"
+  }
+ ]
+}

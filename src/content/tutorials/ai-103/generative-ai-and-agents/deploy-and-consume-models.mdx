@@ -1,0 +1,200 @@
+---
+title: 'Deploy and Call Models from Your App'
+seoTitle: 'Deploy and Call Foundry Models from Python | AI-103'
+description: 'Deploy large, small, code and multimodal models in Microsoft Foundry, then call the deployment name from Python with the project endpoint and keyless sign-in.'
+answer: >-
+  You **deploy** a model in Microsoft Foundry, which creates a named **deployment** with a model version, a deployment type and capacity. Your app calls the **deployment name**, never the model name, through the **project endpoint** with `AIProjectClient` and `DefaultAzureCredential`. Choose a **large or reasoning model** for hard work, a **small language model** for cheap, high-volume work, a **code model** for programming tasks and a **multimodal model** when the input is an image or audio.
+updated: 2026-11-25
+readingMinutes: 11
+keyTerms:
+  - term: Deployment
+    definition: >-
+      A named copy of a model in a Foundry resource, with a version, a deployment type and a capacity. Apps call it by name.
+  - term: Project endpoint
+    definition: >-
+      The URL an app uses to reach one Foundry project, shaped like https://<resource>.services.ai.azure.com/api/projects/<project>.
+  - term: Small language model (SLM)
+    definition: >-
+      A compact model such as Phi-4-mini-instruct that is cheap and fast for simple, high-volume tasks.
+  - term: Multimodal model
+    definition: >-
+      A model that accepts more than text, such as images or audio, as input.
+  - term: DefaultAzureCredential
+    definition: >-
+      An Azure Identity credential that tries your sign-in locally and a managed identity in Azure, so code needs no key.
+  - term: Responses API
+    definition: >-
+      The OpenAI-compatible API your app calls with the deployment name and an input to get a reply and token usage.
+interview:
+  - level: beginner
+    q: 'Why does my app pass a deployment name and not a model name?'
+    a: >-
+      The deployment is the thing that exists in your resource. It points to one model, one version, one deployment type and a slice of quota. If the app used the model name, you could never change the model behind it without editing code.
+    followUps: []
+  - level: intermediate
+    q: 'How do you pick between a large model and a small one?'
+    a: >-
+      I start from the task. Hard, multistep or long-document work goes to a large or reasoning model. Simple, high-volume work such as labelling goes to a small model. Then I test both on my own examples, because a small model that passes is much cheaper.
+    followUps: []
+  - level: experienced
+    q: 'How should an app authenticate to a Foundry project from Azure?'
+    a: >-
+      With a managed identity and Microsoft Entra ID. I enable the identity on the host, give it a Foundry role such as Foundry User on the resource, and use DefaultAzureCredential, so there is no key in code or configuration.
+    followUps: []
+  - level: scenario
+    q: 'A call fails with DeploymentNotFound but the model is deployed. What do you check?'
+    a: >-
+      I check the model parameter first. It must be the deployment name I chose, which might be support-chat, not gpt-4.1-mini. Then I check the endpoint is for the right project and the deployment is in that resource.
+    followUps: []
+revision:
+  keyPoints:
+    - 'A deployment holds the model, version, deployment type and capacity.'
+    - 'Apps pass the deployment name in the model parameter.'
+    - 'The project endpoint plus DefaultAzureCredential gives keyless access.'
+    - 'Use small models for simple volume work and large or reasoning models for hard work.'
+    - 'Multimodal models accept images or audio as input.'
+  mistakes:
+    - 'Passing the model name instead of the deployment name.'
+    - 'Sending every request to the largest model.'
+    - 'Pasting an API key into code when Entra ID works.'
+  examTips:
+    - '"Cheapest model for simple, high-volume labelling" = **small language model**.'
+    - '"404 DeploymentNotFound" = the app used a **model name**, not the **deployment name**.'
+    - '"No secrets in code" = **managed identity + DefaultAzureCredential**.'
+  quick:
+    - q: 'What does the app pass in the model parameter?'
+      a: 'The deployment name.'
+    - q: 'What does AIProjectClient need?'
+      a: 'The project endpoint and a credential.'
+    - q: 'Which model type reads photos?'
+      a: 'A multimodal model.'
+    - q: 'Which model suits cheap simple labelling?'
+      a: 'A small language model.'
+    - q: 'Which credential avoids keys?'
+      a: 'DefaultAzureCredential.'
+references:
+  - title: 'Deploy models in Microsoft Foundry'
+    url: https://learn.microsoft.com/azure/ai-foundry/concepts/deployments-overview
+  - title: 'Foundry SDK overview'
+    url: https://learn.microsoft.com/azure/ai-foundry/how-to/develop/sdk-overview
+  - title: 'Foundry Models sold by Azure'
+    url: https://learn.microsoft.com/azure/ai-foundry/foundry-models/concepts/models-sold-directly-by-azure
+related:
+  - foundry-sdks-and-connectors
+  - rag-in-an-application
+  - orchestrate-multiple-models
+---
+
+## Start with a question
+
+<Story question="Why can a restaurant change its chef without reprinting the menu?">
+
+The menu says "today's special", not "Ravi's special". The kitchen decides who cooks it. Customers keep ordering the same way, and the chef behind it can change.
+
+A **deployment** works like that menu line. Your app asks for `support-chat`. Behind the name sits one **model**, one **version**, one **deployment type** and a slice of **capacity**. Move the name to a new model next month and the app doesn't change.
+
+</Story>
+
+## Explain it like I'm 10
+
+<Eli10>
+
+Imagine a school with a big helper robot and a tiny helper robot.
+
+The big one is great at hard homework. The tiny one is fast at easy things, like sorting your pencils.
+
+You don't shout the robot's factory name. You shout a nickname, like "Homework Helper".
+
+The nickname is the **deployment name**. The school can swap the robot behind the nickname, and you still just call "Homework Helper".
+
+</Eli10>
+
+## The technical explanation
+
+### Pick the model for the job
+
+| Need | Choose | Why |
+| --- | --- | --- |
+| Hard, multistep problems, long documents | A **large** or **reasoning** model (gpt-4.1, o4-mini) | Better answers on difficult work, higher cost and latency |
+| High-volume, simple tasks such as labelling | A **small language model** (Phi-4-mini-instruct, gpt-4.1-nano) | Fast and cheap |
+| Writing and fixing code | A **code-capable** model | Trained on programming tasks |
+| Images or audio as input | A **multimodal** model (gpt-4.1, Phi-4-multimodal-instruct) | Accepts more than text |
+| Search and similarity | An **embedding** model (text-embedding-3-small) | Returns vectors, not text |
+
+Test two candidates on your own examples before you decide. Benchmarks don't know your tickets.
+
+### Deploy it
+
+In the Foundry portal go to **Build > Models + endpoints > + Deploy model**. You choose the model, a **deployment name**, the **deployment type** (Global Standard, Data Zone Standard, Standard, Provisioned or Batch), the **model version** and the **capacity** in tokens per minute. From the CLI:
+
+```bash
+az cognitiveservices account deployment create -n contoso-agents -g rg-agents \
+  --deployment-name support-chat --model-name gpt-4.1-mini --model-format OpenAI \
+  --sku-name GlobalStandard --sku-capacity 50
+```
+
+Deployment names must be unique in the resource. Pick names that describe the job, such as `support-chat` or `label-fast`.
+
+### Call it from Python
+
+Install the Foundry SDK, then connect with the **project endpoint** and a keyless credential. Both values come from the project **Overview** page, and the endpoint belongs in an environment variable, not in code.
+
+```python
+# pip install "azure-ai-projects>=2.3.0" azure-identity
+import os
+from azure.identity import DefaultAzureCredential
+from azure.ai.projects import AIProjectClient
+
+project = AIProjectClient(endpoint=os.environ["FOUNDRY_PROJECT_ENDPOINT"],
+                          credential=DefaultAzureCredential())
+openai = project.get_openai_client()          # OpenAI-compatible client
+
+r = openai.responses.create(model="support-chat",      # the DEPLOYMENT name
+                            input="In one sentence, why do apps call a deployment name?")
+print(r.output_text, r.usage.input_tokens, r.usage.output_tokens)
+```
+
+The reply carries the token counts you pay for. To run this in Azure without a key, enable a **managed identity** on the host and give it the **Foundry User** role on the Foundry resource. Locally, `DefaultAzureCredential` uses your own sign-in.
+
+<TryIt labs="agt-genai-deploy-call" text="Deploy gpt-4.1-mini and Phi-4-mini-instruct, call both from Python, then pass a model name that isn't a deployment and read the error." />
+
+<Callout type="exam">
+Look for the **deployment name**. If an option passes `gpt-4.1-mini` as the model but the deployment is called `support-chat`, that call fails. "Cheapest option for simple, high-volume text labelling" is a **small language model**. "No keys in code" is a **managed identity** with **DefaultAzureCredential**.
+</Callout>
+
+<DeepDive title="Deployment types change where and how you pay">
+
+**Global Standard** and **Data Zone Standard** bill per token and differ in where the prompt may be processed: anywhere, or inside a data zone. **Standard** stays in one region. **Provisioned** reserves capacity for steady, latency-sensitive traffic, and **Batch** suits big offline jobs. You choose the type when you deploy, so a residency rule is a deployment decision, not a code change. Model versions can be pinned or set to upgrade automatically, as of 25 November 2026.
+
+</DeepDive>
+
+## Real-world business scenario
+
+<Scenario
+  company="Fabrikam Retail (fictional)"
+  industry="Retail"
+  problem="One app sent every request, even simple order-status labels, to the largest model. It was slow at peak, and a model upgrade once broke production because the code named the model."
+  service="Two Foundry deployments in one project: support-chat on gpt-4.1-mini for customer answers and label-fast on Phi-4-mini-instruct for ticket labels. The app calls the deployment names through AIProjectClient with a managed identity."
+  why="Simple work moves to the cheaper model, and a model change becomes a deployment change instead of a code change."
+  outcome="Labelling got faster, the large model handled only what needed it, and the next model upgrade was done by repointing a deployment."
+/>
+
+## When to use it and when not to
+
+<UseWhen
+  use={[
+    'You need a model reply inside your own app, with your own logic around it.',
+    'Different tasks need different models, sizes or deployment types.',
+    'You want keyless access that works on a laptop and in Azure.',
+  ]}
+  avoid={[
+    'A prebuilt Foundry Tool already does the job, such as extracting invoice fields.',
+    'Rules or a lookup table can answer exactly. Don\'t pay for a model call.',
+    'You would paste a key into code. Use Microsoft Entra ID.',
+  ]}
+  alternatives={[
+    '<strong>Foundry Tools</strong> such as Content Understanding for predictable, structured extraction.',
+    '<strong>Foundry Agent Service</strong> when the model needs tools, files and memory.',
+    '<strong>Rules or code</strong> for exact answers.',
+  ]}
+/>

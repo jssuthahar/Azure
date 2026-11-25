@@ -1,0 +1,148 @@
+{
+ "cert": "ai-103",
+ "domain": 5,
+ "topic": "search-enrichment-skills",
+ "questions": [
+  {
+   "id": "x5-ski-1",
+   "type": "single",
+   "question": "A skillset runs the PII Detection skill, but the index has no masked text field populated. What is the most likely cause?",
+   "options": [
+    {
+     "text": "The data source uses a managed identity",
+     "why": "Authentication to the data source does not affect enrichment mapping."
+    },
+    {
+     "text": "No output field mapping or projection maps the skill output to an index field",
+     "why": "Correct. Skill outputs exist only in the enrichment tree until they are mapped."
+    },
+    {
+     "text": "The skill is not supported on the Basic tier",
+     "why": "Support is not the issue when the skill runs without errors."
+    },
+    {
+     "text": "The index is missing a semantic configuration",
+     "why": "This affects ranking, not field population."
+    }
+   ],
+   "answer": [
+    1
+   ],
+   "explanation": "Map enrichment outputs to index fields with output field mappings or index projections.",
+   "objective": "5.1.3"
+  },
+  {
+   "id": "x5-ski-2",
+   "type": "single",
+   "question": "You must add a value from an internal product-code system to each document during indexing. No built-in skill provides it. What should you use?",
+   "options": [
+    {
+     "text": "A scoring profile on the product field",
+     "why": "Scoring profiles affect ranking, not enrichment."
+    },
+    {
+     "text": "A second index with a lookup field",
+     "why": "This adds storage but does not enrich during indexing."
+    },
+    {
+     "text": "The Custom Entity Lookup skill with a regular expression against your database",
+     "why": "This detects entities from a list. It does not call your system."
+    },
+    {
+     "text": "A Web API custom skill that calls an Azure Function",
+     "why": "Correct. The skill sends batches of records to your endpoint and reads the results back."
+    }
+   ],
+   "answer": [
+    3
+   ],
+   "explanation": "A Web API skill extends a skillset with your own code.",
+   "objective": "5.1.3"
+  },
+  {
+   "id": "x5-ski-3",
+   "type": "single",
+   "question": "A custom skill endpoint receives records with recordId values r1, r2 and r3. Which response is valid?",
+   "options": [
+    {
+     "text": "A plain text list of product codes",
+     "why": "The response must be JSON in the documented shape."
+    },
+    {
+     "text": "A single object that merges the three results with the id of the batch",
+     "why": "The service expects one result per recordId."
+    },
+    {
+     "text": "A values array with one entry for each of r1, r2 and r3, each with data, errors and warnings",
+     "why": "Correct. Every received recordId must be returned."
+    },
+    {
+     "text": "Only the records that succeeded, with the failures omitted",
+     "why": "Omitted records cause an error. Failures should be reported in errors or warnings."
+    }
+   ],
+   "answer": [
+    2
+   ],
+   "explanation": "A custom skill returns the same recordId values it received.",
+   "objective": "5.1.3"
+  },
+  {
+   "id": "x5-ski-4",
+   "type": "single",
+   "question": "Technical reports contain tables that fixed-length chunking splits across passages. You want chunks that follow sections and tables. Which skill should you add?",
+   "options": [
+    {
+     "text": "The Sentiment skill",
+     "why": "It scores opinion. It does not affect chunk boundaries."
+    },
+    {
+     "text": "The Language Detection skill",
+     "why": "It identifies the language of text. It does not understand layout."
+    },
+    {
+     "text": "The Text Merge skill",
+     "why": "It combines text. It does not chunk by layout."
+    },
+    {
+     "text": "The Azure Content Understanding skill",
+     "why": "Correct. It analyses layout and creates semantic chunks that keep structure together."
+    }
+   ],
+   "answer": [
+    3
+   ],
+   "explanation": "The Content Understanding skill provides layout-aware analysis and chunking.",
+   "objective": "5.1.3"
+  },
+  {
+   "id": "x5-ski-5",
+   "type": "multi",
+   "question": "You edit a skillset that already processed all blobs. Which two actions help you apply the change cost-effectively?",
+   "options": [
+    {
+     "text": "Reset the indexer so that all documents are processed again",
+     "why": "Correct. Unchanged blobs are otherwise skipped."
+    },
+    {
+     "text": "Delete and upload every blob again",
+     "why": "This works but is costly and unnecessary."
+    },
+    {
+     "text": "Switch the search service to a lower tier",
+     "why": "The tier does not decide whether the indexer revisits files."
+    },
+    {
+     "text": "Enable enrichment caching so skills with unchanged inputs are not rerun",
+     "why": "Correct. Cached outputs avoid repeated skill costs."
+    }
+   ],
+   "answer": [
+    0,
+    3
+   ],
+   "explanation": "Reset the indexer, and use caching to avoid paying again for unchanged skill inputs.",
+   "objective": "5.1.3"
+  }
+ ]
+}

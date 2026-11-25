@@ -1,0 +1,148 @@
+{
+ "cert": "ai-103",
+ "domain": 1,
+ "topic": "foundry-infrastructure-and-deployment-options",
+ "questions": [
+  {
+   "id": "plan-inf-1",
+   "type": "single",
+   "question": "A contract requires that prompts and responses are processed only within the EU, while still pooling capacity across EU regions. Which deployment type should you choose?",
+   "options": [
+    {
+     "text": "Data Zone Standard",
+     "why": "Correct. Processing stays within the EU data zone and capacity is pooled across its regions."
+    },
+    {
+     "text": "Global Standard",
+     "why": "Global deployments may process data in any region."
+    },
+    {
+     "text": "Global Batch",
+     "why": "Batch is for offline jobs and processes in any region."
+    },
+    {
+     "text": "Developer",
+     "why": "This tier is for testing and does not give a residency guarantee."
+    }
+   ],
+   "answer": [
+    1
+   ],
+   "explanation": "Data Zone deployment types keep processing inside the EU or US zone.",
+   "objective": "1.2.2"
+  },
+  {
+   "id": "plan-inf-2",
+   "type": "single",
+   "question": "A chat app has steady, high daily traffic and needs predictable latency. Which deployment type should you choose?",
+   "options": [
+    {
+     "text": "Standard with minimum capacity",
+     "why": "Pay-per-token capacity can be throttled at high volume."
+    },
+    {
+     "text": "A new deployment per request",
+     "why": "This is not a deployment option."
+    },
+    {
+     "text": "Provisioned throughput",
+     "why": "Correct. Reserved PTUs give predictable latency for steady high volume."
+    },
+    {
+     "text": "Global Batch",
+     "why": "Batch returns results within 24 hours and cannot serve interactive chat."
+    }
+   ],
+   "answer": [
+    3
+   ],
+   "explanation": "Provisioned throughput is for steady, high-volume workloads.",
+   "objective": "1.2.2"
+  },
+  {
+   "id": "plan-inf-3",
+   "type": "single",
+   "scenario": "A hospital must keep agent threads, uploaded files and vector data in storage that it owns and encrypts with its own keys.",
+   "question": "Which Foundry Agent Service setup should you use?",
+   "options": [
+    {
+     "text": "Standard agent setup",
+     "why": "Correct. It stores threads in your Cosmos DB, files in your Storage account and vectors in your Azure AI Search."
+    },
+    {
+     "text": "Basic setup",
+     "why": "The basic setup stores agent data in Microsoft-managed storage."
+    },
+    {
+     "text": "A public deployment with API keys",
+     "why": "Keys relate to authentication and do not control storage ownership."
+    },
+    {
+     "text": "Global Batch",
+     "why": "Batch is a deployment type and does not affect agent storage."
+    }
+   ],
+   "answer": [
+    1
+   ],
+   "explanation": "The standard agent setup uses resources you own.",
+   "objective": "1.2.1"
+  },
+  {
+   "id": "plan-inf-4",
+   "type": "single",
+   "question": "You need two teams to work in one Foundry resource with separate agents, files and access control. What should you create?",
+   "options": [
+    {
+     "text": "A separate project for each team",
+     "why": "Correct. Projects isolate agents, files, connections and access inside a resource."
+    },
+    {
+     "text": "A second deployment for each team",
+     "why": "Deployments pin models and do not isolate agents or files."
+    },
+    {
+     "text": "A private DNS zone",
+     "why": "DNS zones resolve names and do not separate team workspaces."
+    },
+    {
+     "text": "A new resource group tag",
+     "why": "Tags organise billing and search but do not isolate access."
+    }
+   ],
+   "answer": [
+    0
+   ],
+   "explanation": "Projects are the workspace boundary inside a Foundry resource.",
+   "objective": "1.2.1"
+  },
+  {
+   "id": "plan-inf-5",
+   "type": "single",
+   "question": "A company must rewrite 50,000 product descriptions by morning at the lowest price. No user waits for the results. Which deployment type should you choose?",
+   "options": [
+    {
+     "text": "Global Batch",
+     "why": "Correct. Batch accepts a file of requests and returns results within 24 hours at a lower price."
+    },
+    {
+     "text": "Data Zone Standard",
+     "why": "This is intended for interactive requests with residency needs."
+    },
+    {
+     "text": "Provisioned throughput",
+     "why": "Reserved capacity costs more than needed for a one-time overnight job."
+    },
+    {
+     "text": "Standard",
+     "why": "Interactive pay-per-token capacity costs more and may be throttled."
+    }
+   ],
+   "answer": [
+    2
+   ],
+   "explanation": "Batch is for large offline jobs.",
+   "objective": "1.2.2"
+  }
+ ]
+}

@@ -1,0 +1,148 @@
+{
+ "cert": "ai-103",
+ "domain": 1,
+ "topic": "retrieval-indexing-and-agent-memory",
+ "questions": [
+  {
+   "id": "plan-ret-1",
+   "type": "single",
+   "question": "Users search a policy index for exact control codes such as PCI-07 and also ask questions in plain language. Which retrieval approach should you use?",
+   "options": [
+    {
+     "text": "Hybrid search with the semantic ranker",
+     "why": "Correct. Hybrid combines keyword matching for exact codes with vector matching for meaning."
+    },
+    {
+     "text": "Vector search only",
+     "why": "Vector search can miss exact strings such as codes."
+    },
+    {
+     "text": "Keyword search only",
+     "why": "Keyword search fails when users word questions differently from the documents."
+    },
+    {
+     "text": "File search only",
+     "why": "File search is for files in a conversation, not a company-wide index."
+    }
+   ],
+   "answer": [
+    0
+   ],
+   "explanation": "Hybrid search covers both exact terms and semantic matches.",
+   "objective": "1.1.3"
+  },
+  {
+   "id": "plan-ret-2",
+   "type": "single",
+   "scenario": "A customer uploads their own contract to a chat and asks the agent questions about clause 7. The contract must not become part of the shared knowledge.",
+   "question": "Which capability should the agent use?",
+   "options": [
+    {
+     "text": "File search over the uploaded file",
+     "why": "Correct. File search reads files attached to the conversation without adding them to company knowledge."
+    },
+    {
+     "text": "Azure AI Search",
+     "why": "A shared index would expose the document beyond this conversation."
+    },
+    {
+     "text": "User profile memory",
+     "why": "Memory stores facts about the user, not document content."
+    },
+    {
+     "text": "Web search grounding",
+     "why": "Web search retrieves public pages, not the uploaded contract."
+    }
+   ],
+   "answer": [
+    1
+   ],
+   "explanation": "File search suits content that belongs to one conversation.",
+   "objective": "1.1.4"
+  },
+  {
+   "id": "plan-ret-3",
+   "type": "single",
+   "question": "An agent should remember that a signed-in customer is vegetarian in later sessions. What should you configure?",
+   "options": [
+    {
+     "text": "Increase the model temperature",
+     "why": "Temperature affects randomness, not persistence."
+    },
+    {
+     "text": "User profile memory scoped to the user",
+     "why": "Correct. Memory scoped to the user stores preferences across sessions."
+    },
+    {
+     "text": "Add the preference to the shared knowledge base",
+     "why": "That shares one customer’s data with all users and mixes memory with knowledge."
+    },
+    {
+     "text": "A larger context window",
+     "why": "The context window ends with the session and does not persist."
+    }
+   ],
+   "answer": [
+    2
+   ],
+   "explanation": "Memory holds what is learned about a person. Knowledge holds shared content.",
+   "objective": "1.1.4"
+  },
+  {
+   "id": "plan-ret-4",
+   "type": "single",
+   "question": "An Azure AI Search index feeds an agent from a Blob Storage container that receives new files daily. Retired files must disappear from answers. Which approach should you plan?",
+   "options": [
+    {
+     "text": "Copy the files into the prompt",
+     "why": "This does not scale and cannot filter retired content."
+    },
+    {
+     "text": "Use file search for all documents",
+     "why": "File search is per conversation and not suited to a shared library."
+    },
+    {
+     "text": "A scheduled indexer with deletion detection and a metadata field for effective date",
+     "why": "Correct. The indexer keeps the index current, and metadata lets retrieval filter retired content."
+    },
+    {
+     "text": "Push documents once and never update",
+     "why": "The index becomes stale and retired files remain."
+    }
+   ],
+   "answer": [
+    3
+   ],
+   "explanation": "Plan ingestion refresh and deletions, not only the initial load.",
+   "objective": "1.1.3"
+  },
+  {
+   "id": "plan-ret-5",
+   "type": "single",
+   "question": "What is the main purpose of chunking documents before indexing them for retrieval?",
+   "options": [
+    {
+     "text": "To split content into pieces small enough to retrieve and fit in the model context",
+     "why": "Correct. Smaller passages can be matched precisely and fit the prompt."
+    },
+    {
+     "text": "To encrypt the documents",
+     "why": "Chunking does not encrypt anything."
+    },
+    {
+     "text": "To replace the need for embeddings",
+     "why": "Chunks are usually still embedded for vector search."
+    },
+    {
+     "text": "To lower the quota on a deployment",
+     "why": "Chunking has no effect on quota."
+    }
+   ],
+   "answer": [
+    1
+   ],
+   "explanation": "Chunking prepares content for precise retrieval.",
+   "objective": "1.1.3"
+  }
+ ]
+}

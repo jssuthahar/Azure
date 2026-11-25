@@ -1,0 +1,152 @@
+{
+ "cert": "ai-103",
+ "domain": 2,
+ "topic": "monitor-and-evaluate-agents",
+ "questions": [
+  {
+   "id": "agt-g-monitor-and-ev-1",
+   "type": "single",
+   "scenario": "An agent called a function with an order number the user never provided.",
+   "question": "Which evaluator highlights this problem?",
+   "options": [
+    {
+     "text": "Similarity",
+     "why": "It compares against a ground truth answer."
+    },
+    {
+     "text": "Protected material",
+     "why": "It looks for copyrighted content."
+    },
+    {
+     "text": "Tool call accuracy",
+     "why": "Correct. It judges whether the tool calls and their arguments were correct."
+    },
+    {
+     "text": "Fluency",
+     "why": "It scores language quality."
+    }
+   ],
+   "answer": [
+    2
+   ],
+   "explanation": "Tool call accuracy examines the calls the agent made.",
+   "objective": "2.2.6"
+  },
+  {
+   "id": "agt-g-monitor-and-ev-2",
+   "type": "single",
+   "scenario": "An agent answered a question about invoices when the user wanted to cancel an order.",
+   "question": "Which evaluator measures whether the agent understood the user’s goal?",
+   "options": [
+    {
+     "text": "Coherence",
+     "why": "It measures logical flow of text."
+    },
+    {
+     "text": "Violence",
+     "why": "It checks harmful content."
+    },
+    {
+     "text": "Retrieval",
+     "why": "It checks retrieval quality, not agent intent."
+    },
+    {
+     "text": "Intent resolution",
+     "why": "Correct. It checks whether the agent identified and addressed the intent."
+    }
+   ],
+   "answer": [
+    3
+   ],
+   "explanation": "Intent resolution measures understanding of what the user wanted.",
+   "objective": "2.2.6"
+  },
+  {
+   "id": "agt-g-monitor-and-ev-3",
+   "type": "single",
+   "scenario": "An agent was told to always ask for the order number, but it answered without asking.",
+   "question": "Which evaluator measures adherence to the instructions?",
+   "options": [
+    {
+     "text": "Task adherence",
+     "why": "Correct. It checks whether the agent followed its assigned task and rules."
+    },
+    {
+     "text": "Relevance",
+     "why": "It checks the response against the query only."
+    },
+    {
+     "text": "Hate and unfairness",
+     "why": "It checks harm."
+    },
+    {
+     "text": "F1 score",
+     "why": "It compares with ground truth text."
+    }
+   ],
+   "answer": [
+    0
+   ],
+   "explanation": "Task adherence checks that the agent kept to instructions and scope.",
+   "objective": "2.2.6"
+  },
+  {
+   "id": "agt-g-monitor-and-ev-4",
+   "type": "single",
+   "scenario": "An evaluation of 200 agent runs shows 30 failures.",
+   "question": "What should the team do next?",
+   "options": [
+    {
+     "text": "Disable evaluations",
+     "why": "It removes visibility."
+    },
+    {
+     "text": "Group the failures by cause, fix the instructions or tools, and rerun the same dataset",
+     "why": "Correct. Error analysis leads to fixes that can be measured."
+    },
+    {
+     "text": "Delete the failing rows from the dataset",
+     "why": "It hides the problems."
+    },
+    {
+     "text": "Raise the temperature",
+     "why": "It rarely fixes systematic failures."
+    }
+   ],
+   "answer": [
+    1
+   ],
+   "explanation": "Error analysis finds causes, and a rerun proves the fix.",
+   "objective": "2.2.6"
+  },
+  {
+   "id": "agt-g-monitor-and-ev-5",
+   "type": "single",
+   "scenario": "A deployed agent must be checked for quality drift on real traffic.",
+   "question": "Which approach should you use?",
+   "options": [
+    {
+     "text": "A higher max output tokens value",
+     "why": "It does not measure quality."
+    },
+    {
+     "text": "A larger quota",
+     "why": "Quota does not measure quality."
+    },
+    {
+     "text": "Continuous evaluation on a sample of live traffic with alerts",
+     "why": "Correct. It scores production conversations regularly."
+    },
+    {
+     "text": "A one-time evaluation before release only",
+     "why": "It cannot detect later drift."
+    }
+   ],
+   "answer": [
+    2
+   ],
+   "explanation": "Monitoring includes ongoing evaluation, not just pre-release tests.",
+   "objective": "2.2.6"
+  }
+ ]
+}

@@ -1,0 +1,246 @@
+---
+title: Semantic, Hybrid and Vector Search
+seoTitle: Semantic, Hybrid and Vector Search | AI-103
+description: Choose keyword, vector, hybrid and semantic ranking in Azure AI Search to ground an agent, and see where each one matches, fails and needs setup.
+answer: >-
+  **Keyword** search (BM25) matches the words you type. **Vector** search embeds the question and matches meaning. **Hybrid** runs both in one request and merges the lists with **Reciprocal Rank Fusion (RRF)**, so synonyms and exact codes both work. The **semantic ranker** then rereads the top 50 results with a language model, returns a **reranker score** and **captions**, and needs a **semantic configuration** on the index. For grounding, hybrid plus semantic ranking is the usual best choice. The ranker can't find a document the first stage missed.
+updated: 2026-11-25
+readingMinutes: 12
+keyTerms:
+  - term: BM25
+    definition: The relevance scoring used for keyword (full-text) queries. It rewards rare words that appear often in a document.
+  - term: Embedding
+    definition: A list of numbers that represents the meaning of a text, so similar meanings sit close together.
+  - term: Vector query
+    definition: A query that compares a query vector with the vector field and returns the k nearest neighbours.
+  - term: Vectorizer
+    definition: An index setting that calls an embedding model so a text query can be embedded for you at query time (query kind text).
+  - term: Hybrid search
+    definition: One request that contains a keyword query and one or more vector queries. The lists are merged with RRF.
+  - term: Reciprocal Rank Fusion
+    definition: A merge method that scores each document by the sum of 1 divided by (a constant plus its rank) in every list.
+  - term: Semantic ranker
+    definition: A second-stage reranker that uses a language model on the top 50 results to reorder them and add captions and answers.
+  - term: Semantic configuration
+    definition: An index setting that names the title, content and keyword fields the semantic ranker should read.
+interview:
+  - level: beginner
+    q: What is the difference between keyword and vector search?
+    a: >-
+      Keyword search matches the exact tokens in the query, so "cab" never finds "taxi". Vector search turns the query and the documents into embeddings and finds the closest meaning, so it handles synonyms and paraphrases.
+    followUps: []
+  - level: intermediate
+    q: Why is hybrid search often better than vector search alone?
+    a: >-
+      Vector search can blur exact identifiers such as part numbers or error codes, and keyword search misses synonyms. Hybrid runs both and merges the two lists with RRF, so a document that does well in either, or in both, rises to the top.
+    followUps:
+      - q: Why are hybrid scores small numbers?
+        a: >-
+          They're RRF scores, each term being 1 divided by a constant plus a rank, so they look like 0.03 and aren't comparable with BM25 or similarity scores.
+  - level: experienced
+    q: What does the semantic ranker do, and what can't it do?
+    a: >-
+      It takes at most the top 50 results from the first stage, rereads them with a language model, reorders them with a reranker score from 0 to 4 and can add captions and answers. It can't retrieve a document the first stage didn't return, and it only reads the text fields in the semantic configuration.
+    followUps: []
+  - level: scenario
+    q: A semantic query returns an error about a configuration. What do you check?
+    a: >-
+      Whether the index has a semantic configuration, whether the request names it with semanticConfiguration (or a default is set), and whether the semantic ranker is enabled on the service plan. Then I'd make sure the configuration points at real text fields.
+    followUps: []
+  - level: architecture
+    q: How would you configure retrieval for an HR policy agent?
+    a: >-
+      A hybrid query over a chunk text field and a vector field, with the vectorizer matching the embedding model used at indexing, then the semantic ranker over the top results, with a filter for department or country applied first. I'd test recall and groundedness on a set of real questions before choosing k and any weights.
+    followUps: []
+revision:
+  keyPoints:
+    - Keyword = tokens (BM25). Vector = meaning (embeddings, nearest neighbours). Hybrid = both, merged with RRF.
+    - Semantic ranker reranks only the top 50 and returns captions, answers and a 0 to 4 reranker score.
+    - Semantic ranking needs a semantic configuration on the index and the feature enabled on the service.
+    - A vectorizer lets you send text (kind text) and have the query embedded with the same model as the documents.
+    - Filters can run before the vector search (preFilter) or after it (postFilter).
+    - Hybrid is the default for grounding. Add the semantic ranker when quality matters more than a little latency and cost.
+  mistakes:
+    - Embedding the query with a different model than the documents.
+    - Expecting the semantic ranker to find documents the first stage missed.
+    - Comparing RRF scores with BM25 scores.
+    - Using vector search alone for part numbers and error codes.
+  examTips:
+    - '"Finds meaning with no shared words" = **vector**.'
+    - '"Combine full-text and vector results into one list" = **hybrid** (RRF).'
+    - '"Reorders the top results and returns captions" = **semantic ranker**.'
+  quick:
+    - q: Which algorithm merges keyword and vector result lists?
+      a: Reciprocal Rank Fusion.
+    - q: How many results does the semantic ranker rerank at most?
+      a: The top 50.
+    - q: What must the index have before a semantic query works?
+      a: A semantic configuration.
+    - q: What does a vectorizer let you do at query time?
+      a: Send text and have it embedded with the same model as the documents.
+    - q: Which query type is weak at exact error codes?
+      a: Vector search.
+references:
+  - title: Vector search in Azure AI Search
+    url: https://learn.microsoft.com/azure/search/vector-search-overview
+  - title: Hybrid search in Azure AI Search
+    url: https://learn.microsoft.com/azure/search/hybrid-search-overview
+  - title: Semantic ranking in Azure AI Search
+    url: https://learn.microsoft.com/azure/search/semantic-search-overview
+  - title: Create a semantic query
+    url: https://learn.microsoft.com/azure/search/semantic-how-to-query-request
+  - title: Configure a vectorizer
+    url: https://learn.microsoft.com/azure/search/vector-search-how-to-configure-vectorizer
+related:
+  - ingest-and-index-content
+  - search-enrichment-skills
+  - connect-retrieval-to-agents
+---
+
+## Start with a question
+
+<Story question="An employee asks, “Can I get my cab money back?” The policy says “taxi fares are reimbursed”. Which search finds it?">
+
+Picture two librarians. The first one only looks at the exact words on the book spines. You ask for "cab" and she shrugs: no book has that word.
+
+The second one has read every book and knows what each is about. You say "cab money" and she says: "You mean taxi refunds. Shelf three."
+
+That's **keyword** versus **vector** search. A good library uses both, and then asks a third person, the **semantic ranker**, to read the top few books and tell you which one really answers the question.
+
+</Story>
+
+## Explain it like I'm 10
+
+<Eli10>
+
+Imagine a game of "find the matching card". Keyword search only matches cards with the same word. If one card says "taxi" and yours says "cab", no match.
+
+Vector search gives every card a spot on a big map, and cards that mean the same thing live close together. "Taxi" and "cab" are neighbours.
+
+Hybrid asks both helpers and combines their answers. The semantic ranker is a teacher who reads the best few cards and puts the best one first.
+
+</Eli10>
+
+## The technical explanation
+
+All four options work on the same index. What changes is the query you send.
+
+### Keyword (full-text) search
+
+The `search` parameter runs a BM25 query over searchable text fields. It's fast, precise for **exact words, names and codes**, and supports filters, facets and analyzers. Its weakness is vocabulary: it can't know that "cab" and "taxi" mean the same.
+
+### Vector search
+
+A **vector query** compares an embedding of the question with the vector field and returns the `k` nearest neighbours. You can send a ready-made vector (`kind: "vector"`) or, if the index has a **vectorizer**, send the text and let the service embed it (`kind: "text"`).
+
+```json
+{
+  "select": "title, chunk",
+  "vectorQueries": [
+    { "kind": "text", "text": "Can I get my cab money back?",
+      "fields": "text_vector", "k": 5 }
+  ]
+}
+```
+
+Vector search finds meaning, so it works across paraphrases and even languages. Its weakness is **exact identifiers**: an error code like `E-1074` has no meaning to blur into, so the nearest neighbours may be unrelated. The documents and the query must use **the same embedding model**.
+
+Behind the scenes the vector field uses an **HNSW** graph for fast approximate search, or **exhaustive KNN** when you need exact results on a small set. You can also add **filters** to the same query. A `preFilter` narrows the candidates first, and a `postFilter` trims the nearest neighbours after.
+
+### Hybrid search
+
+Put `search` and `vectorQueries` in the same request. The service runs the keyword and vector queries in parallel and merges their ranked lists with **Reciprocal Rank Fusion**:
+
+`RRF score = sum over lists of 1 / (60 + rank in that list)`
+
+A document that ranks well in both lists beats a document that is first in only one. You get one list back, with small RRF scores. You can weight individual vector queries if one field matters more.
+
+```json
+{
+  "search": "Can I get my cab money back?",
+  "vectorQueries": [ { "kind": "text", "text": "Can I get my cab money back?", "fields": "text_vector", "k": 50 } ],
+  "top": 5
+}
+```
+
+### The semantic ranker
+
+Add `queryType: "semantic"` and a `semanticConfiguration`, and a second stage runs. It rereads the **top 50** results from the first stage with a language model, reorders them by a **reranker score (0 to 4)**, and can return extractive **captions** (highlighted passages) and **answers**.
+
+```json
+{
+  "search": "Can I get my cab money back?",
+  "queryType": "semantic",
+  "semanticConfiguration": "default",
+  "captions": "extractive",
+  "answers": "extractive",
+  "vectorQueries": [ { "kind": "text", "text": "Can I get my cab money back?", "fields": "text_vector", "k": 50 } ]
+}
+```
+
+Two things to remember. First, the **semantic configuration** has to exist on the index (it names a title field, content fields and optional keyword fields), and the feature has to be turned on for the service. Second, the ranker only **reorders**: if the right passage isn't in the first stage's results, it can't appear.
+
+### Which one when?
+
+| Need | Use |
+| --- | --- |
+| Users type exact part numbers, names or codes | Keyword (or hybrid) |
+| Users ask in their own words | Vector (or hybrid) |
+| You can't predict the style | Hybrid |
+| The right answer is in the top 50 but not first, or you need captions | Hybrid plus the semantic ranker |
+
+For an agent, you often don't pick at all. A **knowledge base** with agentic retrieval plans the subqueries and sends hybrid queries with semantic reranking for you (next but one lesson).
+
+| Query | Finds "taxi" for "cab"? | Finds "E-1074"? |
+| --- | --- | --- |
+| Keyword | No | Yes |
+| Vector | Yes | Often not |
+| Hybrid | Yes | Yes |
+| Hybrid + semantic ranker | Yes, ranked best first | Yes |
+
+<TryIt labs="agt-extract-search-queries" text="Run the same question as keyword, vector, hybrid and semantic queries, then see the error an index without a semantic configuration gives." />
+
+<Callout type="exam">
+Match the symptom to the feature. "No shared words but the meaning is the same" is **vector**. "Exact product codes must match" is **keyword**. "One request, both kinds of match, one list" is **hybrid** (RRF). "Reorder the top results and show captions" is the **semantic ranker**, which needs a **semantic configuration** and only sees the **top 50**.
+</Callout>
+
+<DeepDive title="Tuning and cost">
+
+Start with `k` of 50 on the vector query so the semantic ranker has enough candidates. Increase it only if tests show good documents falling outside the top 50.
+
+Vector fields use memory. **Vector compression** (scalar or binary quantization) and **truncated dimensions** on supported embedding models shrink the index with a small recall cost, and **oversampling** with rescoring wins some of that back. Measure recall on your own questions before you compress.
+
+The semantic ranker is a billed feature: a free allowance each month, then a charge per thousand queries. Agentic retrieval adds model token charges for query planning at low and medium effort. Look at the current pricing page before you size a production system, and keep an eye on **search latency** and **throttled queries** in the metrics.
+
+</DeepDive>
+
+## Real-world business scenario
+
+<Scenario
+  company="Northwind Support (fictional)"
+  industry="Consumer electronics"
+  problem="Customers typed error codes and also described problems in their own words. Keyword search found the codes but missed descriptions, and a vector-only pilot found descriptions but returned the wrong article for codes like E-1074."
+  service="A hybrid query over the chunk and text_vector fields with a vectorizer for the same embedding model, plus the semantic ranker over the top 50, with a filter on product line."
+  why="Hybrid keeps the exact-match strength of keyword and the meaning-match of vectors, and the ranker picks the best passage and returns a caption for the answer card."
+  outcome="First-answer accuracy on the test set went from 61% to 84% and agents stopped pasting error codes into chat to get a hit."
+/>
+
+## When to use it and when not to
+
+<UseWhen
+  use={[
+    "Hybrid for most RAG and agent grounding, because users mix exact terms and plain language.",
+    "The semantic ranker when quality of the first few results matters and a bit more latency is fine.",
+    "Pure keyword for catalogue search by SKU, name or code where meaning doesn't matter.",
+  ]}
+  avoid={[
+    "Vector search alone for identifiers and codes.",
+    "The semantic ranker as a fix for poor recall. It only reorders what's already there.",
+    "Embedding queries with a different model than the one used at indexing.",
+  ]}
+  alternatives={[
+    "<strong>Agentic retrieval</strong> through a knowledge base when an agent asks multi-part questions.",
+    "<strong>Filters and facets</strong> when users narrow by category, date or department.",
+    "<strong>Scoring profiles</strong> to boost fields such as title or recency in keyword scoring.",
+  ]}
+/>

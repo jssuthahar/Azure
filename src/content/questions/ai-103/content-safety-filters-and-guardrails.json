@@ -1,0 +1,148 @@
+{
+ "cert": "ai-103",
+ "domain": 1,
+ "topic": "content-safety-filters-and-guardrails",
+ "questions": [
+  {
+   "id": "plan-grd-1",
+   "type": "single",
+   "question": "An agent summarises web pages. A page contains hidden text that tells the model to ignore its rules. Which risk is this?",
+   "options": [
+    {
+     "text": "Indirect attack",
+     "why": "Correct. The instructions are hidden in content the model reads, not typed by the user."
+    },
+    {
+     "text": "A jailbreak by the user",
+     "why": "A jailbreak is typed by the user in the prompt."
+    },
+    {
+     "text": "A rate limit",
+     "why": "Rate limits concern throughput."
+    },
+    {
+     "text": "Model drift",
+     "why": "Drift concerns changes in quality over time."
+    }
+   ],
+   "answer": [
+    0
+   ],
+   "explanation": "Prompt Shields detect user prompt attacks and indirect attacks.",
+   "objective": "1.4.1"
+  },
+  {
+   "id": "plan-grd-2",
+   "type": "single",
+   "question": "Which intervention point should a control use to inspect the content returned by an external tool before the model uses it?",
+   "options": [
+    {
+     "text": "Tool response",
+     "why": "Correct. It checks what a tool returned, which is where indirect attacks arrive."
+    },
+    {
+     "text": "User input",
+     "why": "This checks the user prompt only."
+    },
+    {
+     "text": "Output",
+     "why": "This checks the final answer, which is later."
+    },
+    {
+     "text": "Deployment name",
+     "why": "This is not an intervention point."
+    }
+   ],
+   "answer": [
+    1
+   ],
+   "explanation": "The four intervention points are user input, tool call, tool response and output.",
+   "objective": "1.4.1"
+  },
+  {
+   "id": "plan-grd-3",
+   "type": "single",
+   "scenario": "A team adds a new guardrail control and wants to see what it would catch before it affects users.",
+   "question": "Which action should it choose?",
+   "options": [
+    {
+     "text": "Annotate",
+     "why": "Correct. Annotate records detections without blocking content."
+    },
+    {
+     "text": "Annotate and block",
+     "why": "This blocks content immediately."
+    },
+    {
+     "text": "Delete the control",
+     "why": "This removes the control."
+    },
+    {
+     "text": "Disable the deployment",
+     "why": "This stops the application."
+    }
+   ],
+   "answer": [
+    0
+   ],
+   "explanation": "Annotate first, review, then block.",
+   "objective": "1.4.1"
+  },
+  {
+   "id": "plan-grd-4",
+   "type": "single",
+   "question": "What does a Foundry guardrail contain?",
+   "options": [
+    {
+     "text": "A set of controls combining a risk, an intervention point and an action",
+     "why": "Correct. This is the structure of a guardrail."
+    },
+    {
+     "text": "A list of deployments",
+     "why": "Deployments are what a guardrail attaches to."
+    },
+    {
+     "text": "A set of network rules",
+     "why": "Network rules are separate from guardrails."
+    },
+    {
+     "text": "A set of billing alerts",
+     "why": "Billing alerts are separate."
+    }
+   ],
+   "answer": [
+    1
+   ],
+   "explanation": "Controls define what is detected, where and what happens.",
+   "objective": "1.4.1"
+  },
+  {
+   "id": "plan-grd-5",
+   "type": "single",
+   "question": "Answers must not reveal customer card numbers. Which control should you add?",
+   "options": [
+    {
+     "text": "A PII control at the output intervention point",
+     "why": "Correct. It detects personal data in the model response before the user sees it."
+    },
+    {
+     "text": "A higher temperature",
+     "why": "Temperature does not detect data."
+    },
+    {
+     "text": "A larger context window",
+     "why": "Context size does not detect data."
+    },
+    {
+     "text": "A tool response control for violence only",
+     "why": "This checks a different risk at a different point."
+    }
+   ],
+   "answer": [
+    0
+   ],
+   "explanation": "Use PII detection where the data could leave.",
+   "objective": "1.4.1"
+  }
+ ]
+}

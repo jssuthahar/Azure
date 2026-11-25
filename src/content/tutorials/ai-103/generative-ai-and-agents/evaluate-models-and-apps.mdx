@@ -1,0 +1,197 @@
+---
+title: 'Evaluate Models and Apps: Groundedness, Relevance and Safety'
+seoTitle: 'Evaluate Foundry Models and Apps: Groundedness | AI-103'
+description: 'Score a generative app with built-in evaluators for groundedness, relevance, coherence and safety, find fabrications, and compare a change on the same dataset.'
+answer: >-
+  **Evaluators** score your app's answers on a fixed test dataset. **Groundedness** checks whether the answer is supported by the context, which finds **fabrications**. **Relevance** checks the answer addresses the question, **coherence** and **fluency** check the writing, and **safety evaluators** check harm and attacks. AI-assisted evaluators need a **judge model** deployment. Run the same dataset before and after each change so you can compare.
+updated: 2026-11-25
+readingMinutes: 12
+keyTerms:
+  - term: Evaluator
+    definition: >-
+      A scoring function that rates a response on one quality, such as groundedness or violence.
+  - term: Groundedness
+    definition: >-
+      How well a response is supported by the context it was given. Low scores point to fabrication.
+  - term: Fabrication
+    definition: >-
+      A claim in an answer that the sources do not support.
+  - term: Relevance
+    definition: >-
+      How well a response addresses the question that was asked.
+  - term: Judge model
+    definition: >-
+      A model deployment that an AI-assisted evaluator uses to score each row.
+  - term: Evaluation dataset
+    definition: >-
+      A fixed set of test rows, such as query, context, response and ground truth, used to compare versions.
+interview:
+  - level: beginner
+    q: 'What does groundedness measure?'
+    a: >-
+      Whether the answer is backed by the context the app supplied. If the answer says something the documents never said, groundedness drops.
+    followUps: []
+  - level: intermediate
+    q: 'Why use a fixed dataset for evaluation?'
+    a: >-
+      So the comparison is fair. If I change the prompt and run the same rows through the same evaluators, any change in score comes from my change and not from different questions.
+    followUps: []
+  - level: experienced
+    q: 'Groundedness is high on average but customers complain. What now?'
+    a: >-
+      Averages hide rows. I look at the lowest rows, read why they failed, and check whether the test set matches real traffic. I also add cases the documents can't answer, and run safety evaluators separately because they measure different things.
+    followUps: []
+  - level: scenario
+    q: 'The model started promising vouchers that don''t exist. How do you catch that before release?'
+    a: >-
+      I add that case to the evaluation set with the real context, run groundedness, and see a very low score for the row. Then I fix the instructions or retrieval and run the same dataset again to prove the score recovered.
+    followUps: []
+revision:
+  keyPoints:
+    - 'Groundedness finds claims the context does not support.'
+    - 'Relevance checks the answer addresses the query.'
+    - 'Safety evaluators check harm categories and indirect attacks.'
+    - 'AI-assisted evaluators need a judge model deployment.'
+    - 'Compare changes on the same dataset.'
+  mistakes:
+    - 'Judging quality by a quick demo.'
+    - 'Reading only the average score and not the failing rows.'
+    - 'Running quality evaluators and skipping safety ones.'
+  examTips:
+    - '"Answer contains details not in the documents" = **groundedness**.'
+    - '"Accurate but answers a different question" = **relevance**.'
+    - '"Hidden instructions in a document" = **indirect attack** evaluator.'
+  quick:
+    - q: 'Which evaluator finds fabrications?'
+      a: 'Groundedness.'
+    - q: 'Which checks that the answer fits the question?'
+      a: 'Relevance.'
+    - q: 'What do AI-assisted evaluators need?'
+      a: 'A judge model deployment.'
+    - q: 'Why use a fixed dataset?'
+      a: 'To compare versions fairly.'
+    - q: 'Which evaluator checks injected instructions?'
+      a: 'Indirect attack.'
+references:
+  - title: 'Evaluate generative AI apps with the Foundry SDK'
+    url: https://learn.microsoft.com/azure/ai-foundry/how-to/develop/evaluate-sdk
+  - title: 'Built-in evaluators'
+    url: https://learn.microsoft.com/azure/ai-foundry/concepts/observability
+  - title: 'Azure AI Evaluation client library for Python'
+    url: https://learn.microsoft.com/python/api/azure-ai-evaluation/azure.ai.evaluation
+related:
+  - rag-in-an-application
+  - monitor-and-evaluate-agents
+  - prompt-engineering-and-parameters
+---
+
+## Start with a question
+
+<Story question="How does a teacher know a student really understands?">
+
+A teacher doesn't judge from one confident answer in class. She sets the same test, marks each question against the textbook, and looks at which answers fall apart. A student who says something the book never said gets marked down, however fluent it sounds.
+
+**Evaluators** do that marking for your app. They take a set of questions, the sources the app had and the answers it gave, and score each row. A low **groundedness** score is the "that's not in the book" mark.
+
+</Story>
+
+## Explain it like I'm 10
+
+<Eli10>
+
+Imagine you're checking a friend's book report.
+
+First you check each sentence: is it really in the book? That's **groundedness**.
+
+Then you check: did they answer the question the teacher asked? That's **relevance**.
+
+Then: is it neat and easy to read? That's **coherence** and **fluency**.
+
+Last, you check there's nothing rude or scary in it. That's the **safety** check.
+
+</Eli10>
+
+## The technical explanation
+
+### The evaluator families
+
+| Family | Examples | What it tells you |
+| --- | --- | --- |
+| **Quality (AI-assisted)** | Groundedness, relevance, coherence, fluency | Scored 1 to 5 by a judge model, with a pass threshold you choose |
+| **Quality (compare to a reference)** | Similarity, F1 score | How close the answer is to a ground truth |
+| **Safety** | Violence, hate and unfairness, sexual, self-harm, indirect attack, protected material | Whether harmful content or manipulation is present |
+| **Agent** | Intent resolution, tool call accuracy, task adherence | How an agent behaved (a later lesson) |
+
+### A dataset and a run
+
+Each row of a JSONL file holds what the evaluator needs, for example `query`, `context`, `response` and `ground_truth`.
+
+```json
+{"query": "When will my refund arrive?",
+ "context": "Refunds reach the original payment method in 5 to 7 working days.",
+ "response": "Refunds arrive instantly as store credit, plus a ₹500 voucher.",
+ "ground_truth": "5 to 7 working days"}
+```
+
+```python
+# pip install azure-ai-evaluation azure-identity
+from azure.ai.evaluation import evaluate, AzureOpenAIModelConfiguration, GroundednessEvaluator, RelevanceEvaluator
+
+judge = AzureOpenAIModelConfiguration(azure_endpoint=resource_endpoint, azure_deployment="support-chat")
+result = evaluate(data="rag-eval.jsonl",
+                  evaluators={"groundedness": GroundednessEvaluator(judge), "relevance": RelevanceEvaluator(judge)},
+                  azure_ai_project=project_endpoint)      # the run also appears under Evaluations in the portal
+print(result["metrics"])
+```
+
+The example row scores **1 out of 5** on groundedness. The context says 5 to 7 working days, and the response invents instant credit and a voucher. That's a fabrication, and the score catches it even if the average of the dataset looks fine.
+
+### Make evaluation a habit
+
+1. Build a small dataset from real questions, including some your documents **can't** answer.
+2. Run quality and safety evaluators, and read the **lowest** rows.
+3. Change one thing, such as the prompt or the retrieval.
+4. Run the **same** dataset again and compare.
+
+<TryIt labs="agt-genai-rag-evaluate" text="Score rag-eval.jsonl for groundedness and relevance, find the fabricated row, then run the safety evaluators." />
+
+<Callout type="exam">
+Match the symptom to the evaluator. "Claims not found in the retrieved documents" is **groundedness**. "Well written but off topic" is **relevance**. "A retrieved document contains hidden instructions" is the **indirect attack** evaluator. "Prove a prompt change didn't reduce quality" means the **same dataset and evaluators before and after**.
+</Callout>
+
+<DeepDive title="Judge models and cost">
+
+AI-assisted evaluators call a model for every row and every evaluator, so a dataset of 500 rows with four evaluators makes about 2,000 judge calls. Use a capable deployment as judge, keep the dataset focused, and run the full set on release rather than on every small edit. Safety evaluators for harm categories run on Foundry's safety evaluation service and need a Foundry project, which is why the script passes the project endpoint.
+
+</DeepDive>
+
+## Real-world business scenario
+
+<Scenario
+  company="Contoso Retail (fictional)"
+  industry="Retail"
+  problem="After a prompt tweak, the support bot started promising store credit and vouchers. Nobody noticed until a customer posted the chat."
+  service="A 200-row evaluation set built from real tickets, run with groundedness, relevance and safety evaluators on every release, with the lowest rows reviewed by hand."
+  why="A fabricated promise shows up as a groundedness score of 1 on a known row, before it reaches a customer, and the same set proves the fix."
+  outcome="The team blocked a release that scored lower than the previous one and shipped the fixed prompt two days later with scores restored."
+/>
+
+## When to use it and when not to
+
+<UseWhen
+  use={[
+    'You change prompts, models or retrieval and need to know if quality moved.',
+    'You must show a release meets a quality and safety bar.',
+    'You want to find rows that fail, not only an average.',
+  ]}
+  avoid={[
+    'You have no test data. Collect examples first.',
+    'You only want an uptime check. Azure Monitor metrics cover that.',
+    'You treat a single score as proof of safety. Combine evaluators with review.',
+  ]}
+  alternatives={[
+    '<strong>Continuous evaluation</strong> on sampled live traffic after release.',
+    '<strong>Red teaming</strong> to attack the app on purpose.',
+    '<strong>Human review</strong> for the lowest-scoring rows.',
+  ]}
+/>

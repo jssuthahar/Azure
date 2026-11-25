@@ -1,0 +1,152 @@
+{
+ "cert": "ai-103",
+ "domain": 2,
+ "topic": "prompt-engineering-and-parameters",
+ "questions": [
+  {
+   "id": "agt-g-prompt-enginee-1",
+   "type": "single",
+   "scenario": "A contract-summary tool must produce consistent, factual output.",
+   "question": "Which temperature setting is most appropriate?",
+   "options": [
+    {
+     "text": "A low value such as 0.2",
+     "why": "Correct. It keeps output steady."
+    },
+    {
+     "text": "A high value such as 1.4",
+     "why": "It makes output more varied."
+    },
+    {
+     "text": "Temperature does not affect consistency",
+     "why": "It does affect sampling variety."
+    },
+    {
+     "text": "The maximum allowed value",
+     "why": "It would create the most variety."
+    }
+   ],
+   "answer": [
+    0
+   ],
+   "explanation": "Use low temperature for factual and repeatable tasks.",
+   "objective": "2.3.1"
+  },
+  {
+   "id": "agt-g-prompt-enginee-2",
+   "type": "single",
+   "scenario": "A reply ends mid-sentence and the response status is incomplete.",
+   "question": "What should you increase?",
+   "options": [
+    {
+     "text": "The chunk overlap",
+     "why": "It affects retrieval, not output length."
+    },
+    {
+     "text": "Max output tokens",
+     "why": "Correct. The reply hit the output cap."
+    },
+    {
+     "text": "Temperature",
+     "why": "It does not change the cap."
+    },
+    {
+     "text": "The number of deployments",
+     "why": "It does not affect the cap."
+    }
+   ],
+   "answer": [
+    1
+   ],
+   "explanation": "An incomplete status points to a token limit.",
+   "objective": "2.3.1"
+  },
+  {
+   "id": "agt-g-prompt-enginee-3",
+   "type": "single",
+   "scenario": "A product description must always follow a specific format and tone. Instructions alone give inconsistent results.",
+   "question": "Which technique should you add?",
+   "options": [
+    {
+     "text": "A smaller deployment",
+     "why": "It would not improve format adherence."
+    },
+    {
+     "text": "A longer retention period",
+     "why": "It is unrelated."
+    },
+    {
+     "text": "A few-shot example in the instructions",
+     "why": "Correct. An example shows the format directly."
+    },
+    {
+     "text": "A higher top_p value",
+     "why": "It increases variety."
+    }
+   ],
+   "answer": [
+    2
+   ],
+   "explanation": "Few-shot examples show the model the target output.",
+   "objective": "2.3.1"
+  },
+  {
+   "id": "agt-g-prompt-enginee-4",
+   "type": "single",
+   "scenario": "A team wants a draft checked against a checklist and revised once before it is returned.",
+   "question": "Which technique does this describe?",
+   "options": [
+    {
+     "text": "Embedding the draft",
+     "why": "Embedding creates a vector."
+    },
+    {
+     "text": "Batch deployment",
+     "why": "It is a deployment type."
+    },
+    {
+     "text": "Content filtering",
+     "why": "It checks safety risk."
+    },
+    {
+     "text": "A self-critique loop",
+     "why": "Correct. The model drafts, critiques and revises."
+    }
+   ],
+   "answer": [
+    3
+   ],
+   "explanation": "Reflection loops improve drafts but should have a limited number of rounds.",
+   "objective": "2.3.2"
+  },
+  {
+   "id": "agt-g-prompt-enginee-5",
+   "type": "single",
+   "scenario": "A call to a reasoning model with a temperature parameter is rejected.",
+   "question": "What should you use to influence its behaviour instead?",
+   "options": [
+    {
+     "text": "The reasoning effort setting",
+     "why": "Correct. Reasoning models are tuned with reasoning effort."
+    },
+    {
+     "text": "A larger temperature",
+     "why": "The parameter is not supported."
+    },
+    {
+     "text": "A smaller embedding size",
+     "why": "It is not a generation setting."
+    },
+    {
+     "text": "A different resource group",
+     "why": "It has no effect."
+    }
+   ],
+   "answer": [
+    0
+   ],
+   "explanation": "Reasoning models use different controls from standard chat models.",
+   "objective": "2.3.1"
+  }
+ ]
+}

@@ -1,0 +1,192 @@
+---
+title: 'Autonomous Agents with Safeguards and Approvals'
+seoTitle: 'Agent Safeguards and Approval Flows in Foundry | AI-103'
+description: 'Build semi-autonomous agents safely: let reads run, require approval on write tools, enforce hard limits in code, and keep a trace of every decision.'
+answer: >-
+  Let an agent **read** freely, but mark **write tools** that change data or move money as **approval required**, so the run **pauses** until a person approves or rejects. Put **hard limits in code** for what nobody should approve, give the agent **least-privilege tools** and **limits on steps and cost**, and keep **traces** so an auditor can see who decided. The more autonomy you give, the more these safeguards matter.
+updated: 2026-11-25
+readingMinutes: 12
+keyTerms:
+  - term: Approval flow
+    definition: >-
+      A pause in an agent run until a person approves or rejects a pending tool call.
+  - term: Approval required
+    definition: >-
+      A tool setting such as approval_mode="always_require" that stops the run at that tool.
+  - term: Hard limit
+    definition: >-
+      A rule in code, such as a maximum refund, that applies whatever the model or reviewer decides.
+  - term: Least privilege
+    definition: >-
+      Giving the agent only the tools and access it needs for its job.
+  - term: Human in the loop
+    definition: >-
+      A person approves each risky action before it runs.
+  - term: Audit trail
+    definition: >-
+      A record of tool calls, arguments and decisions that can be reviewed later.
+interview:
+  - level: beginner
+    q: 'Why not let the agent do everything itself?'
+    a: >-
+      Reading an order is harmless, but sending money isn't. A model can misunderstand a message, so for actions with real impact I want a person to say yes first.
+    followUps: []
+  - level: intermediate
+    q: 'What is the difference between an approval and a hard limit?'
+    a: >-
+      An approval asks a person to decide a judgement call, and the person can say yes. A hard limit is code that refuses outright, such as a refund over ₹20,000 going to finance, so nobody can approve it by mistake.
+    followUps: []
+  - level: experienced
+    q: 'How do you design the levels of autonomy?'
+    a: >-
+      I classify tools by impact. Read-only tools run freely. Reversible, low-value writes can run with limits and logging. High-impact or irreversible writes require approval. Anything beyond policy is blocked in code. I also cap steps, time and cost per run.
+    followUps: []
+  - level: scenario
+    q: 'An auditor asks who approved a refund last Tuesday. How do you answer?'
+    a: >-
+      From the trace. It records the tool call, the arguments, the approval request and the decision with the approver and time. That's why I log approvals, not just the final result.
+    followUps: []
+revision:
+  keyPoints:
+    - 'Reads can run freely; writes with impact need approval.'
+    - 'Approval pauses the run until a decision is returned.'
+    - 'Hard limits in code hold even if an approver errs.'
+    - 'Limit tools, steps and cost for autonomous runs.'
+    - 'Traces record who decided what.'
+  mistakes:
+    - 'Relying on the prompt to enforce a business limit.'
+    - 'Approving every read, which adds friction with little risk reduction.'
+    - 'No record of approvals.'
+  examTips:
+    - '"Pause before money moves" = **approval required on the tool**.'
+    - '"Never above a legal limit" = **enforce in code**.'
+    - '"Show who approved" = **trace and audit log**.'
+  quick:
+    - q: 'What pauses a run for a person?'
+      a: 'A tool marked approval required.'
+    - q: 'Where do absolute limits belong?'
+      a: 'In the tool code.'
+    - q: 'What resumes a paused run?'
+      a: 'An approval response (approve or reject).'
+    - q: 'Which tools usually need approval?'
+      a: 'Write tools with real impact.'
+    - q: 'What gives an audit record?'
+      a: 'Traces of tool calls and decisions.'
+references:
+  - title: 'Microsoft Agent Framework: tools with approval'
+    url: https://learn.microsoft.com/agent-framework/user-guide/agents/agent-tools
+  - title: 'Human in the loop with MCP approvals'
+    url: https://learn.microsoft.com/azure/ai-foundry/agents/how-to/tools/model-context-protocol
+  - title: 'Guardrails in Microsoft Foundry'
+    url: https://learn.microsoft.com/azure/ai-foundry/guardrails/guardrails-overview
+related:
+  - multi-agent-orchestration
+  - monitor-and-evaluate-agents
+  - design-agents-roles-goals-and-tools
+---
+
+## Start with a question
+
+<Story question="Would you let a new hire send refunds without asking anyone?">
+
+Not on day one. They can look up orders freely. For a refund they check with a manager, and there's a company rule that no one can refund more than a set amount without finance, however polite the customer is.
+
+That's how to run an **autonomous agent**. Reads are free, risky writes need a **person's approval**, and some limits are **rules in code** that nobody can talk their way around.
+
+</Story>
+
+## Explain it like I'm 10
+
+<Eli10>
+
+Imagine a robot helper at a shop till.
+
+It can look at the price list as much as it likes. No one needs to say yes.
+
+But before it hands out money from the till, it stops and calls the manager. The manager says yes or no.
+
+And there's a lock on the till: the robot can never give out more than a certain amount, even if the manager is in a hurry.
+
+</Eli10>
+
+## The technical explanation
+
+### Levels of autonomy
+
+| Tool kind | Example | Control |
+| --- | --- | --- |
+| **Read-only** | `lookup_order` | Runs freely, logged |
+| **Low-impact write** | Add a note to a ticket | Allowed with limits and logging |
+| **High-impact write** | `issue_refund` | **Approval required** |
+| **Beyond policy** | Refund over ₹20,000 | **Blocked in code** |
+
+### Approval in code
+
+In Microsoft Agent Framework a tool opts in to approval with `approval_mode`:
+
+```python
+@tool
+def lookup_order(order_id: Annotated[str, "Order number"]) -> str:
+    '''Read-only: order total, items and delivery status.'''
+
+@tool(approval_mode="always_require")           # pauses the run until a person decides
+def issue_refund(order_id: Annotated[str, "Order number"], amount_inr: Annotated[int, "Amount in rupees"]) -> str:
+    '''Write action: send money back to the customer.'''
+    if amount_inr > 20000:                      # hard limit in code, whatever the model says
+        raise ValueError("Refunds over ₹20,000 go to the finance team")
+```
+
+When the agent decides to call `issue_refund`, the run **pauses** and returns a pending **approval request** with the exact arguments. Your app shows it to a reviewer and sends back an **approval response**, either approve or reject, and the run continues. A rejected call never runs. Foundry Agent Service has the same idea for remote MCP tools through a `require_approval` setting, so the model's request waits for your decision.
+
+### Safeguards around the approval
+
+1. **Least privilege.** Give the agent only the tools the job needs, and limit what each tool can do.
+2. **Hard limits in code.** Maximum amounts, allowed recipients and allowed fields are checked inside the tool.
+3. **Run limits.** Cap the number of steps, the time and the tokens per run so a loop can't run away.
+4. **Guardrails.** A guardrail can check what the agent sends to a tool and what comes back.
+5. **Traces.** Log the tool call, arguments, approver and decision. That's the audit trail.
+
+An approval is a judgement call by a person. It isn't a substitute for a limit, because a tired reviewer can click yes.
+
+<TryIt labs="agt-genai-multi-approve" text="Request a refund, approve one, reject one, then try ₹45,000 and see the hard limit stop it before any approval." />
+
+<Callout type="exam">
+"Pause until a person decides" is **approval required** on the tool. "Must never exceed the legal limit" is **enforced in code**, not in the prompt. "Show who approved and when" is the **trace**. Read-only tools normally **don't** need the same approval as write tools.
+</Callout>
+
+<DeepDive title="Autonomous is a spectrum">
+
+Human in the loop means a person approves before each risky action. Human on the loop means the agent acts and a person monitors and can step in. Full autonomy means neither. Move along the spectrum only as far as your evaluation results and risk tolerance allow: start with approval on every write, measure how often reviewers change the outcome, and relax the rule for tools that prove safe, never for tools whose mistakes can't be undone.
+
+</DeepDive>
+
+## Real-world business scenario
+
+<Scenario
+  company="Contoso Retail (fictional)"
+  industry="Retail"
+  problem="A helpful refund agent processed ₹64,990 from a vague message, because the only protection was a sentence in its instructions."
+  service="A refund agent on Microsoft Agent Framework: lookup_order runs freely, issue_refund is approval required with a hard limit of ₹20,000 in code, run limits on steps and tokens, and traces for every tool call and decision."
+  why="Small refunds get a quick human check, large ones go to finance automatically, and each decision is recorded with the approver."
+  outcome="Wrongly processed refunds stopped, and the finance audit took minutes because the traces showed every approval."
+/>
+
+## When to use it and when not to
+
+<UseWhen
+  use={[
+    'The agent can change data or move money.',
+    'A mistake would be costly or hard to undo.',
+    'You need to show an auditor who decided.',
+  ]}
+  avoid={[
+    'Approval on every read, which slows people for no benefit.',
+    'Using approvals instead of limits for absolute rules.',
+    'Full autonomy before you have evaluation results.',
+  ]}
+  alternatives={[
+    '<strong>Hard limits in code</strong> for rules with no exceptions.',
+    '<strong>Guardrails</strong> to check tool calls and responses.',
+    '<strong>A fixed workflow</strong> when no model judgement is needed.',
+  ]}
+/>

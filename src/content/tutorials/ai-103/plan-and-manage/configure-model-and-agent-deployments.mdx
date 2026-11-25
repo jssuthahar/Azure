@@ -1,0 +1,195 @@
+---
+title: Configure Model and Agent Deployments
+seoTitle: Configure Foundry Model and Agent Deployments | AI-103
+description: Deploy a model with a pinned version, capacity, upgrade policy and guardrail, then publish, version and roll back an agent in Foundry. AI-103 1.2.3.
+answer: >-
+  A **model deployment** pins a **model name and version**, a **deployment type**, **capacity** (tokens per minute, or PTUs), a **version upgrade policy** and a **guardrail**. Pin a version when behaviour must not change, and choose an upgrade option if you want newer defaults. An **agent** gets a new **version** every time its definition changes, so you can test one version, publish it, and **roll back** by pointing the endpoint at the earlier version. Apps call the **project endpoint** with the deployment name or the agent name, never the model name.
+updated: 2026-11-25
+readingMinutes: 9
+keyTerms:
+  - term: Deployment name
+    definition: The name you give a model deployment. Your code calls this name, not the model name, so you can swap the model behind it.
+  - term: Model version
+    definition: A dated release of a model, such as 2025-04-14. A deployment uses the version you pick or follows the default.
+  - term: Version upgrade policy
+    definition: The setting that decides whether a deployment stays on its pinned version, moves to a new default when one appears, or upgrades once the old one nears retirement.
+  - term: Agent version
+    definition: A saved snapshot of an agent's model, instructions and tools. Each change creates a new version, and the endpoint serves the version you choose.
+  - term: Project endpoint
+    definition: The URL of a Foundry project, which apps use through the Foundry SDK to reach agents, deployments and tools.
+  - term: Capacity
+    definition: "The throughput slice assigned to a deployment: thousands of tokens per minute for pay-per-token types, or PTUs for provisioned types."
+interview:
+  - level: beginner
+    q: Why does your code use a deployment name and not the model name?
+    a: >-
+      Because the deployment is what I configure in Foundry: version, capacity, guardrail. If I need a newer model, I change the deployment, and the code keeps working. The name is a stable handle.
+    followUps: []
+  - level: intermediate
+    q: What does the version upgrade policy do?
+    a: >-
+      It controls what happens when a new default version comes out. With no auto upgrade, my deployment stays pinned until the version retires. With the other options, Azure moves it to the new default on a schedule. I pin for regulated apps and re-run my evaluations before changing.
+    followUps: []
+  - level: experienced
+    q: Walk me through rolling out a new agent prompt safely.
+    a: >-
+      I create a new agent version with the changed instructions, test that version against my evaluation set in a dev project, and only then point production at it. If users report problems, I switch the active version back to the previous one. Versions are kept, so nothing is lost.
+    followUps: []
+  - level: scenario
+    q: A model version is being retired in 60 days and your app depends on its exact wording. What do you do?
+    a: >-
+      I'd deploy the replacement version next to the old one under a new deployment name, run my test set against both, adjust prompts where scores drop, then switch traffic with a percentage rollout and finally delete the old deployment. I wouldn't wait for the forced upgrade date.
+    followUps: []
+revision:
+  keyPoints:
+    - A deployment pins model, version, deployment type, capacity, upgrade policy and guardrail.
+    - Code calls the deployment name, so the model behind it can change.
+    - Pin the version when behaviour must be stable, and re-test before upgrading.
+    - Every agent change creates a new version. The endpoint serves the version you choose, so rollback is a switch.
+    - Capacity is per deployment, taken from the quota for that model and deployment type.
+  mistakes:
+    - Letting auto upgrade change a regulated app's model without re-running evaluations.
+    - Calling the model name instead of the deployment name.
+    - Editing the live agent with no test version, then having nothing to roll back to.
+  examTips:
+    - '"Behaviour must not change until we approve" = **pin the version**, no auto upgrade.'
+    - '"Undo a bad agent release quickly" = switch to the **previous agent version**.'
+    - '"Apply content rules to a deployment" = attach a **guardrail** to it.'
+  quick:
+    - q: What do you call from code, the deployment name or the model name?
+      a: The deployment name.
+    - q: What creates a new agent version?
+      a: Any change to its model, instructions or tools.
+    - q: How do you roll back an agent?
+      a: Point the endpoint at the earlier version.
+    - q: Where does a deployment's capacity come from?
+      a: The quota for that model and deployment type.
+    - q: Which setting stops a deployment moving to a new default model version?
+      a: A pinned version with no auto upgrade.
+references:
+  - title: Deploy models in Foundry
+    url: https://learn.microsoft.com/azure/ai-foundry/foundry-models/how-to/create-model-deployments
+  - title: Model version upgrades
+    url: https://learn.microsoft.com/azure/ai-foundry/openai/how-to/working-with-models#model-deployment-upgrade-configuration
+  - title: Foundry Agent Service overview
+    url: https://learn.microsoft.com/azure/ai-foundry/agents/overview
+  - title: Create and manage agent versions
+    url: https://learn.microsoft.com/azure/ai-foundry/agents/concepts/runtime-components
+related:
+  - foundry-infrastructure-and-deployment-options
+  - foundry-cicd-pipelines
+---
+
+## Start with a question
+
+<Story question="What happens to your app when the model behind it quietly changes?">
+
+Asha's team shipped a refund assistant that always answered in a tidy three-line format. A month later answers started arriving in paragraphs. Nobody had changed the code. The deployment was set to follow new default model versions, and a new default had arrived.
+
+Deployment settings are part of your app. The version, the capacity and the guardrail decide how it behaves as much as your prompt does.
+
+</Story>
+
+## Explain it like I'm 10
+
+<Eli10>
+
+Think of a school canteen counter with a sign: **"Today's Lunch"**. Students ask for "Today's Lunch" and never worry which cook made it.
+
+The sign is the **deployment name**. The cook behind it is the **model version**. You can decide: "Same cook every day" (pinned), or "Use the newest cook when one arrives".
+
+Now the lunch menu itself is the **agent**. Each time you change the menu you save a new copy: version 1, version 2. If version 2 is awful, you put version 1 back on the board.
+
+</Eli10>
+
+## The technical explanation
+
+### Configure a model deployment
+
+In the **Foundry portal**: **Models + endpoints** → **Deploy model** → choose the model → **Customize**:
+
+| Setting | What it controls |
+| --- | --- |
+| **Deployment name** | The name your code calls. Keep it stable and descriptive. |
+| **Model version** | The exact release. Pick one when behaviour must not change. |
+| **Deployment type** | Global, Data Zone, Standard, Provisioned or Batch. |
+| **Tokens per minute (capacity)** | The slice of quota this deployment gets, with matching requests per minute. |
+| **Version upgrade policy** | No auto upgrade, upgrade when a new default arrives, or upgrade only near retirement. |
+| **Guardrail** | The set of controls applied to prompts and answers. |
+
+```bash
+az cognitiveservices account deployment create -n contoso-ai -g rg-agents \
+  --deployment-name gpt-4.1-mini --model-name gpt-4.1-mini --model-version 2025-04-14 \
+  --model-format OpenAI --sku-name DataZoneStandard --sku-capacity 50
+```
+
+Plan changes like code: when a model version retires, deploy the new one beside the old under a new name, test, then move traffic.
+
+### Agents are versioned
+
+An agent definition holds the **model deployment**, **instructions** and **tools** (file search, code interpreter, MCP, functions, knowledge bases). Each change creates a **new version** with its own ID. You choose which version serves traffic.
+
+```python
+from azure.ai.projects import AIProjectClient
+from azure.ai.projects.models import PromptAgentDefinition
+from azure.identity import DefaultAzureCredential
+
+project = AIProjectClient(endpoint=PROJECT_ENDPOINT, credential=DefaultAzureCredential())
+agent = project.agents.create_version(
+    agent_name="support-agent",
+    definition=PromptAgentDefinition(model="gpt-4.1-mini", instructions="Answer only from the policy knowledge base."),
+)
+print(agent.name, agent.version)
+```
+
+A safe release looks like this:
+
+1. Create the new version in a **dev** project and run your evaluation set.
+2. Promote the same definition to the next environment.
+3. Watch metrics and continuous evaluation after release.
+4. If scores drop, **switch back** to the previous version. Nothing was overwritten.
+
+Applications reach all of it through the **project endpoint** (`https://<resource>.services.ai.azure.com/api/projects/<project>`) with Microsoft Entra ID, not a key.
+
+<TryIt labs="agt-plan-deploy" text="Pin a model version and capacity, attach a guardrail, publish agent version 2 and roll it back." />
+
+<Callout type="exam">
+"Behaviour must stay the same until we approve a change" means **pin the model version** and turn off auto upgrade. "Fast rollback of an agent" means **switch to the previous agent version**. If the question asks what an app calls, the answer is the **deployment name**. Capacity belongs to the deployment and is taken from **quota**.
+</Callout>
+
+<DeepDive title="Two deployments of the same model">
+
+You can deploy the same model twice under different names, for example `chat-prod` with high capacity and a strict guardrail, and `chat-eval` with low capacity for test runs. Quota is shared across deployments of that model, so each one you add shrinks what's left. Delete test deployments when you're done with them.
+
+</DeepDive>
+
+## Real-world business scenario
+
+<Scenario
+  company="Contoso Pay (fictional)"
+  industry="Payments"
+  problem="A silent model upgrade changed the tone of refund explanations, and a hurried prompt edit on the live agent made things worse with no way back."
+  service="A pinned gpt-4.1-mini version with no auto upgrade, a strict guardrail attached to the deployment, and agent versions: every prompt change became a new version tested in dev before the endpoint was switched."
+  why="Pinning stopped surprise changes, and versions turned a rollback into a switch of the active version."
+  outcome="The team shipped prompt changes weekly and rolled one back in minutes when a score dropped."
+/>
+
+## When to use it and when not to
+
+<UseWhen
+  use={[
+    'Behaviour must be predictable between releases.',
+    'You want to test a model or prompt change before users see it.',
+    'Different environments need different capacity and guardrails.',
+  ]}
+  avoid={[
+    'You edit a live agent with no new version and no tested fallback.',
+    'You hard-code a model name in app code.',
+    'You never delete old test deployments, so quota drains away.',
+  ]}
+  alternatives={[
+    '<strong>Auto upgrade</strong> for low-risk apps where newer is always welcome.',
+    '<strong>A percentage rollout</strong> by sending part of the traffic to the new deployment first.',
+    '<strong>A model router deployment</strong> that picks a model per request.',
+  ]}
+/>

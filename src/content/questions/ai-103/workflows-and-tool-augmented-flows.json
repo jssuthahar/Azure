@@ -1,0 +1,152 @@
+{
+ "cert": "ai-103",
+ "domain": 2,
+ "topic": "workflows-and-tool-augmented-flows",
+ "questions": [
+  {
+   "id": "agt-g-workflows-and-1",
+   "type": "single",
+   "scenario": "Downstream code parses the model reply and fails when a field name changes between calls.",
+   "question": "Which feature should you use?",
+   "options": [
+    {
+     "text": "A higher temperature",
+     "why": "It makes variation more likely."
+    },
+    {
+     "text": "A longer system message that asks nicely for JSON",
+     "why": "Instructions alone do not guarantee the schema."
+    },
+    {
+     "text": "Streaming the response",
+     "why": "Streaming changes delivery, not structure."
+    },
+    {
+     "text": "Structured outputs with a strict JSON schema",
+     "why": "Correct. The reply must match the schema."
+    }
+   ],
+   "answer": [
+    3
+   ],
+   "explanation": "Structured outputs constrain the model to your schema. JSON mode only promises valid JSON.",
+   "objective": "2.1.3"
+  },
+  {
+   "id": "agt-g-workflows-and-2",
+   "type": "single",
+   "scenario": "A claims flow calls a warranty system that sometimes times out. The flow must never send a reply that lacks verified data.",
+   "question": "What should you implement?",
+   "options": [
+    {
+     "text": "A limited number of retries, then a fallback that holds the claim for a person",
+     "why": "Correct. The flow stays safe when the tool fails."
+    },
+    {
+     "text": "Let the model guess the warranty status when the tool fails",
+     "why": "A guess can produce a wrong promise to the customer."
+    },
+    {
+     "text": "Remove the tool and rely on the prompt",
+     "why": "The data is only available from the system."
+    },
+    {
+     "text": "Retry forever until the tool responds",
+     "why": "Unlimited retries can hang the flow."
+    }
+   ],
+   "answer": [
+    0
+   ],
+   "explanation": "Plan for failure in code: bounded retries, a safe fallback and a check before sending.",
+   "objective": "2.1.3"
+  },
+  {
+   "id": "agt-g-workflows-and-3",
+   "type": "single",
+   "scenario": "A single prompt classifies a claim, extracts fields, checks the warranty and writes the reply. Failures are hard to diagnose.",
+   "question": "What is the best redesign?",
+   "options": [
+    {
+     "text": "Move all steps into the system message",
+     "why": "It keeps one combined prompt."
+    },
+    {
+     "text": "Split the work into steps, each with a focused prompt and a check between steps",
+     "why": "Correct. Each step can be tested and traced on its own."
+    },
+    {
+     "text": "Add more text to the single prompt",
+     "why": "A longer prompt makes failures harder to isolate."
+    },
+    {
+     "text": "Use a higher temperature",
+     "why": "It does not improve diagnosability."
+    }
+   ],
+   "answer": [
+    1
+   ],
+   "explanation": "Multistep pipelines give one job per step, with validation in between.",
+   "objective": "2.1.3"
+  },
+  {
+   "id": "agt-g-workflows-and-4",
+   "type": "single",
+   "question": "Which setting is most appropriate for the classification step of a flow that must give the same label for the same email?",
+   "options": [
+    {
+     "text": "A max output tokens value of 1,000",
+     "why": "Output length does not make the label consistent."
+    },
+    {
+     "text": "A larger context window",
+     "why": "A bigger window does not make output repeatable."
+    },
+    {
+     "text": "Temperature 0",
+     "why": "Correct. It gives the most repeatable output."
+    },
+    {
+     "text": "Temperature 1.5",
+     "why": "A high temperature adds variation."
+    }
+   ],
+   "answer": [
+    2
+   ],
+   "explanation": "Use low temperature for classification and extraction, where consistency matters.",
+   "objective": "2.1.3"
+  },
+  {
+   "id": "agt-g-workflows-and-5",
+   "type": "multi",
+   "scenario": "You are designing a reasoning pipeline that has several model calls and one external tool call.",
+   "question": "Which two practices improve reliability? Select two.",
+   "options": [
+    {
+     "text": "Set timeouts and a maximum number of retries on the tool call",
+     "why": "Correct. Bounds keep the pipeline predictable."
+    },
+    {
+     "text": "Pass every earlier message to every step regardless of need",
+     "why": "Extra context adds cost and can confuse later steps."
+    },
+    {
+     "text": "Use the highest temperature for extraction steps",
+     "why": "High temperature reduces repeatability."
+    },
+    {
+     "text": "Validate each step output before it becomes the next step input",
+     "why": "Correct. Early validation stops errors spreading."
+    }
+   ],
+   "answer": [
+    0,
+    3
+   ],
+   "explanation": "Checks between steps and bounds on tools are the basic controls for a multistep flow.",
+   "objective": "2.1.3"
+  }
+ ]
+}

@@ -1,0 +1,179 @@
+---
+title: Generate and Edit Video
+seoTitle: Generate and Remix Video with Sora 2 in Foundry | AI-103
+description: Create videos with Sora 2 in Microsoft Foundry as asynchronous jobs, anchor them with a reference image, then remix a finished video with one change.
+answer: >-
+  A **Sora 2** video is an **asynchronous job**: you **create** it with a prompt, a **size** (720x1280 or 1280x720) and a duration of **4, 8 or 12 seconds**, **poll** the status, then **download** the video. An **input reference** image must match the video size and can't contain a face. To edit a finished video, **remix** it by its video ID with a short prompt that asks for one change.
+updated: 2026-11-25
+readingMinutes: 8
+keyTerms:
+  - term: Sora 2
+    definition: The video generation model available in Microsoft Foundry (in preview as of 25 November 2026) that creates short videos from text and images.
+  - term: Asynchronous job
+    definition: A request that returns an ID right away while the work continues in the background, so the app polls the status.
+  - term: Input reference
+    definition: An image whose first frame anchors the video. It must match the video size and must not contain a human face.
+  - term: Remix
+    definition: An edit of a completed video, identified by its video ID, that applies a short change from a new prompt.
+interview:
+  - level: beginner
+    q: Why can't a web page wait for a Sora 2 video in one request?
+    a: >-
+      Video generation takes a while. The service returns a job with an ID, and my app polls the status until it's completed, then downloads the file.
+    followUps: []
+  - level: intermediate
+    q: Your create call fails when you add a product photo as a reference. What do you check?
+    a: >-
+      I check that the image has exactly the same width and height as the video size, and that nobody's face is in it. Both rules cause a 400 error.
+    followUps: []
+  - level: experienced
+    q: The client likes a video but wants warmer light. How do you handle it?
+    a: >-
+      I remix the finished video by its ID with one clear change in the prompt. A fresh generation could change everything, and a prompt with many changes drifts away from the original.
+    followUps: []
+  - level: scenario
+    q: Sora 2 is in preview. How does that change your design?
+    a: >-
+      I wouldn't promise it for a customer-facing launch without a fallback. I'd keep limits and regions in configuration, check the Learn page before releases, and store finished videos in my own storage.
+    followUps: []
+revision:
+  keyPoints:
+    - 'Video generation is asynchronous: create, poll, download.'
+    - Sizes are 720x1280 and 1280x720. Durations are 4, 8 or 12 seconds.
+    - The input reference must match the video size and can't include a human face.
+    - Remix edits a completed video by its ID. One clear change works best.
+    - Sora 2 was in preview on 25 November 2026, so check Learn for limits and regions.
+  mistakes:
+    - Holding a web request open until the video is ready.
+    - Using a reference image of a different size.
+    - Asking for many changes in one remix.
+  examTips:
+    - '"Edit a generated video" = **remix** with the video ID.'
+    - '"Video job status polling" = **asynchronous** pattern.'
+    - '"Reference image rejected" = check **size match** and **faces**.'
+  quick:
+    - q: Which durations does Sora 2 accept?
+      a: 4, 8 or 12 seconds.
+    - q: Which sizes are allowed?
+      a: 720x1280 or 1280x720.
+    - q: What must an input reference match?
+      a: The video size exactly.
+    - q: What happens to a reference image with a face?
+      a: It's rejected.
+    - q: How do you edit a finished video?
+      a: Remix it by its video ID with a short prompt.
+references:
+  - title: Video generation with Sora in Microsoft Foundry
+    url: https://learn.microsoft.com/azure/foundry/openai/concepts/video-generation
+  - title: Study guide for Exam AI-103
+    url: https://learn.microsoft.com/en-us/credentials/certifications/resources/study-guides/ai-103
+related:
+  - image-generation-and-editing
+  - responsible-ai-for-visual-content
+---
+
+## Start with a question
+
+<Story question="You ordered a food delivery, and the app says 'in progress'. Why doesn't the pizza arrive the moment you tap the button?">
+
+Because cooking takes time. The app gives you an order number, you check the status now and then, and you collect the pizza when it's ready.
+
+Generating a video works the same way. You don't get the video back in the reply. You get a **video ID**, you **poll** the job, and you **download** the file when its status says **completed**.
+
+</Story>
+
+## Explain it like I'm 10
+
+<Eli10>
+
+Think of a robot that makes a tiny movie when you describe it.
+
+It needs a few minutes, so it gives you a ticket. You come back with the ticket and ask, "Is it ready?" When it is, you get the movie.
+
+If you like the movie but want a sunnier sky, you give the robot the old ticket and say, "Same movie, but sunnier." That's a **remix**.
+
+</Eli10>
+
+## The technical explanation
+
+Deploy **sora-2** on your Foundry resource. At the time of writing (25 November 2026) it's a **preview** model, so confirm the regions and deployment type on Microsoft Learn.
+
+### Create, poll, download
+
+```python
+import time
+video = client.videos.create(
+    model="sora-2",                       # deployment name
+    prompt="A brass tea kettle on a wooden table, steam rising, soft morning light, slow push-in",
+    size="1280x720", seconds="8",
+    input_reference=open("product-1280x720.png", "rb"),   # optional
+)
+while video.status in ("queued", "in_progress"):
+    time.sleep(20)
+    video = client.videos.retrieve(video.id)
+if video.status == "completed":
+    client.videos.download_content(video.id).write_to_file("kettle.mp4")
+```
+
+| Control | Values and rules |
+| --- | --- |
+| `size` | 720x1280 (portrait) or 1280x720 (landscape) |
+| `seconds` | 4, 8 or 12 |
+| `input_reference` | Same size as the video. No human faces |
+| Prompt | Shot, subject, action, setting, light, camera movement |
+| Status | queued, in_progress, completed |
+
+The prompt does the creative work. A good one reads like a shot list: who or what is in frame, what moves, where, in what light, and how the camera behaves. Prompts that name real people or protected characters are rejected.
+
+### Edit with remix
+
+```python
+remixed = client.videos.remix(
+    video.id,
+    prompt="Change the morning light to warm sunset light.",
+)
+```
+
+**Remix** starts from a completed video, so everything you don't mention stays close to the original. Ask for one change. If you pile on five, the result drifts, and you may be better off generating again.
+
+<Callout type="exam">
+"The application must edit a video that was already generated" points to **remix**, not a new create call. "The request must not block" points to the **asynchronous** pattern. "The reference image causes an error" points to **size** and **faces**.
+</Callout>
+
+<DeepDive title="Where do the finished videos live?">
+
+The service stores jobs and outputs for you, but treat that as temporary. Download the file into your own Blob Storage with your own retention, and delete jobs you don't need. Generated videos can carry provenance information such as content credentials, so keep that metadata when you publish.
+
+</DeepDive>
+
+<TryIt labs="agt-vision-video" text="Deploy Sora 2, try a face as the reference, create a video from a product image, then remix it." />
+
+## Real-world business scenario
+
+<Scenario
+  company="Hearth and Brass"
+  industry="Home goods"
+  problem="Every product clip needed a studio day, and a small lighting request meant a reshoot."
+  service="A Sora 2 deployment in Foundry, called from a background job. Product photos at 1280x720 are the input reference, and the team remixes approved clips for seasonal lighting."
+  why="The reference keeps the kettle looking like the real product, polling keeps the web app responsive, and remix avoids starting over."
+  outcome="The team produced drafts for a whole range in a week and sent only the final choices to the studio."
+/>
+
+## When to use it and when not to
+
+<UseWhen
+  use={[
+    'You need short concept clips, storyboards or social drafts.',
+    'You have a product or scene image to anchor the first frame.',
+    'You want small changes to an approved clip.',
+  ]}
+  avoid={[
+    'You need videos longer than 12 seconds in one job.',
+    'The idea needs a real person or a protected character.',
+    'You must guarantee behaviour on a preview model in a launch-critical path.',
+  ]}
+  alternatives={[
+    'gpt-image to create stills or storyboards first.',
+    'Real footage with Content Understanding to analyse it afterwards.',
+  ]}
+/>

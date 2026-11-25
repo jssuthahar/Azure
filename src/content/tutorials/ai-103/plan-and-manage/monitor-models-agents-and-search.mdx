@@ -1,0 +1,189 @@
+---
+title: Monitor Models, Agents and Search Indexes
+seoTitle: Monitor Foundry Models, Agents and Search | AI-103
+description: Monitor model metrics, drift, safety events and grounding quality, and watch Azure AI Search ingestion, index health and relevance. AI-103 1.3.2 and 1.3.3.
+answer: >-
+  Use **Azure Monitor metrics** for requests, tokens, latency and errors, **Application Insights** for traces of every model and tool call, and **continuous evaluation** to score a sample of live answers for **groundedness**, relevance and **safety**, which is how you spot **drift**. Alert on **content filter** and guardrail events. For **Azure AI Search**, watch **indexer** run history and failed items, document counts, **search latency**, **throttled queries** and **relevance** (click-through, evaluation with test queries). When groundedness falls, check the index before you blame the model.
+updated: 2026-11-25
+readingMinutes: 10
+keyTerms:
+  - term: Continuous evaluation
+    definition: Scoring a sample of live agent responses with evaluators such as groundedness and safety, so quality changes show up as a metric.
+  - term: Drift
+    definition: A slow change in answer quality or behaviour over time, caused by new data, changed prompts, a new model version or shifting user questions.
+  - term: Application Insights
+    definition: The Azure Monitor feature that stores traces, requests, dependencies and logs. Foundry sends OpenTelemetry traces of model and tool calls to it.
+  - term: Indexer run history
+    definition: A record of each indexer execution in Azure AI Search with status, documents processed, and the items that failed and why.
+  - term: Throttled queries
+    definition: Search requests rejected because the service is at capacity. A sign that replicas are too few for the query load.
+  - term: Grounding quality
+    definition: How well an answer is supported by the retrieved content. Measured by the groundedness evaluator.
+interview:
+  - level: beginner
+    q: What would you look at first when users say answers got worse?
+    a: >-
+      I'd look at the continuous evaluation scores, mostly groundedness and relevance, and whether anything changed recently: a model version, a prompt, or the indexed content. The traces for a bad answer show what was retrieved and what the model saw.
+    followUps: []
+  - level: intermediate
+    q: How do traces help you debug an agent?
+    a: >-
+      A trace shows each step in order: the user message, the model call with token counts, each tool call with its arguments, approvals, and the final answer. I can see that a bad answer came from an empty retrieval result, not from the model, for example.
+    followUps: []
+  - level: experienced
+    q: Groundedness dropped from 4.6 to 3.4 after a policy update. How do you find the cause?
+    a: >-
+      I'd check the search index first. Did the nightly indexer fail, are the new policy documents missing, or are old and new versions both indexed? Then I'd compare traces of failing answers for their retrieved passages. If retrieval is fine, I'd test the prompt and the model version. Index problems are the most common cause.
+    followUps: []
+  - level: scenario
+    q: Search is fast in the morning and slow at 3 PM. What do you check and change?
+    a: >-
+      Search latency and throttled queries in the metrics at that hour. If queries are throttled, I'd add replicas, because replicas serve queries. If the index is too large for the partitions, I'd add partitions. I'd also look at query shape, such as large top values or heavy semantic ranking.
+    followUps: []
+revision:
+  keyPoints:
+    - Azure Monitor gives metrics, Application Insights gives traces, continuous evaluation gives quality scores.
+    - Drift shows up as falling groundedness or relevance. Check recent changes first.
+    - Alert on safety and guardrail events, error rates and latency.
+    - For search, watch indexer failures, document counts, latency and throttled queries.
+    - Replicas scale query load. Partitions scale storage and indexing.
+  mistakes:
+    - Blaming the model when the index was stale.
+    - Monitoring latency only and never answer quality.
+    - Having traces on but never checking failed indexer items.
+  examTips:
+    - '"Detect quality decline in production" = **continuous evaluation**.'
+    - '"See why an agent chose a tool" = **traces** in Application Insights.'
+    - '"Search queries are throttled at peak" = add **replicas**.'
+    - '"Documents missing from answers" = check **indexer run history**.'
+  quick:
+    - q: Where do agent traces end up?
+      a: In Application Insights.
+    - q: Which evaluator measures support from retrieved content?
+      a: Groundedness.
+    - q: What do you add to a search service to handle more queries?
+      a: Replicas.
+    - q: Where do you see which documents an indexer couldn't process?
+      a: The indexer run history.
+    - q: What can cause drift besides the model?
+      a: Changed prompts, new data and shifting user questions.
+references:
+  - title: Monitor Foundry Agent Service
+    url: https://learn.microsoft.com/azure/ai-foundry/how-to/monitor-applications
+  - title: Trace your application with Foundry tracing
+    url: https://learn.microsoft.com/azure/ai-foundry/how-to/develop/trace-application
+  - title: Monitor Azure AI Search
+    url: https://learn.microsoft.com/azure/search/monitor-azure-cognitive-search
+  - title: Indexer monitoring and troubleshooting
+    url: https://learn.microsoft.com/azure/search/search-monitor-indexers
+related:
+  - quotas-rate-limits-and-cost
+  - responsible-ai-evaluations-and-auditing
+---
+
+## Start with a question
+
+<Story question="How do you know the agent got worse before the customers tell you?">
+
+Ravi runs the support agent. In the first week, answers were crisp and cited the right policy. In the fourth week, tickets started saying "the bot told me something wrong". No alarm had fired. Latency was fine, errors were zero, and the model hadn't changed.
+
+What had changed was the policy library. A nightly import had been failing on 120 PDFs, so the agent kept answering from last quarter's rules. You can't see that in a latency chart. You need to watch **quality** and the **data** under it.
+
+</Story>
+
+## Explain it like I'm 10
+
+<Eli10>
+
+Think of a school canteen.
+
+A **speedometer** on the kitchen door counts how many plates go out and how fast. That's **metrics**.
+
+A **diary** notes each order: who asked, what the cook fetched, what was served. That's **traces**.
+
+A **taste tester** tries a few plates every hour and gives marks. If marks drop, you check the pantry. Maybe it's empty. That's **continuous evaluation** and the **index health check**.
+
+</Eli10>
+
+## The technical explanation
+
+### Three layers to watch
+
+| Layer | Tool | What it tells you |
+| --- | --- | --- |
+| **Platform** | **Azure Monitor metrics** | Requests, processed tokens, latency, errors and 429s per deployment |
+| **Behaviour** | **Application Insights traces** | Every step of a run: model call, tool call, approval, retrieved passages |
+| **Quality and safety** | **Continuous evaluation**, guardrail events | Groundedness, relevance and safety scores on live samples; blocked and flagged content |
+
+Turn on **tracing** for the project by connecting an Application Insights resource, then use the **Monitoring** and **Tracing** pages in the Foundry portal. Set **alerts** on error rate, latency, token spikes, falling evaluation scores and guardrail blocks.
+
+```bash
+az monitor metrics list --resource <foundry-resource-id> --metric ProcessedPromptTokens GeneratedTokens TotalErrors --interval PT1H
+```
+
+### Model and agent drift
+
+Quality changes for ordinary reasons: a prompt edit, a new model version, new content in the index, or different questions from users. To catch it:
+
+1. Run **continuous evaluation** on a sample of live runs (for example 10%).
+2. Track **groundedness**, **relevance** and a **safety** evaluator over time.
+3. Alert when a score falls below your threshold.
+4. Open traces of low-scoring runs and see what was retrieved.
+5. Compare against the last known good change: version, prompt, index.
+
+### Search health
+
+For the Azure AI Search index behind your knowledge base:
+
+| Signal | Where | Action |
+| --- | --- | --- |
+| **Indexer status and failed items** | Indexer run history | Fix unreadable files or permissions, rerun |
+| **Document count vs source** | Index statistics | A gap means ingestion is missing data |
+| **Search latency** | Search metrics | Add replicas or reduce query cost |
+| **Throttled queries** | Search metrics | Add replicas |
+| **Relevance** | Test queries with expected results, click-through | Tune analyzers, semantic ranker, chunking, or hybrid weights |
+
+**Replicas** serve queries and give availability. **Partitions** hold more documents and speed up indexing. Turn on **diagnostic settings** to send search logs to Log Analytics so you can query them with KQL.
+
+<TryIt labs="agt-plan-quota-monitor" text="Read metrics, spot a groundedness drop in continuous evaluation, then find 120 failed items in the indexer." />
+
+<Callout type="exam">
+"Quality drifts after a content update" means check **continuous evaluation** and the **indexer**. "Why did the agent call that tool" means **traces**. "Search is throttled at peak" means add **replicas**, while "index is too big" means add **partitions**. Metrics tell you about **platform health**, and only evaluators tell you about **answer quality**.
+</Callout>
+
+<DeepDive title="Why evaluate a sample and not every answer">
+
+Evaluators that use a model cost tokens and time, and they run on top of your own traffic. Scoring every live answer would add a large bill. A steady sample is enough to see a trend. When a score drops, increase the sample for a while and open the traces of the failing runs.
+
+</DeepDive>
+
+## Real-world business scenario
+
+<Scenario
+  company="Contoso Legal (fictional)"
+  industry="Legal services"
+  problem="Lawyers started getting answers that cited superseded clauses, and nobody noticed for three weeks."
+  service="Application Insights tracing, continuous evaluation on 10% of runs with an alert when groundedness fell below 4.0, indexer failure alerts, and a search dashboard for latency and throttled queries."
+  why="The groundedness alert fired within a day of the failed import, and the indexer history showed 120 unreadable PDFs."
+  outcome="The index was fixed in an afternoon, and the same alert caught a similar issue a month later in hours."
+/>
+
+## When to use it and when not to
+
+<UseWhen
+  use={[
+    'The agent answers from data that changes.',
+    'Wrong answers have a cost: legal, financial or safety.',
+    'You want evidence of quality over time, not a gut feeling.',
+  ]}
+  avoid={[
+    'You watch only latency and error counts.',
+    'You turn tracing on but never review low-scoring runs.',
+    'You evaluate every live answer and pay for it needlessly.',
+  ]}
+  alternatives={[
+    '<strong>Human review samples</strong> for high-risk domains, next to automated scores.',
+    '<strong>Pre-release evaluation only</strong> for a small internal tool with static data.',
+    '<strong>Third-party observability</strong> if your team already standardises on it through OpenTelemetry.',
+  ]}
+/>

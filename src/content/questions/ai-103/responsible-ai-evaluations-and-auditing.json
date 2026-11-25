@@ -1,0 +1,148 @@
+{
+ "cert": "ai-103",
+ "domain": 1,
+ "topic": "responsible-ai-evaluations-and-auditing",
+ "questions": [
+  {
+   "id": "plan-aud-1",
+   "type": "single",
+   "question": "You need a score that shows whether an answer is supported by the retrieved passages. Which evaluator should you use?",
+   "options": [
+    {
+     "text": "Groundedness",
+     "why": "Correct. It measures how well the answer is supported by the provided context."
+    },
+    {
+     "text": "Fluency",
+     "why": "Fluency measures language quality, not support from sources."
+    },
+    {
+     "text": "Violence",
+     "why": "This is a safety evaluator for harmful content."
+    },
+    {
+     "text": "Task adherence",
+     "why": "This checks whether an agent followed its task."
+    }
+   ],
+   "answer": [
+    1
+   ],
+   "explanation": "Groundedness needs the retrieved context.",
+   "objective": "1.4.2"
+  },
+  {
+   "id": "plan-aud-2",
+   "type": "single",
+   "question": "Before launch, you want automated adversarial prompts sent to your app across risk categories and attack strategies. Which Foundry capability should you use?",
+   "options": [
+    {
+     "text": "The AI red teaming agent",
+     "why": "Correct. It attacks the target and reports an attack success rate."
+    },
+    {
+     "text": "Continuous evaluation",
+     "why": "This scores live samples after release."
+    },
+    {
+     "text": "Prompt caching",
+     "why": "This reduces cost."
+    },
+    {
+     "text": "A private endpoint",
+     "why": "This secures the network."
+    }
+   ],
+   "answer": [
+    0
+   ],
+   "explanation": "Red teaming finds weaknesses a fixed test set misses.",
+   "objective": "1.4.2"
+  },
+  {
+   "id": "plan-aud-3",
+   "type": "single",
+   "scenario": "An auditor asks which tool an agent called, with what arguments, and who approved a refund, for a session last week.",
+   "question": "What should have been enabled?",
+   "options": [
+    {
+     "text": "A larger quota",
+     "why": "Quota is unrelated."
+    },
+    {
+     "text": "A model version pin",
+     "why": "Pinning does not record decisions."
+    },
+    {
+     "text": "Tracing to Application Insights with approval records",
+     "why": "Correct. Traces contain model calls, tool calls and approvals."
+    },
+    {
+     "text": "Prompt caching",
+     "why": "Caching does not record decisions."
+    }
+   ],
+   "answer": [
+    3
+   ],
+   "explanation": "Traces and approval logs give an audit trail.",
+   "objective": "1.4.3"
+  },
+  {
+   "id": "plan-aud-4",
+   "type": "single",
+   "question": "Which evaluator checks whether an agent selected the correct tools and passed correct arguments?",
+   "options": [
+    {
+     "text": "Tool call accuracy",
+     "why": "Correct. It evaluates tool selection and arguments."
+    },
+    {
+     "text": "Coherence",
+     "why": "Coherence measures text flow."
+    },
+    {
+     "text": "Protected material",
+     "why": "This detects copyrighted content."
+    },
+    {
+     "text": "Similarity",
+     "why": "This compares text with a reference."
+    }
+   ],
+   "answer": [
+    0
+   ],
+   "explanation": "Agent evaluators include intent resolution, tool call accuracy and task adherence.",
+   "objective": "1.4.2"
+  },
+  {
+   "id": "plan-aud-5",
+   "type": "single",
+   "question": "Which practice makes a pipeline block a release that lowers safety quality?",
+   "options": [
+    {
+     "text": "Run safety evaluators in the pipeline and fail below a threshold",
+     "why": "Correct. The gate uses measured results."
+    },
+    {
+     "text": "Review the release once a year",
+     "why": "This is too infrequent."
+    },
+    {
+     "text": "Increase the log retention",
+     "why": "Retention does not block releases."
+    },
+    {
+     "text": "Rename the agent",
+     "why": "Names have no effect."
+    }
+   ],
+   "answer": [
+    0
+   ],
+   "explanation": "Evaluations in CI/CD make safety a release criterion.",
+   "objective": "1.4.2"
+  }
+ ]
+}

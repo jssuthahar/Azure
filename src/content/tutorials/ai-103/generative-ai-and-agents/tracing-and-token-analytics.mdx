@@ -1,0 +1,207 @@
+---
+title: 'Tracing, Token Analytics and Latency'
+seoTitle: 'Tracing, Token Analytics and Latency in Foundry | AI-103'
+description: 'Trace agent and model calls with OpenTelemetry into Application Insights, then read spans for tokens, latency and safety signals to find slow or costly steps.'
+answer: >-
+  **Tracing** records each agent run, model call and tool call as a **span** with a **duration** and **token counts**. Connect an **Application Insights** resource to the project, **opt in** to GenAI tracing, configure Azure Monitor and instrument the SDK, then read the spans to see **latency by step** and **tokens by model**. Recording **message content** is a separate switch and should stay off in production, because prompts and answers can contain personal data.
+updated: 2026-11-25
+readingMinutes: 12
+keyTerms:
+  - term: Trace
+    definition: >-
+      The record of one request or agent run, made of spans in order.
+  - term: Span
+    definition: >-
+      One timed step inside a trace, such as a model call or a tool call.
+  - term: OpenTelemetry
+    definition: >-
+      The open standard for collecting traces, metrics and logs that Foundry tracing builds on.
+  - term: Application Insights
+    definition: >-
+      The Azure Monitor service that stores the traces and lets you query them.
+  - term: Token analytics
+    definition: >-
+      Looking at input and output tokens by model and operation to understand cost.
+  - term: Content recording
+    definition: >-
+      An opt-in setting that stores prompts and answers in spans. Useful for debugging, risky for privacy.
+interview:
+  - level: beginner
+    q: 'What is a trace?'
+    a: >-
+      It's the story of one run, step by step. Each step, like a model call or a tool call, is a span with how long it took and, for models, how many tokens it used.
+    followUps: []
+  - level: intermediate
+    q: 'How do you find the slowest step of an agent run?'
+    a: >-
+      I open the trace and compare span durations. In the example the tool call took 940 ms and the model calls 610 ms and 590 ms, so the tool is the first thing I would look at.
+    followUps: []
+  - level: experienced
+    q: 'How do you get token usage per model?'
+    a: >-
+      Model spans record input and output token counts and the model name. I query those attributes in Application Insights with KQL, summarising by model and operation, and compare p50 and p95 latency too.
+    followUps: []
+  - level: scenario
+    q: 'Compliance says no personal data may be stored in telemetry. What do you check?'
+    a: >-
+      That message content recording is off, so spans keep timings, token counts and names but not prompts or answers. I also check retention and who can read the Application Insights data.
+    followUps: []
+revision:
+  keyPoints:
+    - 'Spans show duration and tokens for each step.'
+    - 'Application Insights stores the traces.'
+    - 'Tracing is opt-in; content recording is a separate opt-in.'
+    - 'Query token attributes to analyse cost by model.'
+    - 'Look at p95 latency, not just the average.'
+  mistakes:
+    - 'Forgetting to opt in, then seeing no spans.'
+    - 'Leaving content recording on in production.'
+    - 'Judging latency only by the average.'
+  examTips:
+    - '"Find the slowest step" = **span durations in the trace**.'
+    - '"No prompts in telemetry" = **content recording off**.'
+    - '"Where traces are stored" = **Application Insights connected to the project**.'
+  quick:
+    - q: 'What is one timed step called?'
+      a: 'A span.'
+    - q: 'Where are traces stored?'
+      a: 'Application Insights.'
+    - q: 'Is content recording on by default?'
+      a: 'No, it is a separate opt-in.'
+    - q: 'What does a model span record?'
+      a: 'Model name and token counts.'
+    - q: 'Why check p95 latency?'
+      a: 'It shows the slow tail that averages hide.'
+references:
+  - title: 'Trace your agents (Foundry)'
+    url: https://learn.microsoft.com/azure/ai-foundry/how-to/develop/trace-agents-sdk
+  - title: 'Application Insights overview'
+    url: https://learn.microsoft.com/azure/azure-monitor/app/app-insights-overview
+  - title: 'OpenTelemetry GenAI semantic conventions'
+    url: https://learn.microsoft.com/azure/ai-foundry/concepts/trace
+related:
+  - monitor-and-evaluate-agents
+  - foundry-sdks-and-connectors
+  - orchestrate-multiple-models
+---
+
+## Start with a question
+
+<Story question="Why does a delivery app show you each stop and how long it took?">
+
+When a parcel arrives late, a total time doesn't help. You want to see the steps: packed, left the depot, waited at the hub, out for delivery. The long wait at the hub tells you where to fix things.
+
+A **trace** is that tracking page for an AI run. Each step is a **span** with its time and, for model calls, its **tokens**. You see where the time and the money went.
+
+</Story>
+
+## Explain it like I'm 10
+
+<Eli10>
+
+Imagine your helper robot keeps a diary of everything it does, with a stopwatch.
+
+"Started the job. Asked the brain a question: 0.6 seconds. Phoned the parcel office: 0.9 seconds. Wrote the answer: 0.6 seconds."
+
+Now you can see the phone call was the slowest bit.
+
+It can also write down what it said, word for word, but that diary could hold private things, so you only switch that on while testing.
+
+</Eli10>
+
+## The technical explanation
+
+### What a trace looks like
+
+| Span | Duration | Tokens |
+| --- | --- | --- |
+| `invoke_agent order-agent` | 2140 ms | n/a (the whole run) |
+| `chat support-chat` (plan) | 610 ms | 412 in |
+| `execute_tool get_order_status` | 940 ms | n/a |
+| `chat support-chat` (answer) | 590 ms | 96 out |
+
+Read it top to bottom: the **agent run** contains **model calls** and **tool calls**. The slowest child is the first place to look.
+
+### Set it up
+
+1. **Connect Application Insights** to the project (Foundry portal, **Tracing**, or a connection).
+2. **Opt in** to the GenAI instrumentation, which is a preview as of 25 November 2026.
+3. **Configure Azure Monitor** with the project's connection string and **instrument** the SDK.
+
+```python
+# pip install azure-ai-projects opentelemetry-sdk azure-core-tracing-opentelemetry azure-monitor-opentelemetry
+# export AZURE_EXPERIMENTAL_ENABLE_GENAI_TRACING=true                  (opt in)
+# export OTEL_INSTRUMENTATION_GENAI_CAPTURE_MESSAGE_CONTENT=true       (dev only: records prompts and answers)
+from azure.ai.projects.telemetry import AIProjectInstrumentor
+from azure.monitor.opentelemetry import configure_azure_monitor
+
+configure_azure_monitor(connection_string=project.telemetry.get_application_insights_connection_string())
+AIProjectInstrumentor().instrument()
+
+openai = project.get_openai_client(agent_name="order-agent")
+conversation = openai.conversations.create()
+print(openai.responses.create(conversation=conversation.id, input="Where is order ORD-1042?").output_text)
+```
+
+### Token analytics and latency in KQL
+
+Spans carry attributes such as `gen_ai.request.model`, `gen_ai.usage.input_tokens` and `gen_ai.usage.output_tokens`. Summarise them:
+
+```kusto
+dependencies
+| where timestamp > ago(1d) and isnotempty(customDimensions["gen_ai.operation.name"])
+| extend model = tostring(customDimensions["gen_ai.request.model"]),
+         tokens_in = toint(customDimensions["gen_ai.usage.input_tokens"]),
+         tokens_out = toint(customDimensions["gen_ai.usage.output_tokens"])
+| summarize calls=count(), tokens_in=sum(tokens_in), tokens_out=sum(tokens_out),
+            p50=percentile(duration, 50), p95=percentile(duration, 95) by name, model
+```
+
+Use it to answer: which model costs most, which operation is slow, and is the **p95** much worse than the **p50**? Safety signals work the same way: filter results and blocked requests show up as annotations you can count and alert on.
+
+### Privacy
+
+Message content recording is **off by default** and separate from tracing. Turn it on in development to debug prompts. In production keep it off unless your policy allows it, restrict who can read the Application Insights data, and set a retention period.
+
+<TryIt labs="agt-genai-observe" text="Run the agent with tracing off, then opt in and run it again, then report tokens and latency from the traces." />
+
+<Callout type="exam">
+"Find which step is slow" means **span durations in a trace**. "No prompts or answers in telemetry" means **message content recording stays off**. "Traces don't appear" means check the **opt-in setting** and the **Application Insights connection**. Cost by model comes from the **token attributes on model spans**.
+</Callout>
+
+<DeepDive title="Client-side and service-side views">
+
+Client-side tracing, shown here, instruments your code with OpenTelemetry, so you see the app's own spans next to the SDK calls. Foundry also shows agent runs and monitoring dashboards in the portal. Use the client-side traces to follow one request across your own services, and the portal views to watch quality, tokens and latency over time. Both read from Application Insights.
+
+</DeepDive>
+
+## Real-world business scenario
+
+<Scenario
+  company="Contoso Retail (fictional)"
+  industry="Retail"
+  problem="The order agent took about four seconds per reply, the monthly bill rose, and nobody knew which step caused either."
+  service="Application Insights connected to the Foundry project, GenAI tracing opted in, content recording off in production, and a KQL query for tokens and p50 and p95 latency by model and operation."
+  why="The trace showed the get_order_status tool took 940 ms and the planning call used 412 input tokens that a shorter prompt could cut."
+  outcome="The team added a cache for the order lookup and trimmed the prompt, and the p95 latency dropped without touching the model."
+/>
+
+## When to use it and when not to
+
+<UseWhen
+  use={[
+    'You need to find slow or costly steps in a model or agent run.',
+    'You must audit which tools an agent called.',
+    'You want token and latency numbers by model and operation.',
+  ]}
+  avoid={[
+    'Recording message content in production without a privacy decision.',
+    'Looking only at average latency.',
+    'Tracing instead of evaluating quality. Traces don\'t say if answers are right.',
+  ]}
+  alternatives={[
+    '<strong>Evaluators</strong> for answer quality.',
+    '<strong>Azure Monitor metrics</strong> for simple request counts and errors.',
+    '<strong>Foundry monitoring dashboards</strong> for trends over time.',
+  ]}
+/>

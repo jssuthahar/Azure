@@ -1,0 +1,148 @@
+{
+ "cert": "ai-103",
+ "domain": 1,
+ "topic": "choose-models-and-foundry-tools",
+ "questions": [
+  {
+   "id": "plan-mod-1",
+   "type": "single",
+   "question": "A company must label 20,000 short support tickets an hour at the lowest cost, and each label is one of eight fixed categories. Which option should you choose?",
+   "options": [
+    {
+     "text": "A small language model such as Phi-4-mini-instruct",
+     "why": "Correct. A small model handles narrow, high-volume tasks cheaply and quickly."
+    },
+    {
+     "text": "A reasoning model",
+     "why": "A reasoning model costs more and runs slower, and this task needs no multistep thinking."
+    },
+    {
+     "text": "An audio-capable model",
+     "why": "The input is text, so audio capability adds nothing."
+    },
+    {
+     "text": "Content Understanding",
+     "why": "Content Understanding extracts fields from documents, images, audio and video, not short text labels."
+    }
+   ],
+   "answer": [
+    0
+   ],
+   "explanation": "Choose the smallest model that passes your tests. Narrow, high-volume labelling suits a small language model.",
+   "objective": "1.1.1"
+  },
+  {
+   "id": "plan-mod-2",
+   "type": "single",
+   "question": "An app sends product photos to a deployed model and receives an HTTP 400 error that says image input is not supported. What is the most likely cause?",
+   "options": [
+    {
+     "text": "The deployment has too little quota",
+     "why": "Insufficient quota produces HTTP 429, not a 400 about input type."
+    },
+    {
+     "text": "The deployed model accepts text input only",
+     "why": "Correct. Supported input types are listed on the model card, and a text-only model rejects images."
+    },
+    {
+     "text": "The guardrail blocked the image",
+     "why": "A guardrail block returns a content filter error, not an unsupported input error."
+    },
+    {
+     "text": "The project endpoint is public",
+     "why": "Network exposure does not change which inputs a model accepts."
+    }
+   ],
+   "answer": [
+    1
+   ],
+   "explanation": "Check the model card for supported inputs before you design the solution.",
+   "objective": "1.1.1"
+  },
+  {
+   "id": "plan-mod-3",
+   "type": "single",
+   "scenario": "A finance team receives scanned supplier invoices in varied layouts. It needs vendor name, total and due date as structured fields, with no prompt maintenance.",
+   "question": "Which Foundry service should you use?",
+   "options": [
+    {
+     "text": "Azure Speech",
+     "why": "Azure Speech works with audio, not scanned documents."
+    },
+    {
+     "text": "A reasoning model with a long prompt",
+     "why": "This works poorly compared with a service built for fields, and it needs prompt maintenance."
+    },
+    {
+     "text": "Content Understanding",
+     "why": "Correct. It extracts structured fields from documents without prompt engineering."
+    },
+    {
+     "text": "Azure Translator",
+     "why": "Translator converts text between languages and does not extract fields."
+    }
+   ],
+   "answer": [
+    2
+   ],
+   "explanation": "Use a Foundry Tool when the job is fixed and well defined, such as document field extraction.",
+   "objective": "1.1.2"
+  },
+  {
+   "id": "plan-mod-4",
+   "type": "single",
+   "question": "An agent must answer employee questions from 3,000 internal policy documents and return citations. Which Foundry capability should you use to ground the agent?",
+   "options": [
+    {
+     "text": "A larger model with a longer system prompt",
+     "why": "A longer prompt cannot hold 3,000 documents and gives no reliable citations."
+    },
+    {
+     "text": "Global Batch deployment",
+     "why": "Batch is a deployment type for offline work and does not ground answers."
+    },
+    {
+     "text": "A small language model fine-tuned on the questions",
+     "why": "Fine-tuning does not provide citations to current documents."
+    },
+    {
+     "text": "A Foundry IQ knowledge base on Azure AI Search",
+     "why": "Correct. It returns grounded passages with citations from indexed company content."
+    }
+   ],
+   "answer": [
+    3
+   ],
+   "explanation": "Grounding on company content is done with a knowledge base on Azure AI Search, not a bigger model.",
+   "objective": "1.1.2"
+  },
+  {
+   "id": "plan-mod-5",
+   "type": "single",
+   "question": "You are comparing two models that both appear suitable for a summarisation task. What should drive the final choice?",
+   "options": [
+    {
+     "text": "The model with the highest public quality index",
+     "why": "A public index averages other tasks and may not predict results on your data."
+    },
+    {
+     "text": "Scores from your own test set, together with cost and latency",
+     "why": "Correct. Your data and requirements decide, because public benchmarks may not match your task."
+    },
+    {
+     "text": "The model with the largest context window",
+     "why": "Context size matters only if the task needs it."
+    },
+    {
+     "text": "The model released most recently",
+     "why": "Release date does not indicate fit for your task."
+    }
+   ],
+   "answer": [
+    1
+   ],
+   "explanation": "Test candidates on real inputs and choose the smallest that meets the bar.",
+   "objective": "1.1.1"
+  }
+ ]
+}

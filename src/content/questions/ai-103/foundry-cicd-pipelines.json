@@ -1,0 +1,148 @@
+{
+ "cert": "ai-103",
+ "domain": 1,
+ "topic": "foundry-cicd-pipelines",
+ "questions": [
+  {
+   "id": "plan-ci-1",
+   "type": "single",
+   "question": "A GitHub Actions workflow must deploy to Azure without storing a client secret. What should you configure?",
+   "options": [
+    {
+     "text": "A federated credential on a managed identity, and the azure/login action with OpenID Connect",
+     "why": "Correct. The workflow proves its identity with an OIDC token, so no secret is stored."
+    },
+    {
+     "text": "A client secret in repository secrets",
+     "why": "This stores a secret that can leak and expire."
+    },
+    {
+     "text": "A storage account key in the workflow file",
+     "why": "A key in a file is a stored secret and is unsafe."
+    },
+    {
+     "text": "A shared administrator password",
+     "why": "This is a stored credential with excessive access."
+    }
+   ],
+   "answer": [
+    0
+   ],
+   "explanation": "Workload identity federation removes stored secrets.",
+   "objective": "1.2.4"
+  },
+  {
+   "id": "plan-ci-2",
+   "type": "single",
+   "question": "A pipeline must stop a release when a prompt change lowers answer groundedness. What should you add?",
+   "options": [
+    {
+     "text": "An evaluation step with a groundedness threshold that fails the job",
+     "why": "Correct. The evaluation gate blocks promotion when scores are too low."
+    },
+    {
+     "text": "A step that sends an email after release",
+     "why": "It informs but does not stop the release."
+    },
+    {
+     "text": "A larger model deployment",
+     "why": "A bigger model does not stop a weak change."
+    },
+    {
+     "text": "A longer pipeline timeout",
+     "why": "Timeouts do not measure quality."
+    }
+   ],
+   "answer": [
+    1
+   ],
+   "explanation": "An evaluation gate is a release control based on measured quality.",
+   "objective": "1.2.4"
+  },
+  {
+   "id": "plan-ci-3",
+   "type": "single",
+   "scenario": "A team keeps Foundry resources, projects and deployments in source control and wants identical environments for dev, test and prod with different capacity.",
+   "question": "Which approach meets the requirement?",
+   "options": [
+    {
+     "text": "A copy of the production resource group made manually each time",
+     "why": "Manual copies drift and are hard to review."
+    },
+    {
+     "text": "Bicep templates with a parameter file for each environment",
+     "why": "Correct. The same template deploys each environment with its own values."
+    },
+    {
+     "text": "Portal clicks recorded in a document",
+     "why": "This is not repeatable or reviewable."
+    },
+    {
+     "text": "One shared project for all environments",
+     "why": "This removes isolation between environments."
+    }
+   ],
+   "answer": [
+    2
+   ],
+   "explanation": "Infrastructure as code gives repeatable environments.",
+   "objective": "1.2.4"
+  },
+  {
+   "id": "plan-ci-4",
+   "type": "single",
+   "question": "What should a federated credential for the production deployment job be tied to?",
+   "options": [
+    {
+     "text": "A personal access token",
+     "why": "This is a stored credential tied to a person."
+    },
+    {
+     "text": "Any workflow in the organisation",
+     "why": "This is far too broad."
+    },
+    {
+     "text": "The protected prod environment of the repository",
+     "why": "Correct. The approval rules on the environment apply before Azure issues a token."
+    },
+    {
+     "text": "Any branch in the repository",
+     "why": "This lets unreviewed code request production access."
+    }
+   ],
+   "answer": [
+    3
+   ],
+   "explanation": "A narrow subject claim limits which runs can sign in.",
+   "objective": "1.2.4"
+  },
+  {
+   "id": "plan-ci-5",
+   "type": "single",
+   "question": "How should a tested agent change reach production?",
+   "options": [
+    {
+     "text": "Promote the same tested definition through test to prod, with approval",
+     "why": "Correct. This keeps what was tested identical to what is released."
+    },
+    {
+     "text": "Rebuild the agent by hand in prod",
+     "why": "This risks differences from the tested version."
+    },
+    {
+     "text": "Edit the prod agent directly and test afterwards",
+     "why": "Customers would see untested changes."
+    },
+    {
+     "text": "Skip dev to save time",
+     "why": "This removes the first test stage."
+    }
+   ],
+   "answer": [
+    0
+   ],
+   "explanation": "Promote, do not rebuild.",
+   "objective": "1.2.4"
+  }
+ ]
+}

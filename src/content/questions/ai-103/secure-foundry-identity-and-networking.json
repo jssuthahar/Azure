@@ -1,0 +1,148 @@
+{
+ "cert": "ai-103",
+ "domain": 1,
+ "topic": "secure-foundry-identity-and-networking",
+ "questions": [
+  {
+   "id": "plan-sec-1",
+   "type": "single",
+   "question": "A web app must call a Foundry model deployment without any stored secret. What should you do?",
+   "options": [
+    {
+     "text": "Enable managed identity, assign the Foundry User role, and use DefaultAzureCredential",
+     "why": "Correct. The app gets Entra tokens without a secret, with least-privilege access."
+    },
+    {
+     "text": "Store the API key in an app setting",
+     "why": "This is a stored secret."
+    },
+    {
+     "text": "Assign Owner to the app on the subscription",
+     "why": "This is excessive access."
+    },
+    {
+     "text": "Share one developer account",
+     "why": "This is insecure and not auditable."
+    }
+   ],
+   "answer": [
+    1
+   ],
+   "explanation": "Keyless access uses Microsoft Entra ID.",
+   "objective": "1.3.4"
+  },
+  {
+   "id": "plan-sec-2",
+   "type": "single",
+   "question": "You must make leaked API keys useless for a Foundry resource. What should you configure?",
+   "options": [
+    {
+     "text": "Disable local authentication",
+     "why": "Correct. With local auth disabled, only Entra ID tokens are accepted."
+    },
+    {
+     "text": "Rotate the key every year",
+     "why": "A key can still leak between rotations."
+    },
+    {
+     "text": "Add a tag named keyless",
+     "why": "Tags do not change authentication."
+    },
+    {
+     "text": "Increase the deployment capacity",
+     "why": "Capacity is unrelated to authentication."
+    }
+   ],
+   "answer": [
+    0
+   ],
+   "explanation": "The disableLocalAuth property turns keys off.",
+   "objective": "1.3.4"
+  },
+  {
+   "id": "plan-sec-3",
+   "type": "single",
+   "scenario": "A private endpoint for a Foundry resource exists, but an application inside the VNet still resolves the public IP address of the resource.",
+   "question": "What is the most likely missing configuration?",
+   "options": [
+    {
+     "text": "A different model version",
+     "why": "The model version does not affect DNS."
+    },
+    {
+     "text": "A new deployment type",
+     "why": "The deployment type does not affect DNS."
+    },
+    {
+     "text": "A private DNS zone linked to the virtual network",
+     "why": "Correct. Without the linked zone, the resource name still resolves to the public address."
+    },
+    {
+     "text": "A higher quota",
+     "why": "Quota is unrelated to name resolution."
+    }
+   ],
+   "answer": [
+    3
+   ],
+   "explanation": "Private endpoints need private DNS.",
+   "objective": "1.3.4"
+  },
+  {
+   "id": "plan-sec-4",
+   "type": "single",
+   "question": "Which role assignment gives an application least-privilege data-plane access to call models and agents in a Foundry project?",
+   "options": [
+    {
+     "text": "Foundry User",
+     "why": "Correct. It grants data-plane use without resource management rights."
+    },
+    {
+     "text": "Owner on the subscription",
+     "why": "Owner is far more than the app needs."
+    },
+    {
+     "text": "Contributor on the resource group",
+     "why": "Contributor is a control-plane role and gives excessive rights."
+    },
+    {
+     "text": "Reader on the resource",
+     "why": "Reader cannot call models."
+    }
+   ],
+   "answer": [
+    1
+   ],
+   "explanation": "Choose data-plane roles for apps.",
+   "objective": "1.3.4"
+  },
+  {
+   "id": "plan-sec-5",
+   "type": "single",
+   "question": "A policy states that Foundry resources must never accept traffic from the public internet. Which setting meets it?",
+   "options": [
+    {
+     "text": "Public network access set to Disabled, with a private endpoint",
+     "why": "Correct. Traffic can then arrive only through the private endpoint."
+    },
+    {
+     "text": "Public network access set to All networks",
+     "why": "This allows internet traffic."
+    },
+    {
+     "text": "A model deployment named private",
+     "why": "Names have no effect."
+    },
+    {
+     "text": "A budget alert",
+     "why": "Budgets do not control network access."
+    }
+   ],
+   "answer": [
+    0
+   ],
+   "explanation": "Close the public door and open a private one.",
+   "objective": "1.3.4"
+  }
+ ]
+}

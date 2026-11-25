@@ -1,0 +1,152 @@
+{
+ "cert": "ai-103",
+ "domain": 2,
+ "topic": "multi-agent-orchestration",
+ "questions": [
+  {
+   "id": "agt-g-multi-agent-or-1",
+   "type": "single",
+   "scenario": "A drafting agent writes a reply and a reviewing agent must check it afterwards. The order never changes.",
+   "question": "Which pattern should you use?",
+   "options": [
+    {
+     "text": "Sequential",
+     "why": "Correct. Agents run in a fixed order and pass output along."
+    },
+    {
+     "text": "Concurrent",
+     "why": "Concurrent runs agents at the same time."
+    },
+    {
+     "text": "Magentic",
+     "why": "It is for open-ended work planned by a manager."
+    },
+    {
+     "text": "Group chat with random speakers",
+     "why": "The order should be fixed."
+    }
+   ],
+   "answer": [
+    0
+   ],
+   "explanation": "Sequential orchestration is a pipeline.",
+   "objective": "2.2.4"
+  },
+  {
+   "id": "agt-g-multi-agent-or-2",
+   "type": "single",
+   "scenario": "A billing agent and a delivery agent must analyse the same customer message at the same time, and the results are combined.",
+   "question": "Which pattern should you use?",
+   "options": [
+    {
+     "text": "Single agent with no tools",
+     "why": "The requirement is two specialists."
+    },
+    {
+     "text": "Concurrent",
+     "why": "Correct. Both agents work in parallel and the results are aggregated."
+    },
+    {
+     "text": "Sequential",
+     "why": "It runs agents one after another."
+    },
+    {
+     "text": "Handoff",
+     "why": "It transfers control instead of merging parallel results."
+    }
+   ],
+   "answer": [
+    1
+   ],
+   "explanation": "Concurrent fan-out saves time when tasks are independent.",
+   "objective": "2.2.4"
+  },
+  {
+   "id": "agt-g-multi-agent-or-3",
+   "type": "single",
+   "scenario": "A triage agent must pass the conversation to whichever specialist agent suits the request.",
+   "question": "Which pattern should you use?",
+   "options": [
+    {
+     "text": "Concurrent",
+     "why": "It runs all agents at once."
+    },
+    {
+     "text": "Batch",
+     "why": "Batch is a deployment type, not an agent pattern."
+    },
+    {
+     "text": "Handoff",
+     "why": "Correct. Control moves to the better-suited agent."
+    },
+    {
+     "text": "Sequential",
+     "why": "It uses a fixed order."
+    }
+   ],
+   "answer": [
+    2
+   ],
+   "explanation": "Handoff lets the conversation determine which agent responds.",
+   "objective": "2.2.4"
+  },
+  {
+   "id": "agt-g-multi-agent-or-4",
+   "type": "single",
+   "scenario": "A research task has no known steps. A manager agent must create a plan, delegate tasks and track progress.",
+   "question": "Which pattern should you use?",
+   "options": [
+    {
+     "text": "Sequential",
+     "why": "It requires steps known in advance."
+    },
+    {
+     "text": "Concurrent",
+     "why": "It does not plan."
+    },
+    {
+     "text": "A single prompt",
+     "why": "It does not use specialists or a manager."
+    },
+    {
+     "text": "Magentic",
+     "why": "Correct. A manager plans and delegates open-ended work."
+    }
+   ],
+   "answer": [
+    3
+   ],
+   "explanation": "Magentic orchestration suits open-ended tasks.",
+   "objective": "2.2.4"
+  },
+  {
+   "id": "agt-g-multi-agent-or-5",
+   "type": "single",
+   "scenario": "A developer wants builders for sequential, concurrent, handoff, group chat and Magentic orchestrations in Python.",
+   "question": "Which SDK provides them?",
+   "options": [
+    {
+     "text": "Microsoft Agent Framework",
+     "why": "Correct. It includes orchestration builders."
+    },
+    {
+     "text": "azure-storage-blob",
+     "why": "This is a storage library."
+    },
+    {
+     "text": "azure-ai-textanalytics",
+     "why": "This library is for Azure Language."
+    },
+    {
+     "text": "azure-mgmt-network",
+     "why": "This is a management library for networks."
+    }
+   ],
+   "answer": [
+    0
+   ],
+   "explanation": "Agent Framework offers orchestration patterns that you can combine with Foundry agents.",
+   "objective": "2.2.4"
+  }
+ ]
+}

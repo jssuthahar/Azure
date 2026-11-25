@@ -1,0 +1,148 @@
+{
+ "cert": "ai-103",
+ "domain": 1,
+ "topic": "configure-model-and-agent-deployments",
+ "questions": [
+  {
+   "id": "plan-cfg-1",
+   "type": "single",
+   "question": "A regulated application must keep identical model behaviour until your team approves a change. What should you configure on the deployment?",
+   "options": [
+    {
+     "text": "Pin the model version and disable automatic upgrades",
+     "why": "Correct. The deployment stays on the chosen version until you change it."
+    },
+    {
+     "text": "Raise the temperature",
+     "why": "Temperature does not control versioning."
+    },
+    {
+     "text": "Enable upgrades to each new default",
+     "why": "This changes behaviour without approval."
+    },
+    {
+     "text": "Switch to Global Batch",
+     "why": "The deployment type does not pin the model version."
+    }
+   ],
+   "answer": [
+    0
+   ],
+   "explanation": "Version pinning with no auto upgrade keeps behaviour stable.",
+   "objective": "1.2.3"
+  },
+  {
+   "id": "plan-cfg-2",
+   "type": "single",
+   "question": "An app code uses the name of a model in each request, and a new model must replace it without code changes. What should the app call instead?",
+   "options": [
+    {
+     "text": "The resource key",
+     "why": "A key does not identify a model."
+    },
+    {
+     "text": "The deployment name",
+     "why": "Correct. The deployment name is a stable handle, so the model behind it can change."
+    },
+    {
+     "text": "The model name",
+     "why": "This ties code to one model."
+    },
+    {
+     "text": "The subscription ID",
+     "why": "This does not identify a model deployment."
+    }
+   ],
+   "answer": [
+    2
+   ],
+   "explanation": "Applications call deployment names.",
+   "objective": "1.2.3"
+  },
+  {
+   "id": "plan-cfg-3",
+   "type": "single",
+   "scenario": "An agent in production begins giving poor answers after instructions were edited. Earlier versions were saved.",
+   "question": "What is the fastest safe fix?",
+   "options": [
+    {
+     "text": "Increase the deployment capacity",
+     "why": "Capacity affects throttling, not answer quality."
+    },
+    {
+     "text": "Delete the agent and recreate it",
+     "why": "This loses history and takes longer than a rollback."
+    },
+    {
+     "text": "Switch the endpoint to the previous agent version",
+     "why": "Correct. Versions are kept, so you can serve the earlier one immediately."
+    },
+    {
+     "text": "Disable the guardrail",
+     "why": "This removes protection and does not restore earlier behaviour."
+    }
+   ],
+   "answer": [
+    1
+   ],
+   "explanation": "Each agent change creates a version that you can switch back to.",
+   "objective": "1.2.3"
+  },
+  {
+   "id": "plan-cfg-4",
+   "type": "single",
+   "question": "Which setting of a model deployment determines how many tokens per minute it can process?",
+   "options": [
+    {
+     "text": "Model version",
+     "why": "The version selects a model release, not throughput."
+    },
+    {
+     "text": "Guardrail name",
+     "why": "A guardrail controls content, not throughput."
+    },
+    {
+     "text": "Project name",
+     "why": "A project is a workspace and has no effect on throughput."
+    },
+    {
+     "text": "Capacity assigned from quota",
+     "why": "Correct. Capacity is the slice of quota given to the deployment."
+    }
+   ],
+   "answer": [
+    3
+   ],
+   "explanation": "Deployment capacity is taken from the quota for the model and deployment type.",
+   "objective": "1.2.3"
+  },
+  {
+   "id": "plan-cfg-5",
+   "type": "single",
+   "question": "Which change to an agent creates a new agent version?",
+   "options": [
+    {
+     "text": "Changing its instructions",
+     "why": "Correct. Any change to the model, instructions or tools creates a new version."
+    },
+    {
+     "text": "Reading its traces",
+     "why": "Reading data does not change the definition."
+    },
+    {
+     "text": "Running an evaluation",
+     "why": "An evaluation scores the agent without changing it."
+    },
+    {
+     "text": "Viewing its endpoint",
+     "why": "Viewing does not change the definition."
+    }
+   ],
+   "answer": [
+    0
+   ],
+   "explanation": "Agent versions snapshot the definition.",
+   "objective": "1.2.3"
+  }
+ ]
+}

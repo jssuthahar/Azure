@@ -1,0 +1,148 @@
+{
+ "cert": "ai-103",
+ "domain": 1,
+ "topic": "govern-agent-behavior",
+ "questions": [
+  {
+   "id": "plan-gov-1",
+   "type": "single",
+   "question": "An agent must be able to look up orders and issue refunds, and nothing else. Which control enforces this?",
+   "options": [
+    {
+     "text": "An allowed tools list containing only those two tools",
+     "why": "Correct. The agent cannot call tools that are not on the list."
+    },
+    {
+     "text": "A sentence in the system prompt",
+     "why": "A prompt can be overridden by a clever message."
+    },
+    {
+     "text": "A higher temperature",
+     "why": "Temperature does not restrict tools."
+    },
+    {
+     "text": "A longer context window",
+     "why": "Context size does not restrict tools."
+    }
+   ],
+   "answer": [
+    1
+   ],
+   "explanation": "Platform controls enforce limits that prompts cannot.",
+   "objective": "1.4.4"
+  },
+  {
+   "id": "plan-gov-2",
+   "type": "single",
+   "question": "A refund tool must run only after a person confirms it. What should you configure?",
+   "options": [
+    {
+     "text": "Require approval for the tool",
+     "why": "Correct. The run pauses until a human approves or rejects the call."
+    },
+    {
+     "text": "Disable tracing",
+     "why": "This removes evidence and does not add approval."
+    },
+    {
+     "text": "Use Global Batch",
+     "why": "This is unrelated to approvals."
+    },
+    {
+     "text": "Enable prompt caching",
+     "why": "Caching does not add approval."
+    }
+   ],
+   "answer": [
+    0
+   ],
+   "explanation": "Human-in-the-loop approval protects irreversible actions.",
+   "objective": "1.4.4"
+  },
+  {
+   "id": "plan-gov-3",
+   "type": "single",
+   "scenario": "A hosted agent was tricked by a web page into sending data to an unknown website.",
+   "question": "Which control directly limits where the agent can connect?",
+   "options": [
+    {
+     "text": "Network egress controls",
+     "why": "Correct. They restrict which hosts the agent can reach."
+    },
+    {
+     "text": "Model version pinning",
+     "why": "This does not limit connections."
+    },
+    {
+     "text": "Provisioned throughput",
+     "why": "This affects capacity."
+    },
+    {
+     "text": "Semantic ranking",
+     "why": "This affects search ordering."
+    }
+   ],
+   "answer": [
+    0
+   ],
+   "explanation": "Egress controls limit outbound destinations.",
+   "objective": "1.4.4"
+  },
+  {
+   "id": "plan-gov-4",
+   "type": "single",
+   "question": "Why should an agent have its own Microsoft Entra identity?",
+   "options": [
+    {
+     "text": "To avoid using guardrails",
+     "why": "Identity does not replace guardrails."
+    },
+    {
+     "text": "So its access can be granted, audited and revoked separately",
+     "why": "Correct. This supports least privilege and accountability."
+    },
+    {
+     "text": "To increase token quota",
+     "why": "Identity does not change quota."
+    },
+    {
+     "text": "To remove the need for approvals",
+     "why": "Identity does not replace approval of risky actions."
+    }
+   ],
+   "answer": [
+    2
+   ],
+   "explanation": "Agent identity supports least privilege.",
+   "objective": "1.4.4"
+  },
+  {
+   "id": "plan-gov-5",
+   "type": "single",
+   "question": "Which tool design is best for an agent that needs to read one customer order record?",
+   "options": [
+    {
+     "text": "A tool that fetches any URL",
+     "why": "This gives broad network access."
+    },
+    {
+     "text": "A narrow lookup_order tool with a read-only role",
+     "why": "Correct. A narrow tool with limited access follows least privilege."
+    },
+    {
+     "text": "A tool that runs any SQL query",
+     "why": "This gives broad access."
+    },
+    {
+     "text": "A tool that uses an administrator account",
+     "why": "This exceeds what the task needs."
+    }
+   ],
+   "answer": [
+    2
+   ],
+   "explanation": "Prefer narrow tools over general ones.",
+   "objective": "1.4.4"
+  }
+ ]
+}

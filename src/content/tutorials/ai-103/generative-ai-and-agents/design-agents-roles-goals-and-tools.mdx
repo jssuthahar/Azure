@@ -1,0 +1,202 @@
+---
+title: 'Design an Agent: Role, Goals, Threads and Tool Schemas'
+seoTitle: 'Design a Foundry Agent: Role, Goal and Tool Schema | AI-103'
+description: 'Design an agent in Foundry Agent Service: write a role and goal in instructions, define strict function schemas, track the conversation and version changes.'
+answer: >-
+  An **agent** is a model plus **instructions**, **tools** and a **conversation**. The instructions carry its **role**, **goal** and **rules**, including what to do when information is missing. Each tool has a **name, a description and a JSON schema**, and a **strict** schema with **required** parameters makes the agent ask instead of invent. A **conversation** keeps the messages for one chat, and every change to the agent creates a new **version** you can roll back to.
+updated: 2026-11-25
+readingMinutes: 12
+keyTerms:
+  - term: Agent
+    definition: >-
+      A model with instructions, tools and a conversation that can decide which tool to use to reach a goal.
+  - term: Instructions
+    definition: >-
+      The text that sets the agent's role, goal, rules and what to do when something is missing.
+  - term: Function tool
+    definition: >-
+      A tool defined by a name, a description and a JSON schema. The model asks for it and your code runs it.
+  - term: Strict schema
+    definition: >-
+      A tool schema where arguments must match exactly, with required parameters and no extra fields.
+  - term: Conversation
+    definition: >-
+      A stored list of messages for one chat, referenced by ID on each request.
+  - term: Agent version
+    definition: >-
+      A numbered snapshot created each time the agent definition changes.
+interview:
+  - level: beginner
+    q: 'What is the difference between a model and an agent?'
+    a: >-
+      A model answers a prompt. An agent is a model with instructions, tools and a conversation, so it can look things up, take actions and keep track of the chat.
+    followUps: []
+  - level: intermediate
+    q: 'How do you stop an agent inventing an order number?'
+    a: >-
+      I define the function with order_id as a required, strict parameter, and the instructions say to ask the customer if the number is missing. The model then asks instead of filling in a made-up value.
+    followUps: []
+  - level: experienced
+    q: 'What goes in instructions and what goes in the tool description?'
+    a: >-
+      Instructions hold the role, goal, tone, rules and escalation. The tool description tells the model when and why to call that tool, and parameter descriptions explain each argument. The model reads both, so I keep each focused.
+    followUps: []
+  - level: scenario
+    q: 'An agent change made answers worse. How do you recover?'
+    a: >-
+      Each save is a version, so I point the application back to the previous version while I investigate, and I run the evaluation set against both to see what changed.
+    followUps: []
+revision:
+  keyPoints:
+    - 'Instructions define role, goal and rules, including behaviour on missing data.'
+    - 'Tool name, description and schema decide when and how it is called.'
+    - 'Strict schemas with required parameters stop invented arguments.'
+    - 'A conversation stores one chat; memory is a separate feature.'
+    - 'Versions make changes reversible.'
+  mistakes:
+    - 'Vague instructions with no rule for missing information.'
+    - 'Optional parameters that the tool really needs.'
+    - 'Cramming many unrelated tools into one agent.'
+  examTips:
+    - '"Agent invents arguments" = **strict schema with required parameters** and an instruction to ask.'
+    - '"Remember the earlier messages in this chat" = **conversation**.'
+    - '"Roll back a bad change" = **agent versions**.'
+  quick:
+    - q: 'Where are role and goal defined?'
+      a: 'In the agent instructions.'
+    - q: 'What does a function tool need?'
+      a: 'A name, a description and a JSON schema.'
+    - q: 'What stores messages of one chat?'
+      a: 'A conversation.'
+    - q: 'What is created on each agent change?'
+      a: 'A new version.'
+    - q: 'What does strict do?'
+      a: 'It makes arguments match the schema exactly.'
+references:
+  - title: 'What is Foundry Agent Service?'
+    url: https://learn.microsoft.com/azure/ai-foundry/agents/overview
+  - title: 'Function calling with agents'
+    url: https://learn.microsoft.com/azure/ai-foundry/agents/how-to/tools/function-calling
+  - title: 'Foundry Agent Service quickstart'
+    url: https://learn.microsoft.com/azure/ai-foundry/agents/quickstart
+related:
+  - agents-with-retrieval-functions-and-memory
+  - autonomous-workflows-with-approvals
+  - multi-agent-orchestration
+---
+
+## Start with a question
+
+<Story question="What do you tell a new shop assistant on day one?">
+
+You say who they are ("you're the order desk"), what they're there for ("tell customers where their parcel is"), what they may use ("the order system") and what to do when stuck ("if there's no order number, ask for it, never guess").
+
+That's exactly an **agent definition**. The **instructions** give the role, the goal and the rules. The **tools** are the order system. And the **conversation** is the notepad of this one customer's chat.
+
+</Story>
+
+## Explain it like I'm 10
+
+<Eli10>
+
+An agent is like a helper robot you've given a job card.
+
+The card says: "You're the parcel helper. Your goal: tell people where their parcel is."
+
+It also says: "Use the parcel computer. If someone forgets their parcel number, ask. Never make one up."
+
+The robot keeps a little notebook for each chat, so it remembers what you said a minute ago.
+
+</Eli10>
+
+## The technical explanation
+
+### The parts of an agent
+
+| Part | What it does | Example |
+| --- | --- | --- |
+| **Model** | The deployment that does the thinking | `support-chat` |
+| **Instructions** | Role, goal, rules, tone, escalation | "Always call get_order_status for order questions. If the order number is missing, ask." |
+| **Tools** | What it can use | A function, file search, Azure AI Search |
+| **Conversation** | Messages of one chat | Created once, referenced by ID on every request |
+| **Version** | A numbered snapshot of the definition | `order-agent` v3 |
+
+### Write a good tool schema
+
+The model decides to call a tool from its **name and description**, and fills the arguments from the **schema**. Be exact:
+
+```python
+get_order_status = FunctionTool(
+    name="get_order_status",
+    description="Look up the delivery status of one Contoso order. Call it whenever the customer gives an order number.",
+    parameters={"type": "object",
+                "properties": {"order_id": {"type": "string", "description": "Order number, for example ORD-1042"}},
+                "required": ["order_id"], "additionalProperties": False},
+    strict=True)
+
+agent = project.agents.create_version(agent_name="order-agent", definition=PromptAgentDefinition(
+    model="support-chat",
+    instructions=("Role: Contoso Retail's order assistant. Goal: tell customers where their order is. "
+                  "Always call get_order_status for order questions and ask for the order number if it's missing. "
+                  "Never promise a date the tool didn't return."),
+    tools=[get_order_status]))
+```
+
+Mark every parameter the tool really needs as **required**, set `additionalProperties` to false and turn **strict** on. Then a missing order number can't become a made-up one: the instructions tell the agent to ask, and the schema leaves no room to guess.
+
+### Track the conversation
+
+Create a **conversation** for each chat and pass its ID with every request, so the service keeps the history for you. The other option is to resend the messages yourself on each call, which you control but must store and trim. Long-term facts about a user are not part of the conversation. That's **memory**, covered in the next lesson.
+
+```python
+openai = project.get_openai_client(agent_name="order-agent")
+conversation = openai.conversations.create()
+r = openai.responses.create(conversation=conversation.id, input="Where is my order?")
+```
+
+### Versions and agent kinds
+
+Each change to instructions, tools or model makes a new **version**, so you can compare versions on the same evaluation set and roll back. This lesson builds a **prompt agent**: a model with instructions and tools. Foundry also has **workflow** agents for multi-step flows and **hosted** agents that run your own code, both in preview as of 25 November 2026.
+
+<TryIt labs="agt-genai-agent-tools" text="Create the order agent, ask without an order number and watch it ask for one, then ask with ORD-1042." />
+
+<Callout type="exam">
+When an agent **invents** a value, the fix is a **required parameter in a strict schema** plus an instruction to ask. "Behave as a polite order assistant and refuse unrelated requests" belongs in **instructions**. "Keep the earlier messages of this chat" is a **conversation**, and "roll back after a bad change" is a **version**.
+</Callout>
+
+<DeepDive title="Instructions that work">
+
+Short, specific instructions beat long ones. Start with the role and the goal, then list rules as plain sentences, then say what to do on failure: no result, missing input or an unrelated request. Add one example if the format matters. Test with awkward inputs on purpose, such as no order number, two order numbers, or a request the agent shouldn't handle, and keep those cases in your evaluation set.
+
+</DeepDive>
+
+## Real-world business scenario
+
+<Scenario
+  company="Contoso Retail (fictional)"
+  industry="Retail"
+  problem="The first support agent answered Where is my order? with an order number it made up, and it happily discussed topics unrelated to orders."
+  service="An order-agent prompt agent with role and goal instructions, a strict get_order_status function that requires order_id, and a conversation per customer chat. Each edit is a new version."
+  why="With no order number the agent asks for it, and with one it calls the function. Versions let the team compare and roll back."
+  outcome="Made-up order answers stopped, and when a Friday edit made answers worse, the team pointed back to the previous version in minutes."
+/>
+
+## When to use it and when not to
+
+<UseWhen
+  use={[
+    'The model needs tools or data to finish the job.',
+    'A conversation has several turns that depend on each other.',
+    'You want to version, test and roll back behaviour.',
+  ]}
+  avoid={[
+    'A single question and answer. Call the model directly.',
+    'The steps are fixed and known. A workflow may be simpler.',
+    'You give one agent every tool. Split the work into specialists.',
+  ]}
+  alternatives={[
+    '<strong>A direct model call</strong> for simple prompts.',
+    '<strong>A workflow</strong> for fixed steps.',
+    '<strong>Multi-agent orchestration</strong> when the job needs specialists.',
+  ]}
+/>

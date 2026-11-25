@@ -1,0 +1,147 @@
+{
+ "cert": "ai-103",
+ "domain": 4,
+ "topic": "speech-to-text-and-text-to-speech",
+ "questions": [
+  {
+   "id": "txt-spc-1",
+   "type": "single",
+   "question": "A pharmacy phone agent mishears two drug names, but only these two words fail. You need the fastest fix with no data collection or training. What should you do?",
+   "options": [
+    {
+     "text": "Train a custom speech model",
+     "why": "This works but needs data and training."
+    },
+    {
+     "text": "Add a phrase list that contains the two drug names",
+     "why": "Correct. A phrase list boosts specific words with no training."
+    },
+    {
+     "text": "Switch to text to speech with SSML",
+     "why": "Text to speech is output, and it does not affect recognition."
+    },
+    {
+     "text": "Use a larger chat model",
+     "why": "The error occurs before the model receives text."
+    }
+   ],
+   "answer": [
+    1
+   ],
+   "explanation": "A phrase list is the quick fix for a few words. Train custom speech for many terms, accents or noisy audio.",
+   "objective": "4.2.2"
+  },
+  {
+   "id": "txt-spc-2",
+   "type": "single",
+   "question": "A call center has 3,000 product terms, regional accents and noisy lines. A phrase list does not improve recognition enough. What should you do?",
+   "options": [
+    {
+     "text": "Add more phrases to the list until it contains all terms",
+     "why": "Phrase lists suit a small number of words."
+    },
+    {
+     "text": "Lower the speaking rate in SSML",
+     "why": "SSML controls synthesis, not recognition."
+    },
+    {
+     "text": "Train and deploy a custom speech model and use its endpoint ID in the app",
+     "why": "Correct. Custom speech uses your text and audio data for the domain."
+    },
+    {
+     "text": "Enable Content Safety",
+     "why": "Content Safety scores harm and does not improve recognition."
+    }
+   ],
+   "answer": [
+    2
+   ],
+   "explanation": "Custom speech models are trained on related text or labelled audio, then called through a custom endpoint ID.",
+   "objective": "4.2.2"
+  },
+  {
+   "id": "txt-spc-3",
+   "type": "single",
+   "question": "Spoken replies from an agent read a time too fast: \"your order is ready at five\" is spoken in one breath. You must add a short pause and slow only the time. Which technique should you use?",
+   "options": [
+    {
+     "text": "Speech Synthesis Markup Language with a break element and a prosody rate",
+     "why": "Correct. SSML controls pauses, rate, pitch and style."
+    },
+    {
+     "text": "A phrase list",
+     "why": "Phrase lists apply to recognition."
+    },
+    {
+     "text": "A lower model temperature",
+     "why": "Temperature changes the words generated, not the speaking."
+    },
+    {
+     "text": "Speech translation",
+     "why": "Translation converts languages."
+    }
+   ],
+   "answer": [
+    0
+   ],
+   "explanation": "SSML adds pauses and changes rate or pitch for text to speech output.",
+   "objective": "4.2.1"
+  },
+  {
+   "id": "txt-spc-4",
+   "type": "single",
+   "question": "You build a voice agent. The caller speaks, the agent answers and the reply is spoken. Which sequence describes one turn?",
+   "options": [
+    {
+     "text": "Text to speech, model, speech to text",
+     "why": "The order is reversed."
+    },
+    {
+     "text": "Speech to text, model or agent, text to speech",
+     "why": "Correct. Audio becomes text, the model answers, and the answer becomes audio."
+    },
+    {
+     "text": "Speech translation, sentiment, key phrases",
+     "why": "This does not produce a spoken reply."
+    },
+    {
+     "text": "Model, speech to text, language detection",
+     "why": "The model needs text before it answers."
+    }
+   ],
+   "answer": [
+    1
+   ],
+   "explanation": "A basic voice loop is speech in, the model or agent, and speech out. Voice Live can run it as one low-latency connection.",
+   "objective": "4.2.1"
+  },
+  {
+   "id": "txt-spc-5",
+   "type": "single",
+   "question": "A phone agent needs low-latency speech in and speech out, noise suppression and turn detection, over a single connection with a model or an agent. Which feature should you use?",
+   "options": [
+    {
+     "text": "Batch transcription",
+     "why": "Batch transcription processes saved audio files, not live calls."
+    },
+    {
+     "text": "Content Safety text moderation",
+     "why": "This scores harm in text."
+    },
+    {
+     "text": "Custom Translator",
+     "why": "This trains text translation models."
+    },
+    {
+     "text": "Voice Live",
+     "why": "Correct. Voice Live runs real-time speech to speech with these built-in features."
+    }
+   ],
+   "answer": [
+    3
+   ],
+   "explanation": "Voice Live provides a real-time speech interface for models and agents, including noise suppression and end-of-turn detection.",
+   "objective": "4.2.1"
+  }
+ ]
+}

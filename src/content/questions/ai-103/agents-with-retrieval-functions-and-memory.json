@@ -1,0 +1,153 @@
+{
+ "cert": "ai-103",
+ "domain": 2,
+ "topic": "agents-with-retrieval-functions-and-memory",
+ "questions": [
+  {
+   "id": "agt-g-agents-with-re-1",
+   "type": "single",
+   "scenario": "An agent must report the live delivery status of an order held in the company order system.",
+   "question": "Which capability should you add?",
+   "options": [
+    {
+     "text": "File search over last year’s PDF reports",
+     "why": "The PDFs would not hold current status."
+    },
+    {
+     "text": "Fine-tuning on order histories",
+     "why": "Fine-tuning does not give live data."
+    },
+    {
+     "text": "A higher temperature",
+     "why": "It does not provide data."
+    },
+    {
+     "text": "A function tool that calls the order system",
+     "why": "Correct. Live data from a system requires a tool."
+    }
+   ],
+   "answer": [
+    3
+   ],
+   "explanation": "Use function calling for live data and actions.",
+   "objective": "2.2.2"
+  },
+  {
+   "id": "agt-g-agents-with-re-2",
+   "type": "single",
+   "scenario": "Users upload a contract during a conversation and ask questions about it.",
+   "question": "Which tool fits?",
+   "options": [
+    {
+     "text": "File search",
+     "why": "Correct. It searches files provided to the agent or conversation."
+    },
+    {
+     "text": "Memory",
+     "why": "Memory stores learned facts about the user, not document contents."
+    },
+    {
+     "text": "Content filter",
+     "why": "It checks content for risk."
+    },
+    {
+     "text": "Code interpreter only",
+     "why": "It runs code and is not intended for searching documents."
+    }
+   ],
+   "answer": [
+    0
+   ],
+   "explanation": "File search handles documents users or apps bring in.",
+   "objective": "2.2.3"
+  },
+  {
+   "id": "agt-g-agents-with-re-3",
+   "type": "single",
+   "scenario": "An agent should remember that a customer prefers WhatsApp updates in conversations that happen weeks apart.",
+   "question": "What should you use?",
+   "options": [
+    {
+     "text": "A bigger deployment capacity",
+     "why": "It does not store preferences."
+    },
+    {
+     "text": "Memory with a scope per user",
+     "why": "Correct. Memory persists across conversations."
+    },
+    {
+     "text": "The conversation of the first session only",
+     "why": "A conversation is not shared automatically with later sessions."
+    },
+    {
+     "text": "A higher max output tokens value",
+     "why": "It controls reply length."
+    }
+   ],
+   "answer": [
+    1
+   ],
+   "explanation": "Scope memory per user so one customer never sees another’s facts.",
+   "objective": "2.2.2"
+  },
+  {
+   "id": "agt-g-agents-with-re-4",
+   "type": "single",
+   "scenario": "In function calling, the model returns a request to call get_order_status.",
+   "question": "Which component runs the function?",
+   "options": [
+    {
+     "text": "Azure AI Search",
+     "why": "Search does not run application functions."
+    },
+    {
+     "text": "The Foundry portal",
+     "why": "The portal does not run application code at runtime."
+    },
+    {
+     "text": "The application code that owns the function",
+     "why": "Correct. The app executes it and returns the result."
+    },
+    {
+     "text": "The model itself",
+     "why": "Models do not execute your code."
+    }
+   ],
+   "answer": [
+    2
+   ],
+   "explanation": "The model asks, your code acts, and you send the result back.",
+   "objective": "2.2.2"
+  },
+  {
+   "id": "agt-g-agents-with-re-5",
+   "type": "multi",
+   "scenario": "An agent must call a partner REST API that has an OpenAPI specification and must also ground answers on an existing Azure AI Search index.",
+   "question": "Which two tools should you add? Select two.",
+   "options": [
+    {
+     "text": "An Azure AI Search tool",
+     "why": "Correct. It grounds the agent on the index."
+    },
+    {
+     "text": "A text-to-speech tool",
+     "why": "Speech output is not required."
+    },
+    {
+     "text": "A fine-tuned embedding model",
+     "why": "It is not an agent tool for these needs."
+    },
+    {
+     "text": "An OpenAPI tool",
+     "why": "Correct. It calls the API described by the specification."
+    }
+   ],
+   "answer": [
+    0,
+    3
+   ],
+   "explanation": "Tools can include APIs, search, files, MCP servers and functions.",
+   "objective": "2.2.3"
+  }
+ ]
+}

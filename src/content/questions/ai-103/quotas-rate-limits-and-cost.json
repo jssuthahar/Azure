@@ -1,0 +1,148 @@
+{
+ "cert": "ai-103",
+ "domain": 1,
+ "topic": "quotas-rate-limits-and-cost",
+ "questions": [
+  {
+   "id": "plan-qt-1",
+   "type": "single",
+   "question": "A client receives intermittent HTTP 429 responses with a retry-after header from a model deployment. What should the client do first?",
+   "options": [
+    {
+     "text": "Wait for the retry-after period and retry with exponential backoff",
+     "why": "Correct. Backoff respects the limit and spreads retries out."
+    },
+    {
+     "text": "Retry immediately in a tight loop",
+     "why": "This increases load and keeps the throttling going."
+    },
+    {
+     "text": "Switch to API keys",
+     "why": "The authentication method does not change rate limits."
+    },
+    {
+     "text": "Disable the guardrail",
+     "why": "A guardrail does not cause a rate limit."
+    }
+   ],
+   "answer": [
+    1
+   ],
+   "explanation": "A 429 means a rate limit was exceeded.",
+   "objective": "1.3.1"
+  },
+  {
+   "id": "plan-qt-2",
+   "type": "single",
+   "question": "Quota for a model is assigned at which level?",
+   "options": [
+    {
+     "text": "Per prompt",
+     "why": "Prompts do not have quota."
+    },
+    {
+     "text": "Per subscription, region, model and deployment type",
+     "why": "Correct. Deployments take slices of this quota."
+    },
+    {
+     "text": "Per user",
+     "why": "Users do not hold model quota."
+    },
+    {
+     "text": "Per project name",
+     "why": "Projects do not hold quota."
+    }
+   ],
+   "answer": [
+    2
+   ],
+   "explanation": "Deployments are carved out of the quota available for their model and type.",
+   "objective": "1.3.1"
+  },
+  {
+   "id": "plan-qt-3",
+   "type": "single",
+   "scenario": "An app has a steady base load that needs predictable latency, with short peaks that are three times higher. Failed requests during peaks are unacceptable.",
+   "question": "Which design is most cost effective?",
+   "options": [
+    {
+     "text": "Provisioned capacity sized for the base load, with spillover to a standard deployment",
+     "why": "Correct. Reserved capacity serves the base, and spillover absorbs the peaks."
+    },
+    {
+     "text": "Provisioned capacity sized for the peak",
+     "why": "Most of it would sit idle and cost money."
+    },
+    {
+     "text": "A single standard deployment with no retry",
+     "why": "Peaks would fail with 429 responses."
+    },
+    {
+     "text": "Global Batch",
+     "why": "Batch cannot serve interactive requests."
+    }
+   ],
+   "answer": [
+    0
+   ],
+   "explanation": "Size reserved capacity for the base and let spillover handle peaks.",
+   "objective": "1.3.1"
+  },
+  {
+   "id": "plan-qt-4",
+   "type": "single",
+   "question": "A project must warn the team at 80 percent of its monthly spend and be visible by team. What should you configure?",
+   "options": [
+    {
+     "text": "A private endpoint",
+     "why": "Networking does not track spend."
+    },
+    {
+     "text": "A model version pin",
+     "why": "A pinned version does not track spend."
+    },
+    {
+     "text": "An Azure budget with alerts, and tags that identify the team",
+     "why": "Correct. Budgets alert at thresholds and tags attribute cost."
+    },
+    {
+     "text": "A larger deployment",
+     "why": "This increases spend potential."
+    }
+   ],
+   "answer": [
+    3
+   ],
+   "explanation": "Budgets, alerts and tags manage cost footprints.",
+   "objective": "1.3.1"
+  },
+  {
+   "id": "plan-qt-5",
+   "type": "single",
+   "question": "Which change reduces input token cost when every request begins with the same long policy text?",
+   "options": [
+    {
+     "text": "Use prompt caching for the repeated prefix",
+     "why": "Correct. The service can reuse the processed repeated prefix, which lowers cost and latency."
+    },
+    {
+     "text": "Increase the temperature",
+     "why": "Temperature does not affect the token count."
+    },
+    {
+     "text": "Lengthen the system message",
+     "why": "This increases tokens."
+    },
+    {
+     "text": "Retry each request twice",
+     "why": "Retries add tokens."
+    }
+   ],
+   "answer": [
+    0
+   ],
+   "explanation": "Caching and shorter prompts reduce cost.",
+   "objective": "1.3.1"
+  }
+ ]
+}

@@ -1,0 +1,185 @@
+---
+title: 'Workflows, Tool-Augmented Flows and Multistep Reasoning'
+seoTitle: 'Workflows and Tool-Augmented Flows in Foundry | AI-103'
+description: 'Design multistep AI workflows: classify, extract to a JSON schema, call a tool, draft and verify, with retries, fallbacks and checks between every step.'
+answer: >-
+  A **workflow** breaks one AI task into small steps you control, for example **classify, extract, call a tool, draft, verify**. Use **structured outputs** with a strict JSON schema between steps, give tool calls **timeouts, bounded retries and a fallback**, and **check** the result before anything is sent. Low temperature suits classification and extraction, and a reasoning model suits the one step that needs deep planning.
+updated: 2026-11-25
+readingMinutes: 12
+keyTerms:
+  - term: Workflow
+    definition: >-
+      A sequence of steps, some model calls and some code or tools, where each step has one job and its output feeds the next.
+  - term: Tool-augmented flow
+    definition: >-
+      A flow where the model can ask for tools, such as a function or an API, to get data or act.
+  - term: Structured outputs
+    definition: >-
+      A model setting that forces the reply to match a JSON schema, so code can parse it.
+  - term: Fallback
+    definition: >-
+      What the flow does when a step fails, such as holding the item for a person.
+  - term: Verification step
+    definition: >-
+      A check, in code or a second model, that the result matches the facts before it is used.
+  - term: Multistep reasoning
+    definition: >-
+      Solving a problem by working through several steps, either in a reasoning model or across steps of a flow.
+interview:
+  - level: beginner
+    q: 'Why not put everything in one prompt?'
+    a: >-
+      One big prompt hides where things go wrong. If classification, lookup and writing are separate steps, I can test each one, trace each one and fix the one that fails.
+    followUps: []
+  - level: intermediate
+    q: 'What is the difference between JSON mode and structured outputs?'
+    a: >-
+      JSON mode promises valid JSON, but the keys are the model's choice. Structured outputs with a strict schema promise the exact keys and types, so my code can parse the result without guessing.
+    followUps: []
+  - level: experienced
+    q: 'How do you handle a flaky tool inside a flow?'
+    a: >-
+      I set a timeout, retry a limited number of times, and then take a defined fallback such as marking the item for human review. The later steps must respect that fallback, and the verify step must refuse to send anything built without the facts.
+    followUps: []
+  - level: scenario
+    q: 'A claims flow sent a wrong warranty date. What do you add?'
+    a: >-
+      A verify step that compares the draft with the tool result before sending, for example that the date in the text equals the date the tool returned. If it doesn't match, the flow holds the claim.
+    followUps: []
+revision:
+  keyPoints:
+    - 'Give each step one job and check between steps.'
+    - 'Structured outputs make step outputs parseable.'
+    - 'Bound tool calls with timeouts and retries, then fall back safely.'
+    - 'Verify the draft against the facts before sending.'
+    - 'Use low temperature for classification and extraction.'
+  mistakes:
+    - 'Assuming a tool will always answer.'
+    - 'Parsing free text between steps.'
+    - 'Letting a failed step silently produce a guess.'
+  examTips:
+    - '"Code must parse the model reply" = **structured outputs with a strict schema**.'
+    - '"Tool times out, no wrong reply may be sent" = **bounded retries and a fallback**.'
+    - '"Hard to diagnose failures" = **split into steps**.'
+  quick:
+    - q: 'What does a strict schema guarantee?'
+      a: 'The exact keys and types in the reply.'
+    - q: 'What should happen when a tool keeps failing?'
+      a: 'A safe fallback, such as human review.'
+    - q: 'Which temperature suits classification?'
+      a: 'A low one, often 0.'
+    - q: 'What is a verify step?'
+      a: 'A check of the draft against the facts before sending.'
+    - q: 'Why split a prompt into steps?'
+      a: 'So each step can be tested and traced.'
+references:
+  - title: 'Structured outputs'
+    url: https://learn.microsoft.com/azure/ai-foundry/openai/how-to/structured-outputs
+  - title: 'Foundry Agent Service workflows'
+    url: https://learn.microsoft.com/azure/ai-foundry/agents/concepts/workflow
+  - title: 'Function calling'
+    url: https://learn.microsoft.com/azure/ai-foundry/openai/how-to/function-calling
+related:
+  - multi-agent-orchestration
+  - evaluate-models-and-apps
+  - orchestrate-multiple-models
+---
+
+## Start with a question
+
+<Story question="Why does a bakery use a checklist for a wedding cake?">
+
+One person doing everything in one go makes mistakes. A good bakery splits the job: measure, mix, bake, cool, decorate, check. Each stage has one purpose, and someone checks the result before the cake leaves.
+
+An **AI workflow** is that checklist. Instead of asking a model to read a claim email, look up the warranty and write a reply in one prompt, you run **steps**. Each step does one job, and a **check** at the end stops a wrong cake from leaving the shop.
+
+</Story>
+
+## Explain it like I'm 10
+
+<Eli10>
+
+Imagine a relay race instead of one runner doing the whole track.
+
+Runner one sorts the letters. Runner two reads the important parts. Runner three asks the warranty office a question. Runner four writes the answer. Runner five checks it.
+
+If runner three can't reach the office, the team doesn't make up a number. It hands the baton to a grown-up.
+
+</Eli10>
+
+## The technical explanation
+
+### The five steps of a claims flow
+
+| Step | What it does | Setting that matters |
+| --- | --- | --- |
+| **1 Classify** | Warranty, refund or other | Temperature 0, short answer |
+| **2 Extract** | Pull product, serial number and date | **Structured output** with a strict JSON schema |
+| **3 Tool** | Call `check_warranty(serial)` | Timeout, **bounded retries**, fallback value |
+| **4 Draft** | Write the reply from the facts | Only the verified facts go in the prompt |
+| **5 Verify** | Compare the draft with the facts | Rules or a second model, refuse to send on mismatch |
+
+```python
+kind = openai.responses.create(model=model, temperature=0,
+        input=f"Classify as warranty, refund or other: {email}").output_text
+
+fields = json.loads(openai.responses.create(model=model, input=email,
+        text={"format": {"type": "json_schema", "name": "claim", "strict": True,
+                         "schema": CLAIM_SCHEMA}}).output_text)
+
+status = with_retry(lambda: check_warranty(fields["serial_number"]), attempts=3) or "needs_human_review"
+
+draft = openai.responses.create(model=model, input=f"Write a reply. Facts: {fields} {status}").output_text
+print(draft if verify(draft, fields, status) else "Held for a person to check")
+```
+
+### Structured outputs, not hopeful prompts
+
+Asking for JSON in words isn't enough. **JSON mode** (`json_object`) only promises something that parses. **Structured outputs** (`json_schema` with `strict: true`) make the reply match your schema: every required field present, no extras when `additionalProperties` is false. That's what lets step 3 trust the serial number from step 2.
+
+### Tools and multistep reasoning
+
+A **tool-augmented** flow lets a model ask for a tool when it needs data or an action. Your code runs the tool and returns the result. For one step that needs real planning, such as comparing contract clauses, use a **reasoning model** for that step and keep cheap models for the rest. Foundry also has a workflow builder in preview as of 25 November 2026, where you wire steps, agents and conditions together without writing the control flow by hand.
+
+<TryIt labs="agt-genai-flow-route" text="Run the five-step claim flow, then make the warranty tool fail and watch the fallback hold the claim." />
+
+<Callout type="exam">
+When code must read the model's reply, the answer is **structured outputs with a strict JSON schema**, not "ask for JSON in the prompt". When a tool can fail, look for **retries with a limit and a safe fallback**, never "let the model guess". A single prompt that does everything and is hard to debug should be **split into steps**.
+</Callout>
+
+<DeepDive title="Where to put the checks">
+
+Put a check wherever a mistake becomes expensive. After extraction, validate the schema and the serial number format. After the tool, treat an empty or error result as a failure, not as data. Before sending, compare every fact in the draft with its source. Cheap rule checks catch most errors; a second model can review tone and completeness. Log each step so a held claim shows exactly where it stopped.
+
+</DeepDive>
+
+## Real-world business scenario
+
+<Scenario
+  company="Fabrikam Appliances (fictional)"
+  industry="Consumer goods"
+  problem="Claims arrived as free-text emails. One prompt did everything and sometimes promised warranty dates the warranty system didn't show."
+  service="A five-step flow: classify at temperature 0, extract to a strict schema, call check_warranty with three retries, draft from the verified facts, then verify the dates before sending. A tool failure sends the claim to human review."
+  why="Each step is testable, the tool result is the only source of warranty facts, and a failure ends in a person's queue instead of a wrong promise."
+  outcome="Wrong-date replies stopped, and the team could see in the run history exactly which step held each claim."
+/>
+
+## When to use it and when not to
+
+<UseWhen
+  use={[
+    'The task has natural stages, such as classify, look up, write.',
+    'A step calls a system that can fail or return data the reply depends on.',
+    'You need an audit trail of what happened at each step.',
+  ]}
+  avoid={[
+    'One simple question and answer. A single call is enough.',
+    'The steps are not known in advance. An agent that plans may suit better.',
+    'Every step uses the largest model. Match the model to each step.',
+  ]}
+  alternatives={[
+    '<strong>A single prompt</strong> for simple tasks.',
+    '<strong>An agent with tools</strong> when the model should decide the steps.',
+    '<strong>Multi-agent orchestration</strong> when specialists share the work.',
+  ]}
+/>

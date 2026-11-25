@@ -1,0 +1,197 @@
+---
+title: 'Agents with Retrieval, Function Calling and Memory'
+seoTitle: 'Agent Tools: File Search, Functions and Memory | AI-103'
+description: 'Give a Foundry agent file search, Azure AI Search, functions, OpenAPI and MCP tools, plus memory that carries user facts from one conversation to the next.'
+answer: >-
+  Give an agent the tool that matches the need. **Function calling** reaches live data and actions, where the model asks and **your code runs** the function. **File search** and **Azure AI Search** ground answers on documents. **OpenAPI** and **MCP** tools call outside services. **Memory** stores facts about a user, **scoped per user**, so a new conversation next week still knows the preference. The **conversation** only holds one chat.
+updated: 2026-11-25
+readingMinutes: 13
+keyTerms:
+  - term: Function calling
+    definition: >-
+      The model returns a request to call your function with arguments; your code runs it and sends the result back.
+  - term: File search
+    definition: >-
+      An agent tool that searches files in a vector store, such as uploaded policy documents.
+  - term: Memory
+    definition: >-
+      Long-term storage of facts about a user, extracted from conversations and recalled in later ones.
+  - term: Memory scope
+    definition: >-
+      The key, such as a user ID, that decides whose memory is read and written.
+  - term: MCP tool
+    definition: >-
+      A tool that connects an agent to a remote Model Context Protocol server and its tools.
+  - term: OpenAPI tool
+    definition: >-
+      A tool that lets an agent call a REST API described by an OpenAPI specification.
+interview:
+  - level: beginner
+    q: 'Who runs a function when an agent calls it?'
+    a: >-
+      Your code does. The model only asks, for example "call get_order_status with ORD-1042". Your app runs it, then sends the result back so the model can write the answer.
+    followUps: []
+  - level: intermediate
+    q: 'When do you pick file search and when Azure AI Search?'
+    a: >-
+      File search suits documents given to the agent or a conversation, such as an uploaded contract. Azure AI Search suits a curated index the company maintains, with hybrid search and ranking.
+    followUps: []
+  - level: experienced
+    q: 'How do you stop memory leaking between customers?'
+    a: >-
+      I scope the memory store per user, with the user ID as the scope key, so searches and updates only touch that user's items. I also set a retention period and keep an eye on what it stores.
+    followUps: []
+  - level: scenario
+    q: 'The agent must also call a partner API. What are the options?'
+    a: >-
+      If the partner publishes an OpenAPI spec, I add an OpenAPI tool. If they run an MCP server, I add an MCP tool and decide which of its tools are allowed and whether approval is required. For my own logic, a function.
+    followUps: []
+revision:
+  keyPoints:
+    - 'Functions reach live data and actions; your code runs them.'
+    - 'File search grounds on files; Azure AI Search on a curated index.'
+    - 'OpenAPI and MCP tools reach outside services.'
+    - 'Memory carries user facts across conversations, scoped per user.'
+    - 'The conversation only covers the current chat.'
+  mistakes:
+    - 'Using memory for company documents.'
+    - 'Forgetting that your code must run the function.'
+    - 'Memory with no scope, so users could see each other''s facts.'
+  examTips:
+    - '"Live order status" = **function calling**.'
+    - '"Documents users upload mid-chat" = **file search**.'
+    - '"Remember preferences across sessions" = **memory scoped to the user**.'
+  quick:
+    - q: 'Who executes a function call?'
+      a: 'The application code.'
+    - q: 'Which tool searches uploaded files?'
+      a: 'File search.'
+    - q: 'What keeps facts between conversations?'
+      a: 'Memory.'
+    - q: 'What decides whose memory is used?'
+      a: 'The scope key.'
+    - q: 'Which tool calls a REST API with a spec?'
+      a: 'An OpenAPI tool.'
+references:
+  - title: 'Agent tools overview'
+    url: https://learn.microsoft.com/azure/ai-foundry/agents/how-to/tools/overview
+  - title: 'File search tool'
+    url: https://learn.microsoft.com/azure/ai-foundry/agents/how-to/tools/file-search
+  - title: 'Memory in Foundry Agent Service'
+    url: https://learn.microsoft.com/azure/ai-foundry/agents/concepts/what-is-memory
+related:
+  - design-agents-roles-goals-and-tools
+  - rag-in-an-application
+  - multi-agent-orchestration
+---
+
+## Start with a question
+
+<Story question="How does a good shop assistant know your order, the policy and you?">
+
+Three different things are at work. She looks at the **computer** for where your parcel is right now. She flips the **policy folder** for the return rules. And she remembers **you**: "You like WhatsApp messages, don't you?"
+
+An agent has the same three. A **function** reads the live order system. **File search** or **Azure AI Search** reads the policy documents. **Memory** remembers you the next time you come in.
+
+</Story>
+
+## Explain it like I'm 10
+
+<Eli10>
+
+Think of your helper robot with three gadgets.
+
+A **phone** to call the parcel office and ask where a parcel is. That's a function.
+
+A **bookshelf** with the rule books. That's file search.
+
+A **sticky-note wall** about you: "Priya likes WhatsApp." That's memory.
+
+When you come back next week, the robot still has the sticky notes.
+
+</Eli10>
+
+## The technical explanation
+
+### Which tool for which need
+
+| The agent needs | Tool | Notes |
+| --- | --- | --- |
+| Live data or an action | **Function** | The model asks, **your code runs it**, you send the result back |
+| Answers from documents users or apps provide | **File search** | Vector store over uploaded files |
+| Answers from a curated company index | **Azure AI Search** (or a Foundry IQ knowledge base) | Hybrid search, citations |
+| A REST API with a spec | **OpenAPI tool** | Describe it once, the agent calls it |
+| A remote tool server | **MCP tool** | Choose allowed tools and approval |
+| Fields from a document or image | A **Content Understanding** analyzer, called from a function or tool | Predictable extraction |
+| Facts about a user over time | **Memory** | Scoped per user |
+
+### The function-calling loop
+
+```python
+conversation = openai.conversations.create()
+r = openai.responses.create(conversation=conversation.id, input="Where is order ORD-1042?")
+for item in r.output:
+    if item.type == "function_call":                      # the model ASKS
+        result = lookup_order(**json.loads(item.arguments))   # your code RUNS it
+        r = openai.responses.create(conversation=conversation.id,
+              input=[{"type": "function_call_output", "call_id": item.call_id,
+                      "output": json.dumps(result)}])    # send the result back
+print(r.output_text)
+```
+
+The model never runs your code. That's why a function is the safest way to reach private systems: you decide what it can do and you can add checks inside it.
+
+### Memory across conversations
+
+A **conversation** holds one chat. **Memory** (preview as of 25 November 2026) extracts durable facts, such as "prefers WhatsApp updates", stores them in a **memory store**, and retrieves them in a later chat. It stores **user profile** facts and **chat summaries**.
+
+```python
+tools.append(MemorySearchPreviewTool(memory_store_name="customer-memory",
+                                     scope="{{$userId}}",       # one memory per customer
+                                     update_delay=300))
+```
+
+Set the **scope** so each user sees only their own memory, and set a **retention** period. A memory store needs a chat deployment and an embedding deployment, because recall uses search over the stored items.
+
+<TryIt labs="agt-genai-agent-tools" text="Ask a missing-number question, then an order question, then turn memory on and ask in a brand-new conversation." />
+
+<Callout type="exam">
+Read the verbs. "Check the **live** status" is a **function**. "**Search** the documents the user **uploads**" is **file search**. "**Remember** preferences **across sessions**" is **memory**. "**Call** the partner's **REST API**" with a spec is an **OpenAPI tool**. And the code that executes a function is always **your application**.
+</Callout>
+
+<DeepDive title="Why a function beats pasting data into the prompt">
+
+Order data changes every minute and belongs to one customer. Putting it in the prompt up front wastes tokens and risks showing the wrong customer's data. A function fetches only what the question needs, for the signed-in customer, at the moment of the question. It can also enforce rules, such as only returning orders for the current user ID, because your code decides what it returns.
+
+</DeepDive>
+
+## Real-world business scenario
+
+<Scenario
+  company="Contoso Retail (fictional)"
+  industry="Retail"
+  problem="Customers repeated their preferences in every chat, and the agent couldn't see order status or read the returns policy."
+  service="One order-agent with a get_order_status function, file search over the policy PDFs, and a customer-memory store scoped by user ID with a 90-day retention."
+  why="Each need has its own tool: live data through code, documents through search, preferences through memory."
+  outcome="The agent answered order and policy questions in one chat and remembered WhatsApp as the preferred channel in later ones."
+/>
+
+## When to use it and when not to
+
+<UseWhen
+  use={[
+    'The agent needs live data, documents or user preferences it can\'t know on its own.',
+    'You want answers to cite sources.',
+    'Users return and should be recognised across sessions.',
+  ]}
+  avoid={[
+    'Memory for shared company knowledge. Use a knowledge base or search.',
+    'Letting a tool do anything. Limit what each function can do.',
+    'Adding every tool just in case. Each tool adds confusion and risk.',
+  ]}
+  alternatives={[
+    '<strong>A Foundry IQ knowledge base</strong> for managed multi-source retrieval.',
+    '<strong>A workflow</strong> if the steps are fixed.',
+    '<strong>A single prompt</strong> if no tools are needed.',
+  ]}
+/>

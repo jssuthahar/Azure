@@ -1,0 +1,148 @@
+{
+ "cert": "ai-103",
+ "domain": 4,
+ "topic": "translate-text-with-foundry",
+ "questions": [
+  {
+   "id": "txt-trn-1",
+   "type": "single",
+   "question": "An app translates refund notices into Tamil, Hindi and French. It must make as few calls as possible and keep the cost per character low. What should you do?",
+   "options": [
+    {
+     "text": "Call a chat model once for each language",
+     "why": "This costs more and needs three calls."
+    },
+    {
+     "text": "Call Azure Translator once with three target languages",
+     "why": "Correct. One request can return several target languages."
+    },
+    {
+     "text": "Call Azure Translator three times with auto-detect off",
+     "why": "Several calls are unnecessary."
+    },
+    {
+     "text": "Use speech translation",
+     "why": "Speech translation applies to audio input."
+    }
+   ],
+   "answer": [
+    1
+   ],
+   "explanation": "Azure Translator accepts multiple target languages in a single request and is priced per character.",
+   "objective": "4.1.3"
+  },
+  {
+   "id": "txt-trn-2",
+   "type": "single",
+   "question": "Translations are accurate, but the product name Contoso Pay is translated as ordinary words in every language. You must fix this without training a model. What should you use?",
+   "options": [
+    {
+     "text": "A dynamic dictionary entry for Contoso Pay in the request",
+     "why": "Correct. A dynamic dictionary keeps a term unchanged or fixes its translation."
+    },
+    {
+     "text": "A Custom Translator model trained on 10,000 sentence pairs",
+     "why": "This works but requires training, which the scenario excludes."
+    },
+    {
+     "text": "A higher model temperature",
+     "why": "Translator has no temperature setting."
+    },
+    {
+     "text": "Language detection",
+     "why": "Detection identifies the source language only."
+    }
+   ],
+   "answer": [
+    0
+   ],
+   "explanation": "A dynamic dictionary needs no training. Custom Translator suits large domain vocabularies.",
+   "objective": "4.1.3"
+  },
+  {
+   "id": "txt-trn-3",
+   "type": "single",
+   "question": "A bank must translate letters into formal Hindi, keep numbers as digits and keep the product name in English. Rules change often and are written in plain language by the compliance team. Which approach fits best?",
+   "options": [
+    {
+     "text": "An LLM translation flow with the rules in the instructions",
+     "why": "Correct. A model follows tone and formatting rules written in plain words."
+    },
+    {
+     "text": "Azure Translator with language auto-detect",
+     "why": "Translator offers limited tone control."
+    },
+    {
+     "text": "Azure Language key phrase extraction",
+     "why": "Key phrases do not translate text."
+    },
+    {
+     "text": "Text to speech with SSML",
+     "why": "SSML shapes spoken output, not written translation."
+    }
+   ],
+   "answer": [
+    0
+   ],
+   "explanation": "LLM translation flows follow tone and style instructions. Evaluate them first because output can vary.",
+   "objective": "4.1.3"
+  },
+  {
+   "id": "txt-trn-4",
+   "type": "single",
+   "question": "Your Foundry resource is a multi-service resource. Calls to Azure Translator with the resource key return an authentication error about the region. What is the most likely fix?",
+   "options": [
+    {
+     "text": "Send the resource location in the Ocp-Apim-Subscription-Region header",
+     "why": "Correct. Multi-service resources require the region with the key."
+    },
+    {
+     "text": "Regenerate the key every hour",
+     "why": "The key is valid. The region is missing."
+    },
+    {
+     "text": "Switch the deployment type to Provisioned",
+     "why": "Deployment types apply to model deployments."
+    },
+    {
+     "text": "Increase the tokens per minute quota",
+     "why": "Translator is not billed by tokens."
+    }
+   ],
+   "answer": [
+    0
+   ],
+   "explanation": "A multi-service resource needs the region sent with each Translator request, in addition to the key.",
+   "objective": "4.1.3"
+  },
+  {
+   "id": "txt-trn-5",
+   "type": "multi",
+   "question": "You compare Azure Translator with an LLM translation flow for 2 million customer messages. Which two statements are true? Each correct answer presents part of the solution.",
+   "options": [
+    {
+     "text": "Translator gives the same output for the same input",
+     "why": "Correct. Its output is consistent."
+    },
+    {
+     "text": "An LLM flow is always cheaper per character",
+     "why": "LLM translation usually costs more."
+    },
+    {
+     "text": "An LLM flow can follow tone instructions written in plain words",
+     "why": "Correct. Tone and formatting rules go in the instructions."
+    },
+    {
+     "text": "Translator cannot translate into more than one language per call",
+     "why": "Translator accepts several targets in one call."
+    }
+   ],
+   "answer": [
+    0,
+    2
+   ],
+   "explanation": "Translator is fast, steady and priced per character. An LLM flow trades cost and consistency for flexibility.",
+   "objective": "4.1.3"
+  }
+ ]
+}

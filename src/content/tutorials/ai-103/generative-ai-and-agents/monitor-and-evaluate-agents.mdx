@@ -1,0 +1,200 @@
+---
+title: 'Monitor, Evaluate and Debug Agents'
+seoTitle: 'Monitor, Evaluate and Debug Foundry Agents | AI-103'
+description: 'Evaluate agent runs with intent resolution, tool call accuracy and task adherence, run error analysis on failures and monitor deployed agents in production.'
+answer: >-
+  Evaluate an agent by its **whole run**, not only its final text. **Intent resolution** asks if it understood the goal, **tool call accuracy** checks the tools and arguments, and **task adherence** checks it followed its instructions. **Error analysis** groups failing runs into causes, such as a **made-up argument** or a **claimed action with no tool call**, so you fix the cause and rerun the same dataset. In production, add **monitoring** and **continuous evaluation** on sampled live traffic.
+updated: 2026-11-25
+readingMinutes: 12
+keyTerms:
+  - term: Intent resolution
+    definition: >-
+      An agent evaluator that scores whether the agent identified and addressed what the user wanted.
+  - term: Tool call accuracy
+    definition: >-
+      An agent evaluator that scores whether the agent called the right tools with correct arguments.
+  - term: Task adherence
+    definition: >-
+      An agent evaluator that scores whether the agent followed its assigned task and instructions.
+  - term: Error analysis
+    definition: >-
+      Grouping failed runs by cause so fixes target patterns, not single cases.
+  - term: Continuous evaluation
+    definition: >-
+      Scoring a sample of live agent conversations on a schedule to catch drift.
+  - term: Agent run
+    definition: >-
+      One execution of an agent, including model calls, tool calls and the final answer.
+interview:
+  - level: beginner
+    q: 'Why not just read the agent''s final answer?'
+    a: >-
+      The answer can sound right while the agent did something wrong on the way, like calling a tool with a made-up order number. Agent evaluators look at the whole run, including the tool calls.
+    followUps: []
+  - level: intermediate
+    q: 'What do the three main agent evaluators check?'
+    a: >-
+      Intent resolution checks it understood the goal, tool call accuracy checks the tools and arguments it used, and task adherence checks it kept to its instructions and scope.
+    followUps: []
+  - level: experienced
+    q: 'How do you turn failing runs into improvements?'
+    a: >-
+      I group failures by cause. If many runs invent an argument, I tighten the schema and instructions. If an agent claims an action without a tool call, I add the missing tool and require approval. Then I rerun the same dataset to prove the fix and add the cases to the test set.
+    followUps: []
+  - level: scenario
+    q: 'An agent is live. How do you notice it getting worse?'
+    a: >-
+      I run continuous evaluation on a sample of real conversations, watch the scores and failure rates on a dashboard, and set an alert on a drop. I also trace slow or failing runs in Application Insights to debug them.
+    followUps: []
+revision:
+  keyPoints:
+    - 'Agent evaluators read the whole run, including tool calls.'
+    - 'Intent resolution, tool call accuracy and task adherence cover different failures.'
+    - 'Error analysis groups failures into causes.'
+    - 'Rerun the same dataset after a fix.'
+    - 'Continuous evaluation watches live traffic.'
+  mistakes:
+    - 'Judging an agent only by its final text.'
+    - 'Fixing one failing case instead of the pattern.'
+    - 'Evaluating once before release and never again.'
+  examTips:
+    - '"Called a tool with an argument the user never gave" = **tool call accuracy**.'
+    - '"Misunderstood what the user wanted" = **intent resolution**.'
+    - '"Ignored an instruction" = **task adherence**.'
+  quick:
+    - q: 'Which evaluator checks tool arguments?'
+      a: 'Tool call accuracy.'
+    - q: 'Which checks understanding of the goal?'
+      a: 'Intent resolution.'
+    - q: 'Which checks following instructions?'
+      a: 'Task adherence.'
+    - q: 'What is error analysis?'
+      a: 'Grouping failures by cause.'
+    - q: 'How do you watch production quality?'
+      a: 'Continuous evaluation on sampled traffic.'
+references:
+  - title: 'Evaluate your AI agents'
+    url: https://learn.microsoft.com/azure/ai-foundry/how-to/develop/agent-evaluate-sdk
+  - title: 'Agent evaluators'
+    url: https://learn.microsoft.com/azure/ai-foundry/concepts/evaluation-evaluators/agent-evaluators
+  - title: 'Monitor Foundry Agent Service'
+    url: https://learn.microsoft.com/azure/ai-foundry/how-to/monitor-applications
+related:
+  - evaluate-models-and-apps
+  - tracing-and-token-analytics
+  - autonomous-workflows-with-approvals
+---
+
+## Start with a question
+
+<Story question="How does a driving examiner judge a driver?">
+
+The examiner doesn't only check that you arrived. She watches the whole drive: did you understand where to go, did you use the mirrors and signals correctly, did you follow the rules of the test?
+
+**Agent evaluators** are the examiner. **Intent resolution** asks if the agent understood the destination. **Tool call accuracy** watches the mirrors and signals, meaning the tools and arguments. **Task adherence** checks it followed the rules it was given.
+
+</Story>
+
+## Explain it like I'm 10
+
+<Eli10>
+
+Imagine you ask your helper robot to find your lost shoe.
+
+Did it understand you wanted a **shoe**, not a sock? That's **intent**.
+
+Did it look in the right places and use the right tools, instead of pretending it searched? That's **tool use**.
+
+Did it follow your rule, "ask me first before throwing anything away"? That's **adherence**.
+
+If it fails, you write down *why*, and fix that reason. That's **error analysis**.
+
+</Eli10>
+
+## The technical explanation
+
+### What each evaluator reads
+
+| Evaluator | Looks at | Typical failure it finds |
+| --- | --- | --- |
+| **Intent resolution** | The user request and the agent's response | Answered about invoices when the user wanted to cancel |
+| **Tool call accuracy** | The tool calls and arguments | Called `get_order_status` with "ORD-0000", an order number nobody gave |
+| **Task adherence** | The instructions and the run | Didn't ask for the order number as instructed |
+
+The dataset holds agent messages and tool calls, for example one JSON line per run:
+
+```json
+{"query": "Where is my order?",
+ "tool_calls": [{"name": "get_order_status", "arguments": {"order_id": "ORD-0000"}}],
+ "response": "It arrives tomorrow."}
+```
+
+```python
+from azure.ai.evaluation import evaluate, TaskAdherenceEvaluator, ToolCallAccuracyEvaluator, IntentResolutionEvaluator
+
+result = evaluate(data="agent-runs.jsonl",
+                  evaluators={"task_adherence": TaskAdherenceEvaluator(judge),
+                              "tool_call_accuracy": ToolCallAccuracyEvaluator(judge),
+                              "intent_resolution": IntentResolutionEvaluator(judge)},
+                  azure_ai_project=project_endpoint)
+```
+
+### Error analysis
+
+Scores tell you **which** runs failed. Error analysis tells you **why**. Read the lowest rows and group them:
+
+| Cause seen in rows | Fix |
+| --- | --- |
+| Invented tool arguments | Required parameters in a strict schema, and "ask if missing" in the instructions |
+| Claimed an action with no tool call | Add the tool, require approval, and check the trace for the call |
+| Wrong tool chosen | Clearer tool descriptions, or split the agent |
+| Ignored a rule | Move the rule higher in the instructions and add an example |
+
+Then **rerun the same dataset** to prove it worked, and add the failing cases to your test set so they can't come back.
+
+### In production
+
+Pre-release tests don't catch drift. Foundry can run **continuous evaluation** on a sample of live conversations, show scores, latency, tokens and failures on a **monitoring** dashboard, and raise alerts through Azure Monitor. For one bad run, open its **trace** in Application Insights and read the spans in order, as of 25 November 2026.
+
+<TryIt labs="agt-genai-observe" text="Score agent-runs.jsonl with the agent evaluators and read the error analysis for runs 2 and 3." />
+
+<Callout type="exam">
+Match the failure to the evaluator. **Invented or wrong tool arguments** is **tool call accuracy**. **Misread goal** is **intent resolution**. **Ignored instructions** is **task adherence**. And "detect a drop in quality on real traffic" is **continuous evaluation with alerts**, not a one-time test.
+</Callout>
+
+<DeepDive title="Why average scores mislead for agents">
+
+Agent runs fail in clusters. If 10 percent of runs invent an order number, the average can still look healthy, yet one in ten customers gets a wrong answer. Report the pass rate per evaluator, list the failing rows, and tag each with a cause. Track the share of each cause release by release, so you can see which fix helped.
+
+</DeepDive>
+
+## Real-world business scenario
+
+<Scenario
+  company="Contoso Retail (fictional)"
+  industry="Retail"
+  problem="The order agent passed demos but real conversations showed invented order numbers and replies like Your order is cancelled when no cancel tool had run."
+  service="A 120-run evaluation set scored with intent resolution, tool call accuracy and task adherence, an error analysis tagging each failure, and continuous evaluation on 5 percent of live conversations with an alert."
+  why="The scores pointed to two causes, a missing required parameter and a missing cancel tool, and the rerun proved both fixes."
+  outcome="Invented arguments disappeared from the test set, and a later drop after a model change was caught by the alert the same day."
+/>
+
+## When to use it and when not to
+
+<UseWhen
+  use={[
+    'The agent calls tools or follows multi-turn instructions.',
+    'You change instructions, tools or models and need to compare.',
+    'The agent is live and quality could drift.',
+  ]}
+  avoid={[
+    'Only judging the last message of a run.',
+    'Treating one score as proof of safety. Add safety evaluators and review.',
+    'Evaluating without real or realistic conversations.',
+  ]}
+  alternatives={[
+    '<strong>Quality evaluators</strong> for single-turn RAG answers.',
+    '<strong>Tracing</strong> to debug one run in detail.',
+    '<strong>Red teaming</strong> to attack the agent on purpose.',
+  ]}
+/>

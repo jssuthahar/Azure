@@ -1,0 +1,148 @@
+{
+ "cert": "ai-103",
+ "domain": 5,
+ "topic": "content-understanding-document-extraction",
+ "questions": [
+  {
+   "id": "x5-cu-1",
+   "type": "single",
+   "question": "You create a Content Understanding analyzer field that must return one of five fixed incident types. Which method should you use?",
+   "options": [
+    {
+     "text": "No method, because enumerations are not supported",
+     "why": "Classification fields with enumerations are supported."
+    },
+    {
+     "text": "generate, with no enumeration",
+     "why": "Generate lets the model write any value, so consistency is not guaranteed."
+    },
+    {
+     "text": "extract, with a description of the five types",
+     "why": "Extract returns text that is written in the document, which might not match the list."
+    },
+    {
+     "text": "classify, with the five values as an enumeration",
+     "why": "Correct. Classify selects from the list you supply."
+    }
+   ],
+   "answer": [
+    3
+   ],
+   "explanation": "Classify chooses from a fixed set of values.",
+   "objective": "5.2.3"
+  },
+  {
+   "id": "x5-cu-2",
+   "type": "single",
+   "question": "A claims team wants an agent to read forms and open a claim only when values are reliable. A handwritten policy number is often unclear. What should you do?",
+   "options": [
+    {
+     "text": "Change every field to the generate method",
+     "why": "Generated values are less tied to the page and are harder to verify."
+    },
+    {
+     "text": "Enable confidence and source estimation, and route fields below a threshold to a person",
+     "why": "Correct. Confidence scores identify values that need human review."
+    },
+    {
+     "text": "Use prebuilt-layout, which returns only Markdown",
+     "why": "Layout analysis returns no fields to validate."
+    },
+    {
+     "text": "Increase the number of pages analysed per request",
+     "why": "This does not improve the reliability of unclear handwriting."
+    }
+   ],
+   "answer": [
+    1
+   ],
+   "explanation": "Confidence and grounding support straight-through processing with human review.",
+   "objective": "5.2.2"
+  },
+  {
+   "id": "x5-cu-3",
+   "type": "single",
+   "question": "You need clean Markdown with table structure and figure descriptions from reports to ground a RAG application. You do not need custom fields. Which analyzer fits best?",
+   "options": [
+    {
+     "text": "The OCR skill alone",
+     "why": "OCR returns text without structure or figure descriptions."
+    },
+    {
+     "text": "A custom analyzer with a generate field per paragraph",
+     "why": "This is more work and does not preserve layout as Markdown."
+    },
+    {
+     "text": "prebuilt-documentSearch",
+     "why": "Correct. It is optimised for RAG and returns Markdown, tables, figure descriptions and a summary."
+    },
+    {
+     "text": "prebuilt-invoice",
+     "why": "This returns invoice fields, which are not what reports need."
+    }
+   ],
+   "answer": [
+    2
+   ],
+   "explanation": "Use a prebuilt RAG analyzer when no custom fields are needed.",
+   "objective": "5.2.2"
+  },
+  {
+   "id": "x5-cu-4",
+   "type": "single",
+   "question": "Creating a custom analyzer fails because no model deployment is configured. Which prerequisite is missing?",
+   "options": [
+    {
+     "text": "A private endpoint on the storage account",
+     "why": "Networking is unrelated to the error."
+    },
+    {
+     "text": "A custom domain on the Content Understanding analyzer",
+     "why": "Analyzers are created with an id, not a domain."
+    },
+    {
+     "text": "A chat model and an embedding model deployed on the Foundry resource and set as defaults",
+     "why": "Correct. Field extraction uses the resource's own model deployments."
+    },
+    {
+     "text": "A semantic configuration on an Azure AI Search index",
+     "why": "Search is not involved in analyzer creation."
+    }
+   ],
+   "answer": [
+    2
+   ],
+   "explanation": "Content Understanding relies on default model deployments in your Foundry resource.",
+   "objective": "5.2.3"
+  },
+  {
+   "id": "x5-cu-5",
+   "type": "multi",
+   "question": "A custom document analyzer needs an invoice number, a total, and a two-sentence summary for adjusters. Which two field definitions are appropriate?",
+   "options": [
+    {
+     "text": "InvoiceNumber and Total as extract fields",
+     "why": "Correct. Both values are written in the document."
+    },
+    {
+     "text": "Summary as an extract field",
+     "why": "There is no summary text on the page to extract."
+    },
+    {
+     "text": "InvoiceNumber as a generate field",
+     "why": "A value on the page should be extracted so that it stays verifiable."
+    },
+    {
+     "text": "Summary as a generate field",
+     "why": "Correct. The summary is not written in the document, so the model produces it."
+    }
+   ],
+   "answer": [
+    0,
+    3
+   ],
+   "explanation": "Use extract for values on the page and generate for values the model must write.",
+   "objective": "5.2.3"
+  }
+ ]
+}

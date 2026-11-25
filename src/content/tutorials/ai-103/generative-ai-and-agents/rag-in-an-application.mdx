@@ -1,0 +1,199 @@
+---
+title: 'Retrieval-Augmented Generation (RAG) in an App'
+seoTitle: 'RAG in an App with Azure AI Search and Foundry | AI-103'
+description: 'Build retrieval-augmented generation in Python: chunk and embed documents, run hybrid search in Azure AI Search, and answer with citations from a Foundry model.'
+answer: >-
+  **Retrieval-augmented generation (RAG)** looks up your own content first and then asks the model to answer from it. You **chunk** documents, **embed** each chunk, store them in an **Azure AI Search** index, then at query time run a **hybrid** (keyword plus vector) search, put the top chunks in the prompt and ask for **citations**. Use the **same embedding model** for the index and the query, and tell the model to say it doesn't know when the sources don't cover the question.
+updated: 2026-11-25
+readingMinutes: 12
+keyTerms:
+  - term: RAG
+    definition: >-
+      A pattern that retrieves relevant content and adds it to the prompt so the model answers from it instead of guessing.
+  - term: Chunk
+    definition: >-
+      A piece of a document, often about 500 tokens with a small overlap, that is embedded and stored as one search item.
+  - term: Embedding
+    definition: >-
+      A vector of numbers that captures meaning, so similar texts end up close together.
+  - term: Hybrid search
+    definition: >-
+      A query that combines keyword matching and vector similarity, then merges the rankings.
+  - term: Citation
+    definition: >-
+      A pointer from a sentence in the answer to the source chunk that supports it.
+  - term: Grounding
+    definition: >-
+      Tying an answer to supplied sources so each claim can be checked.
+interview:
+  - level: beginner
+    q: 'What problem does RAG solve?'
+    a: >-
+      A model only knows what it was trained on, so it guesses about your private or recent content. RAG fetches the right pieces of your own documents first and gives them to the model, so the answer comes from them and can carry a citation.
+    followUps: []
+  - level: intermediate
+    q: 'Why use hybrid search instead of vectors alone?'
+    a: >-
+      Vectors find meaning, so a paraphrased question matches. They can miss exact codes such as a part number. Keywords catch those. Hybrid runs both and merges the results, which handles both kinds of question.
+    followUps: []
+  - level: experienced
+    q: 'Retrieval looks right but answers are still poor. Where do you look?'
+    a: >-
+      I check chunking first, because bad boundaries lose context. Then the embedding model, which must be the same for ingestion and queries. Then top-k and ranking, then the prompt, and finally I score groundedness and relevance on a test set instead of guessing.
+    followUps: []
+  - level: scenario
+    q: 'The policy changes every week. Should we fine-tune?'
+    a: >-
+      No. I would keep the policy in an index and refresh it, so the answers change when the documents do. Fine-tuning is slow, costs more and is not a reliable way to add facts.
+    followUps: []
+revision:
+  keyPoints:
+    - 'RAG retrieves first, adds the chunks to the prompt, then generates.'
+    - 'Chunk size and overlap decide what retrieval can return.'
+    - 'Hybrid search combines keyword and vector queries.'
+    - 'Query and index vectors must come from the same embedding model.'
+    - 'Tell the model to answer only from sources and to say it does not know.'
+  mistakes:
+    - 'Embedding the query with a different model than the index.'
+    - 'Chunks that start mid-sentence and lose context.'
+    - 'Letting the model answer when retrieval returned nothing.'
+  examTips:
+    - '"Answer from current company documents with citations" = **RAG**, not fine-tuning.'
+    - '"Exact product codes and paraphrases" = **hybrid search**.'
+    - '"Vectors do not match" = check the **same embedding model** for both sides.'
+  quick:
+    - q: 'What are the two phases of RAG?'
+      a: 'Ingestion (chunk, embed, index) and query (retrieve, augment, generate).'
+    - q: 'Which search type mixes keywords and vectors?'
+      a: 'Hybrid search.'
+    - q: 'Which model embeds the query?'
+      a: 'The same one used for the index.'
+    - q: 'What should the model say with no sources?'
+      a: 'That it does not know.'
+    - q: 'What lets a user check a claim?'
+      a: 'A citation to the source chunk.'
+references:
+  - title: 'Retrieval-augmented generation in Foundry'
+    url: https://learn.microsoft.com/azure/ai-foundry/concepts/retrieval-augmented-generation
+  - title: 'Hybrid search in Azure AI Search'
+    url: https://learn.microsoft.com/azure/search/hybrid-search-overview
+  - title: 'Chunk documents for RAG'
+    url: https://learn.microsoft.com/azure/search/vector-search-how-to-chunk-documents
+related:
+  - evaluate-models-and-apps
+  - agents-with-retrieval-functions-and-memory
+  - foundry-sdks-and-connectors
+---
+
+## Start with a question
+
+<Story question="Would you answer an exam question from memory or with the book open?">
+
+If a friend asks "how many days do I get to return a damaged kettle?" about a shop you've never visited, you'd guess. If you open the shop's policy page first, you'd read the answer out.
+
+A model without retrieval is the friend guessing. **RAG** opens the right page first. The app finds the best pieces of your documents, puts them in front of the model and asks it to answer from them.
+
+</Story>
+
+## Explain it like I'm 10
+
+<Eli10>
+
+Imagine a quiz where you may look in the class notebook.
+
+First you flip to the right page. That's **retrieval**.
+
+Then you read the page and write your answer in your own words. That's **generation**.
+
+If the notebook doesn't have the answer, you say "I don't know" instead of making something up.
+
+</Eli10>
+
+## The technical explanation
+
+### Two phases
+
+**Ingestion** happens before any question:
+
+1. Read the documents and **split** them into **chunks**, for example about 500 tokens with a 50-token overlap.
+2. **Embed** each chunk with an embedding model such as `text-embedding-3-small`.
+3. **Upload** the text, the source name and the vector to an **Azure AI Search** index.
+
+**Query** happens for every question:
+
+1. Run a **hybrid** search: keywords plus a vector query for the question.
+2. Take the top few chunks.
+3. Put them in the prompt with the rule "answer from the sources and cite them".
+4. Send it to the chat deployment and return the answer with its citations.
+
+```python
+conn = project.connections.get("search-contoso")          # target comes from the project
+search = SearchClient(endpoint=conn.target, index_name="policies-index", credential=cred)
+hits = search.search(search_text=question,
+                     vector_queries=[VectorizableTextQuery(text=question, k_nearest_neighbors=3, fields="contentVector")],
+                     top=3)
+sources = "\n".join(f"[{h['source']}#{h['chunk']}] {h['content']}" for h in hits)
+
+r = openai.responses.create(
+    model="support-chat",
+    instructions="Answer from the sources and cite them like [file#chunk]. "
+                 "If the sources don't contain the answer, say you don't know.\n\nSources:\n" + sources,
+    input=question, temperature=0.2)
+```
+
+### What makes it work
+
+| Part | What to decide | What goes wrong |
+| --- | --- | --- |
+| **Chunking** | Size and overlap | Chunks that start mid-sentence lose their meaning |
+| **Embedding model** | One model for index and queries | Different models give vectors you can't compare |
+| **Search type** | Hybrid, often with a semantic ranker | Vector-only misses exact codes |
+| **Top K** | How many chunks go in the prompt | Too few misses the answer, too many adds noise and cost |
+| **Prompt** | Answer only from sources, cite, admit gaps | The model fills the gaps with a guess |
+
+Foundry also offers a managed route: a **Foundry IQ knowledge base** on Azure AI Search plans sub-queries and returns grounded passages with citations. The same ideas apply, and you can use it instead of building the retrieval yourself.
+
+Documents are content from outside your app. They can hide instructions that try to steer the model, which is an **indirect attack**, so scan retrieved content and evaluate for it.
+
+<TryIt labs="agt-genai-rag-evaluate" text="Connect Azure AI Search, ingest the policies, ask with and without retrieval, then score the answers." />
+
+<Callout type="exam">
+"Answers must come from the latest company documents" is **RAG**. If the facts change weekly, an option that says "fine-tune weekly" is a distractor. "Exact part numbers and natural-language questions" points to **hybrid search**. "Retrieval returns poor matches after someone changed the embedding model" means **query and index must use the same model**.
+</Callout>
+
+<DeepDive title="Why an honest I don't know matters">
+
+When retrieval returns nothing useful, a model that was never told to refuse will still produce a fluent answer. Put the refusal rule in the instructions, return source IDs so answers can be checked, and score **groundedness** on a test set that includes questions your documents can't answer. That test set is what catches the confident invention before a customer does.
+
+</DeepDive>
+
+## Real-world business scenario
+
+<Scenario
+  company="Contoso Retail (fictional)"
+  industry="Retail"
+  problem="The support chatbot told customers they had 30 days to return damaged kettles. The real policy was 10 days, and it changed again each quarter."
+  service="Policy PDFs chunked and embedded into an Azure AI Search index, hybrid retrieval with the top three chunks, and a chat deployment instructed to cite sources and say it doesn't know. The index refreshes whenever a policy file changes."
+  why="The answer now comes from the current document, carries a citation, and updates when the file does, without retraining anything."
+  outcome="Wrong-policy complaints dropped, and agents could check any answer by opening the cited chunk."
+/>
+
+## When to use it and when not to
+
+<UseWhen
+  use={[
+    'Answers must come from your own documents, with citations.',
+    'The content changes often.',
+    'Different users need different documents, controlled by access to the index.',
+  ]}
+  avoid={[
+    'The answer is one exact value in a database. Query it with a function.',
+    'You want to change tone or format only. Better instructions do that.',
+    'The model already knows the public fact and a source adds nothing.',
+  ]}
+  alternatives={[
+    '<strong>Function calling</strong> for live records in a system.',
+    '<strong>File search</strong> for documents a user uploads in a conversation.',
+    '<strong>Foundry IQ knowledge base</strong> for managed, multi-source retrieval.',
+  ]}
+/>

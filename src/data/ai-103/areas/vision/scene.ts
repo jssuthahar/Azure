@@ -1,0 +1,27 @@
+/**
+ * AI-103 vision area: the 'agentvision' 3D scene narration and each lesson's
+ * simulations. Step order matches src/lib/dc3d/agent/agentvision.ts. Facts
+ * follow Microsoft Learn (gpt-image, Sora 2, vision-enabled chat models,
+ * Content Understanding and Content Safety pages, checked 25 Nov 2026).
+ */
+import type { LessonSims } from '../../../az-900/lesson-sims';
+import type { Sim3D } from '../../../az-900/sims3d';
+
+export const SCENE: Sim3D = {
+  title: 'Computer vision in Foundry: generate, understand, extract and keep it safe',
+  steps: [
+    { title: 'Generate and edit an image', text: 'A **gpt-image** deployment turns a prompt into pixels. Choose a **size** (1024x1024, 1024x1536 or 1536x1024), a **quality** (low, medium, high) and a format (**PNG** or **JPEG**). To change only part of a picture, send the image plus a **mask**: a PNG of the same size where the **transparent** area is what the model may repaint.', actions: [{ id: 'img-generate', label: '🎨 …I send a prompt?', kind: 'ok' }, { id: 'img-mask', label: '🖌️ …I edit with a mask?', kind: 'ok' }, { id: 'img-nomask', label: '⚠️ …I edit with no mask?', kind: 'danger' }, { id: 'img-webp', label: '🧱 …I ask for WEBP?', kind: 'danger' }] },
+    { title: 'Generate and remix a video', text: '**Sora 2** makes video as an **asynchronous job**: create, poll until it\'s done, then download. Pick **720x1280** or **1280x720** and **4, 8 or 12 seconds**. An **input reference** image must match the video size, and faces in it are rejected. **Remix** changes a finished video with a short prompt, ideally one change at a time.', actions: [{ id: 'vid-create', label: '🎬 …I create a video?', kind: 'ok' }, { id: 'vid-size', label: '📐 …the reference is the wrong size?', kind: 'danger' }, { id: 'vid-face', label: '🙂 …the reference shows a face?', kind: 'danger' }, { id: 'vid-remix', label: '🔁 …I remix with one change?', kind: 'ok' }] },
+    { title: 'Ask a model about a picture', text: 'A **multimodal** chat model such as gpt-4.1-mini reads **images** you send with the prompt. The **prompt** decides the result: a **concise** caption, a **detailed** one, **alt text** for accessibility, or an answer to a **question** that points to what is visible. Up to 10 images can go in one request, and **detail** (low, high, auto) trades cost for small text.', actions: [{ id: 'und-caption', label: '💬 …I ask for a caption?', kind: 'ok' }, { id: 'und-ask', label: '❓ …I ask what is damaged?', kind: 'ok' }, { id: 'und-alt', label: '♿ …I ask for alt text?', kind: 'ok' }, { id: 'und-unseen', label: '🙈 …the answer isn\'t in the photo?', kind: 'plain' }] },
+    { title: 'Content Understanding turns media into fields', text: '**Azure Content Understanding** in Foundry Tools runs an **analyzer** on an image or video and returns the same **structured record** every time. Start from **prebuilt-imageSearch** or **prebuilt-videoSearch**, or create a **custom analyzer** with fields that **classify** or **generate**. For video, **segmentation** splits the file into scenes with their own fields, key frames and transcript.', actions: [{ id: 'cu-image', label: '🖼️ …I run the prebuilt image analyzer?', kind: 'ok' }, { id: 'cu-custom', label: '🧩 …I add my own fields?', kind: 'ok' }, { id: 'cu-whole', label: '🎞️ …segmentation is off?', kind: 'plain' }, { id: 'cu-segment', label: '✂️ …segmentation is on?', kind: 'ok' }] },
+    { title: 'Keep visual content safe', text: 'Images and video need gates too. A **guardrail** with **image** controls classifies hate, sexual, violence and self-harm content, and a **custom analyzer** can enforce your own **visual policy** (a competitor\'s logo, a missing watermark). Text **inside** a picture can be an **indirect prompt injection**: read it as **data**, scan it with **Prompt Shields**, and never let it grant a tool or an approval.', actions: [{ id: 'saf-unsafe', label: '🚫 …a harmful image arrives?', kind: 'danger' }, { id: 'saf-inject', label: '🧨 …a note inside a photo gives orders?', kind: 'danger' }, { id: 'saf-guard', label: '🛡️ …the same photo, with defences on?', kind: 'ok' }, { id: 'saf-policy', label: '📋 …an ad shows a banned logo?', kind: 'danger' }] },
+  ],
+};
+
+export const SIMS: Record<string, LessonSims> = {
+  'image-generation-and-editing': { d3: { mode: 'agentvision', start: 0, intro: 'Generate a picture, then edit it with a mask and without one.' }, tour: { id: 'agt-vision-image', intro: 'Deploy gpt-image-1, generate an image and edit it with a mask.' } },
+  'video-generation-and-editing': { d3: { mode: 'agentvision', start: 1, intro: 'Create a video, break the reference image, then remix.' }, tour: { id: 'agt-vision-video', intro: 'Deploy Sora 2, create a video from a reference image and remix it.' } },
+  'multimodal-image-understanding': { d3: { mode: 'agentvision', start: 2, intro: 'Ask for a caption, a question and alt text from the same photo.' }, tour: { id: 'agt-vision-understand', intro: 'Caption, question and alt text in the Chat playground with an image.' } },
+  'content-understanding-for-images-and-video': { d3: { mode: 'agentvision', start: 3, intro: 'Run a prebuilt analyzer, add fields, then segment a video.' }, tour: { id: 'agt-vision-cu', intro: 'Build a custom image analyzer and a segmented video analyzer.' } },
+  'responsible-ai-for-visual-content': { d3: { mode: 'agentvision', start: 4, intro: 'Send a harmful image, then a photo with a hidden order.' }, tour: { id: 'agt-vision-safety', intro: 'Add image controls to a guardrail and test an injected photo.' } },
+};

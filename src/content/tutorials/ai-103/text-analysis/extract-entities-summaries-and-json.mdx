@@ -1,0 +1,219 @@
+---
+title: Extract Entities, Summaries and Structured JSON
+seoTitle: Extract Entities, Summaries and Structured JSON | AI-103
+description: Pull entities out of text with Azure Language, get strict JSON from a model with structured outputs and shape compliance summaries. AI-103 4.1.1 and 4.1.4.
+answer: >-
+  Use **Azure Language in Foundry Tools** when you want fixed, predictable output: **named entity recognition** (people, places, dates, with confidence scores), **PII redaction** and **summaries**. Use a **model deployment** when you need your own fields. Ask for **JSON mode** and you only get valid JSON. Ask with **structured outputs** (a JSON schema with **strict: true**, every field required) and the reply follows your shape every time. For domain summaries such as compliance, don't train anything first: give the model a **role, a checklist, a glossary and one example** at **temperature 0**. For your own entity types at high volume, train **custom NER**.
+updated: 2026-11-25
+readingMinutes: 11
+keyTerms:
+  - term: Named entity recognition (NER)
+    definition: An Azure Language feature that finds people, organizations, locations, dates and other categories in text and returns a category and a confidence score for each.
+  - term: PII detection
+    definition: An Azure Language feature that finds personal data and returns a redacted copy of the text. It can be limited to the categories you list.
+  - term: JSON mode
+    definition: A model setting that makes the reply valid JSON. It doesn't guarantee which keys are present.
+  - term: Structured outputs
+    definition: A model setting that makes the reply match a JSON schema you supply. With strict set to true, every field is required and no extra fields are allowed.
+  - term: Domain prompt
+    definition: Instructions that give a model a role, a checklist, a glossary and an example so its output suits one field, such as compliance.
+  - term: Custom NER
+    definition: A model you train in Azure Language on labelled examples so it extracts your own entity types, such as PolicyId or ApprovalRole.
+interview:
+  - level: beginner
+    q: What's the difference between JSON mode and structured outputs?
+    a: >-
+      JSON mode makes sure the reply parses as JSON, nothing more. The keys can be anything, and some can be missing. Structured outputs take a JSON schema and make the reply match it. With strict true, every field is required and extra fields aren't allowed, so my code can rely on the shape.
+    followUps: []
+  - level: intermediate
+    q: When would you pick Azure Language over a model for extraction?
+    a: >-
+      When the categories are standard and I want the same output for the same input, at volume and a low price. Named entities, PII and summaries come back with a fixed shape and confidence scores. I'd pick a model when I need my own fields or a free-form judgment.
+    followUps: []
+  - level: experienced
+    q: A compliance summary keeps leaving out the deadline and control ID. How do you fix it?
+    a: >-
+      I'd write a developer message with the reader's role, a checklist of required items, a short glossary, and one worked example that shows "Not stated" for missing items. Then temperature 0 and an evaluation on a few dozen real documents. Only if that can't hold the format would I look at fine-tuning.
+    followUps: []
+  - level: scenario
+    q: Three teams want the same four fields from 100,000 contracts a month. What do you build?
+    a: >-
+      I'd label a few hundred contracts and train a custom NER model in Azure Language, because the fields repeat and the volume is high. It's cheaper and steadier than prompting a large model every time. For the odd contract with unusual wording I'd keep a model with a strict schema as a fallback.
+    followUps: []
+revision:
+  keyPoints:
+    - Azure Language gives fixed categories, confidence scores and the same output for the same input.
+    - Prebuilt NER can't know your own fields. Use custom NER or a model for those.
+    - JSON mode means valid JSON only. Structured outputs with strict true means your schema.
+    - Strict schemas need every property listed in required and additionalProperties set to false.
+    - Domain summaries come from role, checklist, glossary, example and temperature 0.
+  mistakes:
+    - Thinking JSON mode guarantees the fields you asked for.
+    - Fine-tuning before trying a better prompt.
+    - Expecting prebuilt NER to return order numbers or policy IDs as their own category.
+  examTips:
+    - '"Reply must match a schema" = **structured outputs**, not JSON mode.'
+    - '"Same fields, huge volume, your own types" = **custom NER**.'
+    - '"Mask personal data" = **PII detection**, with a categories filter when policy lists some.'
+  quick:
+    - q: Which Azure Language feature returns a redacted copy of text?
+      a: PII detection.
+    - q: What does strict true add to a JSON schema?
+      a: Every field is required and the reply can't contain extra fields.
+    - q: What is the first thing to try when a summary lacks required items?
+      a: A domain prompt with a checklist and an example.
+    - q: Which feature learns your own entity types?
+      a: Custom NER.
+    - q: Which Azure Language feature finds people, places and dates?
+      a: Named entity recognition.
+references:
+  - title: Named entity recognition in Azure Language
+    url: https://learn.microsoft.com/azure/ai-services/language-service/named-entity-recognition/overview
+  - title: Personally identifiable information detection
+    url: https://learn.microsoft.com/azure/ai-services/language-service/personally-identifiable-information/overview
+  - title: Structured outputs in Azure OpenAI
+    url: https://learn.microsoft.com/azure/ai-foundry/openai/how-to/structured-outputs
+  - title: Custom named entity recognition
+    url: https://learn.microsoft.com/azure/ai-services/language-service/custom-named-entity-recognition/overview
+related:
+  - sentiment-safety-and-sensitive-content
+  - translate-text-with-foundry
+---
+
+## Start with a question
+
+<Story question="What if the ticket says 'order 48213' and your system wants an order_id field?">
+
+Priya from Fabrikam Retail writes in: "Order 48213 arrived on 12 November with a cracked screen." A person sees the name, the company, the date and the order straight away. Your ticketing system doesn't read sentences. It wants fields, and it throws an error if one is missing.
+
+You have two tools. **Azure Language** is a trained reader with fixed categories. A **model** is a flexible reader that can return any shape you describe. The skill is knowing which one to use, and how to make the model's answer something code can trust.
+
+</Story>
+
+## Explain it like I'm 10
+
+<Eli10>
+
+Imagine a school form with boxes: Name, Date, Problem.
+
+**Azure Language** is a helper who has filled in thousands of the standard forms. It's fast and always fills the standard boxes the same way. But if you add a new box, "Locker number", it doesn't know what that is.
+
+A **model** is a clever friend who can fill any form you draw. But if you only say "write it as a list", they might skip a box. **Structured outputs** is handing them the form with every box marked "must fill in". Now nothing is left empty.
+
+</Eli10>
+
+## The technical explanation
+
+### Azure Language: entities, PII and summaries
+
+Azure Language in Foundry Tools (the service formerly called Azure AI Language) runs on your Foundry resource. The calls are the same across features: send documents, get a result per document.
+
+| Feature | Returns | Good for |
+| --- | --- | --- |
+| Named entity recognition | Entities with a category (Person, Organization, Location, DateTime, Quantity and more) and a confidence score | Standard facts in tickets, emails, contracts |
+| PII detection | Entities plus **redacted text** | Masking personal data before storage or before an agent reads it |
+| Abstractive summarization | A short summary written in new sentences | Long documents and conversations |
+| Custom NER | Your own entity types | Repeated extraction of business fields |
+
+Prebuilt categories are fixed. An order number often comes back as a **Quantity**, because the service doesn't know your business.
+
+```python
+from azure.identity import DefaultAzureCredential
+from azure.ai.textanalytics import TextAnalyticsClient
+
+client = TextAnalyticsClient(endpoint=ENDPOINT, credential=DefaultAzureCredential())
+result = client.recognize_entities([ticket_text])[0]
+for e in result.entities:
+    print(e.text, e.category, round(e.confidence_score, 2))
+
+pii = client.recognize_pii_entities([ticket_text], categories_filter=["PhoneNumber", "Email"])[0]
+print(pii.redacted_text)
+```
+
+### Strict JSON from a model
+
+A model can return your own fields. Three levels of control:
+
+1. **Plain text prompt**: "Return JSON." It usually works until it doesn't. Don't parse this in production.
+2. **JSON mode** (`response_format={"type": "json_object"}`): the reply is valid JSON. The keys are still the model's idea.
+3. **Structured outputs** (`response_format` of type `json_schema` with `strict: true`): the reply matches your schema.
+
+```python
+schema = {
+  "name": "ticket",
+  "strict": True,
+  "schema": {
+    "type": "object",
+    "properties": {
+      "customer": {"type": "string"},
+      "order_id": {"type": "string"},
+      "priority": {"type": "string", "enum": ["low", "normal", "high"]},
+      "churn_risk": {"type": "boolean"}
+    },
+    "required": ["customer", "order_id", "priority", "churn_risk"],
+    "additionalProperties": False
+  }
+}
+resp = openai_client.chat.completions.create(
+    model="gpt-4.1-mini",
+    messages=[{"role": "user", "content": ticket_text}],
+    response_format={"type": "json_schema", "json_schema": schema},
+)
+```
+
+For strict mode, list every property in `required` and set `additionalProperties` to `false`. An **enum** keeps a field to values your code understands.
+
+### Domain tasks: compliance summaries and domain extraction
+
+A plain request such as "summarise this policy update" gives a nice paragraph that an auditor can't use. Fix the prompt before you think about training.
+
+- **Role**: "You are a compliance analyst writing for the audit team."
+- **Checklist**: WHAT changed, WHO is responsible, DEADLINE, CONTROL ID, RISK.
+- **Glossary**: what "PCI-07" or "four-eyes check" mean in your company.
+- **Example**: one policy update and the summary you'd accept, including "Not stated" for something missing.
+- **Temperature 0**, so the layout doesn't wander.
+
+If prompting still can't hold the format, consider **fine-tuning**. If the job is pulling the same fields from huge volumes, **custom NER** in Azure Language is usually cheaper and steadier than prompting a large model every time.
+
+<TryIt labs="agt-text-extract-json" text="Extract entities and PII with Azure Language, compare JSON mode with a strict schema, then fix a compliance summary with a domain prompt." />
+
+<Callout type="exam">
+Read what the question needs. "Standard categories, predictable output, low cost" is **Azure Language**. "Reply must match a schema" is **structured outputs**. "Valid JSON" alone is **JSON mode**. "Our own entity types at high volume" is **custom NER**. "Summary misses required items" is a **domain prompt**, not fine-tuning, as the first step.
+</Callout>
+
+<DeepDive title="Check what's changing in Azure Language">
+
+Microsoft has announced retirement dates for some Azure Language features, with Foundry models as the suggested path. As announced on Microsoft Learn (checked 25 November 2026), entity recognition, PII detection and language detection continue, while features such as sentiment analysis, key phrase extraction and summarization are listed for retirement on 31 March 2029. For a new, long-lived project, read the current retirement notice before you build on a feature, and plan a prompt-based version of anything on that list.
+
+</DeepDive>
+
+## Real-world business scenario
+
+<Scenario
+  company="Fabrikam Retail (fictional)"
+  industry="Retail"
+  problem="Support agents retyped customer name, order ID and priority from emails into the ticketing system, and the quarterly compliance summaries left out deadlines and control IDs."
+  service="Azure Language PII detection to mask card and phone numbers, a gpt-4.1-mini deployment with a strict JSON schema for the ticket fields, and a domain prompt with a checklist and an example for compliance summaries."
+  why="Redaction came from a fixed, predictable service. The schema meant the ticketing API never received a missing field, and the checklist made every summary list the same five items."
+  outcome="Ticket entry time dropped from about four minutes to seconds, and the audit team stopped sending summaries back for missing deadlines."
+/>
+
+## When to use it and when not to
+
+<UseWhen
+  use={[
+    'The categories are standard and you want the same output every time (Azure Language).',
+    'Code downstream needs exact fields (a model with structured outputs).',
+    'Summaries must include a fixed list of items (a domain prompt with an example).',
+  ]}
+  avoid={[
+    'You rely on JSON mode and assume every field will be there.',
+    'You fine-tune before trying a better prompt and a few examples.',
+    'You expect prebuilt entities to know your order IDs or policy numbers.',
+  ]}
+  alternatives={[
+    '<strong>Custom NER</strong> for your own entity types at high volume.',
+    '<strong>Content Understanding</strong> when the source is a scanned form or invoice rather than text.',
+    '<strong>A reasoning model</strong> for judgments that need several steps.',
+  ]}
+/>

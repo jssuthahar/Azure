@@ -1,0 +1,139 @@
+---
+/**
+ * Two gentle prompts (owner's copy, 25 Nov 2026): "share with friends" at most
+ * every 2 days and "buy me a coffee" at most every 7 days, alternating, never
+ * both on the same day, each after 60 seconds of the page being visible.
+ * Learning always wins: never on exams, labs, simulators, games, practice,
+ * the Architecture Builder or embeds; never in slide mode, full screen or
+ * while the learner is typing; never for supporters. A non-modal card, not a
+ * blocking dialog: Esc or "Maybe later" closes it. State is in this browser
+ * only (msdb-prompts-v1); nothing is tracked.
+ */
+import { SITE, SUPPORT } from '../config';
+---
+<aside class="kp" data-kp hidden role="dialog" aria-modal="false" aria-labelledby="kp-h" data-site={SITE.url} data-coffee={SUPPORT.url}>
+  <button type="button" class="kp-x" data-kp-close aria-label="Close">✕</button>
+  <div data-kp-share hidden>
+    <h2 id="kp-h-share" class="kp-h">😊 Hope you’re enjoying your learning!</h2>
+    <p>I hope you’re enjoying your learning and finding these free resources useful.</p>
+    <p>Do you know someone who might benefit from them too?</p>
+    <p>❤️ Share this platform with your friends, classmates and colleagues. One small share could help someone discover a new skill, grow their knowledge or reach their career dreams.</p>
+    <p class="kp-strong">Knowledge grows when we share it!</p>
+    <div class="kp-nets" data-kp-nets hidden>
+      <a class="share-b" data-net="whatsapp" target="_blank" rel="noopener" href="#">💬 WhatsApp</a>
+      <a class="share-b" data-net="linkedin" target="_blank" rel="noopener" href="#">in LinkedIn</a>
+      <a class="share-b" data-net="x" target="_blank" rel="noopener" href="#">𝕏 Post</a>
+      <button type="button" class="share-b" data-net="copy">🔗 Copy link</button>
+    </div>
+    <p class="kp-btns">
+      <button type="button" class="btn btn-accent kp-main" data-kp-share-go>📢 Share with friends</button>
+      <button type="button" class="btn btn-outline" data-kp-later>Maybe later</button>
+    </p>
+  </div>
+  <div data-kp-coffee hidden>
+    <h2 id="kp-h-coffee" class="kp-h">☕ Enjoying free learning? Support this mission!</h2>
+    <p>I’m providing these learning resources for free because I believe everyone deserves a chance to learn and build a better future.</p>
+    <p>I’m also working towards helping students from families who are struggling financially get free learning opportunities.</p>
+    <p>If you find this platform useful and appreciate the effort, consider buying me a coffee. ❤️ Every small contribution helps me keep the platform running, improve the lessons and support students who need a helping hand.</p>
+    <p class="kp-strong">Your small support could make a big difference in someone’s career and future. Thank you for being part of this mission!</p>
+    <p class="kp-btns">
+      <a class="btn btn-accent kp-main" data-kp-coffee-go target="_blank" rel="noopener" href={SUPPORT.url}>☕ Buy me a coffee</a>
+      <button type="button" class="btn btn-outline" data-kp-later>Maybe later</button>
+    </p>
+  </div>
+</aside>
+
+<script>
+  import { isSupporter } from '../lib/monetization/supporter';
+  const box = document.querySelector<HTMLElement>('[data-kp]');
+  const KEY = 'msdb-prompts-v1';
+  const DAY = 86_400_000;
+  const BLOCK = /\/(mock-exam|labs|simulator|games|practice|architect|embed|certificate|offline|exam-dumps)(\/|$)/;
+  type State = { share?: number; coffee?: number; last?: 'share' | 'coffee'; lastAt?: number };
+  const read = (): State => { try { return JSON.parse(localStorage.getItem(KEY) || '{}'); } catch { return {}; } };
+  const write = (s: State) => { try { localStorage.setItem(KEY, JSON.stringify(s)); } catch {} };
+
+  if (box && !BLOCK.test(location.pathname) && !isSupporter()) {
+    const now = Date.now();
+    const s = read();
+    const due = { share: now - (s.share ?? 0) >= 2 * DAY, coffee: now - (s.coffee ?? 0) >= 7 * DAY };
+    const sameDay = now - (s.lastAt ?? 0) < DAY;
+    // Alternate: prefer the one not shown last time.
+    const order: ('share' | 'coffee')[] = s.last === 'share' ? ['coffee', 'share'] : ['share', 'coffee'];
+    const pick = sameDay ? undefined : order.find((k) => due[k]);
+    if (pick) {
+      let visibleMs = 0;
+      let t0 = document.visibilityState === 'visible' ? performance.now() : 0;
+      document.addEventListener('visibilitychange', () => {
+        if (document.visibilityState === 'visible') t0 = performance.now();
+        else if (t0) { visibleMs += performance.now() - t0; t0 = 0; }
+      });
+      const busy = () => {
+        const a = document.activeElement as HTMLElement | null;
+        return document.documentElement.classList.contains('presenting') || !!document.fullscreenElement
+          || !!a?.closest('input, textarea, select, [contenteditable="true"], .knowledge-check, [data-quiz]')
+          || !!document.querySelector('dialog[open]');
+      };
+      const timer = window.setInterval(() => {
+        const ms = visibleMs + (t0 ? performance.now() - t0 : 0);
+        if (ms < 60_000 || busy()) return;
+        clearInterval(timer);
+        show(pick);
+      }, 5000);
+    }
+  }
+
+  function show(kind: 'share' | 'coffee') {
+    const st = read();
+    st[kind] = Date.now(); st.last = kind; st.lastAt = Date.now();
+    write(st);
+    const pane = box!.querySelector<HTMLElement>(kind === 'share' ? '[data-kp-share]' : '[data-kp-coffee]')!;
+    pane.hidden = false;
+    box!.setAttribute('aria-labelledby', kind === 'share' ? 'kp-h-share' : 'kp-h-coffee');
+    box!.hidden = false;
+    requestAnimationFrame(() => box!.classList.add('is-in'));
+    const close = () => { box!.classList.remove('is-in'); setTimeout(() => { box!.hidden = true; }, 250); document.removeEventListener('keydown', esc); };
+    const esc = (e: KeyboardEvent) => { if (e.key === 'Escape') close(); };
+    document.addEventListener('keydown', esc);
+    box!.querySelectorAll('[data-kp-later], [data-kp-close]').forEach((b) => b.addEventListener('click', close));
+    box!.querySelector('[data-kp-coffee-go]')?.addEventListener('click', () => setTimeout(close, 300));
+
+    const site = box!.dataset.site!;
+    const text = 'Free Microsoft Azure and AI certification courses with simulators and practice tests:';
+    const nets = box!.querySelector<HTMLElement>('[data-kp-nets]')!;
+    const links: Record<string, string> = {
+      whatsapp: `https://wa.me/?text=${encodeURIComponent(`${text} ${site}`)}`,
+      linkedin: `https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(site)}`,
+      x: `https://twitter.com/intent/tweet?text=${encodeURIComponent(text)}&url=${encodeURIComponent(site)}`,
+    };
+    nets.querySelectorAll<HTMLAnchorElement>('a[data-net]').forEach((a) => { a.href = links[a.dataset.net!]; });
+    nets.querySelector('[data-net="copy"]')?.addEventListener('click', async (e) => {
+      const b = e.currentTarget as HTMLButtonElement;
+      try { await navigator.clipboard.writeText(site); b.textContent = '✓ Link copied'; } catch { b.textContent = site; }
+    });
+    box!.querySelector('[data-kp-share-go]')?.addEventListener('click', async () => {
+      if (navigator.share && matchMedia('(pointer: coarse)').matches) {
+        try { await navigator.share({ title: 'MSDEVBUILD Azure', text, url: site }); close(); return; } catch { /* cancelled: fall back to the buttons */ }
+      }
+      nets.hidden = false;
+    });
+  }
+</script>
+
+<style is:global>
+  .kp { position: fixed; z-index: 70; left: 1rem; bottom: 1rem; width: min(400px, calc(100vw - 2rem)); max-height: calc(100vh - 7rem); overflow: auto; padding: 1.1rem 1.15rem 1rem; border-radius: 18px; border: 1px solid var(--card-line); background: var(--card); color: var(--text); box-shadow: 0 30px 70px -20px rgb(0 30 70 / .55); opacity: 0; transform: translateY(14px); transition: opacity .25s, transform .25s; }
+  .kp.is-in { opacity: 1; transform: none; }
+  .kp[hidden] { display: none; }
+  .kp-x { position: absolute; top: .45rem; right: .45rem; display: grid; place-items: center; width: 36px; height: 36px; border-radius: 50%; color: var(--text-muted); }
+  .kp-x:hover { background: var(--pastel-grey); }
+  .kp-h { padding-right: 2rem; font-size: 1.1rem; font-weight: 800; line-height: 1.3; }
+  .kp p { margin-top: .55rem; font-size: .9rem; line-height: 1.55; }
+  .kp .kp-strong { font-weight: 750; color: var(--accent-deep); }
+  .kp-nets { display: flex; flex-wrap: wrap; gap: .4rem; margin-top: .7rem; }
+  .kp-nets[hidden] { display: none; }
+  .kp-btns { display: flex; flex-wrap: wrap; gap: .5rem; margin-top: .9rem !important; }
+  .kp-btns .btn { min-height: 44px; }
+  @media (max-width: 640px) { .kp { right: .5rem; left: .5rem; width: auto; bottom: 5.5rem; max-height: calc(100vh - 8rem); } }
+  @media (prefers-reduced-motion: reduce) { .kp { transition: none; } }
+  @media print { .kp { display: none !important; } }
+</style>

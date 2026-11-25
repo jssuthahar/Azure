@@ -1,0 +1,200 @@
+---
+title: 'Multi-Agent Orchestration'
+seoTitle: 'Multi-Agent Orchestration with Agent Framework | AI-103'
+description: 'Split a job across specialist agents and pick an orchestration pattern in Microsoft Agent Framework: sequential, concurrent, handoff, group chat or Magentic.'
+answer: >-
+  **Multi-agent orchestration** shares a job between specialist agents. In **Microsoft Agent Framework** you pick the pattern by **who decides the next step**: **sequential** (a fixed line), **concurrent** (parallel, then merged), **handoff** (the current agent passes control), **group chat** (a manager picks the next speaker) or **Magentic** (a manager plans and delegates open-ended work). Start with one agent and split only when instructions or tools start to collide.
+updated: 2026-11-25
+readingMinutes: 12
+keyTerms:
+  - term: Orchestration
+    definition: >-
+      The logic that decides which agent runs next and how their outputs combine.
+  - term: Sequential
+    definition: >-
+      Agents run in a fixed order, each receiving the previous output.
+  - term: Concurrent
+    definition: >-
+      Agents run at the same time on the same input and the results are aggregated.
+  - term: Handoff
+    definition: >-
+      The current agent transfers control of the conversation to a better-suited agent.
+  - term: Magentic
+    definition: >-
+      A pattern where a manager agent builds a plan, delegates tasks to specialists and tracks progress.
+  - term: Microsoft Agent Framework
+    definition: >-
+      An open-source SDK for Python and .NET to build agents and multi-agent workflows.
+interview:
+  - level: beginner
+    q: 'Why use several agents instead of one?'
+    a: >-
+      Each agent gets a narrow job, short instructions and only the tools it needs. That makes each easier to test and less likely to pick the wrong tool than one agent that does everything.
+    followUps: []
+  - level: intermediate
+    q: 'When is concurrent better than sequential?'
+    a: >-
+      When the tasks don't depend on each other. Billing and delivery checks can run at the same time, and the total time is about the slower one. If the second task needs the first one's output, it has to be sequential.
+    followUps: []
+  - level: experienced
+    q: 'What are the risks of group chat and Magentic?'
+    a: >-
+      They're the least predictable, use the most model calls and take the longest. I set a maximum number of rounds, log every turn, and use them only when I can't write the steps in advance.
+    followUps: []
+  - level: scenario
+    q: 'A customer was charged twice and the order never arrived. Which pattern?'
+    a: >-
+      Concurrent is a good fit if a billing agent and a delivery agent can investigate independently and a writer merges the notes. If triage must first decide who should handle it, handoff fits.
+    followUps: []
+revision:
+  keyPoints:
+    - 'Choose the pattern by who decides the next step.'
+    - 'Sequential is a fixed pipeline; concurrent fans out and merges.'
+    - 'Handoff moves control to the best agent for the conversation.'
+    - 'Group chat and Magentic use a manager and are the least predictable.'
+    - 'One agent with good tools is often enough.'
+  mistakes:
+    - 'Using Magentic for a task with known steps.'
+    - 'Running dependent tasks concurrently.'
+    - 'No limit on rounds or turns.'
+  examTips:
+    - '"Fixed order, each builds on the last" = **sequential**.'
+    - '"Same input to several agents, combine results" = **concurrent**.'
+    - '"Manager plans and delegates open-ended work" = **Magentic**.'
+  quick:
+    - q: 'Which pattern is a fixed pipeline?'
+      a: 'Sequential.'
+    - q: 'Which runs agents in parallel?'
+      a: 'Concurrent.'
+    - q: 'Which moves control between agents?'
+      a: 'Handoff.'
+    - q: 'Which uses a planning manager?'
+      a: 'Magentic.'
+    - q: 'Which SDK has these builders?'
+      a: 'Microsoft Agent Framework.'
+references:
+  - title: 'Microsoft Agent Framework overview'
+    url: https://learn.microsoft.com/agent-framework/overview/agent-framework-overview
+  - title: 'Agent Framework workflows orchestrations'
+    url: https://learn.microsoft.com/agent-framework/user-guide/workflows/orchestrations/overview
+  - title: 'What is Foundry Agent Service?'
+    url: https://learn.microsoft.com/azure/ai-foundry/agents/overview
+related:
+  - design-agents-roles-goals-and-tools
+  - autonomous-workflows-with-approvals
+  - workflows-and-tool-augmented-flows
+---
+
+## Start with a question
+
+<Story question="Who answers when a customer says, charged twice and still no parcel?">
+
+At a good service desk nobody handles everything. A receptionist listens, a billing clerk checks the charge, a delivery clerk checks the parcel, and someone writes one clear reply. Which clerk speaks first, and whether they work together or one after another, is a decision about the **process**.
+
+**Multi-agent orchestration** is that process for AI agents. Each agent has a narrow job, and the pattern says who goes next.
+
+</Story>
+
+## Explain it like I'm 10
+
+<Eli10>
+
+Imagine a group project where each friend has one job.
+
+Sometimes you pass the work down a line: draft, then check, then finish. That's **sequential**.
+
+Sometimes two friends work at the same time and then combine notes. That's **concurrent**.
+
+Sometimes the first friend says "this is a maths question, ask Sam" and hands over. That's **handoff**.
+
+And sometimes a team captain makes a plan and gives out tasks. That's **Magentic**.
+
+</Eli10>
+
+## The technical explanation
+
+### Pick the pattern by who decides the next step
+
+| Pattern | Who decides | Good for | Watch out |
+| --- | --- | --- | --- |
+| **Sequential** | You, in advance | Draft, then review | Time adds up |
+| **Concurrent** | You, in advance | Independent checks, speed | Results must be merged |
+| **Handoff** | The current agent | Triage to a specialist | The route depends on the conversation |
+| **Group chat** | A manager picks the speaker | Debate and refinement | Set a maximum number of rounds |
+| **Magentic** | A manager plans and delegates | Open-ended tasks | Most calls, least predictable |
+
+### Build it with Microsoft Agent Framework
+
+```python
+# pip install agent-framework-foundry azure-identity
+from azure.identity import AzureCliCredential
+from agent_framework.foundry import FoundryChatClient
+from agent_framework.orchestrations import SequentialBuilder, ConcurrentBuilder
+
+client = FoundryChatClient(project_endpoint=os.environ["FOUNDRY_PROJECT_ENDPOINT"],
+                           model="support-chat", credential=AzureCliCredential())
+triage   = client.as_agent(name="triage",   instructions="Work out what the customer needs. Don't answer it yourself.")
+billing  = client.as_agent(name="billing",  instructions="Answer billing and refund questions from the policy.")
+delivery = client.as_agent(name="delivery", instructions="Answer delivery questions. Use get_order_status.")
+writer   = client.as_agent(name="writer",   instructions="Write one friendly reply from the specialists' notes.")
+reviewer = client.as_agent(name="reviewer", instructions="Check the reply against policy. Say APPROVED or list fixes.")
+
+line     = SequentialBuilder(participants=[triage, writer, reviewer]).build()
+parallel = ConcurrentBuilder(participants=[billing, delivery]).build()      # fan out, then aggregate
+# handoff, group chat and Magentic use HandoffBuilder, GroupChatBuilder and MagenticBuilder
+```
+
+Each agent keeps its own short instructions and only the tools it needs. That's the main reason to split: the billing agent never sees the delivery tool, so it can't call it by mistake.
+
+### Design rules that save you
+
+1. **Start with one agent.** Split when instructions get long or tools collide.
+2. **Narrow jobs.** "Billing" beats "customer helper".
+3. **Limit rounds** in group chat and Magentic, and set timeouts.
+4. **Trace every turn.** When the answer is wrong you need to see which agent said what.
+5. **Evaluate the whole flow**, not just each agent.
+
+Foundry's portal also lets you wire agents into a **workflow** visually (preview as of 25 November 2026). The orchestration patterns above are the same ideas in code.
+
+<TryIt labs="agt-genai-multi-approve" text="Run the support workflow as sequential, concurrent and handoff and compare how control moves." />
+
+<Callout type="exam">
+Translate the wording. "Fixed order, each agent uses the previous output" is **sequential**. "At the same time" and "combine" is **concurrent**. "Transfer the conversation to a specialist" is **handoff**. "A manager builds a plan and tracks tasks" is **Magentic**. The SDK that provides these builders is **Microsoft Agent Framework**.
+</Callout>
+
+<DeepDive title="Cost and latency add up">
+
+Every extra agent turn is another model call. A five-agent sequential pipeline pays five latencies in a row, and a group chat of six rounds may call the model dozens of times. Concurrent runs cut waiting but not tokens. Measure with traces, use small models for narrow agents such as triage, and keep the large model for the agent that needs it.
+
+</DeepDive>
+
+## Real-world business scenario
+
+<Scenario
+  company="Fabrikam Retail (fictional)"
+  industry="Retail"
+  problem="One support agent had eleven tools and long instructions. It picked the wrong tool for billing questions and its replies were inconsistent."
+  service="Five agents built with Microsoft Agent Framework on Foundry models: a triage agent hands off to billing or delivery, both can run concurrently for combined cases, and a writer and reviewer finish sequentially."
+  why="Each agent has short instructions and two or three tools, and the pattern decides who speaks, so mistakes are easier to find in the trace."
+  outcome="Tool-choice errors fell sharply, and the reviewer step caught replies that broke policy before customers saw them."
+/>
+
+## When to use it and when not to
+
+<UseWhen
+  use={[
+    'Different parts of the job need different tools, rules or models.',
+    'Independent checks can run in parallel to save time.',
+    'You want each specialist to be tested and replaced on its own.',
+  ]}
+  avoid={[
+    'One agent with a few tools already works. Keep it simple.',
+    'The task is a fixed script. A workflow of steps is clearer.',
+    'You can\'t afford extra latency and tokens for several model calls.',
+  ]}
+  alternatives={[
+    '<strong>A single agent</strong> with a small set of tools.',
+    '<strong>A workflow</strong> of fixed steps and checks.',
+    '<strong>Routing</strong> to one model or agent based on the request.',
+  ]}
+/>

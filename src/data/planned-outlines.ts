@@ -49,16 +49,6 @@ export const PLANNED_OUTLINES: Record<string, PlannedOutline> = {
     ],
     note: 'SC-500 replaced AZ-500, which Microsoft retired on 31 August 2026. Existing AZ-500 certifications cannot be renewed.',
   },
-  'ai-103': {
-    asOf: 'April 16, 2026', verifiedOn: CHECKED, passingScore: 700, owner: 'Microsoft',
-    domains: [
-      { title: 'Plan and manage an Azure AI solution', weight: '25–30%' },
-      { title: 'Implement generative AI and agentic solutions', weight: '30–35%' },
-      { title: 'Implement computer vision solutions', weight: '10–15%' },
-      { title: 'Implement text analysis solutions', weight: '10–15%' },
-      { title: 'Implement information extraction solutions', weight: '10–15%' },
-    ],
-  },
   'ai-300': {
     asOf: '', verifiedOn: '2026-11-20', passingScore: 700, owner: 'Microsoft',
     domains: [

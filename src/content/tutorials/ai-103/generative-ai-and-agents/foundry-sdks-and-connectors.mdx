@@ -1,0 +1,201 @@
+---
+title: 'Foundry SDKs and Connectors'
+seoTitle: 'Foundry SDK and Project Connections in Python | AI-103'
+description: 'Use the Foundry SDK (azure-ai-projects) with a project endpoint and Entra ID sign-in to reach models, agents and connections such as Azure AI Search, keylessly.'
+answer: >-
+  The **Foundry SDK** (`azure-ai-projects`) opens a project with `AIProjectClient`, using the **project endpoint** and `DefaultAzureCredential`. From it you get an **OpenAI-compatible client**, the project's **deployments**, **agents** and **connections**. A **connection** stores the target and authentication of another resource, such as Azure AI Search or Application Insights, so your code reads it by name instead of holding a URL or a key.
+updated: 2026-11-25
+readingMinutes: 11
+keyTerms:
+  - term: AIProjectClient
+    definition: >-
+      The main class in azure-ai-projects. It connects to one Foundry project through its endpoint.
+  - term: Connection
+    definition: >-
+      A project setting that stores the target and authentication method of another resource, such as Azure AI Search.
+  - term: Project endpoint
+    definition: >-
+      The URL for one project, used to create the client.
+  - term: Managed identity
+    definition: >-
+      An Azure-managed identity that an app uses to get Microsoft Entra ID tokens without a stored secret.
+  - term: OpenAI-compatible client
+    definition: >-
+      A client from get_openai_client() that you call with the OpenAI Responses API shape, using deployment names.
+  - term: Connector
+    definition: >-
+      Informal word for a way to reach another service from a project, such as a connection or a tool.
+interview:
+  - level: beginner
+    q: 'What is a connection in Foundry?'
+    a: >-
+      It is a saved link from the project to another resource, like Azure AI Search, with its address and how to sign in. The app asks the project for it by name, so the address and the secret stay out of the code.
+    followUps: []
+  - level: intermediate
+    q: 'How does the same code run on a laptop and in Azure?'
+    a: >-
+      I create the client with DefaultAzureCredential. On the laptop it uses my signed-in account. In Azure it uses the managed identity of the host. The code doesn't change and holds no key.
+    followUps: []
+  - level: experienced
+    q: 'What do you do when the SDK call returns 403?'
+    a: >-
+      I check the role assignment for the identity on the Foundry resource and, for a connection, on the target resource too. For example the project identity needs Search Index Data Reader on the search service. Then I confirm the endpoint is for the right project.
+    followUps: []
+  - level: scenario
+    q: 'A teammate pasted a key into code to reach Azure AI Search. What do you change?'
+    a: >-
+      I create a project connection to the search service with Microsoft Entra ID authentication, assign the right role, and change the code to read the connection by name and sign in with DefaultAzureCredential. Then I rotate the key that leaked.
+    followUps: []
+revision:
+  keyPoints:
+    - 'AIProjectClient takes the project endpoint and a credential.'
+    - 'get_openai_client() returns the client for model calls.'
+    - 'Connections hold targets and authentication for other resources.'
+    - 'DefaultAzureCredential keeps the same code across environments.'
+    - 'Give the identity the roles it needs on every resource it touches.'
+  mistakes:
+    - 'Hard-coding service URLs and keys.'
+    - 'Forgetting the role assignment, then blaming the SDK for a 403.'
+    - 'Mixing up the resource endpoint and the project endpoint.'
+  examTips:
+    - '"Read the Azure AI Search endpoint without hard-coding it" = **project.connections.get(name)**.'
+    - '"Same code on a laptop and in Azure with no key" = **DefaultAzureCredential**.'
+    - '"Package that contains AIProjectClient" = **azure-ai-projects**.'
+  quick:
+    - q: 'Which package has AIProjectClient?'
+      a: 'azure-ai-projects.'
+    - q: 'What does project.get_openai_client() return?'
+      a: 'An OpenAI-compatible client.'
+    - q: 'What does a connection store?'
+      a: 'A target and its authentication method.'
+    - q: 'Which credential keeps code key-free?'
+      a: 'DefaultAzureCredential.'
+    - q: 'Which value creates the client?'
+      a: 'The project endpoint.'
+references:
+  - title: 'Foundry SDK overview'
+    url: https://learn.microsoft.com/azure/ai-foundry/how-to/develop/sdk-overview
+  - title: 'azure-ai-projects client library for Python'
+    url: https://learn.microsoft.com/python/api/overview/azure/ai-projects-readme
+  - title: 'Add a new connection to your project'
+    url: https://learn.microsoft.com/azure/ai-foundry/how-to/connections-add
+related:
+  - deploy-and-consume-models
+  - tracing-and-token-analytics
+  - rag-in-an-application
+---
+
+## Start with a question
+
+<Story question="Why does a hotel give you a key card instead of the master key?">
+
+A key card opens your room and nothing else, and the front desk can cancel it. A master key opens everything and, if it's lost, every lock is at risk.
+
+An **API key pasted in code** is the master key. **Microsoft Entra ID** with a **managed identity** is the key card: the app proves who it is, gets a short-lived token, and only the rooms its role allows. The **Foundry SDK** is built around that.
+
+</Story>
+
+## Explain it like I'm 10
+
+<Eli10>
+
+Imagine your project is a clubhouse with one front door.
+
+The SDK is the door. You tell it the clubhouse address, which is the **project endpoint**, and show your membership badge, which is your sign-in.
+
+Inside there's a board listing the other places the club can visit: the library and the weather station. Those are **connections**.
+
+You ask the board for "the library" by name. You never carry the library's secret password yourself.
+
+</Eli10>
+
+## The technical explanation
+
+### One client, many doors
+
+```python
+# pip install "azure-ai-projects>=2.3.0" azure-identity
+import os
+from azure.identity import DefaultAzureCredential
+from azure.ai.projects import AIProjectClient
+
+project = AIProjectClient(endpoint=os.environ["FOUNDRY_PROJECT_ENDPOINT"],   # .../api/projects/<project>
+                          credential=DefaultAzureCredential())
+
+openai = project.get_openai_client()                 # model calls with deployment names
+for d in project.deployments.list():                 # what is deployed
+    print(d.name, d.model_name)
+for c in project.connections.list():                 # what the project can reach
+    print(c.name, c.type, c.target)
+```
+
+| You want | Use |
+| --- | --- |
+| Call a model | `project.get_openai_client()` then `responses.create(model=<deployment>)` |
+| List deployments | `project.deployments.list()` |
+| Reach another resource | `project.connections.get("search-contoso")` |
+| Create and run agents | `project.agents` and the agent client |
+| Find the trace destination | The project's telemetry helpers (Application Insights connection string) |
+
+The package also exists for JavaScript, .NET and Java, and the same operations are available over REST, as of 25 November 2026.
+
+### Connections keep secrets out of code
+
+Create a connection in the portal (**Settings > Connected resources**) or with the CLI. A connection has a **category** (for example Azure AI Search or Application Insights), a **target** and an **authentication type**. Prefer **Microsoft Entra ID**. Then grant the right role: the project's managed identity needs **Search Index Data Reader** on the search service, for example.
+
+```bash
+az cognitiveservices account project connection create -n contoso-agents -g rg-agents \
+  --project-name order-desk --connection-name search-contoso --file search-connection.yml
+```
+
+```python
+conn = project.connections.get("search-contoso")     # name in, target out
+print(conn.target)                                   # https://srch-contoso-agents.search.windows.net
+```
+
+### Two endpoints, don't mix them
+
+The **project endpoint** (`.../api/projects/<project>`) is for `AIProjectClient`. The **resource endpoint** (`https://<resource>.services.ai.azure.com/`) is what Foundry Tools and some evaluator settings expect. When a call can't find anything, check you used the right one.
+
+<TryIt labs="agt-genai-deploy-call" text="Set the project endpoint, list the project's connections and deployments, then call a deployment by name." />
+
+<Callout type="exam">
+"Read the Azure AI Search endpoint from the project, with no hard-coded values" is a **connection**. "No key anywhere, laptop and Azure" is **DefaultAzureCredential** with a **managed identity**. A **403** after you create a connection usually means a **missing role** on the target resource.
+</Callout>
+
+<DeepDive title="Local development to production">
+
+Locally, `DefaultAzureCredential` can use your Azure CLI or Visual Studio Code sign-in. In Azure it uses the managed identity assigned to the host. Give each environment its own project and its own endpoint in an environment variable, and keep the identity roles in your infrastructure code. The application code then stays identical from laptop to production.
+
+</DeepDive>
+
+## Real-world business scenario
+
+<Scenario
+  company="Northwind Traders (fictional)"
+  industry="Wholesale"
+  problem="Search URLs and an API key were copied into five services. A key leaked in a public repository, and every environment needed code edits."
+  service="One Foundry project per environment, a connection called search-contoso with Entra ID authentication, a managed identity per service with Search Index Data Reader, and code that reads the connection through AIProjectClient."
+  why="No key remains to leak, the same code runs in every environment, and rotating or moving the search service means editing one connection."
+  outcome="The leaked key was revoked with no outage, and new services connected by name in minutes."
+/>
+
+## When to use it and when not to
+
+<UseWhen
+  use={[
+    'Your app calls Foundry models, agents or evaluations from code.',
+    'Several services need the same search or monitoring resource.',
+    'You want the same code on a laptop and in Azure.',
+  ]}
+  avoid={[
+    'You would store a key in code or a config file.',
+    'A single no-code playground test is enough.',
+    'You need a service the project has no connection or tool for. Call it directly with its own SDK.',
+  ]}
+  alternatives={[
+    '<strong>The OpenAI SDK</strong> directly against the resource endpoint for model calls only.',
+    '<strong>Microsoft Agent Framework</strong> for code-first multi-agent apps.',
+    '<strong>REST calls</strong> when no SDK fits.',
+  ]}
+/>

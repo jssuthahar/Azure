@@ -1,0 +1,152 @@
+{
+ "cert": "ai-103",
+ "domain": 2,
+ "topic": "tracing-and-token-analytics",
+ "questions": [
+  {
+   "id": "agt-g-tracing-and-to-1",
+   "type": "single",
+   "scenario": "Agent runs take about four seconds and the team must find the slowest step.",
+   "question": "What should they examine?",
+   "options": [
+    {
+     "text": "The search index schema",
+     "why": "It does not show run timing."
+    },
+    {
+     "text": "The agent version number",
+     "why": "It does not show timing."
+    },
+    {
+     "text": "The span durations inside a trace",
+     "why": "Correct. Each span shows how long a step took."
+    },
+    {
+     "text": "The model deployment name",
+     "why": "It does not show timing."
+    }
+   ],
+   "answer": [
+    2
+   ],
+   "explanation": "Traces break a run into timed spans such as model calls and tool calls.",
+   "objective": "2.3.3"
+  },
+  {
+   "id": "agt-g-tracing-and-to-2",
+   "type": "single",
+   "scenario": "A finance team needs token usage per model and operation.",
+   "question": "Where do these numbers come from?",
+   "options": [
+    {
+     "text": "The resource group tags",
+     "why": "Tags do not carry token counts."
+    },
+    {
+     "text": "The embedding vector length",
+     "why": "It is not usage data."
+    },
+    {
+     "text": "The index replica count",
+     "why": "It is not token usage."
+    },
+    {
+     "text": "Token usage attributes recorded on the spans, queried in Application Insights",
+     "why": "Correct. Spans record input and output tokens."
+    }
+   ],
+   "answer": [
+    3
+   ],
+   "explanation": "Token analytics use telemetry recorded for model calls.",
+   "objective": "2.3.3"
+  },
+  {
+   "id": "agt-g-tracing-and-to-3",
+   "type": "single",
+   "scenario": "Compliance does not allow prompts and answers containing personal data to be stored in telemetry.",
+   "question": "What should you do?",
+   "options": [
+    {
+     "text": "Leave message content recording switched off",
+     "why": "Correct. Content capture is a separate opt-in."
+    },
+    {
+     "text": "Switch content recording on for production",
+     "why": "It would store prompts and answers."
+    },
+    {
+     "text": "Increase the log retention",
+     "why": "It stores more data for longer."
+    },
+    {
+     "text": "Use a higher temperature",
+     "why": "It is unrelated."
+    }
+   ],
+   "answer": [
+    0
+   ],
+   "explanation": "Record message content only where policy permits, usually in development.",
+   "objective": "2.3.3"
+  },
+  {
+   "id": "agt-g-tracing-and-to-4",
+   "type": "single",
+   "scenario": "A developer wants traces from an agent to appear in the Foundry portal.",
+   "question": "What must be connected to the project?",
+   "options": [
+    {
+     "text": "A storage queue",
+     "why": "It is not the trace store."
+    },
+    {
+     "text": "An Application Insights resource",
+     "why": "Correct. It stores the traces."
+    },
+    {
+     "text": "A second Foundry resource",
+     "why": "It does not store traces for this project."
+    },
+    {
+     "text": "A speech resource",
+     "why": "It is unrelated."
+    }
+   ],
+   "answer": [
+    1
+   ],
+   "explanation": "Connect Application Insights, then enable instrumentation.",
+   "objective": "2.3.3"
+  },
+  {
+   "id": "agt-g-tracing-and-to-5",
+   "type": "single",
+   "scenario": "The GenAI tracing instrumentation for the Foundry SDK is a preview that must be explicitly enabled.",
+   "question": "Which action enables it?",
+   "options": [
+    {
+     "text": "Create a new deployment",
+     "why": "Deployments do not enable tracing."
+    },
+    {
+     "text": "Assign the Reader role",
+     "why": "Roles do not switch on instrumentation."
+    },
+    {
+     "text": "Set AZURE_EXPERIMENTAL_ENABLE_GENAI_TRACING to true",
+     "why": "Correct. It opts in to the instrumentation."
+    },
+    {
+     "text": "Set the temperature to 0",
+     "why": "It is a model setting."
+    }
+   ],
+   "answer": [
+    2
+   ],
+   "explanation": "Tracing is opt-in. Content capture is a separate switch.",
+   "objective": "2.3.3"
+  }
+ ]
+}

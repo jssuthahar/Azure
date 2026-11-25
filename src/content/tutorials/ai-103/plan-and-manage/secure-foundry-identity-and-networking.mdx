@@ -1,0 +1,200 @@
+---
+title: "Secure Foundry: Managed Identity, Keyless Auth and Private Networking"
+seoTitle: "Secure Foundry: Identity and Private Link | AI-103"
+description: Replace API keys with Entra ID and managed identities, assign Foundry roles, disable key auth and public access, and add private endpoints. AI-103 1.3.4.
+answer: >-
+  Use **Microsoft Entra ID** instead of keys. Give the app a **managed identity** and assign it the **Foundry User** role on the resource or project (least privilege), then **disable local (key) authentication** so a leaked key is useless. Close the front door with **public network access: Disabled** and add a **private endpoint** in your virtual network, backed by a **private DNS zone**. Use **role policies** (RBAC and Azure Policy) to keep it that way. In code, use `DefaultAzureCredential` and a token provider, not an API key.
+updated: 2026-11-25
+readingMinutes: 10
+keyTerms:
+  - term: Managed identity
+    definition: An identity that Azure creates and manages for a resource, such as a web app or Foundry resource, so it can get Entra tokens without any stored secret.
+  - term: Keyless authentication
+    definition: Calling a service with a Microsoft Entra ID token instead of an API key. Access is controlled by roles and can be audited per identity.
+  - term: Foundry User role
+    definition: A built-in role that lets an identity use a Foundry project's agents, models and tools through the data plane without managing the resource. Earlier docs called it Azure AI User.
+  - term: Local authentication
+    definition: Access with the resource's API keys. The disableLocalAuth setting turns it off so only Entra ID tokens work.
+  - term: Private endpoint
+    definition: A network interface with a private IP address in your virtual network that connects to one Azure resource over Azure Private Link.
+  - term: Private DNS zone
+    definition: A DNS zone that makes the resource's normal name resolve to the private endpoint's IP inside your network.
+interview:
+  - level: beginner
+    q: Why is keyless authentication better than an API key?
+    a: >-
+      A key is a secret that can leak, be shared and never expire. An Entra ID token is short-lived, tied to an identity I can audit, and access comes from a role I can remove. With a managed identity there's no secret in code or config at all.
+    followUps: []
+  - level: intermediate
+    q: What do you do to a Foundry resource so keys no longer work?
+    a: >-
+      Set disableLocalAuth to true, from the portal's resource settings or with az resource update. After that, only Entra ID tokens are accepted. I'd first make sure every caller is using DefaultAzureCredential with the right role, or they'll start getting 401 and 403 errors.
+    followUps: []
+  - level: experienced
+    q: A private endpoint is created, but the app in the VNet still resolves the public IP. Why?
+    a: >-
+      The private DNS zone isn't linked to the VNet, or the zone group isn't attached to the endpoint, so the name still resolves to the public address. I'd create the privatelink zones for the Foundry resource (cognitiveservices and openai and services.ai domains), link them to the VNet and check the A records.
+    followUps: []
+  - level: scenario
+    q: An app runs in a web app and needs to call a model and read a blob. How do you give it access?
+    a: >-
+      Turn on the web app's managed identity, give it Foundry User on the resource and Storage Blob Data Reader on the storage account, and let the code use DefaultAzureCredential. No keys, and each permission is scoped to what the app needs.
+    followUps: []
+revision:
+  keyPoints:
+    - Use Entra ID tokens through DefaultAzureCredential. Managed identities remove stored secrets.
+    - Assign Foundry User at the narrowest scope that works. Owner and Contributor aren't for app access.
+    - disableLocalAuth true makes keys useless. Public network access Disabled closes the internet door.
+    - A private endpoint needs private DNS to work. Link the zones to the VNet.
+    - Enforce the setup with Azure Policy so a new resource can't be created with keys or public access.
+  mistakes:
+    - Disabling keys before the app is switched to Entra ID.
+    - Creating a private endpoint but forgetting the DNS zone link.
+    - Giving the app Contributor on the resource when a data-plane role is enough.
+  examTips:
+    - '"No secrets in code" = **managed identity** with **DefaultAzureCredential**.'
+    - '"Prevent use of API keys" = **disable local authentication**.'
+    - '"Only reachable from our VNet" = **private endpoint** and **public access disabled**.'
+    - '"Least privilege to call a model" = a **data-plane role** such as Foundry User.'
+  quick:
+    - q: Which setting turns off API keys on a Foundry resource?
+      a: disableLocalAuth set to true.
+    - q: Which class gets tokens in Python without a stored secret?
+      a: DefaultAzureCredential.
+    - q: What does a private endpoint give the resource inside your VNet?
+      a: A private IP address.
+    - q: What makes the normal resource name resolve to that private IP?
+      a: A linked private DNS zone.
+    - q: Which role lets an app use agents and models without managing the resource?
+      a: Foundry User.
+references:
+  - title: Role-based access control for Foundry
+    url: https://learn.microsoft.com/azure/ai-foundry/concepts/rbac-foundry
+  - title: Disable API key access
+    url: https://learn.microsoft.com/azure/ai-services/disable-local-auth
+  - title: Configure private link for Foundry
+    url: https://learn.microsoft.com/azure/ai-foundry/how-to/configure-private-link
+  - title: Managed identities for Azure resources
+    url: https://learn.microsoft.com/entra/identity/managed-identities-azure-resources/overview
+related:
+  - foundry-infrastructure-and-deployment-options
+  - govern-agent-behavior
+---
+
+## Start with a question
+
+<Story question="What happens if the API key is pasted into a public repository?">
+
+A developer at Fabrikam commits `.env` by accident. Within minutes, bots find the key and start sending requests to the company's model deployment. The bill climbs, and every call looks like the real app.
+
+Rotating the key fixes today's leak. It doesn't fix the design. As long as a key can call the service, a key can leak. The design fix is to **remove the key**, and to **close the door** the key was using.
+
+</Story>
+
+## Explain it like I'm 10
+
+<Eli10>
+
+A key is like a house key: anyone who finds it can walk in.
+
+A **managed identity** is like a guard who recognises your face. Nothing to lose or copy.
+
+The **role** is the list that says what that person may do: "may use the model, may not delete it".
+
+A **private endpoint** moves the front door inside a fenced garden. Only people in the garden can reach it, and the street door is bricked up.
+
+</Eli10>
+
+## The technical explanation
+
+### Identity: roles, not keys
+
+1. **Give the app an identity.** Turn on **system-assigned** (or create a **user-assigned**) managed identity for the web app, function, container app or VM.
+2. **Assign a role** on the Foundry resource or project, at the narrowest scope.
+3. **Call with Entra ID** in code.
+
+| Role (scope) | Use it for |
+| --- | --- |
+| **Foundry User** (Azure AI User in older docs) | An app or developer that calls models and agents. Data-plane only. |
+| **Foundry Project Manager** / **Azure AI Project Manager** | Creating projects and managing them, with the right to assign User. |
+| **Foundry Account Owner / Owner** | Managing the resource. Not for apps. |
+| **Cognitive Services OpenAI User** | Calling OpenAI models only |
+
+```bash
+az role assignment create --assignee <managed-identity-principal-id> --role "Foundry User" --scope <foundry-resource-id>
+```
+
+```python
+from azure.identity import DefaultAzureCredential, get_bearer_token_provider
+from openai import OpenAI
+
+token = get_bearer_token_provider(DefaultAzureCredential(), "https://cognitiveservices.azure.com/.default")
+client = OpenAI(base_url="https://contoso-ai.services.ai.azure.com/openai/v1/", api_key=token)
+```
+
+### Turn keys off
+
+After every caller uses Entra ID, disable local authentication. **Portal:** Foundry resource → **Resource Management → Keys and Endpoint** (or the resource's properties) → disable key access. **CLI:**
+
+```bash
+az resource update --ids <foundry-resource-id> --set properties.disableLocalAuth=true
+```
+
+A request signed with a key now fails with 403. You can enforce this for every new resource with the built-in Azure Policy for disabling local authentication.
+
+### Close the public door, open a private one
+
+1. **Resource Management → Networking** → **Public network access: Disabled** (or **Selected networks** with a few allowed IPs).
+2. Create a **private endpoint** with target sub-resource `account` in a subnet of your VNet.
+3. Link the **private DNS zones** (`privatelink.cognitiveservices.azure.com`, `privatelink.openai.azure.com`, `privatelink.services.ai.azure.com`) to the VNet, so the normal name resolves to the private IP.
+4. For the standard agent setup, give the dependent resources (Cosmos DB, Storage, AI Search) private endpoints too, and use a delegated subnet for the agent's own traffic.
+
+```bash
+az network private-endpoint create -g rg-agents -n pe-foundry --vnet-name vnet-agents --subnet snet-pe \
+  --private-connection-resource-id <foundry-resource-id> --group-id account --connection-name pe-foundry-conn
+```
+
+Keep the setup from drifting with **Azure Policy** (deny public access, require private endpoints) and **role policies** such as deny assignments and PIM for admin roles.
+
+<TryIt labs="agt-plan-secure" text="Give a managed identity the Foundry User role, turn off key authentication and public access, and add a private endpoint." />
+
+<Callout type="exam">
+"No credentials stored in the app" means **managed identity** with **Entra ID**. "Stop anyone using keys" means **disableLocalAuth**. "Reachable only from the VNet" means **public access disabled** and a **private endpoint**, with **private DNS**. "Least privilege to call models" means **Foundry User**, not Owner or Contributor. If the app resolves a public IP after you added the endpoint, check the **DNS zone link**.
+</Callout>
+
+<DeepDive title="Why Contributor doesn't let you call a model">
+
+Azure roles split the control plane (create, delete, configure resources) from the data plane (call models, run agents). Contributor is a control-plane role, so it can change the resource but the data actions need a data role. That's why a developer with Owner can still get 401 from the model until Foundry User is assigned. It also means an app identity should never need Contributor to do its job.
+
+</DeepDive>
+
+## Real-world business scenario
+
+<Scenario
+  company="Fabrikam Bank (fictional)"
+  industry="Banking"
+  problem="An API key for the loan assistant was found in a repository, and auditors wanted proof that model traffic never crossed the public internet."
+  service="Managed identity on the app with the Foundry User role, local authentication disabled, public network access disabled, private endpoints with linked private DNS zones, and an Azure Policy that denies new Foundry resources with keys or public access."
+  why="With no key and no public path, the leaked key was worthless, and the endpoint was only reachable from the bank's VNet."
+  outcome="The audit passed, and the team stopped rotating keys every quarter."
+/>
+
+## When to use it and when not to
+
+<UseWhen
+  use={[
+    'The app runs in Azure and can use a managed identity.',
+    'Data is regulated or the company bans public endpoints.',
+    'Auditors need to know which identity called what.',
+  ]}
+  avoid={[
+    'You disable keys before switching every caller to Entra ID.',
+    'You give apps Owner or Contributor to make errors go away.',
+    'You add a private endpoint and skip the DNS zone link.',
+  ]}
+  alternatives={[
+    '<strong>Selected networks</strong> with IP rules for a few trusted addresses, when private endpoints are too much.',
+    '<strong>Service principal with a certificate</strong> for callers outside Azure that can\'t use managed identity.',
+    '<strong>Azure API Management</strong> in front, with its own identity, when many clients need one controlled door.',
+  ]}
+/>

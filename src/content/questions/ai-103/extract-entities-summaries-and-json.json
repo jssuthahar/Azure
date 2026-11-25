@@ -1,0 +1,148 @@
+{
+ "cert": "ai-103",
+ "domain": 4,
+ "topic": "extract-entities-summaries-and-json",
+ "questions": [
+  {
+   "id": "txt-ext-1",
+   "type": "single",
+   "question": "A support application receives free-text tickets. The ticketing system requires a fixed set of fields, and a missing field must never reach it. You use a model deployment. What should you configure?",
+   "options": [
+    {
+     "text": "JSON mode with a prompt that lists the field names",
+     "why": "JSON mode guarantees valid JSON only. It does not guarantee that every field is present."
+    },
+    {
+     "text": "Structured outputs with a JSON schema that has strict set to true and all fields required",
+     "why": "Correct. A strict schema constrains the reply to the declared fields and types."
+    },
+    {
+     "text": "A higher temperature so that the model fills every field",
+     "why": "Temperature affects randomness. It does not enforce a schema."
+    },
+    {
+     "text": "Azure Language key phrase extraction",
+     "why": "Key phrase extraction returns phrases. It does not produce your own fields."
+    }
+   ],
+   "answer": [
+    1
+   ],
+   "explanation": "Structured outputs with strict schema adherence enforce the shape of the reply. JSON mode alone only ensures the output parses.",
+   "objective": "4.1.1"
+  },
+  {
+   "id": "txt-ext-2",
+   "type": "single",
+   "question": "An application must find people, organizations, locations and dates in thousands of emails each hour. The categories are the standard ones, and results must be identical for identical input. Which approach meets the requirements with the least effort?",
+   "options": [
+    {
+     "text": "Azure Language named entity recognition",
+     "why": "Correct. It returns prebuilt categories with confidence scores and consistent output."
+    },
+    {
+     "text": "Fine-tune a model on the emails",
+     "why": "Fine-tuning is unnecessary for standard categories and adds effort."
+    },
+    {
+     "text": "A chat model with a free-text prompt",
+     "why": "Free-text output varies between runs and needs parsing."
+    },
+    {
+     "text": "Azure Translator with a dynamic dictionary",
+     "why": "Translator converts languages. It does not extract entities."
+    }
+   ],
+   "answer": [
+    0
+   ],
+   "explanation": "Prebuilt named entity recognition in Azure Language suits standard categories and predictable output.",
+   "objective": "4.1.1"
+  },
+  {
+   "id": "txt-ext-3",
+   "type": "single",
+   "question": "A bank needs summaries of policy updates for an audit team. Each summary must list the change, the role responsible, the deadline and the control ID, and must say \"Not stated\" when information is missing. Plain summaries omit these items. What should you do first?",
+   "options": [
+    {
+     "text": "Train a custom speech model",
+     "why": "Custom speech applies to audio, not text summaries."
+    },
+    {
+     "text": "Increase the maximum output tokens",
+     "why": "Length is not the problem. The content and layout are."
+    },
+    {
+     "text": "Fine-tune the model before changing the prompt",
+     "why": "Fine-tuning is a later step if prompting cannot hold the format."
+    },
+    {
+     "text": "Add a developer message with the role, a checklist, a glossary and a worked example, and set temperature to 0",
+     "why": "Correct. Domain instructions and an example shape the summary without training."
+    }
+   ],
+   "answer": [
+    3
+   ],
+   "explanation": "Prompt the model with a role, a checklist of required items, a glossary and an example, then lower the temperature for steady output. Consider fine-tuning only if this cannot hold the format.",
+   "objective": "4.1.4"
+  },
+  {
+   "id": "txt-ext-4",
+   "type": "single",
+   "question": "A company extracts the same three fields, policy ID, control ID and approval role, from 100,000 documents each month. Prebuilt entity categories do not cover these fields. The output must be predictable and cost-effective at this volume. Which option fits best?",
+   "options": [
+    {
+     "text": "Custom named entity recognition in Azure Language",
+     "why": "Correct. It learns your entity types from labelled examples and runs as a deployed model."
+    },
+    {
+     "text": "Prebuilt PII detection",
+     "why": "PII detection finds personal data categories, not your own fields."
+    },
+    {
+     "text": "Sentiment analysis with opinion mining",
+     "why": "Opinion mining extracts opinions and targets, not policy fields."
+    },
+    {
+     "text": "A reasoning model prompted for each document",
+     "why": "This works but costs more and varies more than a trained extractor at this volume."
+    }
+   ],
+   "answer": [
+    0
+   ],
+   "explanation": "Custom NER is the Azure Language feature for your own entity types and suits high-volume, repeated extraction.",
+   "objective": "4.1.1"
+  },
+  {
+   "id": "txt-ext-5",
+   "type": "multi",
+   "question": "You use Azure Language to process support tickets. Which two outputs does it provide without any model training? Each correct answer presents a complete solution.",
+   "options": [
+    {
+     "text": "Entities with a category and a confidence score",
+     "why": "Correct. Prebuilt named entity recognition returns these."
+    },
+    {
+     "text": "Output that matches a JSON schema you wrote",
+     "why": "A schema-bound reply comes from a model with structured outputs."
+    },
+    {
+     "text": "A redacted version of the text with personal data masked",
+     "why": "Correct. PII detection returns redacted text."
+    },
+    {
+     "text": "Entities of a type named ApprovalRole",
+     "why": "This custom type requires a trained custom NER model."
+    }
+   ],
+   "answer": [
+    0,
+    2
+   ],
+   "explanation": "Prebuilt Azure Language features return entities and redacted PII. Your own types need custom NER, and your own JSON shape needs a model with structured outputs.",
+   "objective": "4.1.1"
+  }
+ ]
+}

@@ -1,0 +1,188 @@
+---
+title: Foundry Infrastructure and Deployment Options
+seoTitle: Foundry Infrastructure and Deployment Options | AI-103
+description: Design the Azure resources behind a Foundry app, pick basic or standard agent setup, and choose Global, Data Zone, Standard, Provisioned or Batch. AI-103 1.2.
+answer: >-
+  A **Foundry resource** (kind AIServices) holds model deployments, networking, keys and identity. **Projects** inside it separate teams and apps. For agents, the **basic setup** uses Microsoft-managed storage, and the **standard setup** keeps threads, files and vectors in your own **Cosmos DB**, **Storage** and **Azure AI Search**, so you control retention, encryption and networking. Deployment types: **Global Standard** (best throughput, data may be processed anywhere), **Data Zone Standard** (stays in the EU or US zone), **Standard** (one geography), **Provisioned** (reserved PTUs for steady latency) and **Global Batch** (cheaper, results within 24 hours).
+updated: 2026-11-25
+readingMinutes: 10
+keyTerms:
+  - term: Foundry resource
+    definition: The Azure resource (Microsoft.CognitiveServices/accounts, kind AIServices) that holds model deployments, keys, networking and identity for your Foundry projects.
+  - term: Foundry project
+    definition: A workspace inside a Foundry resource for one team or app. It has its own agents, files, connections, evaluations and access control.
+  - term: Standard agent setup
+    definition: An agent setup where threads, files and vector data live in your own Cosmos DB, Storage account and Azure AI Search, instead of Microsoft-managed storage.
+  - term: Data Zone deployment
+    definition: A deployment type that processes data only inside a data zone, such as the EU or the US, while still pooling capacity across regions in that zone.
+  - term: Provisioned throughput (PTU)
+    definition: Reserved model capacity that gives predictable latency and cost for steady, high-volume workloads. Billed for the capacity, whether you use it or not.
+  - term: Global Batch
+    definition: A deployment type for large offline jobs. You upload a file of requests and get results within 24 hours at a lower price.
+interview:
+  - level: beginner
+    q: What's the difference between a Foundry resource and a project?
+    a: >-
+      The resource is the Azure resource that owns the deployments, keys, networking and identity. A project is a workspace inside it for one team or app, with its own agents, files and access. I'd create one resource per environment and boundary, and projects for the teams that share it.
+    followUps: []
+  - level: intermediate
+    q: When do you choose the standard agent setup?
+    a: >-
+      When I need to control where agent data lives: customer-managed keys, private networking, retention rules or audit. It puts threads in my Cosmos DB, files in my Storage account and vectors in my Azure AI Search. The basic setup is quicker and fine for prototypes or low-risk data.
+    followUps: []
+  - level: experienced
+    q: A customer says data must not leave the EU. Which deployment type?
+    a: >-
+      Data Zone Standard, or Data Zone Provisioned if I need reserved capacity. Global deployments may process requests in any region. A regional Standard deployment would also keep data in one geography, but Data Zone gives better capacity and the EU residency they asked for. I'd also check that the model I want is offered in that zone.
+    followUps: []
+  - level: scenario
+    q: Marketing wants 50,000 product descriptions rewritten by morning. Chat traffic is steady all day. How do you deploy?
+    a: >-
+      Two deployments. Provisioned or Standard for the steady chat traffic. Global Batch for the overnight job, because it's cheaper and the 24-hour window is fine. Batch also keeps that job from using up the chat deployment's quota.
+    followUps: []
+revision:
+  keyPoints:
+    - One Foundry resource holds deployments, keys, networking and identity. Projects isolate teams and apps.
+    - Standard agent setup puts agent data in your own Cosmos DB, Storage and AI Search. Basic uses managed storage.
+    - Global = best capacity, any region. Data Zone = EU or US zone. Standard = one geography.
+    - Provisioned gives reserved, predictable throughput. Global Batch is cheaper for jobs that can wait up to 24 hours.
+    - Pick region by model availability, quota and where data must stay.
+  mistakes:
+    - Choosing a Global deployment when a contract says data stays in the EU.
+    - Using the basic agent setup where customer-managed keys or private networking are required.
+    - Putting every team's work in one project with shared access.
+  examTips:
+    - '"Data must remain in the EU" = **Data Zone** (or regional Standard).'
+    - '"Predictable latency at steady high volume" = **Provisioned**.'
+    - '"Process a large file of requests overnight, lowest price" = **Global Batch**.'
+    - '"Control where agent threads and files are stored" = **standard agent setup**.'
+  quick:
+    - q: Which resource kind is a Foundry resource?
+      a: AIServices (Microsoft.CognitiveServices/accounts).
+    - q: Where does the standard agent setup keep thread data?
+      a: In your own Cosmos DB account.
+    - q: Which deployment type keeps processing inside the EU or US zone?
+      a: Data Zone Standard (or Data Zone Provisioned).
+    - q: Which deployment type suits an overnight bulk job?
+      a: Global Batch.
+    - q: What does a Foundry project give you inside a resource?
+      a: A separate workspace with its own agents, files, connections and access.
+references:
+  - title: Foundry architecture
+    url: https://learn.microsoft.com/azure/ai-foundry/concepts/architecture
+  - title: Deployment types in Foundry Models
+    url: https://learn.microsoft.com/azure/ai-foundry/foundry-models/concepts/deployment-types
+  - title: Agent Service environment setup
+    url: https://learn.microsoft.com/azure/ai-foundry/agents/environment-setup
+  - title: Provisioned throughput
+    url: https://learn.microsoft.com/azure/ai-foundry/openai/concepts/provisioned-throughput
+related:
+  - configure-model-and-agent-deployments
+  - secure-foundry-identity-and-networking
+---
+
+## Start with a question
+
+<Story question="Do you rent a desk in a shared office, or build your own floor?">
+
+Contoso is moving a support agent from prototype to production. The prototype ran in a shared sandbox. Now legal says customer chats must stay in the EU, security wants the stored conversations in a database the company owns, and finance wants a steady monthly cost for the busy daytime traffic.
+
+Those three sentences are three infrastructure decisions: **where processing happens**, **who owns the agent's data**, and **how capacity is bought**.
+
+</Story>
+
+## Explain it like I'm 10
+
+<Eli10>
+
+Picture a big building called the **Foundry resource**. Inside it there are rooms called **projects**, one for each team, so nobody messes with another team's toys.
+
+The building can send your questions to a thinking machine **anywhere in the world** (Global), **somewhere in your part of the world** (Data Zone), or **only in this town** (Standard).
+
+You can pay as you go, **reserve a private lane** so it's never busy (Provisioned), or drop off a big pile of homework and pick it up tomorrow (Batch).
+
+</Eli10>
+
+## The technical explanation
+
+### The resources behind a Foundry app
+
+```text
+Resource group
+  Foundry resource (AIServices)  <- deployments, keys, identity, networking
+    Project: support-bot          <- agents, files, evaluations, connections
+  Application Insights            <- traces and metrics
+  Azure AI Search                 <- knowledge bases and indexes (optional)
+  Storage account, Cosmos DB      <- agent data (standard setup)
+  Virtual network + private endpoints (when private)
+```
+
+Plan one Foundry resource per environment or security boundary, and projects per team or app. Region matters: pick it for **model availability**, **quota**, and **where data must stay**. Not every model exists in every region.
+
+**Portal:** Azure portal → **Create a resource** → **Microsoft Foundry** → **Basics** (subscription, resource group, name, region, default project name) → **Storage**, **Networking**, **Identity** → **Review + create**.
+
+```bash
+az cognitiveservices account create -n contoso-ai -g rg-agents -l westeurope --kind AIServices --sku S0 --custom-domain contoso-ai
+```
+
+### Basic or standard agent setup
+
+| Setup | Agent data lives in | Choose it when |
+| --- | --- | --- |
+| **Basic** | Microsoft-managed storage | Prototypes, low-risk data, you want to start fast |
+| **Standard** | **Your** Cosmos DB (threads), Storage (files) and Azure AI Search (vectors) | You need data ownership, customer-managed keys, private networking or audit |
+
+### Deployment types
+
+| Type | Billing | Data processing | Use it for |
+| --- | --- | --- | --- |
+| **Global Standard** | Pay per token | Any Azure region | Most workloads that have no residency limit; newest models first |
+| **Data Zone Standard** | Pay per token | Inside the EU or US zone | Residency without a single-region limit |
+| **Standard** | Pay per token | One Azure geography | Strict single-region rules |
+| **Provisioned** (Global, Data Zone, regional) | Reserved PTUs | As the type says | Steady high volume that needs predictable latency |
+| **Global Batch** | Pay per token, lower price | Any region | Offline jobs where 24 hours is fine |
+
+Deployment types differ in **quota**, and a model may support only some of them. Check the model card.
+
+<TryIt labs="agt-plan-deploy" text="Create a Foundry resource in West Europe, deploy a model on a Data Zone deployment type, then pin its version and capacity." />
+
+<Callout type="exam">
+Match the sentence to the control. "Must not leave the EU" is **Data Zone** or **Standard**. "Highest throughput, no residency rule" is **Global**. "Steady load, predictable latency" is **Provisioned**. "Large offline job, lowest price" is **Global Batch**. "Own the stored threads and files" is the **standard agent setup**. A question about team isolation inside one resource is about **projects**.
+</Callout>
+
+<DeepDive title="Why a Global deployment isn't a data leak">
+
+A Global deployment may process prompts and responses in any region where the model runs. The data at rest still stays in the geography you chose for the resource. Whether that's acceptable depends on your contract and regulation, not on a rule of thumb. If anyone needs a yes or no on "where is my data processed", the deployment type is the answer, and Microsoft's data residency page is the source.
+
+</DeepDive>
+
+## Real-world business scenario
+
+<Scenario
+  company="Northwind Health (fictional)"
+  industry="Healthcare"
+  problem="A triage assistant had to keep all chat data in the EU, keep transcripts in storage the hospital controls, and stay fast at 9 AM when every clinic opens."
+  service="A Foundry resource in West Europe, a project per clinic group, the standard agent setup with the hospital's Cosmos DB, Storage and AI Search, a Data Zone Provisioned deployment for the morning peak, and Global Batch for overnight summaries."
+  why="Data Zone kept processing in the EU, the standard setup put transcripts under the hospital's keys and retention, and provisioned capacity avoided throttling at the peak."
+  outcome="The privacy review passed first time, and morning response times stayed steady through the clinic rush."
+/>
+
+## When to use it and when not to
+
+<UseWhen
+  use={[
+    'Residency, ownership or audit rules decide where data lives.',
+    'Traffic is steady enough to justify reserved capacity (Provisioned).',
+    'Work can wait up to 24 hours (Global Batch).',
+  ]}
+  avoid={[
+    'You pick Provisioned for a spiky, low-volume app and pay for idle capacity.',
+    'You use the basic agent setup for regulated data.',
+    'You choose a region without checking that your model and quota exist there.',
+  ]}
+  alternatives={[
+    '<strong>Global Standard</strong> when speed and price matter more than residency.',
+    '<strong>Standard (regional)</strong> when a rule requires a single geography.',
+    '<strong>A separate resource per environment</strong> when dev and prod need different networking and keys.',
+  ]}
+/>

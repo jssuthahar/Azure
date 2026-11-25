@@ -1,0 +1,199 @@
+---
+title: Quotas, Rate Limits, Scaling and Cost
+seoTitle: Foundry Quotas, Rate Limits, Scaling and Cost | AI-103
+description: Read Foundry quota, handle HTTP 429 with retry and backoff, scale with provisioned throughput and spillover, and control token cost with budgets. AI-103 1.3.1.
+answer: >-
+  **Quota** is tokens per minute (TPM) for each **model, deployment type and region** in a subscription. Each deployment takes a slice of it, and **requests per minute (RPM)** come with the slice (about 6 RPM per 1,000 TPM for OpenAI models). Go past the limit and the service answers **HTTP 429** with a **retry-after** header. Handle it with **exponential backoff and retry**, split load across deployments or regions, use **Provisioned throughput** for steady load with **spillover** to a standard deployment for peaks, and control spend with **token budgets**, **cost alerts**, smaller models, shorter prompts and **caching**.
+updated: 2026-11-25
+readingMinutes: 10
+keyTerms:
+  - term: Quota
+    definition: The tokens-per-minute allowance a subscription has for a model and deployment type in a region. Deployments are carved out of it.
+  - term: TPM and RPM
+    definition: Tokens per minute and requests per minute. A deployment has both limits, and a request is throttled when either is exceeded.
+  - term: HTTP 429
+    definition: The status a Foundry endpoint returns when you exceed a rate limit. The retry-after header says how long to wait.
+  - term: Exponential backoff
+    definition: A retry pattern that waits longer after each failed attempt, often with random jitter, so clients don't all retry at once.
+  - term: Spillover
+    definition: A setting that sends overflow requests from a full provisioned deployment to a standard deployment instead of returning 429.
+  - term: Prompt caching
+    definition: Reusing the processed beginning of a prompt that repeats between requests, which lowers latency and the cost of the repeated input tokens.
+interview:
+  - level: beginner
+    q: What does an HTTP 429 from a model endpoint mean?
+    a: >-
+      I've gone over the tokens-per-minute or requests-per-minute limit for that deployment. The retry-after header says how long to wait. The fix is to back off and retry, or to give the deployment more capacity.
+    followUps: []
+  - level: intermediate
+    q: How do you split quota between deployments?
+    a: >-
+      Quota is per subscription, model, deployment type and region. Each deployment gets a slice of it, so giving one deployment more leaves less for others. I'd give production the larger slice, keep a small one for tests, and delete unused deployments to release quota.
+    followUps: []
+  - level: experienced
+    q: When would you choose provisioned throughput with spillover?
+    a: >-
+      When the base load is steady and high enough that reserved PTUs are cheaper than pay-per-token, and the app needs steady latency. I size the PTUs for the base load, not the peak, and enable spillover so peak requests go to a standard deployment instead of failing.
+    followUps: []
+  - level: scenario
+    q: Costs doubled after a feature launch and nobody knows why. What do you check?
+    a: >-
+      Token metrics per deployment and per project in Azure Monitor and cost analysis, to find which deployment grew. Then the prompts: long system messages, large retrieved context, and loops of tool calls. I'd cut context, cache the stable prefix, move easy tasks to a smaller model, and set a token budget with alerts so the next jump is seen early.
+    followUps: []
+revision:
+  keyPoints:
+    - Quota is TPM per model, deployment type and region. Deployments take slices of it.
+    - RPM comes with the TPM slice. Exceeding either gives HTTP 429.
+    - Handle 429 with retry-after, exponential backoff and jitter.
+    - Provisioned throughput gives steady latency, and spillover sends peak overflow to a standard deployment.
+    - Control cost with budgets and alerts, smaller models, shorter context and caching.
+  mistakes:
+    - Retrying instantly in a tight loop, which makes throttling worse.
+    - Sizing provisioned capacity for the peak and paying for idle PTUs.
+    - Leaving test deployments running, so they hold quota.
+  examTips:
+    - '"Requests fail with 429 at peak" = **backoff and retry**, more capacity, or **spillover**.'
+    - '"Steady, high volume, predictable latency" = **Provisioned**.'
+    - '"Stop unexpected spend" = **budget and alerts**.'
+    - '"Lower cost per request without changing the model" = **shorter prompts and caching**.'
+  quick:
+    - q: What does the retry-after header tell you?
+      a: How many seconds to wait before retrying.
+    - q: What is quota measured in?
+      a: Tokens per minute.
+    - q: What does spillover do?
+      a: Sends overflow from a provisioned deployment to a standard deployment.
+    - q: Which limits can trigger a 429?
+      a: Either tokens per minute or requests per minute.
+    - q: Which retry pattern avoids retry storms?
+      a: Exponential backoff with jitter.
+references:
+  - title: Manage Foundry quota
+    url: https://learn.microsoft.com/azure/ai-foundry/openai/how-to/quota
+  - title: Provisioned throughput spillover
+    url: https://learn.microsoft.com/azure/ai-foundry/openai/how-to/spillover-traffic-management
+  - title: Prompt caching
+    url: https://learn.microsoft.com/azure/ai-foundry/openai/how-to/prompt-caching
+  - title: Plan and manage costs for Foundry
+    url: https://learn.microsoft.com/azure/ai-foundry/how-to/costs-plan-manage
+related:
+  - monitor-models-agents-and-search
+  - foundry-infrastructure-and-deployment-options
+---
+
+## Start with a question
+
+<Story question="Why do users see errors at noon when the app was fine all morning?">
+
+The support bot runs on a deployment with 10K tokens per minute, which is about 60 requests a minute. At 9 AM traffic is light. At noon every branch opens at once, the app sends 300 requests a minute, and 240 of them come back with **429 Too Many Requests**.
+
+Nothing is broken. The deployment is doing what it was configured to do. The job is to decide whether to wait, to add capacity, or to send the overflow somewhere else.
+
+</Story>
+
+## Explain it like I'm 10
+
+<Eli10>
+
+A water slide lets in only so many kids per minute. That's the **quota**.
+
+Too many kids at the top? The lifeguard says "wait 20 seconds" (**429, retry after**). Good kids wait, and wait a bit longer each time.
+
+You can add a **second slide** for rush hour (spillover), or rent a **private slide** for your school group (provisioned).
+
+And to keep your money safe, you buy a limited number of tickets in advance (a **budget**).
+
+</Eli10>
+
+## The technical explanation
+
+### Quota and the slice per deployment
+
+Quota is assigned **per subscription, per region, per model and deployment type**, in thousands of tokens per minute. When you create a deployment you choose its **TPM**, and that comes out of the quota. The matching **RPM** is about **6 per 1,000 TPM** for OpenAI models.
+
+- **Portal:** Foundry portal → **Quota** (or Azure portal → Foundry resource → **Quotas**) shows used and remaining per model and region. Request more with the quota request form.
+- **CLI:** `az cognitiveservices usage list --location eastus`.
+
+Deployments share quota. A new deployment shrinks what's left, and deleting one releases it.
+
+### When you exceed the limit
+
+The endpoint returns **429** with a **retry-after** header. Handle it in the client:
+
+```python
+import random, time
+from openai import RateLimitError
+
+def call_with_backoff(fn, tries=6):
+    for n in range(tries):
+        try:
+            return fn()
+        except RateLimitError as e:
+            wait = float(e.response.headers.get("retry-after", 2 ** n)) + random.random()
+            time.sleep(wait)
+    raise RuntimeError("Still throttled after retries")
+```
+
+The Azure SDKs and the OpenAI client already retry a few times. Tune them, and don't add loops that retry instantly.
+
+### Scale options
+
+| Option | Use it when |
+| --- | --- |
+| **Increase the deployment's TPM** | You have spare quota and the load is persistent |
+| **Request more quota** | The subscription's quota is the limit |
+| **Another deployment or region** | Quota is exhausted in one region. Load balance in the app or with a gateway such as Azure API Management |
+| **Provisioned throughput (PTU)** | Steady high volume that needs predictable latency |
+| **Spillover** | A provisioned deployment is full. Overflow goes to a standard deployment instead of failing |
+| **Batch** | The work can wait up to 24 hours |
+
+### Control cost
+
+1. **Measure**: token counts in Azure Monitor per deployment, and Cost analysis for the resource group.
+2. **Choose smaller models** for easy tasks (previous lesson).
+3. **Trim the prompt**: shorter system messages, fewer retrieved chunks, summaries of long history.
+4. **Cache**: repeated prompt prefixes can be cached by the service.
+5. **Budget and alert**: set an Azure budget with alerts at, say, 80%, and a project-level token limit where available. Tags on resources show which team spent what.
+
+<TryIt labs="agt-plan-quota-monitor" text="Read quota, send traffic at a small deployment, fix the 429s with retry and spillover, and set a daily token budget." />
+
+<Callout type="exam">
+"Requests intermittently fail with 429" means you hit **TPM or RPM**. The quick fix is **retry with backoff**. Lasting fixes are **more capacity**, **another deployment**, or **spillover** from a provisioned deployment. "Reserved capacity with predictable latency" is **PTU**. "Control monthly spend and warn at a threshold" is a **budget with alerts**.
+</Callout>
+
+<DeepDive title="Why sizing PTUs for the peak is a trap">
+
+Provisioned throughput is billed for the capacity you reserve, used or not. If the peak is three times the base load, reserving for the peak means you pay for two thirds of it to sit idle most of the day. Size PTUs for the steady base and let spillover handle the peaks on pay-per-token capacity. Re-check the split every month, because both lines move.
+
+</DeepDive>
+
+## Real-world business scenario
+
+<Scenario
+  company="Contoso Retail (fictional)"
+  industry="Retail"
+  problem="Every lunchtime promotion pushed the shopping assistant into 429 errors, and the monthly bill was a surprise."
+  service="Client retry with exponential backoff and jitter, a provisioned deployment sized for the steady base with spillover to a Global Standard deployment, prompt caching for the long product policy prefix, and a budget with alerts at 80% and 100%."
+  why="Backoff absorbed short bursts, provisioned throughput gave steady latency, spillover covered promotions, and alerts showed the trend before the invoice did."
+  outcome="Errors during promotions stopped, and the finance team could see token spend by team every week."
+/>
+
+## When to use it and when not to
+
+<UseWhen
+  use={[
+    'Load is steady and high, so reserved capacity pays off (provisioned).',
+    'Peaks are short and can overflow to pay-per-token (spillover).',
+    'Several teams share a subscription and need budgets and tags.',
+  ]}
+  avoid={[
+    'You retry in a tight loop without backoff.',
+    'You size provisioned capacity for the peak.',
+    'You leave unused deployments holding quota.',
+  ]}
+  alternatives={[
+    '<strong>Azure API Management</strong> as a gateway to balance across deployments and regions.',
+    '<strong>Global Batch</strong> for work that can wait.',
+    '<strong>A smaller model</strong> when the task allows it.',
+  ]}
+/>

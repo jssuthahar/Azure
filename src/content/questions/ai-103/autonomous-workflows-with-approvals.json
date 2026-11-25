@@ -1,0 +1,152 @@
+{
+ "cert": "ai-103",
+ "domain": 2,
+ "topic": "autonomous-workflows-with-approvals",
+ "questions": [
+  {
+   "id": "agt-g-autonomous-wor-1",
+   "type": "single",
+   "scenario": "An agent can issue refunds. A person must decide before any refund is sent.",
+   "question": "What should you configure?",
+   "options": [
+    {
+     "text": "A larger context window",
+     "why": "It does not add approval."
+    },
+    {
+     "text": "A second deployment of the same model",
+     "why": "It does not pause the run."
+    },
+    {
+     "text": "Require approval on the issue_refund tool",
+     "why": "Correct. The run pauses until a decision is returned."
+    },
+    {
+     "text": "A lower temperature for the model",
+     "why": "Temperature does not control approval."
+    }
+   ],
+   "answer": [
+    2
+   ],
+   "explanation": "Approval modes pause tool calls until a person decides.",
+   "objective": "2.2.5"
+  },
+  {
+   "id": "agt-g-autonomous-wor-2",
+   "type": "single",
+   "scenario": "Policy states a refund above ₹20,000 must never be issued by the agent, whatever a reviewer says.",
+   "question": "Where should you enforce the limit?",
+   "options": [
+    {
+     "text": "In the system message only",
+     "why": "A model can ignore or misread instructions."
+    },
+    {
+     "text": "In the temperature setting",
+     "why": "It does not apply business rules."
+    },
+    {
+     "text": "In the Application Insights connection",
+     "why": "Monitoring does not enforce limits."
+    },
+    {
+     "text": "In the tool code, as a rule that rejects larger amounts",
+     "why": "Correct. Code enforces the limit regardless of the model or the approver."
+    }
+   ],
+   "answer": [
+    3
+   ],
+   "explanation": "Use code for absolute limits and approvals for judgement calls.",
+   "objective": "2.2.5"
+  },
+  {
+   "id": "agt-g-autonomous-wor-3",
+   "type": "single",
+   "scenario": "An auditor asks who approved a refund and when.",
+   "question": "What should have been captured?",
+   "options": [
+    {
+     "text": "The tool call and the approval decision in the trace",
+     "why": "Correct. Traces provide the audit record."
+    },
+    {
+     "text": "The model temperature",
+     "why": "It does not show who approved."
+    },
+    {
+     "text": "The embedding model name",
+     "why": "It is unrelated to approval."
+    },
+    {
+     "text": "The chunk size",
+     "why": "It does not relate to approvals."
+    }
+   ],
+   "answer": [
+    0
+   ],
+   "explanation": "Record tool calls and decisions so that actions can be audited.",
+   "objective": "2.2.5"
+  },
+  {
+   "id": "agt-g-autonomous-wor-4",
+   "type": "single",
+   "scenario": "An agent has two tools: lookup_order, which reads data, and issue_refund, which moves money.",
+   "question": "Which tools should normally require approval?",
+   "options": [
+    {
+     "text": "Neither tool",
+     "why": "Money movement should be reviewed."
+    },
+    {
+     "text": "issue_refund only",
+     "why": "Correct. Write actions with financial impact carry the risk."
+    },
+    {
+     "text": "lookup_order only",
+     "why": "The read-only tool carries less risk."
+    },
+    {
+     "text": "Both tools identically",
+     "why": "Approving every read adds friction without equal risk reduction."
+    }
+   ],
+   "answer": [
+    1
+   ],
+   "explanation": "Apply approval where impact is high and keep low-risk reads smooth.",
+   "objective": "2.2.5"
+  },
+  {
+   "id": "agt-g-autonomous-wor-5",
+   "type": "single",
+   "scenario": "A run is paused with a pending approval request.",
+   "question": "What must the application do to continue the run?",
+   "options": [
+    {
+     "text": "Increase the quota",
+     "why": "It does not answer the request."
+    },
+    {
+     "text": "Restart the application and hope the tool runs",
+     "why": "The decision is still required."
+    },
+    {
+     "text": "Return an approval response that approves or rejects the request",
+     "why": "Correct. The run resumes after a decision."
+    },
+    {
+     "text": "Delete the conversation",
+     "why": "It would discard the run."
+    }
+   ],
+   "answer": [
+    2
+   ],
+   "explanation": "Approval requests are answered with a decision, then the run resumes.",
+   "objective": "2.2.5"
+  }
+ ]
+}

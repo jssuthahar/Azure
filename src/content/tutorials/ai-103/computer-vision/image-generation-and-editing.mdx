@@ -1,0 +1,198 @@
+---
+title: Generate and Edit Images
+seoTitle: Generate and Edit Images with gpt-image in Foundry | AI-103
+description: >-
+  Generate images from prompts and edit them with masks using gpt-image in Microsoft Foundry: size, quality, format, transparent backgrounds and input fidelity.
+answer: >-
+  To **generate an image**, you send a prompt to a **gpt-image deployment** and choose the **size**, **quality**, number of images and **output format**. To **edit** an image, you send the picture, a prompt and, for a precise change, a **mask**: a PNG of the same size where the **transparent** area is the only part the model may change. The image comes back as **base64**, and a transparent background needs **PNG**.
+updated: 2026-11-25
+readingMinutes: 9
+keyTerms:
+  - term: gpt-image
+    definition: The family of Azure OpenAI image models, such as gpt-image-1, that generate and edit images from text prompts and reference images.
+  - term: Mask
+    definition: A PNG with the same dimensions as the image where transparent pixels mark the area an edit may change.
+  - term: Inpainting
+    definition: Repainting only a selected region of an existing image, usually with a mask and a prompt.
+  - term: Input fidelity
+    definition: An edit setting (low or high) that controls how closely the model keeps faces, logos and fine details from the input image.
+  - term: Content credentials
+    definition: Provenance metadata added to generated images so that others can tell they were made by AI.
+interview:
+  - level: beginner
+    q: How do you change only the sky in a photo with a gpt-image model?
+    a: >-
+      I call the image edit operation with the photo, a prompt that describes the new sky and a mask. The mask is a PNG the same size as the photo, and the sky area is transparent. Only that area can change.
+    followUps:
+      - q: What if I leave the mask out?
+        a: >-
+          Then the prompt is the only guide, and the model can redraw other parts too. I'd add the mask and set input fidelity to high.
+  - level: intermediate
+    q: A designer wants a logo with no background. What do you set?
+    a: >-
+      I set the output format to PNG and the background to transparent. JPEG can't hold transparency, and WEBP isn't supported for output here.
+    followUps: []
+  - level: experienced
+    q: How would you control cost for a banner tool that makes many variations?
+    a: >-
+      I'd use low quality for drafts and n up to 10 per request, and only render the chosen draft at high quality. I'd also set a token budget on the project and a guardrail on the deployment.
+    followUps: []
+  - level: scenario
+    q: The app tries to read a URL from the response and gets nothing. Why?
+    a: >-
+      gpt-image models return base64 data only. I'd decode the b64_json value, save it as a file or upload it to Blob Storage, and share that link.
+    followUps: []
+revision:
+  keyPoints:
+    - Generation and edits use a gpt-image deployment, and your code sends the deployment name as the model.
+    - Sizes are 1024x1024, 1024x1536 and 1536x1024. Quality is low, medium or high. n is 1 to 10.
+    - Output format is PNG or JPEG. A transparent background needs PNG.
+    - A mask is a PNG of the same size, and transparent pixels are the area that can change.
+    - Images come back as base64. Guardrails check prompts, and generated images carry content credentials.
+  mistakes:
+    - Editing without a mask and expecting only one area to change.
+    - Using a mask with different dimensions from the image.
+    - Asking for WEBP output or a transparent background in JPEG.
+  examTips:
+    - '"Change only part of an image" = **mask-based edit** (transparent area).'
+    - '"Transparent background" = **PNG** output with background transparent.'
+    - '"Keep faces and logos close to the original" = **input_fidelity high**.'
+  quick:
+    - q: What does the transparent area of a mask mean?
+      a: It is the area the model may change.
+    - q: Which format gives a transparent background?
+      a: PNG.
+    - q: How many images can one request create?
+      a: 1 to 10, set with n.
+    - q: In what form does gpt-image return the picture?
+      a: Base64 data, not a URL.
+    - q: Which setting keeps faces and logos closer to the input?
+      a: input_fidelity set to high.
+references:
+  - title: Image generation with Azure OpenAI in Microsoft Foundry Models
+    url: https://learn.microsoft.com/azure/ai-foundry/openai/how-to/dall-e
+  - title: Content credentials for Azure OpenAI image and video models
+    url: https://learn.microsoft.com/azure/ai-foundry/openai/concepts/content-credentials
+  - title: Study guide for Exam AI-103
+    url: https://learn.microsoft.com/en-us/credentials/certifications/resources/study-guides/ai-103
+related:
+  - video-generation-and-editing
+  - multimodal-image-understanding
+  - responsible-ai-for-visual-content
+---
+
+## Start with a question
+
+<Story question="Priya Sweets has one good photo of the shop, but the sky is flat grey. Can the owner fix just the sky without hiring a designer?">
+
+Yes, and that's a different job from asking for a brand new picture.
+
+When you ask a model to **generate**, it starts from a blank canvas and paints what your words describe. When you ask it to **edit**, it starts from your photo and has to decide what to keep. A **mask** is how you tell it: change this part, leave the rest.
+
+</Story>
+
+## Explain it like I'm 10
+
+<Eli10>
+
+Imagine a colouring book page that you traced onto thin paper.
+
+Where you cut a hole in the paper, you're allowed to colour. Everywhere else is covered, so the shop sign can't get a stray crayon mark.
+
+The hole is the **mask**. The crayons are the **prompt**.
+
+</Eli10>
+
+## The technical explanation
+
+In Microsoft Foundry you deploy an image model such as **gpt-image-1**. Your code calls the images API with the **deployment name** in the `model` field.
+
+### Generate
+
+```python
+import base64, os
+from openai import OpenAI
+from azure.identity import DefaultAzureCredential, get_bearer_token_provider
+
+token = get_bearer_token_provider(DefaultAzureCredential(), "https://ai.azure.com/.default")
+client = OpenAI(base_url=os.environ["AZURE_OPENAI_ENDPOINT"].rstrip("/") + "/openai/v1/", api_key=token)
+
+result = client.images.generate(
+    model="gpt-image-1",          # your deployment name
+    prompt="Festival banner for Priya Sweets, laddoos on a brass tray, warm light",
+    size="1536x1024", quality="low", n=2,
+    output_format="png", background="auto",
+)
+for i, item in enumerate(result.data, 1):
+    open(f"banner_{i}.png", "wb").write(base64.b64decode(item.b64_json))   # base64 only
+```
+
+The controls you're expected to know (checked on Microsoft Learn, 25 November 2026):
+
+| Setting | Values | Notes |
+| --- | --- | --- |
+| `size` | 1024x1024, 1024x1536, 1536x1024 | Square, portrait, landscape |
+| `quality` | low, medium, high | Higher costs more and takes longer |
+| `n` | 1 to 10 | Images per request |
+| `output_format` | png, jpeg | No WEBP for output |
+| `background` | auto, transparent | Transparent needs PNG |
+
+### Edit with a mask
+
+```python
+result = client.images.edit(
+    model="gpt-image-1",
+    image=open("shop-front.png", "rb"),
+    mask=open("mask.png", "rb"),             # PNG, same size, transparent = may change
+    prompt="Replace the grey sky with a warm sunset. Keep everything else unchanged.",
+    input_fidelity="high",                   # keep faces, logos and text close to the original
+)
+```
+
+An edit works in three ways. **Mask-based** (inpainting) changes only the transparent area. **Prompt-driven** edits send the image with no mask, and the model decides what to touch, which is fine for a style change but risky for exact details. You can also send **reference images** so a new picture borrows a product or a style.
+
+<Callout type="exam">
+When a question says "only the background" or "everything else must stay the same", the answer is a **mask-based edit**. When it says "transparent background", look for **PNG**. When it says "the response had no URL", remember gpt-image returns **base64**.
+</Callout>
+
+### What guardrails do here
+
+A guardrail on the deployment checks the **prompt**, and unsafe requests are refused before any image is made. Generated images also carry **content credentials**, so people can see they came from AI. Both belong in your design, not in an afterthought.
+
+<DeepDive title="Why does the same prompt give a different picture every time?">
+
+Image models sample, so a prompt is a brief, not a recipe. Put the subject, style, light and layout in the prompt, then use `n` to get several options. When one detail must be exact, such as a logo, don't ask the model to draw it from memory. Supply it as a reference image or add it afterwards in your own code, and review the result.
+
+</DeepDive>
+
+<TryIt labs="agt-vision-image" text="Generate two banners, make a transparent logo, edit the shop photo with a mask and see a guardrail block an unsafe prompt." />
+
+## Real-world business scenario
+
+<Scenario
+  company="Priya Sweets"
+  industry="Food retail"
+  problem="The marketing team made fifty festival banners by hand each year, and every photo edit risked changing the shop sign."
+  service="A gpt-image deployment in Foundry. Banners are generated at low quality for drafts, photos are edited with a mask, and the chosen draft is rendered again at high quality."
+  why="The mask keeps the sign and counters untouched, PNG gives clean logos, and the deployment's guardrail checks every prompt."
+  outcome="The team reviewed ten drafts in the time it used to take to brief one, and no sign was altered by mistake."
+/>
+
+## When to use it and when not to
+
+<UseWhen
+  use={[
+    'You need new marketing or concept images from a text brief.',
+    'You must change one region of an existing image and keep the rest.',
+    'You want several variations in a single request.',
+  ]}
+  avoid={[
+    'You need an exact logo or legal text drawn perfectly. Place the real asset yourself.',
+    'You need to read or classify photos you already have.',
+    'The image could show a real person without their consent.',
+  ]}
+  alternatives={[
+    'A multimodal chat model to describe or question existing images.',
+    'Content Understanding when every image needs the same fields.',
+  ]}
+/>

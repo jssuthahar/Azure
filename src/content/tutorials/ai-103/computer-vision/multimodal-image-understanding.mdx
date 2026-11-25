@@ -1,0 +1,187 @@
+---
+title: 'Multimodal Image Understanding: Captions, Alt Text and Visual Q&A'
+seoTitle: Captions, Alt Text and Visual Q&A in Foundry | AI-103
+description: Use a multimodal chat model in Foundry to caption one or many images, answer questions from visible evidence and write accessible alt text.
+answer: >-
+  A **multimodal chat model** such as **gpt-4.1-mini** reads **images** sent with your prompt, and the **prompt** decides the result: a **concise** or **detailed caption**, an answer to a **visual question** grounded in what's visible, or **alt text** that follows accessibility rules. One request can carry up to **10 images**, and the **detail** setting (low, high, auto) trades cost and speed against small text.
+updated: 2026-11-25
+readingMinutes: 9
+keyTerms:
+  - term: Multimodal model
+    definition: A model that accepts more than one kind of input, such as text and images, in the same request.
+  - term: Visual question answering
+    definition: Answering a question about an image, ideally using only what the image shows.
+  - term: Alt text
+    definition: A short text alternative for an image that a screen reader can read aloud.
+  - term: Extended description
+    definition: A longer description of a complex image, shown on the page or linked, when alt text is too short to carry the meaning.
+  - term: Detail parameter
+    definition: An image input setting (low, high or auto) that controls the resolution the model uses, and so the cost and the ability to read small text.
+interview:
+  - level: beginner
+    q: What changes between a short caption and a detailed one?
+    a: >-
+      Only the prompt. The same model and the same photo give one sentence or a full description depending on what I ask for, so I put the length and the style in the instructions.
+    followUps: []
+  - level: intermediate
+    q: How do you stop a model from guessing about a photo?
+    a: >-
+      I tell it to answer only from what's visible and to say it can't tell otherwise. I also keep the temperature low and test with questions the photo can't answer.
+    followUps: []
+  - level: experienced
+    q: What goes into good alt text instructions?
+    a: >-
+      Purpose first, short, meaningful text in the picture read out, no "image of", and empty alt for decorative images. For charts and diagrams I produce a separate extended description.
+    followUps: []
+  - level: scenario
+    q: Small printed text on parcel labels keeps being misread. What do you try?
+    a: >-
+      I switch detail from low or auto to high so the model sees more of the image. If it still fails, I'd crop to the label first or use Content Understanding with a field for the label text.
+    followUps: []
+revision:
+  keyPoints:
+    - Use a deployment whose model accepts image input, such as gpt-4.1-mini.
+    - Images go in an image_url content part as a URL or base64 data URL.
+    - Up to 10 images per request. Detail is low, high or auto.
+    - Prompts set concise vs detailed captions, grounded Q&A and alt text rules.
+    - Boxes or locations from a language model are approximate.
+  mistakes:
+    - Sending an image to a text-only deployment.
+    - Letting the model answer from imagination instead of visible evidence.
+    - Writing alt text that starts with "image of" or describes decoration.
+  examTips:
+    - '"Short description for a thumbnail" = **concise caption prompt**.'
+    - '"Answer only from the image" = **grounding instruction** in the system message.'
+    - '"Screen reader users" = **alt text**; long complex image = **extended description**.'
+  quick:
+    - q: How many images can one request contain?
+      a: Up to 10.
+    - q: Which setting helps read small text?
+      a: detail set to high.
+    - q: What controls concise or detailed output?
+      a: The prompt.
+    - q: What should alt text describe?
+      a: The purpose of the image, briefly.
+    - q: How do you reduce guessing?
+      a: Tell the model to answer only from what's visible and to say when it can't tell.
+references:
+  - title: Use vision-enabled chat models
+    url: https://learn.microsoft.com/azure/ai-foundry/openai/how-to/gpt-with-vision
+  - title: Study guide for Exam AI-103
+    url: https://learn.microsoft.com/en-us/credentials/certifications/resources/study-guides/ai-103
+related:
+  - content-understanding-for-images-and-video
+  - responsible-ai-for-visual-content
+  - image-generation-and-editing
+---
+
+## Start with a question
+
+<Story question="You send a friend a photo of a dented car door and ask, 'Which door is it?' Why does your friend answer so quickly?">
+
+They look at the photo, find the dent and tell you. If you ask, "How old is the car?" they'll say, "I can't tell from this picture."
+
+That's the behaviour you want from a **multimodal model**. It reads the image and your question together, answers from what it sees, and says so when the photo doesn't show the answer.
+
+</Story>
+
+## Explain it like I'm 10
+
+<Eli10>
+
+A multimodal model is a helper who can read words and look at pictures at the same time.
+
+You hand over a photo and a note. If the note says "one short sentence", you get one short sentence. If it says "tell me everything", you get a long story.
+
+A good helper also says "I can't see that" instead of making something up.
+
+</Eli10>
+
+## The technical explanation
+
+Pick a deployment whose model takes **image input**, such as **gpt-4.1-mini**. A text-only deployment returns an error when you attach a picture.
+
+### Send an image
+
+```python
+response = client.chat.completions.create(
+    model="gpt-4.1-mini",                      # deployment name
+    messages=[
+        {"role": "system", "content": "Answer only from what is visible. If the image does not show it, say you can't tell."},
+        {"role": "user", "content": [
+            {"type": "text", "text": "Which door is damaged?"},
+            {"type": "image_url", "image_url": {"url": data_url, "detail": "high"}},
+        ]},
+    ],
+)
+print(response.choices[0].message.content)
+```
+
+`url` can be a web address or a **base64 data URL**. Add more `image_url` parts to send several images (up to **10** in one request).
+
+| Detail | What the model sees | Use it for |
+| --- | --- | --- |
+| `low` | A reduced version | Fast, cheap captions and big objects |
+| `high` | More of the full image | Small text, tiny objects |
+| `auto` | The service decides | A sensible default |
+
+### Four jobs, four prompts
+
+| Job | What the prompt asks for |
+| --- | --- |
+| **Concise caption** | "One sentence, under 20 words, no opinions." Good for galleries and notifications. |
+| **Detailed caption** | "Describe layout, colours, objects, readable text and anything unusual." Good for reports and search. |
+| **Grounded Q&A** | "Answer only from what is visible. If it isn't shown, say you can't tell." |
+| **Alt text** | Purpose first, short, read out meaningful text, no "image of", empty for decoration. |
+
+With **several images** in one request, the model can also compare them: "Which of these photos shows damage?"
+
+### Alt text and extended descriptions
+
+Alt text is for people who can't see the image. Keep it to the point, around a sentence. A chart or a floor plan often needs more. Put the short version in `alt` and offer an **extended description** in the page text or a linked page. The guidance comes from accessibility standards such as WCAG, and your prompt is where you apply it.
+
+### Locating things
+
+You can ask the model to return JSON with a label and a box for each object, as fractions of the image width and height. Treat the boxes as **approximate**. Draw them for a person to confirm, or use Content Understanding when you need repeatable fields.
+
+<Callout type="exam">
+Three signals to watch for. "Answer only from the image" means a **grounding** instruction. "Screen reader" means **alt text**. "Small text is missed" means **detail high**, not a bigger model or a higher temperature.
+</Callout>
+
+<DeepDive title="What if the photo contains text that gives orders?">
+
+The model reads that text like any other part of the picture, and it might obey it. That's an indirect prompt injection, and it gets its own lesson in this module. For now remember one rule: text inside an image is **data**, not a command.
+
+</DeepDive>
+
+<TryIt labs="agt-vision-understand" text="Caption photos concisely and in detail, ask a grounded question, write alt text and locate the damage." />
+
+## Real-world business scenario
+
+<Scenario
+  company="Fabrikam Insurance"
+  industry="Insurance"
+  problem="Adjusters opened 2,000 car photos a day, and the claims site had no alt text for the images it showed."
+  service="A gpt-4.1-mini deployment in Foundry. One prompt writes a concise caption for the claim list, another answers grounded questions such as which door is damaged, and a third writes alt text."
+  why="The model reads photos in the same request as the question, grounding instructions stop guesses about hidden details, and accessibility rules live in the prompt."
+  outcome="Adjusters triaged photos from the caption list, and the claims site passed its accessibility review."
+/>
+
+## When to use it and when not to
+
+<UseWhen
+  use={[
+    'People need flexible descriptions, summaries or answers about photos.',
+    'You want captions or alt text without training a custom model.',
+    'A question comes with the image and the answer changes each time.',
+  ]}
+  avoid={[
+    'A database needs the same typed fields for every photo.',
+    'You need exact coordinates or measurements.',
+    'The image text might carry hidden instructions and the model has powerful tools.',
+  ]}
+  alternatives={[
+    'Content Understanding analyzers for repeatable fields.',
+    'A custom vision model when you must detect one narrow class very accurately.',
+  ]}
+/>
