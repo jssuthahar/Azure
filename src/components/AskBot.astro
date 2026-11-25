@@ -25,6 +25,7 @@ const here = exams.find((e) => e.slug === Astro.url.pathname.split('/')[1])?.slu
     <div class="ask-head">
       <p id="ask-title" class="ask-title">Ask Nimbus <span id="ask-exam" class="ask-exam"></span></p>
       <button id="ask-switch" type="button" class="ask-hbtn" hidden>Change exam</button>
+      <button type="button" class="ask-hbtn" data-coach-open aria-label="My study plan" title="My study plan"><span aria-hidden="true">🎯</span></button>
       <button id="ask-close" type="button" class="ask-hbtn ask-x" aria-label="Close chat">✕</button>
     </div>
     <div id="ask-log" class="ask-log" role="log" aria-live="polite"></div>

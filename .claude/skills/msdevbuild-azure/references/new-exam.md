@@ -17,7 +17,8 @@ Design reference (approved by the owner): https://claude.ai/artifact/DSB44hzwHVY
 5. **Content**: lessons in `src/content/tutorials/<exam>/<module>/<topic>.mdx` and **original** questions in `src/content/questions/<exam>/` with `cert: '<exam>'` and the right `domain` (1..n). Follow [content.md](content.md) and [voice.md](voice.md).
 6. **Site-wide surfaces** that still assume one exam must list all live exams: home page, sitemap page, llms.txt / llms-full.txt, progress page, header Learn menu, manifest shortcuts, `/app/` save list, offline page groups, OG hub cards in `og-pages.ts`.
 7. **Certificate**: give each exam its own ID prefix and storage key (today it is `MSDB-AZ900-…` in `src/lib/certificate.ts`, one shared key). Keep existing AZ-900 certificates valid.
-8. **Verify**: `npm run verify`. The lessons check reads every exam folder automatically; extend `scripts/qa/layout.mjs` and `a11y.mjs` page lists with the new exam's hub, a lesson and its mock exam.
+8. **Nimbus Coach**: add the exam's row to `src/data/next-exams.ts` (what to take after it), and add it to the lists of the exams that should lead to it.
+9. **Verify**: `npm run verify`. The lessons check reads every exam folder automatically; extend `scripts/qa/layout.mjs` and `a11y.mjs` page lists with the new exam's hub, a lesson and its mock exam.
 
 ## Rules while doing it
 

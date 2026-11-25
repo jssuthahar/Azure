@@ -72,7 +72,8 @@ import { SITE, SUPPORT } from '../config';
         const a = document.activeElement as HTMLElement | null;
         return document.documentElement.classList.contains('presenting') || !!document.fullscreenElement
           || !!a?.closest('input, textarea, select, [contenteditable="true"], .knowledge-check, [data-quiz]')
-          || !!document.querySelector('dialog[open]');
+          || !!document.querySelector('dialog[open]')
+          || !!document.querySelector('[data-coach]:not([hidden])');
       };
       const timer = window.setInterval(() => {
         const ms = visibleMs + (t0 ? performance.now() - t0 : 0);

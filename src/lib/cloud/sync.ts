@@ -79,7 +79,12 @@ export function mergeDeck(a: Deck, b: Deck): Deck {
   return out;
 }
 
-const mergePlan = (a: Record<string, unknown>, b: Record<string, unknown>) => ({ ...b, ...a });
+/** Plans per exam: this device wins. `_coach` (Nimbus Coach, see coach.ts): the newer copy wins. */
+const mergePlan = (a: Record<string, any>, b: Record<string, any>) => {
+  const out = { ...b, ...a };
+  if (a._coach && b._coach) out._coach = (b._coach.updated ?? 0) > (a._coach.updated ?? 0) ? b._coach : a._coach;
+  return out;
+};
 const mergeCert = (a: Cert, b: Cert) => (b.scaled > a.scaled ? b : a);
 
 function merge(k: Name, local: string | null, remote: string | null): string | null {
