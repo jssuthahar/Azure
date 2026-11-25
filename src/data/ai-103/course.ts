@@ -56,7 +56,7 @@ export const COURSE: CourseInfo = {
     servicesTitle: 'Azure AI Apps and Agents Services Reference',
     services: 'Every AI-103 service in 60 seconds: Foundry, Agent Service, Foundry IQ, Azure AI Search, Content Understanding, Speech, Language, Vision and Content Safety.',
     sandboxTitle: 'AI-103 Sandbox: Free Foundry and Azure Simulator | MSDEVBUILD',
-    whoAmI: 'Who Am I? Guess the Azure AI Apps and Agents Service Game | MSDEVBUILD',
+    whoAmI: 'Who Am I? AI-103 Azure AI Service Game | MSDEVBUILD',
   },
   labs: {
     title: 'AI-103 Practice Labs: Free Foundry Simulator | MSDEVBUILD',

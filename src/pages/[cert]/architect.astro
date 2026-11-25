@@ -69,7 +69,7 @@ const faq = [
           <button type="button" class="btn btn-outline btn-sm" data-ab-undo>↶ Undo</button>
           <button type="button" class="btn btn-outline btn-sm" data-ab-clear>Clear</button>
           <label class="sr-only" for="ab-export">Export</label>
-          <select id="ab-export" data-ab-export><option value="">Export…</option><option value="png">PNG image</option><option value="svg">SVG diagram</option><option value="json">JSON (re-import)</option></select>
+          <select id="ab-export" data-ab-export><option value="">Export or share…</option><option value="link">🔗 Share link</option><option value="png">PNG image</option><option value="svg">SVG diagram</option><option value="json">JSON (re-import)</option></select>
           <label class="btn btn-outline btn-sm ab-import">Import<input type="file" accept="application/json,.json" data-ab-import class="sr-only"></label>
         </div>
       </div>
@@ -184,6 +184,11 @@ const faq = [
   .lg-backend { --lc: #107c10; } .lg-nsg { --lc: #ca5010; } .lg-pip { --lc: #7a4fc0; } .lg-peer { --lc: #0078d4; } .lg-pe { --lc: #00838f; } .lg-vpn { --lc: #2b4f8c; } .lg-route { --lc: #c42b30; } .lg-dnslink { --lc: #00838f; }
   .lg-peer::before, .lg-dnslink::before, .lg-vpn::before, .lg-route::before { border-top-style: dashed !important; }
   :global(.ab-pal .ab-ico) { color: var(--accent-deep); flex: none; }
+  :global(.ab-share) { width: min(560px, calc(100vw - 2rem)); padding: 1.2rem 1.3rem; border-radius: 16px; border: 1px solid var(--card-line); background: var(--card); color: var(--text); box-shadow: 0 30px 70px -20px rgb(0 0 0 / .5); }
+  :global(.ab-share::backdrop) { background: rgb(0 20 40 / .45); }
+  :global(.ab-share h2) { font-size: 1.15rem; font-weight: 800; }
+  :global(.ab-share p) { margin: .5rem 0 .8rem; font-size: .9rem; line-height: 1.55; color: var(--text-muted); }
+  :global(.ab-share .ab-share-close) { margin: .9rem 0 0; text-align: right; }
   .ab-toast[data-tone="bad"] { background: var(--bad); }
   .ab-toast[data-tone="ok"] { background: var(--ok); }
   .ab-ghost { position: fixed; left: 0; top: 0; z-index: 60; pointer-events: none; border-radius: 8px; padding: .35rem .6rem; background: var(--accent); color: #fff; font-size: .85rem; font-weight: 600; box-shadow: 0 6px 16px rgb(0 0 0 / .25); }

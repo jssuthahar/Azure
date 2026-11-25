@@ -23,6 +23,7 @@ for (const exam of exams) for (const [dev, viewport] of SIZES) {
   const expect = (ok, msg) => { if (!ok) fail.push(`${where}: ${msg}`); };
   const scan = async (tag) => {
     await p.mouse.move(1, viewport.height / 2); // no hover state on toolbar buttons while axe measures contrast
+    await p.waitForTimeout(250); // let any colour change from the last click settle
     await p.addScriptTag({ content: axe });
     const v = await p.evaluate(async () => (await window.axe.run('#xs', { runOnly: ['wcag2a', 'wcag2aa', 'wcag21aa'] })).violations.map((x) => `${x.id} (${x.nodes.slice(0, 2).map((n) => n.target.join(' ')).join(' , ')})`));
     v.forEach((x) => fail.push(`${where} ${tag}: ${x}`));

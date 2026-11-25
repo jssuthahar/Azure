@@ -39,7 +39,7 @@ const schema = [
 ];
 const feelLabel = ['', 'Free or very cheap', 'Low', 'Medium', 'Premium'][s.feel];
 ---
-<Base title={title.length > 62 ? `${label} in 60 Seconds` : title} description={description} type="article" schema={schema} breadcrumbs={crumbs}>
+<Base title={title.length > 62 ? (`${label} in 60 Seconds`.length > 62 ? label.slice(0, 62) : `${label} in 60 Seconds`) : title} description={description} type="article" schema={schema} breadcrumbs={crumbs}>
   <article class="mx-auto max-w-[960px] px-4 py-8 sm:px-6">
     <nav aria-label="Breadcrumb" class="text-sm text-muted"><a class="hover:underline" href={`/${exam.slug}/services/`}>Service reference</a> › <span class="text-[var(--text)]">{s.cat}</span></nav>
     <div class="mt-3 flex items-center gap-4">

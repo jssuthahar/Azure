@@ -152,6 +152,7 @@ const data = {
 <script is:inline type="application/json" data-cm-data set:html={JSON.stringify(data)} />
 
 <script>
+  import { shareRowHTML, bindShareRows } from '../../lib/share';
   type Track = { i: number; slug: string; code: string; name: string; short: string; role: string; work: string; pickIf: string; live: boolean; from: string; next: { code: string; req: boolean }[] };
   type Term = { j: number; slug: string; code: string; label: string; tag: string; text: string; lines: number[] };
   const root = document.querySelector<HTMLElement>('[data-cm]');
@@ -210,7 +211,9 @@ const data = {
         <p class="cm-pick"><strong>Pick it if</strong> ${esc(t.pickIf)}</p>
         <div class="cm-tear" aria-hidden="true"></div>
         ${cta}
+        <div class="cm-share">${shareRowHTML(`${location.origin}${location.pathname}#route-${t.slug}`, `My ${data.name} certification route: ${t.from} → ${t.code} (${t.short}). Find your line on the free MSDEVBUILD Career Metro:`, 'Share my route:')}</div>
       </div>`;
+      bindShareRows(pass);
     };
 
     const pickLine = (i: number, user = true) => {
@@ -268,10 +271,14 @@ const data = {
       const i = data.tracks.findIndex((t) => t.slug === (e as CustomEvent<string>).detail);
       if (i >= 0) pickLine(i);
     });
+    // A shared route link (#route-<slug>) opens with that line selected.
+    const shared = location.hash.match(/^#route-([a-z0-9-]+)$/)?.[1];
+    const shi = data.tracks.findIndex((t) => t.slug === shared);
+    if (shi >= 0) { pickLine(shi); root.scrollIntoView({ block: 'start' }); }
     // …and a choice it restored before this script loaded
     const saved = document.querySelector<HTMLElement>('[data-pick][aria-pressed="true"]')?.dataset.pick;
     const si = data.tracks.findIndex((t) => t.slug === saved);
-    if (si >= 0) { light([si]); ticket(data.tracks[si]); }
+    if (si >= 0 && shi < 0) { light([si]); ticket(data.tracks[si]); }
 
     // Departures board flips in when it scrolls into view
     const board = root.querySelector<HTMLElement>('[data-cm-board]')!;
@@ -360,6 +367,9 @@ const data = {
   .cm-tear::before { left: -11px; } .cm-tear::after { right: -11px; }
   .cm-cta { width: 100%; justify-content: center; min-height: 44px; }
   .cm-term-code { margin-top: .7rem; font-size: 2rem; font-weight: 900; color: var(--accent-deep); }
+  .cm-share { margin-top: .9rem; }
+  .cm-share .share-row { gap: .35rem; }
+  .cm-share .share-b { font-size: .78rem; padding: .3rem .65rem; min-height: 34px; }
   .cm-chip { display: inline-block; margin: .15rem .1rem; padding: .1rem .5rem; border-radius: 999px; background: var(--c); color: #fff; font-size: .75rem; font-weight: 800; }
 
   /* Departures board */

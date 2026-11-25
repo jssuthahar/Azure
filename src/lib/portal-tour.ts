@@ -152,7 +152,7 @@ const group = (g: Group) => `<section class="pt-group">${g.h ? `<h4>${esc(g.h)}<
 
 function table(cols: string[], rows: string[][]) {
   if (rows.length && rows[0].length === cols.length + 1) cols = ['Name', ...cols];
-  return `<div class="pt-tablewrap"><table class="pt-table"><thead><tr><th class="pt-cb"><i></i></th>${cols.map((c) => `<th>${esc(c)}</th>`).join('')}</tr></thead><tbody>${rows
+  return `<div class="pt-tablewrap" tabindex="0" role="region" aria-label="Table (scrolls sideways)"><table class="pt-table"><thead><tr><th class="pt-cb"><i></i></th>${cols.map((c) => `<th>${esc(c)}</th>`).join('')}</tr></thead><tbody>${rows
     .map((r) => `<tr ${T(`row:${r[0]}`)}><td class="pt-cb"><i></i></td>${r.map((c, i) => `<td>${i === 0 ? `<span class="pt-link">${md(c)}</span>` : statusCell(c)}</td>`).join('')}</tr>`)
     .join('')}</tbody></table></div>`;
 }

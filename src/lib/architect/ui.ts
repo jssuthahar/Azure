@@ -5,6 +5,7 @@
  * be exported as SVG, PNG or JSON. EDUCATION ONLY: nothing is deployed.
  */
 import { iconSvg, iconG } from './icons';
+import { shareRowHTML, bindShareRows } from '../share';
 import { CATALOG, KINDS, LINK_LABEL, linkKindFor, makeNode, byId, childrenOf, linked, newId, emptyDesign, isDesign, type Design, type ArchNode, type Kind, type NsgRule } from './model';
 import { check, summary, type Finding } from './rules';
 import { simulate, sources, targets } from './traffic';
@@ -395,6 +396,7 @@ export function mountBuilder(root: HTMLElement, lessonBase: string) {
     const s = e.target as HTMLSelectElement;
     const kind = s.value; s.value = '';
     if (!d.nodes.length) { toast('Add something first.'); return; }
+    if (kind === 'link') { shareDesign(); return; }
     if (kind === 'json') download(new Blob([JSON.stringify(d, null, 2)], { type: 'application/json' }), `${fileBase()}.json`);
     if (kind === 'svg') download(new Blob([svgText().text], { type: 'image/svg+xml' }), `${fileBase()}.svg`);
     if (kind === 'png') {
@@ -545,9 +547,50 @@ export function mountBuilder(root: HTMLElement, lessonBase: string) {
     say('Explanation ready.');
   });
 
+  /* ---------------- share a design by link (compressed into the URL hash) ---------------- */
+  const b64u = (bytes: Uint8Array) => btoa(String.fromCharCode(...bytes)).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
+  const unb64u = (s: string) => Uint8Array.from(atob(s.replace(/-/g, '+').replace(/_/g, '/')), (c) => c.charCodeAt(0));
+  async function encodeDesign(x: Design): Promise<string> {
+    const raw = new TextEncoder().encode(JSON.stringify(x));
+    if ('CompressionStream' in window) {
+      const zipped = new Uint8Array(await new Response(new Blob([raw]).stream().pipeThrough(new CompressionStream('deflate-raw'))).arrayBuffer());
+      return `z.${b64u(zipped)}`;
+    }
+    return `j.${b64u(raw)}`;
+  }
+  async function decodeDesign(s: string): Promise<Design | null> {
+    try {
+      const [kind, body] = [s.slice(0, 1), s.slice(2)];
+      let bytes = unb64u(body);
+      if (kind === 'z') bytes = new Uint8Array(await new Response(new Blob([bytes]).stream().pipeThrough(new DecompressionStream('deflate-raw'))).arrayBuffer());
+      const v = JSON.parse(new TextDecoder().decode(bytes));
+      return isDesign(v) ? v : null;
+    } catch { return null; }
+  }
+  async function shareDesign() {
+    const url = `${location.origin}${location.pathname}#d=${await encodeDesign(d)}`;
+    const dlg = document.createElement('dialog');
+    dlg.className = 'ab-share';
+    dlg.setAttribute('aria-labelledby', 'ab-share-h');
+    dlg.innerHTML = `<h2 id="ab-share-h">Share “${esc(d.name)}”</h2><p>Anyone with this link opens your design in their browser and can check it, send traffic through it and change their own copy. Nothing is uploaded: the whole design is inside the link.</p>${shareRowHTML(url, `I designed “${d.name}” in the free Azure Architecture Builder on MSDEVBUILD. Open it and check it:`)}<p class="ab-share-close"><button type="button" class="btn btn-outline btn-sm">Close</button></p>`;
+    document.body.append(dlg);
+    bindShareRows(dlg);
+    dlg.querySelector('.ab-share-close button')!.addEventListener('click', () => dlg.close());
+    dlg.addEventListener('close', () => dlg.remove());
+    dlg.showModal();
+  }
+  const sharedHash = location.hash.startsWith('#d=') ? location.hash.slice(3) : '';
+  if (sharedHash) {
+    decodeDesign(sharedHash).then((v) => {
+      history.replaceState(null, '', location.pathname + location.search);
+      if (v) setDesign(v, `Opened the shared design “${v.name}”. Undo brings back your own.`);
+      else toast('That share link is broken or incomplete.', 'bad');
+    });
+  }
+
   render();
   renderPanel();
-  if (saved.draft) toast('Welcome back: your last design is restored (saved in this browser).');
+  if (saved.draft && !sharedHash) toast('Welcome back: your last design is restored (saved in this browser).');
 }
 
 /** Fixed colours for exported diagrams (no CSS variables outside the page). */

@@ -8,10 +8,13 @@
 import type { Lab } from '../lib/sim/labs';
 import { inlineMd } from '../lib/learn';
 import { examFromPath } from '../data/exams';
+import ShareButtons from './ShareButtons.astro';
+import { SITE } from '../config';
 import '../styles/portal.css';
 interface Props { lab: Lab }
 const { lab } = Astro.props;
 const labsHub = `/${lab.exam ?? examFromPath(Astro.url.pathname).slug}/labs/`;
+const labUrl = `${SITE.url}${labsHub}${lab.id}/`;
 const term = lab.start === 'terminal';
 const shellName = term ? 'terminal' : 'Cloud Shell';
 ---
@@ -71,6 +74,7 @@ const shellName = term ? 'terminal' : 'Cloud Shell';
       <p class="text-5xl">🏆</p>
       <p class="mt-2 text-xl font-bold">Lab complete!</p>
       <p class="mt-2 text-sm leading-relaxed">{lab.wrap}</p>
+      <div class="mt-3 flex justify-center"><ShareButtons url={labUrl} text={`I just finished “${lab.title}” in a free Azure simulator lab on MSDEVBUILD 🧪 No Azure account needed:`} /></div>
       <a href={labsHub} class="nav-btn mt-4">More labs ❯</a>
     </div>
     {term

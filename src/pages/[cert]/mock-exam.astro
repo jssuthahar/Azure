@@ -141,6 +141,7 @@ const crumbs = [{ name: 'Home', url: '/' }, { name: `${exam.code}`, url: `/${exa
   .xs-tools { display: flex; flex-wrap: wrap; align-items: center; gap: .4rem; margin-left: auto; }
   .xs-tool { display: inline-flex; align-items: center; justify-content: center; gap: .35rem; min-height: 36px; min-width: 36px; padding: .2rem .7rem; border: 1px solid var(--xs-line); border-radius: 3px; background: var(--xs-bg); font-weight: 600; }
   .xs-tool:hover { border-color: var(--xs-acc); }
+  .xs-tool { transition: none; }
   .xs-tool[hidden] { display: none; }
   .xs-tool[aria-pressed='true'] { background: var(--xs-acc); border-color: var(--xs-acc); color: var(--xs-acc-fg); }
   .xs-tool-dark { background: transparent; color: #fff; border-color: rgb(255 255 255 / .5); font-weight: 500; font-size: .85rem; }
@@ -244,6 +245,7 @@ const crumbs = [{ name: 'Home', url: '/' }, { name: `${exam.code}`, url: `/${exa
   import { saveMock, type MockResult } from '../../lib/progress';
   import { recordAnswers } from '../../lib/review';
   import { issueCert, loadCert, registerCertExams, mockTag, certPage } from '../../lib/certificate';
+  import { shareRowHTML, bindShareRows } from '../../lib/share';
   import { confetti } from '../../lib/fun';
 
   const data = JSON.parse(document.getElementById('exam-data')!.textContent!) as {
@@ -702,6 +704,12 @@ const crumbs = [{ name: 'Home', url: '/' }, { name: `${exam.code}`, url: `/${exa
         : `<div class="flex flex-wrap items-center gap-4"><span class="text-4xl" aria-hidden="true">🎓</span><div class="min-w-0 flex-1"><p class="font-bold">${full ? 'Score 700 or more to earn your MSDEVBUILD certificate' : 'Take the full exam to earn your MSDEVBUILD certificate'}</p><p class="text-sm text-muted">${full ? 'Review the questions below, study the domains marked “Needs work”, and try again.' : 'Practice runs don’t issue certificates. The full 45-question exam does, at a score of 700+.'}</p></div><button id="sr-again-top" class="btn btn-accent">${full ? 'Retake the exam' : 'Take the full exam'}</button></div>`}
       </div>
 
+      <div class="sr-share mt-6 rounded-2xl border border-default bg-[var(--card)] p-5">
+        <p class="font-bold">${r.passed ? '🎉 Share your result' : '📣 Studying with friends helps'}</p>
+        <p class="mt-1 text-sm text-muted">${r.passed ? `Tell your network you scored ${r.scaled}/1000 on the ${data.code} practice exam.` : `Invite a friend to practise ${data.code} with you. It’s free.`}</p>
+        <div class="mt-3">${shareRowHTML(`${location.origin}/${data.slug}/mock-exam/`, r.passed ? `I scored ${r.scaled}/1000 on the ${data.code} practice exam 🎉 Free mock exams, labs and Azure simulators on MSDEVBUILD:` : `I'm preparing for ${data.code} with free mock exams and Azure simulators on MSDEVBUILD. Practise with me:`)}</div>
+      </div>
+
       <div class="mt-8 flex flex-wrap items-center gap-2">
         <h3 class="mr-auto text-xl font-bold">Answer summary</h3>
         <div role="group" aria-label="Filter answers" class="flex flex-wrap gap-1 text-sm">
@@ -713,6 +721,7 @@ const crumbs = [{ name: 'Home', url: '/' }, { name: `${exam.code}`, url: `/${exa
       </div>
       <ol id="sr-list" class="mt-4 space-y-4">${s.paper.items.map((q, i) => reviewItem(q, s.responses[i], i, s.flags[i])).join('')}</ol>
       <div class="mt-8 flex flex-wrap gap-3"><button type="button" id="sr-again" class="btn btn-accent">Take another exam</button><a href="/progress/" class="btn btn-outline">See my progress</a></div>`;
+    bindShareRows(out);
     scrollTo(0, 0);
     if (r.passed) confetti(220);
     const again = () => { out.classList.add('hidden'); $('setup').classList.remove('hidden'); scrollTo(0, 0); };

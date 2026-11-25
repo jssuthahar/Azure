@@ -1090,3 +1090,8 @@ html[data-read-font='easy'] .lesson :is(p, li) { text-align: left; }
 .read-opt input { position: absolute; opacity: 0; width: 1px; height: 1px; }
 .read-opt:has(input:checked) { border-color: var(--accent); background: var(--accent); color: var(--bg); }
 .read-opt:has(input:focus-visible) { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+/* Share rows (ShareButtons.astro and src/lib/share.ts) */
+.share-b { display: inline-flex; align-items: center; gap: .3rem; min-height: 36px; border-radius: 999px; padding: .35rem .8rem; font-size: .85rem; font-weight: 600; border: 1px solid var(--card-line); background: var(--card); color: var(--text) !important; text-decoration: none !important; }
+.share-b:hover { border-color: #0078d4; }
+.share-b[hidden] { display: none; }
