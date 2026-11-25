@@ -1,0 +1,73 @@
+---
+/** Troubleshooting Centre: labs that start broken (src/lib/sim/labs-challenge.ts). Solved = lab completed in this browser. */
+import PublicLayout from '../layouts/PublicLayout.astro';
+import { CHALLENGES } from '../lib/sim/labs-challenge';
+import { liveExams } from '../data/exams';
+import { SITE } from '../config';
+
+const live = new Set(liveExams().map((e) => e.slug));
+const list = CHALLENGES.filter((c) => live.has(c.exam ?? 'az-900'));
+const title = 'Azure Troubleshooting Labs: Fix Broken Setups | MSDEVBUILD';
+const description = `Free Azure troubleshooting challenges: ${list.length} broken setups (locks, storage firewalls, NSGs, licences) to diagnose and fix in a simulator.`;
+const schema = [{ '@type': 'ItemList', name: 'Azure troubleshooting challenges', itemListElement: list.map((c, i) => ({ '@type': 'ListItem', position: i + 1, name: c.title, url: `${SITE.url}/${c.exam}/labs/${c.id}/` })) }];
+---
+<PublicLayout title={title} description={description} breadcrumbs={[{ name: 'Home', url: '/' }, { name: 'Troubleshooting Centre', url: '/troubleshoot/' }]} schema={schema}>
+  <div class="mx-auto max-w-5xl px-4 py-10 sm:px-6">
+    <p class="eyebrow">Troubleshooting Centre</p>
+    <h1 class="mt-2 text-3xl font-extrabold tracking-tight sm:text-4xl">Something’s broken. Can you fix it?</h1>
+    <p class="mt-3 max-w-3xl text-lg text-muted">Each challenge drops you into a simulated Azure environment that’s already broken, with a support ticket from a frustrated user. Find the cause, fix it properly and close the ticket. This is the skill interviews and the AZ-104 exam love to test.</p>
+    <p class="tb-score mt-5" data-tb-score>Solved 0 of {list.length}</p>
+    <ul class="tb-list mt-5">
+      {list.map((c) => (
+        <li data-tb={c.id}>
+          <a href={`/${c.exam}/labs/${c.id}/`} class="tb-card">
+            <span class="tb-ic" aria-hidden="true">{c.icon}</span>
+            <span class="min-w-0 flex-1">
+              <span class="tb-meta">{(c.exam ?? '').toUpperCase()} · {c.level} · {c.minutes} min</span>
+              <strong class="tb-t">{c.title}</strong>
+              <span class="tb-ticket">{c.symptom}</span>
+            </span>
+            <span class="tb-st" data-tb-st>Open</span>
+          </a>
+        </li>
+      ))}
+    </ul>
+    <h2 class="mt-10 text-xl font-bold">How to work a ticket</h2>
+    <ol class="tb-how mt-3">
+      <li><strong>Reproduce it.</strong> Run the failing command yourself and read the whole error.</li>
+      <li><strong>Check the usual suspects.</strong> Locks, network rules, permissions, SKU limits, missing properties.</li>
+      <li><strong>Fix the cause, not the symptom.</strong> Opening everything to the internet “works” but it’s the wrong fix.</li>
+      <li><strong>Prove it.</strong> Run the original command again and watch it succeed.</li>
+    </ol>
+    <p class="mt-8 text-sm text-muted">🧪 Simulations for learning only. Nothing is created in Azure. Prefer building from scratch? See the <a href="/projects/" class="font-semibold text-[var(--accent-deep)] hover:underline">guided projects</a>.</p>
+  </div>
+</PublicLayout>
+
+<script>
+  import { load } from '../lib/progress';
+  const paint = () => {
+    const done = load().labs;
+    const items = [...document.querySelectorAll<HTMLElement>('[data-tb]')];
+    let n = 0;
+    for (const li of items) { const ok = !!done[li.dataset.tb!]; if (ok) n++; li.classList.toggle('is-solved', ok); li.querySelector('[data-tb-st]')!.textContent = ok ? '✓ Solved' : 'Open'; }
+    document.querySelector('[data-tb-score]')!.textContent = `Solved ${n} of ${items.length}${n === items.length && n ? ' 🏆' : ''}`;
+  };
+  paint();
+  window.addEventListener('progress-change', paint);
+</script>
+
+<style>
+  .tb-score { display: inline-block; padding: .35rem .8rem; border-radius: 999px; background: var(--text); color: var(--bg); font-weight: 800; font-size: .88rem; }
+  .tb-list { display: grid; gap: .8rem; }
+  .tb-card { display: flex; align-items: flex-start; gap: .9rem; padding: 1rem 1.1rem; border-radius: 16px; border: 1px solid var(--card-line); border-left: 5px solid #d97706; background: var(--card); box-shadow: var(--glass-shadow); transition: transform .2s, border-color .2s; }
+  .tb-card:hover { transform: translateY(-2px); border-color: var(--accent); }
+  .tb-ic { flex: none; font-size: 1.8rem; }
+  .tb-meta { display: block; font-size: .75rem; font-weight: 700; color: var(--accent-deep); }
+  .tb-t { display: block; margin-top: .15rem; font-size: 1.1rem; font-weight: 800; }
+  .tb-ticket { display: block; margin-top: .35rem; font-size: .9rem; line-height: 1.5; color: var(--text-muted); font-style: italic; }
+  .tb-st { flex: none; align-self: center; padding: .25rem .7rem; border-radius: 999px; border: 1px solid #d97706; color: #8a4b00; font-size: .78rem; font-weight: 800; }
+  :global([data-theme='dark']) .tb-st { color: #ffd08a; }
+  .is-solved .tb-card { border-left-color: #107c10; }
+  .is-solved .tb-st { border-color: #107c10; background: #107c10; color: #fff; }
+  .tb-how { display: grid; gap: .5rem; padding-left: 1.2rem; list-style: decimal; line-height: 1.55; }
+</style>

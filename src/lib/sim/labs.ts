@@ -7,6 +7,8 @@ import { ME, type World } from './world';
 import { AI_LABS } from './labs-ai';
 import { DEV_LABS } from './labs-dev';
 import { ADMIN_LABS } from './labs-admin';
+import { AGENT_LABS } from './labs-agent';
+import { CHALLENGES } from './labs-challenge';
 import { GH_LABS, GH_SANDBOX } from './labs-gh';
 
 export interface LabTask {
@@ -30,6 +32,12 @@ export interface Lab {
   topics: string[]; // related lesson slugs
   tasks: LabTask[];
   wrap: string;
+  /** 'challenge' = starts broken (Troubleshooting Centre); default is a guided lab. */
+  kind?: 'lab' | 'challenge';
+  /** Challenges: the support ticket the learner starts from. */
+  symptom?: string;
+  /** Cloud Shell commands run once when the lab first opens; their events are cleared. */
+  setup?: string[];
 }
 
 const ev = (s: Sim, type: string, pred: (d: Record<string, any>) => boolean = () => true) => s.events.some((e) => e.type === type && pred(e.data));
@@ -525,6 +533,8 @@ export const LABS: Lab[] = [
   ...AI_LABS,
   ...DEV_LABS,
   ...ADMIN_LABS,
+  ...AGENT_LABS,
+  ...CHALLENGES,
   ...GH_LABS,
 ];
 

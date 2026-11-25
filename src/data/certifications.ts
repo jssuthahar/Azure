@@ -7,6 +7,9 @@
  * Before switching one to 'active', re-check the exam's current status on
  * Microsoft Learn — exams are retired and renamed regularly.
  */
+/** Exams switched on only for local preview builds: MSDB_PREVIEW=ai-103 npm run dev / verify. */
+const preview = (slug: string) => typeof process !== 'undefined' && (process.env?.MSDB_PREVIEW ?? '').split(',').includes(slug);
+
 export interface Certification {
   code: string;
   slug: string;
@@ -51,7 +54,7 @@ export const CERTIFICATIONS: Certification[] = [
   // SC-500 replaced AZ-500 (Azure Security Engineer Associate), which retired on 31 August 2026.
   { code: 'SC-500', slug: 'sc-500', icon: 'shield', featured: true, name: 'Cloud and AI Security Engineer Associate', level: 'Associate', status: 'planned', blurb: 'Identity, Key Vault, storage, network and compute security, AI workload protection, Defender for Cloud and Sentinel.', officialUrl: 'https://learn.microsoft.com/en-us/credentials/certifications/cloud-and-ai-security-engineer-associate/', studyGuideUrl: 'https://learn.microsoft.com/en-us/credentials/certifications/resources/study-guides/sc-500' },
   // AI-103 replaced AI-102 (Azure AI Engineer Associate), which retired on 30 June 2026.
-  { code: 'AI-103', slug: 'ai-103', icon: 'ai', name: 'Azure AI Apps and Agents Developer Associate', level: 'Associate', status: 'planned', blurb: 'Generative AI apps and agents built with Microsoft Foundry, plus RAG, vision, text, speech and content extraction.', officialUrl: 'https://learn.microsoft.com/en-us/credentials/certifications/azure-ai-apps-and-agents-developer-associate/', studyGuideUrl: 'https://learn.microsoft.com/en-us/credentials/certifications/resources/study-guides/ai-103' },
+  { code: 'AI-103', slug: 'ai-103', icon: 'ai', name: 'Azure AI Apps and Agents Developer Associate', level: 'Associate', status: preview('ai-103') ? 'active' : 'planned', blurb: 'Generative AI apps and agents built with Microsoft Foundry, plus RAG, vision, text, speech and content extraction.', officialUrl: 'https://learn.microsoft.com/en-us/credentials/certifications/azure-ai-apps-and-agents-developer-associate/', studyGuideUrl: 'https://learn.microsoft.com/en-us/credentials/certifications/resources/study-guides/ai-103' },
   // Added 20 Nov 2026 for the AI certification roadmap (/ai-certifications/). Checked on Microsoft Learn study guides.
   { code: 'AI-300', slug: 'ai-300', icon: 'devops', name: 'Machine Learning Operations Engineer Associate', level: 'Associate', status: 'planned', blurb: 'MLOps with Azure Machine Learning and GenAIOps with Microsoft Foundry: pipelines, deployment, evaluation and monitoring.', officialUrl: 'https://learn.microsoft.com/en-us/credentials/certifications/operationalizing-machine-learning-and-generative-ai-solutions/', studyGuideUrl: 'https://learn.microsoft.com/en-us/credentials/certifications/resources/study-guides/ai-300' },
   { code: 'AB-620', slug: 'ab-620', icon: 'ai', name: 'AI Agent Builder Associate', level: 'Associate', status: 'planned', blurb: 'Enterprise agents in Copilot Studio: workflows, skills, MCP servers and connectors as tools, multi-agent collaboration, testing and ALM.', officialUrl: 'https://learn.microsoft.com/en-us/credentials/certifications/ai-agent-builder-associate/', studyGuideUrl: 'https://learn.microsoft.com/en-us/credentials/certifications/resources/study-guides/ab-620' },

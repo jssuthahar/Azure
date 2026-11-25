@@ -20,7 +20,7 @@ const weights = Object.fromEntries(exam.modules.map((m) => [m.domain, m.weightMi
 const payload = JSON.stringify({ choice, domains, topicTitle, items: exam.examItems, weights, code: exam.code, name: exam.name, slug: exam.slug }).replace(/</g, '\\u003c');
 const total = bank.length + exam.examItems.length;
 
-const title = `${exam.code} Mock Exam: Real Exam Experience, Free`;
+const title = `${exam.code} Practice Test 2026: Free Mock Exam, Real Format`;
 const description = `Free ${exam.code} practice exam that feels like the real Microsoft exam: timer, review screen, drag and drop, Yes/No and drop-down items, score report and certificate.`;
 const crumbs = [{ name: 'Home', url: '/' }, { name: `${exam.code}`, url: `/${exam.slug}/` }, { name: 'Mock exam', url: `/${exam.slug}/mock-exam/` }];
 ---
@@ -37,7 +37,7 @@ const crumbs = [{ name: 'Home', url: '/' }, { name: `${exam.code}`, url: `/${exa
           <p class="mt-4 text-lg leading-relaxed text-muted">Sit it like the real Microsoft exam: a full-screen exam room with the same flow (welcome, agreement, exam features, then the sections), a countdown timer you can hide, zoom and high contrast, <strong>Mark for review</strong>, a review grid, and the same item types: multiple choice, multiple response, <strong>drag and drop</strong>, <strong>build a list</strong>, <strong>drop-down</strong> and a final <strong>Yes/No</strong> section you can’t go back to. Scored on the 1–1000 scale (700 to pass), with a full report and your MSDEVBUILD certificate.</p>
           <div class="mt-5 rounded-xl border-l-[5px] border-[#0078d4] bg-[var(--pastel-blue)] p-4 text-[0.95rem] leading-relaxed">
             <p class="font-bold text-accent">✍️ Original practice questions</p>
-            <p>All {total} questions were written for this site from the official {exam.code} skills outline. None are real, recalled or leaked Microsoft exam questions (sharing those breaks Microsoft’s exam agreement). This is a practice simulation, not affiliated with Microsoft or any exam delivery provider, and a good score here doesn’t guarantee a pass on the real exam.</p>
+            <p>All {total} questions were written for this site from the official {exam.code} skills outline. None are real, recalled or leaked Microsoft exam questions (sharing those breaks Microsoft’s exam agreement; <a href="/exam-dumps/" target="_blank" rel="noopener" class="font-semibold underline">why we never use dumps<span class="sr-only"> (opens in a new tab)</span></a>). This is a practice simulation, not affiliated with Microsoft or any exam delivery provider, and a good score here doesn’t guarantee a pass on the real exam.</p>
           </div>
         </div>
         <div class="card flex items-center gap-4 p-5">

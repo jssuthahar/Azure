@@ -1,0 +1,25 @@
+/**
+ * Which AI-103 lesson each embeddable simulation links back to, derived from
+ * the lesson MDX at build time.
+ */
+import { LESSON_SIMS } from './lesson-sims';
+
+const files = import.meta.glob('/src/content/tutorials/ai-103/**/*.mdx', { query: '?raw', import: 'default', eager: true }) as Record<string, string>;
+
+interface Use { title: string; url: string; slug: string }
+const uses3d: Record<string, Use[]> = {};
+const usesTour: Record<string, Use[]> = {};
+for (const [path, raw] of Object.entries(files)) {
+  const [, module, slug] = path.match(/ai-103\/([^/]+)\/([^/]+)\.mdx$/) ?? [];
+  if (!slug) continue;
+  const title = raw.match(/^title:\s*(.+)$/m)?.[1].replace(/^['"]|['"]$/g, '') ?? slug;
+  const u: Use = { title, url: `/ai-103/${module}/${slug}/`, slug };
+  const sims = LESSON_SIMS[slug];
+  if (sims) { (uses3d[sims.d3.mode] ??= []).push(u); (usesTour[sims.tour.id] ??= []).push(u); }
+}
+
+const HOME_3D: Record<string, string> = { agentplan: 'secure-foundry-identity-and-networking', agentgen: 'agents-with-retrieval-functions-and-memory', agentvision: 'multimodal-image-understanding', agenttext: 'speech-to-text-and-text-to-speech', agentextract: 'semantic-hybrid-and-vector-search' };
+const pick = (list: Use[] = [], prefer?: string) => list.find((u) => u.slug === prefer) ?? list[0];
+
+export const EMBED_LESSON_3D: Record<string, Use | undefined> = Object.fromEntries(Object.keys(HOME_3D).map((m) => [m, pick(uses3d[m], HOME_3D[m])]));
+export const EMBED_LESSON_TOUR: Record<string, Use | undefined> = Object.fromEntries(Object.entries(usesTour).map(([id, l]) => [id, pick(l)]));

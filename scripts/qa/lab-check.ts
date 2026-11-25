@@ -15,6 +15,8 @@ let bad = 0;
 for (const lab of LABS.filter((l) => l.id.startsWith(prefix) && l.start !== 'terminal')) {
   const w = new World();
   const fails: string[] = [];
+  for (const c of lab.setup ?? []) { const r = runCli(c, w); if (r.error) fails.push(`setup "${c}": ${r.error.split('\n')[0]}`); }
+  w.events.length = 0;
   lab.tasks.forEach((t, i) => {
     if (!t.cli) { fails.push(`task ${i + 1}: no cli hint`); return; }
     let r = runCli(t.cli, w);

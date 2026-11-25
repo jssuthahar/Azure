@@ -1,0 +1,384 @@
+---
+/**
+ * Career Metro: the roadmap as a transit map. Each role is a coloured line
+ * from a shared START interchange, through its role station, to the expert
+ * terminals. Pick a line (station, line, departures board or the path finder)
+ * and a train rides it, the other lines dim and a boarding pass explains the
+ * route. Wide screens run left to right; phones run top to bottom.
+ */
+import { CERTIFICATIONS, type Certification } from '../../data/certifications';
+import type { Roadmap } from '../../data/roadmaps';
+
+interface Props { roadmap: Roadmap }
+const { roadmap } = Astro.props;
+const cert = (slug: string): Certification => CERTIFICATIONS.find((c) => c.slug === slug)!;
+const tracks = roadmap.tracks;
+const N = tracks.length;
+const COLORS = ['#0078d4', '#e3008c', '#107c10', '#d97706', '#8661c5', '#00a2ad', '#d13438'];
+const termSlugs = [...new Set(tracks.flatMap((t) => t.next.map((n) => n.slug)))];
+const K = termSlugs.length;
+const termInfo = (slug: string) => {
+  const st = roadmap.stepThree.find((s) => s.slug === slug);
+  if (st) return { label: st.short, tag: st.tag, text: `${st.forWho} What you need: ${st.needs}` };
+  if (roadmap.platform?.slug === slug) return { label: roadmap.platform.label, tag: 'OPTIONAL', text: roadmap.platform.note };
+  return { label: cert(slug).name, tag: 'NEXT', text: cert(slug).blurb };
+};
+
+type Pt = [number, number];
+interface Layout { w: number; h: number; S: number; R: number; T: number; lanes: number[]; cS: number; cT: number[]; map: (m: number, c: number) => Pt; vertical: boolean }
+const spread = (n: number, mid: number, step: number) => Array.from({ length: n }, (_, i) => mid + (i - (n - 1) / 2) * step);
+const H: Layout = (() => {
+  const gap = 104, top = 84, h = top * 2 + Math.max(0, N - 1) * gap;
+  const lanes = Array.from({ length: N }, (_, i) => top + i * gap);
+  const mid = h / 2;
+  return { w: 1000, h, S: 90, R: 480, T: 880, lanes, cS: mid, cT: spread(K, mid, Math.min(120, (h - 120) / Math.max(1, K - 1))), map: (m, c) => [m, c], vertical: false };
+})();
+const V: Layout = (() => {
+  const w = 620, lanes = N > 1 ? spread(N, w / 2, Math.min(125, 500 / (N - 1))) : [w / 2];
+  return { w, h: K ? 780 : 520, S: 70, R: 380, T: 680, lanes, cS: w / 2, cT: spread(K, w / 2, Math.min(230, 460 / Math.max(1, K - 1))), map: (m, c) => [c, m], vertical: true };
+})();
+/** Metro-style segment: straight, one 45° diagonal, straight. */
+const seg = (m0: number, c0: number, m1: number, c1: number): [number, number][] => {
+  const span = m1 - m0, dc = Math.abs(c1 - c0), diag = Math.min(dc, span * 0.7), ma = m0 + (span - diag) / 2;
+  return [[ma, c0], [ma + diag, c1], [m1, c1]];
+};
+const d = (L: Layout, pts: [number, number][]) => pts.map(([m, c], i) => `${i ? 'L' : 'M'}${L.map(m, c).map((v) => v.toFixed(1)).join(' ')}`).join(' ');
+const build = (L: Layout) => ({
+  L,
+  lines: tracks.map((t, i) => {
+    const first = t.next[0];
+    const head: [number, number][] = [[L.S, L.cS], ...seg(L.S, L.cS, L.R, L.lanes[i])];
+    const tail: [number, number][] = first ? [[L.R, L.lanes[i]], ...seg(L.R, L.lanes[i], L.T, L.cT[termSlugs.indexOf(first.slug)])] : [];
+    const pts = [...head, ...tail.slice(1)];
+    const branches = t.next.slice(1).map((n) => ({ req: n.required, d: d(L, [[L.R, L.lanes[i]], ...seg(L.R, L.lanes[i], L.T, L.cT[termSlugs.indexOf(n.slug)])]) }));
+    return { i, d: d(L, pts), head: d(L, head), tail: tail.length ? d(L, tail) : '', branches, dashed: first ? !first.required : false };
+  }),
+  S: L.map(L.S, L.cS),
+  roles: tracks.map((t, i) => ({ i, p: L.map(L.R, L.lanes[i]) })),
+  terms: termSlugs.map((s, j) => ({ j, p: L.map(L.T, L.cT[j]), lines: tracks.map((t, i) => (t.next.some((n) => n.slug === s) ? i : -1)).filter((i) => i >= 0) })),
+});
+const views = [build(H), build(V)];
+const entryCodes = roadmap.entry.map((s) => cert(s).code).join(' · ');
+const data = {
+  name: roadmap.name,
+  colors: COLORS,
+  tracks: tracks.map((t, i) => {
+    const c = cert(t.slug);
+    return { i, slug: t.slug, code: c.code, name: c.name, short: t.short, role: t.role, work: t.work, pickIf: t.pickIf, live: c.status === 'active', from: cert(t.entry).code, next: t.next.map((n) => ({ code: cert(n.slug).code, req: n.required })) };
+  }),
+  terms: termSlugs.map((s, j) => ({ j, slug: s, code: cert(s).code, ...termInfo(s), lines: views[0].terms[j].lines })),
+};
+---
+<div class="cm" data-cm>
+  <div class="cm-top">
+    <p class="cm-hint">Tap a line, a station or a departure to ride it.</p>
+    <button type="button" class="cm-tour" data-cm-tour aria-pressed="false"><span aria-hidden="true">▶</span> Tour all lines</button>
+  </div>
+  <div class="cm-body">
+    <div class="cm-maps">
+      {views.map((v) => (
+        <svg class={`cm-svg ${v.L.vertical ? 'cm-v' : 'cm-h'}`} viewBox={`0 0 ${v.L.w} ${v.L.h}`} role="group" aria-label={`${roadmap.name} Career Metro map: ${N} role lines from an optional start to ${K ? 'expert terminals' : 'their role stations'}`}>
+          <g class="cm-lines">
+            {v.lines.map((ln) => (
+              <g class="cm-line" data-line={ln.i} style={`--c:${COLORS[ln.i % COLORS.length]}`}>
+                <path class="cm-casing" d={ln.d} />
+                <path class="cm-ride" d={ln.d} data-main />
+                <path class="cm-track" d={ln.head} />
+                {ln.tail && <path class={`cm-track${ln.dashed ? ' is-dashed' : ''}`} d={ln.tail} />}
+                {ln.branches.map((b) => <path class={`cm-track cm-branch${b.req ? '' : ' is-dashed'}`} d={b.d} />)}
+                <path class="cm-flow" d={ln.d} />
+                <path class="cm-hit" d={ln.d} data-pick-line={ln.i} />
+              </g>
+            ))}
+          </g>
+          <g class="cm-start" transform={`translate(${v.S[0]} ${v.S[1]})`}>
+            <rect x="-46" y="-22" width="92" height="44" rx="22" />
+            <text class="cm-start-t" y="5">START</text>
+            <text class="cm-sub" y={v.L.vertical ? -34 : 44}>{entryCodes} · optional</text>
+          </g>
+          {v.roles.map((r) => {
+            const t = data.tracks[r.i];
+            return (
+              <g class="cm-st" data-line={r.i} data-pick-line={r.i} data-x={r.p[0]} data-y={r.p[1]} transform={`translate(${r.p[0]} ${r.p[1]})`} role="button" tabindex="0" aria-label={`${t.code}, ${t.short}${t.live ? ', free course live' : ''}. Ride this line.`} style={`--c:${COLORS[r.i % COLORS.length]}`}>
+                <circle class="cm-dot" r="15" />
+                {t.live && <circle class="cm-live" cx="14" cy="-14" r="6" />}
+                {v.L.vertical
+                  ? <text class="cm-code" x="0" y="-26">{t.code}</text>
+                  : <><text class="cm-code" y="-27">{t.code}</text><text class="cm-sub" y="40">{t.short}</text></>}
+              </g>
+            );
+          })}
+          {v.terms.map((tm) => {
+            const t = data.terms[tm.j];
+            return (
+              <g class="cm-term" data-term={tm.j} data-lines={tm.lines.join(' ')} data-x={tm.p[0]} data-y={tm.p[1]} transform={`translate(${tm.p[0]} ${tm.p[1]})`} role="button" tabindex="0" aria-label={`${t.code}, ${t.label}. Show the lines that lead here.`}>
+                <circle class="cm-ring" r="21" /><circle class="cm-ring-in" r="9" />
+                {v.L.vertical
+                  ? <><text class="cm-code" y="48">{t.code}</text><text class="cm-tag" y="68">{t.tag}</text></>
+                  : <><text class="cm-tag" y="-32">{t.tag}</text><text class="cm-code cm-code-r" x="32" y="7">{t.code}</text></>}
+              </g>
+            );
+          })}
+          <g class="cm-train" data-train hidden><circle r="19" /><text y="7">🚆</text></g>
+        </svg>
+      ))}
+    </div>
+    <aside class="cm-pass-wrap" aria-live="polite" data-cm-pass>
+      <div class="cm-pass cm-pass-idle">
+        <p class="cm-pass-k">🎫 Your boarding pass</p>
+        <p class="mt-2 font-semibold">Pick a line to see where it goes.</p>
+        <p class="mt-1 text-sm text-muted">Each colour is a role. START is optional: you can board any line without it.</p>
+      </div>
+    </aside>
+  </div>
+
+  <div class="cm-board" data-cm-board>
+    <p class="cm-board-h"><span aria-hidden="true">🚉</span> Departures</p>
+    <ol>
+      {data.tracks.map((t) => (
+        <li style={`--c:${COLORS[t.i % COLORS.length]};--k:${t.i}`}>
+          <button type="button" data-pick-line={t.i} aria-label={`Line ${t.i + 1}: ${t.code} ${t.short}, ${t.live ? 'free course live' : 'course planned'}. Show this line.`}>
+            <span class="cm-b-line">L{t.i + 1}</span>
+            <span class="cm-b-dest"><b>{t.code}</b><small>{t.short}</small></span>
+            <span class="cm-b-via">{t.next.length ? `→ ${t.next.map((n) => n.code).join(' · ')}` : 'End of line'}</span>
+            <span class={`cm-b-st${t.live ? ' is-live' : ''}`}>{t.live ? '● Boarding now' : 'Scheduled'}</span>
+          </button>
+        </li>
+      ))}
+    </ol>
+  </div>
+</div>
+
+<script is:inline type="application/json" data-cm-data set:html={JSON.stringify(data)} />
+
+<script>
+  type Track = { i: number; slug: string; code: string; name: string; short: string; role: string; work: string; pickIf: string; live: boolean; from: string; next: { code: string; req: boolean }[] };
+  type Term = { j: number; slug: string; code: string; label: string; tag: string; text: string; lines: number[] };
+  const root = document.querySelector<HTMLElement>('[data-cm]');
+  const raw = document.querySelector('[data-cm-data]')?.textContent;
+  if (root && raw) {
+    const data = JSON.parse(raw) as { name: string; colors: string[]; tracks: Track[]; terms: Term[] };
+    const pass = root.querySelector<HTMLElement>('[data-cm-pass]')!;
+    const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
+    const esc = (s: string) => s.replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' })[c]!);
+    const color = (i: number) => data.colors[i % data.colors.length];
+    let anim = 0;
+
+    const light = (lines: number[]) => {
+      root.classList.toggle('has-sel', lines.length > 0);
+      root.querySelectorAll<SVGElement | HTMLElement>('[data-line]').forEach((el) => el.classList.toggle('is-on', lines.includes(Number(el.dataset.line))));
+      root.querySelectorAll<SVGElement>('.cm-term').forEach((el) => el.classList.toggle('is-on', (el.dataset.lines ?? '').split(' ').some((x) => x !== '' && lines.includes(Number(x)))));
+      root.querySelectorAll<HTMLElement>('.cm-board button').forEach((b) => b.setAttribute('aria-pressed', String(lines.includes(Number(b.dataset.pickLine)))));
+    };
+
+    const ride = (i: number) => {
+      cancelAnimationFrame(anim);
+      root.querySelectorAll('.cm-st, .cm-term').forEach((s) => s.classList.remove('is-hit'));
+      const runs = [...root.querySelectorAll<SVGSVGElement>('.cm-svg')].map((svg) => {
+        const path = svg.querySelector<SVGPathElement>(`.cm-line[data-line="${i}"] [data-main]`)!;
+        const train = svg.querySelector<SVGGElement>('[data-train]')!;
+        const stops = [...svg.querySelectorAll<SVGGElement>(`.cm-st[data-line="${i}"], .cm-term`)].filter((s) => s.classList.contains('cm-st') || s.classList.contains('is-on'));
+        train.removeAttribute('hidden');
+        train.style.setProperty('--c', color(i));
+        return { path, train, stops, len: path.getTotalLength() };
+      });
+      const dur = reduce ? 0 : 2400;
+      const t0 = performance.now();
+      const ease = (x: number) => 1 - Math.pow(1 - x, 3);
+      const frame = (now: number) => {
+        const k = dur ? Math.min(1, (now - t0) / dur) : 1;
+        for (const r of runs) {
+          const p = r.path.getPointAtLength(r.len * ease(k));
+          r.train.setAttribute('transform', `translate(${p.x} ${p.y})`);
+          for (const s of r.stops) if (Math.hypot(Number(s.dataset.x) - p.x, Number(s.dataset.y) - p.y) < 26) s.classList.add('is-hit');
+        }
+        if (k < 1) anim = requestAnimationFrame(frame);
+      };
+      anim = requestAnimationFrame(frame);
+    };
+
+    const ticket = (t: Track) => {
+      const next = t.next.length ? t.next.map((n) => `${esc(n.code)}${n.req ? '' : ' (suggested)'}`).join(', ') : 'End of line';
+      const cta = t.live
+        ? `<a class="btn btn-accent cm-cta" href="/${t.slug}/learn/">Start ${esc(t.code)} free →</a>`
+        : `<a class="btn btn-outline cm-cta" href="/${t.slug}/">${esc(t.code)} outline and course plan</a>`;
+      pass.innerHTML = `<div class="cm-pass" style="--c:${color(t.i)}">
+        <p class="cm-pass-k"><span>🎫 Boarding pass · Line ${t.i + 1}</span><span>${esc(data.name)} Metro</span></p>
+        <div class="cm-route"><div><small>From</small><b>${esc(t.from)}</b><em>optional start</em></div><span class="cm-route-go" aria-hidden="true">🚆</span><div><small>To</small><b>${esc(t.code)}</b><em>${esc(t.short)}</em></div></div>
+        <dl class="cm-facts"><div><dt>Role</dt><dd>${esc(t.role)}</dd></div><div><dt>Next stop</dt><dd>${next}</dd></div><div><dt>Status</dt><dd class="${t.live ? 'is-live' : ''}">${t.live ? '● Boarding now: free course live' : 'Scheduled: course planned'}</dd></div></dl>
+        <p class="cm-work">${esc(t.work)}</p>
+        <p class="cm-pick"><strong>Pick it if</strong> ${esc(t.pickIf)}</p>
+        <div class="cm-tear" aria-hidden="true"></div>
+        ${cta}
+      </div>`;
+    };
+
+    const pickLine = (i: number, user = true) => {
+      if (user) stopTour();
+      light([i]);
+      ticket(data.tracks[i]);
+      ride(i);
+    };
+    const pickTerm = (j: number) => {
+      stopTour();
+      const t = data.terms[j];
+      light(t.lines);
+      cancelAnimationFrame(anim);
+      root.querySelectorAll<SVGGElement>('[data-train]').forEach((tr) => tr.setAttribute('hidden', ''));
+      pass.innerHTML = `<div class="cm-pass cm-pass-term">
+        <p class="cm-pass-k"><span>🏁 Terminal · ${esc(t.tag)}</span><span>${esc(data.name)} Metro</span></p>
+        <p class="cm-term-code">${esc(t.code)}</p><p class="font-semibold">${esc(t.label)}</p>
+        <p class="cm-work">${esc(t.text)}</p>
+        <p class="cm-pick"><strong>Lines that stop here:</strong> ${t.lines.map((i) => `<span class="cm-chip" style="--c:${color(i)}">L${i + 1} ${esc(data.tracks[i].code)}</span>`).join(' ')}</p>
+        <div class="cm-tear" aria-hidden="true"></div>
+        <a class="btn btn-outline cm-cta" href="#${t.slug}">Read about ${esc(t.code)}</a>
+      </div>`;
+    };
+
+    root.addEventListener('click', (e) => {
+      const el = (e.target as Element).closest<HTMLElement | SVGElement>('[data-pick-line], [data-term]');
+      if (!el) return;
+      if (el.dataset.term !== undefined) pickTerm(Number(el.dataset.term));
+      else pickLine(Number(el.dataset.pickLine));
+    });
+    root.addEventListener('keydown', (e) => {
+      if (e.key !== 'Enter' && e.key !== ' ') return;
+      const el = (e.target as Element).closest<SVGElement>('svg [role="button"]');
+      if (!el) return;
+      e.preventDefault();
+      el.dispatchEvent(new MouseEvent('click', { bubbles: true }));
+    });
+
+    // Tour all lines
+    const tourBtn = root.querySelector<HTMLButtonElement>('[data-cm-tour]')!;
+    let tour = 0;
+    function stopTour() { if (!tour) return; clearInterval(tour); tour = 0; tourBtn.setAttribute('aria-pressed', 'false'); tourBtn.innerHTML = '<span aria-hidden="true">▶</span> Tour all lines'; }
+    tourBtn.addEventListener('click', () => {
+      if (tour) return stopTour();
+      let k = 0;
+      const step = () => { pickLine(k % data.tracks.length, false); k++; };
+      step();
+      tour = window.setInterval(step, 3600);
+      tourBtn.setAttribute('aria-pressed', 'true');
+      tourBtn.innerHTML = '<span aria-hidden="true">■</span> Stop tour';
+    });
+
+    // The path finder above picks a line too
+    document.addEventListener('rm-pick', (e) => {
+      const i = data.tracks.findIndex((t) => t.slug === (e as CustomEvent<string>).detail);
+      if (i >= 0) pickLine(i);
+    });
+    // …and a choice it restored before this script loaded
+    const saved = document.querySelector<HTMLElement>('[data-pick][aria-pressed="true"]')?.dataset.pick;
+    const si = data.tracks.findIndex((t) => t.slug === saved);
+    if (si >= 0) { light([si]); ticket(data.tracks[si]); }
+
+    // Departures board flips in when it scrolls into view
+    const board = root.querySelector<HTMLElement>('[data-cm-board]')!;
+    if ('IntersectionObserver' in window && !reduce) {
+      board.classList.add('is-waiting');
+      new IntersectionObserver(([en], obs) => { if (en.isIntersecting) { board.classList.remove('is-waiting'); board.classList.add('is-flip'); obs.disconnect(); } }, { threshold: 0.3 }).observe(board);
+    }
+  }
+</script>
+
+<style is:global>
+  .cm { margin-top: 1.5rem; padding: 1.1rem; border-radius: 20px; border: 1px solid var(--border); background-color: var(--card); background-image: radial-gradient(rgb(var(--rm-glow) / .16) 1px, transparent 1px); background-size: 18px 18px; box-shadow: var(--glass-shadow); }
+  .cm-top { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: .6rem; }
+  .cm-hint { font-size: .9rem; color: var(--text-muted); }
+  .cm-tour { min-height: 40px; padding: 0 1rem; border-radius: 999px; font-weight: 700; font-size: .88rem; color: #fff; background: linear-gradient(135deg, #0078d4, #4b3fc0); box-shadow: 0 8px 20px -10px rgb(0 100 200 / .8); }
+  .cm-tour[aria-pressed='true'] { background: #d13438; }
+  .cm-body { margin-top: .9rem; display: grid; gap: 1rem; }
+  @media (min-width: 1024px) { .cm-body { grid-template-columns: minmax(0, 1.75fr) minmax(0, 1fr); align-items: start; } }
+  .cm-svg { display: block; width: 100%; height: auto; overflow: visible; }
+  .cm-v { display: none; }
+  @media (max-width: 767px) { .cm-h { display: none; } .cm-v { display: block; } }
+
+  .cm-casing { fill: none; stroke: var(--card); stroke-width: 16; stroke-linecap: round; stroke-linejoin: round; }
+  .cm-track { fill: none; stroke: var(--c); stroke-width: 9; stroke-linecap: round; stroke-linejoin: round; transition: opacity .3s, stroke-width .3s; }
+  .cm-track.is-dashed { stroke-dasharray: 2 16; stroke-width: 9; }
+  .cm-flow { fill: none; stroke: #fff; stroke-width: 3; stroke-linecap: round; stroke-dasharray: 2 22; opacity: 0; pointer-events: none; }
+  .cm-ride { fill: none; stroke: none; }
+  .cm-code.cm-code-r { text-anchor: start; }
+  .cm-hit { fill: none; stroke: transparent; stroke-width: 26; cursor: pointer; pointer-events: stroke; }
+  .cm-line { transition: opacity .3s; }
+  .cm.has-sel .cm-line:not(.is-on) { opacity: .14; }
+  .cm-line.is-on .cm-track { stroke-width: 12; filter: drop-shadow(0 0 8px var(--c)); }
+  .cm-line.is-on .cm-flow { opacity: .9; animation: cm-flow 0.9s linear infinite; }
+  @keyframes cm-flow { to { stroke-dashoffset: -24; } }
+
+  .cm-start rect { fill: var(--text); }
+  .cm-start-t { fill: var(--card); font: 800 16px system-ui, sans-serif; letter-spacing: .12em; text-anchor: middle; }
+  .cm-sub { fill: var(--text-muted); font: 600 14px system-ui, sans-serif; text-anchor: middle; }
+  .cm-code { fill: var(--text); font: 850 20px system-ui, sans-serif; text-anchor: middle; }
+  .cm-v .cm-code { font-size: 24px; }
+  .cm-v .cm-sub { font-size: 18px; }
+  .cm-tag { fill: var(--accent-deep); font: 800 11px system-ui, sans-serif; letter-spacing: .12em; text-anchor: middle; }
+  .cm-v .cm-tag { font-size: 14px; }
+  .cm-st, .cm-term { cursor: pointer; outline: none; transition: opacity .3s; }
+  .cm-dot { fill: var(--card); stroke: var(--c); stroke-width: 7; transition: r .25s, fill .25s; }
+  .cm-st:hover .cm-dot, .cm-st:focus-visible .cm-dot, .cm-st.is-on .cm-dot { r: 19; }
+  .cm-st:focus-visible .cm-dot, .cm-term:focus-visible .cm-ring { stroke-width: 9; filter: drop-shadow(0 0 6px var(--accent)); }
+  .cm-st.is-hit .cm-dot { fill: var(--c); animation: cm-pop .5s ease-out; }
+  @keyframes cm-pop { 40% { r: 24; } }
+  .cm-live { fill: #16a34a; stroke: var(--card); stroke-width: 3; animation: cm-blink 1.6s ease-in-out infinite; }
+  @keyframes cm-blink { 50% { opacity: .35; } }
+  .cm.has-sel .cm-st:not(.is-on), .cm.has-sel .cm-term:not(.is-on) { opacity: .35; }
+  .cm-ring { fill: var(--card); stroke: var(--text); stroke-width: 6; transition: stroke .25s; }
+  .cm-ring-in { fill: var(--text); transition: fill .25s; }
+  .cm-term:hover .cm-ring, .cm-term.is-on .cm-ring { stroke: var(--accent); }
+  .cm-term.is-hit .cm-ring-in { fill: #ffd75e; animation: cm-pop .6s ease-out; }
+  .cm-train circle { fill: var(--card); stroke: var(--c); stroke-width: 4; filter: drop-shadow(0 6px 10px rgb(0 0 0 / .3)); }
+  .cm-train text { font-size: 20px; text-anchor: middle; }
+  .cm-train[hidden] { display: none; }
+
+  /* Boarding pass */
+  .cm-pass { position: relative; padding: 1.1rem 1.15rem; border-radius: 18px; background: var(--card); border: 1px solid var(--card-line); box-shadow: 0 22px 46px -26px rgb(0 40 90 / .55); animation: cm-in .45s cubic-bezier(.2,.9,.3,1.2); }
+  .cm-pass:not(.cm-pass-idle) { border-top: 6px solid var(--c, var(--accent)); }
+  @keyframes cm-in { from { opacity: 0; transform: translateY(10px) rotate(-1deg); } }
+  .cm-pass-k { display: flex; justify-content: space-between; gap: .5rem; flex-wrap: wrap; font-size: .7rem; font-weight: 800; letter-spacing: .1em; text-transform: uppercase; color: var(--text-muted); }
+  .cm-route { margin-top: .9rem; display: grid; grid-template-columns: 1fr auto 1fr; align-items: center; gap: .5rem; }
+  .cm-route > div { display: flex; flex-direction: column; min-width: 0; }
+  .cm-route > div:last-child { text-align: right; }
+  .cm-route small { font-size: .68rem; font-weight: 800; text-transform: uppercase; letter-spacing: .1em; color: var(--text-muted); }
+  .cm-route b { font-size: 1.7rem; font-weight: 900; letter-spacing: -.02em; line-height: 1.1; }
+  .cm-route > div:last-child b { color: var(--c); }
+  .cm-route em { font-style: normal; font-size: .8rem; color: var(--text-muted); }
+  .cm-route-go { font-size: 1.5rem; animation: cm-go 1.6s ease-in-out infinite; }
+  @keyframes cm-go { 50% { transform: translateX(6px); } }
+  .cm-facts { margin-top: .9rem; display: grid; gap: .45rem; padding: .7rem .8rem; border-radius: 12px; background: var(--band-subtle); }
+  .cm-facts div { display: flex; justify-content: space-between; gap: .75rem; font-size: .84rem; }
+  .cm-facts dt { color: var(--text-muted); }
+  .cm-facts dd { font-weight: 700; text-align: right; }
+  .cm-facts dd.is-live { color: var(--ok); }
+  .cm-work { margin-top: .8rem; font-weight: 650; line-height: 1.5; }
+  .cm-pick { margin-top: .45rem; font-size: .88rem; color: var(--text-muted); line-height: 1.5; }
+  .cm-pick strong { color: var(--text); }
+  .cm-tear { margin: 1rem -1.15rem .9rem; border-top: 2px dashed var(--border); position: relative; }
+  .cm-tear::before, .cm-tear::after { content: ''; position: absolute; top: -11px; width: 20px; height: 20px; border-radius: 50%; background: var(--bg); border: 1px solid var(--card-line); }
+  .cm-tear::before { left: -11px; } .cm-tear::after { right: -11px; }
+  .cm-cta { width: 100%; justify-content: center; min-height: 44px; }
+  .cm-term-code { margin-top: .7rem; font-size: 2rem; font-weight: 900; color: var(--accent-deep); }
+  .cm-chip { display: inline-block; margin: .15rem .1rem; padding: .1rem .5rem; border-radius: 999px; background: var(--c); color: #fff; font-size: .75rem; font-weight: 800; }
+
+  /* Departures board */
+  .cm-board { margin-top: 1.1rem; padding: .9rem; border-radius: 16px; background: #0b1424; color: #f3f6fa; box-shadow: inset 0 2px 10px rgb(0 0 0 / .5); }
+  .cm-board-h { font-size: .8rem; font-weight: 800; letter-spacing: .18em; text-transform: uppercase; color: #ffd75e; }
+  .cm-board ol { margin-top: .6rem; display: grid; gap: .4rem; perspective: 600px; }
+  .cm-board button { width: 100%; display: grid; grid-template-columns: auto minmax(0, 1.2fr) minmax(0, 1fr) auto; align-items: center; gap: .75rem; padding: .55rem .7rem; border-radius: 10px; background: #13213a; border: 1px solid #22314d; color: inherit; text-align: left; font-family: ui-monospace, SFMono-Regular, Menlo, monospace; transition: background .2s, border-color .2s, transform .2s; }
+  .cm-board button:hover, .cm-board button[aria-pressed='true'] { background: #1a2d4f; border-color: var(--c); transform: translateX(3px); }
+  .cm-b-line { display: grid; place-items: center; min-width: 38px; height: 28px; border-radius: 7px; background: var(--c); color: #fff; font-weight: 900; font-size: .85rem; }
+  .cm-b-dest b { display: block; font-size: 1rem; letter-spacing: .04em; }
+  .cm-b-dest small { display: block; font-size: .72rem; color: #a9b8cf; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .cm-b-via { font-size: .78rem; color: #c9d6ea; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .cm-b-st { font-size: .74rem; font-weight: 800; color: #ffd75e; white-space: nowrap; }
+  .cm-b-st.is-live { color: #6ee7a0; animation: cm-blink 1.6s ease-in-out infinite; }
+  @media (max-width: 559px) { .cm-board button { grid-template-columns: auto 1fr auto; } .cm-b-via { display: none; } }
+  .cm-board.is-waiting li { opacity: 0; }
+  .cm-board.is-flip li { animation: cm-flip .55s cubic-bezier(.2,.8,.2,1) calc(var(--k) * 110ms) both; transform-origin: top; }
+  @keyframes cm-flip { from { opacity: 0; transform: rotateX(-90deg); } to { opacity: 1; transform: none; } }
+
+  @media (prefers-reduced-motion: reduce) {
+    .cm-line.is-on .cm-flow, .cm-live, .cm-b-st.is-live, .cm-route-go, .cm-pass, .cm-st.is-hit .cm-dot, .cm-term.is-hit .cm-ring-in, .cm-board.is-flip li { animation: none !important; }
+  }
+</style>

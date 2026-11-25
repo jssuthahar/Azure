@@ -90,7 +90,7 @@ npm run qa             # browser checks on the build: lessons, layout, a11y, pwa
 npm run verify
 ```
 
-`npm run qa -- lessons` (or `layout`, `a11y`, `pwa`, `exam`) runs one check. `exam` walks the mock exam room end to end (welcome, agreement, tools, review grid, section 2, score report) for every live exam; run it after any change to `mock-exam.astro` or `src/lib/exam.ts`. Screenshots for a visual check go to the OS temp folder `msdb-qa-shots/`; look at phone and iPad sizes for anything visual you changed.
+`npm run qa -- lessons` (or `layout`, `a11y`, `pwa`, `exam`, `architect`, `roadmaps`) runs one check. Never run two `npm run verify` at once: they share the build folder and port 4399, and the overlap shows up as random timeouts. `exam` walks the mock exam room end to end (welcome, agreement, tools, review grid, section 2, score report) for every live exam; run it after any change to `mock-exam.astro` or `src/lib/exam.ts`. Screenshots for a visual check go to the OS temp folder `msdb-qa-shots/`; look at phone and iPad sizes for anything visual you changed.
 
 4. Report what changed and what was verified, plainly. If a check fails, say so and fix it; do not weaken a check to make it pass.
 

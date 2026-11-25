@@ -3,6 +3,7 @@ import SupporterCard from '../components/monetization/SupporterCard.astro';
 import SupportCoffee from '../components/SupportCoffee.astro';
 import Base from '../layouts/Base.astro';
 import Mascot from '../components/Mascot.astro';
+import MasteryByDomain from '../components/MasteryByDomain.astro';
 import { getCollection } from 'astro:content';
 import { getNav, getQuestionBank } from '../lib/learn';
 import { getExam } from '../data/exams';
@@ -78,6 +79,8 @@ const payload = JSON.stringify({ moduleKeys, topics, modules: exam.modules.map((
         <p class="mt-2 text-sm font-semibold text-accent" id="pg-plan-cta">Make my plan ❯</p>
       </a>
     </section>
+
+    <MasteryByDomain />
 
     <a id="pg-cert" href="/certificate/" class="mt-4 flex flex-wrap items-center gap-4 rounded-2xl border-2 border-[#ffb900] bg-[var(--pastel-yellow)] p-5 hover:ring-2 hover:ring-[var(--accent)]">
       <span id="pg-cert-badge" class="w-16 shrink-0" aria-hidden="true"></span>

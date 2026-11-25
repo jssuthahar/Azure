@@ -15,7 +15,7 @@ const related = lab.topics.map((t) => nav.find((n) => n.slug === t && n.publishe
 const examLabs = [...labsForExam(exam.slug), sandboxFor(exam.slug)];
 const idx = examLabs.findIndex((l) => l.id === lab.id);
 const next = examLabs[idx + 1];
-const title = lab.id === 'sandbox' ? (exam.course.hubs?.sandboxTitle ?? 'Azure Sandbox Simulator: Practise Free | MSDEVBUILD') : `${lab.title} · Free Azure Lab`.slice(0, 65);
+const title = lab.id === 'sandbox' ? (exam.course.hubs?.sandboxTitle ?? 'Azure Sandbox Simulator: Practise Free | MSDEVBUILD') : `${lab.title} · ${lab.kind === 'challenge' ? 'Azure Troubleshooting Lab' : 'Free Azure Lab'}`.slice(0, 65);
 const description = (lab.id === 'sandbox' && exam.course.labs ? `Free ${exam.code} sandbox: explore a simulated Azure portal, Microsoft Foundry and Cloud Shell with no tasks and no rules. Nothing here costs real money.` : lab.id === 'gh-sandbox' ? `Free ${exam.code} sandbox: a simulated terminal with GitHub Copilot CLI, git and gh. No tasks, no account, nothing leaves your browser.` : `${lab.intro}`).slice(0, 155);
 ---
 <Base title={title} description={description} breadcrumbs={[{ name: 'Home', url: '/' }, { name: `${exam.code}`, url: `/${exam.slug}/` }, { name: 'Practice labs', url: `/${exam.slug}/labs/` }, { name: lab.title, url: Astro.url.pathname }]}>
@@ -25,6 +25,7 @@ const description = (lab.id === 'sandbox' && exam.course.labs ? `Free ${exam.cod
       <div>
         <h1 class="text-3xl font-bold tracking-tight sm:text-4xl"><span aria-hidden="true">{lab.icon}</span> {lab.title}</h1>
         <p class="mt-1 max-w-3xl text-lg text-muted">{lab.intro}</p>
+        {lab.symptom && <p class="lab-ticket mt-3 max-w-3xl"><span aria-hidden="true">🎫</span> <span><strong>Troubleshooting challenge.</strong> {lab.symptom}</span></p>}
       </div>
       {next && <a href={`/${exam.slug}/labs/${next.id}/`} class="nav-btn">Next: {next.title} ❯</a>}
     </div>
@@ -37,3 +38,8 @@ const description = (lab.id === 'sandbox' && exam.course.labs ? `Free ${exam.cod
     )}
   </div>
 </Base>
+
+<style>
+  .lab-ticket { display: flex; gap: .6rem; padding: .75rem .9rem; border-radius: 12px; border: 1px solid #d97706; background: #fff8ec; color: #3d2600; line-height: 1.5; }
+  :global([data-theme="dark"]) .lab-ticket { background: #2b1d08; color: #ffe3b5; }
+</style>

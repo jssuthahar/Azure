@@ -1,0 +1,86 @@
+---
+/**
+ * Retired Microsoft exams in 2026 and their replacements. Built from
+ * src/data/exam-changes.ts (dates checked on Microsoft Learn).
+ */
+import PublicLayout from '../layouts/PublicLayout.astro';
+import BrandLine from '../components/BrandLine.astro';
+import { CERTIFICATIONS } from '../data/certifications';
+import { EXAM_CHANGES, EXAM_UPDATES, VERIFIED, niceDate } from '../data/exam-changes';
+import { SITE } from '../config';
+import { VERSUS } from '../data/exam-versus';
+const VS: Record<string, string> = Object.fromEntries(VERSUS.map((v) => [v.old.code, v.path]));
+
+const live = (slug?: string) => CERTIFICATIONS.find((c) => c.slug === slug)?.status === 'active';
+const title = 'Retired Azure Exams 2026 and Their Replacements | MSDEVBUILD';
+const description = 'AI-900, AI-102, DP-100, AZ-204 and AZ-500 retired in 2026. See what replaced each exam, the exact dates and where to start the new one free.';
+const answer = 'In 2026 Microsoft retired AI-900 (replaced by AI-901), AI-102 (AI-103), DP-100 (AI-300), AZ-204 (AI-200) and AZ-500 (SC-500). The new exams focus on building, running and securing AI solutions. AZ-104 and AZ-900 were not retired.';
+const faq = [
+  { q: 'What replaced AI-900?', a: 'AI-901 replaced AI-900, which retired on 30 June 2026. It still earns Microsoft Certified: Azure AI Fundamentals, but the exam now asks you to build simple AI apps and agents in Microsoft Foundry.' },
+  { q: 'What replaced AZ-204?', a: 'AI-200 (Azure AI Cloud Developer Associate) replaced AZ-204, which retired on 31 July 2026. AI-200 became available on 9 July 2026 and focuses on the back end of AI apps.' },
+  { q: 'What replaced AZ-500?', a: 'SC-500 (Cloud and AI Security Engineer Associate) replaced AZ-500, which retired on 31 August 2026. SC-500 became available on 21 July 2026.' },
+  { q: 'What replaced AI-102?', a: 'AI-103 (Azure AI Apps and Agents Developer Associate) replaced AI-102, which retired on 30 June 2026. AI-103 became available on 19 June 2026.' },
+  { q: 'Is AZ-104 retired?', a: 'No. AZ-104 is still the Azure Administrator exam. Microsoft refreshed its skills outline on 17 April 2026, so use study material dated after that.' },
+  { q: 'I passed a retired exam. Is my certification still valid?', a: 'Yes, for a while. Microsoft says a certification earned before its retirement date stays valid for one year. To keep the role current after that, pass the replacement exam.' },
+  { q: 'Can I still study with old AI-900 or AZ-204 material?', a: 'Use it only for background. The new exams have different skills outlines and newer service names, so study from material written for the replacement exam.' },
+];
+const schema = [
+  { '@type': 'TechArticle', headline: 'Retired Azure exams 2026 and their replacements', description, datePublished: VERIFIED, dateModified: VERIFIED, url: `${SITE.url}/exam-changes-2026/`, author: { '@id': `${SITE.url}/#author` }, publisher: { '@id': `${SITE.url}/#organization` } },
+  { '@type': 'FAQPage', mainEntity: faq.map((f) => ({ '@type': 'Question', name: f.q, acceptedAnswer: { '@type': 'Answer', text: f.a } })) },
+];
+const crumbs = [{ name: 'Home', url: '/' }, { name: 'Certifications', url: '/certifications/' }, { name: 'Exam changes 2026', url: '/exam-changes-2026/' }];
+---
+<PublicLayout title={title} description={description} breadcrumbs={crumbs} schema={schema}>
+  <div class="mx-auto max-w-5xl px-4 py-10 sm:px-6">
+    <p class="eyebrow">Exam changes 2026</p>
+    <h1 class="mt-2 text-3xl font-extrabold tracking-tight sm:text-4xl">Retired Azure exams in 2026 and what replaced them</h1>
+    <div class="mt-3"><BrandLine variant="byline" /></div>
+    <div class="answer-box mt-6" data-speakable><p class="answer-text"><strong>Short answer:</strong> {answer}</p></div>
+
+    <h2 class="xc-h2">Old exam → new exam</h2>
+    <ol class="xc-list">
+      {EXAM_CHANGES.map((x) => (
+        <li class="xc-row">
+          <div class="xc-old"><span class="xc-tag">Retired {niceDate(x.retired)}</span><strong>{x.old}</strong><small>{x.oldName}</small></div>
+          <span class="xc-arrow" aria-hidden="true">→</span>
+          <div class="xc-new"><span class="xc-tag xc-tag-new">{x.available ? `Available ${niceDate(x.available)}` : 'Replacement'}</span><strong>{x.next.join(', ')}</strong><small>{x.nextName}</small></div>
+          <p class="xc-what">{x.what}{VS[x.old] && <> <a href={VS[x.old]} class="font-semibold text-[var(--accent-deep)] hover:underline">Full {x.old} vs {x.next[0]} comparison</a></>}</p>
+          {x.slug && <a href={`/${x.slug}/`} class={`btn ${live(x.slug) ? 'btn-accent' : 'btn-outline'} xc-btn`}>{live(x.slug) ? `Start ${x.next[0]} free →` : `${x.next[0]} outline and course plan`}</a>}
+        </li>
+      ))}
+    </ol>
+
+    <h2 class="xc-h2">Still current, but updated</h2>
+    <ul class="mt-4 grid gap-3">
+      {EXAM_UPDATES.map((u) => <li class="xc-upd"><strong>{u.code}</strong> {u.text} <a href={`/${u.slug}/`} class="font-semibold text-[var(--accent-deep)] hover:underline">Free {u.code} course</a></li>)}
+      <li class="xc-upd"><strong>AZ-900</strong> Still current, and still the gentlest way into Azure. <a href="/az-900/" class="font-semibold text-[var(--accent-deep)] hover:underline">Free AZ-900 course</a></li>
+    </ul>
+
+    <h2 class="xc-h2">Frequently asked questions</h2>
+    <div class="xc-faq">{faq.map((f) => <details><summary><h3>{f.q}</h3></summary><p>{f.a}</p></details>)}</div>
+
+    <p class="mt-8 text-sm text-muted">Dates checked on Microsoft Learn (retired exams list, study guides and Partner Center announcements) on {niceDate(VERIFIED)}. Exams can change, so read the official study guide before you book. Want help choosing? See the <a href="/ai-certifications/" class="font-semibold text-[var(--accent-deep)] hover:underline">AI certification roadmap</a> or the <a href="/security-certifications/" class="font-semibold text-[var(--accent-deep)] hover:underline">security roadmap</a>.</p>
+  </div>
+</PublicLayout>
+
+<style>
+  .xc-h2 { margin-top: 2.5rem; font-size: 1.5rem; font-weight: 800; letter-spacing: -.02em; }
+  .xc-list { margin-top: 1rem; display: grid; gap: .9rem; }
+  .xc-row { display: grid; grid-template-columns: 1fr auto 1fr; align-items: center; gap: .6rem 1rem; padding: 1rem 1.1rem; border-radius: 16px; border: 1px solid var(--card-line); background: var(--card); box-shadow: var(--glass-shadow); }
+  .xc-old, .xc-new { display: flex; flex-direction: column; min-width: 0; }
+  .xc-old strong { font-size: 1.3rem; font-weight: 800; color: var(--text-muted); text-decoration: line-through; text-decoration-thickness: 2px; }
+  .xc-new strong { font-size: 1.3rem; font-weight: 850; color: var(--accent-deep); }
+  .xc-old small, .xc-new small { font-size: .85rem; color: var(--text-muted); }
+  .xc-tag { align-self: flex-start; margin-bottom: .25rem; padding: .1rem .5rem; border-radius: 6px; font-size: .72rem; font-weight: 700; background: var(--pastel-grey); color: var(--text-muted); }
+  .xc-tag-new { background: var(--accent-soft); color: var(--accent-deep); }
+  .xc-arrow { font-size: 1.6rem; font-weight: 800; color: var(--accent); }
+  .xc-what { grid-column: 1 / -1; font-size: .92rem; line-height: 1.55; }
+  .xc-btn { grid-column: 1 / -1; justify-self: start; min-height: 40px; font-size: .88rem; }
+  @media (max-width: 560px) { .xc-row { grid-template-columns: 1fr; } .xc-arrow { transform: rotate(90deg); justify-self: start; } }
+  .xc-upd { padding: .9rem 1rem; border-radius: 12px; border: 1px solid var(--border); background: var(--card); line-height: 1.55; }
+  .xc-faq { margin-top: 1rem; }
+  .xc-faq details { border-top: 1px solid var(--border); padding: .85rem 0; }
+  .xc-faq summary { cursor: pointer; }
+  .xc-faq summary h3 { display: inline; font-size: 1.02rem; font-weight: 750; }
+  .xc-faq details p { margin-top: .5rem; color: var(--text-muted); line-height: 1.6; }
+</style>

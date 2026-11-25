@@ -1,0 +1,93 @@
+---
+/** One "old exam vs new exam" page, built from src/data/exam-versus.ts. */
+import PublicLayout from '../../layouts/PublicLayout.astro';
+import BrandLine from '../BrandLine.astro';
+import { getExam } from '../../data/exams';
+import { getNav, getQuestionBank } from '../../lib/learn';
+import type { Versus } from '../../data/exam-versus';
+import { SITE } from '../../config';
+
+interface Props { v: Versus }
+const { v } = Astro.props;
+const ex = getExam(v.next);
+const lessons = (await getNav(ex.slug)).filter((t) => t.published).length;
+const questions = (await getQuestionBank(ex.slug)).length;
+const crumbs = [{ name: 'Home', url: '/' }, { name: 'Exam changes 2026', url: '/exam-changes-2026/' }, { name: `${v.old.code} vs ${ex.code}`, url: v.path }];
+const schema = [
+  { '@type': 'TechArticle', headline: v.h1, description: v.description, datePublished: '2026-11-25', dateModified: '2026-11-25', url: `${SITE.url}${v.path}`, author: { '@id': `${SITE.url}/#author` }, publisher: { '@id': `${SITE.url}/#organization` } },
+  { '@type': 'FAQPage', mainEntity: v.faq.map((f) => ({ '@type': 'Question', name: f.q, acceptedAnswer: { '@type': 'Answer', text: f.a } })) },
+];
+---
+<PublicLayout title={v.title} description={v.description} breadcrumbs={crumbs} schema={schema}>
+  <div class="mx-auto max-w-5xl px-4 py-10 sm:px-6">
+    <p class="eyebrow">Exam changes 2026</p>
+    <h1 class="mt-2 text-3xl font-extrabold tracking-tight sm:text-4xl">{v.h1}</h1>
+    <div class="mt-3"><BrandLine variant="byline" /></div>
+    <div class="answer-box mt-6" data-speakable><p class="answer-text"><strong>Short answer:</strong> {v.answer}</p></div>
+
+    <h2 class="vs-h2">The outlines side by side</h2>
+    <div class="vs-cols">
+      <section class="vs-col vs-old" aria-label={`${v.old.code} outline`}>
+        <p class="vs-tag">Retired {v.old.retired}</p>
+        <h3>{v.old.code} <small>{v.old.name}</small></h3>
+        <ol>{v.old.domains.map(([t, w]) => <li><span>{t}</span><b>{w}</b></li>)}</ol>
+        <p class="vs-asof">Skills measured as of {v.old.asOf}</p>
+      </section>
+      <section class="vs-col vs-new" aria-label={`${ex.code} outline`}>
+        <p class="vs-tag vs-tag-new">Current exam</p>
+        <h3>{ex.code} <small>{ex.name.replace(/^Microsoft /, '')}</small></h3>
+        <ol>{ex.modules.map((m) => <li><span>{m.title}</span><b>{m.weight}</b></li>)}</ol>
+        <p class="vs-asof">Skills measured as of {ex.skillsMeasuredAsOf}</p>
+      </section>
+    </div>
+
+    <div class="vs-diff">
+      <section><h2 class="vs-h3">🆕 New in {ex.code}</h2><ul>{v.added.map((x) => <li>{x}</li>)}</ul></section>
+      <section><h2 class="vs-h3">🗑️ Gone from the outline</h2><ul>{v.dropped.map((x) => <li>{x}</li>)}</ul></section>
+      <section><h2 class="vs-h3">🔁 Still there</h2><ul>{v.same.map((x) => <li>{x}</li>)}</ul></section>
+    </div>
+
+    <div class="vs-verdict">
+      <h2 class="vs-h3">Which should you study?</h2>
+      <p>{v.verdict}</p>
+      <p class="mt-4 flex flex-wrap gap-3">
+        <a href={`/${ex.slug}/learn/`} class="btn btn-accent">Start {ex.code} free <span aria-hidden="true">→</span></a>
+        <a href={`/${ex.slug}/mock-exam/`} class="btn btn-outline">{ex.code} practice test</a>
+      </p>
+      <p class="mt-2 text-sm text-muted">{lessons} lessons, {questions} original practice questions, labs and a timed mock exam. Free, no account needed.</p>
+    </div>
+
+    <h2 class="vs-h2">Frequently asked questions</h2>
+    <div class="vs-faq">{v.faq.map((f) => <details><summary><h3>{f.q}</h3></summary><p>{f.a}</p></details>)}</div>
+    <p class="mt-8 text-sm text-muted">Both outlines checked on Microsoft Learn on 25 November 2026: <a href={`https://learn.microsoft.com/en-us/credentials/certifications/resources/study-guides/${v.old.code.toLowerCase()}`} target="_blank" rel="noopener" class="underline">{v.old.code} study guide<span class="sr-only"> (opens in a new tab)</span></a> and <a href={ex.studyGuideUrl} target="_blank" rel="noopener" class="underline">{ex.code} study guide<span class="sr-only"> (opens in a new tab)</span></a>. See every <a href="/exam-changes-2026/" class="font-semibold text-[var(--accent-deep)] hover:underline">2026 exam change</a>.</p>
+  </div>
+</PublicLayout>
+
+<style>
+  .vs-h2 { margin-top: 2.5rem; font-size: 1.45rem; font-weight: 800; letter-spacing: -.02em; }
+  .vs-h3 { font-size: 1.1rem; font-weight: 800; }
+  .vs-cols { margin-top: 1rem; display: grid; gap: 1rem; }
+  @media (min-width: 768px) { .vs-cols { grid-template-columns: 1fr 1fr; } }
+  .vs-col { padding: 1.1rem; border-radius: 16px; border: 1px solid var(--card-line); background: var(--card); box-shadow: var(--glass-shadow); }
+  .vs-new { border-top: 5px solid var(--accent); }
+  .vs-old { opacity: .92; border-top: 5px solid var(--border); }
+  .vs-col h3 { margin-top: .4rem; font-size: 1.5rem; font-weight: 850; }
+  .vs-col h3 small { display: block; font-size: .85rem; font-weight: 600; color: var(--text-muted); }
+  .vs-col ol { margin-top: .8rem; display: grid; gap: .4rem; }
+  .vs-col li { display: flex; justify-content: space-between; gap: .75rem; padding: .5rem .65rem; border-radius: 10px; background: var(--band-subtle); font-size: .9rem; }
+  .vs-col li b { flex: none; color: var(--accent-deep); font-variant-numeric: tabular-nums; }
+  .vs-asof { margin-top: .6rem; font-size: .78rem; color: var(--text-muted); }
+  .vs-tag { display: inline-block; padding: .1rem .5rem; border-radius: 6px; font-size: .72rem; font-weight: 700; background: var(--pastel-grey); color: var(--text-muted); }
+  .vs-tag-new { background: var(--accent-soft); color: var(--accent-deep); }
+  .vs-diff { margin-top: 2rem; display: grid; gap: 1rem; }
+  @media (min-width: 900px) { .vs-diff { grid-template-columns: repeat(3, 1fr); } }
+  .vs-diff section { padding: 1rem; border-radius: 14px; border: 1px solid var(--border); background: var(--card); }
+  .vs-diff ul { margin-top: .6rem; display: grid; gap: .5rem; padding-left: 1.1rem; list-style: disc; font-size: .9rem; line-height: 1.5; }
+  .vs-verdict { margin-top: 2rem; padding: 1.25rem; border-radius: 16px; background: linear-gradient(135deg, rgb(0 120 212 / .1), rgb(91 63 184 / .08)); border: 1px solid rgb(0 120 212 / .25); }
+  .vs-verdict > p:first-of-type { margin-top: .5rem; line-height: 1.6; }
+  .vs-faq { margin-top: 1rem; }
+  .vs-faq details { border-top: 1px solid var(--border); padding: .85rem 0; }
+  .vs-faq summary { cursor: pointer; }
+  .vs-faq summary h3 { display: inline; font-size: 1.02rem; font-weight: 750; }
+  .vs-faq details p { margin-top: .5rem; color: var(--text-muted); line-height: 1.6; }
+</style>

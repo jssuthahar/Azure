@@ -2,6 +2,7 @@
 import PublicLayout from '../../layouts/PublicLayout.astro';
 import BrandLine from '../BrandLine.astro';
 import CertIcon from '../course/CertIcon.astro';
+import CareerMetro from './CareerMetro.astro';
 import { CERTIFICATIONS, type Certification } from '../../data/certifications';
 import { ROADMAPS, type Roadmap } from '../../data/roadmaps';
 import { SITE } from '../../config';
@@ -17,37 +18,8 @@ const entry = roadmap.entry.map(cert);
 const platform = roadmap.platform ? cert(roadmap.platform.slug) : null;
 const live = (c: Certification) => c.status === 'active';
 const checked = new Date(`${roadmap.checked}T12:00:00`).toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' });
-const nodeX = (index: number, count: number, margin = 100) => count <= 1 ? 500 : margin + ((1000 - 2 * margin) / (count - 1)) * index;
-const entryX = Object.fromEntries(entry.map((c, i) => [c.slug, nodeX(i, entry.length, 390)]));
-const roleX = Object.fromEntries(roadmap.tracks.map((t, i) => [t.slug, nodeX(i, roadmap.tracks.length)]));
-const expertX = Object.fromEntries(roadmap.stepThree.map((step, i) => [step.slug, nodeX(i, roadmap.stepThree.length, 300)]));
-const onFor = (slug: string) => roadmap.tracks
-  .filter((track) => track.slug === slug || track.entry === slug || track.next.some((next) => next.slug === slug))
-  .map((track) => track.slug)
-  .join(' ');
-const curve = (x1: number, y1: number, x2: number, y2: number) => {
-  const middle = (y1 + y2) / 2;
-  return `M${x1} ${y1} C${x1} ${middle}, ${x2} ${middle}, ${x2} ${y2}`;
-};
-const entryLines = roadmap.tracks.map((track) => ({
-  on: track.slug,
-  d: curve(entryX[track.entry], 86, roleX[track.slug], 162),
-}));
-const nextRoutes = roadmap.tracks.flatMap((track) => track.next.map((next) => ({
-  from: track.slug,
-  to: next.slug,
-  required: next.required,
-})));
-const nextLines = nextRoutes.map((route) => {
-  const targetX = platform?.slug === route.to ? 500 : expertX[route.to];
-  return targetX === undefined ? null : {
-    on: route.from,
-    required: route.required,
-    d: curve(roleX[route.from], 260, targetX, platform?.slug === route.to ? 302 : 384),
-  };
-}).filter((line): line is NonNullable<typeof line> => line !== null);
-const qualificationSteps = roadmap.stepThree.filter((step) => step.alsoNeeds);
-const phoneHeight = 120 + roadmap.tracks.length * 82 + (platform ? 76 : 0) + roadmap.stepThree.length * 88 + 48;
+const firstLive = roadmap.tracks.map((t) => cert(t.slug)).find(live) ?? cert(roadmap.tracks[0].slug);
+const summit = roadmap.stepThree[0] ? cert(roadmap.stepThree[0].slug) : null;
 const schema = [
   {
     '@type': 'ItemList',
@@ -67,9 +39,11 @@ const crumbs = [
 ---
 <PublicLayout title={roadmap.metaTitle} description={roadmap.metaDescription} breadcrumbs={crumbs} schema={schema}>
   <section class="rm-hero" style={`--rm-glow:${roadmap.glow}`}>
+    <div class="rm-mesh" aria-hidden="true"><i></i><i></i><i></i></div>
     <div class="rm-orb rm-orb-a" aria-hidden="true"></div>
     <div class="rm-orb rm-orb-b" aria-hidden="true"></div>
-    <div class="relative mx-auto max-w-6xl px-4 py-12 sm:px-6">
+    <div class="rm-hero-in relative mx-auto grid max-w-6xl items-center gap-10 px-4 py-12 sm:px-6 lg:grid-cols-[1.25fr_1fr] lg:py-16">
+    <div>
       <nav aria-label="Breadcrumb" class="text-sm text-[#d7e5f2]">
         <a href="/" class="font-semibold text-[#8fcbf7] hover:underline">Home</a> ›
         <a href="/certifications/" class="font-semibold text-[#8fcbf7] hover:underline">Certifications</a> ›
@@ -89,11 +63,27 @@ const crumbs = [
         <a href="#finder" class="btn rm-primary">Find my path <span aria-hidden="true">↓</span></a>
         <a href="#map" class="btn rm-secondary">See the map</a>
       </p>
+      <ul class="rm-perks" aria-label="What you get">
+        <li><span aria-hidden="true">💸</span> Free courses</li>
+        <li><span aria-hidden="true">🔓</span> No account needed</li>
+        <li><span aria-hidden="true">🧪</span> Hands-on simulators</li>
+      </ul>
       <div class="mt-6"><BrandLine variant="light" /></div>
+    </div>
+    <div class="rm-journey-card" aria-hidden="true">
+      <p class="rm-jc-k">{roadmap.icon} Your journey</p>
+      <ol class="rm-jc-steps">
+        <li style="--i:0"><span class="rm-jc-dot">1</span><span><b>{entry[0]?.code ?? 'Start'}</b><small>optional start</small></span></li>
+        <li style="--i:1"><span class="rm-jc-dot">2</span><span><b>{firstLive.code}</b><small>{roadmap.tracks.find((t) => t.slug === firstLive.slug)?.short ?? 'your role'}</small></span></li>
+        <li style="--i:2"><span class="rm-jc-dot">{summit ? '3' : '🏆'}</span><span><b>{summit ? summit.code : 'Certified'}</b><small>{summit ? 'expert level' : 'show what you can do'}</small></span></li>
+      </ol>
+      <div class="rm-jc-bar"><span></span></div>
+      <p class="rm-jc-foot">One lesson today beats a perfect plan next month.</p>
+    </div>
     </div>
   </section>
 
-  <div class="mx-auto max-w-6xl px-4 py-10 sm:px-6">
+  <div class="mx-auto max-w-6xl px-4 py-10 sm:px-6" style={`--rm-glow:${roadmap.glow}`}>
     <div class="answer-box" data-speakable>
       <p class="answer-text"><strong>Short answer:</strong> {roadmap.answer}</p>
     </div>
@@ -120,109 +110,13 @@ const crumbs = [
     </section>
 
     <section id="map" class="mt-14 scroll-mt-28" aria-labelledby="rm-map-h">
-      <p class="eyebrow">The map</p>
-      <h2 id="rm-map-h" class="rm-h2">How the {roadmap.name} certifications connect</h2>
-      <div class="rm-map mt-6 rm-reveal">
-        <svg class="rm-map-wide" viewBox="0 0 1000 500" role="group" aria-label={`${roadmap.name} certification paths from optional starting exams through role certifications to advanced certifications`}>
-          <g class="rm-links">
-            {entryLines.map((line, i) => <path class="rm-link rm-link-entry" data-on={line.on} pathLength="1" style={`--path-delay:${i * 110}ms`} d={line.d} />)}
-            {nextLines.map((line, i) => <path class={`rm-link ${line.required ? 'rm-link-required' : 'rm-link-suggested'}`} data-on={line.on} pathLength="1" style={`--path-delay:${(entryLines.length + i) * 110}ms`} d={line.d} />)}
-            {qualificationSteps.map((step, i) => <path class="rm-link rm-link-required" data-on={step.slug} pathLength="1" style={`--path-delay:${(entryLines.length + nextLines.length + i) * 110}ms`} d={curve(850, 356, expertX[step.slug], 384)} />)}
-          </g>
-          <text class="rm-map-label" x="30" y="26">Optional start · not required</text>
-          {entry.map((c) => {
-            const x = entryX[c.slug];
-            return (
-              <a href={`/${c.slug}/`} class="rm-svg-node rm-svg-entry" data-on={onFor(c.slug)}>
-                <rect x={x - 90} y="24" width="180" height="62" rx="14" />
-                <text class="rm-svg-code" x={x} y="51">{c.code}</text>
-                <text class="rm-svg-note" x={x} y="71">optional start</text>
-              </a>
-            );
-          })}
-          {roadmap.tracks.map((track) => {
-            const c = cert(track.slug);
-            const x = roleX[track.slug];
-            return (
-              <a href={`#${track.slug}`} class="rm-svg-node rm-svg-role" data-on={track.slug}>
-                <rect x={x - 86} y="162" width="172" height="98" rx="16" />
-                <text class="rm-svg-code" x={x} y="199">{c.code}</text>
-                <text class="rm-svg-note" x={x} y="222">{track.short}</text>
-                {live(c) && <><circle class="rm-live-dot" cx={x - 32} cy="244" r="4" /><text class="rm-live-text" x={x - 23} y="248">course live</text></>}
-              </a>
-            );
-          })}
-          {platform && (
-            <a href={`/${platform.slug}/`} class="rm-svg-node rm-svg-optional" data-on={onFor(platform.slug)}>
-              <rect x="380" y="302" width="240" height="54" rx="13" />
-              <text class="rm-svg-code" x="500" y="325">{platform.code}</text>
-              <text class="rm-svg-note" x="500" y="344">{roadmap.platform?.label}</text>
-            </a>
-          )}
-          {qualificationSteps.map((step) => (
-            <g class="rm-svg-node rm-svg-optional" data-on={step.slug}>
-              <rect x="755" y="302" width="190" height="54" rx="13" />
-              <text class="rm-svg-note rm-svg-emphasis" x="850" y="325">{step.alsoNeeds?.[0]}</text>
-              <text class="rm-svg-note" x="850" y="344">{step.alsoNeeds?.[1]}</text>
-            </g>
-          ))}
-          {roadmap.stepThree.map((step) => {
-            const c = cert(step.slug);
-            const x = expertX[step.slug];
-            return (
-              <a href={`#${step.slug}`} class="rm-svg-node rm-svg-expert" data-on={onFor(step.slug)}>
-                <rect x={x - 140} y="384" width="280" height="88" rx="17" />
-                <text class="rm-svg-tag" x={x} y="407">{step.tag}</text>
-                <text class="rm-svg-code" x={x} y="435">{c.code}</text>
-                <text class="rm-svg-note" x={x} y="456">{step.short}</text>
-              </a>
-            );
-          })}
-          {!roadmap.stepThree.length && !platform && <text class="rm-map-label" x="500" y="414">Choose a role that matches the work you want to do</text>}
-        </svg>
-        <div class="rm-map-tall" style={`--phone-height:${phoneHeight}px`}>
-          <div class="rm-map-entry">
-            {entry.map((c) => <a href={`/${c.slug}/`} class="rm-node rm-node-entry" data-on={onFor(c.slug)}><strong>{c.code}</strong><small>optional start</small></a>)}
-          </div>
-          <div class="rm-map-flow">Choose a role from the optional start above</div>
-          <ol class="rm-map-tracks">
-            {roadmap.tracks.map((track) => {
-              const c = cert(track.slug);
-              return <li><a href={`#${track.slug}`} class="rm-node rm-node-role" data-on={track.slug}><strong>{c.code}</strong><small>{track.short}</small>{live(c) && <span class="rm-live-pill">Free course live</span>}</a></li>;
-            })}
-          </ol>
-          {platform && <><div class="rm-map-flow" aria-hidden="true">↓ optional</div><a href={`/${platform.slug}/`} class="rm-node rm-node-platform"><strong>{platform.code}</strong><small>{roadmap.platform?.label}</small></a></>}
-          {nextRoutes.length > 0 && (
-            <>
-              <p class="rm-phone-path-label">Where a role can lead</p>
-              <ol class="rm-phone-paths">
-                {nextRoutes.map((route, i) => {
-                  const source = roadmap.tracks.find((track) => track.slug === route.from)!;
-                  const target = cert(route.to);
-                  return (
-                    <li data-on={route.from} style={`--rd:${i * 90}ms`}>
-                      <a href={`#${route.from}`}>{cert(route.from).code} · {source.short}</a>
-                      <span aria-hidden="true">→</span>
-                      <a href={`#${route.to}`}>{target.code} · {target.name}</a>
-                      <small>{route.required ? 'Required for this certification' : 'Suggested next step'}</small>
-                    </li>
-                  );
-                })}
-              </ol>
-            </>
-          )}
-          {qualificationSteps.map((step) => <p class="rm-phone-qual">Also required for {cert(step.slug).code}: {step.alsoNeeds?.join(' · ')}</p>)}
-        </div>
-        <p class="rm-map-legend">
-          <span class="rm-line rm-line-start"></span> optional start ·
-          <span class="rm-line rm-line-suggested"></span> {roadmap.legend.sug} ·
-          <span class="rm-line rm-line-selected"></span> selected path
-          {roadmap.legend.req && <> · <span class="rm-line rm-line-required"></span> {roadmap.legend.req}</>}
-        </p>
-      </div>
+      <p class="eyebrow">Career Metro</p>
+      <h2 id="rm-map-h" class="rm-h2">Ride the {roadmap.name} certification lines</h2>
+      <p class="mt-1 text-muted">Every role is a line. Board at START or anywhere you like, and see where each line takes you next.</p>
+      <CareerMetro roadmap={roadmap} />
     </section>
 
-    <section class="mt-14" aria-labelledby="rm-entry-h">
+    <section class="rm-step mt-14" data-n="1" aria-labelledby="rm-entry-h">
       <p class="eyebrow">Step 1 · optional</p>
       <h2 id="rm-entry-h" class="rm-h2">{roadmap.entryTitle}</h2>
       <p class="mt-1 text-muted">{roadmap.entryNote}</p>
@@ -236,7 +130,7 @@ const crumbs = [
       </ul>
     </section>
 
-    <section class="mt-14" aria-labelledby="rm-roles-h">
+    <section class="rm-step mt-14" data-n="2" aria-labelledby="rm-roles-h">
       <p class="eyebrow">Step 2</p>
       <h2 id="rm-roles-h" class="rm-h2">{roadmap.tracksTitle}</h2>
       <p class="mt-1 text-muted">{roadmap.tracksNote}</p>
@@ -244,7 +138,7 @@ const crumbs = [
         {roadmap.tracks.map((track) => {
           const c = cert(track.slug);
           return (
-            <li class="rm-card rm-reveal" id={track.slug}>
+            <li class="rm-card rm-reveal" id={track.slug} data-live={live(c) ? '' : undefined}>
               <div class="rm-card-top"><CertIcon icon={c.icon} size={36} /><span>{track.role}</span></div>
               <h3 class="rm-card-h"><span class="rm-code">{c.code}</span><span class="block text-base font-semibold">{c.name}</span></h3>
               <p class="rm-work">{track.work}</p>
@@ -270,7 +164,7 @@ const crumbs = [
     )}
 
     {roadmap.stepThree.length > 0 && (
-      <section class="mt-14" aria-labelledby="rm-expert-h">
+      <section class="rm-step mt-14" data-n="3" aria-labelledby="rm-expert-h">
         <p class="eyebrow">{roadmap.stepThreeEyebrow}</p>
         <h2 id="rm-expert-h" class="rm-h2">{roadmap.stepThreeTitle}</h2>
         <p class="mt-1 text-muted">{roadmap.stepThreeNote}</p>
@@ -278,7 +172,7 @@ const crumbs = [
           {roadmap.stepThree.map((step) => {
             const c = cert(step.slug);
             return (
-              <li class="rm-expert rm-reveal" id={step.slug}>
+              <li class="rm-expert rm-reveal" id={step.slug}><span class="rm-summit" aria-hidden="true">🏔️</span>
                 <div class="flex items-center gap-3"><CertIcon icon={c.icon} size={40} /><h3><span class="rm-code">{c.code}</span><span class="block font-semibold">{c.name}</span></h3></div>
                 <p class="mt-3 text-sm">{step.forWho}</p>
                 <p class="rm-needs"><strong>What you need:</strong> {step.needs}</p>
@@ -300,9 +194,13 @@ const crumbs = [
           ['Certify', 'Book the exam once the project works. The exam checks what you already know.'],
           ['Grow', 'Take the next step when your work asks for it, not because a list says so.'],
         ].map(([title, text], i) => (
-          <li class="rm-reveal" style={`--rd:${i * 100}ms`}><span>Step {i + 1}</span><h3>{title}</h3><p>{text}</p></li>
+          <li class="rm-reveal" style={`--rd:${i * 120}ms`}><span class="rm-ms-ic" aria-hidden="true">{['📘', '🛠️', '🎓', '🚀'][i]}</span><span>Step {i + 1}</span><h3>{title}</h3><p>{text}</p></li>
         ))}
       </ol>
+      <div class="rm-cta">
+        <p><strong>You don’t need to be ready to start. You get ready by starting.</strong> Every course here is free, and your progress saves in this browser.</p>
+        <p class="flex flex-wrap gap-3">{live(firstLive) ? <a href={`/${firstLive.slug}/learn/`} class="btn rm-primary">Start {firstLive.code} free <span aria-hidden="true">→</span></a> : <a href="/certifications/" class="btn rm-primary">See the free courses <span aria-hidden="true">→</span></a>}<a href="#finder" class="btn rm-secondary">Pick my path</a></p>
+      </div>
     </section>
 
     <section class="mt-14" aria-labelledby="rm-cross-h">
@@ -336,6 +234,7 @@ const crumbs = [
     result.innerHTML = `<strong>Your route:</strong> ${entryCode.toUpperCase()} (optional) <span aria-hidden="true">→</span> ${track.slug.toUpperCase()}${next}<p>${track.cheer}</p><a class="btn btn-accent rm-btn" href="/${track.slug}/">Explore ${track.slug.toUpperCase()} →</a>`;
     result.hidden = false;
     try { localStorage.setItem(storageKey, slug); } catch {}
+    document.dispatchEvent(new CustomEvent('rm-pick', { detail: slug }));
   };
   buttons.forEach((b) => b.addEventListener('click', () => choose(b.dataset.pick)));
   try {
@@ -389,16 +288,90 @@ const crumbs = [
   .rm-stats{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:.75rem;list-style:none;padding:0}.rm-stats li{min-height:112px;border:1px solid var(--border);border-radius:16px;padding:1rem;background:var(--card);text-align:center}.rm-stats strong{display:block;font-size:2rem;color:var(--accent-deep)}.rm-stats span{display:block;margin-top:.35rem;color:var(--text-muted);font-size:.85rem}
   .rm-finder{border:1px solid var(--border);border-radius:18px;padding:1.25rem;background:linear-gradient(135deg,rgb(var(--rm-glow) / 8%),transparent)}
   .rm-h2{font-size:1.55rem;font-weight:800}.rm-chips{display:flex;flex-wrap:wrap;gap:.6rem}.rm-chip{border:1px solid var(--border);border-radius:999px;padding:.65rem .85rem;background:var(--card);font-size:.9rem}.rm-chip:hover,.rm-chip[aria-pressed=true]{border-color:var(--accent);background:var(--accent-soft);transform:translateY(-1px)}
-  .rm-result{margin-top:1rem;border-left:4px solid var(--accent);border-radius:10px;padding:1rem;background:var(--card)}.rm-result p{margin:.65rem 0}.rm-map{border:1px solid var(--border);border-radius:18px;padding:1.25rem;background:var(--card);text-align:center}.rm-map-wide{display:block;width:100%;height:auto}.rm-map-tall{display:none}.rm-links{fill:none}.rm-link{stroke:var(--border);stroke-width:3;stroke-linecap:round;stroke-dasharray:1;stroke-dashoffset:0;opacity:.85;transition:stroke .25s ease,stroke-width .25s ease,filter .25s ease}.rm-map.is-active .rm-link{stroke-dashoffset:1;animation:rm-path-draw .9s cubic-bezier(.22,.7,.25,1) var(--path-delay,0ms) forwards}.rm-link-entry{stroke:var(--border)}.rm-link-required{stroke:var(--ok);stroke-width:4}.rm-link.is-lit{stroke:var(--accent);stroke-width:5;opacity:1;filter:drop-shadow(0 0 4px rgb(var(--rm-glow) / 55%))}.rm-link-required.is-lit{stroke:var(--ok);filter:drop-shadow(0 0 4px rgb(var(--rm-glow) / 55%))}@keyframes rm-path-draw{to{stroke-dashoffset:0}}
-  .rm-svg-node{cursor:pointer}.rm-svg-node rect{fill:var(--card);stroke:var(--border);stroke-width:2;transition:fill .25s ease,stroke .25s ease,filter .25s ease,transform .25s ease}.rm-svg-node:hover rect,.rm-svg-node.is-lit rect{fill:var(--accent-soft);stroke:var(--accent);filter:drop-shadow(0 0 6px rgb(var(--rm-glow) / 35%))}.rm-svg-node.is-lit rect{stroke-width:3}.rm-svg-node text{text-anchor:middle;pointer-events:none}.rm-svg-code{fill:var(--text);font-size:20px;font-weight:850}.rm-svg-note{fill:var(--text-muted);font-size:12px}.rm-svg-emphasis{font-weight:750}.rm-svg-tag,.rm-map-label{fill:var(--text-muted);font-size:12px;text-anchor:middle}.rm-svg-tag{fill:var(--accent-deep);font-size:10px;font-weight:800;letter-spacing:1px}.rm-live-dot{fill:var(--ok);animation:rm-pulse 1.8s ease-in-out infinite}.rm-live-text{fill:var(--text-muted);font-size:10px}@keyframes rm-pulse{50%{opacity:.45}}
-  .rm-map-entry,.rm-map-tracks{display:flex;justify-content:center;gap:.75rem;list-style:none;padding:0}.rm-map-tracks{flex-wrap:wrap}.rm-map-tracks li{flex:1 1 145px}.rm-node{display:flex;flex-direction:column;justify-content:center;align-items:center;border:1px solid var(--border);border-radius:14px;min-height:62px;background:var(--card);color:var(--text)}.rm-node strong{font-size:1rem}.rm-node small{font-size:.72rem;color:var(--text-muted)}.rm-node-entry{min-width:150px}.rm-node-role{width:100%;min-height:76px}.rm-node-platform{max-width:280px;margin:.75rem auto}.rm-node.is-lit{border-color:var(--accent);box-shadow:0 0 16px rgb(var(--rm-glow) / 25%);transform:translateY(-2px)}.rm-map-flow{margin:.6rem auto;color:var(--text-muted);font-size:.82rem}.rm-phone-path-label{margin:.9rem 0 .45rem;font-weight:750}.rm-phone-paths{display:grid;gap:.5rem;list-style:none;padding:0;text-align:left}.rm-phone-paths li{display:grid;grid-template-columns:1fr auto 1fr;align-items:center;gap:.45rem;border:1px solid var(--border);border-radius:12px;padding:.65rem;background:var(--card);transition:border-color .2s,background .2s}.rm-map.is-active .rm-phone-paths li{animation:rm-route-in .4s ease var(--rd,0ms) both}@keyframes rm-route-in{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}.rm-phone-paths li.is-lit{border-color:var(--accent);background:var(--accent-soft)}.rm-phone-paths a{font-size:.8rem;font-weight:700}.rm-phone-paths small{grid-column:1/-1;color:var(--text-muted);font-size:.7rem}.rm-phone-qual{margin:.75rem 0 0;color:var(--text-muted);font-size:.76rem}
-  .rm-live-pill{margin-top:.25rem;border-radius:999px;background:var(--ok-soft);padding:.15rem .4rem;color:var(--ok);font-size:.65rem}
-  .rm-map-legend{display:flex;justify-content:center;flex-wrap:wrap;gap:.5rem;margin-top:1rem;color:var(--text-muted);font-size:.78rem}.rm-line{width:28px;height:3px;display:inline-block;vertical-align:middle}.rm-line-start,.rm-line-suggested{background:var(--border)}.rm-line-selected{background:var(--accent)}.rm-line-required{background:var(--ok)}
-  .rm-phone-qual{margin:.75rem 0 0;color:var(--text-muted);font-size:.76rem}.rm-entry{display:flex;align-items:center;gap:.8rem;height:100%;border:1px solid var(--border);border-radius:14px;padding:.9rem;background:var(--card)}.rm-entry:hover{border-color:var(--accent)}.rm-code{color:var(--accent-deep);font-weight:850}.rm-status{display:block;margin-top:.25rem;font-size:.78rem;color:var(--text-muted)}
+  .rm-result{margin-top:1rem;border-left:4px solid var(--accent);border-radius:10px;padding:1rem;background:var(--card)}.rm-result p{margin:.65rem 0}.rm-entry{display:flex;align-items:center;gap:.8rem;height:100%;border:1px solid var(--border);border-radius:14px;padding:.9rem;background:var(--card)}.rm-entry:hover{border-color:var(--accent)}.rm-code{color:var(--accent-deep);font-weight:850}.rm-status{display:block;margin-top:.25rem;font-size:.78rem;color:var(--text-muted)}
   .rm-tracks{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:.9rem;list-style:none;padding:0}.rm-card{border:1px solid var(--border);border-radius:16px;padding:1rem;background:var(--card);break-inside:avoid}.rm-card-top{display:flex;align-items:center;gap:.6rem;color:var(--accent-deep);font-size:.82rem;font-weight:800}.rm-card-h{margin-top:.8rem}.rm-work{margin-top:.6rem;font-weight:700}.rm-tools{display:flex;flex-wrap:wrap;gap:.35rem;margin:.8rem 0 0;padding:0;list-style:none}.rm-tools li{border-radius:999px;background:rgb(var(--rm-glow) / 10%);padding:.28rem .48rem;font-size:.72rem}.rm-actions{display:flex;flex-wrap:wrap;align-items:center;gap:.7rem;margin-top:1rem}.rm-btn{font-size:.85rem}.rm-ext{font-size:.82rem;font-weight:700}.rm-platform{display:flex;align-items:center;gap:.8rem;border:1px solid var(--border);border-radius:14px;padding:.9rem;background:var(--card)}.rm-opt{display:block;font-size:.68rem;text-transform:uppercase;color:var(--accent-deep)}.rm-expert{border:1px solid var(--border);border-radius:16px;padding:1rem;background:var(--card)}.rm-needs{margin-top:.7rem;border-radius:10px;padding:.65rem;background:rgb(var(--rm-glow) / 8%);font-size:.82rem}
   .rm-motivation{border:1px solid var(--border);border-radius:18px;padding:1.25rem;background:linear-gradient(135deg,rgb(var(--rm-glow) / 10%),transparent)}.rm-milestones{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:.7rem;list-style:none;padding:0}.rm-milestones li{border-radius:12px;padding:.8rem;background:var(--card)}.rm-milestones li>span{font-size:.68rem;text-transform:uppercase;color:var(--accent-deep)}.rm-milestones h3{margin-top:.25rem;font-weight:800}.rm-milestones p{margin-top:.35rem;font-size:.82rem;color:var(--text-muted)}
   .rm-cross{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:.8rem}.rm-cross a{display:grid;grid-template-columns:auto 1fr;column-gap:.7rem;border:1px solid var(--border);border-radius:14px;padding:.9rem;background:var(--card)}.rm-cross a>span{grid-row:1/3;font-size:1.5rem}.rm-cross small{color:var(--text-muted)}.rm-faq details{border-top:1px solid var(--border);padding:.85rem 0}.rm-faq summary{cursor:pointer;font-weight:800}.rm-faq details p{margin-top:.55rem;color:var(--text-muted)}
   .rm-reveal{opacity:1}:global(html.js) .rm-reveal.is-visible{animation:rm-reveal-in .45s ease}@keyframes rm-reveal-in{from{transform:translateY(12px)}to{transform:none}}
-  @media(max-width:767px){.rm-stats{grid-template-columns:repeat(2,minmax(0,1fr))}.rm-tracks,.rm-milestones{grid-template-columns:1fr}.rm-map-wide{display:none}.rm-map-tall{display:block}.rm-map-entry{flex-wrap:wrap}.rm-node-entry{flex:1 1 130px}.rm-map-tracks{flex-direction:column}.rm-map-tracks li{flex-basis:100%}.rm-node-expert{width:100%}.rm-cross{grid-template-columns:1fr}}
-  @media(prefers-reduced-motion:reduce){.rm-orb,.rm-rotate-list>span,.rm-link,.rm-phone-paths li,.rm-live-dot,.rm-map.is-active .rm-link,.rm-map.is-active .rm-phone-paths li,.rm-reveal.is-visible{animation:none}.rm-link,.rm-map.is-active .rm-link{stroke-dashoffset:0}.rm-reveal{opacity:1!important;transform:none!important}}
+  @media(max-width:767px){.rm-stats{grid-template-columns:repeat(2,minmax(0,1fr))}.rm-tracks,.rm-milestones{grid-template-columns:1fr}.rm-cross{grid-template-columns:1fr}}
+  @media(prefers-reduced-motion:reduce){.rm-orb,.rm-rotate-list>span,.rm-reveal.is-visible{animation:none}.rm-reveal{opacity:1!important;transform:none!important}}
+
+  /* ===== Visual upgrade: animated hero, glass cards, journey rail ===== */
+  .rm-hero{isolation:isolate;background:linear-gradient(135deg,#061528,#0a2240 55%,#071a30)}
+  .rm-mesh{position:absolute;inset:0;z-index:-1;overflow:hidden;pointer-events:none}
+  .rm-mesh::after{content:'';position:absolute;inset:0;background-image:linear-gradient(rgb(255 255 255 / .05) 1px,transparent 1px),linear-gradient(90deg,rgb(255 255 255 / .05) 1px,transparent 1px);background-size:44px 44px;mask-image:radial-gradient(ellipse at 70% 40%,#000 20%,transparent 75%);-webkit-mask-image:radial-gradient(ellipse at 70% 40%,#000 20%,transparent 75%)}
+  .rm-mesh i{position:absolute;border-radius:50%;filter:blur(60px);opacity:.75;animation:rm-drift 16s ease-in-out infinite}
+  .rm-mesh i:nth-child(1){width:520px;height:420px;left:-140px;top:-160px;background:rgb(var(--rm-glow) / .75)}
+  .rm-mesh i:nth-child(2){width:460px;height:380px;right:-120px;top:10%;background:rgb(0 120 212 / .6);animation-delay:-5s;animation-duration:19s}
+  .rm-mesh i:nth-child(3){width:380px;height:300px;left:35%;bottom:-220px;background:rgb(91 63 184 / .55);animation-delay:-9s;animation-duration:22s}
+  @keyframes rm-drift{33%{transform:translate(40px,30px) scale(1.08)}66%{transform:translate(-30px,20px) scale(.95)}}
+  .rm-hero h1{background:linear-gradient(120deg,#fff 30%,rgb(var(--rm-glow)) 70%,#8fcbf7);-webkit-background-clip:text;background-clip:text;color:transparent;text-wrap:balance}
+  .rm-primary{box-shadow:0 10px 28px -10px rgb(0 0 0 / .6);transition:transform .2s,box-shadow .2s}.rm-primary:hover{transform:translateY(-2px);box-shadow:0 16px 34px -12px rgb(255 255 255 / .35)}
+  .rm-secondary{background:rgb(255 255 255 / .08)!important;-webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px)}.rm-secondary:hover{background:rgb(255 255 255 / .16)!important}
+  .rm-perks{display:flex;flex-wrap:wrap;gap:.5rem;margin-top:1.25rem;list-style:none;padding:0}
+  .rm-perks li{display:flex;align-items:center;gap:.4rem;padding:.35rem .75rem;border-radius:999px;background:rgb(255 255 255 / .08);border:1px solid rgb(255 255 255 / .16);font-size:.85rem;font-weight:600;color:#eef5fc;-webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px)}
+  .rm-journey-card{position:relative;padding:1.4rem;border-radius:22px;background:linear-gradient(160deg,rgb(255 255 255 / .14),rgb(255 255 255 / .05));border:1px solid rgb(255 255 255 / .22);box-shadow:0 30px 70px -30px rgb(0 0 0 / .7),inset 0 1px 0 rgb(255 255 255 / .25);-webkit-backdrop-filter:blur(16px);backdrop-filter:blur(16px);animation:rm-bob 7s ease-in-out infinite}
+  @keyframes rm-bob{50%{transform:translateY(-8px)}}
+  .rm-jc-k{font-size:.75rem;font-weight:800;letter-spacing:.14em;text-transform:uppercase;color:#cfe3f6}
+  .rm-jc-steps{margin-top:1rem;display:grid;gap:.7rem;list-style:none;padding:0;position:relative}
+  .rm-jc-steps::before{content:'';position:absolute;left:19px;top:20px;bottom:20px;width:2px;background:linear-gradient(rgb(var(--rm-glow)),#4fa3ff,#ffd75e)}
+  .rm-jc-steps li{position:relative;display:flex;align-items:center;gap:.85rem;padding:.65rem .8rem .65rem .4rem;border-radius:14px;background:rgb(255 255 255 / .07);border:1px solid rgb(255 255 255 / .12);animation:rm-step-in .6s cubic-bezier(.2,.8,.2,1) calc(var(--i) * 220ms + 200ms) both}
+  @keyframes rm-step-in{from{opacity:0;transform:translateX(18px)}}
+  .rm-jc-dot{position:relative;z-index:1;flex:none;display:grid;place-items:center;width:30px;height:30px;margin-left:5px;border-radius:50%;font-weight:800;font-size:.85rem;color:#071a30;background:linear-gradient(135deg,#fff,rgb(var(--rm-glow)));box-shadow:0 0 0 4px rgb(255 255 255 / .1),0 0 18px rgb(var(--rm-glow) / .7)}
+  .rm-jc-steps li:last-child .rm-jc-dot{background:linear-gradient(135deg,#fff3c4,#ffd75e);box-shadow:0 0 0 4px rgb(255 215 94 / .15),0 0 22px rgb(255 215 94 / .7);animation:rm-glow 2.4s ease-in-out infinite}
+  @keyframes rm-glow{50%{box-shadow:0 0 0 7px rgb(255 215 94 / .08),0 0 30px rgb(255 215 94 / .9)}}
+  .rm-jc-steps b{display:block;font-size:1.15rem;letter-spacing:-.01em;color:#fff}.rm-jc-steps small{display:block;font-size:.78rem;color:#cfe0f1}
+  .rm-jc-bar{margin-top:1.1rem;height:8px;border-radius:999px;background:rgb(255 255 255 / .12);overflow:hidden}
+  .rm-jc-bar span{display:block;height:100%;width:72%;border-radius:inherit;background:linear-gradient(90deg,rgb(var(--rm-glow)),#4fa3ff,#ffd75e);background-size:200% 100%;animation:rm-fill 1.6s cubic-bezier(.2,.8,.2,1) .6s both,rm-sheen 3s linear 2.2s infinite}
+  @keyframes rm-fill{from{width:0}}@keyframes rm-sheen{to{background-position:-200% 0}}
+  .rm-jc-foot{margin-top:.8rem;font-size:.85rem;font-style:italic;color:#dbe8f5}
+  @media(max-width:1023px){.rm-journey-card{max-width:460px}}
+
+  .rm-stats li{position:relative;overflow:hidden;background:linear-gradient(160deg,var(--card),rgb(var(--rm-glow) / .07));border-color:rgb(var(--rm-glow) / .25);box-shadow:var(--glass-shadow);transition:transform .25s,box-shadow .25s}
+  .rm-stats li::before{content:'';position:absolute;inset:0 0 auto;height:3px;background:linear-gradient(90deg,rgb(var(--rm-glow)),#0078d4)}
+  .rm-stats li:hover{transform:translateY(-4px);box-shadow:0 20px 40px -20px rgb(var(--rm-glow) / .6)}
+  .rm-stats strong{font-size:2.4rem;font-weight:850;letter-spacing:-.03em;background:linear-gradient(135deg,#0078d4,rgb(var(--rm-glow)));-webkit-background-clip:text;background-clip:text;color:transparent}
+
+  .rm-finder{position:relative;border-color:rgb(var(--rm-glow) / .3);background:linear-gradient(135deg,rgb(var(--rm-glow) / .12),rgb(0 120 212 / .05) 60%,transparent);box-shadow:var(--glass-shadow)}
+  .rm-chip{transition:transform .2s,border-color .2s,background .2s,box-shadow .2s;font-weight:600}
+  .rm-chip:hover{box-shadow:0 8px 18px -10px rgb(var(--rm-glow) / .7)}
+  .rm-chip[aria-pressed=true]{background:linear-gradient(135deg,#0078d4,#4b3fc0);border-color:transparent;color:#fff;box-shadow:0 10px 22px -10px rgb(0 100 200 / .7)}
+  .rm-result:not([hidden]){animation:rm-pop .45s cubic-bezier(.2,.9,.3,1.3);border-left:0;border:1px solid rgb(var(--rm-glow) / .35);background:linear-gradient(135deg,rgb(var(--rm-glow) / .14),var(--card) 70%);box-shadow:0 18px 40px -22px rgb(var(--rm-glow) / .8)}
+  @keyframes rm-pop{from{opacity:0;transform:translateY(8px) scale(.97)}}
+
+  /* Journey rail: steps 1-3 hang off one glowing line */
+  .rm-step{position:relative}
+  @media(min-width:1024px){
+    .rm-step{padding-left:4.25rem}
+    .rm-step::before{content:attr(data-n);position:absolute;left:0;top:-.2rem;display:grid;place-items:center;width:46px;height:46px;border-radius:50%;font-weight:850;font-size:1.2rem;color:#fff;background:linear-gradient(135deg,#0078d4,rgb(var(--rm-glow)));box-shadow:0 0 0 6px rgb(var(--rm-glow) / .12),0 10px 24px -8px rgb(var(--rm-glow) / .8)}
+    .rm-step::after{content:'';position:absolute;left:22px;top:3.2rem;bottom:-3.2rem;width:2px;background:linear-gradient(rgb(var(--rm-glow) / .7),rgb(var(--rm-glow) / .05))}
+  }
+  .rm-entry,.rm-card,.rm-expert,.rm-platform,.rm-cross a{transition:transform .25s,box-shadow .25s,border-color .25s}
+  .rm-entry:hover,.rm-card:hover,.rm-expert:hover,.rm-platform:hover,.rm-cross a:hover{transform:translateY(-4px);border-color:rgb(var(--rm-glow) / .6);box-shadow:0 22px 44px -24px rgb(var(--rm-glow) / .75)}
+  .rm-card{position:relative;overflow:hidden;padding:1.2rem}
+  .rm-card::before{content:'';position:absolute;inset:0 0 auto;height:4px;background:linear-gradient(90deg,#0078d4,rgb(var(--rm-glow)))}
+  .rm-card[data-live]::after{content:'● Free course live';position:absolute;top:.9rem;right:.9rem;padding:.2rem .55rem;border-radius:999px;background:var(--ok-soft);color:var(--ok);font-size:.7rem;font-weight:800}
+  .rm-card-top :global(svg){padding:6px;width:40px;height:40px;border-radius:12px;background:linear-gradient(135deg,rgb(0 120 212 / .14),rgb(var(--rm-glow) / .18))}
+  .rm-tools li{border:1px solid rgb(var(--rm-glow) / .2)}
+  .rm-expert{position:relative;overflow:hidden;padding:1.3rem;background:linear-gradient(160deg,var(--card) 40%,rgb(var(--rm-glow) / .12));border-color:rgb(var(--rm-glow) / .3)}
+  .rm-summit{position:absolute;right:-.4rem;bottom:-.9rem;font-size:5rem;opacity:.12;transform:rotate(-8deg);pointer-events:none}
+  .rm-entry{background:linear-gradient(135deg,var(--card),rgb(0 120 212 / .05))}
+
+  .rm-motivation{position:relative;overflow:hidden;padding:1.75rem;border:0;color:#fff;background:radial-gradient(60% 90% at 100% 0%,rgb(var(--rm-glow) / .55),transparent 70%),linear-gradient(135deg,#0a2a4d,#0b1838);box-shadow:0 30px 60px -30px rgb(0 30 70 / .8)}
+  .rm-motivation .eyebrow{color:#cfe3f6}.rm-motivation .rm-h2{color:#fff}
+  .rm-milestones{position:relative}
+  .rm-milestones li{position:relative;padding:1rem;background:rgb(255 255 255 / .07);border:1px solid rgb(255 255 255 / .14);-webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px);transition:transform .25s,background .25s}
+  .rm-milestones li:hover{transform:translateY(-4px);background:rgb(255 255 255 / .12)}
+  .rm-ms-ic{display:grid!important;place-items:center;width:46px;height:46px;margin-bottom:.6rem;border-radius:14px;font-size:1.4rem!important;text-transform:none!important;background:linear-gradient(135deg,rgb(255 255 255 / .22),rgb(255 255 255 / .06));border:1px solid rgb(255 255 255 / .25)}
+  .rm-milestones li>span:not(.rm-ms-ic){color:#ffd75e}.rm-milestones h3{color:#fff;font-size:1.15rem}.rm-milestones p{color:#d5e4f3}
+  .rm-cta{margin-top:1.5rem;display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:1rem;padding-top:1.25rem;border-top:1px solid rgb(255 255 255 / .15)}
+  .rm-cta>p:first-child{max-width:46ch;color:#dbe8f5}.rm-cta strong{color:#fff}
+  .rm-cross a{background:linear-gradient(135deg,var(--card),rgb(var(--rm-glow) / .08))}
+  .rm-cross a>span{transition:transform .3s}.rm-cross a:hover>span{transform:scale(1.2) rotate(-6deg)}
+  .rm-faq details{transition:background .2s}.rm-faq details[open]{background:linear-gradient(90deg,rgb(var(--rm-glow) / .08),transparent);border-radius:10px;padding-inline:.75rem}
+
+  /* reveal: fade and rise, staggered */
+  :global(html.js) .rm-reveal.is-visible{animation:rm-rise .6s cubic-bezier(.2,.8,.2,1) var(--rd,0ms) both}
+  @keyframes rm-rise{from{opacity:0;transform:translateY(22px)}to{opacity:1;transform:none}}
+  @media(prefers-reduced-motion:reduce){.rm-mesh i,.rm-journey-card,.rm-jc-steps li,.rm-jc-dot,.rm-jc-steps li:last-child .rm-jc-dot,.rm-jc-bar span,.rm-result:not([hidden]),.rm-reveal.is-visible{animation:none!important}}
 </style>

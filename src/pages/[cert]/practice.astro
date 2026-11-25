@@ -254,6 +254,12 @@ const crumbs = [{ name: 'Home', url: '/' }, { name: exam.code, url: `/${exam.slu
   $('sp-again').addEventListener('click', () => start('smart'));
   document.querySelectorAll<HTMLButtonElement>('.sp-mode').forEach((b) => b.addEventListener('click', () => start(b.dataset.mode as PracticeMode)));
   $('sp-domain-go').addEventListener('click', () => start(`domain-${($('sp-domain') as HTMLSelectElement).value}` as PracticeMode));
+  // Deep link from My Progress: /<exam>/practice/#domain-2 starts that area straight away.
+  {
+    const m = location.hash.match(/^#domain-(\d+)$/);
+    const sel = $('sp-domain') as HTMLSelectElement;
+    if (m && [...sel.options].some((o) => o.value === m[1])) { sel.value = m[1]; start(`domain-${m[1]}` as PracticeMode); }
+  }
   $('sp-reset').addEventListener('click', () => { if (confirm(`Forget every ${data.code} practice answer in this browser? Your XP and badges stay.`)) { resetDeck(data.cert); paint(); } });
   window.addEventListener('review-change', paint);
   const paintFlags = () => {

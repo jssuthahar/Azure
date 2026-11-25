@@ -1,0 +1,101 @@
+---
+/**
+ * Captures "exam dumps" searches honestly: what Microsoft's policy says,
+ * the real risks, and free legal practice instead. We never publish real or
+ * recalled exam questions (house rule).
+ */
+import PublicLayout from '../layouts/PublicLayout.astro';
+import BrandLine from '../components/BrandLine.astro';
+import { liveExams } from '../data/exams';
+import { getQuestionBank } from '../lib/learn';
+import { SITE } from '../config';
+
+const exams = await Promise.all(liveExams().map(async (e) => ({ e, n: (await getQuestionBank(e.slug)).length })));
+const codes = exams.map(({ e }) => e.code).join(', ');
+const POLICY = 'https://learn.microsoft.com/credentials/support/exam-and-assessment-lab-security-policies';
+const AGREEMENT = 'https://learn.microsoft.com/credentials/support/certification-exam-candidate-agreement';
+const title = 'Azure Exam Dumps 2026: Risks and Free Practice Tests | MSDEVBUILD';
+const description = `Thinking about ${exams.slice(0, 3).map(({ e }) => e.code).join(' or ')} dumps? See what Microsoft does about brain dumps and use free, original practice tests instead.`;
+const answer = 'Exam dumps are copies of real Microsoft exam questions, obtained by breaking the exam agreement. Microsoft treats using them as cheating: it can cancel your score, revoke your certifications and ban you from future exams. Original practice tests and hands-on labs teach the same skills without that risk.';
+const faq = [
+  { q: 'Are Microsoft exam dumps legal to use?', a: 'Using them breaks the Microsoft Certification Exam Candidate Agreement you accept before every exam. Microsoft lists using brain dump material as misconduct and can revoke scores and certifications and ban the candidate.' },
+  { q: 'Can Microsoft find out I used dumps?', a: 'Microsoft says it uses data forensics, statistical evidence of improper activity, to cancel scores, revoke certifications and ban candidates, and it can ask any candidate to retest when it suspects fraud.' },
+  { q: 'Are the questions on MSDEVBUILD dumps?', a: 'No. Every question on this site is original and written to practise the skills in Microsoft’s published skills outline. We never publish real, recalled or leaked exam questions.' },
+  { q: 'Where can I get a free AZ-104 or AI-901 practice test?', a: `Each live course here has a free timed practice test (${codes}). Microsoft also publishes a free practice assessment for most exams on Microsoft Learn.` },
+  { q: 'Do dumps even work after an exam update?', a: 'Often not. Microsoft refreshes skills outlines and question pools; AZ-104, for example, got a new outline on 17 April 2026. Memorised answers to old questions don’t help with new ones, and they don’t help in a job interview.' },
+  { q: 'How do I report a dump site?', a: 'Microsoft asks people to report sites that share its exam content through its exam security form at aka.ms/wwlcertsecurity.' },
+];
+const schema = [
+  { '@type': 'TechArticle', headline: 'Azure exam dumps: the risks, and free practice tests instead', description, datePublished: '2026-11-25', dateModified: '2026-11-25', url: `${SITE.url}/exam-dumps/`, author: { '@id': `${SITE.url}/#author` }, publisher: { '@id': `${SITE.url}/#organization` } },
+  { '@type': 'FAQPage', mainEntity: faq.map((f) => ({ '@type': 'Question', name: f.q, acceptedAnswer: { '@type': 'Answer', text: f.a } })) },
+];
+const crumbs = [{ name: 'Home', url: '/' }, { name: 'Certifications', url: '/certifications/' }, { name: 'Exam dumps', url: '/exam-dumps/' }];
+const flags = [
+  ['“Actual exam questions” or “real questions”', 'Real questions can only come from someone who broke the exam agreement.'],
+  ['“100% pass guarantee”', 'Nobody can promise a pass honestly. Microsoft changes question pools.'],
+  ['“Latest PDF, updated today”', 'A downloadable list of answers is the classic brain dump format.'],
+  ['“We take the exam for you”', 'That’s proxy testing, which Microsoft names as fraud.'],
+];
+---
+<PublicLayout title={title} description={description} breadcrumbs={crumbs} schema={schema}>
+  <div class="mx-auto max-w-4xl px-4 py-10 sm:px-6">
+    <p class="eyebrow">Exam integrity</p>
+    <h1 class="mt-2 text-3xl font-extrabold tracking-tight sm:text-4xl">Azure exam dumps: what they cost you, and what to use instead</h1>
+    <div class="mt-3"><BrandLine variant="byline" /></div>
+    <div class="answer-box mt-6" data-speakable><p class="answer-text"><strong>Short answer:</strong> {answer}</p></div>
+
+    <h2 class="xd-h2">What Microsoft says about brain dumps</h2>
+    <p class="xd-p">Microsoft defines a brain dump as a source, such as a website, with exam questions that were fraudulently obtained to share or sell. Its <a href={POLICY} target="_blank" rel="noopener" class="xd-a">exam security policy<span class="sr-only"> (opens in a new tab)</span></a> lists what can happen to a candidate who uses one:</p>
+    <ul class="xd-risks">
+      <li><span aria-hidden="true">⛔</span><div><strong>Score cancelled</strong><p>The exam result can be invalidated, with no refund.</p></div></li>
+      <li><span aria-hidden="true">🗑️</span><div><strong>Certifications revoked</strong><p>Not just that exam: credentials you already hold can be removed.</p></div></li>
+      <li><span aria-hidden="true">🚫</span><div><strong>Banned from exams</strong><p>A candidate can be permanently stopped from taking Microsoft exams.</p></div></li>
+      <li><span aria-hidden="true">🔎</span><div><strong>Caught by data</strong><p>Microsoft uses data forensics and can ask anyone to retest.</p></div></li>
+    </ul>
+    <p class="xd-p">You accept these rules in the <a href={AGREEMENT} target="_blank" rel="noopener" class="xd-a">candidate agreement<span class="sr-only"> (opens in a new tab)</span></a> before every exam.</p>
+
+    <h2 class="xd-h2">How to spot a dump site</h2>
+    <ul class="xd-flags">{flags.map(([f, why]) => <li><strong>🚩 {f}</strong><span>{why}</span></li>)}</ul>
+
+    <h2 class="xd-h2">Free practice tests that aren’t dumps</h2>
+    <p class="xd-p">Every question below is original, written against Microsoft’s published skills outline, with an explanation for each answer. Practise the skill, not the answer key.</p>
+    <ul class="xd-grid">
+      {exams.map(({ e, n }) => (
+        <li><a href={`/${e.slug}/mock-exam/`} class="xd-card">
+          <strong>{e.code} practice test</strong>
+          <span>{e.name.replace(/^Microsoft /, '')}</span>
+          <small>{n} original questions · timed · scored 1–1000</small>
+        </a></li>
+      ))}
+    </ul>
+    <p class="xd-p">Microsoft also offers a free practice assessment for most exams on Microsoft Learn, and our labs let you practise in a simulated Azure portal, Cloud Shell and Foundry, which is where the real understanding comes from.</p>
+
+    <h2 class="xd-h2">Frequently asked questions</h2>
+    <div class="xd-faq">{faq.map((f) => <details><summary><h3>{f.q}</h3></summary><p>{f.a}</p></details>)}</div>
+    <p class="mt-8 text-sm text-muted">Policy details checked on Microsoft Learn on 25 November 2026. MSDEVBUILD is independent and not affiliated with Microsoft.</p>
+  </div>
+</PublicLayout>
+
+<style>
+  .xd-h2 { margin-top: 2.5rem; font-size: 1.45rem; font-weight: 800; letter-spacing: -.02em; }
+  .xd-p { margin-top: .75rem; line-height: 1.65; }
+  .xd-a { font-weight: 650; color: var(--accent-deep); text-decoration: underline; }
+  .xd-risks { margin-top: 1rem; display: grid; gap: .75rem; grid-template-columns: repeat(auto-fill, minmax(min(100%, 200px), 1fr)); }
+  .xd-risks li { display: flex; gap: .7rem; padding: .9rem; border-radius: 14px; border: 1px solid var(--card-line); background: var(--card); }
+  .xd-risks li > span { font-size: 1.5rem; }
+  .xd-risks p { margin-top: .2rem; font-size: .88rem; color: var(--text-muted); }
+  .xd-flags { margin-top: 1rem; display: grid; gap: .6rem; }
+  .xd-flags li { display: flex; flex-direction: column; padding: .8rem 1rem; border-left: 4px solid #d13438; border-radius: 10px; background: var(--card); border-top: 1px solid var(--border); border-right: 1px solid var(--border); border-bottom: 1px solid var(--border); }
+  .xd-flags span { margin-top: .2rem; font-size: .9rem; color: var(--text-muted); }
+  .xd-grid { margin-top: 1rem; display: grid; gap: .75rem; grid-template-columns: repeat(auto-fill, minmax(min(100%, 220px), 1fr)); }
+  .xd-card { display: flex; flex-direction: column; height: 100%; padding: 1rem; border-radius: 14px; border: 1px solid var(--card-line); background: linear-gradient(135deg, var(--card), rgb(0 120 212 / .06)); transition: transform .2s, border-color .2s, box-shadow .2s; }
+  .xd-card:hover { transform: translateY(-3px); border-color: var(--accent); box-shadow: 0 18px 36px -20px rgb(0 60 120 / .45); }
+  .xd-card strong { color: var(--accent-deep); font-size: 1.05rem; }
+  .xd-card span { font-size: .9rem; font-weight: 600; }
+  .xd-card small { margin-top: .4rem; font-size: .8rem; color: var(--text-muted); }
+  .xd-faq { margin-top: 1rem; }
+  .xd-faq details { border-top: 1px solid var(--border); padding: .85rem 0; }
+  .xd-faq summary { cursor: pointer; }
+  .xd-faq summary h3 { display: inline; font-size: 1.02rem; font-weight: 750; }
+  .xd-faq details p { margin-top: .5rem; color: var(--text-muted); line-height: 1.6; }
+</style>

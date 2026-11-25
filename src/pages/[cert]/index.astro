@@ -65,7 +65,7 @@ const sequence = [
   ['💼', 'Get interview ready', 'Turn what you know into answers for real jobs.'],
 ];
 
-const title = `${exam.code} ${shortName}: Free Course & Syllabus`;
+const title = [`${exam.code} ${shortName}: Free Course 2026`, `${exam.code} ${shortName}: Free Course`].find((t) => t.length <= 62) ?? `${exam.code}: Free Course and Syllabus 2026`;
 const description = `Free ${exam.code} course on the official skills outline: ${published.length} lessons, 3D simulations, portal labs, ${bank.length} practice questions and mock exams.`;
 const crumbs = [
   { name: 'Home', url: '/' },

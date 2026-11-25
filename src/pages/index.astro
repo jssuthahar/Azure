@@ -84,12 +84,15 @@ const faq = [
   { q: 'Do I need an Azure account to practise?', a: 'No. The Azure portal, Cloud Shell and 3D scenes are simulations that run in your browser, so you can practise without a subscription or a surprise bill.' },
   { q: 'Do I need to sign in?', a: 'No. Everything works without an account and your progress is saved in this browser. Sign in with Google only if you want it synced across your devices.' },
   { q: 'Are the practice questions real exam questions?', a: 'No. Every question is original and written to practise the skills in Microsoft’s official outline. We never publish real or leaked exam questions.' },
+  { q: 'What replaced AI-900, AZ-204 and AZ-500?', a: 'AI-901 replaced AI-900 (retired 30 June 2026), AI-200 replaced AZ-204 (retired 31 July 2026) and SC-500 replaced AZ-500 (retired 31 August 2026). AZ-104 and AZ-900 are still current.' },
+  { q: 'Is there a free Azure practice test?', a: 'Yes. Every live course here has a free, timed practice test in the style of the real exam, plus quizzes in each lesson and a smart practice mode. All questions are original, never exam dumps.' },
+  { q: 'Can I practise Azure without an Azure account?', a: 'Yes. The Azure portal, Cloud Shell, Foundry, 3D scenes and the Architecture Builder are simulators that run in your browser, so there is no subscription and no bill.' },
   { q: 'When will AI-103, AI-300 and SC-500 be ready?', a: 'They are planned. Each course opens once its lessons, questions and mock exam are complete and the exam has been checked on Microsoft Learn.' },
 ];
 
 // Home targets the queries learners type (exam code, free, practice exam, labs), not just the brand name.
-const homeTitle = `Free ${exam.code} Tutorials, Practice Exams & Azure Labs | MSDEVBUILD`;
-const homeDescription = `Learn Microsoft Azure ${exam.code} from scratch: free lessons, 3D simulations, portal practice labs, mock exams, quizzes and interview questions. No Azure account needed.`;
+const homeTitle = 'Free Azure Practice Tests, Labs & Courses 2026 | MSDEVBUILD';
+const homeDescription = `Free ${liveExams().map((e) => e.code).slice(0, 4).join(', ')} courses with practice tests, Azure simulator labs, 3D lessons and mock exams. No Azure account needed.`;
 const schema = [
   { '@type': 'WebPage', '@id': `${SITE.url}/#home`, name: homeTitle, description: homeDescription, url: `${SITE.url}/`, publisher: { '@id': `${SITE.url}/#organization` }, author: { '@id': `${SITE.url}/#author` } },
   { '@type': 'ItemList', name: 'Featured certification courses', itemListElement: featured.map((c, i) => ({ '@type': 'ListItem', position: i + 1, name: `${c.code}: ${c.name}`, url: c.status === 'active' ? `${SITE.url}/${c.slug}/` : `${SITE.url}/certifications/#${c.slug}` })) },
@@ -186,7 +189,7 @@ const schema = [
         </ul>
       </div>
       <p class="hc-empty mt-6 text-muted" data-hc-empty hidden>No courses match that filter yet. <a href="/certifications/" class="font-semibold text-[var(--accent-deep)] hover:underline">See every certification</a>.</p>
-      <p class="mt-6 text-sm text-muted">Looking for AI-900, AZ-204 or AZ-500? Microsoft retired AI-900 on 30 June 2026 (AI-901 replaces it), AZ-204 on 31 July 2026 (AI-200 replaces it) and AZ-500 on 31 August 2026 (SC-500 replaces it).</p>
+      <p class="mt-6 text-sm text-muted">Looking for AI-900, AZ-204 or AZ-500? Microsoft retired AI-900 on 30 June 2026 (AI-901 replaces it), AZ-204 on 31 July 2026 (AI-200 replaces it) and AZ-500 on 31 August 2026 (SC-500 replaces it). <a href="/exam-changes-2026/" class="font-semibold text-[var(--accent-deep)] hover:underline">All 2026 exam changes</a>.</p>
     </div>
   </section>
 

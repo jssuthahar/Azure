@@ -3,6 +3,8 @@ import { getCollection } from 'astro:content';
 import { getNav } from '../lib/learn';
 import { SITE } from '../config';
 import { getExam, liveExams } from '../data/exams';
+import { VERSUS } from '../data/exam-versus';
+import { EXAM_CHANGES, EXAM_UPDATES, VERIFIED, niceDate } from '../data/exam-changes';
 
 const exam = getExam();
 
@@ -43,7 +45,13 @@ export const GET: APIRoute = async () => {
   for (const s of exam.services) lines.push(`- [${s.name}](${u(`/${exam.slug}/services/${s.slug}/`)}): ${plain(s.what)} AWS equivalent: ${s.aws}.`);
   lines.push('', '## Azure Simulator: what happens if…?', '');
   for (const w of exam.whatIfs) lines.push(`- [${w.q}](${u(`/simulator/${w.slug}/`)}): ${plain(w.answer)}`);
+  lines.push('', '## Microsoft exam changes in 2026 (checked on Microsoft Learn ' + VERIFIED + ')', '', `Details: ${u('/exam-changes-2026/')}`, '');
+  for (const x of EXAM_CHANGES) lines.push(`- ${x.old} (${x.oldName}) retired ${niceDate(x.retired)}; replaced by ${x.next.join(', ')} (${x.nextName})${x.available ? `, available from ${niceDate(x.available)}` : ''}. ${x.what}`);
+  for (const up of EXAM_UPDATES) lines.push(`- ${up.code}: ${up.text}`);
+  for (const v of VERSUS) lines.push(`- [${v.old.code} vs ${v.next.toUpperCase()}](${u(v.path)}): ${v.answer}`);
+  lines.push(`- [Exam dumps: risks and free alternatives](${u('/exam-dumps/')}): Microsoft treats brain dumps as misconduct (scores cancelled, certifications revoked, exam bans). Every question on MSDEVBUILD is original, never a dump.`);
   lines.push('', '## Practice and tools', '',
+    ...liveExams().filter((e) => !e.sim).map((e) => `- [${e.code} Azure Architecture Builder](${u(`/${e.slug}/architect/`)}): drag-and-drop Azure network designer in the browser; checks subnets, NSGs, load balancers, peering and private endpoints, simulates traffic hop by hop and explains the design in plain English (rule-based, not AI).`),
     `- [All certification courses](${u('/certifications/')}): every Microsoft certification course on the site by level, with which ones are live and which are planned.`,
     `- [Azure AI certification roadmap](${u('/ai-certifications/')}): which Azure AI certification fits which role (AI-103 apps and agents, AI-200 cloud development, AI-300 MLOps, AB-620 Copilot Studio agents, SC-500 security), with the AB-100 and AI-500 expert prerequisites.`,
     `- [Microsoft security certification roadmap](${u('/security-certifications/')}): role-based Microsoft security paths for SecOps, identity, data and AI security, plus the SC-100 expert route.`,

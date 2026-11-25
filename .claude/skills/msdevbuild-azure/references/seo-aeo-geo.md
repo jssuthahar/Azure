@@ -47,3 +47,9 @@
 ## Search engine pings
 
 `npm run indexnow` submits URLs to search engines. It is outward-facing: only the owner runs it, after deploying.
+
+## Search-intent pages (added 25 Nov 2026)
+
+- `/exam-changes-2026/` is built from `src/data/exam-changes.ts` (retired exams, replacements, dates). Every date was checked on Microsoft Learn; bump `VERIFIED` only after re-checking. `llms.txt` and the home FAQ reuse the same facts, so change them in the data file, not in page copy.
+- `/exam-dumps/` answers "dumps" searches honestly: Microsoft's exam security policy (brain dumps = misconduct: scores cancelled, certifications revoked, bans), red flags, and links to our original practice tests. We never publish real, recalled or leaked questions, and never use the word "dumps" for our own material.
+- Titles carry the year where people search with it: course pages `<CODE> <name>: Free Course 2026` (falls back without the year above 62 chars), mock exams `<CODE> Practice Test 2026: Free Mock Exam, Real Format`. Update the year each January.

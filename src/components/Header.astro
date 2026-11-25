@@ -66,7 +66,7 @@ const active = allLinks.filter((t) => !t.href.includes('#') && (t.href === '/' ?
 const groupActive = (g: Group) => g.items.some((i) => i.href === active);
 ---
 
-<header class="site-header sticky top-0 z-50 border-b border-default bg-[var(--bg)]" data-mode={mode}>
+<header class="site-header hdr-glass sticky top-0 z-50" data-mode={mode}>
   <div class="hdr-row flex h-14 items-center gap-3 px-4 sm:px-6">
     <button id="app-back" type="button" hidden class="-ml-2 grid size-10 shrink-0 place-items-center rounded-md text-2xl leading-none hover:bg-subtle" aria-label="Back">‹</button>
     <a href="/" class="flex shrink-0 items-center gap-2.5" aria-label={`${SITE.brandLine}: home`}>
@@ -237,6 +237,44 @@ const groupActive = (g: Group) => g.items.some((i) => i.href === active);
   .tb-ico { flex: none; display: grid; place-items: center; width: 34px; height: 34px; border-radius: 9px; background: var(--pastel-grey); font-size: 17px; font-weight: 700; }
   .tb-label { display: block; font-weight: 600; }
   .tb-desc { display: block; font-size: .82rem; color: var(--text-muted); line-height: 1.35; }
+
+  /* ---------- Glass header ----------
+     The frosted layer is a ::before so the header itself isn't a backdrop root:
+     the fixed dropdowns can then blur the page behind them too. */
+  .hdr-glass { isolation: isolate; background: transparent; }
+  .hdr-glass::before { content: ''; position: absolute; inset: 0; z-index: -1; pointer-events: none; background: linear-gradient(180deg, rgb(255 255 255 / .86), rgb(246 250 255 / .72)); -webkit-backdrop-filter: blur(18px) saturate(180%); backdrop-filter: blur(18px) saturate(180%); transition: box-shadow .25s, background .25s; }
+  .hdr-glass::after { content: ''; position: absolute; left: 0; right: 0; bottom: 0; height: 1px; pointer-events: none; background: linear-gradient(90deg, transparent, rgb(0 120 212 / .45) 25%, rgb(91 63 184 / .4) 75%, transparent); }
+  .hdr-glass.is-scrolled::before { box-shadow: 0 10px 30px -12px rgb(0 50 110 / .28); }
+  [data-theme='dark'] .hdr-glass::before { background: linear-gradient(180deg, rgb(10 20 36 / .86), rgb(10 20 36 / .7)); }
+  [data-theme='dark'] .hdr-glass::after { background: linear-gradient(90deg, transparent, rgb(80 160 240 / .45) 25%, rgb(150 120 240 / .4) 75%, transparent); }
+  @supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) { .hdr-glass::before { background: var(--bg); } }
+  .hdr-glass #topic-q { background: rgb(255 255 255 / .6); border-color: rgb(0 90 158 / .16); box-shadow: inset 0 1px 2px rgb(0 40 90 / .06); }
+  [data-theme='dark'] .hdr-glass #topic-q { background: rgb(255 255 255 / .06); border-color: rgb(140 180 230 / .2); }
+
+  /* Public bar: a floating glass pill, the current page as a gradient pill */
+  .site-header[data-mode='public'] .topbar { background: transparent; color: var(--text); }
+  .site-header[data-mode='public'] .topbar ul { width: max-content; height: auto; margin: 0 auto .55rem; padding: 4px; gap: 2px; border-radius: 999px; background: var(--glass); border: 1px solid var(--glass-line); box-shadow: var(--glass-shadow), inset 0 1px 0 rgb(255 255 255 / .6); }
+  [data-theme='dark'] .site-header[data-mode='public'] .topbar ul { box-shadow: var(--glass-shadow), inset 0 1px 0 rgb(255 255 255 / .06); }
+  .site-header[data-mode='public'] .topbar a, .site-header[data-mode='public'] .topbar .tb-group { min-height: 38px; padding: 0 1rem; border-radius: 999px; color: var(--text-muted); font-weight: 600; transition: background .2s, color .2s, box-shadow .2s; }
+  .site-header[data-mode='public'] .topbar a:hover, .site-header[data-mode='public'] .topbar .tb-group:hover { background: rgb(0 120 212 / .09); color: var(--text); }
+  .site-header[data-mode='public'] .topbar a[aria-current='page'], .site-header[data-mode='public'] .topbar .tb-group[data-active] { background: linear-gradient(135deg, #0078d4, #4b3fc0); color: #fff; box-shadow: 0 6px 16px -6px rgb(0 100 200 / .65), inset 0 1px 0 rgb(255 255 255 / .25); }
+  .site-header[data-mode='public'] .topbar-more { color: var(--text); background: linear-gradient(90deg, transparent, var(--bg) 65%); }
+  @media (max-width: 767px) { .site-header[data-mode='public'] .topbar ul { margin-inline: .5rem; } }
+
+  /* Learning bar sits on the glass too */
+  .site-header[data-mode='learn'] .topbar { background: transparent; border-top-color: rgb(0 90 158 / .1); }
+  .site-header[data-mode='learn'] .tb-course-li { background: transparent; }
+
+  /* Glass dropdowns */
+  .tb-menu { border-radius: 16px; padding: 8px; background: rgb(255 255 255 / .8); border: 1px solid rgb(255 255 255 / .9); -webkit-backdrop-filter: blur(22px) saturate(180%); backdrop-filter: blur(22px) saturate(180%); box-shadow: 0 24px 60px -18px rgb(0 40 90 / .4), 0 2px 6px rgb(0 40 90 / .08), inset 0 1px 0 rgb(255 255 255 / .7); transform-origin: top left; }
+  .tb-menu:not([hidden]) { animation: tb-pop .16s ease-out; }
+  @keyframes tb-pop { from { opacity: 0; transform: translateY(-4px) scale(.98); } }
+  @media (prefers-reduced-motion: reduce) { .tb-menu:not([hidden]) { animation: none; } }
+  [data-theme='dark'] .tb-menu { background: rgb(14 26 46 / .82); border-color: rgb(140 180 230 / .18); box-shadow: 0 24px 60px -18px rgb(0 0 0 / .7), inset 0 1px 0 rgb(255 255 255 / .05); }
+  @supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) { .tb-menu { background: var(--card); } }
+  .tb-item { border-radius: 10px; transition: background .15s; }
+  .tb-item:hover, .tb-item:focus-visible, .tb-item[aria-current='page'] { background: linear-gradient(90deg, rgb(0 120 212 / .12), rgb(91 63 184 / .06)) !important; }
+  .tb-ico { border-radius: 10px; background: linear-gradient(135deg, rgb(0 120 212 / .14), rgb(91 63 184 / .12)); border: 1px solid rgb(0 120 212 / .12); }
 </style>
 
 <script>
@@ -268,6 +306,12 @@ const groupActive = (g: Group) => g.items.some((i) => i.href === active);
   };
   paintProg();
   window.addEventListener('progress-change', paintProg);
+
+  // Glass header: a deeper shadow once the page scrolls under it
+  const hdr = document.querySelector<HTMLElement>('.site-header');
+  const onScroll = () => hdr?.classList.toggle('is-scrolled', scrollY > 4);
+  addEventListener('scroll', onScroll, { passive: true });
+  onScroll();
 
   // Phones: search toggle
   const header = document.querySelector<HTMLElement>('.site-header');

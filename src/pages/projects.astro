@@ -1,0 +1,101 @@
+---
+/** Guided projects: real-world builds made of existing labs, in order. Progress = completed labs in this browser. */
+import PublicLayout from '../layouts/PublicLayout.astro';
+import { PROJECTS } from '../data/projects';
+import { LABS } from '../lib/sim/labs';
+import { liveExams } from '../data/exams';
+import { SITE } from '../config';
+
+const live = new Set(liveExams().map((e) => e.slug));
+const lab = (id: string) => { const l = LABS.find((x) => x.id === id); if (!l) throw new Error(`projects: unknown lab ${id}`); return l; };
+const projects = PROJECTS.filter((p) => p.steps.every((s) => live.has(lab(s.lab).exam ?? 'az-900'))).map((p) => ({
+  ...p,
+  minutes: p.steps.reduce((n, s) => n + lab(s.lab).minutes, 0),
+  steps: p.steps.map((s) => { const l = lab(s.lab); const ex = l.exam ?? 'az-900'; return { ...s, title: l.title, icon: l.icon, minutes: l.minutes, url: `/${ex}/labs/${l.id}/`, exam: ex.toUpperCase() }; }),
+}));
+const title = 'Guided Azure Projects: Build Real Things, Free | MSDEVBUILD';
+const description = 'Free guided Azure projects: launch a secure web app, build a landing zone, ship a RAG back end or an AI agent, step by step in a simulator.';
+const schema = [{ '@type': 'ItemList', name: 'Guided Azure projects', itemListElement: projects.map((p, i) => ({ '@type': 'ListItem', position: i + 1, name: p.title, url: `${SITE.url}/projects/#${p.id}` })) }];
+---
+<PublicLayout title={title} description={description} breadcrumbs={[{ name: 'Home', url: '/' }, { name: 'Guided projects', url: '/projects/' }]} schema={schema}>
+  <div class="mx-auto max-w-6xl px-4 py-10 sm:px-6">
+    <p class="eyebrow">Learn by building</p>
+    <h1 class="mt-2 text-3xl font-extrabold tracking-tight sm:text-4xl">Guided projects</h1>
+    <p class="mt-3 max-w-3xl text-lg text-muted">Each project is a small real-world job, broken into labs you do in order in the simulator. Finish them all and you’ve built the whole thing, the way you would at work. Free, no Azure account, progress saved in this browser.</p>
+    <ul class="pj-grid mt-8">
+      {projects.map((p) => (
+        <li id={p.id} class="pj scroll-mt-28" data-pj={p.id} data-steps={p.steps.map((s) => s.lab).join(' ')}>
+          <div class="pj-top">
+            <span class="pj-ic" aria-hidden="true">{p.icon}</span>
+            <div class="min-w-0">
+              <p class="pj-meta">{p.exams.map((e) => e.toUpperCase()).join(' + ')} · {p.level} · {p.steps.length} labs · about {p.minutes} min</p>
+              <h2 class="pj-t">{p.title}</h2>
+            </div>
+          </div>
+          <p class="pj-story">{p.story}</p>
+          <div class="pj-prog"><span class="pj-bar"><span data-pj-bar></span></span><span data-pj-count>0/{p.steps.length}</span></div>
+          <ol class="pj-steps">
+            {p.steps.map((s, i) => (
+              <li data-step={s.lab}>
+                <a href={s.url} class="pj-step">
+                  <span class="pj-n" aria-hidden="true">{i + 1}</span>
+                  <span class="min-w-0"><strong>{s.icon} {s.title}</strong><small>{s.why} · {s.minutes} min{p.exams.length > 1 ? ` · ${s.exam}` : ''}</small></span>
+                  <span class="pj-done" aria-hidden="true">✓</span>
+                  <span class="sr-only" data-sr></span>
+                </a>
+              </li>
+            ))}
+          </ol>
+          <p class="pj-out"><strong>You’ll end up with:</strong> {p.outcome}</p>
+          <a href={p.steps[0].url} class="btn btn-accent pj-go" data-pj-go>Start project →</a>
+        </li>
+      ))}
+    </ul>
+    <p class="mt-8 text-sm text-muted">🧪 Simulations for learning only. Nothing is created in Azure. Want to practise fixing things instead? Try the <a href="/troubleshoot/" class="font-semibold text-[var(--accent-deep)] hover:underline">Troubleshooting Centre</a>.</p>
+  </div>
+</PublicLayout>
+
+<script>
+  import { load } from '../lib/progress';
+  const paint = () => {
+    const done = load().labs;
+    document.querySelectorAll<HTMLElement>('[data-pj]').forEach((p) => {
+      const steps = p.dataset.steps!.split(' ');
+      const n = steps.filter((s) => done[s]).length;
+      p.querySelector<HTMLElement>('[data-pj-bar]')!.style.width = `${(n / steps.length) * 100}%`;
+      p.querySelector('[data-pj-count]')!.textContent = n === steps.length ? '🏆 Complete' : `${n}/${steps.length}`;
+      p.querySelectorAll<HTMLElement>('[data-step]').forEach((li) => { const ok = !!done[li.dataset.step!]; li.classList.toggle('is-done', ok); li.querySelector('[data-sr]')!.textContent = ok ? ' (done)' : ''; });
+      const next = steps.find((s) => !done[s]);
+      const go = p.querySelector<HTMLAnchorElement>('[data-pj-go]')!;
+      if (n === steps.length) { go.textContent = 'Do it again →'; }
+      else if (n > 0 && next) { go.href = p.querySelector<HTMLAnchorElement>(`[data-step="${next}"] a`)!.href; go.textContent = `Continue: step ${steps.indexOf(next) + 1} →`; }
+    });
+  };
+  paint();
+  window.addEventListener('progress-change', paint);
+</script>
+
+<style>
+  .pj-grid { display: grid; gap: 1.1rem; grid-template-columns: repeat(auto-fill, minmax(min(100%, 340px), 1fr)); }
+  .pj { display: flex; flex-direction: column; padding: 1.2rem; border-radius: 18px; border: 1px solid var(--card-line); background: var(--card); box-shadow: var(--glass-shadow); }
+  .pj-top { display: flex; gap: .8rem; align-items: center; }
+  .pj-ic { flex: none; display: grid; place-items: center; width: 52px; height: 52px; border-radius: 14px; font-size: 1.7rem; background: linear-gradient(135deg, rgb(0 120 212 / .16), rgb(91 63 184 / .16)); }
+  .pj-meta { font-size: .75rem; font-weight: 700; color: var(--accent-deep); }
+  .pj-t { font-size: 1.2rem; font-weight: 800; line-height: 1.25; }
+  .pj-story { margin-top: .7rem; font-size: .92rem; line-height: 1.55; color: var(--text-muted); }
+  .pj-prog { margin-top: .9rem; display: flex; align-items: center; gap: .6rem; font-size: .8rem; font-weight: 700; }
+  .pj-bar { flex: 1; height: 8px; border-radius: 999px; background: var(--border); overflow: hidden; }
+  .pj-bar span { display: block; height: 100%; width: 0; border-radius: inherit; background: linear-gradient(90deg, #0078d4, #107c10); transition: width .4s; }
+  .pj-steps { margin-top: .8rem; display: grid; gap: .4rem; }
+  .pj-step { display: flex; align-items: center; gap: .65rem; padding: .55rem .65rem; border-radius: 12px; border: 1px solid var(--border); transition: border-color .15s, background .15s; }
+  .pj-step:hover { border-color: var(--accent); }
+  .pj-step strong { display: block; font-size: .88rem; }
+  .pj-step small { display: block; font-size: .78rem; color: var(--text-muted); line-height: 1.4; }
+  .pj-n { flex: none; display: grid; place-items: center; width: 26px; height: 26px; border-radius: 50%; background: var(--band-subtle); font-size: .78rem; font-weight: 800; }
+  .pj-done { margin-left: auto; flex: none; color: #107c10; font-weight: 900; opacity: 0; }
+  .is-done .pj-step { background: rgb(16 124 16 / .06); border-color: rgb(16 124 16 / .35); }
+  .is-done .pj-n { background: #107c10; color: #fff; }
+  .is-done .pj-done { opacity: 1; }
+  .pj-out { margin-top: .9rem; font-size: .88rem; line-height: 1.5; }
+  .pj-go { margin-top: auto; align-self: flex-start; margin-block-start: 1rem; min-height: 44px; }
+</style>

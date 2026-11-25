@@ -235,6 +235,8 @@ const shellName = term ? 'terminal' : 'Cloud Shell';
       sim = new World();
       const saved = restore ? loadSaved() : null;
       if (saved) Object.assign(sim, { rgs: saved.rgs ?? [], res: saved.res ?? [], events: saved.events ?? [] }, saved.world ?? {});
+      // Troubleshooting challenges start broken: build the faulty setup, then forget its events so only the learner's fixes count.
+      if (!saved && lab.setup?.length) { for (const c of lab.setup) runCli(c, sim); sim.events.length = 0; }
       // Fresh element so the previous portal's event listeners are dropped.
       const fresh = portalEl.cloneNode(false) as HTMLElement;
       portalEl.replaceWith(fresh);

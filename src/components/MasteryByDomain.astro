@@ -1,0 +1,125 @@
+---
+/**
+ * My Progress: mastery by exam domain, for every live exam. Each domain shows
+ * a mastery ring (the same readiness blend as Smart practice: question
+ * strength, plus the latest mock exams when there are some), lessons done and
+ * questions answered. The weakest domain gets a one-tap practice link
+ * (/<exam>/practice/#domain-N). Everything is read from this browser.
+ */
+import { liveExams } from '../data/exams';
+import { getNav, getQuestionBank } from '../lib/learn';
+
+const exams = await Promise.all(liveExams().map(async (e) => {
+  const nav = (await getNav(e.slug)).filter((t) => t.published);
+  const bank = (await getQuestionBank(e.slug)).map((q) => ({ id: q.id, domain: q.domain }));
+  return {
+    slug: e.slug, code: e.code,
+    modules: e.modules.map((m) => ({ domain: m.domain, title: m.shortTitle, weight: m.weight, weightMid: m.weightMid, url: `/${e.slug}/${m.slug}/`, keys: nav.filter((t) => t.module.slug === m.slug).map((t) => t.key) })),
+    bank,
+  };
+}));
+const payload = JSON.stringify(exams).replace(/</g, '\\u003c');
+---
+<section class="mx-sec mt-8" aria-labelledby="mx-h" data-mx>
+  <div class="mx-head">
+    <div>
+      <h2 id="mx-h" class="text-xl font-bold">Mastery by domain</h2>
+      <p class="mt-1 text-sm text-muted">How ready you are in each part of the exam, from your quiz and practice answers and your latest mock exams.</p>
+    </div>
+    <div class="mx-tabs" role="tablist" aria-label="Choose an exam">
+      {exams.map((e, i) => <button type="button" role="tab" class="mx-tab" data-mx-exam={e.slug} aria-selected={i === 0 ? 'true' : 'false'}>{e.code}</button>)}
+    </div>
+  </div>
+  <div class="mx-body" data-mx-body role="tabpanel" aria-live="polite"></div>
+  <script type="application/json" data-mx-data set:html={payload} />
+</section>
+
+<script>
+  import { load } from '../lib/progress';
+  import { readiness } from '../lib/review';
+  type Mod = { domain: number; title: string; weight: string; weightMid: number; url: string; keys: string[] };
+  type Ex = { slug: string; code: string; modules: Mod[]; bank: { id: string; domain: number }[] };
+  const root = document.querySelector<HTMLElement>('[data-mx]');
+  if (root) {
+    const exams = JSON.parse(root.querySelector('[data-mx-data]')!.textContent!) as Ex[];
+    const body = root.querySelector<HTMLElement>('[data-mx-body]')!;
+    const tabs = [...root.querySelectorAll<HTMLButtonElement>('[data-mx-exam]')];
+    const esc = (s: string) => s.replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' })[c]!);
+    const tone = (p: number) => (p >= 70 ? 'ok' : p >= 50 ? 'warn' : 'bad');
+    let current = exams[0]?.slug;
+    try {
+      const last = JSON.parse(localStorage.getItem('msdb-last-lesson') || 'null');
+      const slug = typeof last?.url === 'string' ? last.url.split('/')[1] : '';
+      if (exams.some((e) => e.slug === slug)) current = slug;
+    } catch {}
+
+    const paint = () => {
+      const ex = exams.find((e) => e.slug === current)!;
+      tabs.forEach((t) => t.setAttribute('aria-selected', String(t.dataset.mxExam === current)));
+      const s = load();
+      const mocks = s.mocks.filter((m) => (m.exam ?? 'az-900') === ex.slug);
+      const weights = Object.fromEntries(ex.modules.map((m) => [m.domain, m.weightMid]));
+      const r = readiness(ex.slug, ex.bank, weights, mocks);
+      const started = r.answered > 0 || ex.modules.some((m) => m.keys.some((k) => s.done[k]));
+      const rows = ex.modules.map((m) => {
+        const d = r.domains.find((x) => x.domain === m.domain)!;
+        const done = m.keys.filter((k) => s.done[k]).length;
+        return { m, d, done };
+      });
+      const weakest = started ? [...rows].sort((a, b) => a.d.percent - b.d.percent || b.m.weightMid - a.m.weightMid)[0] : null;
+      body.innerHTML = `
+        <div class="mx-overall mx-${tone(r.percent)}">
+          <span class="mx-ring" style="--p:${r.percent}"><b>${r.percent}%</b></span>
+          <div><p class="font-bold">${esc(ex.code)} overall: ${esc(r.label)}</p>
+          <p class="text-sm text-muted">${r.answered} of ${ex.bank.length} questions answered · ${mocks.length} mock exam${mocks.length === 1 ? '' : 's'}</p></div>
+          ${weakest ? `<a class="btn btn-accent mx-go" href="/${ex.slug}/practice/#domain-${weakest.m.domain}">Practise ${esc(weakest.m.title)} →</a>` : `<a class="btn btn-accent mx-go" href="/${ex.slug}/learn/">Start ${esc(ex.code)} free →</a>`}
+        </div>
+        <ol class="mx-list">${rows.map(({ m, d, done }) => `
+          <li class="mx-row mx-${tone(d.percent)}${weakest && weakest.m.domain === m.domain ? ' is-weak' : ''}">
+            <span class="mx-ring mx-ring-sm" style="--p:${d.percent}"><b>${d.percent}%</b></span>
+            <div class="mx-txt">
+              <a href="${m.url}" class="font-semibold hover:underline">Domain ${m.domain}: ${esc(m.title)}</a>
+              <span class="mx-meta">${esc(m.weight)} of the exam · ${done}/${m.keys.length} lessons · ${d.seen}/${d.total} questions${d.mock !== null ? ` · mocks ${d.mock}%` : ''}</span>
+              <span class="mx-bar"><span style="width:${d.percent}%"></span></span>
+            </div>
+            ${weakest && weakest.m.domain === m.domain ? '<span class="mx-flag">Focus here</span>' : `<a class="mx-practice" href="/${ex.slug}/practice/#domain-${m.domain}" aria-label="Practise domain ${m.domain}: ${esc(m.title)}">Practise</a>`}
+          </li>`).join('')}
+        </ol>
+        ${started ? '' : `<p class="mt-3 text-sm text-muted">Nothing here yet for ${esc(ex.code)}. Finish a lesson quiz or a few Smart practice questions and your mastery fills in.</p>`}`;
+    };
+    tabs.forEach((t) => t.addEventListener('click', () => { current = t.dataset.mxExam!; paint(); }));
+    paint();
+    window.addEventListener('progress-change', paint);
+    window.addEventListener('review-change', paint);
+  }
+</script>
+
+<style is:global>
+  .mx-sec { padding: 1.1rem 1.2rem; border-radius: 1rem; border: 1px solid var(--card-line); background: var(--card); box-shadow: var(--glass-shadow); }
+  .mx-head { display: flex; flex-wrap: wrap; align-items: flex-end; justify-content: space-between; gap: .8rem; }
+  .mx-tabs { display: flex; flex-wrap: wrap; gap: .35rem; }
+  .mx-tab { min-height: 36px; padding: 0 .85rem; border-radius: 999px; border: 1px solid var(--border); background: var(--card); font-size: .85rem; font-weight: 700; }
+  .mx-tab[aria-selected='true'] { background: var(--text); color: var(--bg); border-color: var(--text); }
+  .mx-overall { margin-top: 1rem; display: flex; flex-wrap: wrap; align-items: center; gap: 1rem; padding: .9rem 1rem; border-radius: 14px; background: var(--band-subtle); }
+  .mx-overall > div { flex: 1 1 200px; }
+  .mx-go { min-height: 42px; }
+  .mx-ring { --c: var(--accent); flex: none; display: grid; place-items: center; width: 64px; height: 64px; border-radius: 50%; background: conic-gradient(var(--c) calc(var(--p) * 1%), var(--border) 0); }
+  .mx-ring b { display: grid; place-items: center; width: 50px; height: 50px; border-radius: 50%; background: var(--card); font-size: .9rem; font-weight: 850; }
+  .mx-ring-sm { width: 52px; height: 52px; }
+  .mx-ring-sm b { width: 40px; height: 40px; font-size: .78rem; }
+  .mx-ok .mx-ring { --c: #107c10; } .mx-warn .mx-ring { --c: #d97706; } .mx-bad .mx-ring { --c: #d13438; }
+  :root[data-theme='dark'] .mx-ok .mx-ring { --c: #4cc44c; } :root[data-theme='dark'] .mx-bad .mx-ring { --c: #ff6b6b; }
+  .mx-list { margin-top: .9rem; display: grid; gap: .55rem; }
+  .mx-row { display: flex; align-items: center; gap: .85rem; padding: .7rem .8rem; border-radius: 12px; border: 1px solid var(--border); background: var(--card); }
+  .mx-row.is-weak { border-color: #d97706; box-shadow: 0 0 0 3px rgb(217 119 6 / .15); }
+  .mx-txt { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: .2rem; }
+  .mx-meta { font-size: .8rem; color: var(--text-muted); }
+  .mx-bar { display: block; height: 6px; border-radius: 999px; background: var(--border); overflow: hidden; }
+  .mx-bar span { display: block; height: 100%; border-radius: inherit; background: var(--c, var(--accent)); }
+  .mx-ok .mx-bar span { background: #107c10; } .mx-warn .mx-bar span { background: #d97706; } .mx-bad .mx-bar span { background: #d13438; }
+  .mx-flag { flex: none; padding: .2rem .55rem; border-radius: 999px; background: #fff4e0; color: #8a4b00; font-size: .72rem; font-weight: 800; }
+  :root[data-theme='dark'] .mx-flag { background: #3b2a10; color: #ffd08a; }
+  .mx-practice { flex: none; display: inline-flex; align-items: center; min-height: 36px; padding: 0 .75rem; border-radius: 999px; border: 1px solid var(--border); font-size: .8rem; font-weight: 700; color: var(--accent-deep); }
+  .mx-practice:hover { border-color: var(--accent); }
+  @media (max-width: 479px) { .mx-practice { display: none; } }
+</style>

@@ -1,0 +1,6 @@
+---
+import ExamVersus from '../components/versus/ExamVersus.astro';
+import { VERSUS } from '../data/exam-versus';
+const v = VERSUS.find((x) => x.path === '/az-204-vs-ai-200/')!;
+---
+<ExamVersus v={v} />
