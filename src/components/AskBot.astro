@@ -13,12 +13,13 @@
  */
 import { liveExams } from '../data/exams';
 import NimbusBot from './NimbusBot.astro';
+import { SITE, SUPPORT } from '../config';
 const exams = liveExams().map((e) => ({ slug: e.slug, code: e.code, name: e.name }));
 const here = exams.find((e) => e.slug === Astro.url.pathname.split('/')[1])?.slug ?? '';
 ---
-<div id="ask" data-exams={JSON.stringify(exams)} data-here={here}>
+<div id="ask" data-exams={JSON.stringify(exams)} data-here={here} data-site={SITE.url} data-coffee={SUPPORT.url}>
   <button id="ask-fab" type="button" class="ask-fab" aria-expanded="false" aria-controls="ask-panel" aria-label="Ask Nimbus a question about your exam">
-    <span class="ask-fab-bot"><NimbusBot size={54} /></span>
+    <span class="ask-fab-bot"><NimbusBot size={54} react /></span>
     <span>Ask</span>
   </button>
 
@@ -45,7 +46,13 @@ const here = exams.find((e) => e.slug === Astro.url.pathname.split('/')[1])?.slu
 
 <script>
   import { makeRanker, ask, type Ranker } from '../lib/ask';
+  import { canSpeak, speak, stopSpeaking, readableText } from '../lib/speech';
   import type { AskIndex, AskEntry, TutorEntry, SimCard } from '../lib/ask-index';
+  import { load as loadProgress, streak, addXP } from '../lib/progress';
+  import { recordAnswers } from '../lib/review';
+  import { nextTask, percentDone, type CoachData, type CoachExam } from '../lib/coach';
+  import { hint } from '../lib/cloud/account';
+  import { isSupporter } from '../lib/monetization/supporter';
 
   type Exam = { slug: string; code: string; name: string };
   const root = document.getElementById('ask')!;
@@ -128,6 +135,43 @@ const here = exams.find((e) => e.slug === Astro.url.pathname.split('/')[1])?.slu
     return b;
   };
   const text = (s: string) => el('p', '', s);
+  /** A friendly line that fits the time of day. */
+  const greet = () => {
+    const h = new Date().getHours();
+    return h >= 22 || h < 5 ? 'Studying late? Short sessions stick better, so let’s keep this one light. 🌙'
+      : h < 12 ? 'Good morning. A few minutes now is a great start to the day. ☀️'
+      : h < 17 ? 'Good afternoon.' : 'Good evening.';
+  };
+  /** "Good evening, Priya" when signed in, "Good evening" when not. */
+  const firstName = () => (hint()?.name || '').trim().split(/\s+/)[0] || '';
+  const hello = () => {
+    const h = new Date().getHours();
+    const n = firstName();
+    if (h >= 22 || h < 5) return n ? `Studying late, ${n}?` : 'Studying late?';
+    const part = h < 12 ? 'Good morning' : h < 17 ? 'Good afternoon' : 'Good evening';
+    return n ? `${part}, ${n}` : part;
+  };
+  let currentSlug = '';
+  let coachP: Promise<CoachData | null> | null = null;
+  const coachData = () => (coachP ??= fetch('/coach.json').then((r) => (r.ok ? r.json() : null)).catch(() => { coachP = null; return null; }));
+  /** 🔊 Listen: reads one answer aloud with the browser's own voice (nothing leaves the device). */
+  let speaking: HTMLButtonElement | null = null;
+  const listen = (target: () => Element | null) => {
+    const b = el('button', 'ask-listen', '🔊 Listen');
+    b.type = 'button';
+    b.setAttribute('aria-label', 'Read this answer aloud');
+    if (!canSpeak()) b.hidden = true;
+    b.addEventListener('click', async () => {
+      if (speaking) { stopSpeaking(); const was = speaking; speaking.textContent = '🔊 Listen'; speaking = null; if (was === b) return; }
+      const t = target();
+      if (!t) return;
+      speaking = b;
+      b.textContent = '⏹ Stop';
+      setMood('talk');
+      try { await speak(readableText(t).replace(/🔊 Listen|⏹ Stop/g, '')); } finally { if (speaking === b) { b.textContent = '🔊 Listen'; speaking = null; } settle(); }
+    });
+    return b;
+  };
   const chips = (items: { label: string; on: () => void }[]) => {
     const w = el('div', 'ask-chips');
     for (const it of items) {
@@ -158,6 +202,7 @@ const here = exams.find((e) => e.slug === Astro.url.pathname.split('/')[1])?.slu
     setRest('wave');
     const f = document.createDocumentFragment();
     f.append(el('p', 'ask-strong', 'Hi, I’m Nimbus 👋'));
+    f.append(el('p', 'ask-more', greet()));
     f.append(text('I answer from this site’s lessons and show you each idea in 3D first. Which exam are you studying for?'));
     const g = el('div', 'ask-exams');
     for (const e of exams) {
@@ -201,13 +246,209 @@ const here = exams.find((e) => e.slug === Astro.url.pathname.split('/')[1])?.slu
     current = loaded.get(slug)!;
     lockInput(false, `Ask about ${exam.code}…`);
     setRest('idle', 'Online');
+    currentSlug = slug;
     const lesson = current.idx.tutor?.[location.pathname];
-    if (lesson && slug === here) return tutorHello(lesson, location.pathname);
+    const ce = (await coachData())?.exams.find((x) => x.slug === slug);
+    const party = ce ? celebrate(exam, ce) : null;
+    if (lesson && slug === here) tutorHello(lesson, location.pathname);
+    else home(exam, ce);
+    if (party) requestAnimationFrame(() => requestAnimationFrame(() => (log.scrollTop = party.offsetTop - log.offsetTop - 8)));
+    if (!matchMedia('(pointer: coarse)').matches) input.focus();
+  }
+
+  /* ---------- home: personal welcome, progress, today's step and four actions ---------- */
+  const RING = (pct: number) => `<svg width="62" height="62" viewBox="0 0 62 62" aria-hidden="true" focusable="false"><circle cx="31" cy="31" r="26" fill="none" stroke="var(--ring-track)" stroke-width="7"/><circle cx="31" cy="31" r="26" fill="none" stroke="url(#ask-ring-g)" stroke-width="7" stroke-linecap="round" stroke-dasharray="${(163.4 * pct) / 100} 163.4" transform="rotate(-90 31 31)"/><defs><linearGradient id="ask-ring-g" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#0078d4"/><stop offset="1" stop-color="#62e6ff"/></linearGradient></defs></svg>`;
+  function tile(icon: string, title: string, note: string, act: (() => void) | string, cls = '') {
+    const t = typeof act === 'string' ? link('', act, `ask-tile ${cls}`) : el('button', `ask-tile ${cls}`);
+    if (t instanceof HTMLButtonElement) { t.type = 'button'; t.addEventListener('click', act as () => void); }
+    const i = el('span', 'ask-tile-i');
+    i.innerHTML = icon;
+    t.append(i, el('b', '', title), el('span', 'ask-tile-n', note));
+    return t;
+  }
+  const ICON = {
+    ask: '<svg width="22" height="22" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 5h16v11H9l-5 4z" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/></svg>',
+    quiz: '<svg width="22" height="22" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9" fill="none" stroke="currentColor" stroke-width="2"/><path d="M9.5 9.5a2.5 2.5 0 1 1 3.5 2.3c-.7.3-1 .8-1 1.5V14M12 17.5v.5" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round"/></svg>',
+    plan: '<svg width="22" height="22" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9" fill="none" stroke="currentColor" stroke-width="2"/><circle cx="12" cy="12" r="5" fill="none" stroke="currentColor" stroke-width="2"/><circle cx="12" cy="12" r="1.5" fill="currentColor"/></svg>',
+    cube: '<svg width="22" height="22" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3l8 4.5v9L12 21l-8-4.5v-9zM12 12l8-4.5M12 12v9M12 12L4 7.5" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/></svg>',
+    sheet: '<svg width="22" height="22" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 3h9l4 4v14H6z" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/><path d="M9 11h7M9 15h7" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>',
+  };
+  function home(exam: Exam, ce?: CoachExam) {
+    const card = el('div', 'ask-home');
+    const top = el('div', 'ask-home-top');
+    const words = el('div', 'ask-home-w');
+    words.append(el('p', 'ask-hello', hello()));
+    let next: ReturnType<typeof nextTask> | null = null;
+    if (ce && ce.lessons.length) {
+      const p = loadProgress();
+      const pct = percentDone(ce, p);
+      const st = streak(p);
+      const left = ce.lessons.filter((l) => !p.done[l.key]).length;
+      next = nextTask(ce, p);
+      const ring = el('div', 'ask-ring');
+      ring.innerHTML = RING(pct);
+      ring.append(el('span', '', `${pct}%`));
+      ring.setAttribute('role', 'img');
+      ring.setAttribute('aria-label', `${pct}% of ${exam.code} lessons done`);
+      top.append(ring);
+      words.append(el('p', 'ask-home-sub', `${st > 1 ? `Day ${st} in a row. ` : ''}${left ? `${left} ${exam.code} lesson${left === 1 ? '' : 's'} to go.` : `Every ${exam.code} lesson done. Time for mock exams.`}`));
+    } else {
+      words.append(el('p', 'ask-home-sub', `${exam.code}: ask me anything. I’ll show it in 3D first.`));
+    }
+    top.append(words);
+    card.append(top);
+    if (next) {
+      const n = el('p', 'ask-next');
+      n.append(el('span', 'ask-next-l', next.kind === 'lesson' ? 'Next' : 'Today'), `${next.title}${next.minutes ? ` · ${next.minutes} min` : ''}`);
+      card.append(n);
+      const go = link(next.kind === 'lesson' ? 'Continue lesson' : 'Open', next.url, 'ask-cta');
+      const q = el('button', 'ask-cta ask-cta-2', 'Quiz me');
+      q.type = 'button';
+      q.addEventListener('click', () => quizReal());
+      card.append(row(go, q));
+    }
+    const d3 = next?.kind === 'lesson' && simsFor(next.url)?.d3;
+    const tiles = el('div', 'ask-tiles');
+    tiles.append(
+      tile(ICON.ask, 'Ask a question', 'Answers from your lessons', () => input.focus()),
+      tile(ICON.quiz, 'Quiz me', 'One question, right now', () => quizReal(), 'is-gold'),
+    );
+    const plan = tile(ICON.plan, 'My plan', 'Date, reminders, today', () => {});
+    plan.setAttribute('data-coach-open', '');
+    tiles.append(plan, d3 ? tile(ICON.cube, 'Show me in 3D', 'Spin today’s topic', `${next!.url}#sim-3d`) : tile(ICON.sheet, 'Cheat sheet', 'Last-minute revision', `/${exam.slug}/cheat-sheet/`));
+    card.append(tiles);
     const f = document.createDocumentFragment();
-    f.append(text(`Great, ${exam.code} it is. Ask me anything. I’ll show it to you in 3D first, then walk you through ${current.idx.simNoun ?? 'the Azure portal'}, then explain it. A few to try:`));
-    f.append(chips(current.idx.suggest.map((q) => ({ label: `💡 ${q}`, on: () => question(q) }))));
+    f.append(card);
+    if (!firstName() && document.querySelector('[data-account-signin]')) {
+      const si = el('button', 'ask-signin', 'Sign in to keep progress on every device');
+      si.type = 'button';
+      si.setAttribute('data-account-signin', '');
+      f.append(si);
+    }
+    f.append(el('p', 'ask-more', 'Or try one of these:'));
+    f.append(chips(current!.idx.suggest.map((q) => ({ label: `💡 ${q}`, on: () => question(q) }))));
     say(f);
-    input.focus();
+  }
+
+  /* ---------- Quiz me: one original practice question, recorded like every other quiz ---------- */
+  type QuizQ = { id: string; s?: string; q: string; o: string[]; a: number; e: string; t?: string };
+  const quizPools = new Map<string, Promise<QuizQ[] | null>>();
+  const poolFor = (slug: string) => {
+    if (!quizPools.has(slug)) quizPools.set(slug, fetch(`/${slug}/quiz.json`).then((r) => (r.ok ? r.json() : null)).catch(() => null).then((v) => { if (!v) quizPools.delete(slug); return v; }));
+    return quizPools.get(slug)!;
+  };
+  const askedQ = new Set<string>();
+  async function quizReal() {
+    if (!current || !currentSlug) return;
+    say(text('Quiz me'), 'me');
+    const pool = await poolFor(currentSlug);
+    if (!pool?.length) { say(text('I couldn’t load a question just now. Try again in a moment.')); return; }
+    const topic = location.pathname.split('/')[3] || '';
+    let cands = pool.filter((q) => !askedQ.has(q.id) && (!topic || q.t === topic));
+    if (!cands.length) cands = pool.filter((q) => !askedQ.has(q.id));
+    if (!cands.length) { askedQ.clear(); cands = pool; }
+    const q = cands[Math.floor(Math.random() * cands.length)];
+    askedQ.add(q.id);
+    const f = document.createDocumentFragment();
+    f.append(el('p', 'ask-kicker', `❓ Quick quiz · ${current.idx.exam.code}`));
+    if (q.s) f.append(el('p', 'ask-more', q.s));
+    f.append(el('p', 'ask-strong', q.q));
+    const opts = el('div', 'ask-opts');
+    const out = el('div', 'ask-fb');
+    q.o.forEach((o, i) => {
+      const b = el('button', 'ask-opt');
+      b.type = 'button';
+      b.append(el('span', 'ask-opt-l', 'ABCDEF'[i]), el('span', '', o));
+      b.addEventListener('click', () => {
+        const ok = i === q.a;
+        opts.querySelectorAll('button').forEach((x, j) => { x.disabled = true; if (j === q.a) x.classList.add('is-right'); });
+        if (!ok) b.classList.add('is-wrong');
+        recordAnswers(currentSlug, [{ id: q.id, ok }]);
+        if (ok) addXP(5, 'Quick quiz');
+        setMood(ok ? 'cheer' : 'think');
+        clearTimeout(settleT);
+        settleT = window.setTimeout(settle, 1800);
+        out.className = `ask-fb ${ok ? 'is-ok' : 'is-no'}`;
+        out.append(el('p', 'ask-strong', ok ? 'Spot on. +5 XP' : `Not quite. The answer is ${'ABCDEF'[q.a]}.`), text(short(q.e, 520)));
+        out.append(chips([{ label: 'Next question', on: () => quizReal() }, { label: 'Ask something else', on: () => input.focus() }]));
+        requestAnimationFrame(() => out.scrollIntoView({ block: 'nearest' }));
+      }, { once: true });
+      opts.append(b);
+    });
+    f.append(opts, out);
+    say(f);
+  }
+
+  /* ---------- milestones: celebrate, share on LinkedIn, maybe a coffee ---------- */
+  const MS = 'msdb-milestones-v1';
+  const PROMPTS = 'msdb-prompts-v1';
+  const readJ = (k: string) => { try { return JSON.parse(localStorage.getItem(k) || '{}'); } catch { return {}; } };
+  const writeJ = (k: string, v: unknown) => { try { localStorage.setItem(k, JSON.stringify(v)); } catch { /* blocked */ } };
+  function celebrate(exam: Exam, ce: CoachExam): HTMLElement | null {
+    const p = loadProgress();
+    const seen = readJ(MS) as Record<string, string>;
+    const byMod = (slug: string) => ce.lessons.filter((l) => l.key.split('/')[1] === slug);
+    const done = (ce.modules ?? []).filter((m) => { const ls = byMod(m.slug); return ls.length > 0 && ls.every((l) => p.done[l.key]); });
+    const all = ce.lessons.length > 0 && ce.lessons.every((l) => p.done[l.key]);
+    const fresh = done.filter((m) => !seen[`${exam.slug}/${m.slug}`]);
+    const freshAll = all && !seen[`${exam.slug}/*`];
+    if (!fresh.length && !freshAll) return null;
+    const t = new Date().toISOString().slice(0, 10);
+    for (const m of done) seen[`${exam.slug}/${m.slug}`] ??= t;
+    if (all) seen[`${exam.slug}/*`] ??= t;
+    writeJ(MS, seen);
+    const mod = freshAll ? null : fresh[fresh.length - 1];
+    const what = mod ? mod.title : `every ${exam.code} lesson`;
+    const lessons = mod ? byMod(mod.slug) : ce.lessons;
+    const qs = lessons.map((l) => p.quizzes[l.key]).filter(Boolean);
+    const avg = qs.length ? Math.round((qs.reduce((s, q) => s + q.score / q.total, 0) / qs.length) * 100) : null;
+    const n = firstName();
+
+    setRest('cheer', 'Online');
+    const f = document.createDocumentFragment();
+    const hero = el('div', 'ask-party');
+    hero.append(el('p', 'ask-party-t', `${n ? `${n}, you` : 'You'} finished ${what} 🎉`), el('p', 'ask-party-s', `${lessons.length} lessons${avg !== null ? ` · ${avg}% average on quizzes` : ''} · ${p.xp} XP`));
+    f.append(hero);
+
+    const site = root.dataset.site || location.origin;
+    const shareUrl = `${site}/${exam.slug}/`;
+    const share = el('div', 'ask-share');
+    share.append(el('p', 'ask-strong', 'Share your win on LinkedIn'), el('p', 'ask-more', 'Recruiters notice steady progress. Edit the post if you like.'));
+    const ta = el('textarea', 'ask-post');
+    ta.id = `ask-post-${exam.slug}`;
+    ta.rows = 4;
+    ta.value = `I just finished ${what} for Microsoft ${exam.code} on MSDEVBUILD. Free lessons with 3D views and portal simulations: ${shareUrl}`;
+    const lab = el('label', 'sr-only', 'LinkedIn post');
+    lab.htmlFor = ta.id;
+    const go = el('a', 'ask-cta ask-li', 'Copy post and open LinkedIn');
+    go.href = `https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(shareUrl)}`;
+    go.target = '_blank';
+    go.rel = 'noopener';
+    const note = el('p', 'ask-more', '');
+    note.setAttribute('role', 'status');
+    go.addEventListener('click', () => { navigator.clipboard?.writeText(ta.value).then(() => { note.textContent = 'Post copied. Paste it into LinkedIn.'; }, () => {}); });
+    share.append(lab, ta, go, note);
+    f.append(share);
+
+    // Coffee: at most once a week, shared with the share/coffee card's clock, never for supporters.
+    const pr = readJ(PROMPTS) as { coffee?: number; last?: string; lastAt?: number };
+    if (!isSupporter() && Date.now() - (pr.coffee ?? 0) >= 7 * 86_400_000 && root.dataset.coffee) {
+      writeJ(PROMPTS, { ...pr, coffee: Date.now(), last: 'coffee', lastAt: Date.now() });
+      const cof = el('div', 'ask-coffee');
+      cof.append(el('p', 'ask-strong', '☕ Enjoying Nimbus?'), text('Every lesson here is free. A coffee helps keep it that way, and helps students who can’t afford courses.'));
+      const buy = el('a', 'ask-cta ask-buy', 'Buy me a coffee');
+      buy.href = root.dataset.coffee;
+      buy.target = '_blank';
+      buy.rel = 'noopener';
+      const later = el('button', 'ask-cta ask-cta-2', 'Maybe later');
+      later.type = 'button';
+      later.addEventListener('click', () => cof.replaceChildren(el('p', 'ask-more', 'No problem. I won’t ask again this week.')));
+      cof.append(row(buy, later));
+      f.append(cof);
+    }
+    const b = say(f);
+    window.setTimeout(() => setRest('idle', 'Online'), 4000);
+    return b.closest('.ask-row') as HTMLElement;
   }
 
   /* ---------- simulations first: 3D, then the Azure portal, then the text ---------- */
@@ -230,18 +471,20 @@ const here = exams.find((e) => e.slug === Astro.url.pathname.split('/')[1])?.slu
   }
   const row = (...nodes: Node[]) => { const w = el('div', 'ask-chips'); w.append(...nodes); return w; };
 
-  function show3d(url: string, c: SimCard) {
-    if (!c.d3) return;
+  function show3d(url: string, c: SimCard) { const n = node3d(url, c); if (n) say(n); }
+  function showPortal(url: string, c: SimCard) { const n = nodePortal(url, c); if (n) say(n); }
+  function node3d(url: string, c: SimCard) {
+    if (!c.d3) return null;
     const f = document.createDocumentFragment();
     f.append(head('🧊 1 · See it in 3D'));
     f.append(el('p', 'ask-strong', c.d3.step));
     f.append(text(c.d3.intro));
     f.append(el('p', 'ask-more', short(c.d3.text, 260)));
     f.append(row(simJump(url, '#sim-3d', '▶ Open the 3D view')));
-    say(f);
+    return f;
   }
-  function showPortal(url: string, c: SimCard) {
-    if (!c.portal && !c.labs.length) return;
+  function nodePortal(url: string, c: SimCard) {
+    if (!c.portal && !c.labs.length) return null;
     const f = document.createDocumentFragment();
     if (c.portal) {
       f.append(head(`🖥️ ${c.d3 ? 2 : 1} · Do it in ${current?.idx.simNoun ?? 'the Azure portal'}`));
@@ -256,19 +499,20 @@ const here = exams.find((e) => e.slug === Astro.url.pathname.split('/')[1])?.slu
       f.append(el('p', 'ask-more', '🧪 Then try it yourself, no account needed:'));
       f.append(row(...c.labs.map((l) => simJump(url, `#sim-lab-${l.id}`, `${l.icon} ${l.title} · ${l.tasks} tasks · ${l.minutes} min`))));
     }
-    say(f);
+    return f;
   }
 
   function answer(e: AskEntry, others: AskEntry[]) {
     const url = e.l;
     const card = simsFor(url);
     const visual = hasSims(card);
-    if (visual) { show3d(url!, card!); showPortal(url!, card!); }
     const f = document.createDocumentFragment();
     if (visual) f.append(head(`📖 ${(card!.d3 ? 1 : 0) + (card!.portal ? 1 : 0) + 1} · The explanation`));
     f.append(text(short(e.a)));
     const src = el('p', 'ask-src');
     src.append(`${e.k} · ${e.t} · `, link(e.k === 'Glossary' ? 'See in glossary' : e.k === 'Comparison' ? 'Open comparison' : 'Open lesson', e.u));
+    const answerP = f.lastChild as Element;
+    src.append(' ', listen(() => answerP));
     f.append(src);
     const t = url ? current?.idx.tutor?.[url] : undefined;
     if (t) {
@@ -279,7 +523,78 @@ const here = exams.find((e) => e.slug === Astro.url.pathname.split('/')[1])?.slu
       f.append(el('p', 'ask-more', 'Related:'));
       f.append(chips(others.map((o) => ({ label: o.q, on: () => { const m = say(text(o.q), 'me'); answer(o, []); requestAnimationFrame(() => requestAnimationFrame(() => (log.scrollTop = m.offsetTop - log.offsetTop - 8))); } }))));
     }
-    say(f);
+    if (!visual) { say(f); return; }
+    say(story(url!, card!, f, t));
+  }
+
+  /* ---------- Answer Story: See it → Try it → Get it → Check, one step at a time ---------- */
+  let storyN = 0;
+  function story(url: string, c: SimCard, explain: DocumentFragment, t?: TutorEntry) {
+    const id = `ask-story-${++storyN}`;
+    const steps: { label: string; body: Node }[] = [];
+    const d3 = node3d(url, c);
+    if (d3) steps.push({ label: 'See it', body: d3 });
+    const pt = nodePortal(url, c);
+    if (pt) steps.push({ label: 'Try it', body: pt });
+    steps.push({ label: 'Get it', body: explain });
+    const q = t?.quiz.length ? t.quiz[quizAt++ % t.quiz.length] : null;
+    if (q) {
+      const chk = document.createDocumentFragment();
+      chk.append(el('p', 'ask-kicker', '✅ Check yourself'), el('p', 'ask-strong', q.q), el('p', 'ask-more', 'Say your answer in your head, then check.'));
+      const reveal = el('div');
+      chk.append(chips([{ label: 'Show the answer', on: () => { if (!reveal.childNodes.length) reveal.append(text(q.a)); } }]), reveal);
+      steps.push({ label: 'Check', body: chk });
+    }
+    const wrap = el('div', 'ask-story');
+    const tabs = el('div', 'ask-tabs');
+    tabs.setAttribute('role', 'tablist');
+    tabs.setAttribute('aria-label', 'Answer steps');
+    const panels: HTMLElement[] = [];
+    const btns: HTMLButtonElement[] = [];
+    const back = el('button', 'ask-cta ask-cta-2', 'Back');
+    const fwd = el('button', 'ask-cta', '');
+    back.type = fwd.type = 'button';
+    let at = 0;
+    const go = (i: number) => {
+      at = Math.max(0, Math.min(steps.length - 1, i));
+      panels.forEach((p, j) => (p.hidden = j !== at));
+      btns.forEach((b, j) => { b.setAttribute('aria-selected', String(j === at)); b.tabIndex = j === at ? 0 : -1; b.classList.toggle('is-done', j < at); });
+      back.disabled = at === 0;
+      fwd.textContent = at === steps.length - 1 ? 'Done' : `Next: ${steps[at + 1].label}`;
+    };
+    steps.forEach((s, i) => {
+      const b = el('button', 'ask-tab');
+      b.type = 'button';
+      b.id = `${id}-t${i}`;
+      b.setAttribute('role', 'tab');
+      b.setAttribute('aria-controls', `${id}-p${i}`);
+      b.append(el('span', 'ask-tab-bar'), el('span', '', s.label));
+      b.addEventListener('click', () => go(i));
+      b.addEventListener('keydown', (ev) => { if (ev.key === 'ArrowRight' || ev.key === 'ArrowLeft') { go(at + (ev.key === 'ArrowRight' ? 1 : -1)); btns[at].focus(); } });
+      btns.push(b);
+      tabs.append(b);
+      const p = el('div', 'ask-panel-step');
+      p.id = `${id}-p${i}`;
+      p.setAttribute('role', 'tabpanel');
+      p.setAttribute('aria-labelledby', b.id);
+      p.append(s.body);
+      panels.push(p);
+    });
+    back.addEventListener('click', () => go(at - 1));
+    fwd.addEventListener('click', () => { if (at === steps.length - 1) input.focus(); else go(at + 1); });
+    const helped = el('div', 'ask-helped');
+    const ask2 = el('span', '', 'Was this helpful?');
+    const yes = el('button', 'ask-thumb', '👍');
+    const no = el('button', 'ask-thumb', '👎');
+    yes.type = no.type = 'button';
+    yes.setAttribute('aria-label', 'Yes, this helped');
+    no.setAttribute('aria-label', 'No, not really');
+    yes.addEventListener('click', () => { helped.replaceChildren(el('span', '', 'Thanks. I’ll keep explaining it this way.')); setMood('cheer'); clearTimeout(settleT); settleT = window.setTimeout(settle, 1500); });
+    no.addEventListener('click', () => { helped.replaceChildren(el('span', '', 'Thanks for telling me. Try it another way:')); if (t) helped.append(tutorChips(t, url, true)); });
+    helped.append(ask2, yes, no);
+    wrap.append(tabs, ...panels, row(back, fwd), helped);
+    go(0);
+    return wrap;
   }
 
   /* ---------- lesson tutor ---------- */
@@ -308,6 +623,7 @@ const here = exams.find((e) => e.slug === Astro.url.pathname.split('/')[1])?.slu
   }
   function tutorHello(t: TutorEntry, url: string) {
     const f = document.createDocumentFragment();
+    f.append(el('p', 'ask-hello ask-hello-sm', hello()));
     f.append(text(`I’m your tutor for “${t.t}”. See it in 3D, click through it in ${current?.idx.simNoun ?? 'the Azure portal'}, try a lab, or pick another way to explain it. You can also type any question.`));
     f.append(tutorChips(t, url));
     say(f);
@@ -316,7 +632,9 @@ const here = exams.find((e) => e.slug === Astro.url.pathname.split('/')[1])?.slu
   function tutorSay(t: TutorEntry, url: string, ask: string, nodes: Node[]) {
     say(text(ask), 'me');
     const f = document.createDocumentFragment();
-    f.append(...nodes);
+    const box = el('div');
+    box.append(...nodes);
+    f.append(box, listen(() => box));
     f.append(tutorMore(t, url));
     say(f);
   }
@@ -376,6 +694,7 @@ const here = exams.find((e) => e.slug === Astro.url.pathname.split('/')[1])?.slu
     } else if (!input.disabled) input.focus();
   }
   function close() {
+    if (speaking) { stopSpeaking(); speaking.textContent = '🔊 Listen'; speaking = null; }
     panel.hidden = true;
     fab.setAttribute('aria-expanded', 'false');
     root.classList.remove('is-open');
@@ -410,13 +729,19 @@ const here = exams.find((e) => e.slug === Astro.url.pathname.split('/')[1])?.slu
     position: fixed; z-index: 90;
     right: max(16px, env(safe-area-inset-right)); bottom: calc(16px + env(safe-area-inset-bottom));
     display: inline-flex; align-items: center; gap: 6px; min-height: 48px; padding: 0 18px 0 14px;
-    border-radius: 999px; border: 0; background: #005a9e; color: #fff; font-weight: 600;
-    box-shadow: 0 10px 28px -6px rgb(0 60 120 / .45); cursor: pointer;
+    border-radius: 999px; border: 1px solid rgb(255 255 255 / .18); color: #fff; font-weight: 700; letter-spacing: .01em;
+    background: linear-gradient(135deg, #1a8cff 0%, #0063b8 45%, #0a2f5c 100%);
+    box-shadow: 0 14px 32px -10px rgb(0 70 150 / .65), 0 0 0 4px rgb(0 120 212 / .12), inset 0 1px 0 rgb(255 255 255 / .35);
+    cursor: pointer; overflow: visible; isolation: isolate;
   }
+  /* a slow sheen across the pill */
+  .ask-fab::after { content: ''; position: absolute; inset: 0; z-index: -1; border-radius: inherit; overflow: hidden; background: linear-gradient(110deg, transparent 35%, rgb(255 255 255 / .28) 50%, transparent 65%) -200% 0 / 200% 100% no-repeat; animation: ask-sheen 6s ease-in-out 2s infinite; }
+  @keyframes ask-sheen { 0%, 70% { background-position: -200% 0; } 100% { background-position: 200% 0; } }
   .ask-fab { transition: transform .25s ease, opacity .2s ease, visibility 0s linear 0s; }
   .ask-fab.is-tucked { transform: translateY(calc(100% + 24px)); opacity: 0; visibility: hidden; transition: transform .25s ease, opacity .2s ease, visibility 0s linear .25s; }
   @media (prefers-reduced-motion: reduce) { .ask-fab, .ask-fab.is-tucked { transition: none; } }
-  .ask-fab:hover { background: #003a66; }
+  .ask-fab:hover { transform: translateY(-2px); box-shadow: 0 18px 38px -10px rgb(0 70 150 / .75), 0 0 0 5px rgb(0 120 212 / .16), inset 0 1px 0 rgb(255 255 255 / .35); }
+  @media (prefers-reduced-motion: reduce) { .ask-fab::after { animation: none; } }
   .ask-fab-bot { display: grid; place-items: center; width: 52px; height: 40px; margin: -20px 0 -4px -12px; }
   .ask-fab-bot :global(.nb) { filter: drop-shadow(0 4px 6px rgb(0 20 50 / .35)); }
   .ask-fab-bot :global(.nb-shadow) { display: none; }
@@ -434,20 +759,27 @@ const here = exams.find((e) => e.slug === Astro.url.pathname.split('/')[1])?.slu
     right: max(12px, env(safe-area-inset-right)); bottom: calc(12px + env(safe-area-inset-bottom));
     width: min(400px, calc(100vw - 24px)); height: min(600px, calc(100dvh - 96px));
     display: flex; flex-direction: column;
-    border-radius: 22px; border: 1px solid var(--card-line); background: var(--card); color: var(--text);
-    box-shadow: 0 30px 70px -18px rgb(0 30 70 / .5); overflow: hidden;
+    border-radius: 24px; border: 1px solid color-mix(in srgb, var(--accent) 22%, var(--card-line)); color: var(--text);
+    background: var(--card);
+    box-shadow: 0 40px 90px -24px rgb(0 25 60 / .6), 0 12px 28px -18px rgb(0 60 140 / .45), inset 0 1px 0 rgb(255 255 255 / .5);
+    overflow: hidden;
     transform-origin: 100% 100%; animation: ask-in .28s cubic-bezier(.3, .8, .4, 1.1);
   }
   .ask-panel[hidden] { display: none; }
   @keyframes ask-in { from { opacity: 0; transform: translateY(14px) scale(.94); } to { opacity: 1; transform: none; } }
   .ask-head {
-    position: relative; display: flex; align-items: center; gap: 8px; padding: 10px 10px 10px 12px; color: #fff;
-    background: radial-gradient(120% 140% at 0% 0%, rgb(98 230 255 / .28), transparent 55%), linear-gradient(135deg, #0078d4, #004578 70%, #002a4d);
+    position: relative; display: flex; align-items: center; gap: 10px; padding: 12px 10px 12px 12px; color: #fff; isolation: isolate; overflow: hidden;
+    background: linear-gradient(135deg, #0a5cad 0%, #073b75 55%, #061f3f 100%);
+    box-shadow: inset 0 -1px 0 rgb(255 215 94 / .45);
   }
-  .ask-ava { flex: none; display: grid; place-items: center; width: 48px; height: 48px; border-radius: 50%; background: rgb(255 255 255 / .14); box-shadow: inset 0 0 0 1px rgb(255 255 255 / .22); }
+  /* slow aurora behind the header */
+  .ask-head::before { content: ''; position: absolute; inset: -60% -20%; z-index: -1; background: radial-gradient(40% 50% at 20% 30%, rgb(98 230 255 / .35), transparent 70%), radial-gradient(35% 45% at 85% 70%, rgb(140 110 255 / .28), transparent 70%); animation: ask-aurora 14s ease-in-out infinite alternate; }
+  @keyframes ask-aurora { from { transform: translate(-6%, -4%) rotate(0); } to { transform: translate(6%, 4%) rotate(8deg); } }
+  @media (prefers-reduced-motion: reduce) { .ask-head::before { animation: none; } }
+  .ask-ava { flex: none; display: grid; place-items: center; width: 50px; height: 50px; border-radius: 50%; background: radial-gradient(circle at 35% 30%, rgb(255 255 255 / .32), rgb(255 255 255 / .08) 70%); box-shadow: inset 0 0 0 1px rgb(255 255 255 / .28), 0 0 0 3px rgb(255 215 94 / .35), 0 6px 18px -6px rgb(0 0 0 / .5); }
   .ask-ava :global(.nb-shadow) { display: none; }
   .ask-id { flex: 1; min-width: 0; }
-  .ask-title { margin: 0; font-weight: 800; font-size: 1.02rem; line-height: 1.2; }
+  .ask-title { margin: 0; font-weight: 800; font-size: 1.05rem; line-height: 1.2; letter-spacing: -.01em; }
   .ask-sub { display: flex; align-items: center; gap: 6px; margin: 2px 0 0; font-size: .78rem; color: #e3f1ff; white-space: nowrap; overflow: hidden; }
   .ask-sub > span:not(.ask-dot) { overflow: hidden; text-overflow: ellipsis; }
   .ask-dot { flex: none; width: 8px; height: 8px; border-radius: 50%; background: #5ff0a0; box-shadow: 0 0 0 3px rgb(95 240 160 / .25); transition: background .2s, box-shadow .2s; }
@@ -455,8 +787,8 @@ const here = exams.find((e) => e.slug === Astro.url.pathname.split('/')[1])?.slu
   .ask-sub[data-state='off'] .ask-dot { background: #b7c3d3; box-shadow: 0 0 0 3px rgb(183 195 211 / .25); }
   .ask-exam { flex: none; padding: 1px 8px; border-radius: 999px; background: rgb(255 255 255 / .2); font-size: .74rem; font-weight: 700; color: #fff; }
   .ask-exam:empty { display: none; }
-  .ask-hbtn { flex: none; display: grid; place-items: center; min-height: 36px; min-width: 36px; padding: 0 8px; border-radius: 12px; border: 0; background: rgb(255 255 255 / .16); color: #fff; font-size: .9rem; cursor: pointer; transition: background .15s; }
-  .ask-hbtn:hover { background: rgb(255 255 255 / .3); }
+  .ask-hbtn { flex: none; display: grid; place-items: center; min-height: 36px; min-width: 36px; padding: 0 8px; border-radius: 12px; border: 1px solid rgb(255 255 255 / .16); background: rgb(255 255 255 / .1); color: #fff; font-size: .9rem; cursor: pointer; transition: background .15s, border-color .15s; backdrop-filter: blur(6px); }
+  .ask-hbtn:hover { background: rgb(255 255 255 / .22); border-color: rgb(255 255 255 / .35); }
   .ask-hbtn:focus-visible { outline: 2px solid #fff; outline-offset: 2px; }
   .ask-hbtn[hidden] { display: none; }
 
@@ -468,7 +800,7 @@ const here = exams.find((e) => e.slug === Astro.url.pathname.split('/')[1])?.slu
   }
   .ask-log :global(.ask-row) { display: flex; align-items: flex-end; gap: 6px; max-width: 96%; animation: ask-rise .3s ease-out both; }
   .ask-log :global(.ask-row .ask-msg) { max-width: calc(100% - 36px); }
-  .ask-log :global(.ask-ava-s) { flex: none; display: grid; place-items: center; width: 30px; height: 30px; border-radius: 50%; background: var(--accent-soft); }
+  .ask-log :global(.ask-ava-s) { flex: none; display: grid; place-items: center; width: 30px; height: 30px; border-radius: 50%; background: radial-gradient(circle at 35% 30%, #fff, var(--accent-soft)); box-shadow: 0 0 0 2px rgb(255 215 94 / .55), 0 4px 10px -4px rgb(0 60 140 / .5); }
   .ask-log :global(.ask-row.is-cont .ask-ava-s) { visibility: hidden; }
   .ask-log :global(.ask-msg.is-typing) { min-width: 58px; }
   .ask-log :global(.ask-msg.is-typing > *) { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
@@ -486,31 +818,103 @@ const here = exams.find((e) => e.slug === Astro.url.pathname.split('/')[1])?.slu
   .ask-log :global(.ask-msg) { max-width: 92%; padding: 10px 12px; border-radius: 14px; font-size: .95rem; line-height: 1.5; overflow-wrap: anywhere; }
   .ask-log :global(.ask-msg p) { margin: 0; }
   .ask-log :global(.ask-msg p + p), .ask-log :global(.ask-msg p + .ask-chips), .ask-log :global(.ask-chips + p) { margin-top: 8px; }
-  .ask-log :global(.ask-bot) { position: relative; align-self: flex-start; background: var(--card); border: 1px solid var(--card-line); border-bottom-left-radius: 4px; box-shadow: 0 6px 18px -12px rgb(0 40 90 / .45); }
-  .ask-log :global(.ask-me) { align-self: flex-end; background: linear-gradient(135deg, #0078d4, #005a9e); color: #fff; border-bottom-right-radius: 4px; box-shadow: 0 6px 16px -10px rgb(0 60 120 / .6); }
+  .ask-log :global(.ask-bot) { position: relative; align-self: flex-start; background: linear-gradient(180deg, var(--card), color-mix(in srgb, var(--card) 92%, var(--accent))); border: 1px solid color-mix(in srgb, var(--accent) 16%, var(--card-line)); border-radius: 18px 18px 18px 6px; box-shadow: 0 10px 24px -16px rgb(0 40 90 / .55), inset 0 1px 0 rgb(255 255 255 / .6); }
+  .ask-log :global(.ask-me) { align-self: flex-end; background: linear-gradient(135deg, #1a8cff, #0063b8 55%, #0a3d75); color: #fff; border-radius: 18px 18px 6px 18px; box-shadow: 0 10px 22px -12px rgb(0 70 150 / .7), inset 0 1px 0 rgb(255 255 255 / .3); }
   .ask-log :global(.ask-strong) { font-weight: 700; }
   .ask-log :global(.ask-head2) { font-size: .78rem; font-weight: 700; letter-spacing: .02em; text-transform: uppercase; color: var(--accent-deep); }
   .ask-log :global(.ask-steps) { list-style: decimal; font-size: .88rem; }
-  .ask-log :global(.ask-chip.ask-go) { background: #005a9e; border-color: #005a9e; color: #fff; font-weight: 600; }
-  .ask-log :global(.ask-chip.ask-go:hover) { background: #003a66; }
+  .ask-log :global(.ask-chip.ask-go) { background: linear-gradient(135deg, #1a8cff, #0063b8 60%, #0a3d75); border-color: transparent; color: #fff; font-weight: 700; box-shadow: 0 8px 18px -10px rgb(0 70 150 / .8), inset 0 1px 0 rgb(255 255 255 / .3); }
+  .ask-log :global(.ask-chip.ask-go:hover) { background: linear-gradient(135deg, #3399ff, #0070cc 60%, #0a3d75); }
   .ask-log :global(.ask-msg ol + .ask-chips), .ask-log :global(.ask-msg ul + p), .ask-log :global(.ask-msg ol + p) { margin-top: 8px; }
   .ask-log :global(.ask-list) { margin: 0; padding-left: 1.1rem; list-style: disc; }
   .ask-log :global(.ask-list li + li) { margin-top: 4px; }
   .ask-log :global(.ask-src), .ask-log :global(.ask-more) { font-size: .82rem; color: var(--text-muted); }
+  /* home */
+  .ask-log { --ring-track: color-mix(in srgb, var(--accent) 14%, var(--card)); }
+  .ask-log :global(.ask-home) { display: flex; flex-direction: column; gap: 10px; }
+  .ask-log :global(.ask-home-top) { display: flex; align-items: center; gap: 12px; }
+  .ask-log :global(.ask-ring) { position: relative; flex: none; width: 62px; height: 62px; }
+  .ask-log :global(.ask-ring span) { position: absolute; inset: 0; display: grid; place-items: center; font-size: .9rem; font-weight: 800; color: var(--accent-deep); }
+  .ask-log :global(.ask-home-w) { min-width: 0; }
+  .ask-log :global(.ask-hello) { margin: 0; font-size: 1.3rem; font-weight: 800; line-height: 1.15; letter-spacing: -.01em; }
+  .ask-log :global(.ask-hello-sm) { font-size: 1.05rem; }
+  .ask-log :global(.ask-home-sub) { margin: 4px 0 0 !important; font-size: .84rem; color: var(--text-muted); }
+  .ask-log :global(.ask-next) { display: flex; align-items: center; gap: 8px; padding: 9px 11px; border-radius: 14px; background: color-mix(in srgb, var(--accent) 10%, var(--card)); font-size: .88rem; font-weight: 600; }
+  .ask-log :global(.ask-next-l) { flex: none; font-size: .68rem; font-weight: 800; letter-spacing: .1em; text-transform: uppercase; color: var(--accent-deep); }
+  .ask-log :global(.ask-cta) { flex: 1; display: inline-flex; align-items: center; justify-content: center; min-height: 44px; padding: 0 14px; border-radius: 999px; border: 0; background: linear-gradient(135deg, #1a8cff, #0063b8 60%, #0a3d75); color: #fff; font-size: .9rem; font-weight: 700; text-decoration: none; cursor: pointer; box-shadow: 0 8px 18px -10px rgb(0 70 150 / .8); }
+  .ask-log :global(.ask-cta-2) { background: var(--bg); color: var(--accent-deep); border: 1px solid color-mix(in srgb, var(--accent) 35%, var(--card-line)); box-shadow: none; }
+  .ask-log :global(.ask-cta:disabled) { opacity: .45; cursor: default; }
+  .ask-log :global(.ask-cta:focus-visible), .ask-log :global(.ask-tile:focus-visible), .ask-log :global(.ask-opt:focus-visible), .ask-log :global(.ask-tab:focus-visible), .ask-log :global(.ask-thumb:focus-visible), .ask-log :global(.ask-signin:focus-visible), .ask-log :global(.ask-post:focus-visible) { outline: 2px solid var(--accent); outline-offset: 2px; }
+  .ask-log :global(.ask-tiles) { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
+  .ask-log :global(.ask-tile) { display: flex; flex-direction: column; align-items: flex-start; gap: 3px; min-height: 84px; padding: 11px; border-radius: 16px; border: 1px solid color-mix(in srgb, var(--accent) 18%, var(--card-line)); background: var(--bg); color: var(--text); text-align: left; text-decoration: none; font: inherit; cursor: pointer; transition: transform .15s, border-color .15s, box-shadow .15s; }
+  .ask-log :global(.ask-tile:hover) { transform: translateY(-2px); border-color: var(--accent); box-shadow: 0 12px 22px -16px rgb(0 70 150 / .8); }
+  .ask-log :global(.ask-tile b) { font-size: .9rem; }
+  .ask-log :global(.ask-tile-i) { display: grid; color: var(--accent); }
+  .ask-log :global(.ask-tile-n) { font-size: .74rem; line-height: 1.3; color: var(--text-muted); }
+  .ask-log :global(.ask-tile.is-gold) { background: color-mix(in srgb, #ffc83d 16%, var(--card)); border-color: color-mix(in srgb, #ffc83d 55%, var(--card-line)); }
+  .ask-log :global(.ask-tile.is-gold .ask-tile-i) { color: #b07400; }
+  .ask-log :global(.ask-signin) { align-self: flex-start; min-height: 36px; margin-top: 8px; padding: 0; border: 0; background: none; color: var(--accent-deep); font-size: .82rem; font-weight: 700; text-decoration: underline; text-underline-offset: 3px; cursor: pointer; }
+  /* quiz */
+  .ask-log :global(.ask-opts) { display: grid; gap: 6px; margin-top: 8px; }
+  .ask-log :global(.ask-opt) { display: flex; align-items: flex-start; gap: 10px; min-height: 44px; padding: 9px 11px; border-radius: 14px; border: 1px solid color-mix(in srgb, var(--accent) 22%, var(--card-line)); background: var(--bg); color: var(--text); font: inherit; font-size: .88rem; text-align: left; cursor: pointer; }
+  .ask-log :global(.ask-opt:not(:disabled):hover) { border-color: var(--accent); }
+  .ask-log :global(.ask-opt:disabled) { cursor: default; }
+  .ask-log :global(.ask-opt-l) { flex: none; display: grid; place-items: center; width: 24px; height: 24px; border-radius: 8px; background: var(--accent-soft); color: var(--accent-deep); font-size: .78rem; font-weight: 800; }
+  .ask-log :global(.ask-opt.is-right) { border: 2px solid var(--ok); background: color-mix(in srgb, var(--ok) 12%, var(--card)); }
+  .ask-log :global(.ask-opt.is-wrong) { border: 2px solid var(--bad); background: color-mix(in srgb, var(--bad) 10%, var(--card)); }
+  .ask-log :global(.ask-fb:empty) { display: none; }
+  .ask-log :global(.ask-fb) { margin-top: 8px; padding: 10px 12px; border-radius: 14px; display: flex; flex-direction: column; gap: 6px; }
+  .ask-log :global(.ask-fb.is-ok) { background: color-mix(in srgb, var(--ok) 10%, var(--card)); border: 1px solid color-mix(in srgb, var(--ok) 40%, transparent); }
+  .ask-log :global(.ask-fb.is-no) { background: color-mix(in srgb, #ffb300 12%, var(--card)); border: 1px solid color-mix(in srgb, #ffb300 45%, transparent); }
+  .ask-log :global(.ask-kicker) { font-size: .78rem; font-weight: 700; letter-spacing: .02em; text-transform: uppercase; color: var(--accent-deep); }
+  /* celebration */
+  .ask-log :global(.ask-party) { margin: -10px -12px 4px; padding: 16px 14px; border-radius: 16px 16px 12px 12px; color: #fff; text-align: center; background: radial-gradient(70% 90% at 50% 20%, rgb(255 200 61 / .35), transparent 65%), #08284f; }
+  .ask-log :global(.ask-party-t) { margin: 0; font-size: 1.15rem; font-weight: 800; line-height: 1.25; }
+  .ask-log :global(.ask-party-s) { margin: 4px 0 0 !important; font-size: .8rem; color: #d8ecff; }
+  .ask-log :global(.ask-share), .ask-log :global(.ask-coffee) { margin-top: 10px; padding: 12px; border-radius: 16px; display: flex; flex-direction: column; gap: 8px; }
+  .ask-log :global(.ask-share) { border: 1px solid color-mix(in srgb, #0a66c2 30%, var(--card-line)); background: var(--bg); }
+  .ask-log :global(.ask-share p), .ask-log :global(.ask-coffee p) { margin: 0; }
+  .ask-log :global(.ask-post) { width: 100%; box-sizing: border-box; padding: 10px; border-radius: 12px; border: 1px solid var(--card-line); background: var(--card); color: var(--text); font: inherit; font-size: 16px; line-height: 1.45; resize: vertical; }
+  .ask-log :global(.ask-li) { flex: none; background: #0a66c2; box-shadow: 0 8px 18px -10px rgb(10 102 194 / .9); }
+  .ask-log :global(.ask-coffee) { border: 1px solid color-mix(in srgb, #ffc83d 55%, var(--card-line)); background: color-mix(in srgb, #ffc83d 12%, var(--card)); }
+  .ask-log :global(.ask-buy) { background: #ffc83d; color: #3d2a00; box-shadow: none; }
+  .ask-log :global(.ask-coffee .ask-chips) { flex-wrap: nowrap; }
+  .ask-log :global(.ask-coffee .ask-cta) { white-space: nowrap; padding: 0 12px; }
+  /* answer story */
+  .ask-log :global(.ask-story) { display: flex; flex-direction: column; gap: 10px; }
+  .ask-log :global(.ask-tabs) { display: flex; gap: 6px; }
+  .ask-log :global(.ask-tab) { flex: 1; display: flex; flex-direction: column; gap: 5px; min-height: 40px; padding: 0; border: 0; background: none; color: var(--text-muted); font: inherit; font-size: .74rem; font-weight: 700; cursor: pointer; }
+  .ask-log :global(.ask-tab-bar) { display: block; height: 5px; border-radius: 999px; background: color-mix(in srgb, var(--accent) 16%, var(--card)); }
+  .ask-log :global(.ask-tab.is-done) { color: var(--accent-deep); }
+  .ask-log :global(.ask-tab.is-done .ask-tab-bar) { background: var(--accent); }
+  .ask-log :global(.ask-tab[aria-selected='true']) { color: var(--accent-deep); }
+  .ask-log :global(.ask-tab[aria-selected='true'] .ask-tab-bar) { background: linear-gradient(90deg, #0078d4, #62e6ff); }
+  .ask-log :global(.ask-panel-step) { display: flex; flex-direction: column; gap: 8px; animation: ask-rise .25s ease-out both; }
+  .ask-log :global(.ask-panel-step[hidden]) { display: none; }
+  .ask-log :global(.ask-panel-step p) { margin: 0; }
+  .ask-log :global(.ask-helped) { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; padding-top: 8px; border-top: 1px dashed var(--card-line); font-size: .84rem; font-weight: 600; }
+  .ask-log :global(.ask-helped > span:first-child) { flex: 1; }
+  .ask-log :global(.ask-thumb) { display: grid; place-items: center; width: 40px; height: 40px; border-radius: 50%; border: 1px solid var(--card-line); background: var(--bg); font-size: 1.05rem; cursor: pointer; }
+  .ask-log :global(.ask-thumb:hover) { border-color: var(--accent); }
+  .ask-log :global(.ask-listen) { display: inline-flex; align-items: center; min-height: 32px; margin-top: 4px; padding: 0 10px; border-radius: 999px; border: 1px solid var(--card-line); background: var(--bg); color: var(--accent-deep); font-size: .8rem; font-weight: 700; cursor: pointer; }
+  .ask-log :global(.ask-listen:hover) { border-color: var(--accent); }
+  .ask-log :global(.ask-listen:focus-visible) { outline: 2px solid var(--accent); outline-offset: 2px; }
+  .ask-log :global(.ask-listen[hidden]) { display: none; }
   .ask-log :global(.ask-link) { color: var(--accent-deep); font-weight: 600; text-decoration: underline; text-underline-offset: 2px; }
   .ask-log :global(.ask-chips) { display: flex; flex-wrap: wrap; gap: 6px; }
   .ask-log :global(.ask-chip) {
     display: inline-flex; align-items: center; min-height: 36px; padding: 6px 12px; border-radius: 999px;
-    border: 1px solid var(--card-line); background: var(--accent-soft); color: var(--text);
-    font-size: .85rem; text-align: left; text-decoration: none; cursor: pointer;
+    border: 1px solid color-mix(in srgb, var(--accent) 30%, var(--card-line)); background: var(--bg); color: var(--text);
+    font-size: .85rem; font-weight: 600; text-align: left; text-decoration: none; cursor: pointer;
+    box-shadow: 0 2px 6px -4px rgb(0 40 90 / .4); transition: transform .15s, border-color .15s, box-shadow .15s, background .15s;
   }
-  .ask-log :global(.ask-chip:hover) { border-color: var(--accent); }
+  .ask-log :global(.ask-chip:hover) { border-color: var(--accent); background: var(--accent-soft); transform: translateY(-1px); box-shadow: 0 8px 16px -10px rgb(0 70 150 / .55); }
   .ask-log :global(.ask-chip:focus-visible) { outline: 2px solid var(--accent); outline-offset: 2px; }
 
-  .ask-form { display: flex; align-items: center; gap: 8px; padding: 10px; border-top: 1px solid var(--card-line); background: var(--card); }
+  .ask-form { display: flex; align-items: center; gap: 8px; padding: 10px 10px 8px; border-top: 1px solid color-mix(in srgb, var(--accent) 14%, var(--card-line)); background: linear-gradient(180deg, var(--card), color-mix(in srgb, var(--card) 94%, var(--accent))); }
   .ask-form input { flex: 1; min-width: 0; min-height: 42px; padding: 0 14px; border-radius: 999px; border: 1px solid var(--card-line); background: var(--bg); color: var(--text); font-size: 16px; }
-  .ask-form input:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-soft); }
-  .ask-send { display: grid; place-items: center; flex: none; width: 44px; height: 44px; border-radius: 50%; border: 0; background: linear-gradient(135deg, #0078d4, #005a9e); color: #fff; cursor: pointer; box-shadow: 0 6px 14px -6px rgb(0 60 120 / .6); transition: transform .15s; }
+  .ask-form input:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 4px color-mix(in srgb, var(--accent) 22%, transparent), 0 6px 16px -10px rgb(0 70 150 / .6); }
+  .ask-send { display: grid; place-items: center; flex: none; width: 44px; height: 44px; border-radius: 50%; border: 0; background: linear-gradient(135deg, #1a8cff, #0063b8 55%, #0a3d75); color: #fff; cursor: pointer; box-shadow: 0 8px 18px -8px rgb(0 70 150 / .75), inset 0 1px 0 rgb(255 255 255 / .35); transition: transform .15s; }
   .ask-send:not(:disabled):hover { transform: scale(1.06); }
   .ask-send:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
   .ask-send:disabled, .ask-form input:disabled { opacity: .6; cursor: not-allowed; }

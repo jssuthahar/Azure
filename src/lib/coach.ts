@@ -35,7 +35,7 @@ export interface CoachState {
   updated: number;
 }
 
-export interface CoachExam { slug: string; code: string; name: string; lessons: PlanLesson[]; next: { slug: string; why: string }[] }
+export interface CoachExam { slug: string; code: string; name: string; lessons: PlanLesson[]; modules?: { slug: string; title: string }[]; next: { slug: string; why: string }[] }
 export interface CoachData { primary: string; exams: CoachExam[] }
 
 const empty = (): CoachState => ({ focus: null, parked: [], passed: {}, celebrated: {}, asked: {}, updated: 0 });

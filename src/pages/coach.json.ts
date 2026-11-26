@@ -21,6 +21,7 @@ export const GET: APIRoute = async () => {
         code: e.code,
         name: e.name,
         lessons: nav.map((t) => ({ key: t.key, title: t.title, url: t.url, domain: t.module.domain, minutes: entries.find((x) => x.id === t.key)?.data.readingMinutes ?? 8 })),
+        modules: e.modules.map((m) => ({ slug: m.slug, title: m.shortTitle || m.title })),
         next: (NEXT_EXAMS[e.slug] ?? []).filter((n) => slugs.has(n.slug)),
       };
     }),

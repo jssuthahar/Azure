@@ -146,6 +146,30 @@ for (const [dev, vp] of [['phone', { width: 360, height: 740 }], ['ipad', { widt
     if (await p.locator('#nc:not([hidden])').count()) failures.push(`${w}: Escape did not close`);
   } catch { failures.push(`${w}: did not open`); }
 
+  // 6b. Ask Nimbus home: greets a signed-in learner by name, Quiz me records an answer, answers come as a step-by-step story.
+  w = `${dev} ask home`;
+  await p.evaluate((slug) => { localStorage.setItem('msdb-user', JSON.stringify({ uid: 'qa', name: 'Asha Rao', email: '', photo: '' })); localStorage.setItem('msdb-ask-exam', slug); }, A.slug);
+  await p.goto(`${BASE}/about/`, { waitUntil: 'load' });
+  await p.click('#ask-fab');
+  try {
+    await p.waitForSelector('#ask-log .ask-hello', { timeout: 6000 });
+    const hi = await p.locator('#ask-log .ask-hello').first().textContent();
+    if (!/Asha/.test(hi)) failures.push(`${w}: greeting "${hi}" has no name`);
+    await p.click('#ask-log .ask-tile.is-gold');
+    await p.waitForSelector('#ask-log .ask-opt', { timeout: 6000 });
+    const before = await p.evaluate(() => Object.keys(JSON.parse(localStorage.getItem('msdb-azure-review-v1') || '{}')).length);
+    await p.locator('#ask-log .ask-opt').first().click();
+    await p.waitForSelector('#ask-log .ask-fb.is-ok, #ask-log .ask-fb.is-no', { timeout: 3000 });
+    const after = await p.evaluate(() => Object.keys(JSON.parse(localStorage.getItem('msdb-azure-review-v1') || '{}')).length);
+    if (after <= before) failures.push(`${w}: Quiz me answer not recorded in Smart practice`);
+    await fits(p, `${w} quiz`);
+    await p.addScriptTag({ content: axe });
+    const v = await p.evaluate(async () => (await window.axe.run('#ask-panel', { runOnly: ['wcag2a', 'wcag2aa', 'wcag21aa'] })).violations.map((x) => `${x.id} (${x.nodes[0]?.target.join(' ')})`));
+    for (const x of v) failures.push(`${w} axe: ${x}`);
+  } catch (e) { failures.push(`${w}: ${e.message.split('\n')[0]}`); }
+  await p.evaluate(() => localStorage.removeItem('msdb-user'));
+  await p.click('#ask-close').catch(() => {});
+
   // 7. Never on blocked pages.
   await p.evaluate(() => sessionStorage.clear());
   await p.goto(`${BASE}/${A.slug}/mock-exam/`, { waitUntil: 'load' });

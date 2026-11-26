@@ -9,11 +9,17 @@
  * (NimbusCoach does). The eyes follow the pointer, and a tap on a bot marked
  * `data-nb-tap` makes it spin. Everything stops for prefers-reduced-motion.
  */
-interface Props { size?: number; class?: string; mood?: 'idle' | 'wave' | 'think' | 'talk' | 'cheer'; tap?: boolean }
-const { size = 64, class: cls = '', mood = 'idle', tap = false } = Astro.props;
+interface Props {
+  size?: number; class?: string; mood?: 'idle' | 'wave' | 'think' | 'talk' | 'cheer'; tap?: boolean;
+  /** Celebrate when the learner earns XP. */
+  react?: boolean;
+  /** Fixed look (1-6) instead of the learner's level; 0 = no accessory. */
+  level?: number;
+}
+const { size = 64, class: cls = '', mood = 'idle', tap = false, react = false, level } = Astro.props;
 const id = `nb${Math.random().toString(36).slice(2, 8)}`;
 ---
-<svg class:list={['nb', cls]} data-mood={mood} data-nb-tap={tap ? '' : undefined} width={size} height={size} viewBox="-10 -8 140 140" aria-hidden="true" focusable="false">
+<svg class:list={['nb', cls]} data-mood={mood} data-nb-tap={tap ? '' : undefined} data-nb-react={react ? '' : undefined} data-level={level ?? '0'} data-level-fixed={level !== undefined ? '' : undefined} width={size} height={size} viewBox="-10 -8 140 140" aria-hidden="true" focusable="false">
   <defs>
     <linearGradient id={`${id}-body`} x1="0" y1="0" x2="0" y2="1">
       <stop offset="0" stop-color="#ffffff" />
@@ -84,13 +90,47 @@ const id = `nb${Math.random().toString(36).slice(2, 8)}`;
       </g>
       <ellipse cx="43.5" cy="81.5" rx="3" ry="2" fill="#ff7a93" opacity=".8" />
       <ellipse cx="80.5" cy="81.5" rx="3" ry="2" fill="#ff7a93" opacity=".8" />
+
+      <!-- Nimbus grows with the learner: one item per XP level (progress.ts LEVELS) -->
+      <g class="nb-acc nb-acc-1"><path d="M40 51q-1-6 1-10" fill="none" stroke="#2e8b3c" stroke-width="2.4" stroke-linecap="round" /><path d="M41 42q-9-6-13 1q8 4 13-1z" fill="#5cc46b" stroke="#2e8b3c" stroke-width="1.6" stroke-linejoin="round" /><path d="M41 42q8-8 13-2q-7 5-13 2z" fill="#7bd88a" stroke="#2e8b3c" stroke-width="1.6" stroke-linejoin="round" /></g>
+      <g class="nb-acc nb-acc-2"><circle cx="87" cy="88" r="7.5" fill="#ffd75e" stroke="#b8860b" stroke-width="2" /><path d="M87 82.2l2.1 5.8-2.1 5.8-2.1-5.8z" fill="#c50f1f" /><path d="M87 88l2.1 0-2.1 5.8-2.1-5.8z" fill="#fff" /><circle cx="87" cy="88" r="1.3" fill="#5a3b00" /></g>
+      <g class="nb-acc nb-acc-3"><path d="M42 47a18 15 0 0 1 36 0z" fill="#ffc83d" stroke="#c98a00" stroke-width="2" stroke-linejoin="round" /><path d="M60 33v13" stroke="#c98a00" stroke-width="2" /><rect x="37" y="45" width="46" height="5.5" rx="2.75" fill="#ffb300" stroke="#c98a00" stroke-width="1.6" /></g>
+      <g class="nb-acc nb-acc-4"><circle cx="52" cy="73" r="8.6" fill="none" stroke="#ffd75e" stroke-width="2.3" /><circle cx="72" cy="73" r="8.6" fill="none" stroke="#ffd75e" stroke-width="2.3" /><path d="M60.6 72.5q1.4-2 2.8 0" fill="none" stroke="#ffd75e" stroke-width="2.3" stroke-linecap="round" /></g>
+      <g class="nb-acc nb-acc-5"><path d="M55 88l5 9 5-9" fill="#0078d4" stroke="#005a9e" stroke-width="1.5" stroke-linejoin="round" /><circle cx="60" cy="101" r="6.5" fill="#ffc83d" stroke="#c98a00" stroke-width="2" /><path d="M60 97.6l1 2.2 2.4.2-1.8 1.6.6 2.4-2.2-1.3-2.2 1.3.6-2.4-1.8-1.6 2.4-.2z" fill="#fff6cf" /></g>
+      <g class="nb-acc nb-acc-6"><path d="M43 47l3-14 7 7 7-11 7 11 7-7 3 14z" fill="#ffc83d" stroke="#c98a00" stroke-width="2" stroke-linejoin="round" /><circle cx="53" cy="43" r="2" fill="#e81123" /><circle cx="60" cy="42" r="2.2" fill="#0078d4" /><circle cx="67" cy="43" r="2" fill="#107c10" /></g>
+      <!-- night: sleep cap and floating z's -->
+      <g class="nb-night"><path d="M78 53q8-20 30-10q-7 1-9 10z" fill="#3b4fa8" stroke="#1e2a6e" stroke-width="2" stroke-linejoin="round" /><path d="M79 52q10-3 20 1" fill="none" stroke="#fff" stroke-width="3" stroke-linecap="round" /><circle cx="108" cy="43" r="4" fill="#fff" stroke="#1e2a6e" stroke-width="1.5" /><text class="nb-z" x="100" y="28">z</text><text class="nb-z nb-z2" x="108" y="18">z</text></g>
     </g>
   </g>
 </svg>
 
 <script>
+  import { load, levelFor } from '../lib/progress';
   // Eyes follow the pointer (only bots on screen; one rAF per move). Tap a [data-nb-tap] bot to make it spin.
   const calm = matchMedia('(prefers-reduced-motion: reduce)');
+
+  // Nimbus grows with the learner's XP level, and wears a sleep cap late at night.
+  const dress = () => {
+    const lv = levelFor(load().xp).level;
+    const h = new Date().getHours();
+    const night = h >= 22 || h < 5;
+    document.querySelectorAll<SVGElement>('svg.nb').forEach((svg) => {
+      if (!svg.hasAttribute('data-level-fixed')) svg.dataset.level = String(lv);
+      svg.toggleAttribute('data-night', night && !svg.hasAttribute('data-level-fixed'));
+    });
+  };
+  dress();
+  addEventListener('progress-change', dress);
+  // Celebrate XP with the learner: [data-nb-react] bots cheer (longer on a level-up).
+  addEventListener('xp-gain', (e) => {
+    const up = !!(e as CustomEvent).detail?.levelUp;
+    document.querySelectorAll<SVGElement>('svg.nb[data-nb-react]').forEach((svg) => {
+      const before = svg.dataset.mood === 'cheer' ? 'idle' : svg.dataset.mood;
+      svg.dataset.mood = 'cheer';
+      if (up) { svg.classList.remove('nb-spun'); void svg.getBoundingClientRect(); svg.classList.add('nb-spun'); }
+      setTimeout(() => { svg.classList.remove('nb-spun'); svg.dataset.mood = before; }, up ? 3200 : 1800);
+    });
+  });
   let px = -1, py = -1, queued = false;
   const look = () => {
     queued = false;
@@ -138,6 +178,13 @@ const id = `nb${Math.random().toString(36).slice(2, 8)}`;
   .nb .nb-arm { transform-box: view-box; transform-origin: 110px 94px; animation: nb-hover 3.2s ease-in-out infinite; }
   .nb .nb-arm-l { transform-box: view-box; transform-origin: 34px 96px; animation: nb-hover 3.2s ease-in-out -1.6s infinite; }
   .nb-think, .nb-sparks { opacity: 0; transition: opacity .25s; }
+  .nb-acc, .nb-night { display: none; }
+  .nb[data-level='1'] .nb-acc-1, .nb[data-level='2'] .nb-acc-2, .nb[data-level='3'] .nb-acc-3,
+  .nb[data-level='4'] .nb-acc-4, .nb[data-level='5'] .nb-acc-5, .nb[data-level='6'] .nb-acc-6, .nb[data-night] .nb-night { display: inline; }
+  .nb[data-night][data-level='3'] .nb-acc-3, .nb[data-night][data-level='6'] .nb-acc-6 { display: none; }
+  .nb-z { font: 800 11px system-ui, sans-serif; fill: #8fb3ff; transform-box: fill-box; animation: nb-z 2.6s ease-in-out infinite; }
+  .nb-z2 { font-size: 8px; animation-delay: 1.3s; }
+  .nb[data-night] .nb-eye { animation: nb-blink 2.2s infinite; }
   .nb-think circle { fill: #fff; stroke: #0078d4; stroke-width: 2; }
   .nb-spark { fill: #ffc83d; transform-origin: center; }
 
@@ -177,6 +224,7 @@ const id = `nb${Math.random().toString(36).slice(2, 8)}`;
   @keyframes nb-spin { 0% { transform: rotate(0) scale(1); } 50% { transform: rotate(200deg) scale(1.12); } 100% { transform: rotate(360deg) scale(1); } }
   @keyframes nb-bubble { 0%, 100% { transform: scale(.7); opacity: .5; } 50% { transform: scale(1); opacity: 1; } }
   @keyframes nb-twinkle { 0%, 100% { transform: scale(.4) rotate(0); opacity: .3; } 50% { transform: scale(1.1) rotate(25deg); opacity: 1; } }
+  @keyframes nb-z { 0% { opacity: 0; transform: translate(0, 4px); } 30%, 70% { opacity: 1; } 100% { opacity: 0; transform: translate(4px, -6px); } }
   @keyframes nb-pop { 0% { transform: scale(.4) rotate(-12deg); } 60% { transform: scale(1.12) rotate(4deg); } 100% { transform: none; } }
 
   @media (prefers-reduced-motion: reduce) {
