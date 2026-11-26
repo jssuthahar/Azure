@@ -32,6 +32,8 @@ export interface CoachState {
   never?: boolean;
   /** Last date the daily "welcome back" card was shown. */
   greeted?: string;
+  /** Chosen Nimbus character (nimbus-skins.ts). */
+  skin?: string;
   updated: number;
 }
 

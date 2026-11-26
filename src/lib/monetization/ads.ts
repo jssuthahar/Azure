@@ -192,6 +192,19 @@ function boot() {
     watch(h);
   }
 
+  // On a cold first visit a slot can miss its one visibility check and then never fill.
+  // Look again (fresh observation) on the first scroll and once the page has settled.
+  const retry = () => {
+    for (const h of hosts) {
+      if (h.hidden || h.dataset.adTrigger || h.dataset.adReveal || h.dataset.adState === 'filled') continue;
+      settle(h);
+      io?.unobserve(h);
+      watch(h);
+    }
+  };
+  addEventListener('scroll', retry, { once: true, passive: true });
+  setTimeout(retry, 1500);
+
   // Viewport rules are re-checked on resize: drop ads that no longer fit, try ones that now do.
   let t = 0;
   addEventListener('resize', () => {

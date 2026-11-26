@@ -7,10 +7,16 @@
  * up, thought bubbles), talk (mouth moves), cheer (happy eyes, hops,
  * sparkles). Set `mood`, or change `data-mood` on the <svg> at runtime
  * (NimbusCoach does). The eyes follow the pointer, and a tap on a bot marked
- * `data-nb-tap` makes it spin. Everything stops for prefers-reduced-motion.
+ * `data-nb-tap` makes it spin. Everything stops for prefers-reduced-motion
+ * and for Calm mode (html[data-nimbus-calm], set in Meet My Nimbus).
+ *
+ * Characters: the learner's chosen skin (src/lib/nimbus-skins.ts: cloud,
+ * puppy, kitten, panda, bunny, bird, baby, dragon) replaces `.nb-skin` on every
+ * Nimbus at runtime; the cloud is the server-rendered default. Moods dance
+ * (lesson done) and listen (learner typing) join the five above.
  */
 interface Props {
-  size?: number; class?: string; mood?: 'idle' | 'wave' | 'think' | 'talk' | 'cheer'; tap?: boolean;
+  size?: number; class?: string; mood?: 'idle' | 'wave' | 'think' | 'talk' | 'cheer' | 'dance' | 'listen'; tap?: boolean;
   /** Celebrate when the learner earns XP. */
   react?: boolean;
   /** Fixed look (1-6) instead of the learner's level; 0 = no accessory. */
@@ -19,7 +25,7 @@ interface Props {
 const { size = 64, class: cls = '', mood = 'idle', tap = false, react = false, level } = Astro.props;
 const id = `nb${Math.random().toString(36).slice(2, 8)}`;
 ---
-<svg class:list={['nb', cls]} data-mood={mood} data-nb-tap={tap ? '' : undefined} data-nb-react={react ? '' : undefined} data-level={level ?? '0'} data-level-fixed={level !== undefined ? '' : undefined} width={size} height={size} viewBox="-10 -8 140 140" aria-hidden="true" focusable="false">
+<svg class:list={['nb', cls]} data-mood={mood} data-nb-tap={tap ? '' : undefined} data-nb-react={react ? '' : undefined} data-level={level ?? '0'} data-level-fixed={level !== undefined ? '' : undefined} data-nbid={id} width={size} height={size} viewBox="-10 -8 140 140" aria-hidden="true" focusable="false">
   <defs>
     <linearGradient id={`${id}-body`} x1="0" y1="0" x2="0" y2="1">
       <stop offset="0" stop-color="#ffffff" />
@@ -64,6 +70,7 @@ const id = `nb${Math.random().toString(36).slice(2, 8)}`;
       <g class="nb-arm-l"><ellipse cx="17" cy="97" rx="3.4" ry="4.2" transform="rotate(30 17 97)" class="nb-hand" /><ellipse cx="10" cy="93" rx="7.5" ry="9" transform="rotate(-28 10 93)" class="nb-hand" /></g>
       <g class="nb-arm"><ellipse cx="107" cy="70" rx="3.4" ry="4.2" transform="rotate(-30 107 70)" class="nb-hand" /><ellipse cx="114" cy="65" rx="7.5" ry="9" transform="rotate(28 114 65)" class="nb-hand" /></g>
 
+      <g class="nb-skin">
       <!-- antenna -->
       <path d="M60 42V25" stroke="#0078d4" stroke-width="3.5" stroke-linecap="round" />
       <circle class="nb-glow" cx="60" cy="18" r="11" fill="#ffc83d" />
@@ -90,6 +97,7 @@ const id = `nb${Math.random().toString(36).slice(2, 8)}`;
       </g>
       <ellipse cx="43.5" cy="81.5" rx="3" ry="2" fill="#ff7a93" opacity=".8" />
       <ellipse cx="80.5" cy="81.5" rx="3" ry="2" fill="#ff7a93" opacity=".8" />
+      </g>
 
       <!-- Nimbus grows with the learner: one item per XP level (progress.ts LEVELS) -->
       <g class="nb-acc nb-acc-1"><path d="M40 51q-1-6 1-10" fill="none" stroke="#2e8b3c" stroke-width="2.4" stroke-linecap="round" /><path d="M41 42q-9-6-13 1q8 4 13-1z" fill="#5cc46b" stroke="#2e8b3c" stroke-width="1.6" stroke-linejoin="round" /><path d="M41 42q8-8 13-2q-7 5-13 2z" fill="#7bd88a" stroke="#2e8b3c" stroke-width="1.6" stroke-linejoin="round" /></g>
@@ -121,14 +129,40 @@ const id = `nb${Math.random().toString(36).slice(2, 8)}`;
   };
   dress();
   addEventListener('progress-change', dress);
+
+  // Wear the learner's chosen character everywhere (cloud is the server-rendered default).
+  // The character art (nimbus-skins.ts) loads only when a learner has picked something other than the cloud.
+  const chosen = () => { try { return JSON.parse(localStorage.getItem('msdb-azure-plan-v1') || '{}')._coach?.skin || 'cloud'; } catch { return 'cloud'; } };
+  const wear = async () => {
+    const want = chosen();
+    const svgs = [...document.querySelectorAll<SVGElement>('svg.nb:not(.nb-mini):not([data-skin-fixed])')].filter((svg) => (svg.dataset.skin || 'cloud') !== want);
+    if (!svgs.length) return;
+    const { skinMarkup, skinOrDefault } = await import('../lib/nimbus-skins');
+    const skin = skinOrDefault(want);
+    svgs.forEach((svg) => {
+      const g = svg.querySelector('.nb-skin');
+      if (g && svg.dataset.nbid) { g.innerHTML = skinMarkup(skin, svg.dataset.nbid); svg.dataset.skin = skin; }
+    });
+  };
+  wear();
+  addEventListener('nimbus-skin', wear);
+  addEventListener('msdb-data-change', wear);
+  addEventListener('storage', (e) => { if (e.key === 'msdb-azure-plan-v1') wear(); });
+  try { if (localStorage.getItem('msdb-nimbus-calm') === '1') document.documentElement.dataset.nimbusCalm = ''; } catch { /* blocked */ }
+  // No animation work while the tab is in the background (battery on phones).
+  const rest = () => document.documentElement.toggleAttribute('data-nimbus-paused', document.visibilityState === 'hidden');
+  document.addEventListener('visibilitychange', rest);
+  rest();
   // Celebrate XP with the learner: [data-nb-react] bots cheer (longer on a level-up).
   addEventListener('xp-gain', (e) => {
-    const up = !!(e as CustomEvent).detail?.levelUp;
+    const d = (e as CustomEvent).detail ?? {};
+    const up = !!d.levelUp;
+    const dance = /Lesson completed|Every activity/.test(d.reason || '');
     document.querySelectorAll<SVGElement>('svg.nb[data-nb-react]').forEach((svg) => {
-      const before = svg.dataset.mood === 'cheer' ? 'idle' : svg.dataset.mood;
-      svg.dataset.mood = 'cheer';
+      const before = svg.dataset.mood === 'cheer' || svg.dataset.mood === 'dance' ? 'idle' : svg.dataset.mood;
+      svg.dataset.mood = dance ? 'dance' : 'cheer';
       if (up) { svg.classList.remove('nb-spun'); void svg.getBoundingClientRect(); svg.classList.add('nb-spun'); }
-      setTimeout(() => { svg.classList.remove('nb-spun'); svg.dataset.mood = before; }, up ? 3200 : 1800);
+      setTimeout(() => { svg.classList.remove('nb-spun'); svg.dataset.mood = before; }, up || dance ? 3200 : 1800);
     });
   });
   let px = -1, py = -1, queued = false;
@@ -167,6 +201,14 @@ const id = `nb${Math.random().toString(36).slice(2, 8)}`;
   .nb-spun .nb-spin { animation: nb-spin 1s cubic-bezier(.4, 1.4, .5, 1); }
   .nb-glow { opacity: .35; transform-origin: center; animation: nb-glow 2s ease-in-out infinite; }
   .nb-look { transition: transform .25s ease-out; }
+  .nb[data-skin]:not([data-skin='cloud']) :is(.nb-eye, .nb-happy, .nb-mouth, .nb-talk) { filter: none; }
+  .nb[data-skin='puppy'] .nb-hand { fill: #f2c48d; stroke: #6b4220; }
+  .nb[data-skin='kitten'] .nb-hand { fill: #ffc285; stroke: #a65a18; }
+  .nb[data-skin='panda'] .nb-hand { fill: #2b2b2b; stroke: #2b2b2b; }
+  .nb[data-skin='bunny'] .nb-hand { fill: #fff; stroke: #b9879f; }
+  .nb[data-skin='bird'] .nb-hand { fill: #4aa3ef; stroke: #1f6fb2; }
+  .nb[data-skin='baby'] .nb-hand { fill: #ffdcbf; stroke: #c98d68; }
+  .nb[data-skin='dragon'] .nb-hand { fill: #8fe0a6; stroke: #2e8b57; }
   .nb-eye { fill: #62e6ff; transform-origin: center; animation: nb-blink 4.6s infinite; filter: drop-shadow(0 0 2.5px #62e6ff); }
   .nb-eyes { transition: transform .3s ease, opacity .2s; }
   .nb-happy, .nb-mouth { fill: none; stroke: #62e6ff; stroke-width: 3; stroke-linecap: round; filter: drop-shadow(0 0 2px #62e6ff); transition: opacity .2s; }
@@ -188,6 +230,17 @@ const id = `nb${Math.random().toString(36).slice(2, 8)}`;
   .nb-think circle { fill: #fff; stroke: #0078d4; stroke-width: 2; }
   .nb-spark { fill: #ffc83d; transform-origin: center; }
 
+  /* dance: sway side to side with both hands up (lesson completed) */
+  .nb[data-mood='dance'] .nb-float { animation: nb-dance .8s ease-in-out infinite; }
+  .nb[data-mood='dance'] .nb-arm { animation: nb-wave .8s ease-in-out infinite; }
+  .nb[data-mood='dance'] .nb-arm-l { animation: nb-wave-l .8s ease-in-out infinite; }
+  .nb[data-mood='dance'] .nb-eyes { opacity: 0; }
+  .nb[data-mood='dance'] .nb-happy, .nb[data-mood='dance'] .nb-sparks { opacity: 1; }
+  .nb[data-mood='dance'] .nb-spark { animation: nb-twinkle 1s ease-in-out infinite; }
+  /* listen: head tilted, eyes up and attentive (learner is typing) */
+  .nb[data-mood='listen'] .nb-spin { transform: rotate(-7deg); transition: transform .3s; }
+  .nb[data-mood='listen'] .nb-eyes { transform: translate(1px, -2px) scale(1.08); }
+  .nb[data-mood='listen'] .nb-glow { animation-duration: 1s; }
   /* wave: two quick waves, then a rest */
   .nb[data-mood='wave'] .nb-arm { animation: nb-wave 2.6s ease-in-out infinite; }
   /* talk: mouth opens and closes, antenna flickers */
@@ -224,10 +277,14 @@ const id = `nb${Math.random().toString(36).slice(2, 8)}`;
   @keyframes nb-spin { 0% { transform: rotate(0) scale(1); } 50% { transform: rotate(200deg) scale(1.12); } 100% { transform: rotate(360deg) scale(1); } }
   @keyframes nb-bubble { 0%, 100% { transform: scale(.7); opacity: .5; } 50% { transform: scale(1); opacity: 1; } }
   @keyframes nb-twinkle { 0%, 100% { transform: scale(.4) rotate(0); opacity: .3; } 50% { transform: scale(1.1) rotate(25deg); opacity: 1; } }
+  @keyframes nb-dance { 0%, 100% { transform: rotate(-8deg) translateY(0); } 50% { transform: rotate(8deg) translateY(-6px); } }
   @keyframes nb-z { 0% { opacity: 0; transform: translate(0, 4px); } 30%, 70% { opacity: 1; } 100% { opacity: 0; transform: translate(4px, -6px); } }
   @keyframes nb-pop { 0% { transform: scale(.4) rotate(-12deg); } 60% { transform: scale(1.12) rotate(4deg); } 100% { transform: none; } }
 
   @media (prefers-reduced-motion: reduce) {
     .nb *, .nb[data-mood] * { animation: none !important; transition: none !important; }
   }
+  /* Calm mode: the learner turned Nimbus animations off */
+  [data-nimbus-calm] .nb *, [data-nimbus-calm] .nb[data-mood] * { animation: none !important; transition: none !important; }
+  [data-nimbus-paused] .nb * { animation-play-state: paused !important; }
 </style>

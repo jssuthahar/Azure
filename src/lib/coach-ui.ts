@@ -1,0 +1,348 @@
+/**
+ * Nimbus Coach card logic (see NimbusCoach.astro), loaded only where the coach
+ * may have something to say, a few seconds after the page settles, or when a
+ * [data-coach-open] button is tapped.
+ */
+import { load as loadProgress, today } from './progress';
+import { loadPlan, savePlan, buildSchedule, planIcs, addDays } from './plan';
+import {
+    loadCoach, saveCoach, setFocus, session, saveSession, percentDone, bestFullMock, isReady, nextTask, daysTo,
+    type CoachData, type CoachExam, type CoachState,
+  } from './coach';
+
+let mounted = false;
+export function mountCoach() {
+  if (mounted) return;
+  mounted = true;
+  const box = document.getElementById('nc') as HTMLElement;
+  const body = document.getElementById('nc-body')!;
+  const head = document.getElementById('nc-h')!;
+  const SITE_URL = box.dataset.site!;
+  const BLOCK = /\/(mock-exam|labs|simulator|games|practice|architect|embed|certificate|offline|exam-dumps|voice-studio)(\/|$)/;
+  const DAY = 86_400_000;
+
+  let data: CoachData | null = null;
+  const getData = async () => {
+    if (!data) {
+      try { data = (await (await fetch('/coach.json')).json()) as CoachData; } catch { data = null; }
+    }
+    return data;
+  };
+  const examBy = (slug: string | null | undefined) => (slug ? data?.exams.find((e) => e.slug === slug) : undefined);
+  const esc = (s: string) => s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/"/g, '&quot;');
+  const pretty = (d: string) => new Date(`${d}T00:00:00`).toLocaleDateString('en-GB', { day: 'numeric', month: 'long' });
+
+  /* ---------------- where are we ---------------- */
+  const path = location.pathname;
+  const seg = path.split('/')[1] || '';
+  // Playwright and other automation: stay out of the way unless a QA run asks for the coach.
+  const quiet = () => { try { return navigator.webdriver && localStorage.getItem('msdb-coach-qa') !== '1'; } catch { return true; } };
+
+  const busy = () => {
+    const a = document.activeElement as HTMLElement | null;
+    return document.documentElement.classList.contains('presenting') || !!document.fullscreenElement
+      || !!a?.closest('input, textarea, select, [contenteditable="true"], .knowledge-check, [data-quiz]')
+      || !!document.querySelector('dialog[open]')
+      || !!document.querySelector('.kp:not([hidden])')
+      || !!document.querySelector('#ask.is-open');
+  };
+
+  /* ---------------- card ---------------- */
+  let shownBy: 'auto' | 'user' | null = null;
+  /** What closing the current card means (e.g. snooze the welcome). */
+  let onClose: (() => void) | null = null;
+  const bot = box.querySelector<SVGElement>('.nb')!;
+  let typingT = 0, moodT = 0;
+  function show(title: string, html: string, by: 'auto' | 'user', mood: 'idle' | 'wave' | 'think' | 'cheer' = 'idle') {
+    head.textContent = title;
+    bot.classList.remove('nb-in'); void bot.getBoundingClientRect(); bot.classList.add('nb-in');
+    body.innerHTML = html;
+    // Nimbus "types" for a moment, talks while the message lands, then settles into the card's mood.
+    clearTimeout(typingT); clearTimeout(moodT);
+    if (matchMedia('(prefers-reduced-motion: reduce)').matches) bot.dataset.mood = mood;
+    else {
+      bot.dataset.mood = 'talk';
+      box.classList.add('is-typing');
+      typingT = window.setTimeout(() => box.classList.remove('is-typing'), 480);
+      moodT = window.setTimeout(() => { bot.dataset.mood = mood; }, 1500);
+    }
+    const first = !shownBy || box.hidden;
+    shownBy = by;
+    box.hidden = false;
+    requestAnimationFrame(() => box.classList.add('is-in'));
+    // Only move focus when the learner asked for the card, or when moving between steps.
+    if (by === 'user' || !first) head.focus({ preventScroll: true });
+  }
+  function close() {
+    box.classList.remove('is-in');
+    setTimeout(() => { box.hidden = true; }, 220);
+    shownBy = null;
+  }
+  box.querySelector('[data-nc-close]')!.addEventListener('click', () => { onClose?.(); close(); });
+  document.addEventListener('keydown', (e) => { if (e.key === 'Escape' && !box.hidden) { onClose?.(); close(); } });
+
+  const btn = (act: string, label: string, cls = 'btn-outline', extra = '') => `<button type="button" class="btn ${cls}" data-act="${act}" ${extra}>${label}</button>`;
+  const link = (href: string, label: string, cls = 'btn-accent') => `<a class="btn ${cls}" href="${esc(href)}">${label}</a>`;
+  const bar = (pct: number, label: string) => `<div class="nc-bar" role="progressbar" aria-valuenow="${pct}" aria-valuemin="0" aria-valuemax="100" aria-label="${esc(label)}"><span style="width:${pct}%"></span></div>`;
+  const taskLine = (e: CoachExam) => {
+    const t = nextTask(e);
+    return { t, html: `<p class="nc-task"><span class="nc-lbl">Today</span> ${esc(t.title)}${t.minutes ? ` <span class="chip chip-muted">${t.minutes} min</span>` : ''}</p>` };
+  };
+
+  /* ---------------- views ---------------- */
+  let st: CoachState = loadCoach();
+  const save = () => saveCoach(st);
+
+  function viewWelcome(e: CoachExam, by: 'auto' | 'user') {
+    onClose = () => { st.snooze = Date.now() + DAY; save(); };
+    show(`Starting ${e.code}?`, `
+      <p>Hi, I'm Nimbus. Tell me when you want to sit ${esc(e.code)} and I'll split the ${e.lessons.length} lessons into small daily steps, with a calendar reminder.</p>
+      <p class="nc-muted">It takes three taps and stays in your browser. No sign-in needed.</p>
+      <div class="nc-btns">${btn('plan', 'Yes, plan it with me', 'btn-accent')}${btn('looking', 'Just looking')}</div>
+      <button type="button" class="nc-link" data-act="never">Don't ask me again</button>`, by, 'wave');
+    act({
+      plan: () => { setFocus(st, e.slug); st.snooze = undefined; save(); loadPlan(e.slug) ? viewReady(e) : viewDate(e); },
+      looking: () => { st.snooze = Date.now() + 3 * DAY; save(); close(); },
+      never: () => { st.never = true; save(); close(); },
+    });
+  }
+
+  function viewDate(e: CoachExam) {
+    onClose = null;
+    const opt = (days: number, label: string) => `<button type="button" class="nc-opt" data-days="${days}">${label}<span>${pretty(addDays(today(), days))}</span></button>`;
+    show(`When will you sit ${e.code}?`, `
+      <p>Pick a rough date. You can change it any time on the study plan page.</p>
+      <div class="nc-opts">${opt(14, 'In 2 weeks')}${opt(30, 'In 1 month')}${opt(60, 'In 2 months')}</div>
+      <form class="nc-date" data-form><label><span>Or pick a date</span><input type="date" required min="${addDays(today(), 1)}" value="${addDays(today(), 30)}" /></label><button type="submit" class="btn btn-outline">Next</button></form>`, 'user');
+    const go = (date: string) => viewMinutes(e, date);
+    body.querySelectorAll<HTMLButtonElement>('[data-days]').forEach((b) => b.addEventListener('click', () => go(addDays(today(), Number(b.dataset.days)))));
+    body.querySelector('[data-form]')!.addEventListener('submit', (ev) => {
+      ev.preventDefault();
+      const v = (body.querySelector('input[type=date]') as HTMLInputElement).value;
+      if (v && v > today()) go(v);
+    });
+  }
+
+  function viewMinutes(e: CoachExam, date: string) {
+    show('How long each day?', `
+      <p>Be honest. A small amount every day beats a long session once a week.</p>
+      <div class="nc-opts">${[20, 30, 60].map((m) => `<button type="button" class="nc-opt" data-min="${m}">${m === 60 ? '1 hour' : `${m} minutes`}</button>`).join('')}</div>`, 'user');
+    body.querySelectorAll<HTMLButtonElement>('[data-min]').forEach((b) => b.addEventListener('click', () => {
+      const prev = loadPlan(e.slug);
+      savePlan(e.slug, { examDate: date, minutes: Number(b.dataset.min), weekends: prev?.weekends ?? true, time: prev?.time ?? '19:00', created: prev?.created ?? today(), checked: prev?.checked ?? {} });
+      setFocus(st, e.slug); save();
+      viewReady(e);
+    }));
+  }
+
+  function viewReady(e: CoachExam) {
+    onClose = null;
+    const plan = loadPlan(e.slug)!;
+    const s = buildSchedule(plan, e.lessons, new Set(Object.keys(loadProgress().done)), `/${e.slug}/`);
+    const { t } = taskLine(e);
+    const warn = s.neededMinutes > plan.minutes + 5 ? `<p class="nc-warn">To finish every lesson in time you need about ${s.neededMinutes} minutes a day. A later date makes it easier.</p>` : '';
+    show(`Your ${e.code} plan is ready`, `
+      <p><strong>${s.daysToExam} days</strong> to go, ${s.lessonsLeft} lesson${s.lessonsLeft === 1 ? '' : 's'} left. The last few days are for mock exams and revision.</p>
+      ${warn}
+      <p class="nc-task"><span class="nc-lbl">First up</span> ${esc(t.title)}</p>
+      <div class="nc-btns">${link(t.url, 'Start now')}${btn('ics', '📅 Add calendar reminders')}</div>
+      <a class="nc-link" href="/${e.slug}/study-plan/">See the whole plan</a>`, 'user', 'cheer');
+    act({ ics: () => downloadIcs(e) });
+  }
+
+  function viewBack(e: CoachExam) {
+    const p = loadProgress();
+    const pct = percentDone(e, p);
+    const plan = loadPlan(e.slug);
+    const left = plan ? daysTo(plan.examDate) : null;
+    const { t, html } = taskLine(e);
+    onClose = null;
+    show(`Welcome back`, `
+      <p>${esc(e.code)}: ${pct}% done${left !== null && left >= 0 ? `, ${left} day${left === 1 ? '' : 's'} to your exam` : ''}.</p>
+      ${bar(pct, `${e.code} lessons done`)}
+      ${html}
+      <div class="nc-btns">${link(t.url, 'Continue')}${btn('later', 'Later')}</div>
+      ${plan ? '' : `<button type="button" class="nc-link" data-act="date">Set an exam date and get reminders</button>`}`, 'auto', 'wave');
+    act({ later: close, date: () => viewDate(e) });
+  }
+
+  function viewWander(focus: CoachExam, other: CoachExam, onLesson: boolean) {
+    const pct = percentDone(focus);
+    const ss = session();
+    ss.shown = [...new Set([...ss.shown, other.slug])];
+    saveSession(ss);
+    onClose = () => { const s2 = session(); s2.looking = [...new Set([...s2.looking, other.slug])]; saveSession(s2); };
+    const text = onLesson
+      ? `You're ${pct}% through ${esc(focus.code)}. Learning two exams at once slows both down. Want to park ${esc(focus.code)} and make ${esc(other.code)} your focus?`
+      : `You're ${pct}% through ${esc(focus.code)}. Keep going with it, or make ${esc(other.code)} your focus?`;
+    show(`Looking at ${other.code}?`, `
+      <p>${text}</p>
+      ${bar(pct, `${focus.code} lessons done`)}
+      <div class="nc-btns">${link(nextTask(focus).url, `Back to ${esc(focus.code)}`)}${btn('look', 'Just looking')}</div>
+      <button type="button" class="nc-link" data-act="switch">Switch my focus to ${esc(other.code)}</button>
+      <p class="nc-muted">Switching keeps your ${esc(focus.code)} progress. You can come back to it any time.</p>`, 'auto', 'think');
+    act({
+      look: () => { onClose!(); close(); },
+      switch: () => { setFocus(st, other.slug); save(); loadPlan(other.slug) ? viewReady(other) : viewDate(other); },
+    });
+  }
+
+  function viewReadyForExam(e: CoachExam) {
+    const p = loadProgress();
+    const mock = bestFullMock(e, data!.primary, p);
+    st.celebrated[e.slug] = today(); save();
+    onClose = null;
+    show(`You're ready for ${e.code} 🎉`, `
+      <p>${mock >= 80 ? `You scored ${mock}% in a full mock exam.` : `You've finished every ${esc(e.code)} lesson.`} Book the exam while it's fresh, and keep a few mock exams going until the day.</p>
+      <div class="nc-btns">${link(`/${e.slug}/exam-day/`, 'Exam-day checklist')}${btn('passed', `I've passed ${esc(e.code)}`)}</div>
+      <button type="button" class="nc-link" data-act="later">I'll keep revising</button>`, 'auto', 'cheer');
+    act({ passed: () => markPassed(e), later: close });
+  }
+
+  function viewResult(e: CoachExam, date: string) {
+    st.asked[e.slug] = today(); save();
+    onClose = null;
+    show(`How did ${e.code} go?`, `
+      <p>Your exam date was ${pretty(date)}. Tell me how it went and I'll help with what comes next.</p>
+      <div class="nc-btns">${btn('passed', 'I passed 🎉', 'btn-accent')}${btn('date', 'Not yet, pick a new date')}</div>
+      <button type="button" class="nc-link" data-act="later">Ask me later</button>`, 'auto', 'think');
+    act({ passed: () => markPassed(e), date: () => viewDate(e), later: () => { delete st.asked[e.slug]; st.greeted = today(); save(); close(); } });
+  }
+
+  function markPassed(e: CoachExam) {
+    st.passed[e.slug] = today();
+    st.celebrated[e.slug] = st.celebrated[e.slug] ?? today();
+    save();
+    viewNext(e);
+  }
+
+  function viewNext(e: CoachExam) {
+    const nexts = e.next.map((n) => ({ n, x: examBy(n.slug) })).filter((o) => o.x && !st.passed[o.x.slug]);
+    onClose = null;
+    show(`Well done on ${e.code}`, `
+      <p>${st.passed[e.slug] ? 'That one is done. ' : ''}One exam at a time works best. Pick what to focus on next:</p>
+      <div class="nc-opts">${nexts.map(({ n, x }) => `<button type="button" class="nc-opt nc-opt-wide" data-next="${x!.slug}"><strong>${esc(x!.code)} · ${esc(x!.name)}</strong><span>${esc(n.why)}</span></button>`).join('')}</div>
+      <a class="nc-link" href="/ai-certifications/">Not sure? Compare paths by role</a>`, 'user', st.passed[e.slug] ? 'cheer' : 'idle');
+    body.querySelectorAll<HTMLButtonElement>('[data-next]').forEach((b) => b.addEventListener('click', () => {
+      const x = examBy(b.dataset.next)!;
+      setFocus(st, x.slug); save();
+      loadPlan(x.slug) ? viewReady(x) : viewDate(x);
+    }));
+  }
+
+  function viewChoose() {
+    onClose = null;
+    const list = data!.exams.filter((x) => !st.passed[x.slug]);
+    show('Which exam are you studying?', `
+      <p>Pick one. You can still open any page on the site; I'll just keep your plan on this exam.</p>
+      <div class="nc-opts">${list.map((x) => `<button type="button" class="nc-opt nc-opt-wide" data-pick="${x.slug}"><strong>${esc(x.code)}</strong><span>${esc(x.name)}</span></button>`).join('')}</div>`, 'user');
+    body.querySelectorAll<HTMLButtonElement>('[data-pick]').forEach((b) => b.addEventListener('click', () => {
+      const x = examBy(b.dataset.pick)!;
+      setFocus(st, x.slug); save();
+      loadPlan(x.slug) ? viewReady(x) : viewDate(x);
+    }));
+  }
+
+  function viewPlan() {
+    const e = examBy(st.focus);
+    if (!e) return viewChoose();
+    const p = loadProgress();
+    const pct = percentDone(e, p);
+    const plan = loadPlan(e.slug);
+    const left = plan ? daysTo(plan.examDate) : null;
+    const { t, html } = taskLine(e);
+    const parked = st.parked.map((x) => examBy(x.slug)).filter(Boolean) as CoachExam[];
+    onClose = null;
+    show(`My plan: ${e.code}`, `
+      <p>${esc(e.name)}. ${pct}% of lessons done${left !== null ? (left >= 0 ? `, ${left} day${left === 1 ? '' : 's'} to your exam (${pretty(plan!.examDate)})` : `, exam date ${pretty(plan!.examDate)} has passed`) : ''}.</p>
+      ${bar(pct, `${e.code} lessons done`)}
+      ${html}
+      <div class="nc-btns">${link(t.url, 'Continue')}${plan ? btn('ics', '📅 Calendar reminders') : btn('date', 'Set an exam date')}</div>
+      <div class="nc-links">
+        ${plan ? `<a class="nc-link" href="/${e.slug}/study-plan/">Whole plan</a>` : ''}
+        <button type="button" class="nc-link" data-act="passed">I've passed ${esc(e.code)}</button>
+        <button type="button" class="nc-link" data-act="choose">Change exam</button>
+      </div>
+      ${parked.length ? `<p class="nc-lbl nc-park-h">On hold</p><ul class="nc-park">${parked.map((x) => `<li><span>${esc(x.code)} · ${percentDone(x, p)}%</span><button type="button" class="nc-link" data-resume="${x.slug}">Resume</button></li>`).join('')}</ul>` : ''}`, 'user');
+    act({ ics: () => downloadIcs(e), date: () => viewDate(e), passed: () => markPassed(e), choose: viewChoose });
+    body.querySelectorAll<HTMLButtonElement>('[data-resume]').forEach((b) => b.addEventListener('click', () => {
+      setFocus(st, b.dataset.resume!); save(); viewPlan();
+    }));
+  }
+
+  function act(map: Record<string, () => void>) {
+    body.querySelectorAll<HTMLButtonElement>('[data-act]').forEach((b) => b.addEventListener('click', () => map[b.dataset.act!]?.()));
+  }
+
+  function downloadIcs(e: CoachExam) {
+    const plan = loadPlan(e.slug);
+    if (!plan) return;
+    const ics = planIcs(plan, e.code, `${SITE_URL}/${e.slug}/study-plan/`, `${SITE_URL}/${e.slug}/exam-day/`);
+    const a = Object.assign(document.createElement('a'), { href: URL.createObjectURL(new Blob([ics], { type: 'text/calendar' })), download: `${e.slug}-study-plan.ics` });
+    a.click();
+    setTimeout(() => URL.revokeObjectURL(a.href), 2000);
+  }
+
+  /* ---------------- on demand ---------------- */
+  document.addEventListener('click', async (ev) => {
+    const b = (ev.target as HTMLElement).closest('[data-coach-open]');
+    if (!b) return;
+    ev.preventDefault();
+    if (document.querySelector('#ask.is-open')) (document.getElementById('ask-close') as HTMLButtonElement | null)?.click();
+    if (!(await getData())) return;
+    st = loadCoach();
+    viewPlan();
+  });
+
+  /* ---------------- automatic, at most one card per page view ---------------- */
+  async function decide(): Promise<(() => void) | null> {
+    const d = await getData();
+    if (!d) return null;
+    st = loadCoach();
+    const here = examBy(seg);
+    const onLesson = !!here?.lessons.some((l) => l.url === path);
+    const examPage = !!here && (path === `/${here.slug}/` || path === `/${here.slug}/learn/` || onLesson);
+    const focus = examBy(st.focus);
+
+    if (!focus) {
+      if (!here || !examPage || st.never || st.passed[here.slug] || (st.snooze ?? 0) > Date.now()) return null;
+      return () => viewWelcome(here, 'auto');
+    }
+    if (here && here.slug !== focus.slug && !st.passed[here.slug]) {
+      const ss = session();
+      if (!ss.looking.includes(here.slug) && !ss.shown.includes(here.slug)) return () => viewWander(focus, here, onLesson);
+      return null;
+    }
+    const plan = loadPlan(focus.slug);
+    if (plan && plan.examDate < today() && !st.asked[focus.slug] && !st.passed[focus.slug]) return () => viewResult(focus, plan.examDate);
+    if (!st.celebrated[focus.slug] && isReady(focus, d.primary)) return () => viewReadyForExam(focus);
+    if (st.greeted !== today() && !st.passed[focus.slug]) {
+      const t = nextTask(focus);
+      if (t.url === path) return null; // already on today's step
+      return () => { st.greeted = today(); save(); viewBack(focus); };
+    }
+    return null;
+  }
+
+  // Cheap gate before any fetch: only exam pages, or pages where a focus exam is set.
+  const live = new Set<string>(JSON.parse(document.getElementById('ask')?.dataset.exams || '[]').map((x: { slug: string }) => x.slug));
+  const hasFocus = !!st.focus;
+  if (!BLOCK.test(path) && !quiet() && (live.has(seg) || hasFocus)) {
+    const wait = !st.focus ? 8000 : live.has(seg) && seg !== st.focus ? 1500 : 3000;
+    let visibleMs = 0;
+    let t0 = document.visibilityState === 'visible' ? performance.now() : 0;
+    document.addEventListener('visibilitychange', () => {
+      if (document.visibilityState === 'visible') t0 = performance.now();
+      else if (t0) { visibleMs += performance.now() - t0; t0 = 0; }
+    });
+    let pending: Promise<(() => void) | null> | null = null;
+    const timer = window.setInterval(async () => {
+      const ms = visibleMs + (t0 ? performance.now() - t0 : 0);
+      if (ms < wait || busy() || !box.hidden) return;
+      clearInterval(timer);
+      pending ??= decide();
+      const run = await pending;
+      if (run && !busy()) run();
+    }, 750);
+  }
+}

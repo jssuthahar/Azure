@@ -42,6 +42,7 @@ const quick = [
       </a>
     </div>
     <nav class="mt-6 flex flex-wrap gap-2" aria-label="Explore">
+      <button type="button" data-nimbus-meet class="btn btn-sm min-h-[40px] nimbus-meet-btn"><span aria-hidden="true">✨</span> Meet my Nimbus!</button>
       {quick.map(([i, t, h]) => <a href={h} class="btn btn-outline btn-sm min-h-[40px]"><span aria-hidden="true">{i}</span> {t}</a>)}
     </nav>
   </div>
@@ -49,6 +50,8 @@ const quick = [
 </section>
 
 <style>
+  .nimbus-meet-btn { border: 0; color: #fff; font-weight: 800; background: linear-gradient(135deg, #1a8cff, #0063b8 60%, #0a3d75); box-shadow: 0 8px 18px -10px rgb(0 70 150 / .8); }
+  .nimbus-meet-btn:hover { filter: brightness(1.08); }
   .today-blue { border: 0; color: #fff; background: radial-gradient(80% 90% at 100% 0%, rgb(255 255 255 / .16), transparent 70%), linear-gradient(155deg, #005a9e, #003e70); }
   :global([data-theme='dark']) .today-blue { background: var(--band); }
 </style>

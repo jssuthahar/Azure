@@ -1,0 +1,141 @@
+---
+/**
+ * "Meet My Nimbus!" (owner's request, 26 Nov 2026). Any [data-nimbus-meet]
+ * button opens it. Nimbus flies in full screen with sparkles, waves and says
+ * hello out loud (the browser's own voice: no AI service, nothing leaves the
+ * device), then offers four things: Chat with Nimbus, Listen to lessons,
+ * Change my Nimbus (the character picker) and Play and learn.
+ *
+ * It opens only when the learner asks, so it never interrupts a lesson. Calm
+ * mode turns every Nimbus animation off (html[data-nimbus-calm]); Voice
+ * greeting can be switched off too. Both are per-browser conveniences.
+ */
+import NimbusBot from './NimbusBot.astro';
+import { liveExams } from '../data/exams';
+const exams = liveExams().map((e) => e.slug);
+---
+<dialog id="ns" class="ns" aria-labelledby="ns-h" data-exams={JSON.stringify(exams)}>
+  <div class="ns-sky" aria-hidden="true">
+    <span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span>
+  </div>
+  <button type="button" class="ns-x" data-ns-close aria-label="Close Meet my Nimbus">✕</button>
+
+  <div class="ns-view" data-ns-view="home">
+    <div class="ns-hero">
+      <div class="ns-bot"><NimbusBot size={210} mood="wave" tap react /></div>
+      <h2 id="ns-h" class="ns-h">Hi, I’m your Nimbus</h2>
+      <p class="ns-sub" id="ns-sub">Your study buddy. Pick what we do next.</p>
+    </div>
+    <div class="ns-grid">
+      <button type="button" class="ns-card" data-ns="chat">
+        <svg width="30" height="30" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 5h16v11H9l-5 4z" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round" /></svg>
+        <b>Chat with Nimbus</b><span>Ask anything about your exam</span>
+      </button>
+      <button type="button" class="ns-card" data-ns="listen">
+        <svg width="30" height="30" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 13a8 8 0 0 1 16 0v5a2 2 0 0 1-2 2h-1v-7h3M4 13v5a2 2 0 0 0 2 2h1v-7H4" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round" /></svg>
+        <b>Listen to lessons</b><span id="ns-listen-note">Nimbus reads the lesson to you</span>
+      </button>
+      <button type="button" class="ns-card" data-ns="pick">
+        <svg width="30" height="30" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3l2.5 5.5L20 9l-4 4 1 6-5-3-5 3 1-6-4-4 5.5-.5z" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round" /></svg>
+        <b>Change my Nimbus</b><span>Puppy, kitten, panda and more</span>
+      </button>
+      <button type="button" class="ns-card" data-ns="play">
+        <svg width="30" height="30" viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="7" width="18" height="11" rx="5" fill="none" stroke="currentColor" stroke-width="2" /><path d="M8 10.5v4M6 12.5h4" stroke="currentColor" stroke-width="2" stroke-linecap="round" /><circle cx="15.5" cy="11.5" r="1.2" fill="currentColor" /><circle cx="17.5" cy="13.8" r="1.2" fill="currentColor" /></svg>
+        <b>Play and learn</b><span>Quick quiz and games</span>
+      </button>
+    </div>
+    <div class="ns-set">
+      <label><input type="checkbox" id="ns-voice" /> Say hello out loud</label>
+      <label><input type="checkbox" id="ns-calm" /> Calm mode (no animations)</label>
+    </div>
+  </div>
+
+  <div class="ns-view" data-ns-view="pick" hidden>
+    <h2 class="ns-h ns-h2" tabindex="-1" id="ns-pick-h">Choose your Nimbus</h2>
+    <p class="ns-sub">Your pick follows you everywhere on the site: the Ask button, chat, study coach and lesson reader.</p>
+    <div class="ns-skins" id="ns-skins" role="radiogroup" aria-labelledby="ns-pick-h"></div>
+    <div class="ns-row"><button type="button" class="ns-btn" data-ns="back">Done</button></div>
+  </div>
+
+  <div class="ns-view" data-ns-view="play" hidden>
+    <h2 class="ns-h ns-h2" tabindex="-1" id="ns-play-h">Play and learn</h2>
+    <div class="ns-grid ns-grid-2">
+      <button type="button" class="ns-card" data-ns="quiz"><b>Quick quiz</b><span>One question in the chat, +5 XP when right</span></button>
+      <a class="ns-card" id="ns-games" href="/az-900/games/"><b>Games</b><span>Daily challenge, Sort it, Who am I?</span></a>
+    </div>
+    <div class="ns-row"><button type="button" class="ns-btn ns-btn-2" data-ns="back">Back</button></div>
+  </div>
+</dialog>
+
+<script>
+  // Loaded on the first tap (src/lib/nimbus-stage.ts), so pages don't carry it until someone wants to meet Nimbus.
+  let loading: Promise<void> | null = null;
+  const onMeet = (e: Event) => {
+    const t = (e.target as Element)?.closest?.('[data-nimbus-meet]') as HTMLElement | null;
+    if (!t) return;
+    e.stopImmediatePropagation();
+    e.preventDefault();
+    (loading ??= import('../lib/nimbus-stage').then((m) => { m.mountStage(); document.removeEventListener('click', onMeet, true); })).then(() => t.click());
+  };
+  document.addEventListener('click', onMeet, true);
+</script>
+
+<style is:global>
+  /* solid navy on the dialog itself (contrast checkers can't read gradients); the glow sits on its own layer */
+  .ns { width: 100vw; height: 100dvh; max-width: none; max-height: none; margin: 0; padding: 0; border: 0; color: #fff; overflow: auto; overscroll-behavior: contain; background: #061a35; }
+  .ns::before { content: ''; position: fixed; inset: 0; z-index: 0; pointer-events: none; background: radial-gradient(60% 50% at 50% 30%, rgb(98 230 255 / .28), transparent 70%), radial-gradient(50% 50% at 85% 85%, rgb(140 110 255 / .3), transparent 70%); }
+  .ns::backdrop { background: rgb(3 10 25 / .6); }
+  .ns[open] { display: flex; flex-direction: column; align-items: center; }
+  .ns-x { position: fixed; z-index: 2; top: calc(14px + env(safe-area-inset-top)); right: max(14px, env(safe-area-inset-right)); display: grid; place-items: center; width: 44px; height: 44px; border-radius: 50%; border: 1px solid rgb(255 255 255 / .25); background: rgb(255 255 255 / .1); color: #fff; font-size: 1.1rem; cursor: pointer; }
+  .ns-x:focus-visible, .ns-card:focus-visible, .ns-btn:focus-visible, .ns-skin:focus-visible, .ns-set input:focus-visible { outline: 3px solid #ffd75e; outline-offset: 2px; }
+  .ns-sky { position: fixed; inset: 0; z-index: 0; pointer-events: none; overflow: hidden; }
+  .ns-view { z-index: 1; }
+  .ns-sky span { position: absolute; width: 6px; height: 6px; border-radius: 50%; background: #ffd75e; box-shadow: 0 0 10px #ffd75e; opacity: 0; animation: ns-star 3.6s ease-in-out infinite; }
+  /* sparkles stay at the edges so they never sit behind text */
+  .ns-sky span:nth-child(1) { left: 3%; top: 8%; } .ns-sky span:nth-child(2) { left: 95%; top: 14%; animation-delay: .5s; background: #62e6ff; box-shadow: 0 0 10px #62e6ff; }
+  .ns-sky span:nth-child(3) { left: 2%; top: 46%; animation-delay: 1s; } .ns-sky span:nth-child(4) { left: 96%; top: 52%; animation-delay: 1.5s; background: #ff9fb5; box-shadow: 0 0 10px #ff9fb5; }
+  .ns-sky span:nth-child(5) { left: 12%; top: 3%; animation-delay: 2s; } .ns-sky span:nth-child(6) { left: 94%; top: 90%; animation-delay: 2.4s; background: #62e6ff; box-shadow: 0 0 10px #62e6ff; }
+  .ns-sky span:nth-child(7) { left: 3%; top: 92%; animation-delay: 2.8s; } .ns-sky span:nth-child(8) { left: 84%; top: 4%; animation-delay: 3.2s; background: #ff9fb5; box-shadow: 0 0 10px #ff9fb5; }
+  @keyframes ns-star { 0%, 100% { opacity: 0; transform: scale(.4); } 50% { opacity: 1; transform: scale(1.3); } }
+  .ns-view { position: relative; width: min(760px, 100%); box-sizing: border-box; padding: calc(56px + env(safe-area-inset-top)) max(16px, env(safe-area-inset-right)) calc(28px + env(safe-area-inset-bottom)) max(16px, env(safe-area-inset-left)); display: flex; flex-direction: column; gap: 16px; }
+  .ns-view[hidden] { display: none; }
+  .ns-hero { display: flex; flex-direction: column; align-items: center; text-align: center; gap: 6px; }
+  .ns-bot { filter: drop-shadow(0 18px 30px rgb(0 0 0 / .45)); }
+  .ns-bot .nb { width: min(210px, 52vw); height: auto; }
+  .ns.is-in .ns-bot { animation: ns-fly .9s cubic-bezier(.2, .9, .3, 1.15) both; }
+  .ns.is-in .ns-h, .ns.is-in .ns-sub { animation: ns-up .5s .45s ease-out both; }
+  .ns.is-in .ns-card { animation: ns-up .45s ease-out both; }
+  .ns.is-in .ns-card:nth-child(1) { animation-delay: .55s; } .ns.is-in .ns-card:nth-child(2) { animation-delay: .62s; }
+  .ns.is-in .ns-card:nth-child(3) { animation-delay: .69s; } .ns.is-in .ns-card:nth-child(4) { animation-delay: .76s; }
+  /* entrance plays once per opening; switching views afterwards is instant */
+  .ns.is-done .ns-bot, .ns.is-done .ns-h, .ns.is-done .ns-sub, .ns.is-done .ns-card { animation: none; }
+  @keyframes ns-fly { 0% { transform: translate(38vw, 60vh) scale(.2) rotate(-40deg); opacity: 0; } 60% { transform: translate(0, -18px) scale(1.08) rotate(6deg); opacity: 1; } 100% { transform: none; } }
+  @keyframes ns-up { from { opacity: 0; transform: translateY(14px); } to { opacity: 1; transform: none; } }
+  .ns-h { margin: 0; font-size: clamp(1.6rem, 5vw, 2.3rem); font-weight: 800; letter-spacing: -.01em; line-height: 1.15; text-wrap: balance; }
+  .ns-h2 { outline: none; text-align: center; }
+  .ns-sub { margin: 0; color: #d8ecff; text-align: center; }
+  .ns-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
+  .ns-card { display: flex; flex-direction: column; align-items: flex-start; gap: 6px; min-height: 120px; padding: 16px; border-radius: 20px; border: 1px solid rgb(255 255 255 / .18); background: rgb(255 255 255 / .08); color: #fff; text-align: left; text-decoration: none; font: inherit; cursor: pointer; backdrop-filter: blur(8px); transition: transform .15s, background .15s, border-color .15s; }
+  .ns-card:hover { transform: translateY(-3px); background: rgb(255 255 255 / .14); border-color: #62e6ff; }
+  .ns-card svg { color: #62e6ff; }
+  .ns-card b { font-size: 1.05rem; }
+  .ns-card span { font-size: .85rem; color: #d8ecff; }
+  .ns-grid-2 .ns-card { min-height: 96px; }
+  .ns-set { display: flex; flex-wrap: wrap; justify-content: center; gap: 8px 20px; font-size: .88rem; color: #d8ecff; }
+  .ns-set label { display: inline-flex; align-items: center; gap: 8px; min-height: 36px; cursor: pointer; }
+  .ns-set label[hidden] { display: none; }
+  .ns-set input { width: 18px; height: 18px; accent-color: #62e6ff; }
+  .ns-skins { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 10px; }
+  .ns-skin { display: flex; flex-direction: column; align-items: center; gap: 4px; padding: 12px 8px; border-radius: 18px; border: 2px solid rgb(255 255 255 / .14); background: rgb(255 255 255 / .07); color: #fff; font: inherit; text-align: center; cursor: pointer; transition: transform .15s, border-color .15s, background .15s; }
+  .ns-skin:hover { transform: translateY(-2px); border-color: #62e6ff; }
+  .ns-skin[aria-checked='true'] { border-color: #ffd75e; background: rgb(255 215 94 / .14); box-shadow: 0 0 0 4px rgb(255 215 94 / .18); }
+  .ns-skin svg { width: 72px; height: 72px; border-radius: 50%; background: radial-gradient(circle at 50% 45%, rgb(255 255 255 / .95), rgb(214 233 252 / .85)); }
+  .ns-skin b { font-size: .92rem; }
+  .ns-skin span { font-size: .74rem; line-height: 1.3; color: #d8ecff; }
+  .ns-row { display: flex; justify-content: center; }
+  .ns-btn { min-height: 48px; padding: 0 28px; border-radius: 999px; border: 0; background: #ffd75e; color: #2b1d00; font: inherit; font-weight: 800; cursor: pointer; }
+  .ns-btn-2 { background: rgb(255 255 255 / .12); color: #fff; border: 1px solid rgb(255 255 255 / .25); }
+  @media (max-width: 560px) { .ns-skins { grid-template-columns: repeat(2, minmax(0, 1fr)); } .ns-card { min-height: 108px; padding: 14px; } }
+  @media (prefers-reduced-motion: reduce) { .ns *, .ns.is-in * { animation: none !important; transition: none !important; } }
+  [data-nimbus-calm] .ns *, [data-nimbus-calm] .ns.is-in * { animation: none !important; }
+</style>

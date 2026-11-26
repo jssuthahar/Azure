@@ -3,7 +3,7 @@
  * Lesson toolbar: Beginner/Full view switch and "Listen" (Nimbus reads the
  * visible lesson aloud, paragraph by paragraph, highlighting as it goes).
  */
-import Mascot from './Mascot.astro';
+import NimbusBot from './NimbusBot.astro';
 import LessonNotes from './LessonNotes.astro';
 import ReadingSettings from './ReadingSettings.astro';
 interface Props {
@@ -32,7 +32,7 @@ const { lessonKey } = Astro.props;
     <span aria-hidden="true" class="font-serif">Aa</span> Reading
   </button>
   <button type="button" id="listen-btn" class="voice-only inline-flex items-center gap-2 rounded-full bg-[#ffd75e] px-4 py-2 text-sm font-bold text-[#0b1020] hover:bg-[#ffcd2e]">
-    <span aria-hidden="true">🔊</span> <span id="listen-label">Listen to this lesson</span>
+    <span aria-hidden="true">🎧</span> <span id="listen-label">Listen with Nimbus</span>
   </button>
   <label class="voice-only flex items-center gap-1.5 text-sm text-muted">Speed
     <select id="listen-rate" class="rounded-md border border-default bg-[var(--bg)] px-1.5 py-1">
@@ -43,14 +43,27 @@ const { lessonKey } = Astro.props;
   </label>
 </div>
 
-<div id="reader" data-slide-skip class="fixed bottom-4 left-4 z-[140] hidden items-center gap-3 rounded-2xl border border-default bg-[var(--card)] py-2 pr-3 pl-2 shadow-xl" role="region" aria-label="Lesson reader">
-  <div class="reader-nimbus"><Mascot size={48} mood="cheer" /></div>
-  <div class="min-w-0">
-    <p class="text-sm font-semibold">Nimbus is reading…</p>
-    <p id="reader-pos" class="text-xs text-muted"></p>
+<div id="reader" data-slide-skip class="reader hidden" role="region" aria-label="Lesson reader">
+  <div class="reader-top">
+    <div class="reader-nimbus"><NimbusBot size={54} mood="talk" tap /></div>
+    <div class="min-w-0 flex-1">
+      <p class="text-sm font-bold" id="reader-state">Nimbus is reading…</p>
+      <p id="reader-pos" class="text-xs text-muted"></p>
+      <div class="reader-bar" aria-hidden="true"><span id="reader-progress"></span></div>
+    </div>
   </div>
-  <button type="button" id="reader-pause" class="rounded-full bg-[#0078d4] px-3 py-1.5 text-sm font-semibold text-white">⏸ Pause</button>
-  <button type="button" id="reader-stop" class="rounded-full border border-default px-3 py-1.5 text-sm font-semibold" aria-label="Stop reading">⏹</button>
+  <div class="reader-ctl">
+    <button type="button" id="reader-replay" class="reader-b" aria-label="Repeat that sentence">⏮</button>
+    <button type="button" id="reader-pause" class="reader-b reader-main">⏸ Pause</button>
+    <button type="button" id="reader-speed" class="reader-b" aria-label="Reading speed">1×</button>
+    <button type="button" id="reader-stop" class="reader-b" aria-label="Stop reading">⏹</button>
+  </div>
+  <div class="reader-cmds" role="group" aria-label="Ask Nimbus about this lesson">
+    <button type="button" class="reader-cmd" data-tutor-cmd="simple">Explain it simply</button>
+    <button type="button" class="reader-cmd" data-tutor-cmd="story">Tell me a story</button>
+    <button type="button" class="reader-cmd" data-tutor-cmd="quiz">Ask me questions</button>
+    <button type="button" class="reader-cmd" data-tutor-cmd="teach">Teach me</button>
+  </div>
 </div>
 
 <LessonNotes lessonKey={lessonKey} />
@@ -72,9 +85,22 @@ const { lessonKey } = Astro.props;
     box-shadow: 0 0 0 6px var(--pastel-yellow);
     transition: background 0.2s;
   }
-  .reader-nimbus {
-    animation: nimbus-talk 0.9s ease-in-out infinite;
-  }
+  .reader { position: fixed; z-index: 140; left: max(1rem, env(safe-area-inset-left)); bottom: calc(1rem + env(safe-area-inset-bottom)); width: min(400px, calc(100vw - 2rem)); padding: 10px 12px 12px; border-radius: 22px; border: 1px solid color-mix(in srgb, var(--accent) 22%, var(--card-line)); background: var(--card); box-shadow: 0 30px 60px -22px rgb(0 25 60 / .55); display: flex; flex-direction: column; gap: 8px; }
+  .reader.hidden { display: none; }
+  .reader-top { display: flex; align-items: center; gap: 10px; }
+  .reader-nimbus { flex: none; display: grid; place-items: center; width: 58px; height: 58px; border-radius: 50%; background: radial-gradient(circle at 35% 30%, #fff, var(--accent-soft) 75%); box-shadow: 0 0 0 2.5px rgb(255 215 94 / .6); }
+  .reader-nimbus .nb-shadow { display: none; }
+  .reader-bar { height: 5px; margin-top: 6px; border-radius: 999px; background: color-mix(in srgb, var(--accent) 14%, var(--card)); overflow: hidden; }
+  .reader-bar span { display: block; width: 0; height: 100%; border-radius: inherit; background: linear-gradient(90deg, #0078d4, #62e6ff); transition: width .3s; }
+  .reader-ctl { display: flex; gap: 6px; }
+  .reader-b { min-width: 44px; min-height: 40px; padding: 0 12px; border-radius: 999px; border: 1px solid var(--card-line); background: var(--bg); color: var(--text); font-weight: 700; font-size: .9rem; cursor: pointer; }
+  .reader-main { flex: 1; border: 0; color: #fff; background: linear-gradient(135deg, #1a8cff, #0063b8 60%, #0a3d75); }
+  .reader-cmds { display: flex; flex-wrap: wrap; gap: 6px; }
+  .reader-cmd { min-height: 34px; padding: 0 11px; border-radius: 999px; border: 1px solid color-mix(in srgb, var(--accent) 30%, var(--card-line)); background: var(--bg); color: var(--accent-deep); font-size: .78rem; font-weight: 700; cursor: pointer; }
+  .reader-b:focus-visible, .reader-cmd:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+  ::highlight(nimbus-reading) { background-color: #ffd75e; color: #0b1020; }
+  @media (max-width: 640px) { .reader { left: .5rem; right: .5rem; width: auto; bottom: calc(5.4rem + env(safe-area-inset-bottom)); } }
+  @media (max-width: 900px) { body:has(#ask.is-open) .reader { display: none; } }
   /* ---------- Slide mode (src/lib/present.ts) ---------- */
   .present-ui {
     display: none;
@@ -262,17 +288,34 @@ const { lessonKey } = Astro.props;
     }),
   );
 
-  /* ---------- Listen ---------- */
+  /* ---------- Listen with Nimbus: sentence by sentence, browser voice only ---------- */
   const reader = document.getElementById('reader')!;
   const label = document.getElementById('listen-label')!;
   const pauseBtn = document.getElementById('reader-pause')!;
+  const speedBtn = document.getElementById('reader-speed')!;
+  const stateEl = document.getElementById('reader-state')!;
+  const progressEl = document.getElementById('reader-progress')!;
   const rate = document.getElementById('listen-rate') as HTMLSelectElement;
+  const readerBot = reader.querySelector<SVGElement>('.nb');
   rate.value = String(getRate());
-  rate.addEventListener('change', () => setRate(Number(rate.value)));
+  const RATES = [0.8, 1, 1.2];
+  const showRate = () => { speedBtn.textContent = `${Number(rate.value)}×`; };
+  showRate();
+  rate.addEventListener('change', () => { setRate(Number(rate.value)); showRate(); });
+  speedBtn.addEventListener('click', () => {
+    const i = RATES.indexOf(Number(rate.value));
+    rate.value = String(RATES[(i + 1) % RATES.length]);
+    setRate(Number(rate.value));
+    showRate();
+    if (playing && !paused) restartSentence();
+  });
 
   let playing = false;
   let paused = false;
   let runId = 0;
+  let curBlock = 0, curSent = 0;
+  // CSS Custom Highlight API marks the sentence being read without touching the lesson's HTML.
+  const canMark = typeof CSS !== 'undefined' && 'highlights' in CSS && typeof (window as any).Highlight === 'function';
 
   const blocks = () => {
     const root = document.querySelector('article');
@@ -286,28 +329,84 @@ const { lessonKey } = Astro.props;
     });
   };
 
-  const clearMark = () => document.querySelectorAll('.reading').forEach((e) => e.classList.remove('reading'));
+  /** Split one block into sentences, each with a Range over its own text nodes. */
+  type Sent = { text: string; range: Range | null };
+  function sentences(el: HTMLElement): Sent[] {
+    const nodes: { n: Text; start: number }[] = [];
+    let full = '';
+    const walk = document.createTreeWalker(el, NodeFilter.SHOW_TEXT, {
+      acceptNode: (n) => ((n.parentElement?.closest('button, .speak-btn, [aria-hidden="true"], .sr-only, svg, script, style')) ? NodeFilter.FILTER_REJECT : NodeFilter.FILTER_ACCEPT),
+    });
+    for (let n = walk.nextNode() as Text | null; n; n = walk.nextNode() as Text | null) { nodes.push({ n, start: full.length }); full += n.data; }
+    const parts: { s: number; e: number }[] = [];
+    const Seg = (Intl as any).Segmenter;
+    if (Seg) for (const p of new Seg('en', { granularity: 'sentence' }).segment(full)) parts.push({ s: p.index, e: p.index + p.segment.length });
+    else { const re = /[^.!?]+[.!?]+["')\]]*\s*|[^.!?]+$/g; let m; while ((m = re.exec(full))) parts.push({ s: m.index, e: m.index + m[0].length }); }
+    const at = (pos: number) => { for (let i = nodes.length - 1; i >= 0; i--) if (nodes[i].start <= pos) return { node: nodes[i].n, off: Math.min(pos - nodes[i].start, nodes[i].n.length) }; return null; };
+    return parts.map(({ s, e }) => {
+      const text = full.slice(s, e).trim();
+      let range: Range | null = null;
+      const a = at(s), b = at(Math.max(s, e - 1));
+      if (a && b) { try { range = document.createRange(); range.setStart(a.node, a.off); range.setEnd(b.node, Math.min(b.off + 1, b.node.length)); } catch { range = null; } }
+      return { text, range };
+    }).filter((x) => /[\p{L}\p{N}]/u.test(x.text));
+  }
 
-  async function play() {
-    const id = ++runId;
-    const list = blocks();
+  const clearMark = () => {
+    document.querySelectorAll('.reading').forEach((e) => e.classList.remove('reading'));
+    if (canMark) (CSS as any).highlights.delete('nimbus-reading');
+  };
+  const mood = (m: string) => { if (readerBot) readerBot.dataset.mood = m; };
+
+  let list: HTMLElement[] = [];
+  let sents: Sent[] = [];
+  async function run(id: number) {
+    for (; curBlock < list.length; curBlock++, curSent = 0) {
+      if (id !== runId) return;
+      const el = list[curBlock];
+      sents = sentences(el);
+      if (!sents.length) sents = [{ text: readableText(el), range: null }];
+      document.querySelectorAll('.reading').forEach((e) => e.classList.remove('reading'));
+      el.classList.add('reading');
+      el.scrollIntoView({ block: 'center', behavior: 'smooth' });
+      document.getElementById('reader-pos')!.textContent = `Part ${curBlock + 1} of ${list.length}`;
+      progressEl.style.width = `${Math.round((curBlock / list.length) * 100)}%`;
+      for (; curSent < sents.length; curSent++) {
+        if (id !== runId) return;
+        const s = sents[curSent];
+        if (canMark && s.range) (CSS as any).highlights.set('nimbus-reading', new (window as any).Highlight(s.range));
+        mood('talk');
+        await speak(s.text, Number(rate.value));
+        if (id !== runId) return;
+        while (paused && id === runId) await new Promise((r) => setTimeout(r, 150));
+        if (id !== runId) return;
+      }
+    }
+    if (id === runId) { progressEl.style.width = '100%'; finish(); }
+  }
+
+  function play(from = 0) {
+    list = blocks();
+    curBlock = from; curSent = 0;
     playing = true;
     paused = false;
     reader.classList.remove('hidden');
-    reader.classList.add('flex');
     label.textContent = 'Stop listening';
     pauseBtn.textContent = '⏸ Pause';
-    for (let i = 0; i < list.length; i++) {
-      if (id !== runId) return;
-      const el = list[i];
-      clearMark();
-      el.classList.add('reading');
-      el.scrollIntoView({ block: 'center', behavior: 'smooth' });
-      document.getElementById('reader-pos')!.textContent = `Part ${i + 1} of ${list.length}`;
-      await speak(readableText(el), Number(rate.value));
-      while (paused && id === runId) await new Promise((r) => setTimeout(r, 200));
-    }
-    if (id === runId) stop();
+    stateEl.textContent = 'Nimbus is reading…';
+    run(++runId);
+  }
+  /** Re-read the current sentence (after a speed change, Replay or Resume). */
+  function restartSentence() {
+    stopSpeaking();
+    paused = false;
+    pauseBtn.textContent = '⏸ Pause';
+    stateEl.textContent = 'Nimbus is reading…';
+    run(++runId);
+  }
+  function finish() {
+    stop();
+    window.dispatchEvent(new CustomEvent('nimbus-chat', { detail: { say: 'That’s the whole lesson. Want me to ask you a few questions about it? Tap “Quiz me” below.' } }));
   }
   function stop() {
     runId++;
@@ -316,18 +415,27 @@ const { lessonKey } = Astro.props;
     stopSpeaking();
     clearMark();
     reader.classList.add('hidden');
-    reader.classList.remove('flex');
-    label.textContent = 'Listen to this lesson';
+    label.textContent = 'Listen with Nimbus';
   }
   document.getElementById('listen-btn')!.addEventListener('click', () => (playing ? stop() : play()));
   document.getElementById('reader-stop')!.addEventListener('click', stop);
+  document.getElementById('reader-replay')!.addEventListener('click', () => { if (playing) restartSentence(); });
   pauseBtn.addEventListener('click', () => {
     if (!playing) return;
-    paused = !paused;
-    if (paused) speechSynthesis.pause();
-    else speechSynthesis.resume();
-    pauseBtn.textContent = paused ? '▶ Resume' : '⏸ Pause';
+    if (!paused) {
+      // Cancel and remember the sentence: pause() is unreliable on phones, re-reading the sentence always works.
+      paused = true;
+      runId++;
+      stopSpeaking();
+      pauseBtn.textContent = '▶ Resume';
+      stateEl.textContent = 'Paused';
+      mood('wave');
+    } else restartSentence();
   });
+  reader.querySelectorAll<HTMLElement>('[data-tutor-cmd]').forEach((b) => b.addEventListener('click', () => {
+    if (playing && !paused) pauseBtn.click();
+    window.dispatchEvent(new CustomEvent('nimbus-tutor', { detail: { action: b.dataset.tutorCmd } }));
+  }));
   window.addEventListener('speech-stop-all', () => playing && stop());
   window.addEventListener('beforeunload', () => stopSpeaking());
   if (!canSpeak()) document.documentElement.classList.add('no-voice');

@@ -42,7 +42,13 @@ const visit = async (p, url) => {
       return i;
     }, i);
     if (n < 0) break;
-    await p.waitForTimeout(250);
+    // Wait for this slot to fill while it is on screen (up to 1.5 s) instead of a fixed pause:
+    // on very tall pages the browser can report visibility a little later. A slot that never fills still fails below.
+    await p.waitForFunction((i) => {
+      const h = [...document.querySelectorAll('.ad-host')].filter((x) => x.getClientRects().length)[i];
+      return !h || h.dataset.adState === 'filled' || h.dataset.adState === 'off';
+    }, i, { timeout: 1500 }).catch(() => {});
+    await p.waitForTimeout(100);
   }
   await p.evaluate(() => scrollTo({ top: document.scrollingElement.scrollHeight, behavior: 'instant' }));
   await p.waitForTimeout(400);

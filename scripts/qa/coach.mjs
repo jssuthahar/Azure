@@ -148,8 +148,11 @@ for (const [dev, vp] of [['phone', { width: 360, height: 740 }], ['ipad', { widt
 
   // 6b. Ask Nimbus home: greets a signed-in learner by name, Quiz me records an answer, answers come as a step-by-step story.
   w = `${dev} ask home`;
-  await p.evaluate((slug) => { localStorage.setItem('msdb-user', JSON.stringify({ uid: 'qa', name: 'Asha Rao', email: '', photo: '' })); localStorage.setItem('msdb-ask-exam', slug); }, A.slug);
-  await p.goto(`${BASE}/about/`, { waitUntil: 'load' });
+  // A fake sign-in hint is cleared once the real (signed-out) auth check settles, so set it after the page is quiet.
+  await p.evaluate((slug) => localStorage.setItem('msdb-ask-exam', slug), A.slug);
+  await p.goto(`${BASE}/about/`, { waitUntil: 'networkidle' });
+  await p.waitForTimeout(1500);
+  await p.evaluate(() => localStorage.setItem('msdb-user', JSON.stringify({ uid: 'qa', name: 'Asha Rao', email: '', photo: '' })));
   await p.click('#ask-fab');
   try {
     await p.waitForSelector('#ask-log .ask-hello', { timeout: 6000 });
@@ -169,6 +172,46 @@ for (const [dev, vp] of [['phone', { width: 360, height: 740 }], ['ipad', { widt
   } catch (e) { failures.push(`${w}: ${e.message.split('\n')[0]}`); }
   await p.evaluate(() => localStorage.removeItem('msdb-user'));
   await p.click('#ask-close').catch(() => {});
+
+  // 6c. Meet my Nimbus: opens full screen, the picker saves a character every Nimbus then wears, Escape closes.
+  w = `${dev} meet my nimbus`;
+  try {
+    await p.evaluate(() => localStorage.setItem('msdb-nimbus-voice', '0'));
+    await p.goto(`${BASE}/`, { waitUntil: 'load' });
+    await p.click('.nimbus-meet-btn');
+    await p.waitForFunction(() => document.getElementById('ns')?.open, null, { timeout: 3000 });
+    await p.waitForTimeout(1500);
+    await p.addScriptTag({ content: axe });
+    const v = await p.evaluate(async () => (await window.axe.run('#ns', { runOnly: ['wcag2a', 'wcag2aa', 'wcag21aa'] })).violations.map((x) => `${x.id} (${x.nodes[0]?.target.join(' ')})`));
+    for (const x of v) failures.push(`${w} axe: ${x}`);
+    await p.click('#ns [data-ns="pick"]');
+    await p.click('#ns .ns-skin[data-skin="panda"]');
+    const st = await p.evaluate(() => ({ saved: JSON.parse(localStorage.getItem('msdb-azure-plan-v1') || '{}')._coach?.skin, fab: document.querySelector('.ask-fab-bot svg')?.dataset.skin, sw: document.documentElement.scrollWidth - innerWidth }));
+    if (st.saved !== 'panda' || st.fab !== 'panda') failures.push(`${w}: picked panda, saved ${st.saved}, Ask button wears ${st.fab}`);
+    if (st.sw > 0) failures.push(`${w}: page scrolls sideways`);
+    await p.keyboard.press('Escape');
+    if (await p.evaluate(() => document.getElementById('ns').open)) failures.push(`${w}: Escape did not close`);
+    await p.reload({ waitUntil: 'load' });
+    if ((await p.evaluate(() => document.querySelector('.ask-fab-bot svg')?.dataset.skin)) !== 'panda') failures.push(`${w}: character not kept after reload`);
+  } catch (e) { failures.push(`${w}: ${e.message.split('\n')[0]}`); }
+
+  // 6d. Listen with Nimbus: sentence highlight, pause shows Resume, stop hides the reader.
+  w = `${dev} listen with nimbus`;
+  try {
+    await p.goto(`${BASE}${A.lessons[0].url}`, { waitUntil: 'load' });
+    if (await p.locator('#listen-btn').isVisible()) {
+      await p.click('#listen-btn');
+      await p.waitForTimeout(900);
+      const on = await p.evaluate(() => !document.getElementById('reader').classList.contains('hidden') && (!!document.querySelector('.reading') || CSS.highlights?.has('nimbus-reading')));
+      if (!on) failures.push(`${w}: reader did not start`);
+      await p.click('#reader-pause');
+      if (!/Resume/.test(await p.textContent('#reader-pause'))) failures.push(`${w}: pause did not switch to Resume`);
+      await fits(p, w);
+      await p.click('#reader-stop');
+      if (!(await p.evaluate(() => document.getElementById('reader').classList.contains('hidden')))) failures.push(`${w}: stop did not hide the reader`);
+    }
+  } catch (e) { failures.push(`${w}: ${e.message.split('\n')[0]}`); }
+  await p.evaluate(() => { const s = JSON.parse(localStorage.getItem('msdb-azure-plan-v1') || '{}'); if (s._coach) { s._coach.skin = 'cloud'; localStorage.setItem('msdb-azure-plan-v1', JSON.stringify(s)); } });
 
   // 7. Never on blocked pages.
   await p.evaluate(() => sessionStorage.clear());
