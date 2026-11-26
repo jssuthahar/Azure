@@ -23,10 +23,11 @@ import { SITE } from '../config';
 ---
 <aside id="nc" class="nc" data-coach data-site={SITE.url} hidden role="dialog" aria-modal="false" aria-labelledby="nc-h">
   <div class="nc-top">
-    <span class="nc-face"><NimbusBot size={52} mood="wave" /></span>
+    <span class="nc-face"><NimbusBot size={56} mood="wave" tap /></span>
     <h2 id="nc-h" class="nc-h" tabindex="-1"></h2>
     <button type="button" class="nc-x" data-nc-close aria-label="Close Nimbus">✕</button>
   </div>
+  <div class="nc-dots" aria-hidden="true"><span></span><span></span><span></span></div>
   <div id="nc-body" class="nc-body" aria-live="polite"></div>
 </aside>
 
@@ -76,11 +77,20 @@ import { SITE } from '../config';
   /** What closing the current card means (e.g. snooze the welcome). */
   let onClose: (() => void) | null = null;
   const bot = box.querySelector<SVGElement>('.nb')!;
+  let typingT = 0, moodT = 0;
   function show(title: string, html: string, by: 'auto' | 'user', mood: 'idle' | 'wave' | 'think' | 'cheer' = 'idle') {
     head.textContent = title;
-    bot.dataset.mood = mood;
     bot.classList.remove('nb-in'); void bot.getBoundingClientRect(); bot.classList.add('nb-in');
     body.innerHTML = html;
+    // Nimbus "types" for a moment, talks while the message lands, then settles into the card's mood.
+    clearTimeout(typingT); clearTimeout(moodT);
+    if (matchMedia('(prefers-reduced-motion: reduce)').matches) bot.dataset.mood = mood;
+    else {
+      bot.dataset.mood = 'talk';
+      box.classList.add('is-typing');
+      typingT = window.setTimeout(() => box.classList.remove('is-typing'), 480);
+      moodT = window.setTimeout(() => { bot.dataset.mood = mood; }, 1500);
+    }
     const first = !shownBy || box.hidden;
     shownBy = by;
     box.hidden = false;
@@ -369,9 +379,22 @@ import { SITE } from '../config';
   body:has(#ask.is-open) .nc, body:has(#xs:not([hidden])) .nc { display: none; }
   body:has(.install-banner) .nc { bottom: calc(156px + env(safe-area-inset-bottom)); }
   .nc-top { display: flex; align-items: center; gap: .6rem; padding-right: 2.2rem; }
-  .nc-face { flex: none; display: grid; place-items: center; width: 56px; height: 56px; margin: -4px 0 -4px -4px; border-radius: 50%; background: radial-gradient(circle at 50% 60%, var(--accent-soft), transparent 70%); }
+  .nc-face { flex: none; display: grid; place-items: center; width: 60px; height: 60px; margin: -6px 0 -6px -6px; border-radius: 50%; background: radial-gradient(circle at 50% 60%, var(--accent-soft), transparent 70%); }
   .nc .nb-in { animation: nb-pop .55s cubic-bezier(.3, .7, .4, 1.2); }
   @media (prefers-reduced-motion: reduce) { .nc .nb-in { animation: none; } }
+  .nc-dots { display: none; gap: 5px; width: max-content; margin: .7rem 0 .2rem; padding: .6rem .8rem; border-radius: 14px 14px 14px 4px; background: var(--pastel-blue); }
+  .nc-dots span { width: 7px; height: 7px; border-radius: 50%; background: var(--accent); animation: nc-dot 1s ease-in-out infinite; }
+  .nc-dots span:nth-child(2) { animation-delay: .15s; }
+  .nc-dots span:nth-child(3) { animation-delay: .3s; }
+  .nc.is-typing .nc-dots { display: flex; }
+  .nc.is-typing .nc-body { display: none; }
+  .nc-body > * { animation: nc-rise .35s ease-out both; }
+  .nc-body > :nth-child(2) { animation-delay: .06s; }
+  .nc-body > :nth-child(3) { animation-delay: .12s; }
+  .nc-body > :nth-child(n+4) { animation-delay: .18s; }
+  @keyframes nc-dot { 0%, 100% { transform: translateY(0); opacity: .45; } 50% { transform: translateY(-4px); opacity: 1; } }
+  @keyframes nc-rise { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
+  @media (prefers-reduced-motion: reduce) { .nc-body > * { animation: none; } }
   .nc-h { font-size: 1.05rem; font-weight: 800; line-height: 1.3; outline: none; }
   .nc-x { position: absolute; top: .45rem; right: .45rem; display: grid; place-items: center; width: 36px; height: 36px; border-radius: 50%; color: var(--text-muted); }
   .nc-x:hover { background: var(--pastel-grey); }

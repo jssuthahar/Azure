@@ -22,7 +22,7 @@ Fixed brand colours that may be literal: Azure blue `#0078d4`, highlight yellow 
 - Buttons: `.btn` + `.btn-accent | .btn-primary | .btn-outline | .btn-sm`; large CTAs `.big-btn`, `.big-btn-light`.
 - Surfaces: `.card`, `.chip`, `.chip-muted`, `.eyebrow`, `.answer-box`, bands `.band-blue | -yellow | -green | -lilac | -navy`, progress `.bar > span`.
 - Layout: `Base.astro` (every page), `GameLayout`, `EmbedLayout` (iframes, noindex), `LearnShell` (lesson sidebar + content + TOC).
-- Shared: `Header` (grouped menus), `Footer`, `Sidebar`, `BrandLine`, `Mascot` (Nimbus: `happy | thinking | cheer`), `ShareButtons`, `CurrencySelect`, `AppInstall`.
+- Shared: `Header` (grouped menus), `Footer`, `Sidebar`, `BrandLine`, `Mascot` (Nimbus: `happy | thinking | cheer`), `NimbusBot` (animated robot Nimbus for the Ask button and Nimbus Coach: `idle | wave | think | talk | cheer`, eyes follow the pointer, `tap` makes it spin; set `data-mood` at runtime; stops for reduced motion. Keep `transform-box: fill-box` off shapes that carry a `transform` attribute or they jump), `ShareButtons`, `CurrencySelect`, `AppInstall`.
 - Font: Inter variable. Icons: inline SVG with `aria-hidden="true"`, or emoji in `aria-hidden` spans.
 
 Prefer Tailwind utilities in markup; put shared or stateful styles in `global.css` (`@layer components`) or the component's `<style>`.

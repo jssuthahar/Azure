@@ -126,6 +126,14 @@ for (const [dev, vp] of [['phone', { width: 360, height: 740 }], ['ipad', { widt
   // 6. My plan from Ask Nimbus.
   w = `${dev} my plan`;
   await p.click('#ask-fab');
+  await p.waitForTimeout(1500); // let the typing bubbles settle
+  {
+    await p.addScriptTag({ content: axe });
+    const v = await p.evaluate(async () => (await window.axe.run('#ask-panel', { runOnly: ['wcag2a', 'wcag2aa', 'wcag21aa'] })).violations.map((x) => `${x.id} (${x.nodes[0]?.target.join(' ')})`));
+    for (const x of v) failures.push(`${dev} Ask Nimbus panel axe: ${x}`);
+    const sw = await p.evaluate(() => document.querySelector('.ask-sub').scrollWidth > document.querySelector('.ask-sub').clientWidth + 1 && getComputedStyle(document.querySelector('.ask-sub')).overflow !== 'hidden');
+    if (sw) failures.push(`${dev} Ask Nimbus header status overflows`);
+  }
   await p.click('#ask-panel [data-coach-open]');
   try {
     await p.waitForSelector('#nc.is-in', { timeout: 4000 });
