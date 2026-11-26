@@ -14,10 +14,8 @@
 
 /* ---------- Azure-only design tokens (the shared palette comes from @msdevbuild/config) ---------- */
 :root {
-  --glass: rgb(255 255 255 / 0.72);
   --card: #ffffff;
   --card-line: #dde3ea;
-  --band-subtle: rgb(222 236 249 / 0.4);
 
   /* W3-style friendly surfaces */
   --header-h: 100px;
@@ -48,12 +46,9 @@
 }
 
 [data-theme='dark'] {
-  --accent-deep: #8fcbf7;
-  --glass: rgb(20 36 60 / 0.7);
   --card: #111d30;
   --card-line: #263a55;
 
-  --band-subtle: rgb(18 32 54 / 0.5);
 
   --topbar: #08111e;
   --topbar-text: #dfe8f2;
@@ -132,12 +127,7 @@
     left: 0.5rem;
   }
 
-  .site-header {
-    background: color-mix(in srgb, var(--bg) 88%, transparent);
-  }
-  .header-ms {
-    color: var(--accent);
-  }
+  /* .site-header glass and .header-ms: shared, from @msdevbuild/config/base.css */
 
   /* Buttons, eyebrow, display, section-head, glass, glass-premium: shared, from @msdevbuild/config/base.css */
   .tile {
