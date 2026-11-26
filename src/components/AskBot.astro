@@ -255,8 +255,8 @@ const here = exams.find((e) => e.slug === Astro.url.pathname.split('/')[1])?.slu
   .ask-log :global(.ask-tabs) { display: flex; gap: 6px; }
   .ask-log :global(.ask-tab) { flex: 1; display: flex; flex-direction: column; gap: 5px; min-height: 40px; padding: 0; border: 0; background: none; color: var(--text-muted); font: inherit; font-size: .74rem; font-weight: 700; cursor: pointer; }
   .ask-log :global(.ask-tab-bar) { display: block; height: 5px; border-radius: 999px; background: color-mix(in srgb, var(--accent) 16%, var(--card)); }
-  .ask-log :global(.ask-tab.is-done) { color: var(--accent-deep); }
-  .ask-log :global(.ask-tab.is-done .ask-tab-bar) { background: var(--accent); }
+  .ask-log :global(.ask-tab.ask-tab-done) { color: var(--accent-deep); }
+  .ask-log :global(.ask-tab.ask-tab-done .ask-tab-bar) { background: var(--accent); }
   .ask-log :global(.ask-tab[aria-selected='true']) { color: var(--accent-deep); }
   .ask-log :global(.ask-tab[aria-selected='true'] .ask-tab-bar) { background: linear-gradient(90deg, #0078d4, #62e6ff); }
   .ask-log :global(.ask-panel-step) { display: flex; flex-direction: column; gap: 8px; animation: ask-rise .25s ease-out both; }

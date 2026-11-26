@@ -57,9 +57,9 @@ export function mountStage() {
     bot.dataset.mood = 'wave';
     dlg.classList.remove('is-in');
     dlg.showModal();
-    dlg.classList.remove('is-done');
+    dlg.classList.remove('ns-settled');
     requestAnimationFrame(() => dlg.classList.add('is-in'));
-    setTimeout(() => dlg.classList.add('is-done'), 1400);
+    setTimeout(() => dlg.classList.add('ns-settled'), 1400);
     greet(`${n ? `Hi ${n}!` : 'Hi!'} I’m ${name}. What shall we learn today?`);
   }
   function close() { stopSpeaking(); dlg.close(); }

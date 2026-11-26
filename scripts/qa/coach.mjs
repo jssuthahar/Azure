@@ -18,10 +18,11 @@ const b = await launch();
 
 const coach = (p) => p.evaluate(() => JSON.parse(localStorage.getItem('msdb-azure-plan-v1') || '{}'));
 const heading = (p) => p.locator('#nc-h').textContent();
-const waitCard = async (p, where, ms = 14000) => {
+// The coach loads a few seconds after the page settles (coach-ui.ts), then waits its own beat: allow for both.
+const waitCard = async (p, where, ms = 20000) => {
   try { await p.waitForSelector('#nc.is-in', { timeout: ms }); return true; } catch { failures.push(`${where}: coach card did not appear`); return false; }
 };
-const noCard = async (p, where, ms = 4500) => {
+const noCard = async (p, where, ms = 9000) => {
   await p.waitForTimeout(ms);
   if (await p.locator('#nc:not([hidden])').count()) failures.push(`${where}: coach card showed but should not (${await heading(p)})`);
 };
@@ -71,7 +72,7 @@ for (const [dev, vp] of [['phone', { width: 360, height: 740 }], ['ipad', { widt
   w = `${dev} wander /${B.slug}/`;
   await p.evaluate(() => localStorage.setItem('theme', 'dark'));
   await p.goto(`${BASE}/${B.slug}/`, { waitUntil: 'load' });
-  if (await waitCard(p, w, 6000)) {
+  if (await waitCard(p, w, 14000)) {
     if (!(await heading(p)).includes(B.code)) failures.push(`${w}: heading "${await heading(p)}"`);
     await axeCard(p, `${w} dark`);
     await p.screenshot({ path: join(SHOTS, `coach-wander-dark-${dev}.png`) });
@@ -85,7 +86,7 @@ for (const [dev, vp] of [['phone', { width: 360, height: 740 }], ['ipad', { widt
   w = `${dev} wander lesson ${B.lessons[0].url}`;
   await p.evaluate(() => sessionStorage.clear());
   await p.goto(BASE + B.lessons[0].url, { waitUntil: 'load' });
-  if (await waitCard(p, w, 6000)) {
+  if (await waitCard(p, w, 14000)) {
     if (!(await p.locator('#nc-body').textContent()).includes('two exams')) failures.push(`${w}: lesson wording missing`);
     await p.click('#nc [data-act="switch"]');
     const s = await coach(p);
@@ -95,9 +96,9 @@ for (const [dev, vp] of [['phone', { width: 360, height: 740 }], ['ipad', { widt
 
   // 4. Welcome back on a site-wide page, once a day.
   w = `${dev} welcome back /progress/`;
-  await p.evaluate(() => { const all = JSON.parse(localStorage.getItem('msdb-azure-plan-v1') || '{}'); all._coach.greeted = '2000-01-01'; localStorage.setItem('msdb-azure-plan-v1', JSON.stringify(all)); });
+  await p.evaluate(() => { const all = JSON.parse(localStorage.getItem('msdb-azure-plan-v1') || '{}'); all._coach = { ...(all._coach || {}), greeted: '2000-01-01' }; localStorage.setItem('msdb-azure-plan-v1', JSON.stringify(all)); });
   await p.goto(`${BASE}/progress/`, { waitUntil: 'load' });
-  if (await waitCard(p, w, 7000)) {
+  if (await waitCard(p, w, 14000)) {
     if ((await heading(p)) !== 'Welcome back') failures.push(`${w}: heading "${await heading(p)}"`);
     await fits(p, w);
     await p.reload({ waitUntil: 'load' });
@@ -112,7 +113,7 @@ for (const [dev, vp] of [['phone', { width: 360, height: 740 }], ['ipad', { widt
     localStorage.setItem('msdb-azure-progress-v1', JSON.stringify(pr));
   }, B.lessons.map((l) => l.key));
   await p.goto(`${BASE}/`, { waitUntil: 'load' });
-  if (await waitCard(p, w, 7000)) {
+  if (await waitCard(p, w, 14000)) {
     if (!(await heading(p)).includes("You're ready")) failures.push(`${w}: heading "${await heading(p)}"`);
     await p.click('#nc [data-act="passed"]');
     const n = await p.locator('#nc [data-next]').count();
@@ -186,12 +187,15 @@ for (const [dev, vp] of [['phone', { width: 360, height: 740 }], ['ipad', { widt
     for (const x of v) failures.push(`${w} axe: ${x}`);
     await p.click('#ns [data-ns="pick"]');
     await p.click('#ns .ns-skin[data-skin="panda"]');
+    // The character art loads on demand, so the other Nimbus change a moment later.
+    await p.waitForFunction(() => document.querySelector('.ask-fab-bot svg')?.dataset.skin === 'panda', null, { timeout: 3000 }).catch(() => {});
     const st = await p.evaluate(() => ({ saved: JSON.parse(localStorage.getItem('msdb-azure-plan-v1') || '{}')._coach?.skin, fab: document.querySelector('.ask-fab-bot svg')?.dataset.skin, sw: document.documentElement.scrollWidth - innerWidth }));
     if (st.saved !== 'panda' || st.fab !== 'panda') failures.push(`${w}: picked panda, saved ${st.saved}, Ask button wears ${st.fab}`);
     if (st.sw > 0) failures.push(`${w}: page scrolls sideways`);
     await p.keyboard.press('Escape');
     if (await p.evaluate(() => document.getElementById('ns').open)) failures.push(`${w}: Escape did not close`);
     await p.reload({ waitUntil: 'load' });
+    await p.waitForFunction(() => document.querySelector('.ask-fab-bot svg')?.dataset.skin === 'panda', null, { timeout: 3000 }).catch(() => {});
     if ((await p.evaluate(() => document.querySelector('.ask-fab-bot svg')?.dataset.skin)) !== 'panda') failures.push(`${w}: character not kept after reload`);
   } catch (e) { failures.push(`${w}: ${e.message.split('\n')[0]}`); }
 

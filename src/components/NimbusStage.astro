@@ -82,7 +82,9 @@ const exams = liveExams().map((e) => e.slug);
 
 <style is:global>
   /* solid navy on the dialog itself (contrast checkers can't read gradients); the glow sits on its own layer */
-  .ns { width: 100vw; height: 100dvh; max-width: none; max-height: none; margin: 0; padding: 0; border: 0; color: #fff; overflow: auto; overscroll-behavior: contain; background: #061a35; }
+  .ns { width: 100vw; height: 100dvh; max-width: none; max-height: none; margin: 0; padding: 0; border: 0; color: #fff; overflow: auto; overscroll-behavior: contain; background: #061a35; z-index: 2147483000; }
+  /* nothing else from Nimbus shows behind or over the stage */
+  body:has(#ns[open]) :is(#nc, .kp, .reader) { display: none !important; }
   .ns::before { content: ''; position: fixed; inset: 0; z-index: 0; pointer-events: none; background: radial-gradient(60% 50% at 50% 30%, rgb(98 230 255 / .28), transparent 70%), radial-gradient(50% 50% at 85% 85%, rgb(140 110 255 / .3), transparent 70%); }
   .ns::backdrop { background: rgb(3 10 25 / .6); }
   .ns[open] { display: flex; flex-direction: column; align-items: center; }
@@ -108,7 +110,7 @@ const exams = liveExams().map((e) => e.slug);
   .ns.is-in .ns-card:nth-child(1) { animation-delay: .55s; } .ns.is-in .ns-card:nth-child(2) { animation-delay: .62s; }
   .ns.is-in .ns-card:nth-child(3) { animation-delay: .69s; } .ns.is-in .ns-card:nth-child(4) { animation-delay: .76s; }
   /* entrance plays once per opening; switching views afterwards is instant */
-  .ns.is-done .ns-bot, .ns.is-done .ns-h, .ns.is-done .ns-sub, .ns.is-done .ns-card { animation: none; }
+  .ns.ns-settled .ns-bot, .ns.ns-settled .ns-h, .ns.ns-settled .ns-sub, .ns.ns-settled .ns-card { animation: none; }
   @keyframes ns-fly { 0% { transform: translate(38vw, 60vh) scale(.2) rotate(-40deg); opacity: 0; } 60% { transform: translate(0, -18px) scale(1.08) rotate(6deg); opacity: 1; } 100% { transform: none; } }
   @keyframes ns-up { from { opacity: 0; transform: translateY(14px); } to { opacity: 1; transform: none; } }
   .ns-h { margin: 0; font-size: clamp(1.6rem, 5vw, 2.3rem); font-weight: 800; letter-spacing: -.01em; line-height: 1.15; text-wrap: balance; }

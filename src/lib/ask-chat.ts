@@ -532,7 +532,7 @@ export function mountChat() {
     const go = (i: number) => {
       at = Math.max(0, Math.min(steps.length - 1, i));
       panels.forEach((p, j) => (p.hidden = j !== at));
-      btns.forEach((b, j) => { b.setAttribute('aria-selected', String(j === at)); b.tabIndex = j === at ? 0 : -1; b.classList.toggle('is-done', j < at); });
+      btns.forEach((b, j) => { b.setAttribute('aria-selected', String(j === at)); b.tabIndex = j === at ? 0 : -1; b.classList.toggle('ask-tab-done', j < at); });
       back.disabled = at === 0;
       fwd.textContent = at === steps.length - 1 ? 'Done' : `Next: ${steps[at + 1].label}`;
     };
