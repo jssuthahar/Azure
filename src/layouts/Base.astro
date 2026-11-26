@@ -84,7 +84,7 @@ const graph: Record<string, unknown>[] = [
     jobTitle: SITE.authorTitle,
     homeLocation: { '@type': 'Place', name: SITE.authorLocation },
     worksFor: { '@id': `${SITE.url}/#organization` },
-    sameAs: [SITE.profile, SITE.blog, ...SOCIAL.filter((s) => !s.name.startsWith('MSDEVBUILD')).map((s) => s.href.split('?')[0]), 'https://learn.microsoft.com/en-us/users/jssuthahar/'],
+    sameAs: [SITE.profile, SITE.blog, ...SOCIAL.filter((s) => !s.org).map((s) => s.href.split('?')[0]), 'https://learn.microsoft.com/en-us/users/jssuthahar/'],
   },
   ...(breadcrumbs.length
     ? [

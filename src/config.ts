@@ -1,3 +1,5 @@
+import { BRAND, SOCIAL as SHARED_SOCIAL } from '@msdevbuild/config';
+
 export const SITE = {
   url: 'https://azure.msdevbuild.com',
   name: 'MSDEVBUILD Azure',
@@ -5,20 +7,20 @@ export const SITE = {
   description:
     'Free, beginner-friendly Azure certification tutorials, quizzes, mock exams and interview preparation. Start with AZ-900 Azure Fundamentals.',
   lang: 'en',
-  blog: 'https://blog.msdevbuild.com',
-  main: 'https://msdevbuild.com',
-  author: 'Suthahar Jegatheesan',
-  org: 'MSDEVBUILD',
-  /** Same identity as blog.msdevbuild.com */
-  authorTitle: 'Cloud, AI & Mobile Solutions Architect',
-  authorLocation: 'Malaysia',
+  blog: BRAND.blog,
+  main: BRAND.main,
+  author: BRAND.author,
+  org: BRAND.org,
+  /** Identity comes from @msdevbuild/config (msdevbuild-config repo), shared with blog.msdevbuild.com */
+  authorTitle: BRAND.authorTitle,
+  authorLocation: BRAND.authorLocation,
   authorImage: '/images/author.jpg',
   authorImageSmall: '/images/author-160.jpg',
-  profile: 'https://suthahar.msdevbuild.com',
+  profile: BRAND.profile,
   /** Brand line. Shown everywhere as: MSDEVBUILD · Multi-Stack Dev Build (no author name; owner's decision, 13 Nov 2026) */
-  orgFull: 'Multi-Stack Dev Build',
-  tagline: 'Multi-Stack Dev Build',
-  brandLine: 'MSDEVBUILD · Multi-Stack Dev Build',
+  orgFull: BRAND.orgFull,
+  tagline: BRAND.orgFull,
+  brandLine: BRAND.brandLine,
 } as const;
 
 /**
@@ -31,20 +33,12 @@ export const ANALYTICS = {
 
 /** Buy Me a Coffee: the only way to support the site. Shown by <SupportCoffee /> (footer, About, certificate). Never mid-lesson. */
 export const SUPPORT = {
-  url: 'https://buymeacoffee.com/jssuthahar',
-  label: 'Buy me a coffee',
+  url: BRAND.support.url,
+  label: BRAND.support.label,
 } as const;
 
-/** Social profiles (from blog.msdevbuild.com). Used in the footer, About page and schema sameAs. */
-export const SOCIAL = [
-  { name: 'LinkedIn', href: 'https://www.linkedin.com/in/jssuthahar', icon: 'in', color: '#0a66c2' },
-  { name: 'YouTube', href: 'https://www.youtube.com/@MSDEVBUILD?sub_confirmation=1', icon: '▶', color: '#ff0000' },
-  { name: 'X', href: 'https://x.com/jssuthahar', icon: '𝕏', color: '#000000' },
-  { name: 'GitHub', href: 'https://github.com/jssuthahar', icon: 'GH', color: '#24292f' },
-  { name: 'Instagram', href: 'https://www.instagram.com/msdevbuild/', icon: '◎', color: '#d62976' },
-  { name: 'WhatsApp channel', href: 'https://whatsapp.com/channel/0029Va5j2rHEFeXcTlUhQB0J', icon: '✆', color: '#25d366' },
-  { name: 'MSDEVBUILD on LinkedIn', href: 'https://www.linkedin.com/company/31318247/', icon: 'in', color: '#0a66c2' },
-] as const;
+/** Social profiles, shared across MSDEVBUILD sites (msdevbuild-config). Used in the footer, About page and schema sameAs. */
+export const SOCIAL = SHARED_SOCIAL;
 
 export const NAV = [
   { label: 'Azure Tutorials', href: '/#certifications' },

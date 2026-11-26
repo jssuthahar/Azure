@@ -1,58 +1,22 @@
 @import 'tailwindcss';
 @plugin '@tailwindcss/typography';
+/* Shared MSDEVBUILD tokens (msdevbuild-config). Only Azure-specific tokens and overrides stay below. */
+@import '@msdevbuild/config/tokens.css';
+@import '@msdevbuild/config/base.css';
+@source '../../node_modules/@msdevbuild/config';
 
 /* Same theme switch as blog.msdevbuild.com: a data-theme attribute set before paint. */
 @custom-variant dark (&:where([data-theme='dark'], [data-theme='dark'] *));
 
 @theme {
-  --font-sans: 'Segoe UI Variable Text', 'Segoe UI', 'Inter Variable', ui-sans-serif, system-ui, -apple-system, sans-serif;
-  --font-mono: ui-monospace, 'SF Mono', 'Cascadia Code', 'JetBrains Mono', Menlo, monospace;
   --container-prose: 72ch;
-  --color-brand-50: #f3f8fd;
-  --color-brand-100: #deecf9;
-  --color-brand-300: #8db9e2;
-  --color-brand-500: #0078d4;
-  --color-brand-600: #006cbe;
-  --color-brand-700: #005a9e;
-  --color-brand-900: #003a66;
 }
 
-/* ---------- Design tokens: identical palette to the MSDEVBUILD blog ---------- */
+/* ---------- Azure-only design tokens (the shared palette comes from @msdevbuild/config) ---------- */
 :root {
-  --bg: #ffffff;
-  --bg-subtle: #f3f8fd;
-  --bg-code: #f3f8fd;
-  --border: #d5dfea;
-  --text: #0b1020;
-  --text-muted: #4a5163;
-  --accent: #0078d4;
-  --accent-deep: #005a9e;
-  --accent-soft: #deecf9;
-  --ink: #005a9e;
-  --ink-text: #ffffff;
-  --band: linear-gradient(160deg, #006cbe, #004f8c);
-  --page-wash:
-    radial-gradient(34vmax 34vmax at 0% 0%, rgb(0 120 212 / 0.16), transparent 70%),
-    radial-gradient(30vmax 30vmax at 100% 12%, rgb(199 224 244 / 0.5), transparent 70%),
-    radial-gradient(34vmax 34vmax at 96% 100%, rgb(0 90 158 / 0.1), transparent 70%),
-    linear-gradient(135deg, #ffffff, #f3f8fd 55%, #deecf9);
   --glass: rgb(255 255 255 / 0.72);
-  --glass-line: rgb(255 255 255 / 0.9);
-  --glass-shadow: 0 10px 32px -6px rgb(0 90 158 / 0.14), 0 1px 2px rgb(0 90 158 / 0.06);
   --card: #ffffff;
   --card-line: #dde3ea;
-
-  /* Premium glass, the same as the MSDEVBUILD blog (github.com/jssuthahar/blog):
-     strong light fill, a lit edge and a real lift. Used on the home page. */
-  --gp-fill: linear-gradient(145deg, rgb(255 255 255 / 0.86), rgb(255 255 255 / 0.68));
-  --gp-edge: linear-gradient(145deg, rgb(255 255 255 / 1), rgb(255 255 255 / 0.25) 45%, rgb(0 120 212 / 0.4));
-  --gp-shadow:
-    0 28px 64px -20px rgb(0 72 130 / 0.36), 0 6px 16px -8px rgb(0 72 130 / 0.16),
-    inset 0 1px 0 rgb(255 255 255 / 0.85);
-  --gp-tile-line: rgb(255 255 255 / 0.85);
-  --gp-blob-a: rgb(0 120 212 / 0.5);
-  --gp-blob-b: rgb(120 190 245 / 0.6);
-  --gp-text: linear-gradient(100deg, #006abc, #004f8c);
   --band-subtle: rgb(222 236 249 / 0.4);
 
   /* W3-style friendly surfaces */
@@ -84,38 +48,11 @@
 }
 
 [data-theme='dark'] {
-  --bg: #0b1424;
-  --bg-subtle: #122036;
-  --bg-code: #101c30;
-  --border: #263a55;
-  --text: #eef4fb;
-  --text-muted: #a9b7c9;
-  --accent: #63b1ee;
   --accent-deep: #8fcbf7;
-  --accent-soft: #12375a;
-  --ink: #0078d4;
-  --ink-text: #ffffff;
-  --band: linear-gradient(160deg, #0b3f6c, #0a2746);
-  --page-wash:
-    radial-gradient(34vmax 34vmax at 0% 0%, rgb(0 120 212 / 0.22), transparent 70%),
-    radial-gradient(30vmax 30vmax at 100% 12%, rgb(0 90 158 / 0.18), transparent 70%),
-    radial-gradient(34vmax 34vmax at 96% 100%, rgb(0 120 212 / 0.14), transparent 70%),
-    linear-gradient(135deg, #0b1424, #0d1a2e 55%, #10233d);
   --glass: rgb(20 36 60 / 0.7);
-  --glass-line: rgb(120 170 220 / 0.18);
-  --glass-shadow: 0 10px 32px -6px rgb(0 0 0 / 0.45);
   --card: #111d30;
   --card-line: #263a55;
 
-  --gp-fill: linear-gradient(145deg, rgb(24 44 74 / 0.86), rgb(12 24 44 / 0.8));
-  --gp-edge: linear-gradient(145deg, rgb(160 205 245 / 0.55), rgb(120 170 220 / 0.1) 45%, rgb(0 120 212 / 0.5));
-  --gp-shadow:
-    0 28px 64px -20px rgb(0 0 0 / 0.7), 0 6px 16px -8px rgb(0 0 0 / 0.4),
-    inset 0 1px 0 rgb(255 255 255 / 0.1);
-  --gp-tile-line: rgb(160 205 245 / 0.18);
-  --gp-blob-a: rgb(0 120 212 / 0.55);
-  --gp-blob-b: rgb(0 90 158 / 0.55);
-  --gp-text: linear-gradient(100deg, #8fcbf7, #63b1ee);
   --band-subtle: rgb(18 32 54 / 0.5);
 
   --topbar: #08111e;
@@ -158,12 +95,6 @@
     html {
       scroll-behavior: auto;
     }
-    *,
-    *::before,
-    *::after {
-      animation-duration: 0.01ms !important;
-      transition-duration: 0.01ms !important;
-    }
   }
   body {
     background-color: var(--bg);
@@ -178,33 +109,11 @@
   body > footer { padding-bottom: env(safe-area-inset-bottom); }
   /* installed app: feel native, no grey flash on tap */
   .app-mode { -webkit-tap-highlight-color: transparent; }
-
-  ::selection {
-    background-color: var(--accent-soft);
-    color: var(--text);
-  }
-  :focus-visible {
-    outline: 2px solid var(--accent);
-    outline-offset: 2px;
-    border-radius: 2px;
-  }
-  hr {
-    border-color: var(--border);
-  }
 }
 
 @layer utilities {
-  .text-muted {
-    color: var(--text-muted);
-  }
-  .text-accent {
-    color: var(--accent-deep);
-  }
   .bg-subtle {
     background: var(--bg-subtle);
-  }
-  .border-default {
-    border-color: var(--border);
   }
 }
 
@@ -230,92 +139,7 @@
     color: var(--accent);
   }
 
-  /* ---------- Buttons (same pills as the blog) ---------- */
-  .btn {
-    @apply inline-flex items-center justify-center gap-2 rounded-full px-6 py-3 text-sm font-semibold whitespace-nowrap transition-all duration-150;
-    cursor: pointer;
-  }
-  .btn-sm {
-    @apply px-4 py-2 text-sm;
-  }
-  .btn-primary {
-    background: var(--ink);
-    color: var(--ink-text);
-  }
-  .btn-primary:hover {
-    transform: translateY(-1px);
-    box-shadow: 0 8px 20px -8px var(--accent-deep);
-  }
-  .btn-accent {
-    background: #0078d4;
-    color: #fff;
-  }
-  .btn-accent:hover {
-    transform: translateY(-1px);
-    box-shadow: 0 10px 24px -10px var(--accent);
-  }
-  .btn-outline {
-    background: var(--bg);
-    color: var(--text);
-    border: 1.5px solid var(--accent-deep);
-  }
-  .btn-outline:hover {
-    background: var(--accent-deep);
-    color: var(--bg);
-  }
-  .btn:disabled {
-    opacity: 0.5;
-    cursor: not-allowed;
-    transform: none;
-    box-shadow: none;
-  }
-
-  .eyebrow {
-    @apply text-xs font-bold tracking-[0.16em] uppercase;
-    color: var(--accent-deep);
-  }
-  .eyebrow::before {
-    content: '';
-    display: inline-block;
-    width: 28px;
-    height: 3px;
-    margin-inline-end: 0.75rem;
-    vertical-align: 0.2em;
-    background: var(--accent);
-  }
-
-  /* ---------- Blog glass system (github.com/jssuthahar/blog) ---------- */
-  .display {
-    @apply font-bold text-balance;
-    letter-spacing: -0.025em;
-    line-height: 1.1;
-  }
-  .section-head {
-    @apply flex flex-wrap items-end justify-between gap-4 border-b pb-4;
-    border-color: var(--border);
-  }
-  .glass {
-    background: var(--glass);
-    border: 1px solid var(--glass-line);
-    box-shadow: var(--glass-shadow);
-  }
-  /* No backdrop-filter: the page behind is already soft blobs. The lit edge is
-     a masked ring so it doesn't show through the translucent fill. */
-  .glass-premium {
-    position: relative;
-    background: var(--gp-fill);
-    box-shadow: var(--gp-shadow);
-  }
-  .glass-premium::before {
-    content: '';
-    position: absolute;
-    inset: 0;
-    border-radius: inherit;
-    padding: 1px;
-    background: var(--gp-edge);
-    mask: linear-gradient(#000 0 0) content-box exclude, linear-gradient(#000 0 0);
-    pointer-events: none;
-  }
+  /* Buttons, eyebrow, display, section-head, glass, glass-premium: shared, from @msdevbuild/config/base.css */
   .tile {
     position: relative;
     border: 1px solid var(--gp-tile-line);
@@ -352,18 +176,7 @@
     background: var(--band-subtle);
     border-block: 1px solid var(--border);
   }
-  @media (prefers-reduced-motion: no-preference) {
-    @supports (animation-timeline: view()) {
-      .reveal-in {
-        animation: reveal-rise linear both;
-        animation-timeline: view();
-        animation-range: entry 0% entry 28%;
-      }
-      @keyframes reveal-rise {
-        from { opacity: 0; translate: 0 22px; }
-      }
-    }
-  }
+  /* .reveal-in: shared, from @msdevbuild/config/base.css */
 
   .card {
     border: 1px solid var(--card-line);
