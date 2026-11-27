@@ -51,7 +51,9 @@ export const NAV = [
 
 /**
  * Firebase web config (project msdevbuild-azure). These values are public by design:
- * access is controlled by firestore.rules, not by keeping this secret.
+ * access is controlled by firestore.rules, not by keeping this secret. The project is
+ * shared with blog.msdevbuild.com; the rules live only in the private msdevbuild-admin
+ * repo (firebase/firestore.rules), the single place they are tested and deployed from.
  * Used for optional Google sign-in (progress sync) and anonymous usage counts.
  */
 export const FIREBASE = {

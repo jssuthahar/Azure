@@ -22,8 +22,7 @@
     "icons": "node scripts/make-icons.mjs",
     "indexnow": "node scripts/indexnow.mjs",
     "stats": "node scripts/stats.mjs",
-    "auth-helper": "node scripts/auth-helper.mjs",
-    "test:rules": "firebase emulators:exec --only firestore --project demo-msdb \"node scripts/qa/rules.mjs\""
+    "auth-helper": "node scripts/auth-helper.mjs"
   },
   "dependencies": {
     "@astrojs/mdx": "4.3.14",
