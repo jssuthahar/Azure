@@ -17,7 +17,7 @@ import { SITE, SUPPORT } from '../config';
 const exams = liveExams().map((e) => ({ slug: e.slug, code: e.code, name: e.name }));
 const here = exams.find((e) => e.slug === Astro.url.pathname.split('/')[1])?.slug ?? '';
 ---
-<div id="ask" data-exams={JSON.stringify(exams)} data-here={here} data-site={SITE.url} data-coffee={SUPPORT.url}>
+<div id="ask" data-msdb-feature="askBot" data-exams={JSON.stringify(exams)} data-here={here} data-site={SITE.url} data-coffee={SUPPORT.url}>
   <button id="ask-fab" type="button" class="ask-fab" aria-expanded="false" aria-controls="ask-panel" aria-label="Ask Nimbus a question about your exam">
     <span class="ask-fab-bot"><NimbusBot size={54} react /></span>
     <span>Ask</span>

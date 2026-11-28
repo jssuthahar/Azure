@@ -10,14 +10,14 @@ const { variant = 'card', inPage = false, class: cls = '' } = Astro.props;
 const hid = `coffee-h-${inPage ? 'page' : 'foot'}`;
 ---
 {variant === 'strip' ? (
-  <div class:list={['coffee-strip not-prose', cls]}>
+  <div data-msdb-feature="supportCoffee" class:list={['coffee-strip not-prose', cls]}>
     <p><span aria-hidden="true">☕</span> Free for everyone. If it helped you, a coffee helps underprivileged children learn too.</p>
     <a class="coffee-btn coffee-btn--sm" href={SUPPORT.url} target="_blank" rel="noopener">
       <span aria-hidden="true">☕</span> {SUPPORT.label}<span class="sr-only"> (opens in a new tab)</span>
     </a>
   </div>
 ) : (
-  <section class:list={['coffee-card not-prose', inPage && 'coffee-card--page', cls]} aria-labelledby={hid}>
+  <section data-msdb-feature="supportCoffee" class:list={['coffee-card not-prose', inPage && 'coffee-card--page', cls]} aria-labelledby={hid}>
     <div class="coffee-cup" aria-hidden="true">
       <span class="steam s1"></span><span class="steam s2"></span><span class="steam s3"></span>
       <span class="cup">☕</span>
