@@ -8,6 +8,7 @@
  */
 import type { User, AuthProvider } from 'firebase/auth';
 import type { AuthProviderId } from '../../config';
+import type {} from '@msdevbuild/config/account'; // declares window.msdbAccount
 
 const HINT = 'msdb-user';
 export interface Hint { uid: string; name: string; email: string; photo: string }
@@ -26,6 +27,18 @@ async function watch() {
   watching = true;
   const [{ onAuthStateChanged, getRedirectResult }, { auth }, { startSync, stopSync }] = await Promise.all([import('firebase/auth'), import('./firebase'), import('./sync')]);
   const a = await auth();
+  // The shared profile editor (msdevbuild-config ProfileDialog) talks to this sign-in through window.msdbAccount.
+  window.msdbAccount = {
+    user: hint,
+    idToken: async () => (a.currentUser ? a.currentUser.getIdToken() : null),
+    setDisplayName: async (name: string) => {
+      if (!a.currentUser) return;
+      const { updateProfile } = await import('firebase/auth');
+      await updateProfile(a.currentUser, { displayName: name });
+      const h = hint();
+      if (h) { const next = { ...h, name }; setHint(next); render(next); }
+    },
+  };
   getRedirectResult(a).then((r) => { if (r) countSignIn(r); }).catch(() => {});
   onAuthStateChanged(a, (u: User | null) => {
     if (u) {

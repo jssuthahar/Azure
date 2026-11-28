@@ -6,6 +6,7 @@ import Header from '../components/Header.astro';
 import Footer from '../components/Footer.astro';
 import AskBot from '../components/AskBot.astro';
 import SiteEngage from '@msdevbuild/config/components/SiteEngage.astro';
+import ProfileDialog from '@msdevbuild/config/components/ProfileDialog.astro';
 import KindPrompts from '../components/KindPrompts.astro';
 import NimbusCoach from '../components/NimbusCoach.astro';
 import NimbusStage from '../components/NimbusStage.astro';
@@ -177,6 +178,8 @@ const jsonLd = JSON.stringify({ '@context': 'https://schema.org', '@graph': grap
     <a href="#main" class="skip-link">Skip to content</a>
     <!-- Promotions, feature switches and campaign counts from admin.msdevbuild.com. -->
     <SiteEngage site="azure" />
+    <!-- "Edit profile" (shared with blog.msdevbuild.com: one profile per account). -->
+    <ProfileDialog />
     <Header mode={chrome} />
     <main id="main" class="flex-1">
       {wide ? <slot /> : <div class="mx-auto max-w-4xl px-4 py-10 sm:px-6"><slot /></div>}

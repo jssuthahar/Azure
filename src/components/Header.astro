@@ -6,6 +6,7 @@ import { examFromPath } from '../data/exams';
 import CertIcon from './course/CertIcon.astro';
 import NavIcon from './NavIcon.astro';
 import AccountButton from './AccountButton.astro';
+import SiteBell from '@msdevbuild/config/components/SiteBell.astro';
 
 interface Props {
   /** 'public' = discovery menus (home, catalogue, about); 'learn' = only the current exam's learning menus. */
@@ -108,6 +109,8 @@ const groupActive = (g: Group) => g.items.some((i) => i.href === active);
         <span class="install-label">Install<span class="hidden lg:inline"> app</span></span>
       </button>
       <CurrencySelect compact class="mr-1" />
+      <!-- Announcements + who is online (admin.msdevbuild.com → Notifications). -->
+      <SiteBell site="azure" />
       <AccountButton />
       <button id="theme-toggle" type="button" class="rounded-md p-2 transition-colors hover:bg-subtle" aria-label="Switch colour theme">
         <svg class="size-5 dark:hidden" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8Z" /></svg>
