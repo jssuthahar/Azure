@@ -9,6 +9,13 @@
 import type { User, AuthProvider } from 'firebase/auth';
 import type { AuthProviderId } from '../../config';
 import type {} from '@msdevbuild/config/account'; // declares window.msdbAccount
+// One sign-in across MSDEVBUILD sites (shared with the blog): see msdevbuild-config src/sso.ts.
+import { ssoShare, ssoToken, ssoSignOut, ssoState, ssoSignedOutElsewhere } from '@msdevbuild/config/sso';
+
+/** Set while this site is signing someone in, so that sign-in is shared rather than undone. */
+let fresh = false;
+let triedSso = false;
+let firstReport = true;
 
 const HINT = 'msdb-user';
 export interface Hint { uid: string; name: string; email: string; photo: string }
@@ -40,8 +47,27 @@ async function watch() {
     },
   };
   getRedirectResult(a).then((r) => { if (r) countSignIn(r); }).catch(() => {});
-  onAuthStateChanged(a, (u: User | null) => {
+  onAuthStateChanged(a, async (u: User | null) => {
+    try { if (sessionStorage.getItem('msdb-auth-redirect')) fresh = true; } catch { /* blocked */ }
+    // Only the first report on a page is the remembered user (see msdevbuild-config src/account.ts).
+    const remembered = firstReport && !fresh;
+    firstReport = false;
+    if (u && remembered && ssoSignedOutElsewhere()) {
+      // Remembered from before, but they signed out on the blog since.
+      const { signOut: out } = await import('firebase/auth');
+      await out(a);
+      return;
+    }
+    if (!u && !triedSso) {
+      // Signed out here: signed in on the blog? Then sign in quietly.
+      triedSso = true;
+      const token = await ssoToken();
+      if (token) {
+        try { fresh = true; const { signInWithCustomToken } = await import('firebase/auth'); await signInWithCustomToken(a, token); return; } catch { fresh = false; }
+      }
+    }
     if (u) {
+      if (ssoState() !== 'in') void u.getIdToken().then(ssoShare).catch(() => {});
       const h = { uid: u.uid, name: u.displayName || 'Learner', email: u.email || '', photo: u.photoURL || '' };
       setHint(h);
       render(h);
@@ -76,6 +102,7 @@ export async function signIn(id: AuthProviderId = 'google') {
     const [{ signInWithPopup, signInWithRedirect }, { auth }] = await Promise.all([import('firebase/auth'), import('./firebase')]);
     const a = await auth();
     void watch();
+    fresh = true;
     const provider = await makeProvider(id);
     try {
       countSignIn(await signInWithPopup(a, provider));
@@ -83,15 +110,17 @@ export async function signIn(id: AuthProviderId = 'google') {
       const code = (e as { code?: string }).code ?? '';
       // Installed app on iOS and strict popup blockers: fall back to a full-page redirect.
       if (code === 'auth/popup-blocked' || code === 'auth/operation-not-supported-in-this-environment') await signInWithRedirect(a, provider);
-      else if (code !== 'auth/popup-closed-by-user' && code !== 'auth/cancelled-popup-request') throw e;
-      else window.dispatchEvent(new CustomEvent('msdb-sync', { detail: { state: 'idle' } }));
+      else if (code !== 'auth/popup-closed-by-user' && code !== 'auth/cancelled-popup-request') { fresh = false; throw e; }
+      else { fresh = false; window.dispatchEvent(new CustomEvent('msdb-sync', { detail: { state: 'idle' } })); }
     }
   } catch (e) {
     window.dispatchEvent(new CustomEvent('msdb-sync', { detail: { state: 'error', signin: true, code: (e as { code?: string })?.code ?? '', error: String((e as Error)?.message ?? e) } }));
   }
 }
 
+/** Signs out here and on every MSDEVBUILD site. */
 export async function signOut() {
+  await ssoSignOut();
   const [{ signOut: out }, { auth }, { stopSync }] = await Promise.all([import('firebase/auth'), import('./firebase'), import('./sync')]);
   stopSync();
   await out(await auth());
@@ -117,7 +146,8 @@ export function initAccount() {
   render(h);
   // Signed in before (or coming back from a redirect sign-in): confirm with Firebase in the background.
   const back = /[?&](apiKey|authType)=/.test(location.search) || sessionStorage.getItem('msdb-auth-redirect');
-  if (h || back) {
+  // Also when signed in on the blog (sso): Firebase loads and signs in quietly.
+  if (h || back || ssoState() === 'in') {
     const go = () => void watch();
     'requestIdleCallback' in window ? requestIdleCallback(go, { timeout: 3000 }) : setTimeout(go, 1);
   }
