@@ -3,8 +3,11 @@
  * Home = DISCOVER. Certifications first; each card leads to its course details
  * page (understand), whose Start learning button opens the learning environment.
  */
-import SiteLive from '@msdevbuild/config/components/SiteLive.astro';
+// Layout first: its global.css must load before any component CSS, or a component's
+// `@layer components` declares the layer order early and Tailwind's base reset wins
+// over the header's glass pill nav (broke the home menu, 28 Nov 2026).
 import PublicLayout from '../layouts/PublicLayout.astro';
+import SiteLive from '@msdevbuild/config/components/SiteLive.astro';
 import Mascot from '../components/Mascot.astro';
 import CloudScene from '../components/scenes/CloudScene.astro';
 import TodayBand from '../components/TodayBand.astro';
