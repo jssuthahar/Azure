@@ -37,6 +37,7 @@ Lesson prose should sound like Suthahar explaining it to one learner: contractio
 npm run verify      # check:all + qa:seo + browser qa (lessons, layout, a11y, pwa)
 ```
 
+
 If something fails, fix the lesson. Don't weaken the check. Look at the phone and iPad screenshots in `msdb-qa-shots/` and confirm all three tabs open and work. Don't run `npm run indexnow`, commit or push.
 
 Report back: the files you changed, which 3D mode/step, tour and lab each lesson uses (and anything new you added), and the verify result in plain words.
