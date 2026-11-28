@@ -14,20 +14,35 @@ concurrency:
   group: pages
   cancel-in-progress: false
 
+# package.json depends on "@msdevbuild/config": "file:../msdevbuild-config"
+# (shared Nimbus, bell, sign-in…), so both repos are checked out side by side,
+# exactly like the local layout (same as msdevbuild-admin's workflow):
+#   $GITHUB_WORKSPACE/azure               ← this repo
+#   $GITHUB_WORKSPACE/msdevbuild-config   ← shared package (public repo)
 jobs:
   build:
     runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: azure
     steps:
       - uses: actions/checkout@v4
+        with:
+          path: azure
+      - uses: actions/checkout@v4
+        with:
+          repository: jssuthahar/msdevbuild-config
+          path: msdevbuild-config
       - uses: actions/setup-node@v4
         with:
           node-version: 22
           cache: npm
+          cache-dependency-path: azure/package-lock.json
       - run: npm ci
       - run: npm run build
       - uses: actions/upload-pages-artifact@v3
         with:
-          path: dist
+          path: azure/dist
   deploy:
     needs: build
     runs-on: ubuntu-latest
